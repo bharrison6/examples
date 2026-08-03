@@ -1,8 +1,15 @@
-/* UI smoke test: load the game headless, click through a level-3 periapsis
-   escape using only the real UI controls, screenshot along the way. */
+/* UI smoke test: drives the real interface headlessly and asserts the
+   behaviours students depend on. node ui-smoke.js  */
 'use strict';
 const { chromium } = require('playwright');
 const path = require('path');
+
+let fails = 0;
+function check(name, cond, detail) {
+  console.log((cond ? '  PASS ' : '  FAIL ') + name + (detail !== undefined ? '  [' + detail + ']' : ''));
+  if (!cond) fails++;
+}
+const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
 
 (async () => {
   const browser = await chromium.launch();
@@ -12,88 +19,197 @@ const path = require('path');
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
 
   await page.goto('file://' + path.join(__dirname, 'index.html'));
-  await page.waitForTimeout(600);
-  await page.screenshot({ path: '/tmp/fg-1-help.png' });
+  await page.waitForTimeout(500);
 
-  // close help, go to level 3 via Levels modal
+  console.log('\n[1] Boot, theme, and modal pause');
+  check('help modal opens on boot', await page.locator('#helpModal.show').count() === 1);
+  const clockBefore = await page.textContent('#clockChip');
+  await page.waitForTimeout(1200);
+  const clockAfter = await page.textContent('#clockChip');
+  check('sim is paused while a modal is open', clockBefore === clockAfter, clockBefore + ' -> ' + clockAfter);
+  const gold = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--msu-gold').trim());
+  const blue = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--msu-blue').trim());
+  check('MSU gold token present', gold.toUpperCase() === '#ECAC00', gold);
+  check('MSU blue token present', blue.toUpperCase() === '#002144', blue);
   await page.click('#closeHelp');
-  await page.click('#btnLevels');
-  await page.waitForTimeout(200);
-  await page.locator('.levelcard').nth(2).click();
-  await page.waitForTimeout(300);
 
-  // enable HUD, warp to periapsis
+  console.log('\n[2] HUD countdowns and camera');
   await page.click('#btnHud');
-  await page.click('#btnToPe');
-  await page.waitForTimeout(2500); // let the fast-forward run
-  const hudV = await page.textContent('#hudV');
-  console.log('speed at (near) periapsis:', hudV);
+  await page.waitForTimeout(700);
+  const tPe = await page.textContent('#hudTPe');
+  const tAp = await page.textContent('#hudTAp');
+  check('time-to-periapsis countdown populated', /\d/.test(tPe), tPe);
+  check('time-to-apoapsis countdown populated', /\d/.test(tAp), tAp);
+  const hudTop = await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('hud')).top));
+  const barH = await page.evaluate(() => document.getElementById('topbar').offsetHeight);
+  check('HUD clears the top bar', hudTop >= barH, 'hud top=' + hudTop + ' bar=' + barH);
+  check('camera starts framed on the system (follow off)',
+        await page.evaluate(() => !document.getElementById('btnFollow').classList.contains('active')));
+  await page.click('#btnFollow');
+  check('follow toggles on', await page.evaluate(() => document.getElementById('btnFollow').classList.contains('active')));
+  // drag on the map should pan and disable follow
+  await page.mouse.move(400, 400); await page.mouse.down();
+  await page.mouse.move(520, 460, { steps: 6 }); await page.mouse.up();
+  check('dragging the map disables follow (pan)',
+        await page.evaluate(() => !document.getElementById('btnFollow').classList.contains('active')));
+  await page.click('#zoomFit');
 
-  // plan a prograde burn of ~4.5 and commit
-  await page.click('#btnPlanBurn');
+  console.log('\n[3] Mission briefing');
+  await page.click('#btnMission');
   await page.waitForTimeout(200);
-  await page.locator('#dvSlider').fill('4.5');
+  check('mission modal opens', await page.locator('#missionModal.show').count() === 1);
+  check('briefing states par', /m\/s/.test(await page.textContent('#msPar')));
+  check('briefing states the objective', (await page.textContent('#msGoal')).length > 30);
+  await page.click('#msClose');
+
+  console.log('\n[4] Burn planning: aim, preview, thrust vector');
+  // level 1 circularizes only at apoapsis — warp there first
+  await page.click('#btnToAp');
+  await page.waitForTimeout(3000);
+  await page.click('#btnPlanBurn');
+  await page.locator('#dvSlider').fill('3.85');
   await page.locator('#dvSlider').dispatchEvent('input');
   await page.waitForTimeout(300);
-  await page.screenshot({ path: '/tmp/fg-2-planning.png' });
+  const pred = await page.textContent('#predinfo');
+  check('planner predicts the resulting orbit', /Predicted orbit/.test(pred), pred.slice(0, 46));
+  check('Δv reads out in m/s', num(await page.textContent('#dvOut')) > 500, await page.textContent('#dvOut'));
+  // drag on canvas while planning should switch to free-angle aiming
+  await page.mouse.move(300, 300); await page.mouse.down();
+  await page.mouse.move(340, 330, { steps: 3 }); await page.mouse.up();
+  const freeActive = await page.evaluate(() => document.querySelector('.modes [data-mode="free"]').classList.contains('active'));
+  check('dragging the map aims a free-angle burn', freeActive);
+  // back to prograde for the actual burn
+  await page.click('.modes [data-mode="prograde"]');
+  await page.locator('#dvSlider').fill('3.85');
+  await page.locator('#dvSlider').dispatchEvent('input');
+  await page.waitForTimeout(250);
+
+  console.log('\n[5] Undo rewinds a committed burn');
   await page.click('#btnCommitBurn');
-
-  // warp hard and wait for escape debrief
-  await page.click('[data-warp="200"]');
-  let done = false;
-  for (let i = 0; i < 60; i++) {
-    await page.waitForTimeout(500);
-    if (await page.locator('#debriefModal.show').count()) { done = true; break; }
-  }
-  console.log('escape debrief appeared:', done);
-  await page.screenshot({ path: '/tmp/fg-3-debrief.png' });
-
-  // leaderboard save
-  if (done) {
-    await page.fill('#dbName', 'TestBot');
-    await page.click('#dbSave');
-    await page.waitForTimeout(200);
-    const lbRow = await page.locator('#dbLb td.dv').first().textContent();
-    console.log('leaderboard best dv:', lbRow);
-  }
-
-  // teacher mode / projector toggle
+  await page.waitForTimeout(400);
+  const dvAfterBurn = num(await page.textContent('#dvChip'));
+  check('Δv spent recorded', dvAfterBurn > 500, dvAfterBurn + ' m/s');
+  const undoEnabled = await page.evaluate(() => !document.getElementById('btnUndo').disabled);
+  check('undo becomes available after a burn', undoEnabled);
+  check('apoapsis burn completed the circularization', await page.locator('#debriefModal.show').count() === 1);
   await page.click('#dbClose');
-  await page.click('#btnTeacher');
-  await page.click('#tgProjector');
-  await page.waitForTimeout(200);
-  const projector = await page.evaluate(() => document.body.classList.contains('projector'));
-  console.log('projector mode toggled:', projector);
-  await page.screenshot({ path: '/tmp/fg-4-teacher.png' });
-
-  // finite-thrust level: commit a burn, watch it execute over time, cut it
-  await page.click('#closeTeacher');
-  await page.click('#btnLevels');
-  await page.waitForTimeout(200);
-  await page.locator('.levelcard').nth(5).click(); // Level 6: Ignition Window
+  await page.click('#btnUndo');
   await page.waitForTimeout(300);
-  const eng = await page.textContent('#engChip');
-  console.log('L6 engine chip:', eng.trim());
+  const dvAfterUndo = num(await page.textContent('#dvChip'));
+  check('undo restores the fuel ledger to zero', dvAfterUndo === 0, dvAfterUndo + ' m/s');
+  check('undo disables itself when the stack empties',
+        await page.evaluate(() => document.getElementById('btnUndo').disabled));
+
+  console.log('\n[6] Completing a level records progress');
+  await page.click('#btnPlanBurn');
+  await page.locator('#dvSlider').fill('3.85');
+  await page.locator('#dvSlider').dispatchEvent('input');
+  await page.click('#btnCommitBurn');
+  await page.waitForTimeout(500);
+  check('debrief appears on success', await page.locator('#debriefModal.show').count() === 1);
+  check('debrief counts burns', num(await page.textContent('#dbBurns')) === 1);
+  const math = await page.textContent('#dbMath');
+  check('math proof matches the integrator', /✓ matches/.test(math));
+  await page.click('#mathToggle');
+  check('math panel collapses', await page.evaluate(() => document.getElementById('dbMath').classList.contains('collapsed')));
+  await page.click('#mathToggle');
+  await page.fill('#dbName', 'RacerOne');
+  await page.click('#dbSave');
+  await page.waitForTimeout(200);
+  check('score saved to leaderboard', /RacerOne/.test(await page.textContent('#dbLb')));
+  await page.screenshot({ path: '/tmp/msu-4-debrief.png' });
+  await page.click('#dbClose');
+  await page.click('#btnLevels');
+  await page.waitForTimeout(250);
+  check('level card shows a completion badge', await page.locator('.levelcard .badge').count() >= 1);
+  check('progress text updates', /1 of 8/.test(await page.textContent('#progText')), await page.textContent('#progText'));
+  await page.screenshot({ path: '/tmp/msu-5-levels.png' });
+
+  console.log('\n[7] Finite-thrust level: lead warp + engine burn + cut');
+  await page.locator('.levelcard').nth(5).click(); // L6 Ignition Window
+  await page.waitForTimeout(300);
+  check('engine chip shows m/s²', /m\/s²/.test(await page.textContent('#engChip')), (await page.textContent('#engChip')).trim());
+  check('lead-time control appears for finite engines',
+        await page.evaluate(() => document.getElementById('leadWrap').classList.contains('show')));
+  await page.fill('#leadInput', '30');
+  await page.click('#btnToPe');
+  await page.waitForTimeout(2500);
+  const tPe6 = await page.textContent('#hudTPe');
+  check('lead warp stops short of periapsis (~30 min out)', /min|h/.test(tPe6), 'T-' + tPe6);
   await page.click('#btnPlanBurn');
   await page.locator('#dvSlider').fill('3');
   await page.locator('#dvSlider').dispatchEvent('input');
   const cost = await page.textContent('#burncost');
-  console.log('planner shows duration:', /Burn duration/.test(cost));
+  check('planner states burn duration', /Burn duration/.test(cost));
   await page.click('#btnCommitBurn');
   await page.waitForTimeout(400);
-  const dvMid = parseFloat(await page.textContent('#dvChip'));
-  const cutVisible = await page.locator('#btnCut').isVisible();
-  console.log('burn executing over time (0 < dv < 3, cut visible):', dvMid > 0.05 && dvMid < 3 && cutVisible, `(dv=${dvMid})`);
-  await page.click('#btnCut'); // cut mid-burn
+  const dvMid = num(await page.textContent('#dvChip'));
+  check('finite burn spends Δv over time', dvMid > 5 && dvMid < 470, dvMid + ' m/s');
+  check('cut-engine control is offered', await page.locator('#btnCut').isVisible());
+  await page.click('#btnCut');
   await page.waitForTimeout(400);
-  const dvAfterCut = parseFloat(await page.textContent('#dvChip'));
-  await page.waitForTimeout(800);
-  const dvFinal = parseFloat(await page.textContent('#dvChip'));
-  const finiteOk = dvMid > 0.05 && dvMid < 3 && cutVisible && dvAfterCut < 3 && Math.abs(dvFinal - dvAfterCut) < 0.001;
-  console.log('cut engine stops spending:', Math.abs(dvFinal - dvAfterCut) < 0.001, `(settled at ${dvFinal})`);
-  await page.screenshot({ path: '/tmp/fg-5-finite.png' });
+  const dvCut = num(await page.textContent('#dvChip'));
+  await page.waitForTimeout(700);
+  const dvSettled = num(await page.textContent('#dvChip'));
+  check('cutting the engine stops the spend', Math.abs(dvSettled - dvCut) < 1, dvSettled + ' m/s');
+  await page.screenshot({ path: '/tmp/msu-6-finite.png' });
 
-  console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'no console/page errors');
+  console.log('\n[8] Escape criterion legibility (level 3)');
+  await page.click('#btnLevels');
+  await page.locator('.levelcard').nth(2).click();
+  await page.waitForTimeout(300);
+  check('ORBIT chip reports bound state', /BOUND/.test(await page.textContent('#orbitChip')));
+  await page.click('#btnToPe');
+  await page.waitForTimeout(2200);
+  await page.click('#btnPlanBurn');
+  await page.locator('#dvSlider').fill('4');
+  await page.locator('#dvSlider').dispatchEvent('input');
+  await page.waitForTimeout(300);
+  check('under-escape burn is flagged as still bound', /still bound/.test(await page.textContent('#predinfo')));
+  await page.locator('#dvSlider').fill('5');
+  await page.locator('#dvSlider').dispatchEvent('input');
+  await page.waitForTimeout(300);
+  check('sufficient burn is flagged as escape', /ESCAPE/.test(await page.textContent('#predinfo')));
+  await page.click('#btnCommitBurn');
+  await page.click('[data-warp="200"]');
+  let escaped = false;
+  for (let i = 0; i < 60; i++) {
+    await page.waitForTimeout(400);
+    if (await page.locator('#debriefModal.show').count()) { escaped = true; break; }
+  }
+  check('escape completes the mission', escaped);
+  const m3 = await page.textContent('#dbMath');
+  check('proof shows hyperbolic escape with v∞', /hyperbolic escape/.test(m3) && /v∞/.test(m3));
+
+  console.log('\n[9] Teacher mode');
+  await page.click('#dbClose');
+  await page.click('#btnTeacher');
+  await page.click('#tgProjector');
+  await page.waitForTimeout(300);
+  check('projector mode enlarges UI', await page.evaluate(() => document.body.classList.contains('projector')));
+  await page.screenshot({ path: '/tmp/msu-7-projector.png' });
+  await page.click('#tgProjector');
+  await page.click('#closeTeacher');
+
+  console.log('\n[10] Chromebook viewport (1366×768) and mobile (390×844)');
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await page.waitForTimeout(400);
+  const hudTop2 = await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('hud')).top));
+  const barH2 = await page.evaluate(() => document.getElementById('topbar').offsetHeight);
+  check('HUD still clears the top bar at 1366×768', hudTop2 >= barH2);
+  await page.screenshot({ path: '/tmp/msu-8-chromebook.png' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(400);
+  const ctlOverflow = await page.evaluate(() => {
+    const c = document.getElementById('controls');
+    return c.getBoundingClientRect().right <= window.innerWidth + 1;
+  });
+  check('bottom controls fit the mobile viewport', ctlOverflow);
+  await page.screenshot({ path: '/tmp/msu-9-mobile.png' });
+
+  console.log('\n' + (errors.length ? 'CONSOLE ERRORS:\n' + errors.join('\n') : 'no console/page errors'));
+  if (errors.length) fails++;
+  console.log(fails ? '\n' + fails + ' FAILURE(S)\n' : '\nALL UI CHECKS PASSED\n');
   await browser.close();
-  process.exit(errors.length || !done || !finiteOk ? 1 : 0);
+  process.exit(fails ? 1 : 0);
 })();

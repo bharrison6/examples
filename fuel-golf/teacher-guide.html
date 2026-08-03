@@ -8,34 +8,42 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: Georgia, "Times New Roman", serif;
-    color: #16202e; font-size: 8.8pt; line-height: 1.28;
+    color: #16202e; font-size: 8.5pt; line-height: 1.25;
     max-width: 7.6in; margin: 0 auto; padding: 12px;
   }
-  header { border-bottom: 2.5px solid #16202e; padding-bottom: 6px; margin-bottom: 10px;
+  header { border-bottom: 3px solid #ECAC00; padding-bottom: 6px; margin-bottom: 10px;
            display: flex; justify-content: space-between; align-items: baseline; }
-  h1 { font-size: 17pt; }
+  header .brandline {
+    font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 7.4pt;
+    letter-spacing: 1.6px; font-weight: 700; color: #002144; text-transform: uppercase;
+  }
+  h1 { font-size: 17pt; color: #002144; }
   header .sub { font-size: 9pt; color: #4a5a72; font-style: italic; }
   .cols { column-count: 2; column-gap: 0.28in; }
   h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 9.6pt; text-transform: uppercase;
-       letter-spacing: 0.8px; color: #1d4ed8; margin: 9px 0 4px; break-after: avoid; }
+       letter-spacing: 0.8px; color: #002144; margin: 9px 0 4px; break-after: avoid;
+       border-left: 3px solid #ECAC00; padding-left: 5px; }
   h2:first-child { margin-top: 0; }
   p { margin: 4px 0; }
   ul, ol { margin: 3px 0 5px 15px; }
   li { margin: 2.5px 0; }
   b { color: #0e1622; }
   .eq { text-align: center; font-size: 11pt; margin: 6px 0; font-style: italic; }
-  .box { border: 1px solid #b9c4d6; border-left: 3px solid #1d4ed8; background: #f4f7fc;
+  .box { border: 1px solid #b9c4d6; border-left: 3px solid #002144; background: #f4f7fc;
          padding: 6px 9px; margin: 6px 0; border-radius: 3px; break-inside: avoid; }
   .mis { border-left-color: #b91c1c; }
   .mis b.tag { color: #b91c1c; }
-  .time { display: inline-block; min-width: 52px; font-weight: bold; font-family: "Segoe UI", Arial, sans-serif; font-size: 8.6pt; color: #1d4ed8; }
+  .time { display: inline-block; min-width: 52px; font-weight: bold; font-family: "Segoe UI", Arial, sans-serif; font-size: 8.6pt; color: #002144; }
   footer { margin-top: 8px; border-top: 1px solid #b9c4d6; padding-top: 4px; font-size: 8pt; color: #4a5a72; }
   @media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); margin: 20px auto; } }
 </style>
 </head>
 <body>
 <header>
-  <h1>⛳ Fuel Golf — Teacher Guide</h1>
+  <div>
+    <div class="brandline">Murray State University · Racers Flight Lab</div>
+    <h1>⛳ Fuel Golf — Teacher Guide</h1>
+  </div>
   <div class="sub">Orbital mechanics &amp; the Oberth effect, taught by a fuel gauge</div>
 </header>
 
@@ -85,10 +93,11 @@
   <ul>
     <li><b>Leaderboards</b> persist per level on each machine; reset them between class periods via ⚙ Teacher mode → Reset.</li>
     <li>Pars (m/s): L1 712 · L2 1,107 · L3 791 · L4 1,819 · L5 1,424 · L6 838 · L7 823. Verified minimums: L3 escape ≈ 661 m/s from periapsis vs ≈ 1,835 m/s from apoapsis.</li>
-    <li>Keyboard: <b>Space</b> pause · <b>B</b> burn planner · <b>X</b> cut engine · <b>, .</b> warp down/up · <b>H</b> HUD.</li>
+    <li>Keys: <b>Space</b> pause · <b>B</b> burn · <b>Enter</b> commit · <b>Z</b> undo · <b>X</b> cut engine · <b>P</b>/<b>A</b> warp to Pe/Ap · <b>H</b> HUD · <b>M</b> briefing · <b>R</b> restart. <b>Undo</b> rewinds the last burn (also offered after a crash) — students should iterate, not restart.</li>
+    <li>For L6–L7, point students at the HUD <b>time-to-periapsis</b>, the planner's <b>burn duration</b>, and the <b>lead</b> box beside → Pe: those three let them compute an ignition point instead of guessing.</li>
   </ul>
 </div>
 
-<footer>Fuel Golf · offline single-folder web game · open index.html to play, teacher-guide.html to reprint this page. Physics: velocity-Verlet integration of Newtonian gravity; burns are impulsive Δv; all level pars verified against the shipped physics by test-physics.js.</footer>
+<footer><b>Murray State University · Racers Flight Lab</b> · Fuel Golf is an offline single-folder web game — open index.html to play, teacher-guide.html to reprint this page. Physics: velocity-Verlet coasts with RK4 powered arcs; all level pars verified against the shipped physics by test-physics.js (33 checks) and the interface by ui-smoke.js (42 checks).</footer>
 </body>
 </html>
