@@ -181,7 +181,7 @@ const LEVELS = [
     start: { circular: true, r: 150 },
     goal: { type: 'apoapsis', min: 460, max: 540 },
     view: 1250,
-    hint: 'Push the far side of your orbit (apoapsis) out to the ring. A prograde burn raises the opposite side of your orbit from where you burn. Where on the orbit does one unit of Δv move apoapsis the most?',
+    hint: 'Swing your apoapsis — the yellow Ap dot — into the yellow ring. You do NOT need to circularize: the mission completes the moment your orbit\'s high point falls inside the band. A prograde burn raises the opposite side of your orbit. Where on the orbit does one unit of Δv move apoapsis the most?',
     debriefIdeal: 'A prograde burn low and fast raises the opposite side of the orbit most per unit of Δv.',
   },
   {
@@ -830,8 +830,10 @@ function draw() {
 
   // goal ring(s)
   const g = lvl.goal;
-  if (g.type === 'circular' || g.type === 'transfer') drawRing(g.a - g.band, g.a + g.band, 'rgba(74,222,128,0.14)', '#4ade80');
-  if (g.type === 'apoapsis') drawRing(g.min, g.max, 'rgba(74,222,128,0.14)', '#4ade80');
+  if (g.type === 'circular' || g.type === 'transfer')
+    drawRing(g.a - g.band, g.a + g.band, 'rgba(74,222,128,0.14)', '#4ade80', 'TARGET ORBIT — circularize inside this ring');
+  if (g.type === 'apoapsis')
+    drawRing(g.min, g.max, 'rgba(251,191,36,0.12)', '#fbbf24', 'TARGET Ap BAND — get your apoapsis (Ap) in here; no need to circularize');
   if (g.type === 'escape') {
     const [cx, cy] = W2S(0, 0);
     ctx.strokeStyle = 'rgba(248,113,113,0.5)'; ctx.setLineDash([8, 8]); ctx.lineWidth = 1.5;
@@ -944,7 +946,7 @@ function drawApsis(wx, wy, label, color) {
   ctx.font = '11px system-ui';
   ctx.fillText(label, x + 6, y + 4);
 }
-function drawRing(rIn, rOut, fill, edge) {
+function drawRing(rIn, rOut, fill, edge, label) {
   const [cx, cy] = W2S(0, 0);
   ctx.beginPath();
   ctx.arc(cx, cy, rOut * zoom, 0, Math.PI * 2);
@@ -954,6 +956,14 @@ function drawRing(rIn, rOut, fill, edge) {
   ctx.beginPath(); ctx.arc(cx, cy, rOut * zoom, 0, Math.PI * 2); ctx.stroke();
   ctx.beginPath(); ctx.arc(cx, cy, rIn * zoom, 0, Math.PI * 2); ctx.stroke();
   ctx.globalAlpha = 1;
+  if (label) {
+    ctx.save();
+    ctx.fillStyle = edge; ctx.font = '600 12px system-ui'; ctx.textAlign = 'center';
+    ctx.shadowColor = 'rgba(0,0,0,0.95)'; ctx.shadowBlur = 6;
+    ctx.fillText(label, cx, cy - ((rIn + rOut) / 2) * zoom + 4);
+    ctx.restore();
+    ctx.textAlign = 'left';
+  }
 }
 
 /* ---------- boot ---------- */
