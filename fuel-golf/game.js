@@ -1,0 +1,803 @@
+/* =====================================================================
+   FUEL GOLF — orbital mechanics golf for the classroom
+   Physics: planet-centred Newtonian gravity (+ optional moon, restricted
+   three-body with indirect term), integrated with velocity Verlet at a
+   fixed substep. Burns are impulsive Δv. Nothing is scripted: the Oberth
+   advantage emerges from the integrator.
+   The physics + level definitions are exported for Node so the test
+   harness (test-physics.js) exercises EXACTLY the shipped code.
+   ===================================================================== */
+'use strict';
+
+/* ---------------- physics core (pure, DOM-free) ---------------- */
+
+const DT = 1 / 60;           // integrator substep (sim-time units)
+const TIME_SCALE = 4;        // sim-time units per real second at 1x warp
+
+function moonPos(lvl, t) {
+  const m = lvl.moon;
+  const n = Math.sqrt(lvl.mu / (m.R * m.R * m.R)); // circular orbit rate
+  const a = m.a0 + n * t;
+  return { x: m.R * Math.cos(a), y: m.R * Math.sin(a), n };
+}
+
+function accel(lvl, t, x, y) {
+  const r2 = x * x + y * y;
+  const r = Math.sqrt(r2);
+  const k = -lvl.mu / (r2 * r);
+  let ax = k * x, ay = k * y;
+  if (lvl.moon) {
+    const mp = moonPos(lvl, t);
+    const dx = mp.x - x, dy = mp.y - y;
+    const d2 = dx * dx + dy * dy, d = Math.sqrt(d2);
+    const km = lvl.moon.mu / (d2 * d);
+    ax += km * dx; ay += km * dy;
+    // indirect term: planet frame is non-inertial (moon pulls the planet)
+    const R2 = mp.x * mp.x + mp.y * mp.y, R = Math.sqrt(R2);
+    const ki = -lvl.moon.mu / (R2 * R);
+    ax += ki * mp.x; ay += ki * mp.y;
+  }
+  return { ax, ay };
+}
+
+/* one velocity-Verlet substep; mutates s = {t,x,y,vx,vy,ax,ay} */
+function step(lvl, s, dt) {
+  if (s.ax === undefined) { const a0 = accel(lvl, s.t, s.x, s.y); s.ax = a0.ax; s.ay = a0.ay; }
+  s.x += s.vx * dt + 0.5 * s.ax * dt * dt;
+  s.y += s.vy * dt + 0.5 * s.ay * dt * dt;
+  const a1 = accel(lvl, s.t + dt, s.x, s.y);
+  s.vx += 0.5 * (s.ax + a1.ax) * dt;
+  s.vy += 0.5 * (s.ay + a1.ay) * dt;
+  s.ax = a1.ax; s.ay = a1.ay;
+  s.t += dt;
+}
+
+/* osculating elements wrt the planet (two-body; moon ignored) */
+function elements(lvl, s) {
+  const r = Math.hypot(s.x, s.y);
+  const v2 = s.vx * s.vx + s.vy * s.vy;
+  const v = Math.sqrt(v2);
+  const eps = v2 / 2 - lvl.mu / r;                 // specific orbital energy
+  const h = s.x * s.vy - s.y * s.vx;               // specific ang. momentum (z)
+  const rv = s.x * s.vx + s.y * s.vy;
+  const ex = ((v2 - lvl.mu / r) * s.x - rv * s.vx) / lvl.mu;
+  const ey = ((v2 - lvl.mu / r) * s.y - rv * s.vy) / lvl.mu;
+  const e = Math.hypot(ex, ey);
+  const a = -lvl.mu / (2 * eps);                   // <0 if hyperbolic
+  const bound = eps < 0;
+  const rp = bound ? a * (1 - e) : (h * h / lvl.mu) / (1 + e);
+  const ra = bound ? a * (1 + e) : Infinity;
+  return { r, v, eps, h, e, ex, ey, a, rp, ra, bound, rv };
+}
+
+function applyBurn(s, dvx, dvy) { s.vx += dvx; s.vy += dvy; s.ax = undefined; }
+
+/* burn direction unit vector for a mode + free angle (rad, CCW from prograde) */
+function burnDir(s, mode, angle) {
+  const v = Math.hypot(s.vx, s.vy) || 1e-9;
+  const px = s.vx / v, py = s.vy / v;              // prograde
+  const r = Math.hypot(s.x, s.y) || 1e-9;
+  const rx = s.x / r, ry = s.y / r;                // radial out
+  switch (mode) {
+    case 'prograde':  return { x: px, y: py };
+    case 'retrograde':return { x: -px, y: -py };
+    case 'radialout': return { x: rx, y: ry };
+    case 'radialin':  return { x: -rx, y: -ry };
+    case 'free': {
+      const c = Math.cos(angle), sn = Math.sin(angle);
+      return { x: px * c - py * sn, y: px * sn + py * c };
+    }
+  }
+}
+
+/* build a starting state from a level's start spec (placed at apoapsis,
+   or anywhere on a circular orbit), prograde CCW */
+function startState(lvl) {
+  const st = lvl.start;
+  let r, vmag;
+  if (st.circular) { r = st.r; vmag = Math.sqrt(lvl.mu / r); }
+  else { // ellipse from rp/ra, spawn at apoapsis
+    const a = (st.rp + st.ra) / 2;
+    r = st.ra;
+    vmag = Math.sqrt(lvl.mu * (2 / r - 1 / a));
+  }
+  const th = (st.angle !== undefined ? st.angle : Math.PI * 0.75);
+  const x = r * Math.cos(th), y = r * Math.sin(th);
+  // velocity perpendicular to radius, CCW
+  const vx = -vmag * Math.sin(th), vy = vmag * Math.cos(th);
+  return { t: 0, x, y, vx, vy, ax: undefined, ay: undefined };
+}
+
+/* integrate a copy forward; cb(state) each step may return true to stop */
+function propagate(lvl, s0, dt, maxSteps, cb) {
+  const s = { t: s0.t, x: s0.x, y: s0.y, vx: s0.vx, vy: s0.vy, ax: undefined, ay: undefined };
+  for (let i = 0; i < maxSteps; i++) {
+    step(lvl, s, dt);
+    if (cb && cb(s, i)) break;
+  }
+  return s;
+}
+
+/* time (from now) to next periapsis/apoapsis, by watching radial velocity
+   sign change in a coarse propagation. Returns sim-time dt or null. */
+function timeToApsis(lvl, s0, which) {
+  const dt = DT * 4;
+  let prev = s0.x * s0.vx + s0.y * s0.vy;
+  let found = null;
+  propagate(lvl, s0, dt, 300000, (s) => {
+    const rv = s.x * s.vx + s.y * s.vy;
+    const hit = which === 'pe' ? (prev < 0 && rv >= 0) : (prev > 0 && rv <= 0);
+    prev = rv;
+    if (hit) { found = s.t - s0.t; return true; }
+    return false;
+  });
+  return found;
+}
+
+/* ---------------- level definitions ---------------- */
+/* mu is the planet's gravitational parameter in world units (px, sim-s). */
+
+const LEVELS = [
+  {
+    id: 1, name: 'Orbit School', subtitle: 'Circularize your orbit',
+    mu: 100000, planetR: 40, escapeR: 2200, fuel: 8, par: 4.5,
+    start: { rp: 150, ra: 350 },
+    goal: { type: 'circular', a: 350, band: 25, emax: 0.06 },
+    view: 900,
+    hint: 'Your orbit is an ellipse. Make it a circle matching the green ring. Tip: warp to apoapsis (→ Ap) — the top of your orbit — and burn prograde until the dotted preview looks circular. Watch the preview before you commit!',
+    debriefIdeal: 'Circularizing costs least with a single prograde burn exactly at apoapsis.',
+  },
+  {
+    id: 2, name: 'Reach Higher', subtitle: 'Raise apoapsis to the target ring',
+    mu: 100000, planetR: 40, escapeR: 2200, fuel: 12, par: 7.0,
+    start: { circular: true, r: 150 },
+    goal: { type: 'apoapsis', min: 460, max: 540 },
+    view: 1250,
+    hint: 'Push the far side of your orbit (apoapsis) out to the ring. A prograde burn raises the opposite side of your orbit from where you burn. Where on the orbit does one unit of Δv move apoapsis the most?',
+    debriefIdeal: 'A prograde burn low and fast raises the opposite side of the orbit most per unit of Δv.',
+  },
+  {
+    id: 3, name: 'Escape Artist', subtitle: 'Escape the planet — for par',
+    mu: 100000, planetR: 40, escapeR: 1500, fuel: 13, par: 5.0,
+    start: { rp: 110, ra: 480 },
+    goal: { type: 'escape' },
+    view: 1400,
+    hint: 'Break free of the planet. You have 13 Δv in the tank, but par is only 5. Try burning at apoapsis, where you feel far and free... then check the Physics HUD at periapsis. Where does each unit of Δv buy the most energy?',
+    debriefIdeal: 'Escape is cheapest at periapsis: ΔKE = v·Δv + ½Δv², and v is largest at the bottom of the well. This is the Oberth effect.',
+  },
+  {
+    id: 4, name: 'Transfer Window', subtitle: 'Move to the outer circular orbit',
+    mu: 100000, planetR: 40, escapeR: 2600, fuel: 18, par: 11.5,
+    start: { circular: true, r: 140 },
+    goal: { type: 'transfer', a: 420, band: 30, emax: 0.08 },
+    view: 1150,
+    hint: 'Get into a circular orbit at the outer ring. Two burns needed: one to stretch your orbit out to the ring, one to circularize when you get there. This two-burn path has a name — you are about to rediscover the Hohmann transfer.',
+    debriefIdeal: 'The cheap route is a Hohmann transfer: prograde burn to raise apoapsis to the ring, coast half an orbit, prograde burn at apoapsis to circularize.',
+  },
+  {
+    id: 5, name: 'Powered Flyby', subtitle: 'Slingshot past the moon and escape',
+    mu: 100000, planetR: 40, escapeR: 1800, fuel: 14, par: 9.0,
+    start: { circular: true, r: 130, angle: Math.PI * 0.75 },
+    moon: { R: 520, mu: 3500, r: 14, a0: 2.4 },
+    goal: { type: 'escape' },
+    view: 1600,
+    hint: 'Direct escape from here costs ~11.5 Δv — over par. But there is a moon. Raise your apoapsis so you sweep close behind the moon and let its gravity fling you. Time your transfer burn so you and the moon arrive at the same place together.',
+    debriefIdeal: 'A gravity assist trades the moon\'s orbital motion for your speed; pairing it with a burn deep in a gravity well is the powered-flyby (Oberth) strategy real missions use.',
+  },
+  {
+    id: 6, name: 'Sandbox', subtitle: 'Free play — no goal, big tank',
+    mu: 100000, planetR: 40, escapeR: 3200, fuel: 200, par: Infinity,
+    start: { rp: 160, ra: 420 },
+    moon: { R: 700, mu: 4000, r: 16, a0: 0.8 },
+    goal: { type: 'sandbox' },
+    view: 1700,
+    hint: 'No mission. Break orbits, chase the moon, see how cheaply you can escape, or how low you can skim the planet. The HUD is your lab bench.',
+    debriefIdeal: '',
+  },
+];
+
+/* ---------------- exports for the Node test harness ---------------- */
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { DT, LEVELS, accel, step, elements, applyBurn, burnDir, startState, propagate, timeToApsis, moonPos };
+}
+
+/* =====================================================================
+   BROWSER GAME — everything below only runs with a DOM
+   ===================================================================== */
+if (typeof document !== 'undefined') (() => {
+
+const $ = (id) => document.getElementById(id);
+const canvas = $('space');
+const ctx = canvas.getContext('2d');
+
+/* ---------- persistence (guarded: falls back to memory) ---------- */
+const store = (() => {
+  let mem = {};
+  let ok = false;
+  try { localStorage.setItem('__fg', '1'); localStorage.removeItem('__fg'); ok = true; } catch (e) { ok = false; }
+  return {
+    get(k, d) { try { if (ok) { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } } catch (e) {} return (k in mem) ? mem[k] : d; },
+    set(k, v) { try { if (ok) { localStorage.setItem(k, JSON.stringify(v)); return; } } catch (e) {} mem[k] = v; },
+    del(k) { try { if (ok) localStorage.removeItem(k); } catch (e) {} delete mem[k]; },
+  };
+})();
+const LB_KEY = (id) => 'fuelgolf_lb_' + id;
+
+/* ---------- game state ---------- */
+let lvl = null;            // current level object
+let S = null;              // craft state {t,x,y,vx,vy,ax,ay}
+let warp = 1;
+let fuel = 0, dvUsed = 0;
+let phase = 'fly';         // fly | planning | done | crashed
+let trail = [];
+let energyLog = [];        // {t, eps}
+let burnLog = [];          // {t, dv, r, v, mode}
+let lastELog = -Infinity;
+let zoom = 1, targetZoom = 1;
+let pendingWarpTo = null;  // sim time remaining to fast-forward
+let stars = [];
+let plan = { mode: 'prograde', angle: 0, dv: 2 };
+let predPath = null;       // predicted polyline for pending burn
+let curPath = null;        // current-orbit polyline (recomputed after burns)
+let succeededAt = null;
+
+function resize() {
+  canvas.width = window.innerWidth * devicePixelRatio;
+  canvas.height = window.innerHeight * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+}
+window.addEventListener('resize', resize); resize();
+
+function makeStars() {
+  stars = [];
+  for (let i = 0; i < 260; i++) {
+    stars.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.4 + 0.3, a: Math.random() * 0.5 + 0.15 });
+  }
+}
+makeStars();
+
+/* ---------- level lifecycle ---------- */
+function loadLevel(i) {
+  lvl = LEVELS[i];
+  S = startState(lvl);
+  fuel = lvl.fuel; dvUsed = 0;
+  phase = 'fly'; warp = 1; pendingWarpTo = null;
+  trail = []; energyLog = []; burnLog = []; lastELog = -Infinity;
+  succeededAt = null;
+  predPath = null;
+  plan = { mode: 'prograde', angle: 0, dv: Math.min(2, fuel) };
+  targetZoom = zoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
+  computeCurPath();
+  logEnergy(true);
+  syncTop(); syncWarpButtons(); hidePlanner();
+  $('hint').textContent = lvl.hint;
+  $('hint').classList.add('show');
+  setTimeout(() => $('hint').classList.remove('show'), 14000);
+  closeModal('levelsModal'); closeModal('debriefModal'); closeModal('crashModal');
+}
+
+function computeCurPath() {
+  // one-orbit polyline of the current (unburned) trajectory, incl. moon effects
+  const el = elements(lvl, S);
+  const period = el.bound ? 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu) : 0;
+  const horizon = el.bound ? Math.min(period * 1.02, 4000) : 300;
+  const dt = Math.max(DT * 2, horizon / 2600);
+  const pts = [];
+  propagate(lvl, S, dt, Math.ceil(horizon / dt), (s, i) => {
+    if (i % 2 === 0) pts.push([s.x, s.y]);
+    return Math.hypot(s.x, s.y) > lvl.escapeR * 1.4;
+  });
+  curPath = pts;
+}
+
+function computePredPath() {
+  const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
+  const s0 = { t: S.t, x: S.x, y: S.y, vx: S.vx + dir.x * plan.dv, vy: S.vy + dir.y * plan.dv, ax: undefined };
+  const el = elements(lvl, s0);
+  const period = el.bound ? 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu) : 0;
+  const horizon = el.bound ? Math.min(period * 1.02, 5000) : 500;
+  const dt = Math.max(DT * 2, horizon / 3000);
+  const pts = [];
+  let crash = false;
+  propagate(lvl, s0, dt, Math.ceil(horizon / dt), (s, i) => {
+    if (i % 2 === 0) pts.push([s.x, s.y]);
+    if (Math.hypot(s.x, s.y) < lvl.planetR) { crash = true; return true; }
+    return Math.hypot(s.x, s.y) > lvl.escapeR * 1.5;
+  });
+  predPath = { pts, crash, el };
+}
+
+/* ---------- burns ---------- */
+function commitBurn() {
+  const dv = Math.min(plan.dv, fuel);
+  if (dv <= 0.001) return;
+  const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
+  const el0 = elements(lvl, S);
+  applyBurn(S, dir.x * dv, dir.y * dv);
+  fuel -= dv; dvUsed += dv;
+  burnLog.push({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode });
+  logEnergy(true);
+  computeCurPath();
+  hidePlanner();
+  syncTop();
+}
+
+/* ---------- goal / fail detection ---------- */
+function checkGoal() {
+  if (phase !== 'fly') return;
+  const el = elements(lvl, S);
+  if (el.r < lvl.planetR + 2) { crashed('planet'); return; }
+  if (lvl.moon) {
+    const mp = moonPos(lvl, S.t);
+    if (Math.hypot(S.x - mp.x, S.y - mp.y) < lvl.moon.r + 2) { crashed('moon'); return; }
+  }
+  const g = lvl.goal;
+  let done = false;
+  if (g.type === 'circular') done = el.bound && el.e <= g.emax && Math.abs(el.a - g.a) <= g.band;
+  else if (g.type === 'apoapsis') done = el.bound && el.ra >= g.min && el.ra <= g.max && el.rp > lvl.planetR + 10;
+  else if (g.type === 'escape') done = el.eps > 0 && el.r > lvl.escapeR;
+  else if (g.type === 'transfer') done = el.bound && el.e <= g.emax && Math.abs(el.a - g.a) <= g.band;
+  if (done) succeed();
+}
+
+function crashed(what) {
+  phase = 'crashed'; pendingWarpTo = null;
+  $('crashMsg').textContent = what === 'moon'
+    ? 'Your spacecraft hit the moon. Gravity assists want a close pass — not that close.'
+    : 'Your spacecraft hit the planet. In this class, that’s a lab incident report.';
+  openModal('crashModal');
+}
+
+function succeed() {
+  phase = 'done'; pendingWarpTo = null;
+  succeededAt = S.t;
+  showDebrief();
+}
+
+/* ---------- energy log ---------- */
+function logEnergy(force) {
+  if (!force && S.t - lastELog < 0.25) return;
+  lastELog = S.t;
+  const el = elements(lvl, S);
+  energyLog.push({ t: S.t, eps: el.eps });
+  if (energyLog.length > 6000) energyLog = energyLog.filter((_, i) => i % 2 === 0);
+}
+
+/* ---------- debrief ---------- */
+function debriefSentence() {
+  const el = elements(lvl, S);
+  const overPar = dvUsed > lvl.par + 0.05;
+  if (!burnLog.length) return 'No burns — a free ride.';
+  const main = burnLog.reduce((a, b) => (b.dv > a.dv ? b : a));
+  const vmax = Math.max(...burnLog.map(b => b.v), el.v);
+  const highSpeedFrac = main.v / vmax;
+  let s = '';
+  if (!overPar) {
+    s = `Under par with ${dvUsed.toFixed(2)} Δv. Your biggest burn (${main.dv.toFixed(2)} Δv) came at speed ${main.v.toFixed(1)} — `;
+    s += highSpeedFrac > 0.75
+      ? 'deep and fast in the gravity well, so the v·Δv term of ΔKE = v·Δv + ½Δv² did most of the work. Textbook Oberth.'
+      : 'and the mission geometry let you get away with it. Try the same mission burning only at periapsis and watch the margin grow.';
+  } else {
+    s = `Over par (${dvUsed.toFixed(2)} vs ${lvl.par}). Your biggest burn happened at speed ${main.v.toFixed(1)} while this orbit peaks near ${vmax.toFixed(1)} at periapsis — `;
+    s += highSpeedFrac < 0.75
+      ? 'burning where you were slow means each unit of Δv bought little energy (ΔKE = v·Δv + ½Δv²). Same burn at periapsis buys far more.'
+      : 'the direction or timing spent energy fighting your own orbit. Preview burns with the dotted line and spend Δv in as few, well-placed burns as possible.';
+  }
+  return s + (lvl.debriefIdeal ? ' ' + lvl.debriefIdeal : '');
+}
+
+function showDebrief() {
+  $('debriefTitle').textContent = lvl.name + ' — mission complete';
+  $('dbDv').textContent = dvUsed.toFixed(2);
+  $('dbPar').textContent = lvl.par === Infinity ? '—' : lvl.par.toFixed(1);
+  const diff = dvUsed - lvl.par;
+  $('dbScore').textContent = lvl.par === Infinity ? '—' : (diff <= 0 ? diff.toFixed(2) + ' 🏆' : '+' + diff.toFixed(2));
+  const v = $('dbVerdict');
+  v.textContent = debriefSentence();
+  v.className = 'verdict' + (dvUsed > lvl.par + 0.05 ? ' bad' : '');
+  drawEnergyPlot();
+  $('dbSaved').style.display = 'none';
+  $('dbName').value = store.get('fuelgolf_name', '');
+  renderLb('dbLb', lvl.id);
+  openModal('debriefModal');
+}
+
+function drawEnergyPlot() {
+  const c = $('debriefPlot');
+  const g = c.getContext('2d');
+  const W = c.width, H = c.height;
+  g.clearRect(0, 0, W, H);
+  if (energyLog.length < 2) return;
+  const t0 = energyLog[0].t, t1 = energyLog[energyLog.length - 1].t;
+  let eMin = Infinity, eMax = -Infinity;
+  for (const p of energyLog) { eMin = Math.min(eMin, p.eps); eMax = Math.max(eMax, p.eps); }
+  const pad = (eMax - eMin) * 0.12 + 1e-9;
+  eMin -= pad; eMax += pad;
+  const X = (t) => 46 + (t - t0) / (t1 - t0 || 1) * (W - 60);
+  const Y = (e) => H - 24 - (e - eMin) / (eMax - eMin) * (H - 44);
+  // axes
+  g.strokeStyle = '#26324d'; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(46, 8); g.lineTo(46, H - 24); g.lineTo(W - 12, H - 24); g.stroke();
+  // zero-energy line (escape threshold)
+  if (eMin < 0 && eMax > 0) {
+    g.strokeStyle = '#f8717188'; g.setLineDash([5, 4]);
+    g.beginPath(); g.moveTo(46, Y(0)); g.lineTo(W - 12, Y(0)); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = '#f87171'; g.font = '10px system-ui';
+    g.fillText('ε = 0 (escape)', W - 92, Y(0) - 4);
+  }
+  // labels
+  g.fillStyle = '#8fa0bc'; g.font = '10px system-ui';
+  g.fillText('ε', 30, 14);
+  g.fillText('time →', W - 48, H - 8);
+  g.fillText(eMax.toFixed(0), 6, 14);
+  g.fillText(eMin.toFixed(0), 6, H - 26);
+  // energy curve
+  g.strokeStyle = '#5b9dff'; g.lineWidth = 2;
+  g.beginPath();
+  energyLog.forEach((p, i) => { const x = X(p.t), y = Y(p.eps); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
+  g.stroke();
+  // burn markers
+  for (const b of burnLog) {
+    const x = X(b.t);
+    g.fillStyle = '#4ade80';
+    g.beginPath(); g.moveTo(x, H - 24); g.lineTo(x - 5, H - 14); g.lineTo(x + 5, H - 14); g.closePath(); g.fill();
+    g.fillStyle = '#8fa0bc'; g.font = '9px system-ui';
+    g.fillText(b.dv.toFixed(1), x - 8, H - 4);
+  }
+}
+
+/* ---------- leaderboard ---------- */
+function renderLb(tbodyId, levelId) {
+  const tb = $(tbodyId);
+  const rows = store.get(LB_KEY(levelId), []);
+  tb.innerHTML = '';
+  if (!rows.length) { tb.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">No scores yet — be first.</td></tr>'; return; }
+  rows.slice(0, 10).forEach((r, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${i + 1}</td><td></td><td class="dv">${r.dv.toFixed(2)}</td>`;
+    tr.children[1].textContent = r.name;
+    tb.appendChild(tr);
+  });
+}
+$('dbSave').addEventListener('click', () => {
+  const name = ($('dbName').value || 'anon').trim().slice(0, 16);
+  store.set('fuelgolf_name', name);
+  const rows = store.get(LB_KEY(lvl.id), []);
+  rows.push({ name, dv: +dvUsed.toFixed(3) });
+  rows.sort((a, b) => a.dv - b.dv);
+  store.set(LB_KEY(lvl.id), rows.slice(0, 25));
+  renderLb('dbLb', lvl.id);
+  $('dbSaved').style.display = 'inline';
+});
+
+/* ---------- modals ---------- */
+function openModal(id) { $(id).classList.add('show'); }
+function closeModal(id) { $(id).classList.remove('show'); }
+$('dbRetry').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
+$('dbNext').addEventListener('click', () => loadLevel(Math.min(LEVELS.indexOf(lvl) + 1, LEVELS.length - 1)));
+$('dbClose').addEventListener('click', () => closeModal('debriefModal'));
+$('crashRetry').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
+$('btnRestart').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
+$('btnHelp').addEventListener('click', () => openModal('helpModal'));
+$('closeHelp').addEventListener('click', () => closeModal('helpModal'));
+
+/* levels modal */
+function renderLevelGrid() {
+  const grid = $('levelGrid');
+  grid.innerHTML = '';
+  LEVELS.forEach((L, i) => {
+    const best = (store.get(LB_KEY(L.id), [])[0] || null);
+    const card = document.createElement('div');
+    card.className = 'levelcard';
+    card.innerHTML = `<h4>${L.id}. ${L.name}</h4><div class="meta">${L.subtitle}</div>
+      <div class="meta">Par ${L.par === Infinity ? '—' : L.par} · Tank ${L.fuel === 200 ? '∞' : L.fuel} Δv</div>
+      ${best ? `<div class="best">Best: ${best.dv.toFixed(2)} (${best.name})</div>` : ''}`;
+    card.addEventListener('click', () => loadLevel(i));
+    grid.appendChild(card);
+  });
+}
+$('btnLevels').addEventListener('click', () => { renderLevelGrid(); openModal('levelsModal'); });
+$('closeLevels').addEventListener('click', () => closeModal('levelsModal'));
+
+/* teacher modal */
+$('btnTeacher').addEventListener('click', () => openModal('teacherModal'));
+$('closeTeacher').addEventListener('click', () => closeModal('teacherModal'));
+$('tgProjector').addEventListener('click', () => {
+  const on = document.body.classList.toggle('projector');
+  $('tgProjector').textContent = on ? 'On' : 'Off';
+  store.set('fuelgolf_projector', on);
+});
+$('tgReset').addEventListener('click', () => { $('resetConfirmRow').style.display = 'flex'; });
+$('tgResetNo').addEventListener('click', () => { $('resetConfirmRow').style.display = 'none'; });
+$('tgResetYes').addEventListener('click', () => {
+  LEVELS.forEach(L => store.del(LB_KEY(L.id)));
+  $('resetConfirmRow').style.display = 'none';
+});
+if (store.get('fuelgolf_projector', false)) { document.body.classList.add('projector'); $('tgProjector').textContent = 'On'; }
+
+/* HUD toggle */
+$('btnHud').addEventListener('click', () => {
+  $('hud').classList.toggle('show');
+  $('btnHud').classList.toggle('active');
+});
+
+/* ---------- warp & apsis controls ---------- */
+function syncWarpButtons() {
+  document.querySelectorAll('#warpGroup [data-warp]').forEach(b => {
+    b.classList.toggle('active', +b.dataset.warp === warp);
+  });
+}
+document.querySelectorAll('#warpGroup [data-warp]').forEach(b => {
+  b.addEventListener('click', () => { warp = +b.dataset.warp; pendingWarpTo = null; syncWarpButtons(); });
+});
+function warpToApsis(which) {
+  if (phase !== 'fly' && phase !== 'planning') return;
+  const dt = timeToApsis(lvl, S, which);
+  if (dt !== null && dt > 0.05) pendingWarpTo = dt;
+}
+$('btnToPe').addEventListener('click', () => warpToApsis('pe'));
+$('btnToAp').addEventListener('click', () => warpToApsis('ap'));
+
+/* ---------- zoom ---------- */
+$('zoomIn').addEventListener('click', () => targetZoom *= 1.35);
+$('zoomOut').addEventListener('click', () => targetZoom /= 1.35);
+$('zoomFit').addEventListener('click', () => { targetZoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view; });
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); targetZoom *= e.deltaY < 0 ? 1.12 : 1 / 1.12; }, { passive: false });
+/* pinch zoom */
+let pinch = null;
+canvas.addEventListener('touchstart', (e) => { if (e.touches.length === 2) pinch = dist2(e.touches); }, { passive: true });
+canvas.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2 && pinch) { const d = dist2(e.touches); targetZoom *= d / pinch; pinch = d; }
+}, { passive: true });
+canvas.addEventListener('touchend', () => pinch = null);
+function dist2(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
+
+/* ---------- burn planner UI ---------- */
+function showPlanner() {
+  if (phase === 'done' || phase === 'crashed') return;
+  phase = 'planning'; warp = 0; syncWarpButtons();
+  $('planner').classList.add('show');
+  $('dvSlider').max = Math.max(0.5, Math.min(15, fuel)).toFixed(2);
+  if (plan.dv > fuel) plan.dv = Math.max(0, fuel);
+  syncPlanner();
+  computePredPath();
+}
+function hidePlanner() {
+  $('planner').classList.remove('show');
+  if (phase === 'planning') { phase = 'fly'; warp = 1; syncWarpButtons(); }
+  predPath = null;
+}
+$('btnPlanBurn').addEventListener('click', () => { $('planner').classList.contains('show') ? hidePlanner() : showPlanner(); });
+$('btnCancelBurn').addEventListener('click', hidePlanner);
+$('btnCommitBurn').addEventListener('click', () => { if (phase === 'planning') { commitBurn(); checkGoal(); } });
+document.querySelectorAll('.modes button').forEach(b => {
+  b.addEventListener('click', () => {
+    plan.mode = b.dataset.mode;
+    document.querySelectorAll('.modes button').forEach(x => x.classList.toggle('active', x === b));
+    $('angleRow').style.display = plan.mode === 'free' ? 'flex' : 'none';
+    if (phase === 'planning') computePredPath();
+  });
+});
+$('angleSlider').addEventListener('input', () => { plan.angle = +$('angleSlider').value; syncPlanner(); if (phase === 'planning') computePredPath(); });
+$('dvSlider').addEventListener('input', () => { plan.dv = +$('dvSlider').value; syncPlanner(); if (phase === 'planning') computePredPath(); });
+document.querySelectorAll('[data-fine]').forEach(b => {
+  b.addEventListener('click', () => {
+    plan.dv = Math.max(0, Math.min(fuel, plan.dv + +b.dataset.fine));
+    syncPlanner(); if (phase === 'planning') computePredPath();
+  });
+});
+function syncPlanner() {
+  $('dvSlider').value = plan.dv;
+  $('dvOut').textContent = plan.dv.toFixed(2);
+  $('angleOut').textContent = plan.angle + '°';
+  const el = elements(lvl, S);
+  const gain = el.v * plan.dv + 0.5 * plan.dv * plan.dv;
+  $('burncost').innerHTML = `Tank after burn: <b>${Math.max(0, fuel - plan.dv).toFixed(2)}</b> Δv · Energy this burn adds if prograde: <b>${gain.toFixed(0)}</b> (v·Δv + ½Δv², v=${el.v.toFixed(1)})`;
+}
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  const k = e.key.toLowerCase();
+  if (k === ' ') { e.preventDefault(); warp = warp === 0 ? 1 : 0; pendingWarpTo = null; syncWarpButtons(); }
+  else if (k === 'b') { $('planner').classList.contains('show') ? hidePlanner() : showPlanner(); }
+  else if (k === '.') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.min(ws.indexOf(warp) + 1, ws.length - 1)]; syncWarpButtons(); }
+  else if (k === ',') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.max(ws.indexOf(warp) - 1, 0)]; syncWarpButtons(); }
+  else if (k === 'h') { $('hud').classList.toggle('show'); $('btnHud').classList.toggle('active'); }
+});
+
+/* ---------- top bar ---------- */
+function syncTop() {
+  $('levelChip').textContent = `Level ${lvl.id}: ${lvl.name}`;
+  $('parChip').textContent = lvl.par === Infinity ? '—' : lvl.par.toFixed(1);
+  $('dvChip').textContent = dvUsed.toFixed(2);
+  $('fuelChip').textContent = lvl.fuel === 200 ? '∞' : `${fuel.toFixed(1)}`;
+  $('fuelfill').style.width = (lvl.fuel === 200 ? 100 : Math.max(0, fuel / lvl.fuel * 100)) + '%';
+}
+
+/* ---------- HUD ---------- */
+let vSeen = { min: Infinity, max: -Infinity };
+function syncHud() {
+  if (!$('hud').classList.contains('show')) return;
+  const el = elements(lvl, S);
+  vSeen.min = Math.min(vSeen.min, el.v); vSeen.max = Math.max(vSeen.max, el.v);
+  $('hudV').textContent = el.v.toFixed(2);
+  $('hudAlt').textContent = (el.r - lvl.planetR).toFixed(0);
+  $('hudE').textContent = el.eps.toFixed(1) + (el.eps >= 0 ? ' (unbound!)' : '');
+  $('hudPe').textContent = el.rp > 0 ? (el.rp - lvl.planetR).toFixed(0) : '—';
+  $('hudAp').textContent = el.bound ? (el.ra - lvl.planetR).toFixed(0) : '∞';
+  $('hudOberth').textContent = el.v.toFixed(2);
+  const span = Math.max(1e-6, vSeen.max - vSeen.min);
+  $('oberthfill').style.width = Math.max(4, Math.min(100, (el.v - vSeen.min) / span * 100)) + '%';
+}
+
+/* ---------- main loop ---------- */
+let lastFrame = performance.now();
+function frame(now) {
+  const dtReal = Math.min(0.05, (now - lastFrame) / 1000);
+  lastFrame = now;
+
+  if ((phase === 'fly') && (warp > 0 || pendingWarpTo !== null)) {
+    let simDt;
+    if (pendingWarpTo !== null) {
+      simDt = Math.min(pendingWarpTo, TIME_SCALE * 400 * dtReal);
+      pendingWarpTo -= simDt;
+      if (pendingWarpTo <= 1e-6) { pendingWarpTo = null; warp = 0; syncWarpButtons(); }
+    } else {
+      simDt = TIME_SCALE * warp * dtReal;
+    }
+    let steps = Math.ceil(simDt / DT);
+    steps = Math.min(steps, 30000);
+    const dt = simDt / steps;
+    const trailEvery = Math.max(1, Math.ceil(steps / 24));
+    for (let i = 0; i < steps; i++) {
+      step(lvl, S, dt);
+      if (i % trailEvery === 0) trail.push([S.x, S.y]);
+      if ((i & 15) === 0) {
+        const r2 = S.x * S.x + S.y * S.y;
+        if (r2 < lvl.planetR * lvl.planetR) break;
+      }
+    }
+    trail.push([S.x, S.y]);
+    if (trail.length > 2400) trail.splice(0, trail.length - 2400);
+    logEnergy(false);
+    checkGoal();
+  }
+
+  zoom += (targetZoom - zoom) * Math.min(1, dtReal * 8);
+  draw();
+  syncHud();
+  requestAnimationFrame(frame);
+}
+
+/* ---------- rendering ---------- */
+function W2S(x, y) {
+  return [window.innerWidth / 2 + x * zoom, window.innerHeight / 2 + y * zoom];
+}
+function draw() {
+  const w = window.innerWidth, h = window.innerHeight;
+  ctx.clearRect(0, 0, w, h);
+  // stars
+  for (const st of stars) {
+    ctx.globalAlpha = st.a;
+    ctx.fillStyle = '#cdd8ef';
+    ctx.fillRect(st.x * w, st.y * h, st.s, st.s);
+  }
+  ctx.globalAlpha = 1;
+
+  // goal ring(s)
+  const g = lvl.goal;
+  if (g.type === 'circular' || g.type === 'transfer') drawRing(g.a - g.band, g.a + g.band, 'rgba(74,222,128,0.14)', '#4ade80');
+  if (g.type === 'apoapsis') drawRing(g.min, g.max, 'rgba(74,222,128,0.14)', '#4ade80');
+  if (g.type === 'escape') {
+    const [cx, cy] = W2S(0, 0);
+    ctx.strokeStyle = 'rgba(248,113,113,0.5)'; ctx.setLineDash([8, 8]); ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(cx, cy, lvl.escapeR * zoom, 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(248,113,113,0.8)'; ctx.font = '12px system-ui';
+    ctx.fillText('ESCAPE BOUNDARY', cx + lvl.escapeR * zoom * 0.71, cy - lvl.escapeR * zoom * 0.71);
+  }
+
+  // moon orbit + moon
+  if (lvl.moon) {
+    const [cx, cy] = W2S(0, 0);
+    ctx.strokeStyle = 'rgba(143,160,188,0.25)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, lvl.moon.R * zoom, 0, Math.PI * 2); ctx.stroke();
+    const mp = moonPos(lvl, S.t);
+    const [mx, my] = W2S(mp.x, mp.y);
+    const mr = Math.max(3, lvl.moon.r * zoom);
+    const mg = ctx.createRadialGradient(mx - mr * 0.3, my - mr * 0.3, mr * 0.2, mx, my, mr);
+    mg.addColorStop(0, '#c8d2e4'); mg.addColorStop(1, '#5d6a88');
+    ctx.fillStyle = mg;
+    ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#6b7a9c';
+    ctx.beginPath(); ctx.arc(mx - mr * 0.25, my + mr * 0.15, mr * 0.3, 0, Math.PI * 2); ctx.fill();
+  }
+
+  // trail
+  if (trail.length > 1) {
+    ctx.strokeStyle = 'rgba(91,157,255,0.35)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    trail.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+    ctx.stroke();
+  }
+
+  // current orbit path
+  if (curPath && curPath.length > 1) {
+    ctx.strokeStyle = 'rgba(232,236,244,0.28)'; ctx.lineWidth = 1;
+    ctx.beginPath();
+    curPath.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+    ctx.stroke();
+  }
+
+  // predicted burn path (dotted)
+  if (phase === 'planning' && predPath && predPath.pts.length > 1) {
+    ctx.strokeStyle = predPath.crash ? 'rgba(248,113,113,0.95)' : 'rgba(74,222,128,0.95)';
+    ctx.lineWidth = 2; ctx.setLineDash([3, 7]);
+    ctx.beginPath();
+    predPath.pts.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // planet
+  {
+    const [cx, cy] = W2S(0, 0);
+    const pr = Math.max(4, lvl.planetR * zoom);
+    const pg = ctx.createRadialGradient(cx - pr * 0.35, cy - pr * 0.35, pr * 0.15, cx, cy, pr);
+    pg.addColorStop(0, '#7fb2ff'); pg.addColorStop(0.55, '#2f6fd8'); pg.addColorStop(1, '#153164');
+    ctx.fillStyle = pg;
+    ctx.beginPath(); ctx.arc(cx, cy, pr, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(127,178,255,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, pr + 2, 0, Math.PI * 2); ctx.stroke();
+  }
+
+  // craft
+  {
+    const [x, y] = W2S(S.x, S.y);
+    const ang = Math.atan2(S.vy, S.vx);
+    const sz = 7;
+    ctx.save();
+    ctx.translate(x, y); ctx.rotate(ang);
+    ctx.fillStyle = '#f4f7ff';
+    ctx.beginPath();
+    ctx.moveTo(sz, 0); ctx.lineTo(-sz * 0.7, sz * 0.6); ctx.lineTo(-sz * 0.4, 0); ctx.lineTo(-sz * 0.7, -sz * 0.6);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // apsis markers on current orbit
+    const el = elements(lvl, S);
+    if (el.bound && el.e > 1e-4) {
+      const th = Math.atan2(el.ey, el.ex); // periapsis direction
+      const px = el.rp * Math.cos(th), py = el.rp * Math.sin(th);
+      const axp = -el.ra * Math.cos(th), ayp = -el.ra * Math.sin(th);
+      drawApsis(px, py, 'Pe', '#4ade80');
+      drawApsis(axp, ayp, 'Ap', '#fbbf24');
+    }
+  }
+}
+function drawApsis(wx, wy, label, color) {
+  const [x, y] = W2S(wx, wy);
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
+  ctx.font = '11px system-ui';
+  ctx.fillText(label, x + 6, y + 4);
+}
+function drawRing(rIn, rOut, fill, edge) {
+  const [cx, cy] = W2S(0, 0);
+  ctx.beginPath();
+  ctx.arc(cx, cy, rOut * zoom, 0, Math.PI * 2);
+  ctx.arc(cx, cy, rIn * zoom, 0, Math.PI * 2, true);
+  ctx.fillStyle = fill; ctx.fill();
+  ctx.strokeStyle = edge; ctx.globalAlpha = 0.6; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx, cy, rOut * zoom, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, rIn * zoom, 0, Math.PI * 2); ctx.stroke();
+  ctx.globalAlpha = 1;
+}
+
+/* ---------- boot ---------- */
+loadLevel(0);
+openModal('helpModal');
+requestAnimationFrame(frame);
+
+})();
