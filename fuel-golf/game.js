@@ -90,6 +90,34 @@ function burnDir(s, mode, angle) {
   }
 }
 
+/* one RK4 step, optionally with engine thrust of acceleration thr.a along
+   the commanded direction (thr = {mode, angle, a}); direction tracks the
+   instantaneous velocity/radius frame — steering losses are ignored.
+   Used during finite burns: thrust makes acceleration velocity-dependent,
+   which velocity Verlet does not handle; coast phases stay on Verlet. */
+function rk4Step(lvl, s, dt, thr) {
+  const deriv = (t, x, y, vx, vy) => {
+    const g = accel(lvl, t, x, y);
+    let ax = g.ax, ay = g.ay;
+    if (thr) {
+      const d = burnDir({ x, y, vx, vy }, thr.mode, thr.angle);
+      ax += d.x * thr.a; ay += d.y * thr.a;
+    }
+    return [vx, vy, ax, ay];
+  };
+  const h = dt, h2 = dt / 2;
+  const k1 = deriv(s.t, s.x, s.y, s.vx, s.vy);
+  const k2 = deriv(s.t + h2, s.x + k1[0] * h2, s.y + k1[1] * h2, s.vx + k1[2] * h2, s.vy + k1[3] * h2);
+  const k3 = deriv(s.t + h2, s.x + k2[0] * h2, s.y + k2[1] * h2, s.vx + k2[2] * h2, s.vy + k2[3] * h2);
+  const k4 = deriv(s.t + h, s.x + k3[0] * h, s.y + k3[1] * h, s.vx + k3[2] * h, s.vy + k3[3] * h);
+  s.x += h / 6 * (k1[0] + 2 * k2[0] + 2 * k3[0] + k4[0]);
+  s.y += h / 6 * (k1[1] + 2 * k2[1] + 2 * k3[1] + k4[1]);
+  s.vx += h / 6 * (k1[2] + 2 * k2[2] + 2 * k3[2] + k4[2]);
+  s.vy += h / 6 * (k1[3] + 2 * k2[3] + 2 * k3[3] + k4[3]);
+  s.t += h;
+  s.ax = undefined; s.ay = undefined;
+}
+
 /* build a starting state from a level's start spec (placed at apoapsis,
    or anywhere on a circular orbit), prograde CCW */
 function startState(lvl) {
@@ -185,20 +213,41 @@ const LEVELS = [
     debriefIdeal: 'A gravity assist trades the moon\'s orbital motion for your speed; pairing it with a burn deep in a gravity well is the powered-flyby (Oberth) strategy real missions use.',
   },
   {
-    id: 6, name: 'Sandbox', subtitle: 'Free play — no goal, big tank',
+    id: 6, name: 'Ignition Window', subtitle: 'Finite thrust — center your burn on periapsis',
+    mu: 100000, planetR: 40, escapeR: 1500, fuel: 13, par: 5.3,
+    engine: 0.35,
+    start: { rp: 110, ra: 480 },
+    goal: { type: 'escape' },
+    view: 1400,
+    hint: 'Same escape as Level 3 — but now your engine is real: it takes TIME to deliver Δv. A full burn lasts a noticeable arc of your orbit. If you light the engine AT periapsis, half your burn happens after the fast point. Start early, so the burn straddles periapsis.',
+    debriefIdeal: 'With finite thrust, the cheapest burn is centered on periapsis — half before, half after — so every second of thrust happens as fast as possible.',
+  },
+  {
+    id: 7, name: 'Perigee Kicks', subtitle: 'Weak engine — escape takes several passes',
+    mu: 100000, planetR: 40, escapeR: 1500, fuel: 15, par: 5.2,
+    engine: 0.08,
+    start: { rp: 110, ra: 480 },
+    goal: { type: 'escape' },
+    view: 1400,
+    hint: 'Your engine is now so weak that burning all the Δv at once would smear the burn around most of the orbit — expensive. Real upper stages solve this with perigee kicks: short burns centered on each periapsis pass, over several orbits. Kick, coast, repeat.',
+    debriefIdeal: 'Splitting a weak-engine burn into short kicks at successive periapsis passes keeps every unit of Δv near maximum speed. This is exactly how real low-thrust upper stages raise orbits and escape.',
+  },
+  {
+    id: 8, name: 'Sandbox', subtitle: 'Free play — no goal, big tank',
     mu: 100000, planetR: 40, escapeR: 3200, fuel: 200, par: Infinity,
+    engineChoices: [Infinity, 0.35, 0.08],
     start: { rp: 160, ra: 420 },
     moon: { R: 700, mu: 4000, r: 16, a0: 0.8 },
     goal: { type: 'sandbox' },
     view: 1700,
-    hint: 'No mission. Break orbits, chase the moon, see how cheaply you can escape, or how low you can skim the planet. The HUD is your lab bench.',
+    hint: 'No mission. Break orbits, chase the moon, see how cheaply you can escape, or how low you can skim the planet. Swap engines in the burn planner to compare impulsive vs finite thrust. The HUD is your lab bench.',
     debriefIdeal: '',
   },
 ];
 
 /* ---------------- exports for the Node test harness ---------------- */
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { DT, LEVELS, accel, step, elements, applyBurn, burnDir, startState, propagate, timeToApsis, moonPos };
+  module.exports = { DT, LEVELS, accel, step, rk4Step, elements, applyBurn, burnDir, startState, propagate, timeToApsis, moonPos };
 }
 
 /* =====================================================================
@@ -240,6 +289,9 @@ let plan = { mode: 'prograde', angle: 0, dv: 2 };
 let predPath = null;       // predicted polyline for pending burn
 let curPath = null;        // current-orbit polyline (recomputed after burns)
 let succeededAt = null;
+let engine = Infinity;     // current engine accel limit (Infinity = impulsive)
+let activeBurn = null;     // {mode, angle, a, dvRemaining, entry} while thrusting
+let burnPathTick = 0;
 
 function resize() {
   canvas.width = window.innerWidth * devicePixelRatio;
@@ -265,6 +317,10 @@ function loadLevel(i) {
   trail = []; energyLog = []; burnLog = []; lastELog = -Infinity;
   succeededAt = null;
   predPath = null;
+  engine = lvl.engine !== undefined ? lvl.engine : (lvl.engineChoices ? lvl.engineChoices[0] : Infinity);
+  activeBurn = null;
+  $('btnCut').style.display = 'none';
+  syncEngineRow();
   plan = { mode: 'prograde', angle: 0, dv: Math.min(2, fuel) };
   targetZoom = zoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
   computeCurPath();
@@ -291,34 +347,72 @@ function computeCurPath() {
 }
 
 function computePredPath() {
-  const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
-  const s0 = { t: S.t, x: S.x, y: S.y, vx: S.vx + dir.x * plan.dv, vy: S.vy + dir.y * plan.dv, ax: undefined };
+  let s0, burnPts = null, crashInBurn = false;
+  if (isFinite(engine) && plan.dv > 0.001) {
+    // finite thrust: simulate the powered arc first
+    const thr = { mode: plan.mode, angle: plan.angle * Math.PI / 180, a: engine };
+    s0 = { t: S.t, x: S.x, y: S.y, vx: S.vx, vy: S.vy, ax: undefined };
+    const tBurn = plan.dv / engine;
+    const n = Math.max(2, Math.ceil(tBurn / (DT * 2)));
+    const dtb = tBurn / n;
+    burnPts = [[s0.x, s0.y]];
+    for (let i = 0; i < n; i++) {
+      rk4Step(lvl, s0, dtb, thr);
+      if ((i & 3) === 0) burnPts.push([s0.x, s0.y]);
+      if (Math.hypot(s0.x, s0.y) < lvl.planetR) { crashInBurn = true; break; }
+    }
+    burnPts.push([s0.x, s0.y]);
+  } else {
+    const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
+    s0 = { t: S.t, x: S.x, y: S.y, vx: S.vx + dir.x * plan.dv, vy: S.vy + dir.y * plan.dv, ax: undefined };
+  }
   const el = elements(lvl, s0);
   const period = el.bound ? 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu) : 0;
   const horizon = el.bound ? Math.min(period * 1.02, 5000) : 500;
   const dt = Math.max(DT * 2, horizon / 3000);
   const pts = [];
-  let crash = false;
-  propagate(lvl, s0, dt, Math.ceil(horizon / dt), (s, i) => {
+  let crash = crashInBurn;
+  if (!crashInBurn) propagate(lvl, s0, dt, Math.ceil(horizon / dt), (s, i) => {
     if (i % 2 === 0) pts.push([s.x, s.y]);
     if (Math.hypot(s.x, s.y) < lvl.planetR) { crash = true; return true; }
     return Math.hypot(s.x, s.y) > lvl.escapeR * 1.5;
   });
-  predPath = { pts, crash, el };
+  predPath = { pts, crash, el, burnPts };
 }
 
 /* ---------- burns ---------- */
 function commitBurn() {
   const dv = Math.min(plan.dv, fuel);
   if (dv <= 0.001) return;
-  const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
   const el0 = elements(lvl, S);
+  if (isFinite(engine)) {
+    // finite thrust: burn executes over time in the main loop
+    const entry = { t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode };
+    burnLog.push(entry);
+    activeBurn = { mode: plan.mode, angle: plan.angle * Math.PI / 180, a: engine, dvRemaining: dv, entry };
+    hidePlanner();
+    warp = 1; pendingWarpTo = null; syncWarpButtons();
+    $('btnCut').style.display = '';
+    return;
+  }
+  const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
   applyBurn(S, dir.x * dv, dir.y * dv);
   fuel -= dv; dvUsed += dv;
   burnLog.push({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode });
   logEnergy(true);
   computeCurPath();
   hidePlanner();
+  syncTop();
+}
+
+function endBurn() {
+  if (!activeBurn) return;
+  const e = activeBurn.entry;
+  if (e.dv > 1e-9) e.v = e.vSum / e.dv; // Δv-weighted average speed during the burn
+  activeBurn = null;
+  $('btnCut').style.display = 'none';
+  logEnergy(true);
+  computeCurPath();
   syncTop();
 }
 
@@ -532,6 +626,7 @@ document.querySelectorAll('#warpGroup [data-warp]').forEach(b => {
   b.addEventListener('click', () => { warp = +b.dataset.warp; pendingWarpTo = null; syncWarpButtons(); });
 });
 function warpToApsis(which) {
+  if (activeBurn) return; // no apsis-jumping while the engine is lit
   if (phase !== 'fly' && phase !== 'planning') return;
   const dt = timeToApsis(lvl, S, which);
   if (dt !== null && dt > 0.05) pendingWarpTo = dt;
@@ -555,7 +650,7 @@ function dist2(t) { return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY 
 
 /* ---------- burn planner UI ---------- */
 function showPlanner() {
-  if (phase === 'done' || phase === 'crashed') return;
+  if (phase === 'done' || phase === 'crashed' || activeBurn) return;
   phase = 'planning'; warp = 0; syncWarpButtons();
   $('planner').classList.add('show');
   $('dvSlider').max = Math.max(0.5, Math.min(15, fuel)).toFixed(2);
@@ -593,7 +688,17 @@ function syncPlanner() {
   $('angleOut').textContent = plan.angle + '°';
   const el = elements(lvl, S);
   const gain = el.v * plan.dv + 0.5 * plan.dv * plan.dv;
-  $('burncost').innerHTML = `Tank after burn: <b>${Math.max(0, fuel - plan.dv).toFixed(2)}</b> Δv · Energy this burn adds if prograde: <b>${gain.toFixed(0)}</b> (v·Δv + ½Δv², v=${el.v.toFixed(1)})`;
+  let txt = `Tank after burn: <b>${Math.max(0, fuel - plan.dv).toFixed(2)}</b> Δv · Energy this burn adds if prograde: <b>${gain.toFixed(0)}</b> (v·Δv + ½Δv², v=${el.v.toFixed(1)})`;
+  if (isFinite(engine)) {
+    const tBurn = plan.dv / engine;
+    const T = el.bound ? 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu) : Infinity;
+    const frac = T === Infinity ? 0 : tBurn / T;
+    txt += `<br>⏱ Burn duration: <b>${tBurn.toFixed(1)}s</b>` +
+      (T !== Infinity ? ` — <b>${(frac * 100).toFixed(0)}%</b> of your orbit` : '') +
+      `. The burn starts when you commit — start <i>before</i> periapsis so it straddles the fast point.` +
+      (frac > 0.30 ? ' <b style="color:var(--warn)">Too long for one pass — consider splitting into kicks.</b>' : '');
+  }
+  $('burncost').innerHTML = txt;
 }
 
 /* ---------- keyboard ---------- */
@@ -605,6 +710,7 @@ document.addEventListener('keydown', (e) => {
   else if (k === '.') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.min(ws.indexOf(warp) + 1, ws.length - 1)]; syncWarpButtons(); }
   else if (k === ',') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.max(ws.indexOf(warp) - 1, 0)]; syncWarpButtons(); }
   else if (k === 'h') { $('hud').classList.toggle('show'); $('btnHud').classList.toggle('active'); }
+  else if (k === 'x') { endBurn(); }
 });
 
 /* ---------- top bar ---------- */
@@ -614,7 +720,28 @@ function syncTop() {
   $('dvChip').textContent = dvUsed.toFixed(2);
   $('fuelChip').textContent = lvl.fuel === 200 ? '∞' : `${fuel.toFixed(1)}`;
   $('fuelfill').style.width = (lvl.fuel === 200 ? 100 : Math.max(0, fuel / lvl.fuel * 100)) + '%';
+  $('engChip').textContent = isFinite(engine) ? engine.toFixed(2) + ' Δv/s' : '∞ (impulsive)';
 }
+
+/* engine selector (sandbox only) */
+function syncEngineRow() {
+  const row = $('engineRow');
+  if (!lvl.engineChoices) { row.style.display = 'none'; return; }
+  row.style.display = 'grid';
+  row.querySelectorAll('button').forEach(b => {
+    const val = b.dataset.eng === 'inf' ? Infinity : +b.dataset.eng;
+    b.classList.toggle('active', val === engine);
+  });
+}
+document.querySelectorAll('#engineRow button').forEach(b => {
+  b.addEventListener('click', () => {
+    if (activeBurn) return;
+    engine = b.dataset.eng === 'inf' ? Infinity : +b.dataset.eng;
+    syncEngineRow(); syncTop(); syncPlanner();
+    if (phase === 'planning') computePredPath();
+  });
+});
+$('btnCut').addEventListener('click', endBurn);
 
 /* ---------- HUD ---------- */
 let vSeen = { min: Infinity, max: -Infinity };
@@ -645,14 +772,28 @@ function frame(now) {
       pendingWarpTo -= simDt;
       if (pendingWarpTo <= 1e-6) { pendingWarpTo = null; warp = 0; syncWarpButtons(); }
     } else {
-      simDt = TIME_SCALE * warp * dtReal;
+      const effWarp = activeBurn ? Math.min(warp, 10) : warp; // cap warp while thrusting
+      simDt = TIME_SCALE * effWarp * dtReal;
     }
     let steps = Math.ceil(simDt / DT);
     steps = Math.min(steps, 30000);
     const dt = simDt / steps;
     const trailEvery = Math.max(1, Math.ceil(steps / 24));
     for (let i = 0; i < steps; i++) {
-      step(lvl, S, dt);
+      if (activeBurn) {
+        const dvStep = Math.min(activeBurn.a * dt, activeBurn.dvRemaining, fuel);
+        const dtThrust = dvStep / activeBurn.a;
+        const vNow = Math.hypot(S.vx, S.vy);
+        rk4Step(lvl, S, dtThrust, activeBurn);
+        if (dtThrust < dt - 1e-12) step(lvl, S, dt - dtThrust);
+        fuel -= dvStep; dvUsed += dvStep;
+        activeBurn.dvRemaining -= dvStep;
+        activeBurn.entry.dv += dvStep;
+        activeBurn.entry.vSum += vNow * dvStep;
+        if (activeBurn.dvRemaining <= 1e-9 || fuel <= 1e-9) { endBurn(); }
+      } else {
+        step(lvl, S, dt);
+      }
       if (i % trailEvery === 0) trail.push([S.x, S.y]);
       if ((i & 15) === 0) {
         const r2 = S.x * S.x + S.y * S.y;
@@ -661,6 +802,7 @@ function frame(now) {
     }
     trail.push([S.x, S.y]);
     if (trail.length > 2400) trail.splice(0, trail.length - 2400);
+    if (activeBurn) { syncTop(); if (++burnPathTick % 20 === 0) computeCurPath(); }
     logEnergy(false);
     checkGoal();
   }
@@ -731,14 +873,22 @@ function draw() {
     ctx.stroke();
   }
 
-  // predicted burn path (dotted)
-  if (phase === 'planning' && predPath && predPath.pts.length > 1) {
-    ctx.strokeStyle = predPath.crash ? 'rgba(248,113,113,0.95)' : 'rgba(74,222,128,0.95)';
-    ctx.lineWidth = 2; ctx.setLineDash([3, 7]);
-    ctx.beginPath();
-    predPath.pts.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
-    ctx.stroke();
-    ctx.setLineDash([]);
+  // predicted burn path (dotted; powered arc drawn solid orange)
+  if (phase === 'planning' && predPath) {
+    if (predPath.burnPts && predPath.burnPts.length > 1) {
+      ctx.strokeStyle = 'rgba(251,146,60,0.95)'; ctx.lineWidth = 3;
+      ctx.beginPath();
+      predPath.burnPts.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+      ctx.stroke();
+    }
+    if (predPath.pts.length > 1) {
+      ctx.strokeStyle = predPath.crash ? 'rgba(248,113,113,0.95)' : 'rgba(74,222,128,0.95)';
+      ctx.lineWidth = 2; ctx.setLineDash([3, 7]);
+      ctx.beginPath();
+      predPath.pts.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
   }
 
   // planet
@@ -760,6 +910,17 @@ function draw() {
     const sz = 7;
     ctx.save();
     ctx.translate(x, y); ctx.rotate(ang);
+    if (activeBurn) { // engine plume opposite the thrust direction
+      const d = burnDir(S, activeBurn.mode, activeBurn.angle);
+      const pAng = Math.atan2(d.y, d.x) - ang;
+      ctx.save(); ctx.rotate(pAng + Math.PI);
+      const fl = sz * (1.8 + Math.random() * 0.9);
+      const grad = ctx.createLinearGradient(0, 0, fl, 0);
+      grad.addColorStop(0, 'rgba(251,191,36,0.95)'); grad.addColorStop(1, 'rgba(248,113,113,0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.moveTo(sz * 0.2, 0); ctx.lineTo(fl, sz * 0.45); ctx.lineTo(fl, -sz * 0.45); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
     ctx.fillStyle = '#f4f7ff';
     ctx.beginPath();
     ctx.moveTo(sz, 0); ctx.lineTo(-sz * 0.7, sz * 0.6); ctx.lineTo(-sz * 0.4, 0); ctx.lineTo(-sz * 0.7, -sz * 0.6);

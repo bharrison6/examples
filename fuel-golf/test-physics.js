@@ -189,6 +189,79 @@ console.log('\n[4] Level 5 "Powered Flyby": assist must beat par; direct escape 
   check('L5 assist genuinely cheaper than direct', best < direct - 1.5, 'saving=' + (direct - best).toFixed(2));
 }
 
+/* ============ 4b. finite-thrust levels 6 & 7 ============ */
+console.log('\n[4b] Finite thrust: centered burns (L6) and perigee kicks (L7)');
+{
+  const { rk4Step } = G;
+  const burnUntilEscape = (lvl, s, a, tMax = 800) => {
+    const thr = { mode: 'prograde', angle: 0, a };
+    let t = 0;
+    while (t < tMax) {
+      rk4Step(lvl, s, DT, thr); t += DT;
+      if (Math.hypot(s.x, s.y) < lvl.planetR) return null;
+      if (elements(lvl, s).eps > 0) return a * t;
+    }
+    return null;
+  };
+  const burnFor = (lvl, s, a, T) => {
+    const thr = { mode: 'prograde', angle: 0, a };
+    const n = Math.ceil(T / DT), d = T / n;
+    for (let i = 0; i < n; i++) { rk4Step(lvl, s, d, thr); if (elements(lvl, s).eps > 0) return a * d * (i + 1); }
+    return a * T;
+  };
+  const escCostWithLead = (lvl, lead) => {
+    const s = startState(lvl);
+    const tPe = timeToApsis(lvl, s, 'pe');
+    if (tPe - lead <= 0) return null;
+    advance(lvl, s, tPe - lead);
+    return burnUntilEscape(lvl, s, lvl.engine);
+  };
+
+  // L6 (engine 0.35): centered burn must make par; lighting at Pe must miss it
+  const lvl6 = LEVELS[5];
+  check('L6 has finite engine', isFinite(lvl6.engine) && lvl6.engine === 0.35);
+  let bestCentered = Infinity, bestLead = 0;
+  for (let lead = 0; lead <= 20; lead += 2) {
+    const dv = escCostWithLead(lvl6, lead);
+    if (dv !== null && dv < bestCentered) { bestCentered = dv; bestLead = lead; }
+  }
+  const atPe = escCostWithLead(lvl6, 0);
+  console.log('    L6: centered=' + bestCentered.toFixed(2) + ' (lead ' + bestLead + 's), lit-at-Pe=' + atPe.toFixed(2) + ', par=' + lvl6.par + ', impulsive ideal=4.18');
+  check('L6 centered burn makes par (<= par - 0.3)', bestCentered <= lvl6.par - 0.3);
+  check('L6 burn lit AT periapsis misses par (>= par + 0.4)', atPe >= lvl6.par + 0.4);
+  check('L6 finite thrust costs more than the impulsive ideal (gravity loss is real)', bestCentered > 4.3);
+  check('L6 tank covers the naive strategy so students can compare', atPe < lvl6.fuel);
+
+  // L7 (engine 0.08): kicks must make par; a single centered burn must not
+  const lvl7 = LEVELS[6];
+  check('L7 has weak engine', isFinite(lvl7.engine) && lvl7.engine === 0.08);
+  let single = Infinity;
+  for (let lead = 0; lead <= 60; lead += 4) {
+    const dv = escCostWithLead(lvl7, lead);
+    if (dv !== null && dv < single) single = dv;
+  }
+  let kicks = Infinity, kickN = 0;
+  {
+    const w = 10; // 10s kicks centered on Pe
+    const s = startState(lvl7);
+    let total = 0, n = 0, ok = false;
+    for (let orbit = 0; orbit < 15; orbit++) {
+      const tPe = timeToApsis(lvl7, s, 'pe');
+      if (tPe === null) break;
+      if (tPe - w / 2 > 0) advance(lvl7, s, tPe - w / 2);
+      total += burnFor(lvl7, s, lvl7.engine, w); n++;
+      if (elements(lvl7, s).eps > 0) { ok = true; break; }
+      if (total > 12) break;
+    }
+    if (ok) { kicks = total; kickN = n; }
+  }
+  console.log('    L7: kicks=' + kicks.toFixed(2) + ' (' + kickN + ' passes), single-centered=' + single.toFixed(2) + ', par=' + lvl7.par);
+  check('L7 perigee kicks make par (<= par - 0.3)', kicks <= lvl7.par - 0.3);
+  check('L7 single centered burn CANNOT make par (> par + 3)', single > lvl7.par + 3);
+  check('L7 kicks beat the single burn by a wide margin (>1.8x)', single / kicks > 1.8, 'ratio=' + (single / kicks).toFixed(2) + 'x');
+  check('L7 tank covers the single-burn strategy for comparison', single < lvl7.fuel);
+}
+
 /* ============ 5. helpers the UI depends on ============ */
 console.log('\n[5] UI helper sanity');
 {

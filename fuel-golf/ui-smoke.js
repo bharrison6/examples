@@ -66,7 +66,34 @@ const path = require('path');
   console.log('projector mode toggled:', projector);
   await page.screenshot({ path: '/tmp/fg-4-teacher.png' });
 
+  // finite-thrust level: commit a burn, watch it execute over time, cut it
+  await page.click('#closeTeacher');
+  await page.click('#btnLevels');
+  await page.waitForTimeout(200);
+  await page.locator('.levelcard').nth(5).click(); // Level 6: Ignition Window
+  await page.waitForTimeout(300);
+  const eng = await page.textContent('#engChip');
+  console.log('L6 engine chip:', eng.trim());
+  await page.click('#btnPlanBurn');
+  await page.locator('#dvSlider').fill('3');
+  await page.locator('#dvSlider').dispatchEvent('input');
+  const cost = await page.textContent('#burncost');
+  console.log('planner shows duration:', /Burn duration/.test(cost));
+  await page.click('#btnCommitBurn');
+  await page.waitForTimeout(400);
+  const dvMid = parseFloat(await page.textContent('#dvChip'));
+  const cutVisible = await page.locator('#btnCut').isVisible();
+  console.log('burn executing over time (0 < dv < 3, cut visible):', dvMid > 0.05 && dvMid < 3 && cutVisible, `(dv=${dvMid})`);
+  await page.click('#btnCut'); // cut mid-burn
+  await page.waitForTimeout(400);
+  const dvAfterCut = parseFloat(await page.textContent('#dvChip'));
+  await page.waitForTimeout(800);
+  const dvFinal = parseFloat(await page.textContent('#dvChip'));
+  const finiteOk = dvMid > 0.05 && dvMid < 3 && cutVisible && dvAfterCut < 3 && Math.abs(dvFinal - dvAfterCut) < 0.001;
+  console.log('cut engine stops spending:', Math.abs(dvFinal - dvAfterCut) < 0.001, `(settled at ${dvFinal})`);
+  await page.screenshot({ path: '/tmp/fg-5-finite.png' });
+
   console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'no console/page errors');
   await browser.close();
-  process.exit(errors.length || !done ? 1 : 0);
+  process.exit(errors.length || !done || !finiteOk ? 1 : 0);
 })();

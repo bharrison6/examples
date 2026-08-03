@@ -195,6 +195,7 @@
   <span class="chip par">Par <b id="parChip">–</b></span>
   <span class="chip">Δv used <b id="dvChip">0.0</b></span>
   <span id="fuelwrap" class="chip">⛽ <span id="fuelbar"><span id="fuelfill"></span></span> <b id="fuelChip"></b></span>
+  <span class="chip">Engine <b id="engChip">∞</b></span>
   <span class="spacer"></span>
   <button id="btnLevels">Levels</button>
   <button id="btnHud">Physics HUD</button>
@@ -235,12 +236,18 @@
     <button id="zoomOut">−</button>
     <button id="zoomIn">+</button>
     <button id="zoomFit">Fit</button>
+    <button id="btnCut" class="danger" style="display:none">✂ Cut engine</button>
     <button id="btnPlanBurn" class="primary">🔥 Plan burn</button>
   </div>
 </div>
 
 <div id="planner">
   <h3>Plan burn — aim, preview, commit</h3>
+  <div class="modes" id="engineRow" style="display:none">
+    <button data-eng="inf">Engine: ∞</button>
+    <button data-eng="0.35">Engine: 0.35</button>
+    <button data-eng="0.08" style="grid-column: span 2">Engine: 0.08 (weak)</button>
+  </div>
   <div class="modes">
     <button data-mode="prograde" class="active">▲ Prograde</button>
     <button data-mode="retrograde">▼ Retrograde</button>
@@ -348,6 +355,7 @@
     <p>Time-warp with the ⏸ / 1× / 10× / 50× / 200× buttons, or jump straight to periapsis (<b>→ Pe</b>, lowest point, fastest) or apoapsis (<b>→ Ap</b>, highest point, slowest). <span class="kbd">Space</span> pauses. <span class="kbd">.</span> and <span class="kbd">,</span> change warp.</p>
     <h3>Burning</h3>
     <p>Hit <b>🔥 Plan burn</b> (or <span class="kbd">B</span>). Pick a direction — prograde (with your motion), retrograde (against it), radial, or a free angle — and drag the Δv slider. The dotted line previews your new orbit <i>before</i> you spend fuel. <b>COMMIT</b> applies it instantly.</p>
+    <p>On later levels the engine is <b>finite</b>: committed Δv is delivered over time (the orange arc in the preview shows the powered stretch), so start your burn <i>before</i> periapsis to centre it on the fast point — and with a weak engine, split it into repeated perigee kicks. <span class="kbd">X</span> or ✂ cuts the engine early, keeping unspent fuel.</p>
     <h3>The lesson hiding in the game</h3>
     <p>Adding Δv changes your kinetic energy by ΔKE = v·Δv + ½Δv². The <b>v·Δv</b> term means the same burn buys more energy when you're already moving fast — and you're fastest at periapsis. That's the Oberth effect. Open the <b>Physics HUD</b> and watch "energy per unit Δv" climb as you fall toward periapsis.</p>
     <div class="actions"><button id="closeHelp" class="primary">Fly</button></div>

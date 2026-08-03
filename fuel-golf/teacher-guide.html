@@ -8,7 +8,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: Georgia, "Times New Roman", serif;
-    color: #16202e; font-size: 9.6pt; line-height: 1.38;
+    color: #16202e; font-size: 9.1pt; line-height: 1.32;
     max-width: 7.6in; margin: 0 auto; padding: 12px;
   }
   header { border-bottom: 2.5px solid #16202e; padding-bottom: 6px; margin-bottom: 10px;
@@ -49,7 +49,7 @@
     <li><span class="time">3–8 min</span>Students play Levels 1–2 in pairs. Ask them to open the <b>Physics HUD</b> and watch “energy gained per 1 Δv” as the ship swings around.</li>
     <li><span class="time">8–15 min</span>The main event: <b>Level 3, “Escape Artist.”</b> Par is 5.0, but the tank holds 13 — burning at apoapsis costs ≈11.6 to escape, while the same escape from periapsis costs ≈4.2. Let them discover this. When someone makes par, have them explain <i>where</i> they burned and what the HUD showed.</li>
     <li><span class="time">15–19 min</span>Debrief on the projector using a student’s energy-vs-time plot: the burn is a vertical jump in ε, and the jump is taller when v was larger — for the <i>same</i> Δv. Derive the formula (below).</li>
-    <li><span class="time">19–20 min</span>Post the leaderboard. Levels 4–5 (Hohmann, powered flyby) make excellent homework or a second session.</li>
+    <li><span class="time">19–20 min</span>Post the leaderboard. Levels 4–7 (Hohmann, powered flyby, finite thrust) make excellent homework or a second session.</li>
   </ul>
 
   <h2>The physics — Oberth effect</h2>
@@ -68,6 +68,9 @@
     <b class="tag">Misconception 3:</b> “Δv is like distance — it costs the same anywhere.” Δv <i>spent</i> is the same anywhere; the <i>energy it buys</i> is not. That is the whole game.
   </div>
 
+  <h2>Finite thrust (levels 6–7)</h2>
+  <p>Levels 1–5 use impulsive burns; levels 6–7 give the engine limited acceleration, so Δv is delivered over an arc (steering losses ignored). Two lessons emerge: a single burn is cheapest <b>centered on periapsis</b> — start early, or the late half happens at lower speed (lit at Pe: 5.81 Δv to escape; centered: 4.90) — and with a weak engine (level 7) one long burn costs 9.47 while six short <b>perigee kicks</b> cost 4.62. This is why real upper stages escape via repeated perigee kicks.</p>
+
   <h2>Discussion questions</h2>
   <ol>
     <li>Level 3’s energy plot shows a taller jump in ε for the same Δv at periapsis. Which term of ΔKE = v·Δv + ½Δv² explains this?</li>
@@ -81,8 +84,8 @@
   <h2>Classroom logistics</h2>
   <ul>
     <li><b>Leaderboards</b> persist per level on each machine; reset them between class periods via ⚙ Teacher mode → Reset.</li>
-    <li>Par scores: L1 4.5 · L2 7.0 · L3 5.0 · L4 11.5 · L5 9.0. Verified minimums: L3 escape ≈ 4.18 from periapsis vs ≈ 11.60 from apoapsis.</li>
-    <li>Keyboard: <b>Space</b> pause · <b>B</b> burn planner · <b>, .</b> warp down/up · <b>H</b> HUD.</li>
+    <li>Par scores: L1 4.5 · L2 7.0 · L3 5.0 · L4 11.5 · L5 9.0 · L6 5.3 · L7 5.2. Verified minimums: L3 escape ≈ 4.18 from periapsis vs ≈ 11.60 from apoapsis.</li>
+    <li>Keyboard: <b>Space</b> pause · <b>B</b> burn planner · <b>X</b> cut engine · <b>, .</b> warp down/up · <b>H</b> HUD.</li>
   </ul>
 </div>
 
