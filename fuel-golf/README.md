@@ -1,14 +1,29 @@
-# ⛳ Fuel Golf
+# ⛳ Fuel Golf — Murray State Racers Flight Lab
 
 A browser-based orbital mechanics game for physics class. Students complete missions
 using the least Δv — and discover the **Oberth effect** because the physics makes it
 true, not because the game says so.
 
+Themed in Murray State University colors: MSU Blue `#002144`, MSU Gold `#ECAC00`,
+Lite Blue `#00A4E3`, with the university's alert Red Orange `#FF4500` reserved — as the
+brand guidelines specify — for genuine failure states (crashes, fall-back trajectories).
+
 ## Play
 
 Open `index.html` in any browser. Fully offline, no install, mouse + touch
-(Chromebook-friendly). Teachers: open `teacher-guide.html` for a printable one-page
-session plan (also included pre-rendered as `teacher-guide.pdf`).
+(Chromebook-friendly, with a phone layout). Teachers: open `teacher-guide.html` for a
+printable one-page session plan (also included pre-rendered as `teacher-guide.pdf`).
+
+### Controls
+
+| | |
+|---|---|
+| <kbd>B</kbd> burn planner · <kbd>Enter</kbd> commit · <kbd>Esc</kbd> cancel | <kbd>Z</kbd> undo burn · <kbd>X</kbd> cut engine |
+| <kbd>Space</kbd> pause · <kbd>,</kbd> <kbd>.</kbd> warp down/up | <kbd>P</kbd> / <kbd>A</kbd> warp to periapsis / apoapsis |
+| <kbd>H</kbd> physics HUD · <kbd>M</kbd> mission briefing | <kbd>F</kbd> follow camera · <kbd>R</kbd> restart |
+
+Drag the map to pan (or to aim a free-angle burn while the planner is open); scroll or
+pinch to zoom.
 
 ## What's real
 
@@ -43,11 +58,31 @@ session plan (also included pre-rendered as `teacher-guide.pdf`).
 | 7 | Perigee Kicks (0.013 m/s² thrust) | 823 m/s | One long burn costs 1,498; six ~2.8 h kicks cost 731 |
 | 8 | Sandbox | — | Free play, big tank, swappable engines |
 
+## Play-experience features
+
+- **↶ Undo burn** — every committed burn snapshots the flight state, so a misjudged or
+  fatal burn rewinds instead of costing a level restart. Offered directly on the crash
+  screen. Students iterate fast; that is the whole point in a 20-minute session.
+- **Time-to-periapsis / apoapsis countdowns** in the HUD, plus a **lead-time warp**
+  (→ Pe with a lead in minutes). Together with the planner's burn-duration readout these
+  are the tools students need to *compute* a periapsis-centered burn on levels 6–7 —
+  the game supplies the instruments, not the answer.
+- **Live thrust vector** on the craft while planning (direction, magnitude, m/s label),
+  **hollow Pe′/Ap′ markers** showing where the new apsides will land, and a solid orange
+  powered arc for finite burns — all before committing fuel.
+- **Drag-to-aim**: drag the map with the planner open to point a free-angle burn.
+- **Camera**: pan by dragging, follow-cam toggle, and an off-screen CRAFT pointer so you
+  can never lose the ship.
+- **Progress tracking**: per-level ✓ / 🏆 badges, a completion bar, and a mission
+  briefing panel (📋) recallable at any time.
+- Sim **pauses whenever a dialog is open**, so reading never costs fuel.
+
 ## Verifying the physics
 
 ```
-node test-physics.js   # runs 33 checks against the shipped game code
-node ui-smoke.js       # headless Playwright playthrough (levels 3 and 6, optional)
+node test-physics.js   # 33 checks against the shipped physics + level definitions
+node ui-smoke.js       # 42 headless UI checks: theme tokens, undo, lead warp,
+                       # countdowns, aiming, escape legibility, projector + mobile
 ```
 
 `test-physics.js` imports the exact physics and level definitions the game ships

@@ -10,6 +10,7 @@ A collection of small, self-contained browser demos. Each demo is plain HTML/CSS
 | [snake](snake/) | Classic snake on a canvas — arrow key / WASD controls, score, and increasing speed. |
 | [memory-match](memory-match/) | Card-flip matching game with a moves counter and timer. |
 | [fuel-golf](fuel-golf/) | Orbital mechanics golf for physics class — real integrated gravity, impulsive and finite-thrust burns, eight missions teaching the Oberth effect and perigee kicks. Includes a printable teacher guide. |
+| [engineering-demo](engineering-demo/) | **Bridge Works** — truss bridge builder for physics class. Real direct-stiffness truss solver, live tension/compression colouring, Euler buckling, progressive collapse, six levels with golf-style par budgets. Includes a printable teacher guide. |
 
 ## Adding a new demo
 

@@ -3,70 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Fuel Golf — Orbital Mechanics Game</title>
+<title>Fuel Golf — Murray State Racers Flight Lab</title>
 <style>
+  /* ===== Murray State University brand palette =====
+     MSU Blue #002144 (PMS 289) · MSU Gold #ECAC00 (PMS 123)
+     Lite Blue #00A4E3 (PMS 2995) · Red Orange #FF4500 (alerts only) */
   :root {
-    --bg: #05070d;
-    --panel: rgba(16, 22, 36, 0.92);
-    --panel-border: #26324d;
-    --text: #e8ecf4;
-    --muted: #8fa0bc;
-    --accent: #5b9dff;
-    --good: #4ade80;
-    --warn: #fbbf24;
-    --bad: #f87171;
+    --msu-blue: #002144;
+    --msu-gold: #ECAC00;
+    --msu-lite: #00A4E3;
+    --msu-alert: #FF4500;
+
+    --bg: #00101f;
+    --bg-deep: #000a14;
+    --panel: rgba(0, 33, 68, 0.94);
+    --panel-solid: #002144;
+    --panel-2: rgba(0, 24, 50, 0.9);
+    --border: #0d3c६6;
+    --border: #10406e;
+    --border-gold: rgba(236, 172, 0, 0.45);
+    --text: #eef4fb;
+    --muted: #8fadd0;
+
+    /* functional (physics) colors — deliberately distinct from brand chrome */
+    --prograde: #4ade80;
     --retro: #fb923c;
     --radial: #22d3ee;
+    --good: #4ade80;
+    --warn: var(--msu-gold);
+    --bad: var(--msu-alert);
     --fs: 1;
   }
-  .projector { --fs: 1.35; }
+  .projector { --fs: 1.42; }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    background: var(--bg-deep);
     color: var(--text);
     font-size: calc(14px * var(--fs));
     user-select: none;
   }
-  #space { position: fixed; inset: 0; display: block; touch-action: none; }
+  #space { position: fixed; inset: 0; display: block; touch-action: none; cursor: grab; }
+  #space.grabbing { cursor: grabbing; }
+  #space.aiming { cursor: crosshair; }
 
   /* ---------- top bar ---------- */
   #topbar {
     position: fixed; top: 0; left: 0; right: 0;
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 12px;
-    background: linear-gradient(rgba(5,7,13,0.9), rgba(5,7,13,0.55) 80%, transparent);
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 12px 9px;
+    background: linear-gradient(180deg, rgba(0,16,31,0.97) 0%, rgba(0,16,31,0.85) 62%, transparent 100%);
+    border-bottom: 2px solid var(--msu-gold);
     flex-wrap: wrap;
     z-index: 10;
   }
-  #topbar .title { font-weight: 700; font-size: calc(16px * var(--fs)); letter-spacing: 0.5px; }
+  .brand { display: flex; align-items: center; gap: 9px; margin-right: 4px; }
+  .brand .lockup { line-height: 1.05; }
+  .brand .msu {
+    font-size: calc(8.5px * var(--fs)); letter-spacing: 1.6px; font-weight: 800;
+    color: var(--msu-gold); text-transform: uppercase; white-space: nowrap;
+  }
+  .brand .racers {
+    font-size: calc(7.5px * var(--fs)); letter-spacing: 2.4px; font-weight: 700;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .brand .title {
+    font-weight: 800; font-size: calc(16.5px * var(--fs)); letter-spacing: 0.3px;
+    color: #fff; white-space: nowrap;
+  }
+  .brand .rule { width: 2px; align-self: stretch; background: var(--msu-gold); border-radius: 2px; }
+
   .chip {
-    background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 999px; padding: 4px 12px; font-size: calc(12.5px * var(--fs));
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 11px; font-size: calc(12.5px * var(--fs));
     color: var(--muted); white-space: nowrap;
   }
   .chip b { color: var(--text); }
-  .chip.par b { color: var(--warn); }
-  #fuelwrap { display: flex; align-items: center; gap: 6px; }
+  .chip.par { border-color: var(--border-gold); }
+  .chip.par b { color: var(--msu-gold); }
+  .chip.mono b { font-variant-numeric: tabular-nums; }
+  #fuelwrap { display: flex; align-items: center; gap: 7px; }
   #fuelbar {
-    width: calc(120px * var(--fs)); height: calc(12px * var(--fs));
-    background: #111827; border: 1px solid var(--panel-border); border-radius: 999px; overflow: hidden;
+    width: calc(110px * var(--fs)); height: calc(11px * var(--fs));
+    background: #001730; border: 1px solid var(--border); border-radius: 999px; overflow: hidden;
   }
-  #fuelfill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--good), var(--warn)); transition: width 0.2s; }
+  #fuelfill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--msu-lite), var(--msu-gold)); transition: width 0.25s; }
   .spacer { flex: 1; }
+
   button {
     font-family: inherit;
     background: var(--panel); color: var(--text);
-    border: 1px solid var(--panel-border); border-radius: 8px;
+    border: 1px solid var(--border); border-radius: 8px;
     padding: 6px 12px; font-size: calc(13px * var(--fs)); cursor: pointer;
+    transition: border-color 0.12s, background 0.12s;
   }
-  button:hover { border-color: var(--accent); }
-  button.primary { background: var(--accent); color: #0b1020; font-weight: 700; border-color: var(--accent); }
-  button.primary:hover { filter: brightness(1.12); }
-  button.active { background: var(--accent); color: #0b1020; border-color: var(--accent); font-weight: 600; }
-  button.danger { color: var(--bad); border-color: #5b2430; }
-  button:disabled { opacity: 0.45; cursor: default; }
+  button:hover:not(:disabled) { border-color: var(--msu-gold); }
+  button.primary { background: var(--msu-gold); color: #001b39; font-weight: 800; border-color: var(--msu-gold); }
+  button.primary:hover:not(:disabled) { filter: brightness(1.1); }
+  button.lite { background: var(--msu-lite); color: #001b39; font-weight: 700; border-color: var(--msu-lite); }
+  button.active { background: var(--msu-gold); color: #001b39; border-color: var(--msu-gold); font-weight: 700; }
+  button.danger { color: var(--msu-alert); border-color: rgba(255,69,0,0.45); }
+  button:disabled { opacity: 0.38; cursor: default; }
 
   /* ---------- bottom controls ---------- */
   #controls {
@@ -78,144 +116,308 @@
   }
   #controls > * { pointer-events: auto; }
   .ctlgroup {
-    background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 12px; padding: 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 7px 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
   }
-  .ctlgroup .lbl { color: var(--muted); font-size: calc(11px * var(--fs)); margin: 0 4px; }
+  .ctlgroup .lbl {
+    color: var(--msu-gold); font-size: calc(9.5px * var(--fs)); margin: 0 3px;
+    letter-spacing: 1.3px; font-weight: 800;
+  }
+  .ctlgroup .sep { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
+  #leadWrap { display: none; align-items: center; gap: 4px; }
+  #leadWrap.show { display: flex; }
+  #leadInput {
+    width: calc(52px * var(--fs)); background: #001730; color: var(--text);
+    border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px;
+    font-family: inherit; font-size: calc(12px * var(--fs)); text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  #leadWrap .u { color: var(--muted); font-size: calc(11px * var(--fs)); }
 
   /* ---------- burn planner ---------- */
   #planner {
-    position: fixed; right: 12px; bottom: 64px;
-    width: min(340px, calc(100vw - 24px));
-    background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 14px; padding: 14px; z-index: 12;
+    position: fixed; right: 12px; bottom: 66px;
+    width: min(346px, calc(100vw - 24px));
+    max-height: calc(100vh - 150px); overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--border);
+    border-top: 3px solid var(--msu-gold);
+    border-radius: 14px; padding: 13px; z-index: 12;
     display: none;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
   }
   #planner.show { display: block; }
-  #planner h3 { font-size: calc(14px * var(--fs)); margin-bottom: 10px; color: var(--accent); }
-  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
+  #planner h3 {
+    font-size: calc(11px * var(--fs)); margin-bottom: 9px; color: var(--msu-gold);
+    text-transform: uppercase; letter-spacing: 1.4px; font-weight: 800;
+  }
+  .modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 9px; }
   .modes button { padding: 8px 6px; }
-  .modes button[data-mode="prograde"].active { background: var(--good); border-color: var(--good); }
-  .modes button[data-mode="retrograde"].active { background: var(--retro); border-color: var(--retro); }
-  .modes button[data-mode="radialout"].active, .modes button[data-mode="radialin"].active { background: var(--radial); border-color: var(--radial); }
+  .modes button[data-mode="prograde"].active { background: var(--prograde); color: #012a12; border-color: var(--prograde); }
+  .modes button[data-mode="retrograde"].active { background: var(--retro); color: #2a1402; border-color: var(--retro); }
+  .modes button[data-mode="radialout"].active, .modes button[data-mode="radialin"].active { background: var(--radial); color: #002028; border-color: var(--radial); }
+  .modes button[data-mode="free"].active { background: var(--msu-lite); color: #001b39; border-color: var(--msu-lite); }
   .sliderrow { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
-  .sliderrow label { font-size: calc(12px * var(--fs)); color: var(--muted); width: calc(58px * var(--fs)); }
-  .sliderrow input[type=range] { flex: 1; accent-color: var(--accent); }
-  .sliderrow output { width: calc(64px * var(--fs)); text-align: right; font-variant-numeric: tabular-nums; }
+  .sliderrow label { font-size: calc(11.5px * var(--fs)); color: var(--muted); width: calc(60px * var(--fs)); }
+  .sliderrow input[type=range] { flex: 1; accent-color: var(--msu-gold); }
+  .sliderrow output {
+    width: calc(72px * var(--fs)); text-align: right; font-variant-numeric: tabular-nums;
+    font-weight: 700; color: var(--msu-gold);
+  }
   .finebtns { display: flex; gap: 4px; }
-  .finebtns button { padding: 4px 8px; font-size: calc(12px * var(--fs)); }
+  .finebtns button { flex: 1; padding: 4px 6px; font-size: calc(11.5px * var(--fs)); }
   #plannerActions { display: flex; gap: 8px; margin-top: 10px; }
   #plannerActions button { flex: 1; padding: 10px; }
-  #burncost { font-size: calc(12px * var(--fs)); color: var(--muted); margin-top: 8px; }
+  #burncost { font-size: calc(11.5px * var(--fs)); color: var(--muted); margin-top: 8px; line-height: 1.5; }
+  #predinfo { font-size: calc(12px * var(--fs)); margin-top: 6px; font-weight: 700; line-height: 1.45; }
+  .aimhint {
+    font-size: calc(10.5px * var(--fs)); color: var(--muted); margin-top: 7px;
+    padding-top: 7px; border-top: 1px dashed var(--border);
+  }
 
   /* ---------- physics HUD ---------- */
   #hud {
-    position: fixed; top: 56px; right: 12px;
-    background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 12px; padding: 12px 14px; z-index: 9;
-    min-width: calc(215px * var(--fs));
+    position: fixed; top: 58px; right: 12px;
+    background: var(--panel); border: 1px solid var(--border);
+    border-left: 3px solid var(--msu-gold);
+    border-radius: 12px; padding: 11px 13px; z-index: 9;
+    min-width: calc(232px * var(--fs));
     display: none;
     font-variant-numeric: tabular-nums;
   }
   #hud.show { display: block; }
-  #hud h4 { color: var(--accent); font-size: calc(12px * var(--fs)); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  #hud h4 {
+    color: var(--msu-gold); font-size: calc(10.5px * var(--fs)); text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 7px; font-weight: 800;
+  }
   #hud .row { display: flex; justify-content: space-between; gap: 12px; font-size: calc(12.5px * var(--fs)); padding: 2px 0; }
   #hud .row span { color: var(--muted); }
-  #oberthbarwrap { margin-top: 8px; }
-  #oberthbarwrap .cap { font-size: calc(11px * var(--fs)); color: var(--muted); margin-bottom: 3px; }
-  #oberthbar { height: calc(10px * var(--fs)); background: #111827; border-radius: 999px; overflow: hidden; border: 1px solid var(--panel-border); }
-  #oberthfill { height: 100%; background: linear-gradient(90deg, #22d3ee, var(--good)); width: 0%; }
+  #hud .row.hi b { color: var(--msu-gold); }
+  #hud .divider { height: 1px; background: var(--border); margin: 6px 0; }
+  #oberthbarwrap { margin-top: 7px; }
+  #oberthbarwrap .cap { font-size: calc(10.5px * var(--fs)); color: var(--muted); margin-bottom: 3px; line-height: 1.4; }
+  #oberthbar { height: calc(9px * var(--fs)); background: #001730; border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+  #oberthfill { height: 100%; background: linear-gradient(90deg, var(--msu-lite), var(--msu-gold)); width: 0%; }
 
-  /* ---------- hint banner ---------- */
+  /* ---------- hint / mission banner ---------- */
   #hint {
     position: fixed; left: 50%; transform: translateX(-50%);
-    bottom: 74px; max-width: min(620px, 92vw);
-    background: var(--panel); border: 1px solid var(--panel-border);
-    border-left: 3px solid var(--accent);
-    border-radius: 10px; padding: 10px 14px;
+    bottom: 76px; max-width: min(640px, 92vw);
+    background: var(--panel); border: 1px solid var(--border);
+    border-left: 4px solid var(--msu-gold);
+    border-radius: 10px; padding: 11px 38px 11px 15px;
     font-size: calc(13px * var(--fs)); color: var(--text); z-index: 8;
-    display: none;
+    display: none; line-height: 1.5;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.45);
   }
   #hint.show { display: block; }
+  #hintClose {
+    position: absolute; top: 6px; right: 8px; padding: 2px 7px;
+    background: transparent; border: none; color: var(--muted); font-size: calc(15px * var(--fs));
+  }
+  #hintClose:hover { color: var(--msu-gold); }
+
+  /* ---------- toast ---------- */
+  #toast {
+    position: fixed; left: 50%; top: 64px; transform: translateX(-50%);
+    background: var(--panel-solid); border: 1px solid var(--msu-gold);
+    border-radius: 999px; padding: 7px 18px; z-index: 15;
+    font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--msu-gold);
+    display: none; box-shadow: 0 6px 24px rgba(0,0,0,0.5);
+  }
+  #toast.show { display: block; }
 
   /* ---------- modals ---------- */
   .modal {
     position: fixed; inset: 0; z-index: 20;
     display: none; align-items: center; justify-content: center;
-    background: rgba(3, 5, 10, 0.72);
+    background: rgba(0, 10, 20, 0.78);
     padding: 16px;
   }
   .modal.show { display: flex; }
   .modal .box {
-    background: var(--panel); border: 1px solid var(--panel-border);
-    border-radius: 16px; padding: 22px;
-    width: min(680px, 94vw); max-height: 90vh; overflow-y: auto;
+    background: var(--panel-solid); border: 1px solid var(--border);
+    border-top: 4px solid var(--msu-gold);
+    border-radius: 14px; padding: 22px;
+    width: min(700px, 94vw); max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
   }
-  .modal h2 { font-size: calc(19px * var(--fs)); margin-bottom: 4px; }
-  .modal h3 { font-size: calc(14px * var(--fs)); color: var(--accent); margin: 14px 0 6px; }
-  .modal p { color: var(--muted); font-size: calc(13px * var(--fs)); line-height: 1.55; margin: 6px 0; }
+  .modal .eyebrow {
+    font-size: calc(9.5px * var(--fs)); letter-spacing: 2px; font-weight: 800;
+    color: var(--msu-gold); text-transform: uppercase; margin-bottom: 5px;
+  }
+  .modal h2 { font-size: calc(20px * var(--fs)); margin-bottom: 4px; }
+  .modal h3 {
+    font-size: calc(11px * var(--fs)); color: var(--msu-gold); margin: 15px 0 6px;
+    text-transform: uppercase; letter-spacing: 1.3px; font-weight: 800;
+  }
+  .modal p { color: var(--muted); font-size: calc(13px * var(--fs)); line-height: 1.58; margin: 6px 0; }
   .modal p.big { color: var(--text); font-size: calc(14.5px * var(--fs)); }
-  .levelgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
-  .levelcard {
-    background: rgba(10, 15, 26, 0.8); border: 1px solid var(--panel-border);
-    border-radius: 12px; padding: 12px; cursor: pointer;
+  .modal p b { color: var(--text); }
+
+  .progressbar {
+    height: 6px; background: #001730; border-radius: 999px; overflow: hidden;
+    border: 1px solid var(--border); margin: 10px 0 4px;
   }
-  .levelcard:hover { border-color: var(--accent); }
-  .levelcard h4 { font-size: calc(13.5px * var(--fs)); margin-bottom: 4px; }
-  .levelcard .meta { font-size: calc(11.5px * var(--fs)); color: var(--muted); }
-  .levelcard .best { font-size: calc(11.5px * var(--fs)); color: var(--good); margin-top: 4px; }
-  #debriefPlot { width: 100%; height: 200px; background: #0a0f1a; border-radius: 10px; border: 1px solid var(--panel-border); margin: 10px 0; }
-  .scorebar { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; }
-  .scorebar .stat { background: rgba(10,15,26,0.8); border: 1px solid var(--panel-border); border-radius: 10px; padding: 8px 14px; }
-  .scorebar .stat .v { font-size: calc(19px * var(--fs)); font-weight: 700; font-variant-numeric: tabular-nums; }
-  .scorebar .stat .k { font-size: calc(11px * var(--fs)); color: var(--muted); }
-  .verdict { border-left: 3px solid var(--good); padding: 8px 12px; background: rgba(74, 222, 128, 0.07); border-radius: 6px; margin: 10px 0; font-size: calc(13.5px * var(--fs)); line-height: 1.5; }
-  .verdict.bad { border-color: var(--warn); background: rgba(251, 191, 36, 0.07); }
+  .progressbar div { height: 100%; background: var(--msu-gold); width: 0%; transition: width 0.3s; }
+
+  .levelgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 10px; margin-top: 12px; }
+  .levelcard {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; cursor: pointer; position: relative;
+    transition: border-color 0.12s, transform 0.12s;
+  }
+  .levelcard:hover { border-color: var(--msu-gold); transform: translateY(-2px); }
+  .levelcard.done { border-left: 3px solid var(--good); }
+  .levelcard.current { border-color: var(--msu-gold); }
+  .levelcard h4 { font-size: calc(13.5px * var(--fs)); margin-bottom: 4px; padding-right: 22px; }
+  .levelcard .meta { font-size: calc(11.5px * var(--fs)); color: var(--muted); line-height: 1.45; }
+  .levelcard .best { font-size: calc(11.5px * var(--fs)); color: var(--good); margin-top: 5px; font-weight: 700; }
+  .levelcard .badge {
+    position: absolute; top: 10px; right: 10px; font-size: calc(13px * var(--fs));
+  }
+  .levelcard .badge.par { color: var(--msu-gold); }
+
+  #debriefPlot {
+    width: 100%; height: 200px; background: #000c1a; border-radius: 10px;
+    border: 1px solid var(--border); margin: 10px 0;
+  }
+  .scorebar { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .scorebar .stat {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 15px; flex: 1; min-width: 108px;
+  }
+  .scorebar .stat .v { font-size: calc(19px * var(--fs)); font-weight: 800; font-variant-numeric: tabular-nums; }
+  .scorebar .stat .k {
+    font-size: calc(9.5px * var(--fs)); color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1.2px; font-weight: 700; margin-top: 2px;
+  }
+  .scorebar .stat.hero { border-color: var(--border-gold); }
+  .scorebar .stat.hero .v { color: var(--msu-gold); }
+
+  .verdict {
+    border-left: 3px solid var(--good); padding: 9px 13px;
+    background: rgba(74, 222, 128, 0.08); border-radius: 6px; margin: 10px 0;
+    font-size: calc(13.5px * var(--fs)); line-height: 1.55;
+  }
+  .verdict.bad { border-color: var(--msu-gold); background: rgba(236, 172, 0, 0.09); }
+
   .mathcard {
-    background: rgba(10, 15, 26, 0.8); border: 1px solid var(--panel-border);
-    border-left: 3px solid var(--accent); border-radius: 8px;
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--msu-lite); border-radius: 8px;
     padding: 10px 12px; margin: 8px 0;
     font-size: calc(12.5px * var(--fs)); line-height: 1.65;
     font-variant-numeric: tabular-nums;
   }
-  .mathcard .mhead { color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+  .mathcard .mhead { color: var(--msu-lite); font-weight: 800; margin-bottom: 4px; }
   .mathcard .ok { color: var(--good); font-weight: 700; }
-  .mathcard .warnc { color: var(--warn); }
+  .mathcard .warnc { color: var(--msu-gold); }
   .mathcard .dim { color: var(--muted); }
-  .mathcard.ledger { border-left-color: var(--good); }
+  .mathcard.ledger { border-left-color: var(--msu-gold); }
+  .mathcard.ledger .mhead { color: var(--msu-gold); }
   .mathcard .mono { font-family: ui-monospace, Consolas, monospace; font-size: calc(12px * var(--fs)); }
+  #mathToggle {
+    width: 100%; text-align: left; margin-top: 4px;
+    border-color: var(--border-gold); color: var(--msu-gold); font-weight: 700;
+  }
+  #dbMath.collapsed { display: none; }
+
   table.lb { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: calc(13px * var(--fs)); }
-  table.lb th, table.lb td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--panel-border); }
-  table.lb th { color: var(--muted); font-weight: 600; font-size: calc(11.5px * var(--fs)); text-transform: uppercase; letter-spacing: 0.5px; }
-  table.lb td.dv { font-variant-numeric: tabular-nums; color: var(--good); }
+  table.lb th, table.lb td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+  table.lb th {
+    color: var(--msu-gold); font-weight: 800; font-size: calc(10px * var(--fs));
+    text-transform: uppercase; letter-spacing: 1.2px;
+  }
+  table.lb td.dv { font-variant-numeric: tabular-nums; color: var(--good); font-weight: 700; }
+  table.lb tr.you td { background: rgba(236, 172, 0, 0.1); }
+
   .modal .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
   .modal .actions button { padding: 10px 16px; }
   input[type=text] {
-    background: #0a0f1a; color: var(--text); border: 1px solid var(--panel-border);
-    border-radius: 8px; padding: 8px 10px; font-size: calc(13px * var(--fs)); font-family: inherit;
-    width: calc(160px * var(--fs));
+    background: #001730; color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 9px 11px; font-size: calc(13px * var(--fs)); font-family: inherit;
+    width: calc(170px * var(--fs));
   }
-  .togglerow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--panel-border); }
-  .kbd { background: #0a0f1a; border: 1px solid var(--panel-border); border-radius: 5px; padding: 1px 6px; font-size: calc(11px * var(--fs)); }
+  input[type=text]:focus { outline: none; border-color: var(--msu-gold); }
+  .togglerow {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .kbd {
+    background: #001730; border: 1px solid var(--border); border-radius: 5px;
+    padding: 1px 7px; font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--msu-gold);
+  }
+  .keygrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; margin-top: 6px; }
+  .keygrid div { font-size: calc(12px * var(--fs)); color: var(--muted); }
+
+  .msufoot {
+    margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--border);
+    font-size: calc(10px * var(--fs)); color: var(--muted);
+    letter-spacing: 1.2px; text-transform: uppercase; font-weight: 700;
+  }
+  .msufoot b { color: var(--msu-gold); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 860px) {
+    .brand .lockup { display: none; }
+    #planner { right: 8px; left: 8px; width: auto; bottom: 58px; }
+    .chip { font-size: calc(11px * var(--fs)); padding: 3px 8px; }
+  }
+  /* phones: icon-only buttons, essential chips only, HUD as a compact sheet */
+  @media (max-width: 700px) {
+    .btxt { display: none; }
+    .hide-sm { display: none; }
+    #topbar { gap: 6px; padding: 6px 8px 7px; }
+    .brand .title { font-size: calc(14px * var(--fs)); }
+    button { padding: 6px 9px; }
+    #fuelbar { width: calc(64px * var(--fs)); }
+    #hud {
+      top: auto !important; bottom: 108px; right: 8px; left: 8px;
+      min-width: 0; padding: 9px 11px;
+      max-height: 46vh; overflow-y: auto;
+    }
+    /* dock the briefing under the top bar so it never fights the HUD sheet */
+    #hint {
+      bottom: auto; top: 142px; left: 8px; right: 8px; transform: none;
+      max-width: none; font-size: calc(12px * var(--fs)); padding: 9px 32px 9px 12px;
+    }
+    #controls { padding: 7px 8px; gap: 7px; }
+    .ctlgroup { padding: 6px; gap: 5px; }
+    .ctlgroup .lbl { display: none; }
+    #planner { max-height: 62vh; }
+    .modal .box { padding: 16px; }
+    .scorebar .stat { padding: 7px 11px; min-width: 84px; }
+  }
+  @media (max-height: 620px) {
+    #planner { max-height: calc(100vh - 86px); }
+  }
 </style>
 </head>
 <body>
 <canvas id="space"></canvas>
 
 <div id="topbar">
-  <span class="title">⛳ Fuel Golf</span>
+  <div class="brand">
+    <div class="rule"></div>
+    <div class="lockup">
+      <div class="msu">Murray State</div>
+      <div class="racers">Racers Flight Lab</div>
+    </div>
+    <span class="title">⛳ Fuel Golf</span>
+  </div>
   <span class="chip" id="levelChip">Level –</span>
-  <span class="chip par">Par <b id="parChip">–</b></span>
-  <span class="chip">Δv used <b id="dvChip">0.0</b></span>
-  <span id="fuelwrap" class="chip">⛽ <span id="fuelbar"><span id="fuelfill"></span></span> <b id="fuelChip"></b></span>
-  <span class="chip">Engine <b id="engChip">∞</b></span>
-  <span class="chip" id="orbitChip" style="display:none"></span>
-  <span class="chip">🕐 <b id="clockChip">T+ 0 min</b></span>
+  <span class="chip par mono">Par <b id="parChip">–</b></span>
+  <span class="chip mono">Δv used <b id="dvChip">0</b></span>
+  <span id="fuelwrap" class="chip mono">⛽ <span id="fuelbar"><span id="fuelfill"></span></span> <b id="fuelChip"></b></span>
+  <span class="chip mono hide-sm">Engine <b id="engChip">∞</b></span>
+  <span class="chip mono" id="orbitChip" style="display:none"></span>
+  <span class="chip mono hide-sm">🕐 <b id="clockChip">T+ 0 min</b></span>
   <span class="spacer"></span>
-  <button id="btnLevels">Levels</button>
-  <button id="btnHud">Physics HUD</button>
-  <button id="btnRestart">Restart</button>
-  <button id="btnHelp">?</button>
+  <button id="btnMission" title="Mission briefing (M)">📋<span class="btxt"> Mission</span></button>
+  <button id="btnLevels" title="Level select">🗺<span class="btxt"> Levels</span></button>
+  <button id="btnHud" title="Physics HUD (H)">📊<span class="btxt"> Physics HUD</span></button>
+  <button id="btnUndo" title="Undo last burn (Z)" disabled>↶<span class="btxt"> Undo</span></button>
+  <button id="btnRestart" title="Restart level (R)">↻<span class="btxt"> Restart</span></button>
+  <button id="btnHelp" title="How to play">?</button>
   <button id="btnTeacher" title="Teacher mode">⚙</button>
 </div>
 
@@ -226,6 +428,10 @@
   <div class="row"><span>Spec. energy ε</span><b id="hudE">–</b></div>
   <div class="row"><span>Periapsis</span><b id="hudPe">–</b></div>
   <div class="row"><span>Apoapsis</span><b id="hudAp">–</b></div>
+  <div class="divider"></div>
+  <div class="row hi"><span>Time to periapsis</span><b id="hudTPe">–</b></div>
+  <div class="row"><span>Time to apoapsis</span><b id="hudTAp">–</b></div>
+  <div class="row" id="hudBurnRow" style="display:none"><span>Full-tank burn time</span><b id="hudBurnT">–</b></div>
   <div id="oberthbarwrap">
     <div class="cap">Energy gained per 1 Δv (prograde) = <b id="hudOberth">–</b></div>
     <div id="oberthbar"><div id="oberthfill"></div></div>
@@ -233,24 +439,33 @@
   </div>
 </div>
 
-<div id="hint"></div>
+<div id="hint"><button id="hintClose" title="Dismiss">×</button><span id="hintText"></span></div>
+<div id="toast"></div>
 
 <div id="controls">
   <div class="ctlgroup" id="warpGroup">
     <span class="lbl">TIME</span>
-    <button data-warp="0" title="Pause">⏸</button>
+    <button data-warp="0" title="Pause (Space)">⏸</button>
     <button data-warp="1" class="active">1×</button>
     <button data-warp="10">10×</button>
     <button data-warp="50">50×</button>
     <button data-warp="200">200×</button>
+    <span class="sep"></span>
     <button id="btnToPe" title="Warp to periapsis">→ Pe</button>
     <button id="btnToAp" title="Warp to apoapsis">→ Ap</button>
+    <span id="leadWrap">
+      <span class="u">lead</span>
+      <input type="text" id="leadInput" value="0" inputmode="decimal" title="Stop this many minutes BEFORE the apsis">
+      <span class="u">min</span>
+    </span>
   </div>
   <div class="ctlgroup">
     <span class="lbl">VIEW</span>
-    <button id="zoomOut">−</button>
-    <button id="zoomIn">+</button>
-    <button id="zoomFit">Fit</button>
+    <button id="zoomOut" title="Zoom out">−</button>
+    <button id="zoomIn" title="Zoom in">+</button>
+    <button id="zoomFit" title="Fit whole orbit">Fit</button>
+    <button id="btnFollow" class="active" title="Camera follows craft (F)">⊕ Follow</button>
+    <span class="sep"></span>
     <button id="btnCut" class="danger" style="display:none">✂ Cut engine</button>
     <button id="btnPlanBurn" class="primary">🔥 Plan burn</button>
   </div>
@@ -260,8 +475,8 @@
   <h3>Plan burn — aim, preview, commit</h3>
   <div class="modes" id="engineRow" style="display:none">
     <button data-eng="inf">Engine: ∞</button>
-    <button data-eng="0.35">Engine: 0.35</button>
-    <button data-eng="0.08" style="grid-column: span 2">Engine: 0.08 (weak)</button>
+    <button data-eng="0.35">0.055 m/s²</button>
+    <button data-eng="0.08" style="grid-column: span 2">0.013 m/s² (weak)</button>
   </div>
   <div class="modes">
     <button data-mode="prograde" class="active">▲ Prograde</button>
@@ -285,46 +500,72 @@
     <button data-fine="10">+10</button><button data-fine="100">+100</button>
   </div>
   <div id="burncost">Dotted line shows your predicted new trajectory.</div>
-  <div id="predinfo" style="font-size:calc(12px * var(--fs));margin-top:6px;font-weight:600"></div>
+  <div id="predinfo"></div>
+  <div class="aimhint">Drag on the map to aim a free-angle burn. <span class="kbd">Enter</span> commits · <span class="kbd">Esc</span> cancels.</div>
   <div id="plannerActions">
     <button id="btnCancelBurn">Cancel</button>
     <button id="btnCommitBurn" class="primary">COMMIT BURN</button>
   </div>
 </div>
 
+<!-- Mission briefing -->
+<div class="modal" id="missionModal">
+  <div class="box">
+    <div class="eyebrow">Mission briefing</div>
+    <h2 id="msTitle">–</h2>
+    <p class="big" id="msSubtitle">–</p>
+    <div class="scorebar">
+      <div class="stat hero"><div class="v" id="msPar">–</div><div class="k">Par Δv</div></div>
+      <div class="stat"><div class="v" id="msTank">–</div><div class="k">Tank</div></div>
+      <div class="stat"><div class="v" id="msEngine">–</div><div class="k">Engine</div></div>
+    </div>
+    <h3>Objective</h3>
+    <p id="msGoal">–</p>
+    <h3>Flight notes</h3>
+    <p id="msHint">–</p>
+    <div class="actions"><button id="msClose" class="primary">Fly the mission</button></div>
+  </div>
+</div>
+
 <!-- Level select -->
 <div class="modal" id="levelsModal">
   <div class="box">
-    <h2>⛳ Fuel Golf</h2>
+    <div class="eyebrow">Murray State Racers Flight Lab</div>
+    <h2>⛳ Fuel Golf — mission list</h2>
     <p>Complete each mission using the least Δv. Par is the fuel-efficient benchmark — beat it like golf.</p>
+    <div class="progressbar"><div id="progFill"></div></div>
+    <p style="margin:0" id="progText">–</p>
     <div class="levelgrid" id="levelGrid"></div>
     <div class="actions"><button id="closeLevels">Close</button></div>
+    <div class="msufoot">Murray State University · <b>Racers</b> · Physics Department</div>
   </div>
 </div>
 
 <!-- Debrief -->
 <div class="modal" id="debriefModal">
   <div class="box">
+    <div class="eyebrow" id="dbEyebrow">Mission complete</div>
     <h2 id="debriefTitle">Mission complete</h2>
     <div class="scorebar">
-      <div class="stat"><div class="v" id="dbDv">–</div><div class="k">Δv used</div></div>
+      <div class="stat hero"><div class="v" id="dbDv">–</div><div class="k">Δv used</div></div>
       <div class="stat"><div class="v" id="dbPar">–</div><div class="k">Par</div></div>
       <div class="stat"><div class="v" id="dbScore">–</div><div class="k">vs par</div></div>
+      <div class="stat"><div class="v" id="dbBurns">–</div><div class="k">Burns</div></div>
     </div>
     <div class="verdict" id="dbVerdict"></div>
     <h3>Orbital energy vs. time (burns marked ▲)</h3>
     <canvas id="debriefPlot" width="620" height="200"></canvas>
-    <h3>The math — proving the outcome from your inputs</h3>
+    <button id="mathToggle">▼ Hide the math — proving the outcome from your inputs</button>
     <div id="dbMath"></div>
-    <div id="dbNameRow" style="display:flex;gap:8px;align-items:center;margin-top:8px">
+    <h3>Class leaderboard — this level</h3>
+    <div id="dbNameRow" style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap">
       <input type="text" id="dbName" maxlength="16" placeholder="Your name">
-      <button id="dbSave" class="primary">Save to leaderboard</button>
-      <span id="dbSaved" style="color:var(--good);display:none">Saved ✓</span>
+      <button id="dbSave" class="primary">Save score</button>
+      <span id="dbSaved" style="color:var(--good);display:none;font-weight:700">Saved ✓</span>
     </div>
-    <h3>Leaderboard — this level</h3>
     <table class="lb"><thead><tr><th>#</th><th>Name</th><th>Δv</th></tr></thead><tbody id="dbLb"></tbody></table>
     <div class="actions">
-      <button id="dbRetry">Retry level</button>
+      <button id="dbRetry">↻ Retry level</button>
       <button id="dbNext" class="primary">Next level →</button>
       <button id="dbClose">Close</button>
     </div>
@@ -334,15 +575,20 @@
 <!-- Crash -->
 <div class="modal" id="crashModal">
   <div class="box">
+    <div class="eyebrow" style="color:var(--msu-alert)">Flight terminated</div>
     <h2>💥 Lithobraking detected</h2>
-    <p class="big" id="crashMsg">Your spacecraft hit the planet. In this class, that's a lab incident report.</p>
-    <div class="actions"><button id="crashRetry" class="primary">Retry level</button></div>
+    <p class="big" id="crashMsg">Your spacecraft hit the planet.</p>
+    <div class="actions">
+      <button id="crashUndo" class="primary">↶ Undo last burn</button>
+      <button id="crashRetry">↻ Restart level</button>
+    </div>
   </div>
 </div>
 
 <!-- Teacher -->
 <div class="modal" id="teacherModal">
   <div class="box">
+    <div class="eyebrow">Instructor controls</div>
     <h2>Teacher mode</h2>
     <div class="togglerow">
       <div><b>Projector mode</b><p>Larger UI, readable from the back row.</p></div>
@@ -353,32 +599,54 @@
       <button id="tgReset" class="danger">Reset…</button>
     </div>
     <div class="togglerow" id="resetConfirmRow" style="display:none">
-      <div><b style="color:var(--bad)">Really clear all scores?</b></div>
+      <div><b style="color:var(--msu-alert)">Really clear all scores?</b></div>
       <div style="display:flex;gap:6px">
         <button id="tgResetNo">Cancel</button>
         <button id="tgResetYes" class="danger">Yes, clear</button>
       </div>
     </div>
-    <p style="margin-top:10px">Teacher guide: open <b>teacher-guide.html</b> in this folder for a printable one-pager (session plan, Oberth math, misconceptions, discussion questions).</p>
-    <div class="actions"><button id="closeTeacher">Close</button></div>
+    <div class="togglerow">
+      <div><b>Reset mission progress</b><p>Clears completion badges (leaderboards untouched).</p></div>
+      <button id="tgResetProg" class="danger">Clear</button>
+    </div>
+    <h3>Teacher guide</h3>
+    <p>Open <b>teacher-guide.html</b> in this folder for the printable one-pager: 20-minute session plan, the Oberth math, common misconceptions, and discussion questions.</p>
+    <div class="actions"><button id="closeTeacher" class="primary">Close</button></div>
+    <div class="msufoot">Murray State University · <b>Racers</b> · Physics Department</div>
   </div>
 </div>
 
 <!-- Help -->
 <div class="modal" id="helpModal">
   <div class="box">
-    <h2>How to play</h2>
-    <p class="big">You have a spacecraft, a fuel tank of Δv, and a mission. Lowest Δv wins.</p>
+    <div class="eyebrow">Murray State Racers Flight Lab</div>
+    <h2>⛳ Fuel Golf — how to play</h2>
+    <p class="big">You have a spacecraft, a tank of Δv, and a mission. Lowest Δv wins.</p>
     <h3>Flying</h3>
-    <p>Time-warp with the ⏸ / 1× / 10× / 50× / 200× buttons, or jump straight to periapsis (<b>→ Pe</b>, lowest point, fastest) or apoapsis (<b>→ Ap</b>, highest point, slowest). <span class="kbd">Space</span> pauses. <span class="kbd">.</span> and <span class="kbd">,</span> change warp.</p>
+    <p>Time-warp with ⏸ / 1× / 10× / 50× / 200×, or jump straight to <b>periapsis</b> (→ Pe, the low fast point) or <b>apoapsis</b> (→ Ap, the high slow point). Set a <b>lead</b> in minutes to stop short of the apsis — essential once your engine takes real time to burn. Drag the map to pan, scroll or pinch to zoom, <b>⊕ Follow</b> keeps the camera on your craft.</p>
     <h3>Burning</h3>
-    <p>Hit <b>🔥 Plan burn</b> (or <span class="kbd">B</span>). Pick a direction — prograde (with your motion), retrograde (against it), radial, or a free angle — and drag the Δv slider. The dotted line previews your new orbit <i>before</i> you spend fuel. <b>COMMIT</b> applies it instantly.</p>
-    <p>On later levels the engine is <b>finite</b>: committed Δv is delivered over time (the orange arc in the preview shows the powered stretch), so start your burn <i>before</i> periapsis to centre it on the fast point — and with a weak engine, split it into repeated perigee kicks. <span class="kbd">X</span> or ✂ cuts the engine early, keeping unspent fuel.</p>
+    <p>Hit <b>🔥 Plan burn</b> (or <span class="kbd">B</span>). Pick a direction — prograde, retrograde, radial, or free angle (drag the map to aim) — and set Δv. The dotted line previews your new orbit, with hollow Pe/Ap markers showing where the new apsides land, <i>before</i> you spend fuel. Misjudged it? <b>↶ Undo</b> rewinds the last burn.</p>
     <h3>The lesson hiding in the game</h3>
     <p>Adding Δv changes your kinetic energy by ΔKE = v·Δv + ½Δv². The <b>v·Δv</b> term means the same burn buys more energy when you're already moving fast — and you're fastest at periapsis. That's the Oberth effect. Open the <b>Physics HUD</b> and watch "energy per unit Δv" climb as you fall toward periapsis.</p>
     <h3>Real numbers</h3>
-    <p>The planet is <b>Earth</b> at true scale: μ = 398,600 km³/s², radius 6,371 km. Speeds are km/s, Δv budgets are m/s, altitudes are km, and orbital periods run from hours to days — which is why time-warp exists. The moon is fictional (closer and heavier than our Moon) so a gravity assist fits in a class period.</p>
+    <p>The planet is <b>Earth</b> at true scale: μ = 398,600 km³/s², radius 6,371 km. Speeds are km/s, Δv budgets m/s, altitudes km, and orbital periods run hours to days — which is why time-warp exists. The moon is fictional (closer and heavier than our Moon) so a gravity assist fits a class period.</p>
+    <h3>Keyboard</h3>
+    <div class="keygrid">
+      <div><span class="kbd">Space</span> pause</div>
+      <div><span class="kbd">B</span> burn planner</div>
+      <div><span class="kbd">Enter</span> commit burn</div>
+      <div><span class="kbd">Esc</span> cancel / close</div>
+      <div><span class="kbd">Z</span> undo burn</div>
+      <div><span class="kbd">X</span> cut engine</div>
+      <div><span class="kbd">,</span> <span class="kbd">.</span> warp down/up</div>
+      <div><span class="kbd">P</span> / <span class="kbd">A</span> warp to Pe / Ap</div>
+      <div><span class="kbd">H</span> physics HUD</div>
+      <div><span class="kbd">F</span> follow camera</div>
+      <div><span class="kbd">M</span> mission briefing</div>
+      <div><span class="kbd">R</span> restart level</div>
+    </div>
     <div class="actions"><button id="closeHelp" class="primary">Fly</button></div>
+    <div class="msufoot">Murray State University · <b>Racers</b> · Physics Department</div>
   </div>
 </div>
 

@@ -298,6 +298,21 @@ const store = (() => {
 })();
 const LB_KEY = (id) => 'fuelgolf_lb_' + id;
 
+/* ---------- small UI helpers ---------- */
+function toast(msg, ms) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200);
+}
+function showHint(text, ms) {
+  $('hintText').textContent = text;
+  $('hint').classList.add('show');
+  if (ms) setTimeout(() => { if ($('hintText').textContent === text) $('hint').classList.remove('show'); }, ms);
+}
+function anyModalOpen() { return !!document.querySelector('.modal.show'); }
+
 /* ---------- game state ---------- */
 let lvl = null;            // current level object
 let S = null;              // craft state {t,x,y,vx,vy,ax,ay}
@@ -321,18 +336,32 @@ let burnPathTick = 0;
 let warnedFallback = false; // one warning per boundary crossing while bound
 let orbitChipState = '';
 let epsStart = 0;          // ε at level start, anchor for the energy ledger
+let undoStack = [];        // snapshots taken immediately before each committed burn
+let camX = 0, camY = 0;    // camera centre in world coords
+let follow = true;         // camera tracks the craft
+let dragging = null;       // {mode:'pan'|'aim', ...} active pointer gesture
+let toastTimer = null;
+const PROG_KEY = 'fuelgolf_progress';
 
 function resize() {
   canvas.width = window.innerWidth * devicePixelRatio;
   canvas.height = window.innerHeight * devicePixelRatio;
   ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  layoutPanels();
+}
+/* keep the HUD clear of the top bar however many rows it wraps to */
+function layoutPanels() {
+  const tb = $('topbar');
+  if (!tb) return;
+  // phones dock the HUD to the bottom via CSS; wider screens sit it under the bar
+  $('hud').style.top = window.innerWidth <= 700 ? '' : (tb.offsetHeight + 8) + 'px';
 }
 window.addEventListener('resize', resize); resize();
 
 function makeStars() {
   stars = [];
   for (let i = 0; i < 260; i++) {
-    stars.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.4 + 0.3, a: Math.random() * 0.5 + 0.15 });
+    stars.push({ x: Math.random(), y: Math.random(), s: Math.random() * 1.4 + 0.3, a: Math.random() * 0.5 + 0.15, g: Math.random() < 0.09 });
   }
 }
 makeStars();
@@ -354,16 +383,19 @@ function loadLevel(i) {
   plan = { mode: 'prograde', angle: 0, dv: Math.min(2, fuel) };
   targetZoom = zoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
   epsStart = elements(lvl, S).eps;
+  undoStack = [];
+  // start framed on the whole system (Earth centred) — follow is an opt-in tool
+  camX = 0; camY = 0; setFollow(false);
+  syncUndoBtn();
   computeCurPath();
   logEnergy(true);
   syncTop(); syncWarpButtons(); hidePlanner();
-  $('hint').textContent = lvl.hint;
-  $('hint').classList.add('show');
-  setTimeout(() => $('hint').classList.remove('show'), 14000);
+  showHint(lvl.hint, 16000);
   closeModal('levelsModal'); closeModal('debriefModal'); closeModal('crashModal');
 }
 
 function computeCurPath() {
+  apsisCache.t = -1; // orbit changed → countdowns are stale
   // one-orbit polyline of the current (unburned) trajectory, incl. moon effects
   const el = elements(lvl, S);
   const period = el.bound ? 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu) : 0;
@@ -422,10 +454,44 @@ function computePredPath() {
   }
 }
 
+/* ---------- undo (rewind to the instant before a burn was committed) ---------- */
+function snapshot() {
+  return {
+    S: { t: S.t, x: S.x, y: S.y, vx: S.vx, vy: S.vy, ax: undefined, ay: undefined },
+    fuel, dvUsed,
+    burnLog: burnLog.map(b => Object.assign({}, b)),
+    energyLog: energyLog.slice(),
+    trail: trail.slice(),
+    lastELog, warnedFallback, engine,
+  };
+}
+function pushUndo() {
+  undoStack.push(snapshot());
+  if (undoStack.length > 12) undoStack.shift();
+  syncUndoBtn();
+}
+function undoBurn() {
+  if (!undoStack.length) return;
+  const s = undoStack.pop();
+  S = s.S; fuel = s.fuel; dvUsed = s.dvUsed;
+  burnLog = s.burnLog; energyLog = s.energyLog; trail = s.trail;
+  lastELog = s.lastELog; warnedFallback = s.warnedFallback; engine = s.engine;
+  activeBurn = null; pendingWarpTo = null; predPath = null;
+  phase = 'fly'; warp = 0; orbitChipState = '';
+  $('btnCut').style.display = 'none';
+  closeModal('crashModal'); closeModal('debriefModal');
+  hidePlanner();
+  warp = 0; syncWarpButtons();
+  computeCurPath(); syncTop(); syncEngineRow(); syncUndoBtn();
+  toast('↶ Rewound to before that burn — paused');
+}
+function syncUndoBtn() { $('btnUndo').disabled = undoStack.length === 0; }
+
 /* ---------- burns ---------- */
 function commitBurn() {
   const dv = Math.min(plan.dv, fuel);
   if (dv <= 0.001) return;
+  pushUndo();
   const el0 = elements(lvl, S);
   if (isFinite(engine)) {
     // finite thrust: burn executes over time in the main loop
@@ -512,16 +578,20 @@ function syncOrbitChip() {
 }
 
 function crashed(what) {
-  phase = 'crashed'; pendingWarpTo = null;
+  phase = 'crashed'; pendingWarpTo = null; activeBurn = null;
+  $('btnCut').style.display = 'none';
   $('crashMsg').textContent = what === 'moon'
     ? 'Your spacecraft hit the moon. Gravity assists want a close pass — not that close.'
-    : 'Your spacecraft hit the planet. In this class, that’s a lab incident report.';
+    : 'Your spacecraft hit Earth. In this class, that’s a lab incident report.';
+  $('crashUndo').style.display = undoStack.length ? '' : 'none';
   openModal('crashModal');
 }
 
 function succeed() {
-  phase = 'done'; pendingWarpTo = null;
+  phase = 'done'; pendingWarpTo = null; activeBurn = null;
+  $('btnCut').style.display = 'none';
   succeededAt = S.t;
+  markComplete(lvl.id, dvUsed, lvl.par);
   showDebrief();
 }
 
@@ -643,11 +713,15 @@ function renderMathProof() {
 }
 
 function showDebrief() {
-  $('debriefTitle').textContent = lvl.name + ' — mission complete';
+  const madePar = lvl.par !== Infinity && dvUsed <= lvl.par;
+  $('dbEyebrow').textContent = lvl.par === Infinity ? 'Sandbox flight' : (madePar ? '🏆 Par achieved' : 'Mission complete — over par');
+  $('debriefTitle').textContent = `Level ${lvl.id}: ${lvl.name}`;
   $('dbDv').textContent = fmtMS(dvUsed);
   $('dbPar').textContent = lvl.par === Infinity ? '—' : fmtMS(lvl.par);
+  $('dbBurns').textContent = burnLog.length;
   const diff = dvUsed - lvl.par;
   $('dbScore').textContent = lvl.par === Infinity ? '—' : (diff <= 0 ? uMS(diff).toLocaleString('en-US') + ' m/s 🏆' : '+' + fmtMS(diff));
+  $('dbNext').style.display = LEVELS.indexOf(lvl) < LEVELS.length - 1 ? '' : 'none';
   const v = $('dbVerdict');
   v.textContent = debriefSentence();
   v.className = 'verdict' + (dvUsed > lvl.par + 0.05 ? ' bad' : '');
@@ -673,14 +747,14 @@ function drawEnergyPlot() {
   const X = (t) => 46 + (t - t0) / (t1 - t0 || 1) * (W - 60);
   const Y = (e) => H - 24 - (e - eMin) / (eMax - eMin) * (H - 44);
   // axes
-  g.strokeStyle = '#26324d'; g.lineWidth = 1;
+  g.strokeStyle = '#10406e'; g.lineWidth = 1;
   g.beginPath(); g.moveTo(46, 8); g.lineTo(46, H - 24); g.lineTo(W - 12, H - 24); g.stroke();
   // zero-energy line (escape threshold)
   if (eMin < 0 && eMax > 0) {
-    g.strokeStyle = '#f8717188'; g.setLineDash([5, 4]);
+    g.strokeStyle = 'rgba(255,69,0,0.6)'; g.setLineDash([5, 4]);
     g.beginPath(); g.moveTo(46, Y(0)); g.lineTo(W - 12, Y(0)); g.stroke();
     g.setLineDash([]);
-    g.fillStyle = '#f87171'; g.font = '10px system-ui';
+    g.fillStyle = '#FF4500'; g.font = '10px system-ui';
     g.fillText('ε = 0 (escape)', W - 92, Y(0) - 4);
   }
   // labels
@@ -690,14 +764,14 @@ function drawEnergyPlot() {
   g.fillText(uEPS(eMax).toFixed(1), 6, 26);
   g.fillText(uEPS(eMin).toFixed(1), 6, H - 30);
   // energy curve
-  g.strokeStyle = '#5b9dff'; g.lineWidth = 2;
+  g.strokeStyle = '#00A4E3'; g.lineWidth = 2.2;
   g.beginPath();
   energyLog.forEach((p, i) => { const x = X(p.t), y = Y(p.eps); if (i === 0) g.moveTo(x, y); else g.lineTo(x, y); });
   g.stroke();
   // burn markers
   for (const b of burnLog) {
     const x = X(b.t);
-    g.fillStyle = '#4ade80';
+    g.fillStyle = '#ECAC00';
     g.beginPath(); g.moveTo(x, H - 24); g.lineTo(x - 5, H - 14); g.lineTo(x + 5, H - 14); g.closePath(); g.fill();
     g.fillStyle = '#8fa0bc'; g.font = '9px system-ui';
     g.fillText(uMS(b.dv) + '', x - 10, H - 4);
@@ -705,13 +779,15 @@ function drawEnergyPlot() {
 }
 
 /* ---------- leaderboard ---------- */
-function renderLb(tbodyId, levelId) {
+function renderLb(tbodyId, levelId, highlight) {
   const tb = $(tbodyId);
   const rows = store.get(LB_KEY(levelId), []);
   tb.innerHTML = '';
   if (!rows.length) { tb.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">No scores yet — be first.</td></tr>'; return; }
+  let marked = false;
   rows.slice(0, 10).forEach((r, i) => {
     const tr = document.createElement('tr');
+    if (!marked && highlight && Math.abs(r.dv - highlight.dv) < 1e-6 && r.name === highlight.name) { tr.className = 'you'; marked = true; }
     tr.innerHTML = `<td>${i + 1}</td><td></td><td class="dv">${fmtMS(r.dv)}</td>`;
     tr.children[1].textContent = r.name;
     tb.appendChild(tr);
@@ -724,8 +800,11 @@ $('dbSave').addEventListener('click', () => {
   rows.push({ name, dv: +dvUsed.toFixed(3) });
   rows.sort((a, b) => a.dv - b.dv);
   store.set(LB_KEY(lvl.id), rows.slice(0, 25));
-  renderLb('dbLb', lvl.id);
+  const entry = { name, dv: +dvUsed.toFixed(3) };
+  renderLb('dbLb', lvl.id, entry);
   $('dbSaved').style.display = 'inline';
+  const rank = store.get(LB_KEY(lvl.id), []).findIndex(r => r.name === entry.name && Math.abs(r.dv - entry.dv) < 1e-6) + 1;
+  if (rank === 1) toast('🏆 New class best on this level!');
 });
 
 /* ---------- modals ---------- */
@@ -740,20 +819,63 @@ $('btnHelp').addEventListener('click', () => openModal('helpModal'));
 $('closeHelp').addEventListener('click', () => closeModal('helpModal'));
 
 /* levels modal */
+/* ---------- progress ---------- */
+function getProgress() { return store.get(PROG_KEY, {}); }
+function markComplete(levelId, dv, par) {
+  const p = getProgress();
+  const prev = p[levelId];
+  const rec = { done: true, best: (prev && prev.best < dv) ? prev.best : dv, par: par !== Infinity };
+  rec.underPar = (par !== Infinity && rec.best <= par + 1e-9) || (prev && prev.underPar);
+  p[levelId] = rec;
+  store.set(PROG_KEY, p);
+}
 function renderLevelGrid() {
   const grid = $('levelGrid');
+  const prog = getProgress();
   grid.innerHTML = '';
+  let done = 0, underPar = 0, scored = 0;
   LEVELS.forEach((L, i) => {
     const best = (store.get(LB_KEY(L.id), [])[0] || null);
+    const pr = prog[L.id];
+    if (pr && pr.done) { done++; if (L.par !== Infinity) { scored++; if (pr.underPar) underPar++; } }
     const card = document.createElement('div');
-    card.className = 'levelcard';
-    card.innerHTML = `<h4>${L.id}. ${L.name}</h4><div class="meta">${L.subtitle}</div>
-      <div class="meta">Par ${L.par === Infinity ? '—' : fmtMS(L.par)} · Tank ${L.fuel === 200 ? '∞' : fmtMS(L.fuel)}</div>
-      ${best ? `<div class="best">Best: ${fmtMS(best.dv)} (${best.name})</div>` : ''}`;
+    card.className = 'levelcard' + (pr && pr.done ? ' done' : '') + (lvl && lvl.id === L.id ? ' current' : '');
+    const badge = pr && pr.done
+      ? (pr.underPar ? '<span class="badge par" title="Made par">🏆</span>' : '<span class="badge" title="Completed">✓</span>')
+      : '';
+    card.innerHTML = `${badge}<h4>${L.id}. ${L.name}</h4><div class="meta">${L.subtitle}</div>
+      <div class="meta">Par ${L.par === Infinity ? '—' : fmtMS(L.par)} · Tank ${L.fuel === 200 ? '∞' : fmtMS(L.fuel)}${isFinite(L.engine) ? ' · ' + (L.engine * MS2_PER_AU).toFixed(3) + ' m/s²' : ''}</div>
+      ${pr && pr.done ? `<div class="best">Your best: ${fmtMS(pr.best)}</div>` : ''}
+      ${best ? `<div class="meta">Class best: ${fmtMS(best.dv)} (${best.name})</div>` : ''}`;
     card.addEventListener('click', () => loadLevel(i));
     grid.appendChild(card);
   });
+  const pct = Math.round(done / LEVELS.length * 100);
+  $('progFill').style.width = pct + '%';
+  $('progText').innerHTML = `<b style="color:var(--text)">${done} of ${LEVELS.length}</b> missions flown · <b style="color:var(--msu-gold)">${underPar}</b> of ${scored || LEVELS.length - 1} scored missions at or under par`;
 }
+
+/* ---------- mission briefing ---------- */
+const GOAL_TEXT = {
+  circular: (g) => `Settle into a circular orbit inside the green ring — semi-major axis within ${fmtKm(g.band)} of ${fmtKm(g.a)}, eccentricity at or below ${g.emax}.`,
+  transfer: (g) => `Reach a circular orbit on the green ring — semi-major axis within ${fmtKm(g.band)} of ${fmtKm(g.a)}, eccentricity at or below ${g.emax}. Two burns are the efficient route.`,
+  apoapsis: (g) => `Raise your apoapsis — the high point of your orbit, marked Ap — into the gold band between ${fmtKm(g.min)} and ${fmtKm(g.max)}. You do NOT need to circularize; the mission ends the moment Ap enters the band.`,
+  escape: () => `Escape Earth. That means specific orbital energy ε above zero AND crossing the system edge. A tall ellipse that crosses the edge with ε still negative will fall back — watch the ORBIT chip.`,
+  sandbox: () => `No objective. Fly anything you like: skim the atmosphere, chase the moon, or hunt the cheapest possible escape. Swap engines in the burn planner to compare impulsive against finite thrust.`,
+};
+function showMission() {
+  $('msTitle').textContent = `Level ${lvl.id}: ${lvl.name}`;
+  $('msSubtitle').textContent = lvl.subtitle;
+  $('msPar').textContent = lvl.par === Infinity ? '—' : fmtMS(lvl.par);
+  $('msTank').textContent = lvl.fuel === 200 ? '∞' : fmtMS(lvl.fuel);
+  $('msEngine').textContent = isFinite(engine) ? (engine * MS2_PER_AU).toFixed(3) + ' m/s²' : 'impulsive';
+  $('msGoal').textContent = (GOAL_TEXT[lvl.goal.type] || (() => ''))(lvl.goal);
+  $('msHint').textContent = lvl.hint;
+  openModal('missionModal');
+}
+$('btnMission').addEventListener('click', showMission);
+$('msClose').addEventListener('click', () => closeModal('missionModal'));
+$('hintClose').addEventListener('click', () => $('hint').classList.remove('show'));
 $('btnLevels').addEventListener('click', () => { renderLevelGrid(); openModal('levelsModal'); });
 $('closeLevels').addEventListener('click', () => closeModal('levelsModal'));
 
@@ -788,23 +910,101 @@ function syncWarpButtons() {
 document.querySelectorAll('#warpGroup [data-warp]').forEach(b => {
   b.addEventListener('click', () => { warp = +b.dataset.warp; pendingWarpTo = null; syncWarpButtons(); });
 });
+function leadSeconds() {
+  const v = parseFloat($('leadInput').value);
+  return (isFinite(v) && v > 0) ? v * 60 / SEC_PER_TU : 0; // minutes -> sim-time units
+}
 function warpToApsis(which) {
   if (activeBurn) return; // no apsis-jumping while the engine is lit
   if (phase !== 'fly' && phase !== 'planning') return;
-  const dt = timeToApsis(lvl, S, which);
-  if (dt !== null && dt > 0.05) pendingWarpTo = dt;
+  let dt = timeToApsis(lvl, S, which);
+  if (dt === null) { toast('No ' + (which === 'pe' ? 'periapsis' : 'apoapsis') + ' ahead on this trajectory'); return; }
+  const lead = leadSeconds();
+  if (lead > 0) {
+    dt -= lead;
+    if (dt <= 0.05) {
+      // already inside the lead window — go round once more if the orbit is closed
+      const el = elements(lvl, S);
+      if (el.bound) dt += 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu);
+      else { toast('Lead is longer than the time remaining'); return; }
+    }
+    toast('Warping to ' + (which === 'pe' ? 'Pe' : 'Ap') + ' − ' + $('leadInput').value + ' min');
+  }
+  if (dt > 0.05) { pendingWarpTo = dt; if (phase === 'planning') hidePlanner(); }
 }
 $('btnToPe').addEventListener('click', () => warpToApsis('pe'));
 $('btnToAp').addEventListener('click', () => warpToApsis('ap'));
+$('leadInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('leadInput').blur(); } });
 
-/* ---------- zoom ---------- */
+/* ---------- zoom / pan / follow ---------- */
+function setFollow(on) {
+  follow = on;
+  $('btnFollow').classList.toggle('active', on);
+  if (on && S) { camX = S.x; camY = S.y; }
+}
+$('btnFollow').addEventListener('click', () => setFollow(!follow));
 $('zoomIn').addEventListener('click', () => targetZoom *= 1.35);
 $('zoomOut').addEventListener('click', () => targetZoom /= 1.35);
-$('zoomFit').addEventListener('click', () => { targetZoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view; });
+$('zoomFit').addEventListener('click', () => {
+  targetZoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
+  camX = 0; camY = 0; setFollow(false);
+});
 canvas.addEventListener('wheel', (e) => { e.preventDefault(); targetZoom *= e.deltaY < 0 ? 1.12 : 1 / 1.12; }, { passive: false });
-/* pinch zoom */
+
+/* pointer gestures: drag = pan, or aim the burn while the planner is open */
+function screenToWorld(px, py) {
+  return { x: camX + (px - window.innerWidth / 2) / zoom, y: camY + (py - window.innerHeight / 2) / zoom };
+}
+canvas.addEventListener('pointerdown', (e) => {
+  if (e.pointerType === 'touch' && e.isPrimary === false) return;
+  canvas.setPointerCapture(e.pointerId);
+  if (phase === 'planning') {
+    dragging = { mode: 'aim' };
+    aimAt(e.clientX, e.clientY);
+  } else {
+    dragging = { mode: 'pan', px: e.clientX, py: e.clientY, moved: false };
+    canvas.classList.add('grabbing');
+  }
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  if (dragging.mode === 'aim') { aimAt(e.clientX, e.clientY); return; }
+  const dx = (e.clientX - dragging.px) / zoom, dy = (e.clientY - dragging.py) / zoom;
+  if (Math.abs(e.clientX - dragging.px) + Math.abs(e.clientY - dragging.py) > 3) {
+    if (!dragging.moved) { dragging.moved = true; setFollow(false); }
+    camX -= dx; camY -= dy;
+    dragging.px = e.clientX; dragging.py = e.clientY;
+  }
+});
+function endDrag(e) {
+  if (!dragging) return;
+  dragging = null;
+  canvas.classList.remove('grabbing');
+  try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+
+/* aim: point the burn from the craft toward the cursor (free-angle mode) */
+function aimAt(px, py) {
+  const w = screenToWorld(px, py);
+  const dx = w.x - S.x, dy = w.y - S.y;
+  if (Math.hypot(dx, dy) < 1e-6) return;
+  const vAng = Math.atan2(S.vy, S.vx);
+  let rel = Math.atan2(dy, dx) - vAng;
+  while (rel > Math.PI) rel -= 2 * Math.PI;
+  while (rel < -Math.PI) rel += 2 * Math.PI;
+  plan.mode = 'free';
+  plan.angle = Math.round(rel * 180 / Math.PI);
+  document.querySelectorAll('.modes [data-mode]').forEach(x => x.classList.toggle('active', x.dataset.mode === 'free'));
+  $('angleRow').style.display = 'flex';
+  $('angleSlider').value = plan.angle;
+  syncPlanner(); computePredPath();
+}
+
+/* pinch zoom (two-finger) */
 let pinch = null;
-canvas.addEventListener('touchstart', (e) => { if (e.touches.length === 2) pinch = dist2(e.touches); }, { passive: true });
+canvas.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { pinch = dist2(e.touches); dragging = null; } }, { passive: true });
 canvas.addEventListener('touchmove', (e) => {
   if (e.touches.length === 2 && pinch) { const d = dist2(e.touches); targetZoom *= d / pinch; pinch = d; }
 }, { passive: true });
@@ -868,12 +1068,41 @@ function syncPlanner() {
 document.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT') return;
   const k = e.key.toLowerCase();
-  if (k === ' ') { e.preventDefault(); warp = warp === 0 ? 1 : 0; pendingWarpTo = null; syncWarpButtons(); }
+  // Esc closes whatever is on top
+  if (k === 'escape') {
+    const open = document.querySelector('.modal.show');
+    if (open) { closeModal(open.id); return; }
+    if (phase === 'planning') { hidePlanner(); return; }
+    return;
+  }
+  if (anyModalOpen()) return; // don't fly the ship while a dialog is up
+  if (k === 'enter') { if (phase === 'planning') { e.preventDefault(); commitBurn(); checkGoal(); } }
+  else if (k === ' ') { e.preventDefault(); warp = warp === 0 ? 1 : 0; pendingWarpTo = null; syncWarpButtons(); }
   else if (k === 'b') { $('planner').classList.contains('show') ? hidePlanner() : showPlanner(); }
-  else if (k === '.') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.min(ws.indexOf(warp) + 1, ws.length - 1)]; syncWarpButtons(); }
-  else if (k === ',') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.max(ws.indexOf(warp) - 1, 0)]; syncWarpButtons(); }
+  else if (k === '.') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.min(ws.indexOf(warp) + 1, ws.length - 1)]; pendingWarpTo = null; syncWarpButtons(); }
+  else if (k === ',') { const ws = [0, 1, 10, 50, 200]; warp = ws[Math.max(ws.indexOf(warp) - 1, 0)]; pendingWarpTo = null; syncWarpButtons(); }
   else if (k === 'h') { $('hud').classList.toggle('show'); $('btnHud').classList.toggle('active'); }
   else if (k === 'x') { endBurn(); }
+  else if (k === 'z') { undoBurn(); }
+  else if (k === 'f') { setFollow(!follow); }
+  else if (k === 'm') { showMission(); }
+  else if (k === 'p') { warpToApsis('pe'); }
+  else if (k === 'a') { warpToApsis('ap'); }
+  else if (k === 'r') { loadLevel(LEVELS.indexOf(lvl)); }
+});
+
+/* new top-bar + modal wiring */
+$('btnUndo').addEventListener('click', undoBurn);
+$('crashUndo').addEventListener('click', undoBurn);
+$('mathToggle').addEventListener('click', () => {
+  const m = $('dbMath');
+  const hidden = m.classList.toggle('collapsed');
+  $('mathToggle').textContent = (hidden ? '▶ Show' : '▼ Hide') + ' the math — proving the outcome from your inputs';
+});
+$('tgResetProg').addEventListener('click', () => {
+  store.del(PROG_KEY);
+  renderLevelGrid();
+  toast('Mission progress cleared');
 });
 
 /* ---------- top bar ---------- */
@@ -888,6 +1117,7 @@ function syncTop() {
 
 /* engine selector (sandbox only) */
 function syncEngineRow() {
+  $('leadWrap').classList.toggle('show', isFinite(engine));
   const row = $('engineRow');
   if (!lvl.engineChoices) { row.style.display = 'none'; return; }
   row.style.display = 'grid';
@@ -908,8 +1138,25 @@ $('btnCut').addEventListener('click', endBurn);
 
 /* ---------- HUD ---------- */
 let vSeen = { min: Infinity, max: -Infinity };
+var apsisCache = { t: -1, pe: null, ap: null };
+function apsisCountdowns() {
+  // recompute at most a few times a second of sim time — propagation is not free
+  if (Math.abs(S.t - apsisCache.t) > 0.4 || apsisCache.t < 0) {
+    apsisCache = { t: S.t, pe: timeToApsis(lvl, S, 'pe'), ap: timeToApsis(lvl, S, 'ap') };
+  }
+  return apsisCache;
+}
 function syncHud() {
   if (!$('hud').classList.contains('show')) return;
+  const ap = apsisCountdowns();
+  $('hudTPe').textContent = ap.pe === null ? '—' : fmtDur(ap.pe);
+  $('hudTAp').textContent = ap.ap === null ? '—' : fmtDur(ap.ap);
+  if (isFinite(engine)) {
+    $('hudBurnRow').style.display = 'flex';
+    $('hudBurnT').textContent = fmtDur(fuel / engine);
+  } else {
+    $('hudBurnRow').style.display = 'none';
+  }
   const el = elements(lvl, S);
   vSeen.min = Math.min(vSeen.min, el.v); vSeen.max = Math.max(vSeen.max, el.v);
   $('hudV').textContent = uKMS(el.v).toFixed(2) + ' km/s';
@@ -928,7 +1175,7 @@ function frame(now) {
   const dtReal = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
 
-  if ((phase === 'fly') && (warp > 0 || pendingWarpTo !== null)) {
+  if ((phase === 'fly') && !anyModalOpen() && (warp > 0 || pendingWarpTo !== null)) {
     let simDt;
     if (pendingWarpTo !== null) {
       simDt = Math.min(pendingWarpTo, TIME_SCALE * 400 * dtReal);
@@ -971,6 +1218,10 @@ function frame(now) {
   }
 
   zoom += (targetZoom - zoom) * Math.min(1, dtReal * 8);
+  if (follow) {
+    const k = Math.min(1, dtReal * 6);
+    camX += (S.x - camX) * k; camY += (S.y - camY) * k;
+  }
   draw();
   syncHud();
   syncOrbitChip();
@@ -980,16 +1231,24 @@ function frame(now) {
 
 /* ---------- rendering ---------- */
 function W2S(x, y) {
-  return [window.innerWidth / 2 + x * zoom, window.innerHeight / 2 + y * zoom];
+  return [window.innerWidth / 2 + (x - camX) * zoom, window.innerHeight / 2 + (y - camY) * zoom];
 }
 function draw() {
   const w = window.innerWidth, h = window.innerHeight;
   ctx.clearRect(0, 0, w, h);
-  // stars
+  // deep-space backdrop (MSU navy vignette)
+  const bg = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.75);
+  bg.addColorStop(0, '#00203f');
+  bg.addColorStop(1, '#000710');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+  // stars (slow parallax against the camera so panning feels physical)
+  const pxOff = (camX * zoom * 0.02) % w, pyOff = (camY * zoom * 0.02) % h;
   for (const st of stars) {
     ctx.globalAlpha = st.a;
-    ctx.fillStyle = '#cdd8ef';
-    ctx.fillRect(st.x * w, st.y * h, st.s, st.s);
+    ctx.fillStyle = st.g ? '#ECAC00' : '#cfe0f5';
+    let sx = (st.x * w - pxOff + w) % w, sy = (st.y * h - pyOff + h) % h;
+    ctx.fillRect(sx, sy, st.s, st.s);
   }
   ctx.globalAlpha = 1;
 
@@ -998,11 +1257,11 @@ function draw() {
   if (g.type === 'circular' || g.type === 'transfer')
     drawRing(g.a - g.band, g.a + g.band, 'rgba(74,222,128,0.14)', '#4ade80', 'TARGET ORBIT — circularize inside this ring');
   if (g.type === 'apoapsis')
-    drawRing(g.min, g.max, 'rgba(251,191,36,0.12)', '#fbbf24', 'TARGET Ap BAND — get your apoapsis (Ap) in here; no need to circularize');
+    drawRing(g.min, g.max, 'rgba(236,172,0,0.13)', '#ECAC00', 'TARGET Ap BAND — get your apoapsis (Ap) in here; no need to circularize');
   if (g.type === 'escape') {
     const [cx, cy] = W2S(0, 0);
     const free = elements(lvl, S).eps > 0;
-    const col = free ? '74,222,128' : '248,113,113';
+    const col = free ? '74,222,128' : '255,69,0';
     ctx.strokeStyle = `rgba(${col},0.55)`; ctx.setLineDash([8, 8]); ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(cx, cy, lvl.escapeR * zoom, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([]);
@@ -1014,7 +1273,7 @@ function draw() {
   // moon orbit + moon
   if (lvl.moon) {
     const [cx, cy] = W2S(0, 0);
-    ctx.strokeStyle = 'rgba(143,160,188,0.25)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0,164,227,0.28)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(cx, cy, lvl.moon.R * zoom, 0, Math.PI * 2); ctx.stroke();
     const mp = moonPos(lvl, S.t);
     const [mx, my] = W2S(mp.x, mp.y);
@@ -1029,7 +1288,7 @@ function draw() {
 
   // trail
   if (trail.length > 1) {
-    ctx.strokeStyle = 'rgba(91,157,255,0.35)'; ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(0,164,227,0.4)'; ctx.lineWidth = 1.5;
     ctx.beginPath();
     trail.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
     ctx.stroke();
@@ -1037,7 +1296,7 @@ function draw() {
 
   // current orbit path
   if (curPath && curPath.length > 1) {
-    ctx.strokeStyle = 'rgba(232,236,244,0.28)'; ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(232,240,251,0.32)'; ctx.lineWidth = 1;
     ctx.beginPath();
     curPath.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
     ctx.stroke();
@@ -1052,25 +1311,43 @@ function draw() {
       ctx.stroke();
     }
     if (predPath.pts.length > 1) {
-      ctx.strokeStyle = predPath.crash ? 'rgba(248,113,113,0.95)' : 'rgba(74,222,128,0.95)';
+      ctx.strokeStyle = predPath.crash ? 'rgba(255,69,0,0.95)' : 'rgba(74,222,128,0.95)';
       ctx.lineWidth = 2; ctx.setLineDash([3, 7]);
       ctx.beginPath();
       predPath.pts.forEach((p, i) => { const [x, y] = W2S(p[0], p[1]); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
       ctx.stroke();
       ctx.setLineDash([]);
     }
+    // hollow markers: where the NEW apsides will sit
+    const pe = predPath.el;
+    if (!predPath.crash && pe && pe.bound && pe.e > 1e-4) {
+      const th = Math.atan2(pe.ey, pe.ex);
+      drawApsis(pe.rp * Math.cos(th), pe.rp * Math.sin(th), 'Pe′', '#4ade80', true);
+      drawApsis(-pe.ra * Math.cos(th), -pe.ra * Math.sin(th), 'Ap′', '#ECAC00', true);
+    }
   }
 
-  // planet
+  // Earth
   {
     const [cx, cy] = W2S(0, 0);
     const pr = Math.max(4, lvl.planetR * zoom);
-    const pg = ctx.createRadialGradient(cx - pr * 0.35, cy - pr * 0.35, pr * 0.15, cx, cy, pr);
-    pg.addColorStop(0, '#7fb2ff'); pg.addColorStop(0.55, '#2f6fd8'); pg.addColorStop(1, '#153164');
+    // atmosphere glow
+    const ag = ctx.createRadialGradient(cx, cy, pr, cx, cy, pr * 1.28);
+    ag.addColorStop(0, 'rgba(0,164,227,0.34)'); ag.addColorStop(1, 'rgba(0,164,227,0)');
+    ctx.fillStyle = ag;
+    ctx.beginPath(); ctx.arc(cx, cy, pr * 1.28, 0, Math.PI * 2); ctx.fill();
+    const pg = ctx.createRadialGradient(cx - pr * 0.35, cy - pr * 0.38, pr * 0.12, cx, cy, pr);
+    pg.addColorStop(0, '#4fc3f7'); pg.addColorStop(0.45, '#00A4E3'); pg.addColorStop(1, '#002144');
     ctx.fillStyle = pg;
     ctx.beginPath(); ctx.arc(cx, cy, pr, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = 'rgba(127,178,255,0.35)'; ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(cx, cy, pr + 2, 0, Math.PI * 2); ctx.stroke();
+    ctx.strokeStyle = 'rgba(0,164,227,0.55)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.arc(cx, cy, pr, 0, Math.PI * 2); ctx.stroke();
+    if (pr > 22) {
+      ctx.save();
+      ctx.fillStyle = 'rgba(236,172,0,0.85)'; ctx.font = '600 10px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText('EARTH', cx, cy + 3);
+      ctx.restore();
+    }
   }
 
   // craft
@@ -1091,28 +1368,83 @@ function draw() {
       ctx.beginPath(); ctx.moveTo(sz * 0.2, 0); ctx.lineTo(fl, sz * 0.45); ctx.lineTo(fl, -sz * 0.45); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
-    ctx.fillStyle = '#f4f7ff';
+    // Racer gold craft
+    ctx.fillStyle = '#ECAC00';
+    ctx.strokeStyle = '#fff3d0'; ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(sz, 0); ctx.lineTo(-sz * 0.7, sz * 0.6); ctx.lineTo(-sz * 0.4, 0); ctx.lineTo(-sz * 0.7, -sz * 0.6);
-    ctx.closePath(); ctx.fill();
+    ctx.closePath(); ctx.fill(); ctx.stroke();
     ctx.restore();
+
+    // live thrust-vector arrow while planning (direction + relative magnitude)
+    if (phase === 'planning' && plan.dv > 0.001) {
+      const d = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
+      const frac = Math.min(1, plan.dv / Math.max(0.001, lvl.fuel));
+      const len = 26 + 52 * frac;
+      const ax = x + d.x * len, ay = y + d.y * len;
+      const col = { prograde: '#4ade80', retrograde: '#fb923c', radialout: '#22d3ee', radialin: '#22d3ee', free: '#00A4E3' }[plan.mode];
+      ctx.save();
+      ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 2.5;
+      ctx.shadowColor = 'rgba(0,7,16,0.9)'; ctx.shadowBlur = 5;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ax, ay); ctx.stroke();
+      const a = Math.atan2(d.y, d.x);
+      ctx.beginPath();
+      ctx.moveTo(ax + Math.cos(a) * 9, ay + Math.sin(a) * 9);
+      ctx.lineTo(ax + Math.cos(a + 2.5) * 8, ay + Math.sin(a + 2.5) * 8);
+      ctx.lineTo(ax + Math.cos(a - 2.5) * 8, ay + Math.sin(a - 2.5) * 8);
+      ctx.closePath(); ctx.fill();
+      ctx.font = '600 11px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(fmtMS(plan.dv), ax + Math.cos(a) * 22, ay + Math.sin(a) * 22 + 4);
+      ctx.restore();
+      ctx.textAlign = 'left';
+    }
+
     // apsis markers on current orbit
     const el = elements(lvl, S);
     if (el.bound && el.e > 1e-4) {
       const th = Math.atan2(el.ey, el.ex); // periapsis direction
-      const px = el.rp * Math.cos(th), py = el.rp * Math.sin(th);
-      const axp = -el.ra * Math.cos(th), ayp = -el.ra * Math.sin(th);
-      drawApsis(px, py, 'Pe', '#4ade80');
-      drawApsis(axp, ayp, 'Ap', '#fbbf24');
+      drawApsis(el.rp * Math.cos(th), el.rp * Math.sin(th), 'Pe', '#4ade80');
+      drawApsis(-el.ra * Math.cos(th), -el.ra * Math.sin(th), 'Ap', '#ECAC00');
     }
+    // off-screen: point to the craft from the screen edge
+    const m = 42;
+    if (x < m || y < m || x > w - m || y > h - m) drawOffscreenPointer(x, y, w, h, m);
   }
 }
-function drawApsis(wx, wy, label, color) {
+
+function drawOffscreenPointer(x, y, w, h, m) {
+  const cx = w / 2, cy = h / 2;
+  const dx = x - cx, dy = y - cy;
+  const ang = Math.atan2(dy, dx);
+  // clamp onto the inset rectangle
+  const t = Math.min(
+    Math.abs((w / 2 - m) / (dx || 1e-6)),
+    Math.abs((h / 2 - m) / (dy || 1e-6))
+  );
+  const px = cx + dx * t, py = cy + dy * t;
+  ctx.save();
+  ctx.translate(px, py); ctx.rotate(ang);
+  ctx.fillStyle = '#ECAC00';
+  ctx.shadowColor = 'rgba(0,7,16,0.9)'; ctx.shadowBlur = 6;
+  ctx.beginPath(); ctx.moveTo(13, 0); ctx.lineTo(-7, 8); ctx.lineTo(-7, -8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.fillStyle = '#ECAC00'; ctx.font = '600 10px system-ui'; ctx.textAlign = 'center';
+  ctx.shadowColor = 'rgba(0,7,16,0.95)'; ctx.shadowBlur = 5;
+  ctx.fillText('CRAFT', px - Math.cos(ang) * 20, py - Math.sin(ang) * 20 + 3);
+  ctx.restore();
+  ctx.textAlign = 'left';
+}
+function drawApsis(wx, wy, label, color, hollow) {
   const [x, y] = W2S(wx, wy);
-  ctx.fillStyle = color;
-  ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-  ctx.font = '11px system-ui';
-  ctx.fillText(label, x + 6, y + 4);
+  ctx.beginPath(); ctx.arc(x, y, hollow ? 4.5 : 3.5, 0, Math.PI * 2);
+  if (hollow) { ctx.strokeStyle = color; ctx.lineWidth = 1.8; ctx.stroke(); }
+  else { ctx.fillStyle = color; ctx.fill(); }
+  ctx.save();
+  ctx.fillStyle = color; ctx.font = '600 11px system-ui';
+  ctx.shadowColor = 'rgba(0,7,16,0.95)'; ctx.shadowBlur = 4;
+  ctx.fillText(label, x + 7, y + 4);
+  ctx.restore();
 }
 function drawRing(rIn, rOut, fill, edge, label) {
   const [cx, cy] = W2S(0, 0);
