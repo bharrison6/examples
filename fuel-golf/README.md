@@ -12,6 +12,12 @@ session plan (also included pre-rendered as `teacher-guide.pdf`).
 
 ## What's real
 
+- **The planet is Earth at true scale**: μ = 398,600 km³/s², radius 6,371 km. The
+  sim is scale-free internally; the display maps 1 world unit = 159.275 km and
+  1 sim-second = 1,006.8 s so that μ comes out exactly right. All UI numbers are
+  physical: speeds in km/s, Δv budgets in m/s, altitudes in km, ε in km²/s²,
+  mission clock in hours/days. (The moon is fictional — closer and heavier than
+  Luna — so a gravity assist fits a class period.)
 - Newtonian gravity integrated with velocity Verlet at a fixed substep — an unburned
   orbit stays closed for 50+ periods (energy drift ~1e-13, verified).
 - Burns are impulsive Δv in a chosen direction (prograde / retrograde / radial / free
@@ -28,13 +34,13 @@ session plan (also included pre-rendered as `teacher-guide.pdf`).
 
 | # | Mission | Par | The lesson |
 |---|---------|-----|-----------|
-| 1 | Circularize your orbit | 4.5 | Controls; burns at apoapsis |
-| 2 | Raise apoapsis to a ring | 7.0 | Burns move the *opposite* side of the orbit |
-| 3 | **Escape Artist** | 5.0 | The aha: escape costs 4.18 Δv at periapsis, 11.60 at apoapsis |
-| 4 | Transfer to an outer orbit | 11.5 | Hohmann discovery |
-| 5 | Powered flyby of the moon | 9.0 | Gravity assist + Oberth burn |
-| 6 | Ignition Window (finite thrust) | 5.3 | Center the burn on periapsis: lit at Pe costs 5.81, centered 4.90 |
-| 7 | Perigee Kicks (weak engine) | 5.2 | One long burn costs 9.47; six 10-s kicks cost 4.62 |
+| 1 | Circularize your orbit | 712 m/s | Controls; burns at apoapsis |
+| 2 | Raise apoapsis to a ring | 1,107 m/s | Burns move the *opposite* side of the orbit |
+| 3 | **Escape Artist** | 791 m/s | The aha: escape costs 661 m/s at periapsis, 1,835 m/s at apoapsis |
+| 4 | Transfer to an outer orbit | 1,819 m/s | Hohmann discovery |
+| 5 | Powered flyby of the moon | 1,424 m/s | Gravity assist + Oberth burn |
+| 6 | Ignition Window (0.055 m/s² thrust) | 838 m/s | Center the burn on periapsis: lit at Pe costs 919, centered 775 |
+| 7 | Perigee Kicks (0.013 m/s² thrust) | 823 m/s | One long burn costs 1,498; six ~2.8 h kicks cost 731 |
 | 8 | Sandbox | — | Free play, big tank, swappable engines |
 
 ## Verifying the physics

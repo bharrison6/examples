@@ -8,7 +8,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: Georgia, "Times New Roman", serif;
-    color: #16202e; font-size: 9.1pt; line-height: 1.32;
+    color: #16202e; font-size: 8.8pt; line-height: 1.28;
     max-width: 7.6in; margin: 0 auto; padding: 12px;
   }
   header { border-bottom: 2.5px solid #16202e; padding-bottom: 6px; margin-bottom: 10px;
@@ -41,13 +41,13 @@
 
 <div class="cols">
   <h2>What students do</h2>
-  <p>Each mission gives a spacecraft, a goal (circularize, raise an orbit, escape, transfer, use a moon flyby) and a <b>par Δv budget</b>. Real Newtonian gravity is integrated live — nothing is animated or scripted. Students time-warp, aim a burn, preview the dotted trajectory, and commit. Score is total Δv spent; lowest wins. It runs offline in any browser — just open <b>index.html</b> (works on Chromebooks, mouse or touch).</p>
+  <p>Each mission gives a spacecraft, a goal (circularize, raise an orbit, escape, transfer, moon flyby) and a <b>par Δv budget</b>. Real Newtonian gravity is integrated live, and <b>the planet is Earth at true scale</b> (μ = 398,600 km³/s², R = 6,371 km): speeds in km/s, Δv in m/s, altitudes in km — every number transfers to real missions. Students time-warp, aim a burn, preview the dotted trajectory, commit. Lowest total Δv wins. Runs offline in any browser — open <b>index.html</b> (Chromebook-friendly). The moon is fictional (closer/heavier than Luna) so an assist fits one class.</p>
 
   <h2>20-minute session plan</h2>
   <ul>
     <li><span class="time">0–3 min</span>Project the game (⚙ → Projector mode). Fly Level 1 together: show time-warp, the burn planner, and the dotted preview. Vocabulary: periapsis (low, fast), apoapsis (high, slow), prograde.</li>
     <li><span class="time">3–8 min</span>Students play Levels 1–2 in pairs. Ask them to open the <b>Physics HUD</b> and watch “energy gained per 1 Δv” as the ship swings around.</li>
-    <li><span class="time">8–15 min</span>The main event: <b>Level 3, “Escape Artist.”</b> Par is 5.0, but the tank holds 13 — burning at apoapsis costs ≈11.6 to escape, while the same escape from periapsis costs ≈4.2. Let them discover this. When someone makes par, have them explain <i>where</i> they burned and what the HUD showed.</li>
+    <li><span class="time">8–15 min</span>The main event: <b>Level 3, “Escape Artist.”</b> Par is 791 m/s, but the tank holds 2,057 — escaping Earth from apoapsis costs ≈1,835 m/s, while the same escape from periapsis costs ≈661. Let them discover this. When someone makes par, have them explain <i>where</i> they burned and what the HUD showed.</li>
     <li><span class="time">15–19 min</span>Debrief on the projector using a student’s energy-vs-time plot and the <b>“show the math” panel</b> below it, which evaluates Δε = v·Δv + ½Δv² with that student’s actual numbers and checks it against the simulation. The burn is a vertical jump in ε — taller when v was larger, for the <i>same</i> Δv.</li>
     <li><span class="time">19–20 min</span>Post the leaderboard. Levels 4–7 (Hohmann, powered flyby, finite thrust) make excellent homework or a second session.</li>
   </ul>
@@ -69,7 +69,7 @@
   </div>
 
   <h2>Finite thrust (levels 6–7)</h2>
-  <p>Levels 1–5 use impulsive burns; levels 6–7 give the engine limited acceleration, so Δv is delivered over an arc (steering losses ignored). Two lessons emerge: a single burn is cheapest <b>centered on periapsis</b> — start early, or the late half happens at lower speed (lit at Pe: 5.81 Δv to escape; centered: 4.90) — and with a weak engine (level 7) one long burn costs 9.47 while six short <b>perigee kicks</b> cost 4.62. This is why real upper stages escape via repeated perigee kicks.</p>
+  <p>Levels 1–5 use impulsive burns; levels 6–7 give the engine limited acceleration (0.055 and 0.013 m/s²), so Δv is delivered over hours of arc (steering losses ignored). Two lessons emerge: a single burn is cheapest <b>centered on periapsis</b> — start early, or the late half happens at lower speed (lit at Pe: 919 m/s to escape; centered: 775) — and with the weak engine one long burn costs 1,498 m/s while six ~3 h <b>perigee kicks</b> cost 731. This is why real upper stages escape via repeated perigee kicks.</p>
 
   <h2>Discussion questions</h2>
   <ol>
@@ -84,7 +84,7 @@
   <h2>Classroom logistics</h2>
   <ul>
     <li><b>Leaderboards</b> persist per level on each machine; reset them between class periods via ⚙ Teacher mode → Reset.</li>
-    <li>Par scores: L1 4.5 · L2 7.0 · L3 5.0 · L4 11.5 · L5 9.0 · L6 5.3 · L7 5.2. Verified minimums: L3 escape ≈ 4.18 from periapsis vs ≈ 11.60 from apoapsis.</li>
+    <li>Pars (m/s): L1 712 · L2 1,107 · L3 791 · L4 1,819 · L5 1,424 · L6 838 · L7 823. Verified minimums: L3 escape ≈ 661 m/s from periapsis vs ≈ 1,835 m/s from apoapsis.</li>
     <li>Keyboard: <b>Space</b> pause · <b>B</b> burn planner · <b>X</b> cut engine · <b>, .</b> warp down/up · <b>H</b> HUD.</li>
   </ul>
 </div>

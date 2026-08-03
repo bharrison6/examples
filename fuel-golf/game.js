@@ -14,6 +14,18 @@
 const DT = 1 / 60;           // integrator substep (sim-time units)
 const TIME_SCALE = 4;        // sim-time units per real second at 1x warp
 
+/* ---- real-world unit mapping (display only; the sim is scale-free) ----
+   The planet IS Earth: radius 6371 km, mu = 398,600 km^3/s^2.
+   With the planet drawn at 40 world units, that fixes the length unit,
+   and matching mu fixes the time unit. Every displayed number is real. */
+const MU_KM = 398600;                                  // km^3/s^2 (Earth)
+const KM_PER_U = 6371 / 40;                            // 159.275 km per world unit
+const SEC_PER_TU = Math.sqrt(100000 * Math.pow(KM_PER_U, 3) / MU_KM); // ~1007 s per sim-second
+const KMS_PER_VU = KM_PER_U / SEC_PER_TU;              // ~0.1582 km/s per speed unit
+const MS_PER_VU = KMS_PER_VU * 1000;                   // ~158.2 m/s per speed unit
+const EPS_KM = KMS_PER_VU * KMS_PER_VU;                // km^2/s^2 per energy unit
+const MS2_PER_AU = MS_PER_VU / SEC_PER_TU;             // ~0.157 m/s^2 per accel unit
+
 function moonPos(lvl, t) {
   const m = lvl.moon;
   const n = Math.sqrt(lvl.mu / (m.R * m.R * m.R)); // circular orbit rate
@@ -190,7 +202,7 @@ const LEVELS = [
     start: { rp: 110, ra: 480 },
     goal: { type: 'escape' },
     view: 1400,
-    hint: 'Break free of the planet. Escaping means orbital energy ε > 0 — a giant ellipse still falls back, no matter how far it flies! Watch the ORBIT chip up top (or ε in the HUD). You have 13 Δv but par is only 5. Where does each unit of Δv buy the most energy?',
+    hint: 'Break free of Earth. Escaping means orbital energy ε > 0 — a giant ellipse still falls back, no matter how far it flies! Watch the ORBIT chip up top (or ε in the HUD). You have 2,057 m/s in the tank but par is only 791. Where does each m/s of Δv buy the most energy?',
     debriefIdeal: 'Escape is cheapest at periapsis: ΔKE = v·Δv + ½Δv², and v is largest at the bottom of the well. This is the Oberth effect.',
   },
   {
@@ -209,7 +221,7 @@ const LEVELS = [
     moon: { R: 520, mu: 3500, r: 14, a0: 2.4 },
     goal: { type: 'escape' },
     view: 1600,
-    hint: 'Direct escape from here costs ~11.5 Δv — over par. But there is a moon. Raise your apoapsis so you sweep close behind the moon and let its gravity fling you. Time your transfer burn so you and the moon arrive at the same place together.',
+    hint: 'Direct escape from here costs ~1,820 m/s — well over par (1,424). But there is a moon. Raise your apoapsis so you sweep close behind it and let its gravity fling you. Time your transfer burn so you and the moon arrive at the same place together.',
     debriefIdeal: 'A gravity assist trades the moon\'s orbital motion for your speed; pairing it with a burn deep in a gravity well is the powered-flyby (Oberth) strategy real missions use.',
   },
   {
@@ -258,6 +270,20 @@ if (typeof document !== 'undefined') (() => {
 const $ = (id) => document.getElementById(id);
 const canvas = $('space');
 const ctx = canvas.getContext('2d');
+
+/* ---------- real-unit display formatters ---------- */
+const uMS = (vu) => Math.round(vu * MS_PER_VU);                       // Δv, m/s
+const uKMS = (vu) => (vu * KMS_PER_VU);                               // speed, km/s
+const uKM = (u) => Math.round(u * KM_PER_U);                          // distance, km
+const uEPS = (eu) => (eu * EPS_KM);                                   // ε, km²/s²
+const fmtKm = (u) => uKM(u).toLocaleString('en-US') + ' km';
+const fmtMS = (vu) => uMS(vu).toLocaleString('en-US') + ' m/s';
+const fmtDur = (tu) => {
+  const s = tu * SEC_PER_TU;
+  if (s < 5400) return Math.round(s / 60) + ' min';
+  if (s < 172800) return (s / 3600).toFixed(1) + ' h';
+  return (s / 86400).toFixed(1) + ' d';
+};
 
 /* ---------- persistence (guarded: falls back to memory) ---------- */
 const store = (() => {
@@ -388,9 +414,9 @@ function computePredPath() {
   if (crash) {
     pi.innerHTML = '<span style="color:var(--bad)">Predicted: impacts the planet 💥</span>';
   } else if (el.eps > 0) {
-    pi.innerHTML = '<span style="color:var(--good)">Predicted: ESCAPE trajectory (ε = +' + el.eps.toFixed(1) + ') — leaves and never returns</span>';
+    pi.innerHTML = '<span style="color:var(--good)">Predicted: ESCAPE trajectory (ε = +' + uEPS(el.eps).toFixed(2) + ' km²/s²) — leaves and never returns</span>';
   } else {
-    let t = 'Predicted orbit: Pe ' + Math.round(el.rp - lvl.planetR) + ' · Ap ' + Math.round(el.ra - lvl.planetR) + ' · ε = ' + el.eps.toFixed(1);
+    let t = 'Predicted orbit: Pe ' + fmtKm(el.rp - lvl.planetR) + ' · Ap ' + fmtKm(el.ra - lvl.planetR) + ' · ε = ' + uEPS(el.eps).toFixed(2) + ' km²/s²';
     if (lvl.goal.type === 'escape') t += ' — <span style="color:var(--warn)">still bound: it will fall back</span>';
     pi.innerHTML = t;
   }
@@ -457,7 +483,7 @@ function checkGoal() {
     if (!done && el.eps <= 0 && el.r > lvl.escapeR && !warnedFallback) {
       warnedFallback = true;
       $('hint').textContent = 'You crossed the system edge — but your orbital energy is still negative (ε = ' +
-        el.eps.toFixed(1) + '), so this is just a very tall ellipse: gravity will pull you back. ' +
+        uEPS(el.eps).toFixed(2) + ' km²/s²), so this is just a very tall ellipse: gravity will pull you back. ' +
         'Escape needs ε > 0. More speed — cheapest at periapsis.';
       $('hint').classList.add('show');
       setTimeout(() => $('hint').classList.remove('show'), 12000);
@@ -518,14 +544,14 @@ function debriefSentence() {
   const highSpeedFrac = main.v / vmax;
   let s = '';
   if (!overPar) {
-    s = `Under par with ${dvUsed.toFixed(2)} Δv. Your biggest burn (${main.dv.toFixed(2)} Δv) came at speed ${main.v.toFixed(1)} — `;
+    s = `Under par with ${fmtMS(dvUsed)}. Your biggest burn (${fmtMS(main.dv)}) came at ${uKMS(main.v).toFixed(2)} km/s — `;
     s += highSpeedFrac > 0.75
       ? 'deep and fast in the gravity well, so the v·Δv term of ΔKE = v·Δv + ½Δv² did most of the work. Textbook Oberth.'
       : 'and the mission geometry let you get away with it. Try the same mission burning only at periapsis and watch the margin grow.';
   } else {
-    s = `Over par (${dvUsed.toFixed(2)} vs ${lvl.par}). Your biggest burn happened at speed ${main.v.toFixed(1)} while this orbit peaks near ${vmax.toFixed(1)} at periapsis — `;
+    s = `Over par (${fmtMS(dvUsed)} vs ${fmtMS(lvl.par)}). Your biggest burn happened at ${uKMS(main.v).toFixed(2)} km/s while this orbit peaks near ${uKMS(vmax).toFixed(2)} km/s at periapsis — `;
     s += highSpeedFrac < 0.75
-      ? 'burning where you were slow means each unit of Δv bought little energy (ΔKE = v·Δv + ½Δv²). Same burn at periapsis buys far more.'
+      ? 'burning where you were slow means each m/s of Δv bought little energy (ΔKE = v·Δv + ½Δv²). The same burn at periapsis buys far more.'
       : 'the direction or timing spent energy fighting your own orbit. Preview burns with the dotted line and spend Δv in as few, well-placed burns as possible.';
   }
   return s + (lvl.debriefIdeal ? ' ' + lvl.debriefIdeal : '');
@@ -541,13 +567,15 @@ function orbitFromEpsH(mu, eps, h) {
 }
 function renderMathProof() {
   const mu = lvl.mu;
-  const n1 = (x) => x.toFixed(1);
-  const n2 = (x) => x.toFixed(2);
-  const sgn = (x, d = 1) => (x >= 0 ? '+' : '') + x.toFixed(d);
-  let html = `<div class="mathcard"><div class="mhead">Setup</div>
-    μ = ${mu.toLocaleString()} · specific orbital energy ε = v²/2 − μ/r (per unit mass) ·
+  // everything below is shown in real units: km, km/s, km²/s² (per unit mass)
+  const V = (vu) => uKMS(vu).toFixed(3);          // speed / Δv, km/s
+  const E = (eu) => uEPS(eu).toFixed(2);          // ε, km²/s²
+  const Es = (eu) => (eu >= 0 ? '+' : '') + uEPS(eu).toFixed(2);
+  const R = (u) => uKM(u).toLocaleString('en-US');
+  let html = `<div class="mathcard"><div class="mhead">Setup — real Earth numbers</div>
+    μ = 398,600 km³/s² (Earth) · specific orbital energy ε = v²/2 − μ/r in km²/s² (per kg) ·
     a burn of Δv changes it by <b>Δε = v⃗·Δv⃗ + ½Δv²</b><br>
-    <span class="dim">Starting orbit: ε₀ = ${n1(epsStart)}. Everything below uses only your recorded inputs — the sim never gets a vote it can't justify.</span></div>`;
+    <span class="dim">Starting orbit: ε₀ = ${E(epsStart)} km²/s². Everything below uses only your recorded inputs — the sim never gets a vote it can't justify.</span></div>`;
 
   let sumBurnEps = 0;
   burnLog.forEach((b, i) => {
@@ -562,25 +590,25 @@ function renderMathProof() {
       const match = Math.abs(predicted - b.eps1) <= Math.max(0.5, Math.abs(b.eps1) * 0.02);
       const o = orbitFromEpsH(mu, b.eps1, b.h1);
       const orbitLine = o.hyper
-        ? `ε′ &gt; 0 → <b>hyperbolic escape</b>, leftover speed at infinity v<sub>∞</sub> = √(2ε′) = ${n2(o.vinf)}`
-        : `a′ = −μ/2ε′ = ${n1(o.a)} · e′ = √(1 + 2ε′h′²/μ²) = ${o.e.toFixed(3)} → Pe ${Math.round(o.rp - lvl.planetR)} / Ap ${Math.round(o.ra - lvl.planetR)} alt`;
-      html += `<div class="mathcard"><div class="mhead">Burn ${i + 1} — ${b.mode.toUpperCase()}, Δv = ${n2(b.dv)} at r = ${n1(b.r)} (t = ${n1(b.t)})</div>
-        <span class="mono">before: v = ${n2(b.v)}, ε = ${n2(b.v)}²/2 − μ/${n1(b.r)} = ${n1(b.eps0)}</span><br>
-        <span class="mono">Δε = v·Δv·cos θ + ½Δv² = ${n2(b.v)}·${n2(b.dv)}·cos ${theta}° + ½·${n2(b.dv)}² = ${sgn(b.vDotDv)} ${sgn(0.5 * b.dv * b.dv)} = <b>${sgn(dKE)}</b></span><br>
-        <span class="mono">predicted ε′ = ${n1(b.eps0)} ${sgn(dKE)} = ${n1(predicted)} · integrator measured ε′ = ${n1(b.eps1)} ${match ? '<span class="ok">✓ matches</span>' : '<span class="warnc">(Δ ' + n1(predicted - b.eps1) + ')</span>'}</span><br>
+        ? `ε′ &gt; 0 → <b>hyperbolic escape</b>, leftover speed at infinity v<sub>∞</sub> = √(2ε′) = ${V(o.vinf)} km/s`
+        : `a′ = −μ/2ε′ = ${R(o.a)} km · e′ = √(1 + 2ε′h′²/μ²) = ${o.e.toFixed(3)} → Pe ${R(o.rp - lvl.planetR)} / Ap ${R(o.ra - lvl.planetR)} km alt`;
+      html += `<div class="mathcard"><div class="mhead">Burn ${i + 1} — ${b.mode.toUpperCase()}, Δv = ${fmtMS(b.dv)} at r = ${R(b.r)} km (T+${fmtDur(b.t)})</div>
+        <span class="mono">before: v = ${V(b.v)} km/s, ε = ${V(b.v)}²/2 − 398600/${R(b.r)} = ${E(b.eps0)} km²/s²</span><br>
+        <span class="mono">Δε = v·Δv·cos θ + ½Δv² = ${V(b.v)}·${V(b.dv)}·cos ${theta}° + ½·${V(b.dv)}² = ${Es(b.vDotDv)} ${Es(0.5 * b.dv * b.dv)} = <b>${Es(dKE)} km²/s²</b></span><br>
+        <span class="mono">predicted ε′ = ${E(b.eps0)} ${Es(dKE)} = ${E(predicted)} · integrator measured ε′ = ${E(b.eps1)} ${match ? '<span class="ok">✓ matches</span>' : '<span class="warnc">(Δ ' + E(predicted - b.eps1) + ')</span>'}</span><br>
         <span class="mono">new orbit: ${orbitLine}</span></div>`;
     } else {
       const perDv = b.dv > 1e-9 ? dEpsMeasured / b.dv : 0;
       const approx = b.v * b.dv;
       const o = orbitFromEpsH(mu, b.eps1, b.h1);
       const orbitLine = o.hyper
-        ? `ε′ &gt; 0 → <b>hyperbolic escape</b>, v<sub>∞</sub> = √(2ε′) = ${n2(o.vinf)}`
-        : `a′ = −μ/2ε′ = ${n1(o.a)}, e′ = ${o.e.toFixed(3)} → Pe ${Math.round(o.rp - lvl.planetR)} / Ap ${Math.round(o.ra - lvl.planetR)} alt`;
-      html += `<div class="mathcard"><div class="mhead">Burn ${i + 1} — ${b.mode.toUpperCase()} (finite thrust ${b.aEng} Δv/s), Δv = ${n2(b.dv)} over ${n1(b.dur || 0)}s</div>
-        <span class="mono">Δv-weighted average speed during burn: v̄ = ${n2(b.v)}</span><br>
-        <span class="mono">Δε ≈ v̄·Δv = ${n2(b.v)}·${n2(b.dv)} = ${sgn(approx)} · integrator measured ${sgn(dEpsMeasured)} ${Math.abs(approx - dEpsMeasured) <= Math.max(1.5, Math.abs(dEpsMeasured) * 0.05) ? '<span class="ok">✓</span>' : ''}</span><br>
+        ? `ε′ &gt; 0 → <b>hyperbolic escape</b>, v<sub>∞</sub> = √(2ε′) = ${V(o.vinf)} km/s`
+        : `a′ = −μ/2ε′ = ${R(o.a)} km, e′ = ${o.e.toFixed(3)} → Pe ${R(o.rp - lvl.planetR)} / Ap ${R(o.ra - lvl.planetR)} km alt`;
+      html += `<div class="mathcard"><div class="mhead">Burn ${i + 1} — ${b.mode.toUpperCase()} (finite thrust ${(b.aEng * MS2_PER_AU).toFixed(3)} m/s²), Δv = ${fmtMS(b.dv)} over ${fmtDur(b.dur || 0)}</div>
+        <span class="mono">Δv-weighted average speed during burn: v̄ = ${V(b.v)} km/s</span><br>
+        <span class="mono">Δε ≈ v̄·Δv = ${V(b.v)}·${V(b.dv)} = ${Es(approx)} · integrator measured ${Es(dEpsMeasured)} km²/s² ${Math.abs(approx - dEpsMeasured) <= Math.max(1.5, Math.abs(dEpsMeasured) * 0.05) ? '<span class="ok">✓</span>' : ''}</span><br>
         <span class="dim">(≈ because a spread-out burn buys each slice of Δv at whatever speed you had at that instant — that's the gravity loss)</span><br>
-        <span class="mono">energy bought per unit Δv: ${n1(perDv)} — compare v at periapsis</span><br>
+        <span class="mono">energy bought per km/s of Δv: ${(perDv * KMS_PER_VU).toFixed(2)} km²/s² — compare v at periapsis</span><br>
         <span class="mono">new orbit: ${orbitLine}</span></div>`;
     }
   });
@@ -589,26 +617,26 @@ function renderMathProof() {
   const elF = elements(lvl, S);
   const residual = elF.eps - epsStart - sumBurnEps;
   const hasMoon = !!lvl.moon;
-  let ledger = `<span class="mono">ε start ${sgn(epsStart)}</span><br>`;
-  burnLog.forEach((b, i) => { if (b.eps1 !== undefined) ledger += `<span class="mono">+ burn ${i + 1} ${sgn(b.eps1 - b.eps0)}</span><br>`; });
-  if (Math.abs(residual) > 0.5 && hasMoon)
-    ledger += `<span class="mono">+ moon gravity assist ${sgn(residual)} <span class="ok">(cost: 0 fuel!)</span></span><br>`;
-  else if (Math.abs(residual) > 0.5)
-    ledger += `<span class="mono">+ unmodelled drift ${sgn(residual)}</span><br>`;
-  ledger += `<span class="mono">= ε final <b>${sgn(elF.eps)}</b> <span class="dim">(coasting never changes ε — gravity is conservative${hasMoon ? ', except the moon\'s tug' : ''})</span></span><br>`;
+  let ledger = `<span class="mono">ε start ${Es(epsStart)}</span><br>`;
+  burnLog.forEach((b, i) => { if (b.eps1 !== undefined) ledger += `<span class="mono">+ burn ${i + 1} ${Es(b.eps1 - b.eps0)}</span><br>`; });
+  if (Math.abs(uEPS(residual)) > 0.02 && hasMoon)
+    ledger += `<span class="mono">+ moon gravity assist ${Es(residual)} <span class="ok">(cost: 0 fuel!)</span></span><br>`;
+  else if (Math.abs(uEPS(residual)) > 0.02)
+    ledger += `<span class="mono">+ unmodelled drift ${Es(residual)}</span><br>`;
+  ledger += `<span class="mono">= ε final <b>${Es(elF.eps)} km²/s²</b> <span class="dim">(coasting never changes ε — gravity is conservative${hasMoon ? ', except the moon\'s tug' : ''})</span></span><br>`;
 
   // goal proof
   const g = lvl.goal;
   let proof = '';
   if (g.type === 'escape') {
-    proof = `ε final = ${sgn(elF.eps)} &gt; 0 and r = ${Math.round(elF.r)} &gt; system edge ${lvl.escapeR} → <b>escaped</b> with v<sub>∞</sub> = √(2·${n1(elF.eps)}) = ${n2(Math.sqrt(2 * Math.max(0, elF.eps)))}`;
+    proof = `ε final = ${Es(elF.eps)} &gt; 0 and r = ${R(elF.r)} km &gt; system edge ${R(lvl.escapeR)} km → <b>escaped Earth</b> with v<sub>∞</sub> = ${V(Math.sqrt(2 * Math.max(0, elF.eps)))} km/s`;
   } else if (g.type === 'apoapsis') {
-    proof = `Ap = a(1+e) = ${n1(elF.ra)}, target band [${g.min}, ${g.max}] → <b>${elF.ra >= g.min && elF.ra <= g.max ? 'inside ✓' : 'outside'}</b>`;
+    proof = `Ap = a(1+e) = ${R(elF.ra)} km, target band [${R(g.min)}, ${R(g.max)}] km → <b>${elF.ra >= g.min && elF.ra <= g.max ? 'inside ✓' : 'outside'}</b>`;
   } else if (g.type === 'circular' || g.type === 'transfer') {
-    proof = `a = ${n1(elF.a)} (target ${g.a} ± ${g.band}) and e = ${elF.e.toFixed(3)} (≤ ${g.emax}) → <b>${Math.abs(elF.a - g.a) <= g.band && elF.e <= g.emax ? 'inside ✓' : 'outside'}</b>`;
+    proof = `a = ${R(elF.a)} km (target ${R(g.a)} ± ${R(g.band)} km) and e = ${elF.e.toFixed(3)} (≤ ${g.emax}) → <b>${Math.abs(elF.a - g.a) <= g.band && elF.e <= g.emax ? 'inside ✓' : 'outside'}</b>`;
   }
   html += `<div class="mathcard ledger"><div class="mhead">Energy ledger → outcome</div>${ledger}
-    <span class="mono">total Δv spent = ${n2(dvUsed)} vs par ${lvl.par === Infinity ? '—' : lvl.par}</span><br>
+    <span class="mono">total Δv spent = ${fmtMS(dvUsed)} vs par ${lvl.par === Infinity ? '—' : fmtMS(lvl.par)}</span><br>
     <span class="mono">goal check: ${proof}</span></div>`;
 
   $('dbMath').innerHTML = html;
@@ -616,10 +644,10 @@ function renderMathProof() {
 
 function showDebrief() {
   $('debriefTitle').textContent = lvl.name + ' — mission complete';
-  $('dbDv').textContent = dvUsed.toFixed(2);
-  $('dbPar').textContent = lvl.par === Infinity ? '—' : lvl.par.toFixed(1);
+  $('dbDv').textContent = fmtMS(dvUsed);
+  $('dbPar').textContent = lvl.par === Infinity ? '—' : fmtMS(lvl.par);
   const diff = dvUsed - lvl.par;
-  $('dbScore').textContent = lvl.par === Infinity ? '—' : (diff <= 0 ? diff.toFixed(2) + ' 🏆' : '+' + diff.toFixed(2));
+  $('dbScore').textContent = lvl.par === Infinity ? '—' : (diff <= 0 ? uMS(diff).toLocaleString('en-US') + ' m/s 🏆' : '+' + fmtMS(diff));
   const v = $('dbVerdict');
   v.textContent = debriefSentence();
   v.className = 'verdict' + (dvUsed > lvl.par + 0.05 ? ' bad' : '');
@@ -657,10 +685,10 @@ function drawEnergyPlot() {
   }
   // labels
   g.fillStyle = '#8fa0bc'; g.font = '10px system-ui';
-  g.fillText('ε', 30, 14);
+  g.fillText('ε (km²/s²)', 12, 14);
   g.fillText('time →', W - 48, H - 8);
-  g.fillText(eMax.toFixed(0), 6, 14);
-  g.fillText(eMin.toFixed(0), 6, H - 26);
+  g.fillText(uEPS(eMax).toFixed(1), 6, 26);
+  g.fillText(uEPS(eMin).toFixed(1), 6, H - 30);
   // energy curve
   g.strokeStyle = '#5b9dff'; g.lineWidth = 2;
   g.beginPath();
@@ -672,7 +700,7 @@ function drawEnergyPlot() {
     g.fillStyle = '#4ade80';
     g.beginPath(); g.moveTo(x, H - 24); g.lineTo(x - 5, H - 14); g.lineTo(x + 5, H - 14); g.closePath(); g.fill();
     g.fillStyle = '#8fa0bc'; g.font = '9px system-ui';
-    g.fillText(b.dv.toFixed(1), x - 8, H - 4);
+    g.fillText(uMS(b.dv) + '', x - 10, H - 4);
   }
 }
 
@@ -684,7 +712,7 @@ function renderLb(tbodyId, levelId) {
   if (!rows.length) { tb.innerHTML = '<tr><td colspan="3" style="color:var(--muted)">No scores yet — be first.</td></tr>'; return; }
   rows.slice(0, 10).forEach((r, i) => {
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${i + 1}</td><td></td><td class="dv">${r.dv.toFixed(2)}</td>`;
+    tr.innerHTML = `<td>${i + 1}</td><td></td><td class="dv">${fmtMS(r.dv)}</td>`;
     tr.children[1].textContent = r.name;
     tb.appendChild(tr);
   });
@@ -720,8 +748,8 @@ function renderLevelGrid() {
     const card = document.createElement('div');
     card.className = 'levelcard';
     card.innerHTML = `<h4>${L.id}. ${L.name}</h4><div class="meta">${L.subtitle}</div>
-      <div class="meta">Par ${L.par === Infinity ? '—' : L.par} · Tank ${L.fuel === 200 ? '∞' : L.fuel} Δv</div>
-      ${best ? `<div class="best">Best: ${best.dv.toFixed(2)} (${best.name})</div>` : ''}`;
+      <div class="meta">Par ${L.par === Infinity ? '—' : fmtMS(L.par)} · Tank ${L.fuel === 200 ? '∞' : fmtMS(L.fuel)}</div>
+      ${best ? `<div class="best">Best: ${fmtMS(best.dv)} (${best.name})</div>` : ''}`;
     card.addEventListener('click', () => loadLevel(i));
     grid.appendChild(card);
   });
@@ -813,23 +841,23 @@ $('angleSlider').addEventListener('input', () => { plan.angle = +$('angleSlider'
 $('dvSlider').addEventListener('input', () => { plan.dv = +$('dvSlider').value; syncPlanner(); if (phase === 'planning') computePredPath(); });
 document.querySelectorAll('[data-fine]').forEach(b => {
   b.addEventListener('click', () => {
-    plan.dv = Math.max(0, Math.min(fuel, plan.dv + +b.dataset.fine));
+    plan.dv = Math.max(0, Math.min(fuel, plan.dv + (+b.dataset.fine) / MS_PER_VU)); // buttons are in m/s
     syncPlanner(); if (phase === 'planning') computePredPath();
   });
 });
 function syncPlanner() {
   $('dvSlider').value = plan.dv;
-  $('dvOut').textContent = plan.dv.toFixed(2);
+  $('dvOut').textContent = uMS(plan.dv).toLocaleString('en-US');
   $('angleOut').textContent = plan.angle + '°';
   const el = elements(lvl, S);
   const gain = el.v * plan.dv + 0.5 * plan.dv * plan.dv;
-  let txt = `Tank after burn: <b>${Math.max(0, fuel - plan.dv).toFixed(2)}</b> Δv · Energy this burn adds if prograde: <b>${gain.toFixed(0)}</b> (v·Δv + ½Δv², v=${el.v.toFixed(1)})`;
+  let txt = `Tank after burn: <b>${fmtMS(Math.max(0, fuel - plan.dv))}</b> · Energy this burn adds if prograde: <b>${uEPS(gain).toFixed(2)} km²/s²</b> (v·Δv + ½Δv², v = ${uKMS(el.v).toFixed(2)} km/s)`;
   if (isFinite(engine)) {
     const tBurn = plan.dv / engine;
     const T = el.bound ? 2 * Math.PI * Math.sqrt(Math.pow(el.a, 3) / lvl.mu) : Infinity;
     const frac = T === Infinity ? 0 : tBurn / T;
-    txt += `<br>⏱ Burn duration: <b>${tBurn.toFixed(1)}s</b>` +
-      (T !== Infinity ? ` — <b>${(frac * 100).toFixed(0)}%</b> of your orbit` : '') +
+    txt += `<br>⏱ Burn duration: <b>${fmtDur(tBurn)}</b>` +
+      (T !== Infinity ? ` — <b>${(frac * 100).toFixed(0)}%</b> of your ${fmtDur(T)} orbit` : '') +
       `. The burn starts when you commit — start <i>before</i> periapsis so it straddles the fast point.` +
       (frac > 0.30 ? ' <b style="color:var(--warn)">Too long for one pass — consider splitting into kicks.</b>' : '');
   }
@@ -851,11 +879,11 @@ document.addEventListener('keydown', (e) => {
 /* ---------- top bar ---------- */
 function syncTop() {
   $('levelChip').textContent = `Level ${lvl.id}: ${lvl.name}`;
-  $('parChip').textContent = lvl.par === Infinity ? '—' : lvl.par.toFixed(1);
-  $('dvChip').textContent = dvUsed.toFixed(2);
-  $('fuelChip').textContent = lvl.fuel === 200 ? '∞' : `${fuel.toFixed(1)}`;
+  $('parChip').textContent = lvl.par === Infinity ? '—' : fmtMS(lvl.par);
+  $('dvChip').textContent = fmtMS(dvUsed);
+  $('fuelChip').textContent = lvl.fuel === 200 ? '∞' : fmtMS(fuel);
   $('fuelfill').style.width = (lvl.fuel === 200 ? 100 : Math.max(0, fuel / lvl.fuel * 100)) + '%';
-  $('engChip').textContent = isFinite(engine) ? engine.toFixed(2) + ' Δv/s' : '∞ (impulsive)';
+  $('engChip').textContent = isFinite(engine) ? (engine * MS2_PER_AU).toFixed(3) + ' m/s²' : 'impulsive';
 }
 
 /* engine selector (sandbox only) */
@@ -884,12 +912,12 @@ function syncHud() {
   if (!$('hud').classList.contains('show')) return;
   const el = elements(lvl, S);
   vSeen.min = Math.min(vSeen.min, el.v); vSeen.max = Math.max(vSeen.max, el.v);
-  $('hudV').textContent = el.v.toFixed(2);
-  $('hudAlt').textContent = (el.r - lvl.planetR).toFixed(0);
-  $('hudE').textContent = el.eps.toFixed(1) + (el.eps >= 0 ? ' (unbound!)' : '');
-  $('hudPe').textContent = el.rp > 0 ? (el.rp - lvl.planetR).toFixed(0) : '—';
-  $('hudAp').textContent = el.bound ? (el.ra - lvl.planetR).toFixed(0) : '∞';
-  $('hudOberth').textContent = el.v.toFixed(2);
+  $('hudV').textContent = uKMS(el.v).toFixed(2) + ' km/s';
+  $('hudAlt').textContent = fmtKm(el.r - lvl.planetR);
+  $('hudE').textContent = uEPS(el.eps).toFixed(2) + ' km²/s²' + (el.eps >= 0 ? ' (unbound!)' : '');
+  $('hudPe').textContent = el.rp > 0 ? fmtKm(el.rp - lvl.planetR) : '—';
+  $('hudAp').textContent = el.bound ? fmtKm(el.ra - lvl.planetR) : '∞';
+  $('hudOberth').textContent = uKMS(el.v).toFixed(2) + ' km/s';
   const span = Math.max(1e-6, vSeen.max - vSeen.min);
   $('oberthfill').style.width = Math.max(4, Math.min(100, (el.v - vSeen.min) / span * 100)) + '%';
 }
@@ -946,6 +974,7 @@ function frame(now) {
   draw();
   syncHud();
   syncOrbitChip();
+  $('clockChip').textContent = 'T+ ' + fmtDur(S.t);
   requestAnimationFrame(frame);
 }
 

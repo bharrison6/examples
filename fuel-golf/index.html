@@ -210,6 +210,7 @@
   <span id="fuelwrap" class="chip">⛽ <span id="fuelbar"><span id="fuelfill"></span></span> <b id="fuelChip"></b></span>
   <span class="chip">Engine <b id="engChip">∞</b></span>
   <span class="chip" id="orbitChip" style="display:none"></span>
+  <span class="chip">🕐 <b id="clockChip">T+ 0 min</b></span>
   <span class="spacer"></span>
   <button id="btnLevels">Levels</button>
   <button id="btnHud">Physics HUD</button>
@@ -275,13 +276,13 @@
     <output id="angleOut">0°</output>
   </div>
   <div class="sliderrow">
-    <label>Δv</label>
+    <label>Δv (m/s)</label>
     <input type="range" id="dvSlider" min="0" max="15" value="2" step="0.05">
-    <output id="dvOut">2.00</output>
+    <output id="dvOut">316</output>
   </div>
   <div class="finebtns">
-    <button data-fine="-1">−1</button><button data-fine="-0.1">−0.1</button>
-    <button data-fine="0.1">+0.1</button><button data-fine="1">+1</button>
+    <button data-fine="-100">−100</button><button data-fine="-10">−10</button>
+    <button data-fine="10">+10</button><button data-fine="100">+100</button>
   </div>
   <div id="burncost">Dotted line shows your predicted new trajectory.</div>
   <div id="predinfo" style="font-size:calc(12px * var(--fs));margin-top:6px;font-weight:600"></div>
@@ -375,6 +376,8 @@
     <p>On later levels the engine is <b>finite</b>: committed Δv is delivered over time (the orange arc in the preview shows the powered stretch), so start your burn <i>before</i> periapsis to centre it on the fast point — and with a weak engine, split it into repeated perigee kicks. <span class="kbd">X</span> or ✂ cuts the engine early, keeping unspent fuel.</p>
     <h3>The lesson hiding in the game</h3>
     <p>Adding Δv changes your kinetic energy by ΔKE = v·Δv + ½Δv². The <b>v·Δv</b> term means the same burn buys more energy when you're already moving fast — and you're fastest at periapsis. That's the Oberth effect. Open the <b>Physics HUD</b> and watch "energy per unit Δv" climb as you fall toward periapsis.</p>
+    <h3>Real numbers</h3>
+    <p>The planet is <b>Earth</b> at true scale: μ = 398,600 km³/s², radius 6,371 km. Speeds are km/s, Δv budgets are m/s, altitudes are km, and orbital periods run from hours to days — which is why time-warp exists. The moon is fictional (closer and heavier than our Moon) so a gravity assist fits in a class period.</p>
     <div class="actions"><button id="closeHelp" class="primary">Fly</button></div>
   </div>
 </div>
