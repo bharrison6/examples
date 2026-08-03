@@ -190,7 +190,7 @@ const LEVELS = [
     start: { rp: 110, ra: 480 },
     goal: { type: 'escape' },
     view: 1400,
-    hint: 'Break free of the planet. You have 13 Δv in the tank, but par is only 5. Try burning at apoapsis, where you feel far and free... then check the Physics HUD at periapsis. Where does each unit of Δv buy the most energy?',
+    hint: 'Break free of the planet. Escaping means orbital energy ε > 0 — a giant ellipse still falls back, no matter how far it flies! Watch the ORBIT chip up top (or ε in the HUD). You have 13 Δv but par is only 5. Where does each unit of Δv buy the most energy?',
     debriefIdeal: 'Escape is cheapest at periapsis: ΔKE = v·Δv + ½Δv², and v is largest at the bottom of the well. This is the Oberth effect.',
   },
   {
@@ -292,6 +292,8 @@ let succeededAt = null;
 let engine = Infinity;     // current engine accel limit (Infinity = impulsive)
 let activeBurn = null;     // {mode, angle, a, dvRemaining, entry} while thrusting
 let burnPathTick = 0;
+let warnedFallback = false; // one warning per boundary crossing while bound
+let orbitChipState = '';
 
 function resize() {
   canvas.width = window.innerWidth * devicePixelRatio;
@@ -319,6 +321,7 @@ function loadLevel(i) {
   predPath = null;
   engine = lvl.engine !== undefined ? lvl.engine : (lvl.engineChoices ? lvl.engineChoices[0] : Infinity);
   activeBurn = null;
+  warnedFallback = false; orbitChipState = '';
   $('btnCut').style.display = 'none';
   syncEngineRow();
   plan = { mode: 'prograde', angle: 0, dv: Math.min(2, fuel) };
@@ -378,6 +381,17 @@ function computePredPath() {
     return Math.hypot(s.x, s.y) > lvl.escapeR * 1.5;
   });
   predPath = { pts, crash, el, burnPts };
+  // planner verdict: what does this burn actually buy?
+  const pi = $('predinfo');
+  if (crash) {
+    pi.innerHTML = '<span style="color:var(--bad)">Predicted: impacts the planet 💥</span>';
+  } else if (el.eps > 0) {
+    pi.innerHTML = '<span style="color:var(--good)">Predicted: ESCAPE trajectory (ε = +' + el.eps.toFixed(1) + ') — leaves and never returns</span>';
+  } else {
+    let t = 'Predicted orbit: Pe ' + Math.round(el.rp - lvl.planetR) + ' · Ap ' + Math.round(el.ra - lvl.planetR) + ' · ε = ' + el.eps.toFixed(1);
+    if (lvl.goal.type === 'escape') t += ' — <span style="color:var(--warn)">still bound: it will fall back</span>';
+    pi.innerHTML = t;
+  }
 }
 
 /* ---------- burns ---------- */
@@ -429,9 +443,38 @@ function checkGoal() {
   let done = false;
   if (g.type === 'circular') done = el.bound && el.e <= g.emax && Math.abs(el.a - g.a) <= g.band;
   else if (g.type === 'apoapsis') done = el.bound && el.ra >= g.min && el.ra <= g.max && el.rp > lvl.planetR + 10;
-  else if (g.type === 'escape') done = el.eps > 0 && el.r > lvl.escapeR;
+  else if (g.type === 'escape') {
+    done = el.eps > 0 && el.r > lvl.escapeR;
+    // crossed the edge while still bound: explain why it doesn't count
+    if (!done && el.eps <= 0 && el.r > lvl.escapeR && !warnedFallback) {
+      warnedFallback = true;
+      $('hint').textContent = 'You crossed the system edge — but your orbital energy is still negative (ε = ' +
+        el.eps.toFixed(1) + '), so this is just a very tall ellipse: gravity will pull you back. ' +
+        'Escape needs ε > 0. More speed — cheapest at periapsis.';
+      $('hint').classList.add('show');
+      setTimeout(() => $('hint').classList.remove('show'), 12000);
+    }
+    if (el.r < lvl.escapeR * 0.9) warnedFallback = false;
+  }
   else if (g.type === 'transfer') done = el.bound && el.e <= g.emax && Math.abs(el.a - g.a) <= g.band;
   if (done) succeed();
+}
+
+/* ORBIT chip: live bound/escaping state on escape levels */
+function syncOrbitChip() {
+  const chip = $('orbitChip');
+  if (lvl.goal.type !== 'escape') { if (orbitChipState !== 'off') { chip.style.display = 'none'; orbitChipState = 'off'; } return; }
+  const el = elements(lvl, S);
+  const stateKey = el.eps > 0 ? 'free' : 'bound';
+  if (stateKey !== orbitChipState) {
+    orbitChipState = stateKey;
+    chip.style.display = '';
+    if (el.eps > 0) {
+      chip.innerHTML = 'ORBIT: <b style="color:var(--good)">ESCAPING (ε &gt; 0)</b>';
+    } else {
+      chip.innerHTML = 'ORBIT: <b style="color:var(--warn)">BOUND — will fall back</b>';
+    }
+  }
 }
 
 function crashed(what) {
@@ -810,6 +853,7 @@ function frame(now) {
   zoom += (targetZoom - zoom) * Math.min(1, dtReal * 8);
   draw();
   syncHud();
+  syncOrbitChip();
   requestAnimationFrame(frame);
 }
 
@@ -836,11 +880,14 @@ function draw() {
     drawRing(g.min, g.max, 'rgba(251,191,36,0.12)', '#fbbf24', 'TARGET Ap BAND — get your apoapsis (Ap) in here; no need to circularize');
   if (g.type === 'escape') {
     const [cx, cy] = W2S(0, 0);
-    ctx.strokeStyle = 'rgba(248,113,113,0.5)'; ctx.setLineDash([8, 8]); ctx.lineWidth = 1.5;
+    const free = elements(lvl, S).eps > 0;
+    const col = free ? '74,222,128' : '248,113,113';
+    ctx.strokeStyle = `rgba(${col},0.55)`; ctx.setLineDash([8, 8]); ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(cx, cy, lvl.escapeR * zoom, 0, Math.PI * 2); ctx.stroke();
     ctx.setLineDash([]);
-    ctx.fillStyle = 'rgba(248,113,113,0.8)'; ctx.font = '12px system-ui';
-    ctx.fillText('ESCAPE BOUNDARY', cx + lvl.escapeR * zoom * 0.71, cy - lvl.escapeR * zoom * 0.71);
+    ctx.fillStyle = `rgba(${col},0.9)`; ctx.font = '600 12px system-ui';
+    ctx.fillText(free ? 'SYSTEM EDGE — escape trajectory! cross to finish' : 'SYSTEM EDGE — only counts with ε > 0 (else you fall back)',
+                 cx + lvl.escapeR * zoom * 0.71, cy - lvl.escapeR * zoom * 0.71);
   }
 
   // moon orbit + moon

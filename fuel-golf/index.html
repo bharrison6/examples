@@ -196,6 +196,7 @@
   <span class="chip">Δv used <b id="dvChip">0.0</b></span>
   <span id="fuelwrap" class="chip">⛽ <span id="fuelbar"><span id="fuelfill"></span></span> <b id="fuelChip"></b></span>
   <span class="chip">Engine <b id="engChip">∞</b></span>
+  <span class="chip" id="orbitChip" style="display:none"></span>
   <span class="spacer"></span>
   <button id="btnLevels">Levels</button>
   <button id="btnHud">Physics HUD</button>
@@ -270,6 +271,7 @@
     <button data-fine="0.1">+0.1</button><button data-fine="1">+1</button>
   </div>
   <div id="burncost">Dotted line shows your predicted new trajectory.</div>
+  <div id="predinfo" style="font-size:calc(12px * var(--fs));margin-top:6px;font-weight:600"></div>
   <div id="plannerActions">
     <button id="btnCancelBurn">Cancel</button>
     <button id="btnCommitBurn" class="primary">COMMIT BURN</button>
