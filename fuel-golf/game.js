@@ -294,6 +294,7 @@ let activeBurn = null;     // {mode, angle, a, dvRemaining, entry} while thrusti
 let burnPathTick = 0;
 let warnedFallback = false; // one warning per boundary crossing while bound
 let orbitChipState = '';
+let epsStart = 0;          // ε at level start, anchor for the energy ledger
 
 function resize() {
   canvas.width = window.innerWidth * devicePixelRatio;
@@ -326,6 +327,7 @@ function loadLevel(i) {
   syncEngineRow();
   plan = { mode: 'prograde', angle: 0, dv: Math.min(2, fuel) };
   targetZoom = zoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
+  epsStart = elements(lvl, S).eps;
   computeCurPath();
   logEnergy(true);
   syncTop(); syncWarpButtons(); hidePlanner();
@@ -401,7 +403,8 @@ function commitBurn() {
   const el0 = elements(lvl, S);
   if (isFinite(engine)) {
     // finite thrust: burn executes over time in the main loop
-    const entry = { t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode };
+    const entry = { t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode,
+                    finite: true, aEng: engine, eps0: el0.eps };
     burnLog.push(entry);
     activeBurn = { mode: plan.mode, angle: plan.angle * Math.PI / 180, a: engine, dvRemaining: dv, entry };
     hidePlanner();
@@ -410,9 +413,12 @@ function commitBurn() {
     return;
   }
   const dir = burnDir(S, plan.mode, plan.angle * Math.PI / 180);
+  const vDotDv = S.vx * dir.x * dv + S.vy * dir.y * dv; // v⃗·Δv⃗ before the kick
   applyBurn(S, dir.x * dv, dir.y * dv);
   fuel -= dv; dvUsed += dv;
-  burnLog.push({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode });
+  const el1 = elements(lvl, S);
+  burnLog.push({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode,
+                 finite: false, vDotDv, eps0: el0.eps, eps1: el1.eps, h1: el1.h });
   logEnergy(true);
   computeCurPath();
   hidePlanner();
@@ -423,6 +429,8 @@ function endBurn() {
   if (!activeBurn) return;
   const e = activeBurn.entry;
   if (e.dv > 1e-9) e.v = e.vSum / e.dv; // Δv-weighted average speed during the burn
+  const el1 = elements(lvl, S);
+  e.eps1 = el1.eps; e.h1 = el1.h; e.dur = S.t - e.t;
   activeBurn = null;
   $('btnCut').style.display = 'none';
   logEnergy(true);
@@ -523,6 +531,89 @@ function debriefSentence() {
   return s + (lvl.debriefIdeal ? ' ' + lvl.debriefIdeal : '');
 }
 
+/* ---------- "show the math" proof panel ---------- */
+function orbitFromEpsH(mu, eps, h) {
+  // shape of the conic determined purely by (ε, h): e = √(1 + 2εh²/μ²)
+  const e = Math.sqrt(Math.max(0, 1 + 2 * eps * h * h / (mu * mu)));
+  if (eps >= 0) return { e, hyper: true, vinf: Math.sqrt(2 * eps) };
+  const a = -mu / (2 * eps);
+  return { e, hyper: false, a, rp: a * (1 - e), ra: a * (1 + e) };
+}
+function renderMathProof() {
+  const mu = lvl.mu;
+  const n1 = (x) => x.toFixed(1);
+  const n2 = (x) => x.toFixed(2);
+  const sgn = (x, d = 1) => (x >= 0 ? '+' : '') + x.toFixed(d);
+  let html = `<div class="mathcard"><div class="mhead">Setup</div>
+    μ = ${mu.toLocaleString()} · specific orbital energy ε = v²/2 − μ/r (per unit mass) ·
+    a burn of Δv changes it by <b>Δε = v⃗·Δv⃗ + ½Δv²</b><br>
+    <span class="dim">Starting orbit: ε₀ = ${n1(epsStart)}. Everything below uses only your recorded inputs — the sim never gets a vote it can't justify.</span></div>`;
+
+  let sumBurnEps = 0;
+  burnLog.forEach((b, i) => {
+    if (b.eps1 === undefined) return; // burn still in progress (shouldn't happen at debrief)
+    const dEpsMeasured = b.eps1 - b.eps0;
+    sumBurnEps += dEpsMeasured;
+    if (!b.finite) {
+      const cosT = b.dv > 1e-9 ? Math.max(-1, Math.min(1, b.vDotDv / (b.v * b.dv))) : 1;
+      const theta = Math.round(Math.acos(cosT) * 180 / Math.PI);
+      const dKE = b.vDotDv + 0.5 * b.dv * b.dv;
+      const predicted = b.eps0 + dKE;
+      const match = Math.abs(predicted - b.eps1) <= Math.max(0.5, Math.abs(b.eps1) * 0.02);
+      const o = orbitFromEpsH(mu, b.eps1, b.h1);
+      const orbitLine = o.hyper
+        ? `ε′ &gt; 0 → <b>hyperbolic escape</b>, leftover speed at infinity v<sub>∞</sub> = √(2ε′) = ${n2(o.vinf)}`
+        : `a′ = −μ/2ε′ = ${n1(o.a)} · e′ = √(1 + 2ε′h′²/μ²) = ${o.e.toFixed(3)} → Pe ${Math.round(o.rp - lvl.planetR)} / Ap ${Math.round(o.ra - lvl.planetR)} alt`;
+      html += `<div class="mathcard"><div class="mhead">Burn ${i + 1} — ${b.mode.toUpperCase()}, Δv = ${n2(b.dv)} at r = ${n1(b.r)} (t = ${n1(b.t)})</div>
+        <span class="mono">before: v = ${n2(b.v)}, ε = ${n2(b.v)}²/2 − μ/${n1(b.r)} = ${n1(b.eps0)}</span><br>
+        <span class="mono">Δε = v·Δv·cos θ + ½Δv² = ${n2(b.v)}·${n2(b.dv)}·cos ${theta}° + ½·${n2(b.dv)}² = ${sgn(b.vDotDv)} ${sgn(0.5 * b.dv * b.dv)} = <b>${sgn(dKE)}</b></span><br>
+        <span class="mono">predicted ε′ = ${n1(b.eps0)} ${sgn(dKE)} = ${n1(predicted)} · integrator measured ε′ = ${n1(b.eps1)} ${match ? '<span class="ok">✓ matches</span>' : '<span class="warnc">(Δ ' + n1(predicted - b.eps1) + ')</span>'}</span><br>
+        <span class="mono">new orbit: ${orbitLine}</span></div>`;
+    } else {
+      const perDv = b.dv > 1e-9 ? dEpsMeasured / b.dv : 0;
+      const approx = b.v * b.dv;
+      const o = orbitFromEpsH(mu, b.eps1, b.h1);
+      const orbitLine = o.hyper
+        ? `ε′ &gt; 0 → <b>hyperbolic escape</b>, v<sub>∞</sub> = √(2ε′) = ${n2(o.vinf)}`
+        : `a′ = −μ/2ε′ = ${n1(o.a)}, e′ = ${o.e.toFixed(3)} → Pe ${Math.round(o.rp - lvl.planetR)} / Ap ${Math.round(o.ra - lvl.planetR)} alt`;
+      html += `<div class="mathcard"><div class="mhead">Burn ${i + 1} — ${b.mode.toUpperCase()} (finite thrust ${b.aEng} Δv/s), Δv = ${n2(b.dv)} over ${n1(b.dur || 0)}s</div>
+        <span class="mono">Δv-weighted average speed during burn: v̄ = ${n2(b.v)}</span><br>
+        <span class="mono">Δε ≈ v̄·Δv = ${n2(b.v)}·${n2(b.dv)} = ${sgn(approx)} · integrator measured ${sgn(dEpsMeasured)} ${Math.abs(approx - dEpsMeasured) <= Math.max(1.5, Math.abs(dEpsMeasured) * 0.05) ? '<span class="ok">✓</span>' : ''}</span><br>
+        <span class="dim">(≈ because a spread-out burn buys each slice of Δv at whatever speed you had at that instant — that's the gravity loss)</span><br>
+        <span class="mono">energy bought per unit Δv: ${n1(perDv)} — compare v at periapsis</span><br>
+        <span class="mono">new orbit: ${orbitLine}</span></div>`;
+    }
+  });
+
+  // energy ledger start → finish
+  const elF = elements(lvl, S);
+  const residual = elF.eps - epsStart - sumBurnEps;
+  const hasMoon = !!lvl.moon;
+  let ledger = `<span class="mono">ε start ${sgn(epsStart)}</span><br>`;
+  burnLog.forEach((b, i) => { if (b.eps1 !== undefined) ledger += `<span class="mono">+ burn ${i + 1} ${sgn(b.eps1 - b.eps0)}</span><br>`; });
+  if (Math.abs(residual) > 0.5 && hasMoon)
+    ledger += `<span class="mono">+ moon gravity assist ${sgn(residual)} <span class="ok">(cost: 0 fuel!)</span></span><br>`;
+  else if (Math.abs(residual) > 0.5)
+    ledger += `<span class="mono">+ unmodelled drift ${sgn(residual)}</span><br>`;
+  ledger += `<span class="mono">= ε final <b>${sgn(elF.eps)}</b> <span class="dim">(coasting never changes ε — gravity is conservative${hasMoon ? ', except the moon\'s tug' : ''})</span></span><br>`;
+
+  // goal proof
+  const g = lvl.goal;
+  let proof = '';
+  if (g.type === 'escape') {
+    proof = `ε final = ${sgn(elF.eps)} &gt; 0 and r = ${Math.round(elF.r)} &gt; system edge ${lvl.escapeR} → <b>escaped</b> with v<sub>∞</sub> = √(2·${n1(elF.eps)}) = ${n2(Math.sqrt(2 * Math.max(0, elF.eps)))}`;
+  } else if (g.type === 'apoapsis') {
+    proof = `Ap = a(1+e) = ${n1(elF.ra)}, target band [${g.min}, ${g.max}] → <b>${elF.ra >= g.min && elF.ra <= g.max ? 'inside ✓' : 'outside'}</b>`;
+  } else if (g.type === 'circular' || g.type === 'transfer') {
+    proof = `a = ${n1(elF.a)} (target ${g.a} ± ${g.band}) and e = ${elF.e.toFixed(3)} (≤ ${g.emax}) → <b>${Math.abs(elF.a - g.a) <= g.band && elF.e <= g.emax ? 'inside ✓' : 'outside'}</b>`;
+  }
+  html += `<div class="mathcard ledger"><div class="mhead">Energy ledger → outcome</div>${ledger}
+    <span class="mono">total Δv spent = ${n2(dvUsed)} vs par ${lvl.par === Infinity ? '—' : lvl.par}</span><br>
+    <span class="mono">goal check: ${proof}</span></div>`;
+
+  $('dbMath').innerHTML = html;
+}
+
 function showDebrief() {
   $('debriefTitle').textContent = lvl.name + ' — mission complete';
   $('dbDv').textContent = dvUsed.toFixed(2);
@@ -533,6 +624,7 @@ function showDebrief() {
   v.textContent = debriefSentence();
   v.className = 'verdict' + (dvUsed > lvl.par + 0.05 ? ' bad' : '');
   drawEnergyPlot();
+  renderMathProof();
   $('dbSaved').style.display = 'none';
   $('dbName').value = store.get('fuelgolf_name', '');
   renderLb('dbLb', lvl.id);

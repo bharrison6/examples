@@ -171,6 +171,19 @@
   .scorebar .stat .k { font-size: calc(11px * var(--fs)); color: var(--muted); }
   .verdict { border-left: 3px solid var(--good); padding: 8px 12px; background: rgba(74, 222, 128, 0.07); border-radius: 6px; margin: 10px 0; font-size: calc(13.5px * var(--fs)); line-height: 1.5; }
   .verdict.bad { border-color: var(--warn); background: rgba(251, 191, 36, 0.07); }
+  .mathcard {
+    background: rgba(10, 15, 26, 0.8); border: 1px solid var(--panel-border);
+    border-left: 3px solid var(--accent); border-radius: 8px;
+    padding: 10px 12px; margin: 8px 0;
+    font-size: calc(12.5px * var(--fs)); line-height: 1.65;
+    font-variant-numeric: tabular-nums;
+  }
+  .mathcard .mhead { color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+  .mathcard .ok { color: var(--good); font-weight: 700; }
+  .mathcard .warnc { color: var(--warn); }
+  .mathcard .dim { color: var(--muted); }
+  .mathcard.ledger { border-left-color: var(--good); }
+  .mathcard .mono { font-family: ui-monospace, Consolas, monospace; font-size: calc(12px * var(--fs)); }
   table.lb { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: calc(13px * var(--fs)); }
   table.lb th, table.lb td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--panel-border); }
   table.lb th { color: var(--muted); font-weight: 600; font-size: calc(11.5px * var(--fs)); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -300,6 +313,8 @@
     <div class="verdict" id="dbVerdict"></div>
     <h3>Orbital energy vs. time (burns marked ▲)</h3>
     <canvas id="debriefPlot" width="620" height="200"></canvas>
+    <h3>The math — proving the outcome from your inputs</h3>
+    <div id="dbMath"></div>
     <div id="dbNameRow" style="display:flex;gap:8px;align-items:center;margin-top:8px">
       <input type="text" id="dbName" maxlength="16" placeholder="Your name">
       <button id="dbSave" class="primary">Save to leaderboard</button>

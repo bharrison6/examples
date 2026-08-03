@@ -57,3 +57,10 @@ Toggleable physics HUD (speed, altitude, specific orbital energy, and a live
 "energy gained per unit Δv" readout — the Oberth multiplier), per-level local
 leaderboards, and a teacher mode (⚙) with a projector-friendly large-UI toggle
 and leaderboard reset.
+
+The post-level debrief includes a **"show the math" proof panel**: every burn's
+recorded before-state, the predicted Δε = v⃗·Δv⃗ + ½Δv² evaluated with the
+player's actual numbers and checked against what the integrator measured, the
+resulting orbit derived purely from (ε, h) via e = √(1 + 2εh²/μ²), and an
+energy ledger from ε_start through each burn to the final outcome — on moon
+levels the gravity assist appears as its own zero-fuel line item.
