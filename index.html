@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Examples — Demo Launcher</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --card: #1a2233;
+    --card-hover: #222d44;
+    --text: #e8ecf4;
+    --muted: #93a0b8;
+    --accent: #5b9dff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+  }
+  h1 { font-size: 2rem; margin-bottom: 8px; }
+  p.sub { color: var(--muted); margin-bottom: 40px; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    width: 100%;
+    max-width: 900px;
+  }
+  a.card {
+    display: block;
+    background: var(--card);
+    border: 1px solid #2a3550;
+    border-radius: 12px;
+    padding: 24px;
+    text-decoration: none;
+    color: var(--text);
+    transition: transform 0.12s ease, background 0.12s ease;
+  }
+  a.card:hover {
+    background: var(--card-hover);
+    transform: translateY(-3px);
+  }
+  .card .emoji { font-size: 2rem; display: block; margin-bottom: 12px; }
+  .card h2 { font-size: 1.15rem; margin-bottom: 6px; color: var(--accent); }
+  .card p { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+  footer { margin-top: 48px; color: var(--muted); font-size: 0.8rem; }
+</style>
+</head>
+<body>
+  <h1>Examples</h1>
+  <p class="sub">Small self-contained browser demos — pick one to play.</p>
+  <div class="grid">
+    <a class="card" href="tic-tac-toe/index.html">
+      <span class="emoji">⭕</span>
+      <h2>Nine Board Tic Tac Toe</h2>
+      <p>Nine independent boards, pass-and-play and CPU modes. First to win five boards takes the match.</p>
+    </a>
+    <a class="card" href="snake/index.html">
+      <span class="emoji">🐍</span>
+      <h2>Snake</h2>
+      <p>Classic snake on a canvas. Arrow keys or WASD, score tracking, and the game speeds up as you grow.</p>
+    </a>
+    <a class="card" href="memory-match/index.html">
+      <span class="emoji">🃏</span>
+      <h2>Memory Match</h2>
+      <p>Flip cards to find matching pairs. Tracks your moves and time — try to beat your best.</p>
+    </a>
+  </div>
+  <footer>Plain HTML/CSS/JS · no build step · open any demo's index.html directly</footer>
+</body>
+</html>
