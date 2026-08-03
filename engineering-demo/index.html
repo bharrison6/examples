@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Bridge Works — truss bridge builder</title>
+<style>
+:root{
+  /* Murray State University brand palette.
+     Blue #002144 (PMS 289) · Gold #ECAC00 (PMS 123)
+     accents: Lite Blue #00A4E3 (PMS 2995) · Red Orange #FF4500 */
+  --msu-blue:#002144; --msu-gold:#ECAC00; --msu-lite:#00A4E3; --msu-red:#FF4500;
+  --bg:#001428; --card:#002144; --card2:#0a3260; --line:#14406e;
+  --text:#eaf1f9; --muted:#8fa9c6; --accent:#ECAC00; --good:#3fbf86; --bad:#FF4500;
+  --tension:#ff6a45; --compression:#33bff0;
+  --fs:15px; --fsBig:1.05rem; --pad:10px; --btnH:38px; --ui:1;
+}
+body.big{ --fs:20px; --pad:14px; --btnH:50px; --ui:1.32; }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  background:var(--bg); color:var(--text); font-size:var(--fs);
+  display:flex; flex-direction:column; -webkit-user-select:none; user-select:none;
+  touch-action:manipulation;
+}
+button{
+  font:inherit; font-size:.92em; color:var(--text); background:var(--card2);
+  border:1px solid var(--line); border-radius:8px; padding:0 calc(var(--pad)*1.1);
+  height:var(--btnH); cursor:pointer; transition:background .12s,border-color .12s;
+  display:inline-flex; align-items:center; gap:.4em; white-space:nowrap;
+}
+button:hover:not(:disabled){background:#124478;border-color:#1d5798}
+button:disabled{opacity:.4;cursor:default}
+button.active{background:var(--accent);border-color:var(--accent);color:#00172e;font-weight:700}
+button.primary{background:var(--msu-gold);border-color:var(--msu-gold);color:#00172e;font-weight:700}
+button.primary:hover:not(:disabled){background:#ffc22e;border-color:#ffc22e}
+button.danger{background:#7d2606;border-color:#a8360c}
+.icon{padding:0;width:var(--btnH);justify-content:center;font-size:1.1em}
+
+/* ---------------------------------------------------------------- chrome */
+header{
+  display:flex; align-items:center; gap:var(--pad); padding:var(--pad);
+  background:var(--card); border-bottom:2px solid var(--msu-gold); flex:0 0 auto;
+}
+.brand{font-weight:700; font-size:1.12em; letter-spacing:.2px; white-space:nowrap}
+.brand small{color:var(--msu-gold);font-weight:600;font-size:.56em;display:block;margin-top:-1px;letter-spacing:1.1px}
+#levelChip{
+  background:var(--card2); border:1px solid var(--line); border-radius:999px;
+  padding:.3em .9em; color:var(--muted); white-space:nowrap; font-size:.9em;
+}
+#levelChip b{color:var(--text)}
+.spacer{flex:1}
+#costBox{
+  display:flex; flex-direction:column; align-items:flex-end; line-height:1.15;
+  padding-right:calc(var(--pad)*.5); min-width:7em;
+}
+#costVal{font-size:1.35em;font-weight:700;font-variant-numeric:tabular-nums}
+#costVal.over{color:var(--bad)} #costVal.under{color:var(--good)}
+#parVal{font-size:.78em;color:var(--muted);font-variant-numeric:tabular-nums}
+#costBreak{font-size:.72em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+#toolbar{
+  display:flex; align-items:center; gap:calc(var(--pad)*.7); flex-wrap:wrap;
+  padding:calc(var(--pad)*.7) var(--pad); background:#00182f;
+  border-bottom:1px solid var(--line); flex:0 0 auto;
+}
+.group{display:flex;gap:6px;align-items:center}
+.group+.group{border-left:1px solid var(--line);padding-left:calc(var(--pad)*.7)}
+.tgl{
+  display:inline-flex;align-items:center;gap:.42em;font-size:.88em;color:var(--muted);
+  cursor:pointer;padding:.25em .5em;border-radius:7px;white-space:nowrap;
+}
+.tgl:hover{background:var(--card2);color:var(--text)}
+.tgl input{width:1.05em;height:1.05em;accent-color:var(--accent);cursor:pointer}
+.tgl.on{color:var(--text)}
+#toolHint{font-size:.84em;color:var(--msu-gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:.85}
+#statusMsg{font-size:.88em;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#statusMsg.warn{color:#ffc75a} #statusMsg.err{color:var(--bad)}
+
+main{position:relative;flex:1;min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+
+/* --------------------------------------------------------------- overlays */
+#legend{
+  position:absolute; left:12px; bottom:12px; background:rgba(0,26,52,.92);
+  border:1px solid var(--line); border-radius:10px; padding:calc(var(--pad)*.8);
+  font-size:.82em; color:var(--muted); pointer-events:none; line-height:1.7;
+  backdrop-filter:blur(3px);
+}
+#legend .sw{display:inline-block;width:2.2em;height:.5em;border-radius:2px;vertical-align:middle;margin-right:.5em}
+#legend b{color:var(--text);display:block;margin-bottom:.3em;font-size:1.05em}
+
+#hint{
+  position:absolute; left:50%; transform:translateX(-50%); bottom:12px;
+  background:rgba(0,26,52,.94); border:1px solid var(--line); border-radius:10px;
+  padding:calc(var(--pad)*.75) calc(var(--pad)*1.2); font-size:.88em; color:var(--muted);
+  max-width:min(680px,72vw); text-align:center; backdrop-filter:blur(3px);
+}
+#hint b{color:var(--accent)}
+
+#fbd{
+  position:absolute; background:rgba(0,22,45,.97); border:1px solid var(--msu-gold);
+  border-radius:10px; padding:calc(var(--pad)*.9); font-size:.84em; min-width:15em;
+  box-shadow:0 8px 30px rgba(0,0,0,.55); pointer-events:none; z-index:5;
+}
+#fbd h4{font-size:1.05em;margin-bottom:.45em;color:var(--accent)}
+#fbd table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+#fbd td{padding:.12em .3em}
+#fbd td:last-child{text-align:right}
+#fbd .sum{border-top:1px solid var(--line);margin-top:.4em;padding-top:.4em;color:var(--good)}
+.hidden{display:none!important}
+
+/* ---------------------------------------------------------------- modals */
+.modal{
+  position:fixed;inset:0;background:rgba(0,10,22,.8);z-index:20;
+  display:flex;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(4px);
+}
+.sheet{
+  background:var(--card); border:1px solid var(--line); border-radius:14px;
+  max-width:920px; width:100%; max-height:88vh; overflow:auto;
+  box-shadow:0 24px 70px rgba(0,0,0,.6);
+}
+.sheet header{background:transparent;border-bottom:1px solid var(--line)}
+.sheet h2{font-size:1.25em}
+.sheet .body{padding:calc(var(--pad)*1.6)}
+.sheet .foot{padding:var(--pad) calc(var(--pad)*1.6) calc(var(--pad)*1.6);display:flex;gap:8px;justify-content:flex-end}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{
+  background:var(--card2);border:1px solid var(--line);border-radius:10px;
+  padding:var(--pad);cursor:pointer;transition:transform .1s,border-color .1s;
+}
+.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.card h3{font-size:1em;color:var(--accent);margin-bottom:.25em}
+.card p{font-size:.82em;color:var(--muted);line-height:1.45}
+.card .meta{font-size:.76em;color:var(--muted);margin-top:.5em;display:flex;justify-content:space-between}
+.card.done{border-color:var(--good)}
+.card svg{width:100%;height:70px;display:block;margin:.4em 0}
+h3.sec{font-size:.82em;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:1.1em 0 .5em}
+h3.sec:first-child{margin-top:0}
+table.data{width:100%;border-collapse:collapse;font-size:.86em;font-variant-numeric:tabular-nums}
+table.data th{text-align:left;color:var(--muted);font-weight:500;padding:.35em .5em;border-bottom:1px solid var(--line);font-size:.92em}
+table.data td{padding:.3em .5em;border-bottom:1px solid rgba(20,64,110,.55)}
+table.data td.num{text-align:right}
+table.data tr.weak td{background:rgba(255,69,0,.16)}
+table.data tr.zero td{color:var(--muted)}
+.verdict{display:flex;align-items:center;gap:.6em;font-size:1.5em;font-weight:700;margin-bottom:.15em}
+.verdict.pass{color:var(--good)} .verdict.fail{color:var(--bad)}
+.sub{color:var(--muted);font-size:.9em}
+.plain{
+  background:rgba(236,172,0,.10);border-left:3px solid var(--msu-gold);
+  border-radius:0 8px 8px 0;padding:calc(var(--pad)*.9) var(--pad);margin:1em 0;line-height:1.5;
+}
+.stats{display:flex;gap:calc(var(--pad)*1.6);flex-wrap:wrap;margin:.8em 0}
+.stat{min-width:6em}
+.stat .k{font-size:.74em;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stat .v{font-size:1.28em;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .v.good{color:var(--good)} .stat .v.bad{color:var(--bad)}
+ol.steps{margin-left:1.2em;line-height:1.7} ol.steps li{margin-bottom:.3em}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:.3em 1em;font-size:.9em}
+.kv b{color:var(--muted);font-weight:500}
+input[type=text]{
+  font:inherit;font-size:.92em;background:#0e1421;border:1px solid var(--line);
+  border-radius:8px;color:var(--text);padding:.5em .7em;height:var(--btnH);
+}
+input[type=range]{accent-color:var(--accent);width:9em}
+select{font:inherit;font-size:.9em;background:var(--card2);color:var(--text);
+  border:1px solid var(--line);border-radius:8px;height:var(--btnH);padding:0 .5em}
+.row{display:flex;align-items:center;gap:.7em;margin:.5em 0;flex-wrap:wrap}
+a{color:var(--accent)}
+@media (max-width:760px){
+  .brand small{display:none}
+  #legend{display:none}
+  header,#toolbar{gap:6px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Bridge&nbsp;Works<small>MURRAY STATE UNIVERSITY · TRUSS STATICS LAB</small></div>
+  <div id="levelChip"></div>
+  <div class="spacer"></div>
+  <div id="costBox">
+    <span id="costVal">$0</span>
+    <span id="costBreak"></span>
+    <span id="parVal"></span>
+  </div>
+  <button id="btnTest" class="primary">▶ Load test</button>
+  <button id="btnLevels">Levels</button>
+  <button id="btnGallery">Gallery</button>
+  <button id="btnBoard" class="icon" title="Leaderboard">🏆</button>
+  <button id="btnTeacher" class="icon" title="Teacher mode">⚙</button>
+  <button id="btnHelp" class="icon" title="How to play">?</button>
+</header>
+
+<div id="toolbar">
+  <div class="group">
+    <button class="tool active" data-tool="build" title="Drag between grid points to add a member">✏️ Draw</button>
+    <button class="tool" data-tool="erase" title="Tap a member or joint to remove it">✖ Erase</button>
+    <button class="tool" data-tool="inspect" title="Tap a joint to see every force meeting there">⊕ Check a joint</button>
+  </div>
+  <div class="group">
+    <button id="btnUndo">↶ Undo</button>
+    <button id="btnClear">Clear</button>
+  </div>
+  <div class="group">
+    <label class="tgl on"><input type="checkbox" id="tglXray" checked> X-ray</label>
+    <label class="tgl"><input type="checkbox" id="tglNums"> Numbers</label>
+    <label class="tgl"><input type="checkbox" id="tglWeight"> Self-weight</label>
+  </div>
+  <div class="group hidden" id="vehGroup">
+    <label class="tgl on">Vehicle <select id="vehSel"></select></label>
+  </div>
+  <div class="spacer"></div>
+  <div id="toolHint"></div>
+  <div id="statusMsg"></div>
+</div>
+
+<main>
+  <canvas id="cv"></canvas>
+  <div id="legend">
+    <b>Member forces</b>
+    <div><span class="sw" style="background:var(--tension)"></span>tension — being pulled apart</div>
+    <div><span class="sw" style="background:var(--compression)"></span>compression — being squashed</div>
+    <div><span class="sw" style="background:#55637d"></span>carrying nothing</div>
+    <div style="margin-top:.3em">brighter = closer to breaking</div>
+  </div>
+  <div id="hint"></div>
+  <div id="fbd" class="hidden"></div>
+</main>
+
+<!-- ------------------------------------------------------------- debrief -->
+<div id="mDebrief" class="modal hidden"><div class="sheet">
+  <header><h2>Debrief</h2><div class="spacer"></div><button id="dbClose" class="icon">✕</button></header>
+  <div class="body" id="dbBody"></div>
+  <div class="foot">
+    <button id="dbRetry">Back to build</button>
+    <input type="text" id="dbName" placeholder="name or initials" maxlength="18">
+    <button id="dbSave" class="primary">Save to leaderboard</button>
+    <button id="dbNext" class="primary hidden">Next level →</button>
+  </div>
+</div></div>
+
+<!-- -------------------------------------------------------------- levels -->
+<div id="mLevels" class="modal hidden"><div class="sheet">
+  <header><h2>Levels</h2><div class="spacer"></div><button id="lvClose" class="icon">✕</button></header>
+  <div class="body"><div class="grid" id="lvGrid"></div></div>
+</div></div>
+
+<!-- ------------------------------------------------------------- gallery -->
+<div id="mGallery" class="modal hidden"><div class="sheet">
+  <header><h2>Famous trusses</h2><div class="spacer"></div><button id="glClose" class="icon">✕</button></header>
+  <div class="body">
+    <p class="sub" style="margin-bottom:1em">Load one into the current level, run the test, and compare where the
+      forces go. They all cross the same gap — they route the load differently.</p>
+    <div class="row">
+      <label class="tgl">Depth <input type="range" id="glH" min="1" max="10" step="1" value="4"></label>
+      <span id="glHv" class="sub"></span>
+      <label class="tgl">Panels <input type="range" id="glN" min="2" max="10" step="1" value="5"></label>
+      <span id="glNv" class="sub"></span>
+    </div>
+    <div class="grid" id="glGrid"></div>
+  </div>
+</div></div>
+
+<!-- --------------------------------------------------------- leaderboard -->
+<div id="mBoard" class="modal hidden"><div class="sheet">
+  <header><h2>Class leaderboard</h2><div class="spacer"></div><button id="bdClose" class="icon">✕</button></header>
+  <div class="body" id="bdBody"></div>
+</div></div>
+
+<!-- ------------------------------------------------------------- teacher -->
+<div id="mTeacher" class="modal hidden"><div class="sheet" style="max-width:600px">
+  <header><h2>Teacher mode</h2><div class="spacer"></div><button id="tcClose" class="icon">✕</button></header>
+  <div class="body">
+    <h3 class="sec">Display</h3>
+    <div class="row"><label class="tgl"><input type="checkbox" id="tglBig"> Projector mode — large UI for the back of the room</label></div>
+    <div class="row"><label class="tgl"><input type="checkbox" id="tglPar" checked> Show par budgets</label></div>
+    <h3 class="sec">Demonstrations</h3>
+    <div class="row"><label class="tgl"><input type="checkbox" id="tglOverload"> Let me pick the test vehicle on any level</label></div>
+    <p class="sub">Useful for showing a class what happens when a bridge that comfortably carried a car
+      meets a 20&nbsp;tonne crane. Runs with a non-standard vehicle are marked as demos and stay off the leaderboard.</p>
+    <h3 class="sec">Class data</h3>
+    <p class="sub">Scores are stored in this browser only — each machine keeps its own class list.</p>
+    <div class="row">
+      <button id="btnResetLevel" class="danger">Reset this level's board</button>
+      <button id="btnResetAll" class="danger">Reset every board</button>
+    </div>
+    <h3 class="sec">Printable guide</h3>
+    <p class="sub">Open <a href="teacher-guide.html" target="_blank">teacher-guide.html</a> for the one-page
+      lesson plan, physics background and discussion questions (also supplied as a PDF).</p>
+  </div>
+</div></div>
+
+<!-- ---------------------------------------------------------------- help -->
+<div id="mHelp" class="modal hidden"><div class="sheet" style="max-width:660px">
+  <header><h2>How to play</h2><div class="spacer"></div><button id="hpClose" class="icon">✕</button></header>
+  <div class="body">
+    <h3 class="sec">Build</h3>
+    <ol class="steps">
+      <li><b>Drag</b> from one grid point to another to add a member. Joints appear automatically.</li>
+      <li>You are billed the way a fabricator bills: <b>steel by weight</b> (9.4&nbsp;kg per metre at
+        $4.80/kg, so about <b>$45 a metre</b>) plus <b>$180 for every joint</b> you place — a gusset plate,
+        bolts and someone to install them. Abutment bearings come with the level. Nothing longer than 4&nbsp;m.</li>
+      <li>Because connections cost real money, <b>more panels is not free</b>. Bracing a panel you already
+        have adds steel only; adding a panel adds a joint too. That is why real trusses use as few panels
+        as they can get away with.</li>
+      <li>The <b>orange anchors</b> are fixed by the level and cannot be moved or deleted.</li>
+      <li>The car needs an unbroken <b>roadway along the deck line</b> to drive on.</li>
+      <li><b>Erase</b> removes a member or joint. <b>Undo</b> is Ctrl+Z.</li>
+    </ol>
+    <h3 class="sec">Understand</h3>
+    <ol class="steps">
+      <li><b>X-ray</b> parks the test vehicle at mid-span and colours every member by the force it carries — before you commit.</li>
+      <li><b>Check a joint</b>: tap any joint and every force meeting there is drawn as an arrow, with
+        the running total printed. It is always zero — that is the whole of statics. (If the structure can
+        still fold there is no equilibrium yet, and the panel will tell you so.)</li>
+      <li><b>Numbers</b> prints the force in kilonewtons on each member.</li>
+    </ol>
+    <h3 class="sec">Test</h3>
+    <p class="sub" style="line-height:1.6">The vehicle is solved at every position as it crosses. Members that exceed their rating
+      snap, and the structure is immediately re-solved with what is left — which is how one failure becomes a collapse.
+      <b>Compression members fail far below tension members</b> of the same size, and the longer they are, the weaker they get.
+      Survive the crossing for the least money to beat par.</p>
+    <h3 class="sec">Keys</h3>
+    <div class="kv"><b>1 / 2 / 3</b><span>build · erase · joint</span>
+      <b>Ctrl+Z</b><span>undo</span><b>Space</b><span>run the load test</span>
+      <b>X</b><span>toggle X-ray</span><b>F</b><span>toggle force numbers</span></div>
+  </div>
+</div></div>
+
+<script src="physics.js"></script>
+<script src="levels.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bridge Works — Teacher Guide</title>
+<style>
+  @page { size: letter; margin: 0.45in; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    color: #16202e; font-size: 7.6pt; line-height: 1.24;
+    max-width: 7.6in; margin: 0 auto; padding: 0;
+  }
+  header { border-bottom: 2.5px solid #16202e; padding-bottom: 4px; margin-bottom: 7px;
+           display: flex; justify-content: space-between; align-items: baseline; }
+  h1 { font-size: 15pt; }
+  header .sub { font-size: 8.4pt; color: #4a5a72; font-style: italic; }
+  .cols { column-count: 2; column-gap: 0.26in; }
+  h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 8.6pt; text-transform: uppercase;
+       letter-spacing: 0.7px; color: #1d4ed8; margin: 7px 0 3px; break-after: avoid; }
+  h2:first-child { margin-top: 0; }
+  p { margin: 3px 0; }
+  ul, ol { margin: 2px 0 4px 14px; }
+  li { margin: 1.5px 0; }
+  b { color: #0e1622; }
+  .eq { text-align: center; font-size: 10pt; margin: 4px 0; font-style: italic; }
+  .box { border: 1px solid #b9c4d6; border-left: 3px solid #b91c1c; background: #fbf5f5;
+         padding: 4px 7px; margin: 4px 0; border-radius: 3px; break-inside: avoid; }
+  .box b.tag { color: #b91c1c; }
+  .time { display: inline-block; min-width: 46px; font-weight: bold;
+          font-family: "Segoe UI", Arial, sans-serif; font-size: 8pt; color: #1d4ed8; }
+  table { width: 100%; border-collapse: collapse; font-size: 7.7pt; margin: 3px 0; break-inside: avoid; }
+  th { text-align: left; border-bottom: 1px solid #16202e; padding: 1px 3px;
+       font-family: "Segoe UI", Arial, sans-serif; font-size: 7.2pt; text-transform: uppercase; letter-spacing: .3px; }
+  td { padding: 1px 3px; border-bottom: 1px solid #dde3ec; }
+  td.n { text-align: right; font-variant-numeric: tabular-nums; }
+  th.n { text-align: right; text-transform: none; font-size: 7.7pt; }
+  footer { margin-top: 6px; border-top: 1px solid #b9c4d6; padding-top: 3px; font-size: 7.4pt; color: #4a5a72; }
+  @media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); padding: 0.45in; margin: 20px auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Bridge Works — Teacher Guide</h1>
+  <div class="sub">Murray State University &middot; Statics you can watch fail</div>
+</header>
+
+<div class="cols">
+  <h2>What students do</h2>
+  <p>Drag members between grid joints and drive a vehicle across. Costing follows a fabricator's bill:
+  <b>steel by weight</b> (9.4 kg/m at $4.80/kg &asymp; $45/m) plus <b>$180 per joint</b> for the gusset, bolts and
+  labour. So <b>the cheapest bridge that survives wins</b>, golf-style against par. Members are coloured live —
+  <b>red = tension, blue = compression, brighter = nearer breaking</b> — so the load path is visible before anything
+  fails. Offline in any browser: open <b>index.html</b> (Chromebook-friendly, mouse or touch).</p>
+  <p>Underneath is a real <b>direct stiffness</b> solver: element stiffnesses assembled into a global <b>K</b>,
+  supports as boundary conditions, <b>K·u = F</b> solved for joint displacements, member forces from the strains.
+  Overloaded members are deleted and the structure <i>re-solved</i>, so failures cascade like real ones.</p>
+
+  <h2>30-minute session plan</h2>
+  <ul>
+    <li><span class="time">0–4</span>Project it (⚙ → <b>Projector mode</b>). On Level 1 build <i>only</i> the flat
+      roadway and press <b>Load test</b>. It folds. Name what they just saw: joint, member, tension, compression,
+      support. Add a post and two struts; run it again.</li>
+    <li><span class="time">4–10</span>Students play <b>Level 1</b> in pairs with <b>X-ray</b> on. Have them use the
+      <b>Joint</b> tool: tap a joint, see every force meeting there and their sum. It is always zero. That panel
+      <i>is</i> the method of joints.</li>
+    <li><span class="time">10–18</span><b>Level 2 — the lesson.</b> It opens with a rectangular frame already built.
+      Test it first: it folds into a parallelogram and the debrief reports a <b>mechanism</b>, naming the joints that
+      ran away. Take predictions, then let them add diagonals. Par forces a second pass: which members do nothing?</li>
+    <li><span class="time">18–25</span><b>Level 3 — Heavy Haul.</b> Four times the load. Point them at the debrief's
+      <b>“buckles at”</b> column to discover that compression rating depends on <i>length</i> and tension rating
+      does not.</li>
+    <li><span class="time">25–30</span>Project a student's debrief. Load Pratt, Howe and Warren from the
+      <b>Gallery</b> at equal depth and compare. Post the leaderboard. Levels 4–6 make good homework.</li>
+  </ul>
+
+  <h2>Why connections are priced</h2>
+  <p>A flat price per metre makes extra panels free, which is false and hides a real design driver. Here
+  connections are roughly <b>45%</b> of a typical bill, so panel count is a genuine trade-off: bracing a panel you
+  already have costs steel only, while adding a panel costs a joint as well. That is exactly why real trusses use
+  as few panels as they can. The debrief splits the bill into steel and connections.</p>
+
+  <h2>Axial members</h2>
+  <p>Every joint is a pin, so it carries no bending moment. A straight member pinned at both ends is therefore a
+  <b>two-force member</b>: its only possible force is along its own axis — a pull (<b>tension</b>) or a push
+  (<b>compression</b>). One number describes it completely. Each joint satisfies <b>ΣF<sub>x</sub> = ΣF<sub>y</sub> = 0</b>;
+  the Joint tool draws exactly that and prints the residual.</p>
+
+  <h2>Tension vs. compression</h2>
+  <p>Same steel section throughout (E = 200 GPa, A = 12 cm²). Pulled, it yields at
+  T<sub>max</sub> = σ<sub>y</sub>A = <b>300 kN at any length</b>. Pushed, it does not crush — it
+  <b>buckles sideways</b>, at</p>
+  <p class="eq">P<sub>cr</sub> = π²EI / L² ≈ 720 kN·m² / L²</p>
+  <p>capped at 180 kN when stubby. Length is <b>squared</b>: double a strut, quarter its capacity.</p>
+  <table>
+    <tr><th>Length</th><th class="n">1 m</th><th class="n">2 m</th><th class="n">3 m</th><th class="n">4 m</th></tr>
+    <tr><td>Pulled</td><td class="n">300 kN</td><td class="n">300</td><td class="n">300</td><td class="n">300</td></tr>
+    <tr><td>Pushed</td><td class="n">180 kN</td><td class="n">180</td><td class="n">80</td><td class="n">45</td></tr>
+  </table>
+  <p>Students can find the consequence themselves: flip a working design below the deck so the long members
+  <i>hang</i> instead of <i>prop</i>. Same geometry, same cost, far lower stress.</p>
+
+  <h2>Why triangles</h2>
+  <p>Three side lengths fix a triangle completely — its corners cannot move without stretching a side. Four do not
+  fix a quadrilateral: it shears into a parallelogram with every side the same length as before. A member only
+  resists <i>a change in its own length</i>, so a rectangular panel meets that shearing with <b>zero</b> resistance.</p>
+  <p>In the solver this is arithmetic, not a special case: the shearing motion strains nothing, so K maps it to zero
+  force and is <b>singular</b>. The game finds the rank deficiency, reads the null-space direction out of the
+  elimination, and folds the bridge <i>along that exact direction</i> — the collapse students watch is the real
+  mathematical failure mode. During the build phase it reports <b>how many independent folds</b> exist (the
+  dimension of that null space) and animates each in turn. A null vector has zero strain only to <i>first</i> order,
+  so the drawn shape is projected back onto exact member lengths before display — what the class watches really does
+  keep every member at its built length. Adding one well-placed member removes exactly one fold: count down to zero.</p>
+
+  <h2>Static determinacy, plainly</h2>
+  <p>Count members <b>m</b>, reactions <b>r</b>, joints <b>j</b>; each joint gives 2 equations.</p>
+  <ul>
+    <li><b>m + r &lt; 2j</b> — <i>mechanism.</i> Not enough members. It folds; strength cannot help.</li>
+    <li><b>m + r = 2j</b> — <i>determinate.</i> Equilibrium alone gives every force, and <b>every member is
+      critical</b>: lose one and the rest is a mechanism.</li>
+    <li><b>m + r &gt; 2j</b> — <i>indeterminate.</i> Spare members; load now splits by <b>stiffness</b>, not
+      equilibrium alone. This is why the game solves K·u = F instead of walking joint to joint.</li>
+  </ul>
+  <p>The count is necessary but not sufficient — members in the wrong places leave a local mechanism. The solver
+  checks the matrix, not the count.</p>
+
+  <div class="box">
+    <b class="tag">Misconception 1 — “more members always makes it stronger.”</b> Extra members change how load
+    <i>shares</i>, and a stiffer path attracts <i>more</i> force, so an added member can overload its neighbour. And
+    every member costs money: the debrief flags those that never passed 5% of their limit, and first attempts
+    usually have several. <b>Try it:</b> add a member to a design that just made par and watch the peak move.
+  </div>
+  <div class="box">
+    <b class="tag">Misconception 2 — “the verticals do nothing, they're spacers.”</b> In a Pratt the verticals are in
+    compression carrying each panel's shear to the top chord; in a Howe they are in tension. <b>Try it:</b> load a
+    Pratt from the Gallery, turn on X-ray, erase one vertical — its panel becomes a rectangle and the truss becomes a
+    mechanism. A member genuinely carrying nothing is drawn grey, and that is a different thing.
+  </div>
+  <div class="box">
+    <b class="tag">Misconception 3 — “tension and compression are just plus and minus.”</b> The <i>same</i> 4 m
+    member holds 300 kN pulled and 45 kN pushed. The sign is not bookkeeping; it selects a completely different
+    failure mode. <b>Try it:</b> note a design's peak use, then rebuild it upside down under the deck.
+  </div>
+
+  <h2>Discussion questions</h2>
+  <ol>
+    <li>The bare rectangle folded without any member changing length. Where did the load go, and why could no
+      member resist it?</li>
+    <li>Two designs, same cost and same joints, but one props the deck from above and one hangs it from below.
+      Predict which is safer, then check. What in P<sub>cr</sub> = π²EI/L² explains it?</li>
+    <li>A Warren's diagonals alternate tension–compression all the way along. Take one bottom joint and use
+      ΣF<sub>y</sub> = 0 to show why its two diagonals must have opposite signs.</li>
+    <li>Why is the bottom chord's force greatest at mid-span and near zero at the supports?</li>
+    <li>One member snapped and the whole bridge came down. What does that say about its spare load paths? What
+      would you add, and what would it cost?</li>
+    <li>Level 5's pier drops par sharply. Halving a span does much more than halve the forces — why? Where do real
+      bridges use this, and when can't they?</li>
+    <li>Turn on <b>Self-weight</b> and retest a design that just made par. What happens, and why does it matter
+      more as spans grow?</li>
+  </ol>
+
+  <h2>Levels, par &amp; logistics</h2>
+  <table>
+    <tr><th>#</th><th>Level</th><th>Span / vehicle</th><th class="n">Par</th><th>Lesson</th></tr>
+    <tr><td>1</td><td>First Crossing</td><td>6 m · car 30 kN</td><td class="n">$1,050</td><td>A flat deck is a mechanism</td></tr>
+    <tr><td>2</td><td>The Long Gap</td><td>12 m · car 30 kN</td><td class="n">$2,800</td><td>Rectangles fold, triangles don't</td></tr>
+    <tr><td>3</td><td>Heavy Haul</td><td>10 m · truck 125 kN</td><td class="n">$2,800</td><td>Buckling; length matters</td></tr>
+    <tr><td>4</td><td>High Water</td><td>12 m · van 60 kN</td><td class="n">$3,100</td><td>Through truss / bowstring</td></tr>
+    <tr><td>5</td><td>Island Pier</td><td>16 m · truck 125 kN</td><td class="n">$3,600</td><td>Supports beat steel</td></tr>
+    <tr><td>6</td><td>Sandbox</td><td>18 m · your choice</td><td class="n">—</td><td>Free build</td></tr>
+  </table>
+  <ul>
+    <li><b>⚙ Teacher mode</b>: projector large-UI toggle, leaderboard resets, and an option to <b>pick the test
+      vehicle on any level</b> — for showing what happens when a bridge that carried a car meets a 12 tonne tipper.
+      Demo runs stay off the leaderboard.</li>
+    <li>Boards and saved designs live in each machine's browser storage; reset between periods.</li>
+    <li>Keys: <b>1 2 3</b> build / erase / joint · <b>Ctrl+Z</b> undo · <b>Space</b> test · <b>X</b> X-ray ·
+      <b>F</b> force numbers.</li>
+  </ul>
+</div>
+
+<footer>Bridge Works · offline single-folder web game · open index.html to play, teacher-guide.html to reprint this page. Physics: 2D pin-jointed truss by the direct stiffness method; mechanisms detected as rank deficiency and animated along the null-space mode; Euler buckling governs compression; overloaded members are removed and the structure re-solved. Pars verified beatable by test-physics.js.</footer>
+</body>
+</html>
