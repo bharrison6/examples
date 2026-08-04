@@ -181,8 +181,62 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   const m3 = await page.textContent('#dbMath');
   check('proof shows hyperbolic escape with v∞', /hyperbolic escape/.test(m3) && /v∞/.test(m3));
 
-  console.log('\n[9] Teacher mode');
+  console.log('\n[8b] Regression: fall-back warning must not break the hint banner');
+  // crossing the system edge while still BOUND fires the fall-back banner; a later
+  // level load then re-renders the banner. Setting textContent on the #hint
+  // container (rather than #hintText) used to destroy the span and throw
+  // "Cannot set properties of null" on the next showHint().
   await page.click('#dbClose');
+  await page.click('#btnLevels');
+  await page.locator('.levelcard').nth(2).click(); // level 3 again
+  await page.waitForTimeout(300);
+  await page.click('#btnToPe');
+  await page.waitForTimeout(2200);
+  await page.click('#btnPlanBurn');
+  await page.locator('#dvSlider').fill('4');       // deliberately short of escape
+  await page.locator('#dvSlider').dispatchEvent('input');
+  await page.click('#btnCommitBurn');
+  await page.click('[data-warp="200"]');
+  let warned = false;
+  for (let i = 0; i < 50; i++) {
+    await page.waitForTimeout(400);
+    const t = await page.textContent('#hint');
+    if (/fall back|still negative/i.test(t)) { warned = true; break; }
+  }
+  check('fall-back warning fires on a tall bound ellipse', warned);
+  check('#hintText survives the warning',
+        await page.evaluate(() => !!document.getElementById('hintText')));
+  check('#hintClose survives the warning',
+        await page.evaluate(() => !!document.getElementById('hintClose')));
+  const errsBefore = errors.length;
+  await page.click('#btnRestart');                  // this is what used to throw
+  await page.waitForTimeout(500);
+  check('restarting after the warning does not throw', errors.length === errsBefore,
+        errors.slice(errsBefore).join(' | '));
+  check('mission banner still renders after restart',
+        (await page.textContent('#hintText')).length > 20);
+
+  console.log('\n[8c] Regression: sandbox engine buttons must not hijack burn direction');
+  await page.click('#btnLevels');
+  await page.locator('.levelcard').nth(7).click(); // level 8 sandbox (engine choices)
+  await page.waitForTimeout(300);
+  await page.click('#btnPlanBurn');
+  await page.waitForTimeout(150);
+  await page.click('#engineRow [data-eng="0.35"]');
+  await page.waitForTimeout(250);
+  const modeAfterEngine = await page.evaluate(() => {
+    const a = document.querySelector('.modes [data-mode].active');
+    return a ? a.dataset.mode : null;
+  });
+  check('picking an engine leaves the burn direction intact', modeAfterEngine === 'prograde', String(modeAfterEngine));
+  await page.locator('#dvSlider').fill('2');
+  await page.locator('#dvSlider').dispatchEvent('input');
+  await page.waitForTimeout(250);
+  check('predicted path still computes after an engine swap',
+        /Predicted/.test(await page.textContent('#predinfo')));
+  await page.click('#btnCancelBurn');
+
+  console.log('\n[9] Teacher mode');
   await page.click('#btnTeacher');
   await page.click('#tgProjector');
   await page.waitForTimeout(300);

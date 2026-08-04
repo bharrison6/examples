@@ -307,9 +307,11 @@ function toast(msg, ms) {
   toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2200);
 }
 function showHint(text, ms) {
-  $('hintText').textContent = text;
+  const el = $('hintText');
+  if (!el) return;                       // defensive: never let a banner update break the sim
+  el.textContent = text;
   $('hint').classList.add('show');
-  if (ms) setTimeout(() => { if ($('hintText').textContent === text) $('hint').classList.remove('show'); }, ms);
+  if (ms) setTimeout(() => { if (el.textContent === text) $('hint').classList.remove('show'); }, ms);
 }
 function anyModalOpen() { return !!document.querySelector('.modal.show'); }
 
@@ -548,11 +550,9 @@ function checkGoal() {
     // crossed the edge while still bound: explain why it doesn't count
     if (!done && el.eps <= 0 && el.r > lvl.escapeR && !warnedFallback) {
       warnedFallback = true;
-      $('hint').textContent = 'You crossed the system edge — but your orbital energy is still negative (ε = ' +
+      showHint('You crossed the system edge — but your orbital energy is still negative (ε = ' +
         uEPS(el.eps).toFixed(2) + ' km²/s²), so this is just a very tall ellipse: gravity will pull you back. ' +
-        'Escape needs ε > 0. More speed — cheapest at periapsis.';
-      $('hint').classList.add('show');
-      setTimeout(() => $('hint').classList.remove('show'), 12000);
+        'Escape needs ε > 0. More speed — cheapest at periapsis.', 12000);
     }
     if (el.r < lvl.escapeR * 0.9) warnedFallback = false;
   }
@@ -1029,10 +1029,10 @@ function hidePlanner() {
 $('btnPlanBurn').addEventListener('click', () => { $('planner').classList.contains('show') ? hidePlanner() : showPlanner(); });
 $('btnCancelBurn').addEventListener('click', hidePlanner);
 $('btnCommitBurn').addEventListener('click', () => { if (phase === 'planning') { commitBurn(); checkGoal(); } });
-document.querySelectorAll('.modes button').forEach(b => {
+document.querySelectorAll('.modes [data-mode]').forEach(b => {
   b.addEventListener('click', () => {
     plan.mode = b.dataset.mode;
-    document.querySelectorAll('.modes button').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.modes [data-mode]').forEach(x => x.classList.toggle('active', x === b));
     $('angleRow').style.display = plan.mode === 'free' ? 'flex' : 'none';
     if (phase === 'planning') computePredPath();
   });
