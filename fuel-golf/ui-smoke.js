@@ -1,8 +1,27 @@
 /* UI smoke test: drives the real interface headlessly and asserts the
    behaviours students depend on. node ui-smoke.js  */
 'use strict';
-const { chromium } = require('playwright');
+let chromium;
+try {
+  ({ chromium } = require('playwright'));
+} catch (err) {
+  console.error('ui-smoke.js requires Playwright. Install the test-only dependency with: npm install --save-dev playwright && npx playwright install chromium');
+  process.exit(2);
+}
 const path = require('path');
+const fs = require('fs');
+function browserExecutable() {
+  const winRoots = [process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.LOCALAPPDATA].filter(Boolean);
+  const candidates = [
+    ...winRoots.flatMap((root) => [
+      path.join(root, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(root, 'Microsoft', 'Edge', 'Application', 'msedge.exe')
+    ]),
+    '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium',
+    '/usr/bin/chromium-browser', '/snap/bin/chromium'
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate));
+}
 
 let fails = 0;
 function check(name, cond, detail) {
@@ -12,7 +31,8 @@ function check(name, cond, detail) {
 const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
 
 (async () => {
-  const browser = await chromium.launch();
+  const executablePath = browserExecutable();
+  const browser = await chromium.launch(executablePath ? { executablePath } : {});
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
@@ -31,7 +51,53 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   const blue = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--msu-blue').trim());
   check('MSU gold token present', gold.toUpperCase() === '#ECAC00', gold);
   check('MSU blue token present', blue.toUpperCase() === '#002144', blue);
-  await page.click('#closeHelp');
+  console.log('\n[1a] Dialog and keyboard accessibility');
+  check('boot help is announced as a labelled modal dialog', await page.evaluate(() => {
+    const modal = document.getElementById('helpModal');
+    return modal.getAttribute('role') === 'dialog' && modal.getAttribute('aria-modal') === 'true' &&
+      modal.getAttribute('aria-labelledby') === 'helpTitle' && modal.getAttribute('aria-describedby') === 'helpIntro';
+  }));
+  check('boot help moves focus into the dialog without a click opener',
+        await page.evaluate(() => document.activeElement && document.activeElement.id === 'closeHelp'));
+  check('modal makes background controls inert', await page.evaluate(() => {
+    const mission = document.getElementById('btnMission');
+    const inertAncestor = mission.closest('[inert]');
+    return inertAncestor && inertAncestor.inert && inertAncestor.getAttribute('aria-hidden') === 'true' &&
+      !mission.matches(':focus-within');
+  }));
+  await page.keyboard.press('Tab');
+  check('Tab stays inside the boot help dialog',
+        await page.evaluate(() => document.activeElement && document.activeElement.id === 'closeHelp'));
+  await page.keyboard.press('Escape');
+  check('Escape closes boot help and restores a safe fallback focus', await page.evaluate(() => {
+    return !document.getElementById('helpModal').classList.contains('show') && document.activeElement.id === 'btnHelp';
+  }));
+  await page.click('#btnMission');
+  await page.waitForTimeout(50);
+  check('mission dialog moves focus to its control',
+        await page.evaluate(() => document.activeElement && document.activeElement.id === 'msClose'));
+  await page.keyboard.press('Escape');
+  check('Escape restores focus to the modal opener',
+        await page.evaluate(() => document.activeElement && document.activeElement.id === 'btnMission'));
+  await page.click('#btnLevels');
+  await page.waitForTimeout(50);
+  check('mission cards are native keyboard controls with useful names', await page.evaluate(() => {
+    const card = document.querySelector('.levelcard');
+    return card && card.tagName === 'BUTTON' && /Load level 1: Orbit School\. Circularize your orbit\./.test(card.getAttribute('aria-label'));
+  }));
+  await page.locator('.levelcard').nth(1).focus();
+  check('mission-card focus is visibly styled', await page.evaluate(() => {
+    const card = document.activeElement;
+    return card.classList.contains('levelcard') && parseFloat(getComputedStyle(card).outlineWidth) >= 3;
+  }));
+  await page.keyboard.press('Space');
+  await page.waitForTimeout(80);
+  check('Space activates a mission card', /Level 2:/.test(await page.textContent('#levelChip')));
+  await page.click('#btnLevels');
+  await page.locator('.levelcard').first().focus();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(80);
+  check('Enter activates a mission card', /Level 1:/.test(await page.textContent('#levelChip')));
 
   console.log('\n[2] HUD countdowns and camera');
   await page.click('#btnHud');

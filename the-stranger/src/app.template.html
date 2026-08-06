@@ -1,0 +1,1213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
+<meta name="color-scheme" content="dark">
+<title>The Stranger — why prompts work</title>
+<style>
+/* ============================================================ THE STRANGER
+   Single file. Zero network. Every response below is hand-authored at build
+   time; there is no model behind this glass and never was.
+   ------------------------------------------------------------------------ */
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  --bg:#0a0d14; --bg2:#10141e; --panel:#151b28; --panel2:#1b2231; --line:#2a3550;
+  --ink:#e9eef8; --dim:#93a2be; --dim2:#6b7a97;
+  --c1:#f4a63f; --c1b:#4d3413; --c2:#3fddA0; --c2b:#0f3b2c; --c3:#b49bff; --c3b:#2c2455;
+  --acc:#ffd47e; --bad:#ff8080;
+  --fs:19px; --pad:18px; --r:14px;
+  --stream:420; /* characters per second */
+}
+body.mode-presenter{--fs:clamp(18px,0.72vw + 13px,25px);--pad:20px}
+body.mode-student{--fs:clamp(15.5px,0.30vw + 13px,18.5px);--pad:14px}
+
+html,body{height:100%}
+body{
+  margin:0;font-size:var(--fs);
+  font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color:var(--ink);background:var(--bg);
+  -webkit-text-size-adjust:100%;overflow:hidden;
+}
+/* street-corner motif: one sodium streetlamp, off to the side, and asphalt */
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(58vw 42vw at 8% -12%, rgba(255,190,90,.13), transparent 62%),
+    radial-gradient(40vw 40vw at 96% 108%, rgba(120,150,255,.07), transparent 60%);
+}
+body::after{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
+  background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.014) 0 2px,transparent 2px 5px);
+}
+#app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column}
+
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.btn{
+  border:1px solid var(--line);background:var(--panel);border-radius:10px;
+  padding:.42em .8em;font-size:.8em;color:var(--dim);transition:.15s;white-space:nowrap;
+}
+.btn:hover{border-color:#3d4c72;color:var(--ink);background:var(--panel2)}
+.btn.on{background:var(--acc);color:#221803;border-color:var(--acc);font-weight:650}
+.btn.primary{background:linear-gradient(180deg,#ffdf9a,#f2b750);color:#241a04;border-color:#f2b750;font-weight:700;font-size:.92em;padding:.5em 1.2em}
+.btn.primary:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent}
+
+/* ---------------------------------------------------------------- header */
+#bar{
+  display:flex;align-items:center;gap:.7em;flex:0 0 auto;flex-wrap:wrap;row-gap:.45em;
+  padding:.5em var(--pad);border-bottom:1px solid var(--line);
+  background:rgba(10,13,20,.82);backdrop-filter:blur(8px);
+}
+/* the question tabs always own a full row: the tool buttons carry real labels
+   now, and on one row they squeezed the tabs down to two letters */
+.tabrow{flex:1 1 100%;display:flex;align-items:center;gap:.6em;min-width:0;order:3}
+.brand{display:flex;align-items:center;gap:.5em;font-size:.82em;letter-spacing:.13em;flex:0 0 auto;white-space:nowrap}
+.brand b{font-weight:800}
+.brand small{color:var(--dim2);letter-spacing:.05em;text-transform:none}
+.lamp{width:.62em;height:.62em;border-radius:50%;background:var(--acc);box-shadow:0 0 12px 3px rgba(255,212,126,.5)}
+#tabs{display:flex;gap:.3em;overflow:auto;scrollbar-width:none;flex:1 1 auto;min-width:0}
+#tabs::-webkit-scrollbar{display:none}
+.tab{border:1px solid transparent;border-radius:999px;padding:.35em .85em;font-size:.78em;color:var(--dim);white-space:nowrap}
+.tab:hover{color:var(--ink)}
+.tab.on{background:var(--panel2);border-color:var(--line);color:var(--ink);font-weight:600}
+.barright{margin-left:auto;display:flex;gap:.35em;align-items:center}
+
+/* ------------------------------------------------------------------ main */
+main{flex:1 1 auto;display:grid;grid-template-columns:minmax(300px,30%) 1fr;min-height:0;min-width:0}
+/* grid and flex children default to min-width:auto, which lets a wide row of
+   lever buttons force the whole page wider than a phone. Pin them all to 0. */
+main>section,#cols,.col,#promptWrap,#promptBox,#levers,#deckRail,.bubble,.md,.gtxt{min-width:0}
+.md,.bubble,.gtxt,.quiz{overflow-wrap:break-word}
+#left{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,rgba(21,27,40,.55),rgba(10,13,20,.2))}
+/* the answer is what has to be legible from the back of the room; the control
+   column does not, and at projector scale it was eating the whole screen */
+body.mode-presenter #left{font-size:.8em}
+/* a 900px-tall laptop cannot show projector-sized controls and the prompt at once */
+@media (max-height:1000px){ body.mode-presenter #left{font-size:.72em} }
+@media (max-height:820px){ body.mode-presenter #left{font-size:.66em} }
+#leftScroll{flex:1 1 auto;min-height:0;overflow:auto}
+#askDock{flex:0 0 auto;border-top:1px solid var(--line);background:rgba(9,12,19,.92);box-shadow:0 -12px 16px -12px rgba(0,0,0,.9)}
+#right{display:flex;flex-direction:column;min-height:0;position:relative}
+.paneTitle{
+  font-size:.68em;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2);
+  padding:.85em var(--pad) .5em;flex:0 0 auto;
+}
+
+/* ---------------------------------------------------------------- levers */
+#levers{padding:0 var(--pad);display:flex;flex-direction:column;gap:.45em;flex:0 0 auto}
+.lever{
+  display:block;width:100%;text-align:left;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:var(--panel);transition:.18s;position:relative;overflow:hidden;
+}
+.leverhead{display:flex;align-items:center;gap:.7em;width:100%;text-align:left;padding:.62em .8em}
+.leverhead:hover{background:rgba(255,255,255,.03)}
+.lever:hover{border-color:#3d4c72}
+/* what leaving this lever in this position will cost you, said before you ask */
+.conseq{font-size:.7em;line-height:1.45;color:var(--dim);padding:.5em .9em .55em;border-top:1px dashed var(--line)}
+.conseq b{color:var(--ink);font-weight:650}
+.lever[data-l="0"].on .conseq{background:rgba(244,166,63,.06)}
+.lever[data-l="1"].on .conseq{background:rgba(63,221,160,.06)}
+.lever[data-l="2"].on .conseq{background:rgba(180,155,255,.06)}
+/* the deck is not a separate widget somewhere else on the screen. It is what
+   lever 2 is about, so it sits inside lever 2 and visibly leaves when you pull it. */
+.deckrow{display:flex;align-items:center;gap:.7em;padding:.05em .9em .5em}
+.decknames{display:flex;flex-direction:column;gap:.14em;font-size:.63em;color:var(--dim2);line-height:1.25;min-width:0}
+.deckrow.gone .decknames{text-decoration:line-through;opacity:.5}
+.rehearse{display:none;gap:.35em;align-items:center;flex-wrap:wrap;padding:0 .9em .6em;font-size:.86em}
+body.rehearsal .rehearse{display:flex}
+.rehearse .btn{font-size:.66em;padding:.35em .6em}
+.rehearse .fieldlabel{font-size:.58em}
+.lever .num{
+  flex:0 0 auto;width:1.75em;height:1.75em;border-radius:8px;display:grid;place-items:center;
+  font-size:.8em;font-weight:800;background:#0e131d;color:var(--dim2);border:1px solid var(--line);
+}
+.lever .txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+.lever .nm{display:block;font-size:.8em;font-weight:750;letter-spacing:.08em}
+.lever .tg{display:block;font-size:.68em;color:var(--dim2);margin-top:.15em;line-height:1.3}
+.sw{flex:0 0 auto;width:2.5em;height:1.35em;border-radius:999px;background:#0e131d;border:1px solid var(--line);position:relative;transition:.2s}
+.sw::after{content:"";position:absolute;top:50%;left:.16em;transform:translateY(-50%);width:.95em;height:.95em;border-radius:50%;background:var(--dim2);transition:.2s}
+.lever.on .sw::after{left:calc(100% - 1.11em);background:#101520}
+.lever.on{background:var(--panel2)}
+.lever[data-l="0"].on{border-color:var(--c1);box-shadow:inset 3px 0 0 var(--c1)} .lever[data-l="0"].on .sw{background:var(--c1);border-color:var(--c1)} .lever[data-l="0"].on .num{color:var(--c1);border-color:var(--c1)} .lever[data-l="0"].on .nm{color:var(--c1)}
+.lever[data-l="1"].on{border-color:var(--c2);box-shadow:inset 3px 0 0 var(--c2)} .lever[data-l="1"].on .sw{background:var(--c2);border-color:var(--c2)} .lever[data-l="1"].on .num{color:var(--c2);border-color:var(--c2)} .lever[data-l="1"].on .nm{color:var(--c2)}
+.lever[data-l="2"].on{border-color:var(--c3);box-shadow:inset 3px 0 0 var(--c3)} .lever[data-l="2"].on .sw{background:var(--c3);border-color:var(--c3)} .lever[data-l="2"].on .num{color:var(--c3);border-color:var(--c3)} .lever[data-l="2"].on .nm{color:var(--c3)}
+
+/* -------------------------------------------------------- assembled prompt */
+#promptWrap{flex:0 0 auto;display:flex;flex-direction:column;padding:.25em var(--pad) 0}
+#promptBox{
+  flex:0 0 auto;max-height:32vh;overflow:auto;
+  border:1px solid var(--line);border-radius:var(--r);background:#0c101a;padding:.8em;
+  font-size:.78em;line-height:1.5;
+}
+.pblock{border-left:3px solid var(--line);padding:.35em .6em;margin:.4em 0;border-radius:0 8px 8px 0;background:rgba(255,255,255,.02);animation:slidein .28s ease both}
+.pblock.base{border-color:var(--dim2);color:var(--ink);font-weight:600;background:transparent}
+.pblock.c1{border-color:var(--c1);background:rgba(244,166,63,.09);color:#ffe0b4}
+.pblock.c2{border-color:var(--c2);background:rgba(63,221,160,.09);color:#bdf5df}
+.pblock.c3{border-color:var(--c3);background:rgba(180,155,255,.09);color:#ddd2ff}
+.pblock .lbl{display:block;font-size:.68em;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin-bottom:.15em}
+@keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.attach{display:inline-flex;align-items:center;gap:.4em;border:1px dashed var(--line);border-radius:8px;padding:.3em .6em;margin:.4em 0;font-size:.9em;color:var(--dim);cursor:pointer}
+.attach:hover{border-color:var(--acc);color:var(--acc)}
+#askRow{flex:0 0 auto;display:flex;gap:.5em;align-items:center;padding:.15em var(--pad) .8em;flex-wrap:wrap}
+#askRow .hint{font-size:.66em;color:var(--dim2)}
+
+/* ------------------------------------------------------------ target deck */
+#deckRail{
+  flex:0 0 auto;display:flex;align-items:center;gap:.7em;flex-wrap:wrap;row-gap:.35em;
+  padding:.5em var(--pad);border-bottom:1px solid var(--line);min-height:3.1em;
+}
+#deckRail .dlabel{font-size:.66em;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2)}
+#deck{position:relative;width:3.4em;height:2.2em;flex:0 0 auto;transition:transform .6s cubic-bezier(.5,-0.4,.3,1.4),opacity .5s}
+#deck i{position:absolute;inset:0;border-radius:6px;border:1px solid var(--line);
+  background:linear-gradient(160deg,#293350,#161d2c);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+#deck i:nth-child(1){transform:translate(-4px,-3px) rotate(-6deg)}
+#deck i:nth-child(2){transform:translate(-1px,-1px) rotate(-2deg)}
+#deck i:nth-child(3){background:linear-gradient(160deg,#37436a,#1d2537)}
+#deck.gone{transform:translateX(-14%) rotate(-15deg) scale(.9);opacity:.3;filter:grayscale(1)}
+/* the explanation gets its own full-width line so it never gets squeezed into
+   a two-word-wide column by the controls beside it */
+#forceCard{max-width:9.5em}
+#deckMsg b{color:var(--c2)}
+.chip{
+  display:inline-flex;align-items:center;gap:.45em;border:1px solid var(--line);border-radius:999px;
+  padding:.25em .7em;font-size:.7em;color:var(--dim);background:var(--panel)
+}
+.chip.target{border-color:#5b4a86;color:#cbbaf5;background:rgba(180,155,255,.09)}
+
+/* card-draw overlay */
+/* no backdrop-filter here: on some GPUs/projectors the filtered layer drops out
+   entirely and the card never appears. A flat scrim is the safe choice. */
+#cardStage{position:absolute;inset:0;z-index:40;display:none;place-items:center;background:rgba(6,8,13,.88)}
+#cardStage.show{display:grid}
+.tcard{
+  width:min(78%,15em);aspect-ratio:5/7;border-radius:18px;padding:1.1em;
+  background:linear-gradient(165deg,#f7f3e8,#ded6c2);color:#20242e;
+  box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 0 1px rgba(255,255,255,.35) inset;
+  display:flex;flex-direction:column;gap:.5em;transform-origin:50% 120%;
+  animation:draw .85s cubic-bezier(.2,.9,.25,1.05) both;
+}
+@keyframes draw{
+  0%{transform:translateY(52vh) rotate(-16deg) scale(.55);opacity:0}
+  55%{opacity:1}
+  70%{transform:translateY(-2vh) rotate(3deg) scale(1.04)}
+  100%{transform:none;opacity:1}
+}
+.tcard .k{font-size:.62em;letter-spacing:.2em;text-transform:uppercase;color:#7b7566}
+.tcard .icon{font-size:2.1em;line-height:1;color:#5b5342}
+.tcard .lab{font-size:1.05em;font-weight:800;line-height:1.18}
+.tcard .sub{font-size:.74em;line-height:1.4;color:#4a4a52}
+.tcard .foot{margin-top:auto;font-size:.6em;color:#8a8272;border-top:1px solid rgba(0,0,0,.14);padding-top:.5em;line-height:1.35}
+
+/* ------------------------------------------------------------------ chat */
+#cols{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr;gap:0}
+#cols.compare{grid-template-columns:1fr 1fr}
+.col{min-height:0;overflow:auto;padding:var(--pad);display:flex;flex-direction:column;gap:.8em;scroll-behavior:smooth}
+.col+.col{border-left:1px solid var(--line)}
+.colhead{
+  position:sticky;top:calc(var(--pad) * -1);margin:calc(var(--pad) * -1) calc(var(--pad) * -1) 0;
+  padding:.5em var(--pad);background:rgba(10,13,20,.9);backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.5em;flex-wrap:wrap;z-index:5;font-size:.72em;color:var(--dim2)
+}
+.bubble{max-width:min(46em,96%);border-radius:16px;padding:.75em 1em;line-height:1.55;font-size:.92em}
+.bubble.user{align-self:flex-end;background:linear-gradient(180deg,#243049,#1b2437);border:1px solid #33405f;border-bottom-right-radius:5px}
+.bubble.user .pblock{margin:.3em 0;font-size:.95em}
+.row{display:flex;gap:.6em;align-items:flex-start}
+.av{flex:0 0 auto;width:1.9em;height:1.9em;border-radius:9px;display:grid;place-items:center;border:1px solid var(--line);color:var(--acc);font-size:.8em;background:linear-gradient(160deg,#2a3450,#181f2e)}
+.bubble.ai{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:5px;flex:1 1 auto;position:relative}
+.aihead{display:flex;align-items:center;gap:.55em;font-size:.7em;color:var(--dim2);margin-bottom:.35em;flex-wrap:wrap}
+.aihead .nm{color:var(--dim);font-weight:600;letter-spacing:.04em}
+.md h3{font-size:.98em;margin:.95em 0 .3em;letter-spacing:.01em}
+.md h3:first-child{margin-top:.15em}
+.md p{margin:.5em 0}
+.md ul,.md ol{margin:.45em 0;padding-left:1.35em}
+.md li{margin:.22em 0}
+.md b{color:#fff}
+.md .tw-pending{display:none}
+mark.jg{background:transparent;color:inherit;border-radius:3px;padding:0 .05em;transition:background .3s,color .3s}
+body.hl mark.jg{background:rgba(180,155,255,.2);color:#e2d9ff;box-shadow:inset 0 -2px 0 rgba(180,155,255,.75)}
+body.hl mark.jg[data-novel="1"]{background:rgba(180,155,255,.3);box-shadow:inset 0 -2px 0 var(--c3)}
+mark.jg.pop{animation:pop .5s ease}
+@keyframes pop{0%{background:rgba(180,155,255,.75);color:#fff}100%{background:transparent}}
+.caret{display:inline-block;width:.5em;height:1.05em;vertical-align:-.16em;background:var(--acc);animation:blink .9s steps(1,end) infinite;margin-left:.05em}
+@keyframes blink{50%{opacity:0}}
+
+/* jargon meter */
+.meter{display:flex;align-items:center;gap:.55em;flex-wrap:wrap;margin-top:.7em;padding-top:.6em;border-top:1px dashed var(--line);font-size:.72em;color:var(--dim2)}
+.meter .big{font-size:1.5em;font-weight:800;color:var(--c3);font-variant-numeric:tabular-nums;line-height:1}
+.meter .never{color:var(--c3);font-weight:600}
+.meter .never.zero{color:var(--dim2);font-weight:400}
+.scorestrip{display:flex;align-items:center;gap:.3em;flex-wrap:wrap;margin-top:.55em;font-size:.72em;color:var(--dim2)}
+.sbtn{width:1.85em;height:1.85em;border-radius:8px;border:1px solid var(--line);background:#0e131d;font-size:.9em;color:var(--dim)}
+.sbtn:hover{border-color:var(--acc);color:var(--acc)}
+.sbtn.on{background:var(--acc);color:#221803;border-color:var(--acc);font-weight:700}
+.note{font-size:.68em;color:var(--dim2);font-style:italic;margin-top:.5em;border-left:2px solid var(--line);padding-left:.6em}
+
+/* quiz */
+.quiz{border:1px solid #4a3f74;background:linear-gradient(180deg,rgba(180,155,255,.09),rgba(180,155,255,.03));border-radius:var(--r);padding:.9em 1em}
+.quiz .q{font-size:.88em;line-height:1.5;margin-bottom:.7em}
+.quiz .opt{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:.55em .8em;margin:.35em 0;font-size:.85em;background:var(--panel);transition:.15s}
+.quiz .opt:hover{border-color:var(--c3)}
+.quiz .opt.right{border-color:var(--c2);background:rgba(63,221,160,.12)}
+.quiz .opt.wrong{border-color:#7a3b3b;background:rgba(255,128,128,.09)}
+.quiz .fb{font-size:.8em;line-height:1.5;margin-top:.55em;color:var(--dim);border-left:2px solid var(--line);padding-left:.7em}
+
+/* guide bar (student mode) */
+/* mode banner: the modes differ in five ways and none of them announced itself */
+#modeBanner{flex:0 0 auto;font-size:.7em;line-height:1.45;padding:.45em var(--pad);
+  border-bottom:1px solid var(--line);color:var(--dim2);display:flex;gap:.55em;align-items:baseline;flex-wrap:wrap}
+#modeBanner b{letter-spacing:.11em;text-transform:uppercase;font-size:.92em;flex:0 0 auto}
+body.mode-presenter #modeBanner{background:rgba(255,212,126,.055);border-bottom-color:rgba(255,212,126,.2)}
+body.mode-presenter #modeBanner b{color:var(--acc)}
+body.mode-student #modeBanner{background:rgba(180,155,255,.07);border-bottom-color:rgba(180,155,255,.24)}
+body.mode-student #modeBanner b{color:var(--c3)}
+#modeBanner.flash{animation:bflash 1.2s ease}
+@keyframes bflash{0%{background:rgba(255,255,255,.16)}60%{background:rgba(255,255,255,.05)}}
+
+#guide{flex:0 0 auto;border-top:3px solid var(--c3);background:linear-gradient(180deg,rgba(180,155,255,.10),rgba(15,19,29,.97));
+  padding:.65em var(--pad) .75em;display:flex;align-items:center;gap:1em}
+.gwrap{flex:1 1 auto;min-width:0}
+.gmeta{display:flex;align-items:baseline;gap:.7em;flex-wrap:wrap}
+#guide .glabel{font-size:.62em;letter-spacing:.18em;text-transform:uppercase;color:var(--c3);font-weight:700}
+#guide .step{font-size:.62em;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2)}
+.gbar{height:3px;border-radius:2px;background:var(--line);margin:.35em 0 .45em;overflow:hidden;max-width:34em}
+.gbar i{display:block;height:100%;background:var(--c3);transition:width .35s ease}
+#guide .gtxt{display:block;font-size:.82em;line-height:1.45;color:var(--dim)}
+#guide .gtxt b{color:var(--ink);display:block;font-size:1.05em;margin-bottom:.1em}
+#guide .gnav{display:flex;gap:.45em;flex:0 0 auto}
+#guide .gnav .btn.primary{font-size:1em;padding:.55em 1.5em}
+
+/* ---------------------------------------------------------------- modals */
+.modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;background:rgba(5,7,11,.78);backdrop-filter:blur(6px);padding:4vh 4vw}
+.modal.show{display:grid}
+.sheet{width:min(60em,100%);max-height:92vh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:1.4em}
+.sheet h2{margin:0 0 .1em;font-size:1.05em;letter-spacing:.02em}
+.sheet .sub{color:var(--dim2);font-size:.76em;margin-bottom:1em}
+.sheet h3{font-size:.8em;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2);margin:1.2em 0 .5em}
+.close{position:sticky;top:0;float:right;font-size:.9em;color:var(--dim2)}
+table.tbl{width:100%;border-collapse:collapse;font-size:.76em}
+table.tbl th,table.tbl td{text-align:left;padding:.35em .5em;border-bottom:1px solid var(--line)}
+table.tbl th{color:var(--dim2);font-weight:600;font-size:.9em}
+.keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(13em,1fr));gap:.4em;font-size:.76em}
+.keys div{display:flex;gap:.5em;align-items:baseline;color:var(--dim)}
+kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1em .45em;font-family:ui-monospace,monospace;font-size:.85em;color:var(--ink)}
+.draft p{font-size:.82em;line-height:1.6;color:var(--dim)}
+.draft p:first-of-type{color:var(--ink)}
+
+/* closing screen */
+#closing{position:fixed;inset:0;z-index:90;display:none;background:radial-gradient(70vw 60vh at 50% 10%,rgba(255,190,90,.16),transparent 60%),#080a10}
+#closing.show{display:grid;place-items:center;padding:6vh 6vw;text-align:center}
+#closing .big{font-size:clamp(24px,3.6vw,58px);font-weight:800;line-height:1.18;max-width:20em;letter-spacing:-.01em}
+#closing .sub{margin-top:1em;color:var(--dim);font-size:clamp(14px,1.1vw,20px);max-width:34em;line-height:1.6}
+#closing .stats{margin-top:2.2em;display:flex;gap:2.4em;flex-wrap:wrap;justify-content:center;color:var(--dim2);font-size:.8em}
+#closing .stats b{display:block;font-size:2.1em;color:var(--acc);font-weight:800;line-height:1}
+
+/* ------------------------------------------------------------- responsive */
+@media (max-width:860px), (orientation:portrait) and (max-width:1100px){
+  main{grid-template-columns:1fr;grid-template-rows:auto 1fr}
+  #left{border-right:0;border-bottom:1px solid var(--line);max-height:52vh}
+  .paneTitle{padding:.55em var(--pad) .35em}
+  #levers{gap:.4em}
+  .leverhead{padding:.42em .6em;gap:.55em}
+  .lever .tg{font-size:.64em}
+  .conseq{padding:.45em .7em .55em}
+  .deckrow,.rehearse{padding-left:.7em;padding-right:.7em}
+  .lever .sw{width:2.1em;height:1.15em}
+  .lever.on .sw::after{left:calc(100% - .96em)}
+  #askRow{padding:.55em var(--pad)}
+  #promptBox{font-size:.82em;max-height:26vh}
+  #cols.compare{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+  .col+.col{border-left:0;border-top:1px solid var(--line)}
+  .brand small{display:none}
+  #guide{flex-wrap:wrap}
+}
+@media (max-width:760px){
+  #bar{flex-wrap:wrap;row-gap:.4em;gap:.4em;padding:.45em .7em}
+  .barright{flex-wrap:wrap;justify-content:flex-end}
+  .brand b{font-size:.9em}
+  #deckRail{flex-wrap:wrap;row-gap:.35em}
+  #deckRail>span:last-of-type{margin-left:0}
+  #forceCard{max-width:11em}
+}
+@media (max-width:560px){
+  /* a phone is a student's device: the presenter's tools come off the bar */
+  body.mode-presenter{--fs:16.5px}
+  #btnCompare,#btnScoreboard,#forceCard,.brand small{display:none}
+  #deckRail{padding:.4em .7em;min-height:0}
+  .bubble{max-width:100%}
+}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:0 0 auto}
+.seg button{font-size:.78em;padding:.42em .8em;color:var(--dim);background:var(--panel);white-space:nowrap}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--acc);color:#221803;font-weight:700}
+.fieldlabel{font-size:.62em;letter-spacing:.13em;text-transform:uppercase;color:var(--dim2);white-space:nowrap}
+.deckctl{margin-left:auto;display:flex;gap:.4em;align-items:center;flex-wrap:wrap;flex:0 0 auto;justify-content:flex-end}
+.hintline{font-size:.68em;color:var(--dim2);padding:0 var(--pad) .45em;line-height:1.4}
+.startcard{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:1em 1.2em;max-width:36em}
+.startcard h4{margin:0 0 .5em;font-size:1em}
+.startcard ol{margin:.3em 0 .8em;padding-left:1.3em;font-size:.86em;line-height:1.65;color:var(--dim)}
+.startcard ol b{color:var(--ink)}
+.startcard p{font-size:.75em;color:var(--dim2);margin:0;line-height:1.55}
+.meter .mlabel{font-size:.85em;letter-spacing:.1em;text-transform:uppercase;color:var(--dim2)}
+.steps{counter-reset:st;margin:.2em 0 0;padding:0;list-style:none}
+.steps li{counter-increment:st;position:relative;padding:.45em 0 .45em 2.4em;font-size:.86em;line-height:1.55;color:var(--dim);border-bottom:1px solid var(--line)}
+.steps li:last-child{border-bottom:0}
+.steps li::before{content:counter(st);position:absolute;left:0;top:.42em;width:1.7em;height:1.7em;border-radius:8px;
+  display:grid;place-items:center;background:#0e131d;border:1px solid var(--line);color:var(--acc);font-weight:800;font-size:.82em}
+.steps li b{color:var(--ink)}
+.swatch{display:inline-block;padding:0 .35em;border-radius:4px;font-weight:700;font-size:.92em}
+.swatch.s1{background:rgba(244,166,63,.2);color:var(--c1)}
+.swatch.s2{background:rgba(63,221,160,.2);color:var(--c2)}
+.swatch.s3{background:rgba(180,155,255,.2);color:var(--c3)}
+.hidden{display:none !important}
+/* .col sets display:flex, which outranks the UA rule for the hidden attribute */
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body class="mode-presenter rehearsal">
+<div id="app">
+
+  <header id="bar">
+    <div class="brand"><span class="lamp"></span><b>THE STRANGER</b><small>three levers</small></div>
+    <div class="barright">
+      <span class="fieldlabel">Mode</span>
+      <div class="seg" id="modeSeg">
+        <button data-mode="presenter" class="on" title="Big type for a projector, class scoring, side-by-side compare (M)">Presenter</button>
+        <button data-mode="student" title="Self-paced walkthrough with quizzes at the end (M)">Student</button>
+      </div>
+      <button class="btn" id="btnCompare" title="Keep this answer on screen beside the next one (P)">Pin to compare</button>
+      <button class="btn" id="btnScoreboard" title="The class scores so far, plotted against levers pulled (S)">Scoreboard</button>
+      <button class="btn" id="btnFinish" title="The takeaway slide to end on">Closing slide</button>
+      <button class="btn" id="btnHelp" title="What everything on this screen does (?)">How this works</button>
+    </div>
+    <div class="tabrow"><span class="fieldlabel">Question</span><nav id="tabs"></nav></div>
+  </header>
+  <div id="modeBanner"></div>
+
+  <main>
+    <section id="left">
+      <div id="leftScroll">
+        <div class="paneTitle">Step 1 &mdash; build the prompt</div>
+        <div class="hintline">Each lever adds one block of text to what you send, and says underneath what leaving it off will cost you.</div>
+        <div id="levers"></div>
+      </div>
+      <div id="askDock">
+      <div id="promptWrap">
+        <div class="paneTitle" style="padding-left:0;padding-bottom:.2em">Step 2 &mdash; this is exactly what gets sent</div>
+        <div id="promptBox"></div>
+      </div>
+      <div class="paneTitle" style="padding-bottom:.15em">Step 3 &mdash; send it</div>
+      <div id="askRow">
+        <button class="btn primary" id="btnAsk" title="Send this prompt (Enter)">Ask</button>
+        <button class="btn" id="btnSkip" title="Jump to the end of the typing animation (Space)">Skip typing</button>
+        <span class="hint" id="askHint"></span>
+      </div>
+      </div>
+    </section>
+
+    <section id="right">
+      <div id="cols">
+        <div class="col" id="colPin" hidden></div>
+        <div class="col" id="colLive"></div>
+      </div>
+      <div id="cardStage"><div id="cardHost"></div></div>
+    </section>
+  </main>
+
+  <div id="guide" class="hidden">
+    <div class="gwrap">
+      <div class="gmeta">
+        <span class="glabel">Guided walkthrough</span>
+        <span class="step" id="gStep">Step 1 of 8</span>
+      </div>
+      <div class="gbar"><i id="gFill"></i></div>
+      <span class="gtxt" id="gTxt"></span>
+    </div>
+    <span class="gnav">
+      <button class="btn" id="gBack">Back</button>
+      <button class="btn primary" id="gNext">Next</button>
+    </span>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------- modals -->
+<div class="modal" id="mScore"><div class="sheet">
+  <button class="btn ghost close" data-close>close</button>
+  <h2>Scoreboard</h2>
+  <div class="sub">How useful was that answer, 1&ndash;10? Ask the room, type the number, watch the curve.</div>
+  <div id="chart"></div>
+  <h3>Every answer this session</h3>
+  <div id="scoreList"></div>
+  <p style="margin-top:1.2em"><button class="btn" id="btnClearScores">Clear the board</button></p>
+</div></div>
+
+<div class="modal" id="mHelp"><div class="sheet">
+  <button class="btn close" data-close>close</button>
+  <h2>How this works</h2>
+  <div class="sub">A student asks a question. You decide how much you tell it before it answers. That is the whole demo.</div>
+
+  <ol class="steps">
+    <li>Pick a <b>question</b> along the top of the screen. These are things people really ask.</li>
+    <li>On the left are <b>three levers</b>. Each one adds a block of text to the question:
+      <span class="swatch s1">context</span> says who is asking,
+      <span class="swatch s2">success spec</span> says what a finished answer looks like,
+      <span class="swatch s3">expert keywords</span> says which vocabulary to answer in.
+      The box underneath shows the whole prompt as it grows, colour-coded to match.</li>
+    <li>Under each lever is a line telling you <b>what leaving it in that position will cost you</b>,
+      before you ask anything. Lever 2's cost is an object you can see: the
+      <b>deck of target cards</b> sitting inside it, which it deals from when you haven't said what
+      a finished answer looks like. Turn lever 2 on and watch the deck get struck out and pushed
+      aside &mdash; you took the decision back.</li>
+    <li>Press <b>Ask</b>. The answer types itself out. There are 64 answers baked into this file, one for
+      every combination &mdash; nothing is generated live, so it behaves the same every time you run it.</li>
+    <li>Two counters do the arguing for you: the <b>expert-term counter</b> under every answer, and
+      the <b>Scoreboard</b>. Both are explained below.</li>
+  </ol>
+
+  <h3>Every control on the screen</h3>
+  <table class="tbl"><tbody>
+    <tr><td><b>The three levers</b></td><td>Flip one on and its text is appended to the prompt. Flip it off and it is gone. Nothing else about the question changes, so any difference in the answer came from that lever.</td></tr>
+    <tr><td><b>Step 2 box</b></td><td>The literal text being sent. If it is not in this box, the AI does not know it.</td></tr>
+    <tr><td><b>Ask</b></td><td>Sends it. <b>Skip typing</b> jumps to the end of the animation; tapping the answer does the same.</td></tr>
+    <tr><td><b>The deck inside lever 2</b></td><td>Somebody has to decide what a good answer looks like &mdash; how long, for whom, in what format. That decision always gets made. The only question is by whom. <b>Lever 2 off:</b> you haven't decided, so the AI deals itself one of the three cards shown in the lever and silently answers to it. Press Ask and it shows you the card it drew, which is the one courtesy the real thing never extends. <b>Lever 2 on:</b> the deck is struck out and shoved aside inside the lever, because you just took that decision off it. The deck lives inside lever 2 because it <i>is</i> lever 2 &mdash; it is what that lever is for.</td></tr>
+    <tr><td><b>Card it will draw</b></td><td>In the lever 2 panel, presenter mode only. Normally <b>Random</b>, which is the honest version. Pick a specific card to rehearse it. <b>Show that card again</b> re-plays the draw for the answer currently on screen.</td></tr>
+    <tr><td><b>Expert terms</b></td><td>Under every answer. It counts the specialist words the answer used, and how many of those are words the student never typed. Turn on <b>Show me which ones</b> and they light up in the text. With lever 3 off you will see one or two. With it on you will see fifteen or more, nearly all of them words nobody in the room supplied. That is the point of the lever.</td></tr>
+    <tr><td><b>1&ndash;10 strip</b></td><td>Ask the class how useful the answer was and tap the number. It goes on the <b>Scoreboard</b>, which plots score against how many levers were pulled. After six or seven answers the curve climbs on its own and you do not have to argue for it.</td></tr>
+    <tr><td><b>Pin to compare</b></td><td>Freezes the answer on screen in a second column so the next answer lands beside it. The fastest way to show one lever's effect. Press it again to unpin.</td></tr>
+    <tr><td><b>Presenter vs Student</b></td><td>Five concrete differences, listed in the coloured banner under the toolbar whenever you switch:
+      <b>1.</b> Type size &mdash; presenter is sized for a projector, student for a phone or laptop held at arm's length.
+      <b>2.</b> The <b>guided walkthrough</b> only appears in student mode: an eight-step tour that sets the levers for you, one at a time, and finishes with three <i>&ldquo;which lever would fix this?&rdquo;</i> questions with written feedback on every option.
+      <b>3.</b> The <b>1&ndash;10 score strip</b> under each answer is presenter-only, since it is the class scoring out loud.
+      <b>4.</b> <b>Scoreboard</b> and <b>Pin to compare</b> are presenter-only tools.
+      <b>5.</b> The <b>card picker</b> in lever 2 is presenter-only; a student always gets a random draw, which is the honest version.
+      Everything else &mdash; all four questions, all 64 answers, the deck, the counter &mdash; is identical in both. Hand a student a phone in student mode and they can run the whole lesson alone.</td></tr>
+    <tr><td><b>Closing slide</b></td><td>The line to end on, plus what the class scored.</td></tr>
+  </tbody></table>
+
+  <h3>Keys</h3>
+  <div class="keys">
+    <div><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> toggle a lever</div>
+    <div><kbd>Enter</kbd> ask</div>
+    <div><kbd>Space</kbd> skip the typing</div>
+    <div><kbd>H</kbd> highlight expert terms</div>
+    <div><kbd>R</kbd> replay the card draw</div>
+    <div><kbd>P</kbd> pin for compare</div>
+    <div><kbd>&larr;</kbd><kbd>&rarr;</kbd> change scenario</div>
+    <div><kbd>S</kbd> scoreboard</div>
+    <div><kbd>M</kbd> presenter / student</div>
+    <div><kbd>0</kbd> all levers off</div>
+    <div><kbd>9</kbd> all levers on</div>
+    <div><kbd>Esc</kbd> close anything</div>
+  </div>
+  <h3>The shape of the twelve minutes</h3>
+  <table class="tbl"><tbody>
+    <tr><td>0:00</td><td>Play the Stranger. Walk up to a student, say the bare prompt out loud, answer it as blandly as you can.</td></tr>
+    <tr><td>2:00</td><td>Scenario 1, all levers off. Draw the card. Score it. Put the number on the board.</td></tr>
+    <tr><td>4:00</td><td>One lever at a time. Score each. The curve does the arguing for you.</td></tr>
+    <tr><td>7:00</td><td>Scenario 2 with keywords on. Turn on the highlighter. Count the words nobody typed.</td></tr>
+    <tr><td>10:00</td><td>Their turn: which lever would fix this? Then the closing line.</td></tr>
+  </tbody></table>
+  <p style="margin-top:1.4em"><button class="btn primary" data-close>Got it &mdash; start the demo</button></p>
+</div></div>
+
+<div class="modal" id="mDraft"><div class="sheet draft">
+  <button class="btn ghost close" data-close>close</button>
+  <h2 id="draftTitle"></h2>
+  <div class="sub">essay-draft.docx &mdash; attached to the prompt in all eight states</div>
+  <div id="draftBody"></div>
+</div></div>
+
+<div id="closing">
+  <div>
+    <div class="big" id="closeLine"></div>
+    <div class="sub" id="closeSub"></div>
+    <div class="stats" id="closeStats"></div>
+    <p style="margin-top:2.4em"><button class="btn" id="btnCloseBack">back to the demo</button></p>
+  </div>
+</div>
+
+<script>const DATA = __DATA__;</script>
+<script>
+"use strict";
+/* =====================================================================
+   THE STRANGER — runtime
+   No network. No storage APIs. Everything in memory, gone on refresh.
+   ===================================================================== */
+
+const LEVERS = [
+  { key:"context",  n:1, name:"CONTEXT",         tag:"tells it who is asking and what they're working with",  cls:"c1" },
+  { key:"success",  n:2, name:"SUCCESS SPEC",    tag:"tells it what a finished answer looks like",            cls:"c2" },
+  { key:"keywords", n:3, name:"EXPERT KEYWORDS", tag:"tells it which vocabulary to answer in",                cls:"c3" }
+];
+
+const S = {
+  sc: 0,
+  bits: [0,0,0],
+  mode: "presenter",
+  highlight: false,
+  forced: "",           // "" = random
+  lastCard: null,       // card id drawn for the response on screen
+  lastKey: null,        // response key on screen
+  scores: [],           // {sid,key,card,levers,score}
+  heard: 0,             // responses streamed this session
+  novelSeen: 0,         // expert terms shown that the prompt never contained
+  pinned: null,
+  guideIdx: -1,         // -1 = guide not running
+  asked: false
+};
+
+const $  = (s,r)=> (r||document).querySelector(s);
+const $$ = (s,r)=> Array.from((r||document).querySelectorAll(s));
+const scen = ()=> DATA.scenarios[S.sc];
+const bitStr = ()=> S.bits.join("");
+const leverCount = ()=> S.bits.reduce((a,b)=>a+b,0);
+
+/* ---------------------------------------------------------- markdown ---- */
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function inline(s){
+  return esc(s)
+    .replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>")
+    .replace(/(^|[^*])\*([^*\n]+)\*/g,"$1<i>$2</i>");
+}
+function mdToHtml(md){
+  const lines = md.split("\n");
+  const out = [];
+  let list = null, para = [];
+  const flushP = ()=>{ if(para.length){ out.push("<p>"+inline(para.join(" "))+"</p>"); para=[]; } };
+  const flushL = ()=>{ if(list){ out.push("</"+list+">"); list=null; } };
+  for(const raw of lines){
+    const line = raw.replace(/\s+$/,"");
+    if(!line.trim()){ flushP(); flushL(); continue; }
+    let m;
+    if((m = line.match(/^###\s+(.*)$/))){ flushP(); flushL(); out.push("<h3>"+inline(m[1])+"</h3>"); continue; }
+    if((m = line.match(/^\s*-\s+(.*)$/))){ flushP(); if(list!=="ul"){ flushL(); out.push("<ul>"); list="ul"; } out.push("<li>"+inline(m[1])+"</li>"); continue; }
+    if((m = line.match(/^\s*\d+\.\s+(.*)$/))){ flushP(); if(list!=="ol"){ flushL(); out.push("<ol>"); list="ol"; } out.push("<li>"+inline(m[1])+"</li>"); continue; }
+    flushL(); para.push(line.trim());
+  }
+  flushP(); flushL();
+  return out.join("");
+}
+
+/* ----------------------------------------------------- jargon tagging ---- */
+// Wrap the FIRST occurrence of each tagged term. First-occurrence-only is what
+// makes the meter's final number equal the authored term list exactly.
+function markTerms(root, terms, promptLow){
+  const ordered = terms.slice().sort((a,b)=> b.length - a.length);
+  const missed = [];
+  for(const term of ordered){
+    if(!markFirst(root, term, promptLow.indexOf(term.toLowerCase()) === -1)) missed.push(term);
+  }
+  return missed;
+}
+function markFirst(root, term, novel){
+  const low = term.toLowerCase();
+  const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+    acceptNode(n){ return n.parentNode.closest("mark") ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT; }
+  });
+  let n;
+  while((n = w.nextNode())){
+    const hay = n.nodeValue.toLowerCase();
+    let from = 0, i;
+    while((i = hay.indexOf(low, from)) !== -1){
+      const before = i === 0 ? "" : hay[i-1];
+      const after  = hay[i+low.length] || "";
+      if(!/[a-z0-9]/.test(before) && !/[a-z0-9]/.test(after)){
+        const mid = n.splitText(i);
+        mid.splitText(low.length);
+        const mk = document.createElement("mark");
+        mk.className = "jg";
+        mk.dataset.novel = novel ? "1" : "0";
+        mid.parentNode.replaceChild(mk, mid);
+        mk.appendChild(mid);
+        return true;
+      }
+      from = i + 1;
+    }
+  }
+  return false;
+}
+
+/* ------------------------------------------------------- typewriter ------ */
+class Typer {
+  constructor(host, onTerm, onDone){
+    this.host = host; this.onTerm = onTerm; this.onDone = onDone;
+    this.nodes = []; this.i = 0; this.off = 0; this.raf = 0; this.done = false;
+    const w = document.createTreeWalker(host, NodeFilter.SHOW_TEXT);
+    let n; while((n = w.nextNode())) this.nodes.push({ n, full:n.nodeValue });
+    for(const it of this.nodes) it.n.nodeValue = "";
+    $$("h3,p,li,ul,ol", host).forEach(el=> el.classList.add("tw-pending"));
+    this.caret = document.createElement("span");
+    this.caret.className = "caret";
+  }
+  reveal(item){
+    let el = item.n.parentNode;
+    while(el && el !== this.host){ el.classList.remove("tw-pending"); el = el.parentNode; }
+  }
+  start(){
+    if(!this.nodes.length){ return this.finish(); }
+    let last = performance.now();
+    const tick = (t)=>{
+      if(this.done) return;
+      let budget = Math.max(1, Math.round((t - last) / 1000 * (+getComputedStyle(document.documentElement).getPropertyValue("--stream") || 420)));
+      last = t;
+      while(budget > 0 && this.i < this.nodes.length){
+        const item = this.nodes[this.i];
+        if(this.off === 0) this.reveal(item);
+        const take = Math.min(budget, item.full.length - this.off);
+        this.off += take; budget -= take;
+        item.n.nodeValue = item.full.slice(0, this.off);
+        if(this.off >= item.full.length){
+          const mk = item.n.parentNode;
+          if(mk && mk.tagName === "MARK"){ mk.classList.add("pop"); this.onTerm(mk); }
+          this.i++; this.off = 0;
+          const nx = this.nodes[this.i];
+          if(nx) nx.n.parentNode.appendChild(this.caret);
+        }
+      }
+      if(this.i >= this.nodes.length) return this.finish();
+      this.raf = requestAnimationFrame(tick);
+      this.host.dispatchEvent(new CustomEvent("grew",{bubbles:true}));
+    };
+    this.raf = requestAnimationFrame(tick);
+  }
+  skip(){
+    if(this.done) return;
+    for(let k = this.i; k < this.nodes.length; k++){
+      const item = this.nodes[k];
+      this.reveal(item);
+      item.n.nodeValue = item.full;
+      const mk = item.n.parentNode;
+      if(mk && mk.tagName === "MARK") this.onTerm(mk);
+    }
+    this.i = this.nodes.length;
+    this.finish();
+  }
+  finish(){
+    if(this.done) return;
+    this.done = true;
+    cancelAnimationFrame(this.raf);
+    if(this.caret.parentNode) this.caret.parentNode.removeChild(this.caret);
+    $$(".tw-pending", this.host).forEach(el=> el.classList.remove("tw-pending"));
+    this.onDone();
+  }
+}
+let activeTyper = null;
+
+/* ----------------------------------------------------------- prompt ------ */
+function assembledText(sc, bits){
+  const p = [sc.base];
+  if(bits[0]) p.push(sc.levers.context);
+  if(bits[1]) p.push(sc.levers.success);
+  if(bits[2]) p.push(sc.levers.keywords);
+  return p.join("\n\n");
+}
+function promptHtml(sc, bits, compact){
+  let h = "";
+  if(sc.attachment) h += '<div class="attach" data-draft>\u{1F4CE} '+esc(sc.attachment)+'</div>';
+  h += '<div class="pblock base">'+esc(sc.base)+"</div>";
+  LEVERS.forEach((L,i)=>{
+    if(!bits[i]) return;
+    h += '<div class="pblock '+L.cls+'">'+(compact?"":'<span class="lbl">'+L.name+"</span>")+esc(sc.levers[L.key])+"</div>";
+  });
+  return h;
+}
+
+/* --------------------------------------------------------------- render -- */
+function renderTabs(){
+  $("#tabs").innerHTML = DATA.scenarios.map((s,i)=>
+    '<button class="tab'+(i===S.sc?" on":"")+'" data-sc="'+i+'">'+esc(s.tab)+"</button>").join("");
+}
+// Each lever states, before you press anything, what leaving it in this
+// position will cost you. Lever 2's consequence is a physical object — the deck
+// it deals itself — so the deck lives inside lever 2 rather than across the room
+// from it. That adjacency is the only reliable way to show they are one thing.
+function shorten(t, n){
+  if(t.length <= n) return t;
+  const cut = t.slice(0, n);
+  return cut.slice(0, cut.lastIndexOf(" ")) + "\u2026";
+}
+function consequence(i){
+  const sc = scen(), on = !!S.bits[i];
+  if(i === 0) return on
+    ? "<b>It knows who is asking.</b> See step 2."
+    : "<b>It has no idea who is asking.</b> Whatever comes back will be aimed at everybody, which is another way of saying nobody.";
+  if(i === 2) return on
+    ? "<b>It answers in the field's vocabulary.</b> Watch the counter under the answer."
+    : "<b>It will answer in the words you used.</b> The expert-term counter under the answer will sit near zero.";
+  return on
+    ? "<b>You decided what done looks like, so the deck is out of its hands:</b>"
+    : "<b>Somebody has to decide what a finished answer looks like, and you haven't.</b> So it deals itself one of these three and answers to that card, without saying which.";
+}
+function renderLevers(){
+  const cards = scen().cards;
+  $("#levers").innerHTML = LEVERS.map((L,i)=>{
+    const on = !!S.bits[i];
+    // The consequence answers "what am I missing by leaving this off?" Once the
+    // lever is pulled you are not missing it, and its text is sitting in step 2,
+    // so the panel collapses. Lever 2 keeps a line, because the retired deck is
+    // the payoff of pulling it.
+    let body = (on && i !== 1) ? "" :
+      '<div class="conseq ' + (on ? "yes" : "no") + '">' + consequence(i) + "</div>";
+    if(i === 1){
+      body +=
+        '<div class="deckrow' + (on ? " gone" : "") + '">' +
+          '<div id="deck" class="' + (on ? "gone" : "") + '"><i></i><i></i><i></i></div>' +
+          '<div class="decknames">' +
+            cards.map(c=> '<span>' + DATA.cards[c].icon + " " + esc(DATA.cards[c].label) + "</span>").join("") +
+          "</div>" +
+        "</div>" +
+        '<div class="rehearse">' +
+          '<span class="fieldlabel">Card it will draw</span>' +
+          '<select class="btn" id="forceCard" title="Normally random, which is the honest version. Pick one to rehearse it."></select>' +
+          '<button class="btn" id="btnReplay" title="Show the card it drew for the answer on screen (R)">Show that card again</button>' +
+        "</div>";
+    }
+    return '<div class="lever' + (on ? " on" : "") + '" data-l="' + i + '">' +
+      '<button class="leverhead" data-toggle="' + i + '" aria-pressed="' + on + '">' +
+        '<span class="num">' + L.n + "</span>" +
+        '<span class="txt"><span class="nm">' + L.name + '</span><span class="tg">' + esc(L.tag) + "</span></span>" +
+        '<span class="sw"></span></button>' + body + "</div>";
+  }).join("");
+}
+function renderPrompt(){
+  $("#promptBox").innerHTML = promptHtml(scen(), S.bits, false);
+  const n = leverCount();
+  $("#askHint").textContent = n === 0
+    ? "Nothing but the question. This is how most people ask."
+    : n + (n===1 ? " lever pulled." : " levers pulled.");
+}
+function renderDeck(){
+  const specOn = !!S.bits[1];
+  const sel = $("#forceCard");
+  if(!sel) return;                       // levers not rendered yet
+  sel.innerHTML = '<option value="">Random (what students see)</option>' +
+    scen().cards.map(c=>'<option value="'+c+'">'+esc(DATA.cards[c].label)+"</option>").join("");
+  sel.value = S.forced;
+  sel.disabled = specOn;
+  $("#btnReplay").disabled = specOn || !S.lastCard;
+  const dk = $("#deck"), dr = $(".deckrow");
+  if(dk) dk.classList.toggle("gone", specOn);
+  if(dr) dr.classList.toggle("gone", specOn);
+}
+function renderAll(){ renderTabs(); renderLevers(); renderPrompt(); renderDeck(); }
+
+/* ------------------------------------------------------------- the ask --- */
+function pickCard(){
+  const cards = scen().cards;
+  if(S.forced && cards.includes(S.forced)) return S.forced;
+  return cards[Math.floor(Math.random()*cards.length)];
+}
+function cardHtml(id){
+  const c = DATA.cards[id];
+  return '<div class="tcard"><div class="k">you didn\u2019t say what a good answer looks like, so it picked:</div>'+
+    '<div class="icon">'+c.icon+'</div>'+
+    '<div class="lab">'+esc(c.label)+"</div>"+
+    '<div class="sub">'+esc(c.sub)+"</div>"+
+    '<div class="foot">The answer you are about to read was written to this rule. Normally this card stays face down and you never learn it existed.</div></div>';
+}
+// One card at a time. The pending close is held here so that dismissing a card
+// early (tap, Escape, or drawing a replacement) cannot let a stale timer fire
+// later and yank a card that is only half a second old off the screen.
+let cardTimer = 0, cardPending = null;
+function dismissCard(){
+  clearTimeout(cardTimer); cardTimer = 0;
+  const stage = $("#cardStage");
+  if(cardPending) stage.removeEventListener("click", cardPending);
+  cardPending = null;
+  stage.classList.remove("show");
+}
+function closeCard(){
+  const then = cardPending && cardPending.then;
+  dismissCard();
+  if(then) then();
+}
+function drawCard(id, then){
+  dismissCard();
+  const stage = $("#cardStage");
+  $("#cardHost").innerHTML = cardHtml(id);
+  stage.classList.add("show");
+  const handler = ()=> closeCard();
+  handler.then = then;
+  cardPending = handler;
+  stage.addEventListener("click", handler);
+  cardTimer = setTimeout(handler, 2100);
+}
+
+function ask(){
+  if(activeTyper && !activeTyper.done) activeTyper.skip();
+  const sc = scen(), bits = bitStr();
+  S.asked = true;
+  if(S.bits[1] === 1){
+    S.lastCard = null; S.lastKey = bits;
+    renderDeck();
+    stream(sc, bits, null);
+  }else{
+    const card = pickCard();
+    S.lastCard = card; S.lastKey = bits + "|" + card;
+    renderDeck();
+    drawCard(card, ()=> stream(sc, bits, card));
+  }
+}
+
+function responseNode(sc, bits, card, opts){
+  opts = opts || {};
+  const key = card ? bits + "|" + card : bits;
+  const r = sc.responses[key];
+  const promptLow = assembledText(sc, bits.split("").map(Number)).toLowerCase();
+  const novelTotal = r.terms.filter(t=> promptLow.indexOf(t.toLowerCase()) === -1).length;
+
+  const wrap = document.createElement("div");
+  wrap.className = "row";
+  wrap.innerHTML =
+    '<div class="av">◉</div>'+
+    '<div class="bubble ai">'+
+      '<div class="aihead"><span class="nm">Assistant</span>'+
+        (card ? '<span class="chip target">'+DATA.cards[card].icon+" "+esc(DATA.cards[card].label)+"</span>" : "")+
+        '<span class="chip">'+leverLabel(bits)+"</span>"+
+      "</div>"+
+      '<div class="md"></div>'+
+      '<div class="meter"><span class="mlabel">Expert&nbsp;terms</span><span class="big">0</span>'+
+        '<span>specialist words in this answer</span>'+
+        '<span class="never"></span>'+
+        '<button class="btn" data-hl title="Colour in the specialist words so the room can see them">Show me which ones</button></div>'+
+    "</div>";
+  const md = $(".md", wrap);
+  md.innerHTML = mdToHtml(r.md);
+  const missed = markTerms(md, r.terms, promptLow);
+  if(missed.length) console.warn("unmarked terms", key, missed);
+
+  const meterBig = $(".big", wrap), never = $(".never", wrap);
+  let count = 0, novel = 0;
+  const bump = (mk)=>{
+    count++; if(mk.dataset.novel === "1") novel++;
+    meterBig.textContent = count;
+    never.textContent = novel ? "\u2014 " + novel + " of them are words you never typed" : "";
+    never.classList.toggle("zero", !novel);
+  };
+  wrap.dataset.total = r.terms.length;
+  wrap.dataset.novelTotal = novelTotal;
+
+  if(opts.instant){
+    $$("mark.jg", md).forEach(bump);
+    if(opts.withScore) addScoreStrip(wrap, sc, key);
+    return { wrap, typer:null };
+  }
+  const typer = new Typer(md, bump, ()=>{
+    if(opts.withScore){ S.heard++; S.novelSeen += novelTotal; addScoreStrip(wrap, sc, key); }
+    if(S.mode === "student" && S.guideIdx >= 0) $("#gNext").focus();
+    scrollLive();
+  });
+  return { wrap, typer };
+}
+
+function leverLabel(bits){
+  const on = LEVERS.filter((L,i)=> bits[i] === "1").map(L=> L.name.toLowerCase());
+  return on.length ? on.join(" + ") : "no levers";
+}
+
+function stream(sc, bits, card){
+  const col = $("#colLive");
+  col.innerHTML = '<div class="colhead"><b style="color:var(--ink)">'+esc(sc.title)+"</b> — live</div>";
+  const user = document.createElement("div");
+  user.className = "bubble user";
+  user.innerHTML = promptHtml(sc, bits.split("").map(Number), true);
+  col.appendChild(user);
+
+  const { wrap, typer } = responseNode(sc, bits, card, { withScore:true });
+  col.appendChild(wrap);
+  activeTyper = typer;
+  typer.start();
+  scrollLive();
+}
+function scrollLive(){ const c = $("#colLive"); c.scrollTop = c.scrollHeight; }
+
+/* ------------------------------------------------------------ scoring ---- */
+function addScoreStrip(wrap, sc, key){
+  if(S.mode !== "presenter") return;
+  const strip = document.createElement("div");
+  strip.className = "scorestrip";
+  strip.innerHTML = "<span>Ask the room: how useful was that answer, 1&ndash;10?</span>" +
+    Array.from({length:10},(_,i)=>'<button class="sbtn" data-score="'+(i+1)+'">'+(i+1)+"</button>").join("");
+  strip.addEventListener("click", e=>{
+    const b = e.target.closest("[data-score]"); if(!b) return;
+    $$(".sbtn", strip).forEach(x=> x.classList.remove("on"));
+    b.classList.add("on");
+    recordScore(sc.id, key, +b.dataset.score);
+  });
+  $(".bubble.ai", wrap).appendChild(strip);
+}
+function recordScore(sid, key, score){
+  const bits = key.split("|")[0];
+  const levers = bits.split("").filter(c=> c === "1").length;
+  const i = S.scores.findIndex(s=> s.sid === sid && s.key === key);
+  const row = { sid, key, levers, score, card:key.split("|")[1] || null };
+  if(i >= 0) S.scores[i] = row; else S.scores.push(row);
+  drawChart();
+}
+
+function drawChart(){
+  const host = $("#chart"), W = 640, H = 300, m = { l:44, r:16, t:16, b:40 };
+  if(!S.scores.length){
+    host.innerHTML = '<p style="color:var(--dim2);font-size:.8em">Nothing scored yet. Ask something, then tap a number under the answer.</p>';
+    return;
+  }
+  const x = v => m.l + (v/3) * (W - m.l - m.r);
+  const y = v => H - m.b - ((v-1)/9) * (H - m.t - m.b);
+  let g = "";
+  for(let k=1;k<=10;k+=3){ g += '<line x1="'+m.l+'" y1="'+y(k)+'" x2="'+(W-m.r)+'" y2="'+y(k)+'" stroke="#2a3550"/>'+
+    '<text x="'+(m.l-8)+'" y="'+(y(k)+4)+'" fill="#6b7a97" font-size="11" text-anchor="end">'+k+"</text>"; }
+  for(let k=0;k<=3;k++){ g += '<text x="'+x(k)+'" y="'+(H-m.b+20)+'" fill="#6b7a97" font-size="11" text-anchor="middle">'+k+"</text>"; }
+  g += '<text x="'+((W+m.l)/2)+'" y="'+(H-4)+'" fill="#93a2be" font-size="11" text-anchor="middle">levers pulled</text>';
+
+  const means = [];
+  for(let k=0;k<=3;k++){
+    const set = S.scores.filter(s=> s.levers === k);
+    if(set.length) means.push([k, set.reduce((a,b)=> a+b.score,0)/set.length]);
+  }
+  if(means.length > 1){
+    g += '<polyline fill="none" stroke="#ffd47e" stroke-width="3" stroke-linejoin="round" points="'+
+      means.map(([k,v])=> x(k)+","+y(v)).join(" ")+'"/>';
+  }
+  means.forEach(([k,v])=>{ g += '<circle cx="'+x(k)+'" cy="'+y(v)+'" r="5.5" fill="#ffd47e"/>'; });
+  const cols = ["#93a2be","#f4a63f","#3fdda0","#b49bff"];
+  S.scores.forEach((s,i)=>{
+    const jx = x(s.levers) + ((i % 5) - 2) * 7;
+    g += '<circle cx="'+jx+'" cy="'+y(s.score)+'" r="3.4" fill="'+cols[s.levers]+'" opacity=".85"/>';
+  });
+  host.innerHTML = '<svg viewBox="0 0 '+W+" "+H+'" style="width:100%;height:auto">'+g+"</svg>"+
+    '<p style="color:var(--dim2);font-size:.72em;margin:.2em 0 0">Gold line: the class average at each number of levers.</p>';
+
+  $("#scoreList").innerHTML = "<table class='tbl'><thead><tr><th>scenario</th><th>levers</th><th>target card</th><th>score</th></tr></thead><tbody>"+
+    S.scores.map(s=>{
+      const sc = DATA.scenarios.find(x=> x.id === s.sid);
+      return "<tr><td>"+esc(sc.tab)+"</td><td>"+leverLabel(s.key.split("|")[0])+"</td><td>"+
+        (s.card ? esc(DATA.cards[s.card].label) : "—")+"</td><td><b>"+s.score+"</b></td></tr>";
+    }).join("")+"</tbody></table>";
+}
+
+/* ------------------------------------------------------------ compare ---- */
+function pin(){
+  if(!S.lastKey){ return; }
+  S.pinned = { sid: scen().id, key: S.lastKey };
+  renderPin();
+}
+function renderPin(){
+  const col = $("#colPin");
+  if(!S.pinned){
+    col.hidden = true; $("#cols").classList.remove("compare");
+    $("#btnCompare").classList.remove("on"); $("#btnCompare").textContent = "Pin to compare";
+    return;
+  }
+  const sc = DATA.scenarios.find(x=> x.id === S.pinned.sid);
+  const [bits, card] = S.pinned.key.split("|");
+  col.hidden = false; $("#cols").classList.add("compare");
+  $("#btnCompare").classList.add("on"); $("#btnCompare").textContent = "Unpin this";
+  col.innerHTML = '<div class="colhead"><b style="color:var(--ink)">'+esc(sc.title)+"</b> — pinned</div>";
+  const user = document.createElement("div");
+  user.className = "bubble user";
+  user.innerHTML = promptHtml(sc, bits.split("").map(Number), true);
+  col.appendChild(user);
+  const { wrap } = responseNode(sc, bits, card || null, { instant:true });
+  col.appendChild(wrap);
+}
+
+/* -------------------------------------------------------------- guide ---- */
+function guideSteps(){
+  const sid = scen().id;
+  return DATA.guide.map(g=> ({ type:"state", ...g }))
+    .concat(DATA.quizzes[sid].map((q,i)=> ({ type:"quiz", q, i })));
+}
+function runGuide(idx){
+  const steps = guideSteps();
+  S.guideIdx = Math.max(0, Math.min(idx, steps.length - 1));
+  const st = steps[S.guideIdx];
+  $("#gStep").textContent = "Step " + (S.guideIdx+1) + " of " + steps.length +
+    (st.type === "quiz" ? " \u00b7 quiz" : "");
+  $("#gFill").style.width = Math.round((S.guideIdx+1) / steps.length * 100) + "%";
+  $("#gBack").disabled = S.guideIdx === 0;
+  $("#gNext").textContent = S.guideIdx === steps.length - 1 ? "Finish" : "Next \u2192";
+  if(st.type === "state"){
+    $("#gTxt").innerHTML = "<b>"+esc(st.title)+"</b>"+esc(st.text);
+    S.bits = st.state.split("").map(Number);
+    renderAll();
+    ask();
+  }else{
+    $("#gTxt").innerHTML = "<b>Which lever would fix this?</b>Read it, pick one, then read why.";
+    showQuiz(st.q);
+  }
+}
+function showQuiz(q){
+  const col = $("#colLive");
+  col.innerHTML = '<div class="colhead"><b style="color:var(--ink)">Which lever would fix this?</b></div>';
+  const box = document.createElement("div");
+  box.className = "quiz";
+  box.innerHTML = '<div class="q">'+esc(q.stem)+"</div>" +
+    q.options.map((o,i)=>'<button class="opt" data-i="'+i+'">'+esc(o.label)+"</button>").join("") +
+    '<div class="fb hidden"></div>';
+  box.addEventListener("click", e=>{
+    const b = e.target.closest(".opt"); if(!b || box.dataset.done) return;
+    const o = q.options[+b.dataset.i];
+    b.classList.add(o.correct ? "right" : "wrong");
+    if(!o.correct){
+      const right = q.options.findIndex(x=> x.correct);
+      $$(".opt", box)[right].classList.add("right");
+    }
+    box.dataset.done = "1";
+    const fb = $(".fb", box);
+    fb.classList.remove("hidden");
+    fb.textContent = o.feedback;
+  });
+  col.appendChild(box);
+}
+
+/* --------------------------------------------------------------- modes --- */
+const MODE_TEXT = {
+  presenter: "Projector-sized type. You drive it: score every answer 1\u201310 and watch the curve build, pin two answers side by side, and choose which target card gets drawn. No walkthrough \u2014 you decide where to go next.",
+  student:   "Self-paced and smaller type. A guided walkthrough at the bottom of the screen takes you through the levers one at a time, then asks three \u201Cwhich lever would fix this?\u201D questions. No class scoring, no compare, and the target card is always drawn at random \u2014 the way it happens in real life."
+};
+function renderModeBanner(flash){
+  const el = $("#modeBanner");
+  el.innerHTML = "<b>" + (S.mode === "presenter" ? "Presenter mode" : "Student mode") + "</b><span>" +
+    MODE_TEXT[S.mode] + "</span>";
+  if(flash){ el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash"); }
+}
+function setMode(m){
+  const changed = S.mode !== m;
+  S.mode = m;
+  document.body.className = "mode-" + m + (S.highlight ? " hl" : "");
+  $$("#modeSeg button").forEach(b=> b.classList.toggle("on", b.dataset.mode === m));
+  $("#guide").classList.toggle("hidden", m !== "student");
+  ["#btnScoreboard","#btnCompare"].forEach(s=> $(s).classList.toggle("hidden", m !== "presenter"));
+  document.body.classList.toggle("rehearsal", m === "presenter");
+  renderModeBanner(changed);
+  if(m === "student"){ runGuide(0); }
+  else { S.guideIdx = -1; }
+}
+function setHighlight(v){
+  S.highlight = v;
+  document.body.classList.toggle("hl", v);
+  $$("[data-hl]").forEach(b=> b.classList.toggle("on", v));
+}
+
+/* -------------------------------------------------------------- closing -- */
+function showClosing(){
+  $("#closeLine").textContent = DATA.closing.line;
+  $("#closeSub").textContent = DATA.closing.sub;
+  const byLever = [0,1,2,3].map(k=>{
+    const set = S.scores.filter(s=> s.levers === k);
+    return set.length ? (set.reduce((a,b)=> a+b.score,0)/set.length) : null;
+  });
+  const lo = byLever[0], hi = byLever[3];
+  const stats = [
+    ["answers heard", S.heard || "—"],
+    ["average, no levers", lo == null ? "—" : lo.toFixed(1)],
+    ["average, all three", hi == null ? "—" : hi.toFixed(1)],
+    ["expert words it handed you", S.novelSeen || "—"]
+  ];
+  $("#closeStats").innerHTML = stats.map(([k,v])=> "<div><b>"+v+"</b>"+k+"</div>").join("");
+  $("#closing").classList.add("show");
+}
+
+/* --------------------------------------------------------------- wiring -- */
+function init(){
+  renderAll();
+  drawChart();
+  $("#draftTitle").textContent = DATA.draftTitle;
+  $("#draftBody").innerHTML = DATA.draft.map(p=> "<p>"+esc(p)+"</p>").join("");
+
+  $("#tabs").addEventListener("click", e=>{
+    const b = e.target.closest("[data-sc]"); if(!b) return;
+    S.sc = +b.dataset.sc; S.forced = ""; S.lastCard = null; S.lastKey = null;
+    showEmpty();
+    renderAll();
+    if(S.mode === "student") runGuide(0);
+  });
+  $("#levers").addEventListener("click", e=>{
+    const h = e.target.closest("[data-toggle]");
+    if(h){ toggle(+h.dataset.toggle); return; }
+    if(e.target.closest("#btnReplay") && S.lastCard) drawCard(S.lastCard, null);
+  });
+  $("#levers").addEventListener("change", e=>{
+    if(e.target.id === "forceCard") S.forced = e.target.value;
+  });
+  $("#promptBox").addEventListener("click", e=>{ if(e.target.closest("[data-draft]")) $("#mDraft").classList.add("show"); });
+  $("#cols").addEventListener("click", e=>{
+    if(e.target.closest("[data-draft]")) $("#mDraft").classList.add("show");
+    if(e.target.closest("[data-hl]")) setHighlight(!S.highlight);
+    else if(e.target.closest(".bubble.ai") && activeTyper && !activeTyper.done) activeTyper.skip();
+  });
+  $("#btnAsk").addEventListener("click", ask);
+  $("#btnSkip").addEventListener("click", ()=> activeTyper && activeTyper.skip());
+  $("#btnCompare").addEventListener("click", ()=>{ S.pinned ? (S.pinned = null, renderPin()) : pin(); });
+  $("#btnScoreboard").addEventListener("click", ()=>{ drawChart(); $("#mScore").classList.add("show"); });
+  $("#btnHelp").addEventListener("click", ()=> $("#mHelp").classList.add("show"));
+  $("#modeSeg").addEventListener("click", e=>{
+    const b = e.target.closest("[data-mode]"); if(!b) return;
+    if(b.dataset.mode !== S.mode) setMode(b.dataset.mode);
+  });
+  $("#btnFinish").addEventListener("click", showClosing);
+  $("#btnCloseBack").addEventListener("click", ()=> $("#closing").classList.remove("show"));
+  $("#btnClearScores").addEventListener("click", ()=>{ S.scores = []; drawChart(); });
+  $("#gNext").addEventListener("click", ()=>{
+    const steps = guideSteps();
+    if(S.guideIdx >= steps.length - 1) showClosing(); else runGuide(S.guideIdx + 1);
+  });
+  $("#gBack").addEventListener("click", ()=> runGuide(S.guideIdx - 1));
+  $$("[data-close]").forEach(b=> b.addEventListener("click", e=> e.target.closest(".modal").classList.remove("show")));
+  $$(".modal").forEach(m=> m.addEventListener("click", e=>{ if(e.target === m) m.classList.remove("show"); }));
+
+  document.addEventListener("keydown", e=>{
+    if(e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if(k === "Escape"){
+      $$(".modal.show").forEach(m=> m.classList.remove("show"));
+      $("#closing").classList.remove("show");
+      if($("#cardStage").classList.contains("show")) closeCard();  // skip the card, keep the answer
+      return;
+    }
+    if(["1","2","3"].includes(k)){ toggle(+k - 1); e.preventDefault(); return; }
+    if(k === "0"){ S.bits = [0,0,0]; renderAll(); return; }
+    if(k === "9"){ S.bits = [1,1,1]; renderAll(); return; }
+    if(k === "Enter"){ ask(); e.preventDefault(); return; }
+    if(k === " "){ activeTyper && activeTyper.skip(); e.preventDefault(); return; }
+    const l = k.toLowerCase();
+    if(l === "h") setHighlight(!S.highlight);
+    if(l === "r" && S.lastCard) drawCard(S.lastCard, null);
+    if(l === "p") S.pinned ? (S.pinned = null, renderPin()) : pin();
+    if(l === "s"){ drawChart(); $("#mScore").classList.toggle("show"); }
+    if(l === "m") setMode(S.mode === "presenter" ? "student" : "presenter");
+    if(k === "ArrowRight"){ S.sc = (S.sc + 1) % DATA.scenarios.length; showEmpty(); S.lastKey=null; renderAll(); }
+    if(k === "ArrowLeft"){ S.sc = (S.sc - 1 + DATA.scenarios.length) % DATA.scenarios.length; showEmpty(); S.lastKey=null; renderAll(); }
+  });
+
+  showEmpty();
+  renderModeBanner(false);
+  $("#mHelp").classList.add("show");   // first thing anyone sees is what everything does
+}
+function toggle(i){
+  S.bits[i] = S.bits[i] ? 0 : 1;
+  renderAll();
+}
+function showEmpty(){
+  $("#colLive").innerHTML =
+    '<div class="colhead">The answer will appear here</div>' +
+    '<div class="startcard"><h4>Start here</h4><ol>' +
+      '<li>Leave all three levers <b>off</b> for the first run.</li>' +
+      '<li>Press <b>Ask</b>. Read what a stranger says to a stranger.</li>' +
+      '<li>Turn on <b>one</b> lever, press Ask again, and see exactly what that one lever bought you.</li>' +
+      '<li>Then all three.</li>' +
+    "</ol><p>Every answer in this file was written by hand before the file was saved. Nothing is generated live and nothing touches the internet.</p></div>";
+}
+window.__stranger = { S, DATA, ask, toggle, setMode, showEmpty, runGuide, recordScore, pin, setHighlight,
+  drawCard, guideSteps, renderAll, drawChart, showClosing, renderPin,
+  unpin(){ S.pinned = null; renderPin(); },
+  get typer(){ return activeTyper; },
+  // set levers + scenario + forced card in one call (used by the build's playtest)
+  set(i, bits, card){ S.sc = i; S.bits = bits.split("").map(Number); S.forced = card || ""; renderAll(); } };
+init();
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>

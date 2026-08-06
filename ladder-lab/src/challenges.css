@@ -1,0 +1,323 @@
+/* Ladder Lab — src/challenges.css
+ * Styles for LL.Challenges (ch-* classes only; nothing leaks onto other panes).
+ * Industrial-panel look per SPEC.md, matching editor.css conventions:
+ * charcoal #23272b / #2c3136, panel cards #f4f4f2 with dark borders and the
+ * corner-screw motif, safety-yellow #f5a800 accents, stack-light green/red for
+ * pass/fail, monospace tags, touch targets >= 44px. Sizes are em-based off
+ * .ch-root so body.bigui scales the whole panel (~1.35x). */
+
+.ch-root {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  color: #23272b;
+  background: #2c3136;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+.bigui .ch-root { font-size: 19px; }   /* spec: ~1.35x in Big UI mode */
+
+.ch-root button { font-family: inherit; font-size: inherit; color: inherit; }
+.ch-root button:focus-visible { outline: 3px solid #f5a800; outline-offset: 1px; }
+
+/* ---------- challenge tabs ---------- */
+
+.ch-tabs {
+  display: flex;
+  gap: 0.35em;
+  flex-wrap: wrap;
+  padding: 0.5em 0.7em 0;
+  background: #23272b;
+  border-bottom: 3px solid #16181a;
+}
+
+.ch-tabs .ch-tab { /* double class out-specifies the .ch-root button reset */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45em;
+  min-height: 44px;
+  padding: 0.35em 0.8em;
+  border: 2px solid #16181a;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: #33383d;
+  color: #e7e9eb;
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ch-tabs .ch-tab:hover { background: #4a5056; }
+.ch-tabs .ch-tab-active,
+.ch-tabs .ch-tab-active:hover {
+  background: #f4f4f2;
+  color: #23272b;
+  box-shadow: inset 0 3px 0 #f5a800;
+}
+
+/* status indicator lamp on each tab */
+.ch-dot {
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  border: 2px solid #16181a;
+  background: #5a5f64;               /* not tried: dark lens */
+  flex: 0 0 auto;
+}
+.ch-dot[data-status="attempted"] { background: #f5a800; box-shadow: 0 0 4px #f5a800; }
+.ch-dot[data-status="passed"]    { background: #2e9e46; box-shadow: 0 0 5px #2e9e46; }
+
+/* ---------- layout ---------- */
+
+.ch-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8em;
+  padding: 0.8em;
+}
+
+/* ---------- panel card (shared) ---------- */
+
+.ch-card {
+  background: #f4f4f2;
+  border: 2px solid #16181a;
+  border-radius: 6px;
+  padding: 0 1.1em 1em;
+  /* subtle corner screws motif */
+  background-image:
+    radial-gradient(circle at 9px 9px, #b9bdb9 0 2.5px, #82868a 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #b9bdb9 0 2.5px, #82868a 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 9px calc(100% - 9px), #b9bdb9 0 2.5px, #82868a 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #b9bdb9 0 2.5px, #82868a 2.5px 4px, transparent 4.5px);
+}
+
+.ch-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+  padding: 0.7em 0 0.45em;
+  border-bottom: 2px solid #23272b;
+  margin-bottom: 0.6em;
+}
+
+.ch-title,
+.ch-results-title {
+  margin: 0;
+  font-size: 1.15em;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+}
+
+.ch-status-badge {
+  font-size: 0.72em;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  padding: 0.25em 0.7em;
+  border: 2px solid #16181a;
+  border-radius: 999px;
+  background: #e8e8e4;
+  color: #5a5f64;
+}
+.ch-status-badge[data-status="attempted"] { background: #ffe9b8; color: #b97f00; border-color: #b97f00; }
+.ch-status-badge[data-status="passed"]    { background: #dcf3e1; color: #1d6b33; border-color: #1d6b33; }
+
+/* ---------- spec text ---------- */
+
+.ch-spec-para {
+  margin: 0 0 0.7em;
+  line-height: 1.45;
+  max-width: 62em;
+}
+.ch-spec-para:last-child { margin-bottom: 0.2em; }
+
+.ch-tags {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  margin: 0.6em 0 0.2em;
+}
+.ch-tags-label { font-weight: 650; font-size: 0.9em; color: #4a5056; }
+.ch-tagchip {
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  font-size: 0.92em;
+  font-weight: 600;
+  padding: 0.15em 0.5em;
+  border: 2px solid #23272b;
+  border-radius: 5px;
+  background: #fffbe8;
+}
+
+/* ---------- hints ---------- */
+
+.ch-hints {
+  margin-top: 0.8em;
+  border-top: 1px dashed #82868a;
+  padding-top: 0.55em;
+}
+.ch-hints-title {
+  margin: 0 0 0.4em;
+  font-size: 0.9em;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #4a5056;
+}
+.ch-hint-list { margin: 0 0 0.6em; padding-left: 1.4em; }
+.ch-hint {
+  margin: 0 0 0.45em;
+  line-height: 1.4;
+  max-width: 58em;
+  background: #fff7df;
+  border-left: 4px solid #f5a800;
+  padding: 0.35em 0.6em;
+  border-radius: 0 4px 4px 0;
+}
+.ch-hints-done { font-size: 0.88em; color: #5a5f64; font-style: italic; }
+
+/* ---------- action buttons (panel pushbuttons) ---------- */
+
+.ch-actions {
+  display: flex;
+  gap: 0.6em;
+  flex-wrap: wrap;
+  margin-top: 0.9em;
+}
+
+.ch-btn {
+  min-height: 44px;
+  padding: 0.35em 1em;
+  border: 2px solid #23272b;
+  border-radius: 8px;
+  background: #e8e8e4;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.14);
+  font-weight: 650;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ch-btn:hover { background: #fff; }
+.ch-btn:active { box-shadow: inset 0 2px 0 rgba(0, 0, 0, 0.18); transform: translateY(1px); }
+
+.ch-btn-primary {
+  background: #f5a800;
+  border-color: #16181a;
+}
+.ch-btn-primary:hover { background: #ffd363; }
+
+.ch-btn-hint { font-size: 0.92em; min-height: 40px; }
+
+/* ---------- results ---------- */
+
+.ch-results-empty,
+.ch-results-note {
+  color: #4a5056;
+  line-height: 1.45;
+  padding: 0.4em 0.2em 0.2em;
+  max-width: 60em;
+}
+.ch-results-note {
+  background: #fff7df;
+  border: 2px solid #b97f00;
+  border-radius: 6px;
+  padding: 0.6em 0.8em;
+  color: #23272b;
+}
+
+/* pass / fail banner — tasteful, no confetti */
+.ch-banner {
+  border: 2px solid #16181a;
+  border-radius: 6px;
+  padding: 0.7em 1em;
+  margin-bottom: 0.7em;
+  text-align: center;
+}
+.ch-banner-word {
+  font-size: 1.9em;
+  font-weight: 850;
+  letter-spacing: 0.22em;
+  line-height: 1.1;
+}
+.ch-banner-sub { font-size: 0.95em; margin-top: 0.25em; }
+
+.ch-banner-pass {
+  background: linear-gradient(180deg, #e3f6e8, #cdeed7);
+  border-color: #1d6b33;
+  color: #145226;
+  box-shadow: inset 0 0 0 3px #2e9e46, 0 0 10px rgba(46, 158, 70, 0.35);
+}
+.ch-banner-fail {
+  background: #fdecea;
+  border-color: #c62828;
+  color: #8e1f1f;
+}
+
+/* step-by-step report */
+.ch-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+}
+
+.ch-step {
+  border: 1px solid #c9ccc9;
+  border-radius: 5px;
+  background: #fff;
+  padding: 0.35em 0.6em;
+}
+.ch-step-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55em;
+}
+.ch-step-mark {
+  font-weight: 850;
+  font-family: ui-monospace, "Cascadia Mono", "Consolas", monospace;
+  flex: 0 0 auto;
+  width: 1.1em;
+  text-align: center;
+}
+.ch-step-desc { line-height: 1.35; }
+
+.ch-step-pass .ch-step-mark { color: #1d6b33; }
+.ch-step-pass { border-left: 4px solid #2e9e46; }
+
+.ch-step-fail .ch-step-mark { color: #c62828; }
+.ch-step-fail {
+  border-left: 4px solid #c62828;
+  background: #fdecea;
+}
+.ch-step-fail .ch-step-desc { font-weight: 700; }
+
+/* the first (real) failure is the one to read */
+.ch-step-first-fail {
+  border: 2px solid #c62828;
+  border-left-width: 6px;
+  box-shadow: 0 1px 4px rgba(198, 40, 40, 0.25);
+}
+
+.ch-step-detail {
+  margin: 0.4em 0 0.15em 1.65em;
+  font-size: 0.92em;
+  line-height: 1.45;
+  color: #5a2020;
+}
+.ch-step-detail-main {
+  background: #fff;
+  border: 1px solid #e0b4b4;
+  border-radius: 4px;
+  padding: 0.45em 0.6em;
+  color: #23272b;
+}
+
+/* skipped (not-run) steps sit quietly */
+.ch-step-skip { opacity: 0.55; }
+.ch-step-skip .ch-step-mark { color: #5a5f64; }
+.ch-step-skip .ch-step-detail { color: #5a5f64; font-style: italic; }

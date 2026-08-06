@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bridge Works — Teacher Guide</title>
 <style>
   @page { size: letter; margin: 0.45in; }
@@ -37,6 +38,14 @@
   th.n { text-align: right; text-transform: none; font-size: 7.7pt; }
   footer { margin-top: 6px; border-top: 1px solid #b9c4d6; padding-top: 3px; font-size: 7.4pt; color: #4a5a72; }
   @media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); padding: 0.45in; margin: 20px auto; } }
+  @media screen and (max-width: 600px) {
+    body { width: 100%; max-width: none; margin: 0; padding: 16px 12px 28px; font-size: 10pt; overflow-wrap: anywhere; box-shadow: none; }
+    header { display: block; }
+    header .sub { display: block; margin-top: 4px; }
+    .cols { column-count: 1; }
+    h2 { font-size: 10pt; margin-top: 14px; }
+    table { display: block; max-width: 100%; overflow-x: auto; font-size: 9pt; }
+  }
 </style>
 </head>
 <body>

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zero to Unbeatable — demo guide</title>
+<style>
+  /* --------------------------------------------------------------
+     Everything is scoped to .guide and sized in em off one base, so
+     this same stylesheet and markup can be dropped straight into the
+     app's Presenter notes sheet and simply scaled up for a screen.
+     Print keeps the base at 7.4pt, which is what fits the page.
+     Murray State palette: navy is the ink, gold is a rule and a fill
+     — never small type, it does not carry on white paper.
+     -------------------------------------------------------------- */
+  @page { size: A4 portrait; margin: 10mm 9mm; }
+
+  .guide {
+    --g-ink:#111820; --g-ink2:#41505f; --g-ink3:#71808f; --g-line:#c2cede;
+    --g-navy:#002144; --g-gold:#ECAC00; --g-hi:#FFF7E4;
+    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--g-ink); background: #fff; font-size: 7.4pt; line-height: 1.26;
+    max-width: 210mm; margin: 0 auto; padding: 3.8em 3.45em;
+  }
+  .guide * { box-sizing: border-box; margin: 0; padding: 0; }
+  .guide header { border-bottom: .32em solid var(--g-navy); padding-bottom: .69em; margin-bottom: .84em;
+           display: flex; justify-content: space-between; align-items: flex-end; gap: 2.3em; }
+  .guide .eyebrow { font-size: .865em; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+             color: var(--g-navy); border-bottom: .22em solid var(--g-gold);
+             display: inline-block; padding-bottom: .22em; margin-bottom: .53em; }
+  .guide h1 { font-size: 1.89em; letter-spacing: .03em; line-height: 1; color: var(--g-navy); }
+  .guide h1 small { display: block; font-size: .493em; font-weight: 600; letter-spacing: .2em;
+             text-transform: uppercase; color: var(--g-ink2); margin-top: .72em; }
+  .guide .meta { text-align: right; font-size: .892em; color: var(--g-ink2); line-height: 1.35; }
+  .guide .cols { column-count: 2; column-gap: 1.92em; column-rule: .06em solid var(--g-line); }
+  .guide section { break-inside: avoid; margin-bottom: .77em; }
+  .guide h2 { font-size: 1.027em; text-transform: uppercase; letter-spacing: .1em; color: var(--g-navy);
+       border-bottom: .16em solid var(--g-gold); padding-bottom: .19em; margin-bottom: .38em; }
+  .guide p { margin-bottom: .38em; }
+  .guide ol { margin: 0 0 .38em 1.3em; }
+  .guide ul { margin: 0 0 .38em 1.15em; }
+  .guide li { margin-bottom: .23em; }
+  .guide .beat { display: grid; grid-template-columns: 3.64em 1fr; gap: .46em; margin-bottom: .46em; break-inside: avoid; }
+  .guide .beat .t { font-weight: 800; color: var(--g-navy); font-variant-numeric: tabular-nums; font-size: .946em; }
+  .guide .beat > div > b:first-of-type { display: block; }
+  .guide .say { background: var(--g-hi); border-left: .22em solid var(--g-gold); padding: .35em .5em;
+         margin: .23em 0; font-style: italic; break-inside: avoid; }
+  .guide .mis { border: .07em solid var(--g-line); border-radius: .54em; padding: .42em .54em;
+         margin-bottom: .46em; break-inside: avoid; }
+  .guide .mis .claim { font-weight: 700; color: var(--g-navy); }
+  .guide .mis .claim::before { content: "\201C"; } .guide .mis .claim::after { content: "\201D"; }
+  .guide .mis .ans { color: var(--g-ink2); margin-top: .12em; }
+  .guide .kv { font-size: .919em; color: var(--g-ink2); }
+  .guide .kv b { color: var(--g-navy); }
+  .guide code { font-family: ui-monospace, Consolas, monospace; font-size: .93em; }
+  .guide footer { margin-top: .77em; padding-top: .46em; border-top: .08em solid var(--g-line);
+           font-size: .865em; color: var(--g-ink3); display: flex; justify-content: space-between; gap: 1.5em; }
+  .guide .warn { color: #a3341f; font-weight: 600; }
+  .guide .act2 { break-before: page; padding-top: .77em; }
+  .guide .act2 > h2 { font-size: 1.216em; }
+
+  /* On a screen the print size is unreadable, so the base grows and the
+     two columns collapse when there is not room for them. */
+  @media screen {
+    body { background: #eef1f6; margin: 0; }
+    .guide { font-size: 12pt; box-shadow: 0 0 0 1px #dfe5ee; margin: 16px auto; }
+  }
+  @media screen and (max-width: 900px) {
+    .guide { font-size: 13pt; padding: 1.6em 1.3em; }
+    .guide .cols { column-count: 1; }
+    .guide .act2 { break-before: auto; }
+    .guide header, .guide footer { flex-wrap: wrap; }
+    .guide .meta { text-align: left; }
+  }
+  @media print { .guide { font-size: 7.4pt; padding: 0; max-width: none; margin: 0; box-shadow: none; } }
+</style>
+</head>
+<body>
+
+<div class="guide">
+
+<header>
+  <div>
+    <div class="eyebrow">Murray State University</div>
+    <h1>Zero to Unbeatable<small>15-minute demo &middot; 5-minute second act &middot; how machines learn</small></h1>
+  </div>
+  <div class="meta">
+    <b>You need:</b> one phone, tablet or laptop. Open <code>index.html</code>.<br>
+    No install, no login, no network. Projecting? Settings &rarr; <b>Presenter mode</b>.<br>
+    <b class="warn">Do not train before the session</b>, and do not refresh mid-demo.
+  </div>
+</header>
+
+<div class="cols">
+
+<section>
+  <h2>Setup (60 seconds)</h2>
+  <p>Open the file. Turn on <b>Presenter mode</b> if projecting. To reproduce a rehearsed run exactly,
+  type your seed into <b>Rehearsal seed</b> and press <b>Reset to Era 0</b>. Leave the burst on
+  <b>5,000</b> — the arc is tuned for it and takes three to five presses.</p>
+</section>
+
+<section>
+  <h2>The script</h2>
+
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>Hand it to a student. "Beat it."</b>
+    Era 0 has never played a game. It loses fast and stupidly — it will ignore a row you have almost
+    finished. Let two or three people beat it. Let the room laugh at it.
+    <div class="say">"This has played zero games. It does not know what winning is. It knows how to put
+    a mark in an empty square, and that is all."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">2:00</div><div>
+    <b>Press "Show its brain".</b>
+    Every square reads <code>+0.00</code>, seen 0 times.
+    <div class="say">"That is the entire mind of your opponent. Nine numbers, all zero. No strategy, no
+    line of code that says 'block the row'. When every number ties it flips a coin — which is exactly
+    what you just watched."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">3:00</div><div>
+    <b>Press "Train the AI". Say nothing for three seconds.</b>
+    Let them watch the counter blur past five thousand games. Point at the two live readings:
+    <b>&epsilon;</b> falling — how often it still tries a random square — and its <b>win rate against
+    random play</b> climbing. Then read the card: it now takes a free win and blocks your row.
+  </div></div>
+
+  <div class="beat"><div class="t">4:30</div><div>
+    <b>Play Era 1. Two or three games.</b>
+    It blocks now. It is annoying. You can still beat it — about one game in six — and when somebody
+    does, that is your line:
+    <div class="say">"Five thousand games of experience and you still got it. So what is it missing?"</div>
+  </div></div>
+
+  <div class="beat"><div class="t">6:30</div><div>
+    <b>Train again. Play Era 2.</b>
+    This is the turn. Wins dry up, draws start, somebody loses and is annoyed about it. Let that land
+    before moving on — the frustration <em>is</em> the lesson.
+  </div></div>
+
+  <div class="beat"><div class="t">9:00</div><div>
+    <b>Train twice more. Play the newest era.</b>
+    Between the third and fifth press the purple banner appears. Every game is a draw now. Invite the
+    best player in the room to try. They will draw.
+  </div></div>
+
+  <div class="beat"><div class="t">11:30</div><div>
+    <b>The beat that makes it stick: go back.</b>
+    Choose <b>Era 0</b> from the dropdown and stomp it again. Then switch to the newest era and draw
+    again. Same program, same code, different numbers.
+    <div class="say">"Nobody rewrote this. The only thing that changed is a list of numbers, and the
+    only thing that changed the numbers was playing games and being told won, lost or drew."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">13:00</div><div>
+    <b>Read the banner aloud, then close on the bridge.</b>
+    Tic-tac-toe has about five and a half thousand positions, so a table holds all of them. Chess and
+    language cannot be listed at all — which is the whole reason big AI uses a neural network instead.
+    <div class="say">"Different brain. Same idea: play, get told how it went, adjust, repeat."</div>
+  </div></div>
+</section>
+
+<section>
+  <h2>Discussion questions</h2>
+  <ol>
+    <li>It played 5,000 games in three seconds. How many had you played before you stopped losing at
+    this? What does that comparison tell us — and what does it hide?</li>
+    <li>Why does it deliberately play a bad square during training? What breaks if it always plays the
+    move it currently rates best?</li>
+    <li>Forty per cent of its training is against an opponent playing at random. Why not train it only
+    against itself, which is far stronger?</li>
+    <li>The last thing it learns is that answering two opposite corners in a corner loses. Why would
+    that arrive after "block the row"?</li>
+    <li>Once trained, every opening square scores the same. Has it failed to learn something, or
+    learned something?</li>
+    <li>It can never lose now. Is it <em>good at</em> tic-tac-toe, or has it memorised tic-tac-toe? Is
+    there a difference, and does the difference matter?</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Misconceptions to draw out</h2>
+
+  <div class="mis">
+    <div class="claim">It was secretly programmed with strategy and just pretends to start dumb.</div>
+    <div class="ans">Meet this head on. Show the brain at Era 0 — every value exactly zero. Then run
+    <b>Settings &rarr; Run the full self-test</b> in front of them: it chi-squared tests 9,000 moves by
+    a newborn and reports it indistinguishable from a coin flip. The code also measures that a newborn
+    takes a free win no more often than chance. A hidden rule would show in both.</div>
+  </div>
+
+  <div class="mis">
+    <div class="claim">It understands tic-tac-toe now.</div>
+    <div class="ans">It has a number attached to each of about five thousand board pictures. It cannot
+    say what a row is, cannot play on a 4&times;4 board, cannot explain one choice. Ask the room what
+    "understands" would have to mean and whether anything on screen meets it. Best argument you can
+    have in the last two minutes.</div>
+  </div>
+
+  <div class="mis">
+    <div class="claim">More training always keeps making it visibly better.</div>
+    <div class="ans">Watch the card across bursts. The first changes almost everything; by the third
+    the landmark positions stop moving at all and only "positions it would now play differently" keeps
+    falling. Improvement goes invisible, then stops — it has hit the ceiling of the game, and nothing
+    goes past a draw.</div>
+  </div>
+
+  <p class="kv"><b>And if someone says it is unbeatable only because it has won a lot:</b> it is not a
+  win record. After every burst the app searches <em>every</em> game still playable against it, in
+  both roles, following every square you could pick and every coin flip it could make — about 15,000
+  complete games in some 20 milliseconds — and finds no line where it loses. That is a proof, not a
+  sample.</p>
+</section>
+
+<section>
+  <h2>What is actually running</h2>
+  <p class="kv">Tabular <b>afterstate value learning</b>: one number per board position meaning "how did
+  this turn out for whoever just moved". Update is <code>+1</code> for a win, <code>0</code> for a
+  draw, otherwise the best thing the opponent can do to you, negated and discounted. Learning rate
+  <b>0.8</b>, discount <b>0.95</b>, &epsilon; from <b>1.00</b> to <b>0.25</b> over 14,000 games,
+  <b>60%</b> self-play and <b>40%</b> versus random play in both roles, <b>20%</b> of games started
+  from a dealt position so rare endgames get practised. No minimax, no heuristics, no opening book
+  anywhere in the agent. Sources and the full test suite sit beside this file.</p>
+</section>
+
+<section>
+  <h2>Notes for the presenter</h2>
+  <ul>
+    <li><b>Short of time?</b> Press train twice in a row and skip Era 2. It always lands by the fifth
+    press.</li>
+    <li><b>A student beats Era 3?</b> They cannot beat a <em>verified</em> era, but they can beat one
+    before the banner. That is real and it is a gift — say so, then train again.</li>
+    <li><b>500 and 2,000</b> exist to show the wobble in slow motion; they need many more presses.
+    Keep 5,000 for a timed session.</li>
+    <li>The maths for 5,000 games finishes in well under a tenth of a second. The montage is stretched
+    to about two and a half seconds so there is something to watch — the app admits this itself, and
+    so should you.</li>
+  </ul>
+</section>
+
+</div><!-- /cols -->
+
+<section class="act2">
+  <h2>Second act: nine boards at once (5 minutes)</h2>
+  <p>The toggle at the top switches to the nine-board game: a mark per turn on <em>any</em> unfinished
+  board, finished boards lock, first to five boards takes the match. Run this after the banner, when
+  the room has just watched something become perfect. The point is what happens to that method when
+  the world gets one step bigger.</p>
+
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>Switch to "Nine at once" and play it.</b>
+    It is beatable again — sometimes badly. Nothing was taken away from it. Ask the room why.
+    <div class="say">"Same opponent. Same table. It just got moved somewhere slightly bigger."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">1:30</div><div>
+    <b>Turn on "Show its brain" and read the last line.</b>
+    It reports what fraction of the squares it is weighing up sit on a board picture it has never
+    seen — often most of them. On one board the marks tell you whose turn it is; here you can play
+    twice in the same board while your opponent is busy elsewhere, so about half the pictures you meet
+    <em>cannot happen</em> in ordinary tic-tac-toe. Only 14% of what this game needs came across.
+  </div></div>
+
+  <div class="beat"><div class="t">2:30</div><div>
+    <b>Train it, then read the first card.</b>
+    It counts, by playing, how often any position comes round twice. On one board about ten times. On
+    nine boards about once.
+    <div class="say">"Learning from experience needs the experience to repeat. Here it never does. So
+    why does this work at all?"</div>
+    Because it looks at <b>one board at a time</b> and adds up what it finds — and a person chose that
+    shortcut. Finding the shortcut yourself is what a neural network is for.
+  </div></div>
+
+  <div class="beat"><div class="t">4:00</div><div>
+    <b>Point at the missing banner.</b>
+    Where Act I printed a proof, this mode prints a refusal: nobody can check every game here, so
+    nobody can promise. Then show the score against the hand-written opponent — take any win, block
+    any loss, else prefer the middle, the way a person would explain the game. It stops losing to
+    those rules within a few bursts, having never been shown them.
+    <div class="say">"Good, but not proven. That is where every real AI system lives."</div>
+  </div></div>
+
+  <p class="kv"><b>Two more questions for this act.</b> (1) The agent scores a move by how much it
+  improves the one board it is played in, and ignores the other eight. When would that be exactly
+  right, and when would it be wrong? (2) It explores by trying whatever it has seen least, rather than
+  at random. Why does rolling a die stop working when the space gets big?</p>
+</section>
+
+<footer>
+  <span>Murray State University &middot; Zero to Unbeatable &middot; single-file offline demo &middot; no network, no accounts, no AI service</span>
+  <span>Donald Michie's MENACE (1961) did this with 304 matchboxes and coloured beads.</span>
+</footer>
+
+</div><!-- /guide -->
+
+</body>
+</html>

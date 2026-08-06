@@ -6,8 +6,27 @@
      npm i playwright && node ui-smoke.js
 */
 'use strict';
-const { chromium } = require('playwright');
+let chromium;
+try {
+  ({ chromium } = require('playwright'));
+} catch (err) {
+  console.error('ui-smoke.js requires Playwright. Install the test-only dependency with: npm install --save-dev playwright && npx playwright install chromium');
+  process.exit(2);
+}
 const path = require('path');
+const fs = require('fs');
+function browserExecutable() {
+  const winRoots = [process.env.ProgramFiles, process.env['ProgramFiles(x86)'], process.env.LOCALAPPDATA].filter(Boolean);
+  const candidates = [
+    ...winRoots.flatMap((root) => [
+      path.join(root, 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      path.join(root, 'Microsoft', 'Edge', 'Application', 'msedge.exe')
+    ]),
+    '/usr/bin/google-chrome', '/usr/bin/google-chrome-stable', '/usr/bin/chromium',
+    '/usr/bin/chromium-browser', '/snap/bin/chromium'
+  ];
+  return candidates.find((candidate) => fs.existsSync(candidate));
+}
 
 let failures = 0;
 function check(name, cond, detail) {
@@ -16,7 +35,8 @@ function check(name, cond, detail) {
 }
 
 (async () => {
-  const browser = await chromium.launch();
+  const executablePath = browserExecutable();
+  const browser = await chromium.launch(executablePath ? { executablePath } : {});
   const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
@@ -64,6 +84,30 @@ function check(name, cond, detail) {
     return waitForDebrief(maxWaitMs);
   }
   const txt = async (sel) => (await page.textContent(sel)).replace(/\s+/g, ' ').trim();
+
+  console.log('\n[0a] Keyboard cards and canvas editing');
+  await page.click('#btnLevels');
+  await page.waitForTimeout(80);
+  check('level cards are native named buttons', await page.evaluate(() => {
+    const c = document.querySelector('#lvGrid .card');
+    return c && c.tagName === 'BUTTON' && /Load level 1/.test(c.getAttribute('aria-label'));
+  }));
+  await page.locator('#lvGrid .card').first().focus();
+  await page.keyboard.press('Enter');
+  await page.waitForTimeout(100);
+  check('Enter activates a level card', (await txt('#levelChip')).includes('First Crossing'));
+  check('keyboard editing is off by default', await page.evaluate(() => !BWGAME.keyboard && document.getElementById('cv').tabIndex === -1));
+  await page.click('#btnTeacher');
+  await page.click('#tglKeyboard');
+  await page.click('#tcClose');
+  check('Teacher mode can enable the keyboard cursor', await page.evaluate(() => BWGAME.keyboard && document.getElementById('cv').tabIndex === 0));
+  await page.locator('#cv').focus();
+  await page.keyboard.press('b');
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('b');
+  check('keyboard cursor builds a member on the canvas', await page.evaluate(() => BWGAME.members.length === 1 && /Cursor|Member/.test(document.getElementById('statusMsg').textContent)));
+  await page.keyboard.press('e');
+  check('keyboard cursor erases a member on the canvas', await page.evaluate(() => BWGAME.members.length === 0));
 
   /* ---------------------------------------------- 1. build and pass level 1 */
   console.log('\n[1] Level 1 — build a king-post truss with the mouse and test it');
@@ -239,7 +283,37 @@ function check(name, cond, detail) {
         (await page.evaluate(() => (BWGAME.analysis.modes || []).length)) === 4);
   await page.screenshot({ path: '/tmp/bw-7-ladder.png' });
   await page.click('#btnTest');
-  await page.waitForTimeout(900);
+  let collapseFrames = 0, collapseLengthExact = true, collapseRollerFixed = true,
+      collapseRollerConstraint = true, collapseRollerSlide = 0;
+  for (let i = 0; i < 12; i++) {
+    await page.waitForTimeout(70);
+    const sample = await page.evaluate(() => {
+      const C = BWGAME.coll, S = BWGAME;
+      if (!C || C.fall) return null;
+      let err = 0, rollerY = 0, roller = null;
+      C.links.forEach((link) => {
+        const now = Math.hypot(C.p[link.b].x - C.p[link.a].x, C.p[link.b].y - C.p[link.a].y);
+        err = Math.max(err, Math.abs(now - link.rest) / link.rest);
+      });
+      S.nodes.forEach((n, i) => {
+        if (n.type !== 'roller') return;
+        rollerY = Math.max(rollerY, Math.abs(C.p[i].y - n.y));
+        roller = { fixX: C.p[i].fixX, fixY: C.p[i].fixY, slide: Math.abs(C.p[i].x - n.x) };
+      });
+      return { err, rollerY, roller };
+    });
+    if (sample) {
+      collapseFrames++; collapseLengthExact = collapseLengthExact && sample.err < 1e-4;
+      collapseRollerFixed = collapseRollerFixed && sample.rollerY < 1e-9;
+      collapseRollerConstraint = collapseRollerConstraint && !!sample.roller && sample.roller.fixY === true && sample.roller.fixX === false;
+      collapseRollerSlide = Math.max(collapseRollerSlide, sample.roller ? sample.roller.slide : 0);
+    }
+  }
+  check('actual phase-one collapse frames use projected, length-exact geometry',
+        collapseFrames > 2 && collapseLengthExact && collapseRollerFixed &&
+        collapseRollerConstraint && collapseRollerSlide > 0.02,
+        collapseFrames + ' frames; roller slide ' + collapseRollerSlide.toFixed(2) + ' m');
+  await page.waitForTimeout(150);
   await page.screenshot({ path: '/tmp/bw-8-folding.png' });
   check('the frame is visibly folding along the solver\'s mechanism mode',
         await page.evaluate(() => !!BWGAME.coll));
@@ -359,6 +433,156 @@ function check(name, cond, detail) {
   check('a member drawn through an existing joint is split too',
         !ms.includes('(5,0)-(8,0)') && ms.includes('(6.5,0)-(8,0)'), ms.join(' '));
   await page.screenshot({ path: '/tmp/bw-15-weld.png' });
+
+  /* -------------------- 11. erasing must not leave a structural scar */
+  console.log('\n[11] Erase leaves no scar, and unbraced roadway joints are flagged');
+  await gotoLevel(3);
+  await page.click('#btnClear');
+  await page.waitForTimeout(200);
+  await page.click('#btnGallery');
+  await page.waitForTimeout(300);
+  await page.locator('#glN').fill('6'); await page.locator('#glN').dispatchEvent('input');
+  await page.locator('#glH').fill('4'); await page.locator('#glH').dispatchEvent('input');
+  await page.waitForTimeout(200);
+  await page.locator('#glGrid .card').nth(2).click();
+  await page.waitForTimeout(400);
+  const canon = () => page.evaluate(() => ({
+    n: BWGAME.nodes.map((n) => n.x + ',' + n.y).sort().join('|'),
+    m: BWGAME.members.map((m) => {
+      const A = BWGAME.nodes[m.a], B = BWGAME.nodes[m.b];
+      return [A.x + ',' + A.y, B.x + ',' + B.y].sort().join('-');
+    }).sort().join('|')
+  }));
+  const before = await canon();
+  const costBefore = await txt('#costVal');
+  check('a clean Warren has no unbraced roadway joints',
+        (await page.evaluate(() => BWGAME.unbraced.length)) === 0);
+
+  await drag(3, 0, 3, 1);                       // post from a panel MIDPOINT splits the deck
+  check('  drawing to a panel midpoint splits the deck member',
+        (await page.evaluate(() => BWGAME.unbraced.length)) === 0);
+  await page.click('[data-tool=erase]');
+  await page.waitForTimeout(120);
+  await page.mouse.click(SX(3), SY(0.5));       // erase it again
+  await page.waitForTimeout(300);
+  await page.click('[data-tool=build]');
+  await page.waitForTimeout(250);
+  const after = await canon();
+  check('erasing it restores the exact original topology',
+        after.m === before.m && after.n === before.n);
+  check('  and the exact original cost', (await txt('#costVal')) === costBefore,
+        costBefore + ' -> ' + (await txt('#costVal')));
+  check('  leaving no unbraced roadway joint behind',
+        (await page.evaluate(() => BWGAME.unbraced.length)) === 0);
+
+  /* a bare deck: every panel joint is unbraced and must be called out */
+  await page.click('#btnClear');
+  await page.waitForTimeout(200);
+  for (const x of [2, 5, 8, 11]) await drag(x, 0, x + 3, 0);
+  await page.waitForTimeout(300);
+  check('a bare roadway flags every unbraced panel joint',
+        (await page.evaluate(() => BWGAME.unbraced.length)) === 3,
+        (await page.evaluate(() => BWGAME.unbraced.length)) + ' flagged');
+  check('  with an explanation, before the test rather than during it',
+        /nothing bracing/.test(await txt('#statusMsg')), await txt('#statusMsg'));
+  await page.screenshot({ path: '/tmp/bw-16-unbraced.png' });
+
+  /* ------------ 12. two joints must never occupy the same point ---------- */
+  console.log('\n[12] Joints never stack, even when the grid clamps');
+  await gotoLevel(3);                       // level 4 forbids building below the deck
+  await page.click('#btnClear');
+  await page.waitForTimeout(200);
+  await drag(2, 0, 5, 0);
+  await drag(5, 0, 8, 0);
+  await drag(5, 0, 7, 2);
+  const n0 = await page.evaluate(() => BWGAME.nodes.length);
+  /* a pointer BELOW the deck clamps up onto the deck line and lands on the
+     joint at (5,0) — further from the pointer than the snap radius */
+  await drag(5, -0.5, 6.5, 1.5);
+  const st12 = await page.evaluate(() => ({
+    n: BWGAME.nodes.length,
+    dup: BWGAME.nodes.some((a, i) => BWGAME.nodes.some((b, j) =>
+      j > i && Math.hypot(a.x - b.x, a.y - b.y) < 1e-9)),
+    atJoint: BWGAME.members.filter((m) => {
+      const A = BWGAME.nodes[m.a], B = BWGAME.nodes[m.b];
+      return (A.x === 5 && A.y === 0) || (B.x === 5 && B.y === 0);
+    }).length
+  }));
+  check('dragging from a forbidden spot does not stack a second joint', !st12.dup);
+  check('  it attaches to the joint already there', st12.n === n0 + 1,
+        n0 + ' joints -> ' + st12.n);
+  check('  so every member meeting there is on the same joint', st12.atJoint === 3,
+        st12.atJoint + ' members at (5,0)');
+
+  /* the confusing case from the field: several members meet, still unbraced */
+  await page.click('#btnClear');
+  await page.waitForTimeout(200);
+  await drag(2, 0, 5, 0); await drag(5, 0, 8, 0); await drag(5, 0, 6.5, 0);
+  await page.waitForTimeout(250);
+  await page.click('[data-tool=inspect]');
+  await page.waitForTimeout(120);
+  await page.mouse.click(SX(5), SY(0));
+  await page.waitForTimeout(350);
+  const ub = (await txt('#fbd'));
+  check('an unbraced joint explains itself instead of just being flagged',
+        /all lie along the same straight line/.test(ub) && /nothing bracing it/.test(ub));
+  await page.click('[data-tool=build]');
+  await page.waitForTimeout(150);
+
+  /* a short randomised edit session, checking the invariants after each step */
+  let seed = 12345;
+  const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+  const spots = [];
+  for (let x = 1.4; x <= 14.6; x += 0.53)
+    for (let y = -1.2; y <= 4.4; y += 0.47) spots.push([+x.toFixed(3), +y.toFixed(3)]);
+  let broke = null, done = 0;
+  for (let k = 0; k < 70 && !broke; k++) {
+    if (rnd() < 0.72) {
+      const a = spots[Math.floor(rnd() * spots.length)], c = spots[Math.floor(rnd() * spots.length)];
+      if (Math.hypot(a[0] - c[0], a[1] - c[1]) > 4.2) continue;
+      await page.mouse.move(SX(a[0]), SY(a[1]));
+      await page.mouse.down();
+      await page.mouse.move(SX(c[0]), SY(c[1]), { steps: 3 });
+      await page.mouse.up();
+    } else {
+      await page.click('[data-tool=erase]');
+      const a = spots[Math.floor(rnd() * spots.length)];
+      await page.mouse.click(SX(a[0]), SY(a[1]));
+      await page.click('[data-tool=build]');
+    }
+    done++;
+    await page.waitForTimeout(16);
+    broke = await page.evaluate(() => {
+      const S = BWGAME, bad = [];
+      for (let i = 0; i < S.nodes.length; i++)
+        for (let j = i + 1; j < S.nodes.length; j++)
+          if (Math.hypot(S.nodes[i].x - S.nodes[j].x, S.nodes[i].y - S.nodes[j].y) < 1e-9)
+            bad.push('two joints at (' + S.nodes[i].x + ',' + S.nodes[i].y + ')');
+      S.members.forEach((m, k2) => {
+        const A = S.nodes[m.a], B = S.nodes[m.b];
+        if (!A || !B) bad.push('member ' + k2 + ' dangling');
+        else if (Math.hypot(B.x - A.x, B.y - A.y) < 1e-9) bad.push('zero-length member ' + k2);
+      });
+      S.unbraced.forEach((n) => {
+        const d = [];
+        S.members.forEach((m) => {
+          if (m.a !== n && m.b !== n) return;
+          const o = m.a === n ? m.b : m.a;
+          const dx = S.nodes[o].x - S.nodes[n].x, dy = S.nodes[o].y - S.nodes[n].y;
+          const L = Math.hypot(dx, dy);
+          if (L > 1e-9) d.push([dx / L, dy / L]);
+        });
+        for (let i = 0; i < d.length; i++)
+          for (let j = i + 1; j < d.length; j++)
+            if (Math.abs(d[i][0] * d[j][1] - d[i][1] * d[j][0]) > 1e-6)
+              bad.push('joint flagged unbraced but braced in 2 directions');
+      });
+      return bad.length ? bad[0] : null;
+    });
+  }
+  check('a randomised edit session keeps every editor invariant',
+        !broke, broke || done + ' random draw/erase operations');
+  await page.screenshot({ path: '/tmp/bw-17-fuzz.png' });
 
   console.log('\nJS errors: ' + (errors.length ? errors.join(' | ') : 'none'));
   if (errors.length) failures += errors.length;

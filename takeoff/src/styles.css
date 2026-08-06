@@ -1,0 +1,542 @@
+/* ==========================================================================
+   Undershoot — styles.
+
+   Murray State palette: navy #002144, gold #ECAC00, cyan #00A4E3,
+   red-orange #FF4500. The brand guide asks that the accents stay sparing, so
+   red-orange appears only where something is wrong or falling short, and gold
+   carries the truth line throughout — once a colour means "this is what
+   actually happened", it must not mean anything else.
+
+   Phone-first. One rule governs the layout on a small screen: the chart and
+   the reveal button are never both below the fold.
+   ========================================================================== */
+
+:root {
+  --navy:   #00142B;
+  --navy-2: #002144;
+  --panel:  #08203C;
+  --panel-2:#0C2A4C;
+  --line:   rgba(143,163,192,0.16);
+  --ink:    #E8EDF5;
+  --dim:    #8FA3C0;
+  --gold:   #ECAC00;
+  --cyan:   #00A4E3;
+  --red:    #FF4500;
+  --u: 8px;
+  --maxw: 1180px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* The browser's own [hidden] rule is a bare attribute selector, so any class
+   that sets `display` outranks it. `.overlay { display: flex }` therefore left
+   the settings sheet stretched invisibly across the viewport, swallowing every
+   pointer event aimed at the chart. Found by an integration test that observed
+   zero pointerdown events on a canvas that was plainly visible. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(1200px 700px at 20% -10%, #06294B 0%, transparent 60%),
+    var(--navy);
+  color: var(--ink);
+  min-height: 100dvh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ---- chrome -------------------------------------------------------------- */
+
+#brandbar { position: sticky; top: 0; z-index: 40; background: rgba(0,20,43,0.92); backdrop-filter: blur(10px); }
+
+#topbar {
+  max-width: var(--maxw); margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--u); padding: calc(var(--u)*1.25) calc(var(--u)*2);
+}
+
+#brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.b0 { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.b1 { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; }
+.b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: 0.8rem; margin-left: 8px; letter-spacing: 0.01em; }
+
+#rule { height: 2px; background: linear-gradient(90deg, var(--gold) 0%, var(--cyan) 55%, transparent 100%); opacity: 0.75; }
+
+#actnav {
+  max-width: var(--maxw); margin: 0 auto;
+  display: flex; gap: 2px; padding: 0 calc(var(--u)*2) calc(var(--u)*1);
+}
+#actnav button {
+  flex: 1; background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--dim); font: inherit; font-size: 0.82rem; font-weight: 600;
+  padding: calc(var(--u)*1.1) 4px; cursor: pointer; min-height: 44px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+#actnav button span { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+#actnav button.on { color: var(--ink); border-bottom-color: var(--gold); }
+#actnav button:hover { color: var(--ink); }
+
+main { max-width: var(--maxw); margin: 0 auto; padding: calc(var(--u)*2); }
+
+.icon-btn {
+  background: none; border: 1px solid var(--line); border-radius: 10px;
+  color: var(--dim); width: 40px; height: 40px; font-size: 1.05rem; cursor: pointer; flex: none;
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--dim); }
+
+/* ---- typography ---------------------------------------------------------- */
+
+h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; font-weight: 750; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+h4 { font-size: 0.98rem; font-weight: 700; }
+p  { font-size: 0.94rem; }
+
+.lede { color: var(--dim); font-size: 0.95rem; max-width: 62ch; }
+
+/* ---- panels -------------------------------------------------------------- */
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: calc(var(--u)*2);
+}
+
+/* ---- Act I --------------------------------------------------------------- */
+
+#round-head { display: flex; align-items: baseline; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*0.75); }
+#round-num { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; color: var(--gold); border: 1px solid rgba(236,172,0,0.35); border-radius: 20px; padding: 3px 10px; }
+#round-name { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.015em; }
+#round-metric { font-size: 0.76rem; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; }
+
+#round-q { font-size: 1.02rem; line-height: 1.55; margin: calc(var(--u)*1.25) 0; max-width: 68ch; }
+#round-blurb { font-size: 0.85rem; color: var(--dim); max-width: 68ch; margin-bottom: calc(var(--u)*1.5); }
+
+/* The height here is a starting value only. fitChart() in app.js measures the
+   space actually left over and overwrites it, because the chrome above the
+   chart changes height with the length of each round's question and with how
+   many lines that question wraps to at a given width. Guessing a number in CSS
+   put the Reveal button below the fold at five of eight test viewports. */
+#chart-wrap {
+  position: relative; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: calc(var(--u)*1);
+  height: min(44dvh, 340px); min-height: 150px;
+}
+#chart { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+
+#draw-row { display: flex; align-items: center; gap: var(--u); margin-top: calc(var(--u)*1.25); }
+#draw-hint { font-size: 0.82rem; color: var(--cyan); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.legend-mini { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; margin-top: 6px; font-size: 0.72rem; color: var(--dim); }
+.legend-mini span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-mini i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.lm-known i { background: var(--ink); }
+.lm-guess i { background: var(--cyan); }
+.lm-truth i { background: var(--gold); }
+
+/* The multiplying-scale warning for the two logarithmic rounds. */
+#scale-note { font-size: 0.8rem; line-height: 1.45; color: var(--cyan); margin-top: 8px;
+  max-width: 74ch; border-left: 2px solid rgba(0,164,227,0.4); padding-left: 10px; }
+
+/* ---- buttons ------------------------------------------------------------- */
+
+.btn {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 11px;
+  color: var(--ink); font: inherit; font-weight: 650; font-size: 0.92rem;
+  padding: calc(var(--u)*1.35) calc(var(--u)*2.25); cursor: pointer; min-height: 46px;
+  transition: transform 0.1s ease, background 0.14s ease, border-color 0.14s ease;
+}
+.btn:hover:not(:disabled) { background: #113356; border-color: var(--dim); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.32; cursor: not-allowed; }
+.btn.primary { background: var(--gold); color: #23180A; border-color: var(--gold); font-weight: 750; }
+.btn.primary:hover:not(:disabled) { background: #FFC01F; border-color: #FFC01F; }
+.btn.ghost { background: transparent; }
+.btn.sm { font-size: 0.82rem; padding: calc(var(--u)*0.9) calc(var(--u)*1.5); min-height: 40px; }
+
+/* ---- verdict ------------------------------------------------------------- */
+
+#verdict, #twist-wrap { margin-top: calc(var(--u)*2); }
+
+.v-head { border-left: 3px solid var(--gold); padding-left: calc(var(--u)*1.5); margin-bottom: calc(var(--u)*1.75); }
+.v-head.low { border-left-color: var(--red); }
+.v-tag { display: inline-block; font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+.v-head h3 { font-size: 1.3rem; line-height: 1.3; letter-spacing: -0.015em; }
+
+.v-nums { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+.v-num { background: rgba(0,20,43,0.5); border: 1px solid var(--line); border-radius: 11px; padding: calc(var(--u)*1.25) calc(var(--u)*1.75); flex: 1; min-width: 116px; }
+.v-num .k { display: block; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
+.v-num .val { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.v-num.truth .val { color: var(--gold); }
+
+.v-ratio { font-size: 1.05rem; margin-bottom: calc(var(--u)*1.25); }
+.v-ratio strong { color: var(--gold); font-size: 1.25rem; }
+.v-body { color: var(--ink); opacity: 0.9; max-width: 70ch; margin-bottom: calc(var(--u)*1.5); }
+.v-close { margin-top: calc(var(--u)*1.5); font-size: 1rem; font-weight: 600; max-width: 70ch; border-left: 3px solid var(--cyan); padding-left: calc(var(--u)*1.5); }
+
+.v-caveat { border: 1px solid var(--line); border-radius: 11px; padding: calc(var(--u)*1.25) calc(var(--u)*1.75); background: rgba(255,69,0,0.04); }
+.v-caveat summary { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--red); cursor: pointer; }
+.v-caveat p { margin-top: var(--u); font-size: 0.88rem; color: var(--dim); max-width: 70ch; }
+
+.v-src { margin-top: calc(var(--u)*1.5); font-size: 0.72rem; color: var(--dim); line-height: 1.7; }
+.v-src a { color: var(--dim); text-decoration: none; border-bottom: 1px dotted rgba(143,163,192,0.4); }
+.v-src a:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+.v-src .dot { margin: 0 7px; opacity: 0.5; }
+
+/* bars in the ARC finale. Four bars, deliberately colour-coded by what kind of
+   measurement each one is, because they are NOT four readings of one quantity
+   and the caveat below them says so. */
+.bars { margin: calc(var(--u)*1.75) 0; display: flex; flex-direction: column; gap: calc(var(--u)*1.25); }
+.bar-row { display: flex; align-items: center; gap: calc(var(--u)*1.25); }
+.bar-row .bl { width: 190px; flex: none; font-size: 0.85rem; font-weight: 650; line-height: 1.3; }
+.bar-row .bl em { display: block; font-style: normal; font-weight: 500; font-size: 0.72rem; color: var(--dim); margin-top: 2px; }
+.bar-row .bt { flex: 1; height: 24px; background: rgba(0,20,43,0.6); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.bar-row .bf { height: 100%; border-radius: 5px 0 0 5px; transition: width 0.9s cubic-bezier(0.22,1,0.36,1); background: var(--gold); }
+.bar-row .bf.human { background: var(--ink); }
+.bar-row .bf.good  { background: var(--gold); }
+.bar-row .bf.mid   { background: rgba(236,172,0,0.45); }
+.bar-row .bf.bad   { background: var(--red); min-width: 3px; }
+.bar-row .bv { width: 62px; flex: none; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.95rem; }
+
+.what-is { border-left: 2px solid var(--line); padding-left: calc(var(--u)*1.5); color: var(--dim) !important; }
+.v-punch { font-size: 1.02rem; font-weight: 650; line-height: 1.5; max-width: 70ch;
+  margin: calc(var(--u)*1.5) 0; padding-left: calc(var(--u)*1.5); border-left: 3px solid var(--gold); }
+
+@media (max-width: 620px) {
+  .bar-row { flex-wrap: wrap; }
+  .bar-row .bl { width: 100%; }
+  .bar-row .bt { flex: 1 1 60%; }
+}
+
+/* ---- scorecard ----------------------------------------------------------- */
+
+#scorecard h2 { margin-bottom: var(--u); }
+.big-stat { font-size: 1.05rem; margin-bottom: calc(var(--u)*2); }
+.big-stat strong { font-size: 1.9rem; color: var(--gold); }
+.sc-rows { display: flex; flex-direction: column; gap: 2px; margin-bottom: calc(var(--u)*2); }
+.sc-row { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: var(--u); align-items: center;
+  padding: calc(var(--u)*1.1) calc(var(--u)*1.25); background: rgba(0,20,43,0.4); border-radius: 8px; font-size: 0.86rem; }
+.sc-row .n { font-weight: 600; }
+.sc-row .g { color: var(--cyan); font-variant-numeric: tabular-nums; }
+.sc-row .arrow { color: var(--dim); }
+.sc-row .t { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 700; }
+.sc-row .r { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+.sc-row .r.low { color: var(--red); }
+.sc-note { color: var(--dim); max-width: 72ch; margin-bottom: calc(var(--u)*2); }
+.sc-actions { display: flex; gap: var(--u); flex-wrap: wrap; }
+
+/* ---- Act II -------------------------------------------------------------- */
+
+#tl-wrap { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(var(--u)*1.25); margin-bottom: calc(var(--u)*1.5); }
+#tl { width: 100%; height: 210px; display: block; }
+#tl-hover {
+  position: absolute; left: calc(var(--u)*1.5); bottom: calc(var(--u)*1.5);
+  background: rgba(0,20,43,0.95); border: 1px solid var(--line); border-radius: 10px;
+  padding: calc(var(--u)*1.1) calc(var(--u)*1.5); max-width: min(340px, 80%);
+  display: flex; flex-direction: column; gap: 2px; pointer-events: none;
+}
+#tl-hover strong { font-size: 0.92rem; }
+#tl-hover .lab, #tl-hover .date { font-size: 0.72rem; color: var(--dim); }
+#tl-hover .note { font-size: 0.78rem; margin-top: 4px; color: var(--ink); opacity: 0.85; }
+
+#tl-controls { display: flex; align-items: center; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+#tl-slider { flex: 1; min-width: 180px; height: 44px; accent-color: var(--cyan); background: none; }
+
+#tl-filter { display: flex; gap: 2px; background: rgba(0,20,43,0.5); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+#tl-filter button { background: none; border: 0; border-radius: 7px; color: var(--dim); font: inherit; font-size: 0.8rem; font-weight: 600; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+#tl-filter button.on { background: var(--panel-2); color: var(--ink); }
+
+#tl-stats { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+.stat { background: rgba(0,20,43,0.45); border: 1px solid var(--line); border-radius: 11px; padding: calc(var(--u)*1.25) calc(var(--u)*1.6); flex: 1; min-width: 108px; }
+.stat b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+
+#tl-legend { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; font-size: 0.72rem; color: var(--dim); margin-bottom: calc(var(--u)*1.5); }
+.lg { display: inline-flex; align-items: center; gap: 5px; }
+.lg i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.shapekey { font-size: 0.74rem; color: var(--dim); margin-bottom: calc(var(--u)*2); }
+
+#tl-unlock { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--cyan); border-radius: 12px; padding: calc(var(--u)*1.75); }
+#tl-unlock .u-date { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); }
+#tl-unlock h4 { margin: 4px 0 var(--u); display: flex; align-items: center; gap: var(--u); flex-wrap: wrap; }
+#tl-unlock p { font-size: 0.9rem; color: var(--ink); opacity: 0.9; max-width: 72ch; }
+.flag { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--dim); color: var(--dim); border-radius: 20px; padding: 2px 9px; font-weight: 600; }
+.flag.bad { border-color: var(--red); color: var(--red); }
+
+/* ---- Act III ------------------------------------------------------------- */
+
+#math-cards { display: flex; flex-direction: column; gap: calc(var(--u)*2); margin-bottom: calc(var(--u)*3); }
+
+.mcard { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(var(--u)*2); border-left: 3px solid var(--gold); }
+.mcard.overclaimed { border-left-color: var(--red); }
+.mcard header { display: flex; align-items: baseline; gap: var(--u); flex-wrap: wrap; margin-bottom: var(--u); }
+.mcard .verdict { font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--gold); border: 1px solid rgba(236,172,0,0.4); border-radius: 20px; padding: 3px 10px; }
+.mcard.overclaimed .verdict { color: var(--red); border-color: rgba(255,69,0,0.45); }
+.mcard .mdate { font-size: 0.72rem; color: var(--dim); margin-left: auto; }
+.mcard .what { color: var(--dim); font-size: 0.88rem; margin-bottom: calc(var(--u)*1.5); max-width: 72ch; }
+
+.split { display: grid; gap: calc(var(--u)*1.5); grid-template-columns: 1fr; margin-bottom: calc(var(--u)*1.5); }
+.split > div { background: rgba(0,20,43,0.4); border-radius: 11px; padding: calc(var(--u)*1.5); }
+.s-k { display: block; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+.s-machine .s-k { color: var(--cyan); }
+.s-human .s-k { color: var(--gold); }
+.split p { font-size: 0.88rem; }
+
+.mcard blockquote { border-left: 2px solid var(--dim); padding-left: calc(var(--u)*1.5); margin: calc(var(--u)*1.5) 0; font-size: 0.93rem; font-style: italic; color: var(--ink); opacity: 0.92; max-width: 70ch; }
+.mcard blockquote cite { display: block; font-style: normal; font-size: 0.75rem; color: var(--dim); margin-top: var(--u); }
+.mcard .caveat { font-size: 0.86rem; color: var(--dim); border-top: 1px solid var(--line); padding-top: calc(var(--u)*1.25); max-width: 72ch; }
+
+#cut { background: rgba(255,69,0,0.05); border: 1px solid rgba(255,69,0,0.22); border-radius: 14px; padding: calc(var(--u)*2); margin-bottom: calc(var(--u)*3); }
+#cut h3 { color: var(--red); margin-bottom: var(--u); }
+#cut > p { color: var(--dim); font-size: 0.88rem; max-width: 72ch; margin-bottom: calc(var(--u)*1.75); }
+#cut-list { list-style: none; display: flex; flex-direction: column; gap: calc(var(--u)*1.5); }
+#cut-list li { display: flex; flex-direction: column; gap: 4px; }
+#cut-list strong { font-size: 0.9rem; }
+#cut-list span { font-size: 0.85rem; color: var(--dim); max-width: 72ch; }
+
+.closers { display: grid; gap: calc(var(--u)*1.5); grid-template-columns: 1fr; margin-bottom: calc(var(--u)*3); }
+.closer { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(var(--u)*2); }
+.closer .num { font-size: 2.6rem; font-weight: 850; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.closer .unit { font-size: 0.9rem; color: var(--dim); margin-left: 6px; font-weight: 600; }
+.closer h4 { margin: var(--u) 0 6px; }
+.closer p { font-size: 0.85rem; color: var(--dim); }
+
+#final { border-left: 3px solid var(--gold); padding-left: calc(var(--u)*2); margin-bottom: calc(var(--u)*3); }
+#final p { font-size: 1.02rem; max-width: 70ch; margin-bottom: var(--u); }
+#final p:last-child { margin-bottom: 0; }
+
+#sources { border-top: 1px solid var(--line); padding-top: calc(var(--u)*2); }
+#sources h3 { margin-bottom: var(--u); }
+#sources > p { font-size: 0.85rem; color: var(--dim); margin-bottom: calc(var(--u)*1.5); max-width: 72ch; }
+#source-list { list-style: none; columns: 2; column-gap: calc(var(--u)*3); font-size: 0.8rem; }
+#source-list li { break-inside: avoid; margin-bottom: 7px; }
+#source-list a { color: var(--dim); text-decoration: none; border-bottom: 1px dotted rgba(143,163,192,0.35); }
+#source-list a:hover { color: var(--cyan); }
+
+/* ---- overlays ------------------------------------------------------------ */
+
+.overlay { position: fixed; inset: 0; z-index: 60; background: rgba(0,10,22,0.72); backdrop-filter: blur(5px); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-inner { background: var(--panel); border: 1px solid var(--line); border-radius: 18px 18px 0 0; width: 100%; max-width: 640px; max-height: 88dvh; display: flex; flex-direction: column; }
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--u); padding: calc(var(--u)*2); border-bottom: 1px solid var(--line); }
+.sheet-head .sub { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-top: 3px; }
+.sheet-body { padding: calc(var(--u)*2); overflow-y: auto; flex: 1; }
+.sheet-foot { padding: calc(var(--u)*1.5) calc(var(--u)*2); border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
+
+.field { margin-bottom: calc(var(--u)*2.5); }
+.lbl { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: var(--u); }
+.switch { display: flex; align-items: center; gap: var(--u); cursor: pointer; padding: var(--u) 0; font-size: 0.92rem; min-height: 44px; }
+.switch input { width: 20px; height: 20px; accent-color: var(--gold); flex: none; }
+.help { font-size: 0.82rem; color: var(--dim); margin-top: var(--u); }
+
+#selftest-out { margin-top: calc(var(--u)*1.5); font-size: 0.8rem; }
+.st-head { font-weight: 800; margin-bottom: var(--u); padding: var(--u); border-radius: 8px; }
+.st-head.good { color: var(--gold); background: rgba(236,172,0,0.1); }
+.st-head.bad { color: var(--red); background: rgba(255,69,0,0.1); }
+.st-row { display: grid; grid-template-columns: 16px 1fr; gap: 7px; padding: 4px 0; align-items: start; }
+.st-row.good > span:first-child { color: var(--gold); }
+.st-row.bad > span:first-child { color: var(--red); }
+.st-row em { grid-column: 2; font-size: 0.74rem; color: var(--dim); font-style: normal; }
+
+/* ---- footer -------------------------------------------------------------- */
+
+#foot { border-top: 1px solid var(--line); margin-top: calc(var(--u)*4); padding: calc(var(--u)*2.5) 0; font-size: 0.76rem; color: var(--dim); display: flex; gap: var(--u); flex-wrap: wrap; align-items: center; }
+#foot .msu { font-weight: 700; color: var(--ink); }
+
+/* ---- the opening screen -------------------------------------------------- */
+
+#intro { max-width: 74ch; padding: calc(var(--u)*1) 0 calc(var(--u)*3); }
+#intro h1 { font-size: 1.7rem; line-height: 1.22; letter-spacing: -0.02em; margin-bottom: calc(var(--u)*2.25); }
+#intro-body p { font-size: 1.02rem; line-height: 1.6; margin-bottom: calc(var(--u)*1.75); color: rgba(232,237,245,0.9); }
+#intro-body p:first-child { color: var(--ink); }
+#intro-note { font-size: 0.86rem; color: var(--dim); border-left: 2px solid var(--line);
+  padding-left: calc(var(--u)*1.5); margin-bottom: calc(var(--u)*2.75); }
+.btn.big { font-size: 1.05rem; padding: calc(var(--u)*1.75) calc(var(--u)*3); min-height: 56px; }
+
+/* ---- what the test is, before the chart ---------------------------------- */
+
+/* The benchmark's real name — a quiet credential under the plain-language
+   title, so a curious viewer can go and look the test up. */
+#round-real { font-size: 0.8rem; color: var(--dim); margin: 2px 0 calc(var(--u)*1.25);
+  letter-spacing: 0.01em; }
+
+#round-plain { font-size: 0.98rem; line-height: 1.55; max-width: 70ch; margin-bottom: calc(var(--u)*1.5);
+  color: rgba(232,237,245,0.92); }
+
+#round-aside { display: grid; gap: var(--u); margin-bottom: calc(var(--u)*1.5); }
+
+#round-example { border: 1px solid var(--line); border-radius: 11px; background: rgba(0,20,43,0.4); }
+#round-example summary { cursor: pointer; padding: calc(var(--u)*1.1) calc(var(--u)*1.5);
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--cyan); list-style: none; min-height: 42px; display: flex; align-items: center; }
+#round-example summary::-webkit-details-marker { display: none; }
+#round-example summary::before { content: '▸'; margin-right: 9px; transition: transform 0.15s; }
+#round-example[open] summary::before { transform: rotate(90deg); }
+#example-body { padding: 0 calc(var(--u)*1.5) calc(var(--u)*1.5); }
+.ex-text { font-size: 0.9rem; margin-bottom: var(--u); white-space: pre-line; }
+.ex-note { font-size: 0.78rem; color: var(--dim); font-style: italic; margin-top: var(--u); }
+
+.ladder { display: flex; flex-direction: column; gap: 5px; }
+.lrow { display: flex; gap: var(--u); align-items: baseline; font-size: 0.88rem; }
+.lrow .lt { flex: none; width: 62px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.lrow .ls { color: rgba(232,237,245,0.85); }
+
+.arc-wrap { display: flex; flex-direction: column; gap: calc(var(--u)*1.5); }
+.arc-pair { display: flex; flex-direction: column; gap: 5px; }
+.arc-cap { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.arc-pair.test .arc-cap { color: var(--gold); }
+.arc-row { display: flex; align-items: center; gap: calc(var(--u)*1.5); }
+.arc-arrow { color: var(--dim); font-size: 1.1rem; }
+.arc-grid { display: grid; gap: 2px; width: 96px; }
+.arc-grid i { aspect-ratio: 1; border-radius: 2px; display: block; }
+.arc-reveal { width: 96px; height: 96px; border-radius: 6px; border: 1px dashed var(--gold);
+  background: rgba(236,172,0,0.07); color: var(--gold); font-size: 1.6rem; font-weight: 800;
+  cursor: pointer; font-family: inherit; }
+.arc-reveal:hover { background: rgba(236,172,0,0.16); }
+
+#round-human { border-left: 2px solid var(--gold); padding-left: calc(var(--u)*1.5); }
+#round-human .rh-k { font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700; display: block; margin-bottom: 3px; }
+#round-human p { font-size: 0.88rem; color: rgba(232,237,245,0.88); max-width: 68ch; }
+
+#round-q { font-size: 1.06rem; font-weight: 600; line-height: 1.5; margin-bottom: calc(var(--u)*1.5);
+  max-width: 68ch; }
+
+/* ---- Act II filters ------------------------------------------------------ */
+
+#tl-filters { display: flex; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+.fgroup { display: flex; gap: 2px; background: rgba(0,20,43,0.5); border: 1px solid var(--line);
+  border-radius: 10px; padding: 3px; flex-wrap: wrap; }
+.fgroup button { background: none; border: 0; border-radius: 7px; color: var(--dim); font: inherit;
+  font-size: 0.8rem; font-weight: 600; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+.fgroup button.on { background: var(--panel-2); color: var(--ink); }
+#tl-hover .lic { font-size: 0.7rem; color: var(--gold); }
+
+/* ---- Act III domains ----------------------------------------------------- */
+
+#domain-nav { display: flex; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*2.5); }
+#domain-nav button { background: rgba(0,20,43,0.5); border: 1px solid var(--line); border-radius: 20px;
+  color: var(--dim); font: inherit; font-size: 0.82rem; font-weight: 600; padding: 9px 16px;
+  cursor: pointer; min-height: 40px; }
+#domain-nav button:hover { color: var(--ink); border-color: var(--dim); }
+
+.domain { margin-bottom: calc(var(--u)*4); scroll-margin-top: 130px; }
+.dhead { margin-bottom: calc(var(--u)*2); }
+.dhead h2 { font-size: 1.4rem; letter-spacing: -0.015em; margin-bottom: 5px; }
+.dhead h2::after { content: ''; display: block; width: 44px; height: 3px; background: var(--gold);
+  border-radius: 2px; margin-top: 7px; }
+.dhead p { color: var(--dim); font-size: 0.9rem; max-width: 72ch; margin-top: var(--u); }
+.domain .mcard { margin-bottom: calc(var(--u)*1.75); }
+.mcard.disputed { border-left-color: var(--cyan); }
+.mcard.disputed .verdict { color: var(--cyan); border-color: rgba(0,164,227,0.45); }
+
+/* ---- wide ---------------------------------------------------------------- */
+
+@media (min-width: 800px) {
+  h1 { font-size: 1.9rem; }
+  #round-name { font-size: 1.7rem; }
+  #chart-wrap { height: min(52dvh, 430px); }
+  #tl { height: 250px; }
+  .split { grid-template-columns: 1fr 1fr; }
+  #round-aside { grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); align-items: start; }
+  .closers { grid-template-columns: repeat(3, 1fr); }
+  .v-head h3 { font-size: 1.55rem; }
+  #actnav button { font-size: 0.9rem; }
+}
+
+@media (min-width: 1100px) {
+  #chart-wrap { height: 460px; }
+}
+
+/* ---- the fold rule -------------------------------------------------------
+   The chart and the Reveal button are both reachable without scrolling, at
+   every viewport this ships to. The chart is what yields; everything above it
+   compresses first, and in short-and-wide viewports the question moves beside
+   the chart rather than above it. */
+
+@media (max-height: 720px) {
+  #round-plain { font-size: 0.9rem; margin-bottom: var(--u); }
+  #scale-note { font-size: 0.75rem; margin-top: 5px; }
+  #round-human p { font-size: 0.82rem; }
+  #round-q { font-size: 0.97rem; margin-bottom: var(--u); }
+  #topbar { padding: calc(var(--u)*0.9) calc(var(--u)*2); }
+  #actnav button { padding: calc(var(--u)*0.8) 4px; }
+}
+
+/* Narrow phones. At 320x568 the header and the question between them were
+   taking 300px of a 568px screen, which left the chart under the 150px floor
+   and pushed Reveal 27px past the bottom edge. Measured, then trimmed. */
+@media (max-width: 400px) {
+  #topbar { padding: calc(var(--u)*0.7) calc(var(--u)*1.5); }
+  .b0 { font-size: 0.6rem; letter-spacing: 0.1em; }
+  .b1 { font-size: 0.92rem; }
+  .b1 em { display: none; }
+  .icon-btn { width: 40px; height: 40px; }
+  #actnav { padding: 0 calc(var(--u)*1.5) 0; }
+  #actnav button { font-size: 0.75rem; padding: calc(var(--u)*0.7) 2px; min-height: 40px; }
+  #actnav button span { display: none; }
+  #round-head { margin-bottom: 2px; }
+  #round-name { font-size: 1.15rem; }
+  #round-plain { font-size: 0.86rem; line-height: 1.45; }
+  #round-q { font-size: 0.92rem; line-height: 1.42; margin-bottom: var(--u); }
+  #intro h1 { font-size: 1.3rem; }
+  #intro-body p { font-size: 0.94rem; }
+  main { padding: calc(var(--u)*1.25) calc(var(--u)*1.5); }
+}
+
+/* Landscape phones and other short-and-wide viewports: side by side. */
+@media (min-width: 700px) and (max-height: 560px) {
+  #round-body { display: flex; gap: calc(var(--u)*2); align-items: flex-start; }
+  #round-intro { flex: 0 0 40%; min-width: 0; max-height: calc(100dvh - 150px); overflow-y: auto; }
+  #round-chart { flex: 1; min-width: 0; }
+  #round-aside { grid-template-columns: 1fr; }
+}
+
+/* ---- presenter ----------------------------------------------------------- */
+
+body.presenter { --u: 11px; }
+body.presenter #round-name { font-size: 2.4rem; }
+body.presenter #round-q { font-size: 1.4rem; max-width: 60ch; }
+body.presenter #round-blurb { font-size: 1.05rem; }
+body.presenter .v-head h3 { font-size: 2.1rem; }
+body.presenter .v-num .val { font-size: 2rem; }
+body.presenter .v-ratio { font-size: 1.35rem; }
+body.presenter .v-ratio strong { font-size: 1.8rem; }
+body.presenter .v-body, body.presenter .v-close { font-size: 1.15rem; }
+body.presenter .btn { font-size: 1.1rem; min-height: 56px; }
+body.presenter #chart-wrap { height: min(56dvh, 560px); }
+body.presenter #tl { height: 300px; }
+body.presenter .b1 { font-size: 1.3rem; }
+body.presenter #actnav button { font-size: 1.05rem; }
+body.presenter .stat b { font-size: 2rem; }
+body.presenter .closer .num { font-size: 3.4rem; }
+body.presenter #source-list { columns: 3; }
+body.presenter .mcard .what, body.presenter .split p { font-size: 1.02rem; }
+body.presenter #intro h1 { font-size: 2.5rem; }
+body.presenter #intro-body p { font-size: 1.32rem; }
+body.presenter #round-plain { font-size: 1.22rem; }
+body.presenter #round-q { font-size: 1.4rem; }
+body.presenter #round-human p { font-size: 1.05rem; }
+body.presenter #scale-note { font-size: 1rem; }
+body.presenter .bar-row .bl { width: 250px; font-size: 1rem; }
+body.presenter .v-punch { font-size: 1.25rem; }
+body.presenter .dhead h2 { font-size: 1.9rem; }
+body.presenter .arc-grid, body.presenter .arc-reveal { width: 132px; }
+body.presenter .arc-reveal { height: 132px; }
+
+/* Presenter mode on a 720p projector: everything is 35% bigger, and the
+   explanation plus the question no longer fit above the chart in 720px of
+   height. On a wide-but-short projector the text moves beside the chart
+   instead. Caught by the fold assertion at 1280x720. */
+@media (min-width: 1000px) and (max-height: 900px) {
+  body.presenter #round-body { display: flex; gap: calc(var(--u)*2.5); align-items: flex-start; }
+  body.presenter #round-intro { flex: 0 0 42%; min-width: 0; max-height: calc(100dvh - 160px); overflow-y: auto; }
+  body.presenter #round-chart { flex: 1; min-width: 0; }
+  body.presenter #round-aside { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

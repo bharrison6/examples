@@ -13,7 +13,7 @@
   --bg:#001428; --card:#002144; --card2:#0a3260; --line:#14406e;
   --text:#eaf1f9; --muted:#8fa9c6; --accent:#ECAC00; --good:#3fbf86; --bad:#FF4500;
   --tension:#ff6a45; --compression:#33bff0;
-  --fs:15px; --fsBig:1.05rem; --pad:10px; --btnH:38px; --ui:1;
+  --fs:15px; --fsBig:1.05rem; --pad:10px; --btnH:44px; --ui:1;
 }
 body.big{ --fs:20px; --pad:14px; --btnH:50px; --ui:1.32; }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -32,11 +32,12 @@ button{
 }
 button:hover:not(:disabled){background:#124478;border-color:#1d5798}
 button:disabled{opacity:.4;cursor:default}
+button:focus-visible,canvas:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
 button.active{background:var(--accent);border-color:var(--accent);color:#00172e;font-weight:700}
 button.primary{background:var(--msu-gold);border-color:var(--msu-gold);color:#00172e;font-weight:700}
 button.primary:hover:not(:disabled){background:#ffc22e;border-color:#ffc22e}
 button.danger{background:#7d2606;border-color:#a8360c}
-.icon{padding:0;width:var(--btnH);justify-content:center;font-size:1.1em}
+.icon{padding:0;width:var(--btnH);min-width:var(--btnH);flex:0 0 var(--btnH);justify-content:center;font-size:1.1em}
 
 /* ---------------------------------------------------------------- chrome */
 header{
@@ -69,7 +70,7 @@ header{
 .group+.group{border-left:1px solid var(--line);padding-left:calc(var(--pad)*.7)}
 .tgl{
   display:inline-flex;align-items:center;gap:.42em;font-size:.88em;color:var(--muted);
-  cursor:pointer;padding:.25em .5em;border-radius:7px;white-space:nowrap;
+  cursor:pointer;padding:.25em .5em;border-radius:7px;white-space:nowrap;min-height:44px;
 }
 .tgl:hover{background:var(--card2);color:var(--text)}
 .tgl input{width:1.05em;height:1.05em;accent-color:var(--accent);cursor:pointer}
@@ -130,7 +131,8 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
   background:var(--card2);border:1px solid var(--line);border-radius:10px;
   padding:var(--pad);cursor:pointer;transition:transform .1s,border-color .1s;
 }
-.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.card:hover,.card:focus-visible{transform:translateY(-2px);border-color:var(--accent)}
+.card{height:auto;min-height:0;width:100%;display:block;text-align:left;white-space:normal}
 .card h3{font-size:1em;color:var(--accent);margin-bottom:.25em}
 .card p{font-size:.82em;color:var(--muted);line-height:1.45}
 .card .meta{font-size:.76em;color:var(--muted);margin-top:.5em;display:flex;justify-content:space-between}
@@ -168,11 +170,29 @@ select{font:inherit;font-size:.9em;background:var(--card2);color:var(--text);
   border:1px solid var(--line);border-radius:8px;height:var(--btnH);padding:0 .5em}
 .row{display:flex;align-items:center;gap:.7em;margin:.5em 0;flex-wrap:wrap}
 a{color:var(--accent)}
-@media (max-width:760px){
+@media (max-width:1000px){
   .brand small{display:none}
   #legend{display:none}
   header,#toolbar{gap:6px}
+  header{flex-wrap:wrap;padding:6px}
+  header .brand{flex:1 1 140px;min-width:0}
+  header .spacer{display:none}
+  #levelChip{max-width:46vw;overflow:hidden;text-overflow:ellipsis}
+  #costBox{min-width:0;flex:1 1 90px}
+  header button{min-width:44px;justify-content:center}
+  #toolbar{padding:6px;max-width:100vw;overflow-x:hidden}
+  .group{flex-wrap:wrap}
+  .group+.group{border-left:0;padding-left:0}
 }
+
+/* --------------------------------------------------- in-app teacher guide */
+.msu-guide-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(0,10,24,.84)}
+.msu-guide-overlay[hidden]{display:none}
+.msu-guide-dialog{width:min(1000px,100%);height:min(92dvh,900px);background:#fff;color:#172231;border:2px solid #002144;border-top:5px solid #ECAC00;border-radius:12px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.65)}
+.msu-guide-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 12px;background:#002144;color:#fff}
+.msu-guide-bar h2{margin:0;font-size:1.05rem}.msu-guide-spacer{flex:1}.msu-guide-bar button{min-height:40px;background:#fff;color:#002144;border-color:#fff}.msu-guide-bar button:last-child{background:#ECAC00;border-color:#ECAC00}
+.msu-guide-frame{width:100%;flex:1;border:0;background:#fff}
+@media(max-width:600px){.msu-guide-overlay{padding:0}.msu-guide-dialog{width:100%;height:100dvh;border-width:0;border-top-width:5px;border-radius:0}.msu-guide-bar h2{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -189,9 +209,9 @@ a{color:var(--accent)}
   <button id="btnTest" class="primary">▶ Load test</button>
   <button id="btnLevels">Levels</button>
   <button id="btnGallery">Gallery</button>
+  <button id="btnHelp">Guide</button>
   <button id="btnBoard" class="icon" title="Leaderboard">🏆</button>
   <button id="btnTeacher" class="icon" title="Teacher mode">⚙</button>
-  <button id="btnHelp" class="icon" title="How to play">?</button>
 </header>
 
 <div id="toolbar">
@@ -214,11 +234,11 @@ a{color:var(--accent)}
   </div>
   <div class="spacer"></div>
   <div id="toolHint"></div>
-  <div id="statusMsg"></div>
+  <div id="statusMsg" aria-live="polite"></div>
 </div>
 
 <main>
-  <canvas id="cv"></canvas>
+  <canvas id="cv" tabindex="-1" role="img" aria-label="Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode."></canvas>
   <div id="legend">
     <b>Member forces</b>
     <div><span class="sw" style="background:var(--tension)"></span>tension — being pulled apart</div>
@@ -277,6 +297,7 @@ a{color:var(--accent)}
     <h3 class="sec">Display</h3>
     <div class="row"><label class="tgl"><input type="checkbox" id="tglBig"> Projector mode — large UI for the back of the room</label></div>
     <div class="row"><label class="tgl"><input type="checkbox" id="tglPar" checked> Show par budgets</label></div>
+    <div class="row"><label class="tgl"><input type="checkbox" id="tglKeyboard"> Keyboard editing cursor — arrow keys move; B builds, E erases, I inspects</label></div>
     <h3 class="sec">Demonstrations</h3>
     <div class="row"><label class="tgl"><input type="checkbox" id="tglOverload"> Let me pick the test vehicle on any level</label></div>
     <p class="sub">Useful for showing a class what happens when a bridge that comfortably carried a car
@@ -287,9 +308,9 @@ a{color:var(--accent)}
       <button id="btnResetLevel" class="danger">Reset this level's board</button>
       <button id="btnResetAll" class="danger">Reset every board</button>
     </div>
-    <h3 class="sec">Printable guide</h3>
-    <p class="sub">Open <a href="teacher-guide.html" target="_blank">teacher-guide.html</a> for the one-page
-      lesson plan, physics background and discussion questions (also supplied as a PDF).</p>
+    <h3 class="sec">Teacher guide</h3>
+    <p class="sub">The complete lesson plan, physics background, and discussion questions are available inside the demo and as a printable copy.</p>
+    <button class="teacher-guide-open">Open teacher guide</button>
   </div>
 </div></div>
 
@@ -297,6 +318,13 @@ a{color:var(--accent)}
 <div id="mHelp" class="modal hidden"><div class="sheet" style="max-width:660px">
   <header><h2>How to play</h2><div class="spacer"></div><button id="hpClose" class="icon">✕</button></header>
   <div class="body">
+    <h3 class="sec">Your first bridge in 60 seconds</h3>
+    <ol class="steps">
+      <li><b>Draw the roadway:</b> with Draw selected, drag between neighboring grid points from the left orange support to the right one.</li>
+      <li><b>Make triangles:</b> add joints above or below the road, then connect diagonal members. Rectangles fold; triangles hold their shape.</li>
+      <li><b>Read the bridge:</b> leave X-ray on. Red members are being pulled, blue members are being compressed, and brighter members are closer to failure.</li>
+      <li><b>Run it:</b> press Load test. If it fails, use the debrief to find the first weak member, return to the build, and change one thing.</li>
+    </ol>
     <h3 class="sec">Build</h3>
     <ol class="steps">
       <li><b>Drag</b> from one grid point to another to add a member. Joints appear automatically.</li>
@@ -323,15 +351,36 @@ a{color:var(--accent)}
       snap, and the structure is immediately re-solved with what is left — which is how one failure becomes a collapse.
       <b>Compression members fail far below tension members</b> of the same size, and the longer they are, the weaker they get.
       Survive the crossing for the least money to beat par.</p>
-    <h3 class="sec">Keys</h3>
+    <h3 class="sec">Optional keyboard editing</h3>
+    <p class="sub">Turn on <b>Teacher mode → Keyboard editing cursor</b> first. The canvas then joins the Tab order.</p>
     <div class="kv"><b>1 / 2 / 3</b><span>build · erase · joint</span>
       <b>Ctrl+Z</b><span>undo</span><b>Space</b><span>run the load test</span>
-      <b>X</b><span>toggle X-ray</span><b>F</b><span>toggle force numbers</span></div>
+      <b>X</b><span>toggle X-ray</span><b>F</b><span>toggle force numbers</span>
+      <b>Arrows</b><span>move cursor</span><b>B / E / I</b><span>build · erase · inspect</span></div>
   </div>
 </div></div>
+
+<div class="msu-guide-overlay" id="msu-guide" hidden>
+  <section class="msu-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="msu-guide-title" tabindex="-1">
+    <div class="msu-guide-bar"><h2 id="msu-guide-title">Bridge Works teacher guide</h2><span class="msu-guide-spacer"></span><button type="button" id="msu-guide-print">Open printable copy</button><button type="button" id="msu-guide-close" aria-label="Close teacher guide">Close</button></div>
+    <iframe class="msu-guide-frame" id="msu-guide-frame" data-guide="teacher-guide.html" title="Bridge Works teacher guide"></iframe>
+  </section>
+</div>
 
 <script src="physics.js"></script>
 <script src="levels.js"></script>
 <script src="game.js"></script>
+<script>
+(() => {
+  const overlay=document.getElementById('msu-guide');if(!overlay)return;
+  const dialog=overlay.querySelector('.msu-guide-dialog'),frame=document.getElementById('msu-guide-frame'),close=document.getElementById('msu-guide-close');let returnFocus=null,inerted=[],overlayWasInert=false;
+  const show=opener=>{returnFocus=opener||document.activeElement;overlayWasInert=overlay.inert;overlay.inert=false;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.dataset.guide);overlay.hidden=false;inerted=[...document.body.children].filter(node=>node!==overlay&&!node.inert);inerted.forEach(node=>{node.inert=true});dialog.focus()};
+  const hide=()=>{overlay.hidden=true;inerted.forEach(node=>{node.inert=false});inerted=[];overlay.inert=overlayWasInert;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus()};
+  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(opener){event.preventDefault();show(opener)}});close.addEventListener('click',hide);
+  document.getElementById('msu-guide-print').addEventListener('click',()=>window.open(frame.dataset.guide,'_blank','noopener'));
+  overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
+})();
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

@@ -288,6 +288,17 @@ console.log('\n[6] REQUIREMENT: overload produces a progressive collapse');
         heavy.broke.length + ' break(s), then mechanism at x=' + heavy.mechanismAt.toFixed(1));
   check('  the break is a buckling failure, not a tension one',
         heavy.broke[0].force < 0, kN(heavy.broke[0].force) + ' kN');
+  /* This is the actual crossing helper at a phase offset that hits the
+     ~102% tipper sample. The broken member must retain that sample in the
+     reported maxima after solveWithBreaks removes it from the live mask. */
+  const tippedSample = P.crossTest(kp, { deckY: L1.deckY, x0: 5, x1: 11,
+    vehicle: LV.VEHICLES.tipper, step: 0.35 });
+  const broken = tippedSample.broke[0];
+  check('  debrief maxima retain the 102% tipper breaking sample',
+        broken && broken.util >= 1.02 && broken.util < 1.03 &&
+        tippedSample.maxUtil[broken.member] >= broken.util,
+        broken ? Math.floor(broken.util * 100) + '% break retained in ' +
+          Math.round(tippedSample.maxUtil[broken.member] * 100) + '% maximum' : 'no break');
 
   /* a REDUNDANT structure keeps standing after the first break, so overloading
      it produces a genuine chain: break -> re-solve -> break -> ... */
@@ -435,6 +446,13 @@ console.log('\n[9] Optional self weight');
   }
   check('reactions carry exactly the structure\'s own weight', near(R, W, 5),
         kN(R) + ' kN vs ' + kN(W) + ' kN of steel');
+  const hanging = P.analyse({
+    nodes: [{ x: 0, y: 0, fixX: 1, fixY: 1 }, { x: 0, y: -1, fixX: 0, fixY: 0 }],
+    members: [{ a: 0, b: 1 }], selfWeight: true, loads: new Float64Array(4)
+  });
+  check('a 1 m self-loaded dangling member keeps its 900 N load',
+        near(hanging.selfWeightTotal, 900, 1e-9) && hanging.zeroForce[0] === 0,
+        hanging.selfWeightTotal.toFixed(0) + ' N; ' + (hanging.mechanism ? 'unsupported lateral DOF reported' : 'solved'));
 }
 
 /* ================ 10. the moving load ==================================== */

@@ -81,9 +81,21 @@ pinch to zoom.
 
 ```
 node test-physics.js   # 33 checks against the shipped physics + level definitions
-node ui-smoke.js       # 42 headless UI checks: theme tokens, undo, lead warp,
-                       # countdowns, aiming, escape legibility, projector + mobile
+node ui-smoke.js       # headless UI checks, including keyboard cards and modal focus
 ```
+
+The game itself has no build step, package install, or network dependency. The optional
+browser smoke test uses Playwright, which is deliberately a separate test-only setup:
+
+```
+npm install --save-dev playwright
+npx playwright install chromium
+node ui-smoke.js
+```
+
+`ui-smoke.js` exits with a clear error if that dependency is absent; it never silently
+skips browser coverage. The smoke assertions are intentionally not given a fixed count,
+so adding a regression check cannot leave this README stale.
 
 `test-physics.js` imports the exact physics and level definitions the game ships
 (`game.js` exports them), and checks integrator stability, the periapsis-vs-apoapsis

@@ -1,0 +1,119 @@
+/* ============================================================
+   Integration layer — appended LAST so it wins over module CSS.
+   These rules only reconcile the modules with the app shell's
+   flex layout; they never change a module's internal design.
+   ============================================================ */
+
+/* ---- ladder host -------------------------------------------------------
+   .pane-host is a column flexbox (right for sim/editor), but the ladder's
+   <svg> would become a flex item and get vertically SQUASHED from its true
+   height down to the pane height. The ladder must lay out as a normal block
+   and scroll. */
+#ladder-host { display: block; }
+#ladder-host[hidden] { display: none; }
+#ladder-host.lad-container { border: 0; border-radius: 0; }
+
+/* ---- sim pane ----------------------------------------------------------
+   The stage must shrink to the space left over after the field-device panel,
+   letterboxing the scene instead of pushing the panel below the fold. */
+#sim-host { padding: 6px; }
+#sim-host > .sim-root { flex: 1 1 auto; min-height: 0; gap: 6px; }
+.sim-root > .sim-stage { flex: 1 1 auto; min-height: 150px; }
+.sim-root > .sim-stage > .sim-svg { width: 100%; height: 100%; }
+.sim-root > .sim-panel { flex: 0 0 auto; }
+
+/* Compact the field-device panel so all four groups sit on ONE row: the
+   control widths were being driven by their caption text, which forced a
+   second row and stole ~130px of height from the intersection. */
+.sim-panel { padding: 22px 12px 8px; gap: 6px 16px; }
+.sim-group-controls { gap: 10px; }
+.sim-ctl { min-width: 56px; max-width: 78px; }
+.sim-ctl-info { flex-wrap: wrap; justify-content: center; row-gap: 0; }
+.sim-ctl-name { text-align: center; line-height: 1.15; }
+body.bigui .sim-ctl, .sim-bigui .sim-ctl { max-width: 104px; }
+
+/* Troubleshoot: the intersection is what students diagnose from — keep the
+   fault panel from crowding it out; its explanation scrolls instead. */
+#fault-host { max-height: 32%; }
+
+/* the sim HUD strip (sim time / scans / cars) sits with the motor widget */
+.sim-root > .sim-hudrow, .sim-root > .sim-status { flex: 0 0 auto; }
+
+/* ---- editor + challenge hosts -----------------------------------------
+   Both manage their own scrolling; let their content define height. */
+#editor-host { display: block; }
+#editor-host[hidden] { display: none; }
+#challenge-host { display: block; }
+#challenge-host[hidden] { display: none; }
+#fault-host { display: block; padding: 6px; }
+#fault-host[hidden] { display: none; }
+
+/* ---- watch window ------------------------------------------------------
+   Side-by-side sections so the tag table AND the image tables are both on
+   screen while single-stepping (they are the point of step mode). */
+#watch-host { padding: 0 6px 6px; display: flex; gap: 10px; align-items: flex-start; }
+#watch-host > .watch-sec { flex: 1 1 0; min-width: 0; }
+
+/* ---- toast: park it in the empty middle of the status row so it never
+   covers the ladder, the intersection controls, or the image tables ----- */
+#toast { bottom: auto; top: 70px; padding: 7px 16px; font-size: .95em; }
+
+/* ---- ladder hidden: centre the sim so it does not stretch to 1600px ---- */
+body.hide-ladder #sim-host > .sim-root { max-width: 1180px; margin: 0 auto; width: 100%; }
+
+/* ---- proportions -------------------------------------------------------
+   The watch drawer lives INSIDE the left pane (under the ladder), so the
+   intersection gets the full height of the window — and hiding the ladder
+   for predict-then-reveal correctly hides the tag values too. */
+#left-pane { flex: 1.3; }
+#bottom-pane { max-height: 46%; }
+body.hide-ladder #bottom-pane { display: none; }
+
+/* Challenges stacks the spec panel above the editor — cap the spec so the
+   editor always has a workable canvas. */
+body[data-mode="challenges"] #challenge-host { max-height: 40%; }
+body[data-mode="challenges"] #editor-host,
+body[data-mode="editor"] #editor-host { min-height: 240px; }
+
+/* ---- density: keep everything on one screen on a 768px Chromebook ------
+   The field-device panel must stay ONE row at classroom laptop widths,
+   otherwise it steals ~130px of height from the intersection. */
+@media (max-width: 1500px) {
+  #left-pane { flex: 1.15; }
+  .sim-panel { gap: 4px 10px; padding: 20px 8px 6px; }
+  .sim-group-controls { gap: 7px; }
+  .sim-ctl { min-width: 50px; max-width: 66px; }
+  .sim-ctl-name { font-size: 0.62em; }
+  .sim-ctl-tag { font-size: 0.70em; }
+}
+@media (max-height: 820px) {
+  #bottom-pane { max-height: 42%; }
+  #topbar { padding: 4px 10px; gap: 7px; }
+  .sim-panel { padding: 18px 8px 5px; }
+}
+
+/* Projector mode on a SHORT screen: enlarge the ladder and the type, but keep
+   the field-device buttons at their normal size — otherwise the panel grows a
+   second row and squeezes the intersection down to a thumbnail. */
+@media (max-height: 900px) {
+  body.bigui .sim-btn-start,    .sim-bigui .sim-btn-start    { width: 54px; height: 54px; }
+  body.bigui .sim-btn-stop,     .sim-bigui .sim-btn-stop     { width: 66px; height: 66px; }
+  body.bigui .sim-btn-ped,      .sim-bigui .sim-btn-ped      { width: 50px; height: 50px; }
+  body.bigui .sim-btn-loop,     .sim-bigui .sim-btn-loop     { width: 44px; height: 44px; }
+  body.bigui .sim-btn-sel,      .sim-bigui .sim-btn-sel      { width: 58px; height: 58px; }
+  body.bigui .sim-btn-mushroom, .sim-bigui .sim-btn-mushroom { width: 66px; height: 66px; }
+  body.bigui .sim-sel-knob,     .sim-bigui .sim-sel-knob     { width: 12px; height: 38px; margin: -19px 0 0 -6px; }
+  body.bigui .sim-root,         .sim-root.sim-bigui          { font-size: 15px; }
+  body.bigui .sim-ctl,          .sim-bigui .sim-ctl          { max-width: 74px; }
+}
+
+/* Phone widths cannot keep the two watch sections side by side: each image
+   table has a useful intrinsic width, and the pair used to widen a 320px
+   layout viewport to 395px. Stack the sections and let each table shrink. */
+@media (max-width: 480px) {
+  #watch-host { display: block; }
+  #watch-host > .watch-sec + .watch-sec { margin-top: 8px; }
+  .watch-grids { display: block; }
+  .watch-imgblock { min-width: 0; width: 100%; }
+  .watch-imgblock + .watch-imgblock { margin-top: 8px; }
+}

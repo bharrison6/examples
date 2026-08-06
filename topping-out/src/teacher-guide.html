@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Topping Out — Instructor Guide</title>
+<style>
+  @page { size: letter; margin: 0.62in 0.7in; }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.42;
+    color: #141414;
+    background: #fff;
+    max-width: 7.1in;
+    margin: 0 auto;
+    padding: 28px 22px 60px;
+  }
+  p { margin: 0 0 .58em; }
+  b, strong { font-weight: 700; }
+
+  /* ---- drawing-set typography ---------------------------------- */
+  .mono, th, .tag, .sheetno, .titleblock, caption {
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* ---- title block --------------------------------------------- */
+  .titleblock {
+    border: 1.5px solid #111;
+    margin-bottom: 20px;
+  }
+  .tb-row { display: flex; border-bottom: 1px solid #111; }
+  .tb-row:last-child { border-bottom: 0; }
+  .tb-cell { padding: 5px 8px 6px; border-right: 1px solid #111; flex: 1 1 auto; }
+  .tb-cell:last-child { border-right: 0; }
+  .tb-lab {
+    font-size: 6.6pt; letter-spacing: .13em; text-transform: uppercase;
+    color: #555; display: block; margin-bottom: 1px;
+  }
+  .tb-val { font-size: 9.2pt; font-weight: 700; letter-spacing: .02em; }
+  .tb-title { flex: 3 1 auto; }
+  .tb-title .tb-val { font-size: 17pt; letter-spacing: .06em; text-transform: uppercase; line-height: 1.1; }
+  .tb-title .tb-sub { font-size: 9pt; font-weight: 400; color: #333; margin-top: 2px; }
+  .sheetno { flex: 0 0 92px; text-align: center; }
+  .sheetno .tb-val { font-size: 20pt; letter-spacing: .04em; }
+
+  /* ---- sections -------------------------------------------------- */
+  h2 {
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 11.5pt; text-transform: uppercase; letter-spacing: .11em;
+    margin: 17px 0 7px; padding-bottom: 3px;
+    border-bottom: 1.5px solid #111;
+    break-after: avoid; page-break-after: avoid;
+  }
+  h2 .num {
+    display: inline-block; min-width: 1.5em;
+    color: #b4531c; font-weight: 700;
+  }
+  h3 {
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 9.6pt; text-transform: uppercase; letter-spacing: .07em;
+    margin: 11px 0 4px;
+    break-after: avoid; page-break-after: avoid;
+  }
+  .lead { font-size: 10.8pt; }
+
+  /* ---- tables ---------------------------------------------------- */
+  table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.3pt; }
+  caption {
+    caption-side: top; text-align: left; font-size: 7.6pt; letter-spacing: .1em;
+    text-transform: uppercase; color: #444; padding-bottom: 4px;
+  }
+  th {
+    text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1.2px solid #111; padding: 3px 6px 3px 0; vertical-align: bottom;
+  }
+  td { padding: 3px 6px 3px 0; border-bottom: .5px solid #c8c8c8; vertical-align: top; }
+  tr:last-child td { border-bottom: 1px solid #111; }
+  td.n, th.n { text-align: right; padding-right: 12px; font-variant-numeric: tabular-nums; }
+  tbody tr.hi td { background: #f2ece4; }
+  .tight td, .tight th { padding-top: 2px; padding-bottom: 2px; }
+
+  /* ---- boxes ----------------------------------------------------- */
+  .box {
+    border: 1px solid #111; border-left: 4px solid #b4531c;
+    padding: 7px 11px 2px; margin: 9px 0 11px; background: #fbfaf8;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .box .tag {
+    font-size: 7.2pt; letter-spacing: .14em; text-transform: uppercase;
+    color: #b4531c; font-weight: 700; display: block; margin-bottom: 3px;
+  }
+  .note { font-size: 9.2pt; color: #333; }
+
+  code, .act {
+    font-family: "SF Mono", "DejaVu Sans Mono", Consolas, monospace;
+    font-size: 8.8pt; letter-spacing: -.01em;
+  }
+  .act { font-weight: 700; white-space: nowrap; }
+
+  ol, ul { margin: 4px 0 10px; padding-left: 1.75em; }
+  li { margin-bottom: 5px; }
+  ol.q > li { margin-bottom: 7px; }
+  .src { font-size: 9.2pt; margin: 0 0 7px; padding-left: 1.1em; text-indent: -1.1em; }
+
+  .foot {
+    margin-top: 18px; padding-top: 6px; border-top: 1.5px solid #111;
+    font-size: 8pt; letter-spacing: .04em; color: #444;
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between;
+  }
+
+  .printbtn {
+    position: fixed; top: 14px; right: 16px;
+    font-family: "Roboto Condensed", Arial, sans-serif;
+    font-size: 9pt; letter-spacing: .1em; text-transform: uppercase;
+    background: #111; color: #fff; border: 0; padding: 9px 15px; cursor: pointer;
+  }
+  .printbtn:hover { background: #b4531c; }
+
+  @media print {
+    body { max-width: none; margin: 0; padding: 0; font-size: 9.8pt; }
+    .printbtn { display: none !important; }
+    .box, table, .titleblock { break-inside: avoid; page-break-inside: avoid; }
+    h2, h3 { break-after: avoid; page-break-after: avoid; }
+    p, li { orphans: 2; widows: 2; }
+    a { color: #000; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+
+<button class="printbtn" onclick="window.print()">Print</button>
+
+<!-- ============================ TITLE BLOCK ============================ -->
+<div class="titleblock">
+  <div class="tb-row">
+    <div class="tb-cell tb-title">
+      <span class="tb-lab">Instructor Guide</span>
+      <span class="tb-val">Topping&nbsp;Out</span>
+      <div class="tb-sub">A week-by-week construction scheduling game &mdash; <i>Racer Commons</i>, 3-story commercial, 38 activities</div>
+    </div>
+    <div class="tb-cell sheetno">
+      <span class="tb-lab">Sheet</span>
+      <span class="tb-val">IG-01</span>
+    </div>
+  </div>
+  <div class="tb-row">
+    <div class="tb-cell"><span class="tb-lab">Course level</span><span class="tb-val">First-year CM</span></div>
+    <div class="tb-cell"><span class="tb-lab">Session</span><span class="tb-val">75 minutes</span></div>
+    <div class="tb-cell"><span class="tb-lab">Teams</span><span class="tb-val">3&ndash;4 students</span></div>
+    <div class="tb-cell"><span class="tb-lab">Prereq</span><span class="tb-val">Network diagrams</span></div>
+    <div class="tb-cell"><span class="tb-lab">Issued for</span><span class="tb-val">Class use</span></div>
+  </div>
+</div>
+
+<p class="lead">Every team schedules the same building, week by week, from the same seed code. The seed fixes the
+project, the sequence of events <i>and</i> the roll behind every judgment call before anyone touches anything, so
+two teams that finish $200,000 apart did not get different weather and did not get different luck &mdash; they
+bought different exposure. That is the whole pedagogical trick, and Section 5 is how you prove it to a student
+who says otherwise.</p>
+
+<p>The turn is a Monday morning meeting in four phases. <b>THE NEWS</b> reveals this week's events. <b>DECISIONS</b>
+lets you answer this week's calls, resequence, run overtime, order crews &mdash; they take two weeks to show
+up &mdash; expedite a delivery, work through the rain or stand down, move crews between zones, or absorb it.
+Expediting is worth saying out loud at the board, because students read it as an undo button: a fee always buys
+back <i>some</i> of a late delivery and never all of it. The engine caps recovery one day short of the delay at
+every difficulty, and if that leaves nothing to buy the offer is simply not made. A hot shot &mdash; a dedicated
+truck sent for one load rather than waiting for the scheduled run &mdash; recovers one of the two days on a short
+rebar shipment. It does not un-ship it.
+<b>COMMIT</b> is irreversible &mdash; no undo, ever. <b>THE WEEK RUNS</b> plays the five working days out in 4D.</p>
+
+<p><b>What is on the screen.</b> The right-hand panel is the meeting. Above the crew board sit this week's
+<i>calls</i>, headed "decide now, find out later", each one naming the activity where its consequence will show
+up. Below that, decisions live on a single <i>crew board</i>
+grouped by trade: each card carries the trade's headcount as pips (solid = working, hollow amber = idle and still
+billing, dashed = ordered and not here yet, reading <span style="font-family:monospace;font-size:.9em">+1 arrives
+wk 14</span>), its overtime switch, and every work front open to that trade this week, tagged with its zone, its
+remaining duration and its float. Trades with nothing open collapse to one line. Cure times and inspection holds
+sit in their own hatched block headed "running on their own &mdash; nothing you can do", which is the point. On
+the left, the 4D view draws the finished building as a faint dashed ghost and fills it in as work completes;
+crews stand on the floor they are working, and a floor with work open and nobody on it gets an amber
+<span style="font-family:monospace;font-size:.9em">WORK OPEN &mdash; NO CREW</span> box. Underneath, a real CPM
+engine re-solves the network every turn against what actually happened.</p>
+
+<!-- ============================ 1. RUNNING ORDER ============================ -->
+<h2><span class="num">1</span> Seventy-five minute running order</h2>
+
+<p>The tutorial project, <i>Shoe Tree Annex</i>, is 10 activities, runs nine turns, and carries two calls of its
+own so nobody meets the mechanic for the first time when it is being scored. Do not skip it. Teams that meet the
+interface on the graded run spend six weeks clicking instead of thinking, and the debrief gets thin.</p>
+
+<table class="tight">
+  <caption>Running order &mdash; 75 minutes</caption>
+  <thead>
+    <tr><th class="n" style="width:62px">Minutes</th><th style="width:58px">Length</th><th>Segment</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="n">0&ndash;5</td><td>5 min</td><td><b>Setup.</b> Seed code and difficulty on the board. Teams open the game, enter both, name themselves. Projector mode up front. Confirm every team reads the same project start date, Mon 7 Sep 2026, before anyone commits a week.</td></tr>
+    <tr><td class="n">5&ndash;11</td><td>6 min</td><td><b>CPM at the board.</b> Forward pass, backward pass, total float, on the ten-activity tutorial network (Section 2). Land one sentence: float is not slack in your day, it is what a specific activity can slip before it moves the finish. Leave free float for the debrief.</td></tr>
+    <tr><td class="n">11&ndash;22</td><td>11 min</td><td><b>Tutorial run</b> &mdash; <i>Shoe Tree Annex</i>, nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
+    <tr><td class="n">22&ndash;26</td><td>4 min</td><td><b>Brief the competition.</b> Same seed, same difficulty, score is profit, no undo. Show where float and the critical path live, then say two things out loud: calls default to the free option, so not answering is answering; and crews take two weeks, so manpower is a forecast.</td></tr>
+    <tr><td class="n">26&ndash;59</td><td>33 min</td><td><b>Competitive run.</b> Twenty-four to thirty turns. Roughly half the weeks are one click; the rest carry a call, a weather decision or a crew order. Checkpoint at minute 44 &mdash; teams should be near week 12, and anyone behind should commit the quiet weeks fast.</td></tr>
+    <tr><td class="n">59&ndash;63</td><td>4 min</td><td><b>Leaderboard and the do-nothing baseline.</b> Show the spread, then what absorbing everything would have scored on this seed. Worst team against baseline is usually more interesting than first against second.</td></tr>
+    <tr><td class="n">63&ndash;75</td><td>12 min</td><td><b>Debrief.</b> Open on the calls table (Section 5); it is the fastest route into the room. Then five misconceptions (Section 6) and two or three questions from Section 7. Finish on the week the critical path moved and ask who noticed at the time.</td></tr>
+  </tbody>
+</table>
+
+<p class="note">The competitive run gained three minutes over the previous edition, because a rushed call is
+worse than no call. Two come off the board work &mdash; do both passes and total float there, and derive free
+float in the debrief off a schedule the room has just lived through. The third comes off the leaderboard, which
+lands faster now that the calls table is doing the explaining.</p>
+
+<div class="box">
+  <span class="tag">If you are short on time</span>
+  <p>Call time at minute 59 wherever teams are and score <i>projected</i> profit &mdash; the CPM finish date priced
+  out with general conditions, liquidated damages and the early bonus. It is a legitimate score and it ranks teams
+  the same way. Alternatively, assign the tutorial as ten minutes of homework and give the whole 44 minutes to
+  <i>Racer Commons</i>, which lets stronger classes finish the job properly. Do not buy time by cutting the
+  debrief: the calls table is where the session pays off.</p>
+</div>
+
+<!-- ============================ 2. CPM ============================ -->
+<h2><span class="num">2</span> The CPM you can teach from</h2>
+
+<p>The engine runs a precedence-diagram CPM with finish-to-start, start-to-start and finish-to-finish
+relationships and lags in working days. Nothing is declared critical in the data file; criticality is computed,
+every single turn, from the live state of the job.</p>
+
+<h3>Forward pass &mdash; earliest dates</h3>
+<p>Walk the network in topological order. An activity's early start is the latest demand any predecessor places
+on it: <code>FS</code> requires predecessor EF + lag; <code>SS</code> requires predecessor ES + lag;
+<code>FF</code> requires predecessor EF + lag &minus; duration. Early finish is ES + duration. The largest EF in the
+network is the project duration. In the tutorial that is <b>29 working days</b>.</p>
+
+<h3>Backward pass &mdash; latest dates</h3>
+<p>Start from the project end and walk back. Late finish is the earliest demand any successor places on you:
+<code>FS</code> gives successor LS &minus; lag; <code>SS</code> gives successor LS &minus; lag + your duration;
+<code>FF</code> gives successor LF &minus; lag. Late start is LF &minus; duration. Total float is LS &minus; ES.</p>
+
+<h3>Total float versus free float</h3>
+<p>Total float is how long an activity can slip before the <i>project</i> slips. Free float is how long it can slip
+before it disturbs the <i>early start of its own successor</i>. Students collapse these two into "spare time" and
+it costs them. In <i>Racer Commons</i> at baseline, MEP rough-in on Level 1 (<span class="act">MEP1</span>)
+carries 9 days of total float and 1 day of free float. Spend three days on it and the finish date has not
+moved &mdash; but Level 2 rough-in cannot start when it wanted to, and the next card that lands on that branch
+has nowhere to go.</p>
+
+<h3>Why lags matter</h3>
+<p>Lags are how the schedule expresses trade overlap, and they are most of the compression already built into
+the plan. Steel walks up the building on <code>SS+4</code>: Level 2 erection starts four days after Level 1
+starts, not after it finishes. Drywall, finishes and MEP each ladder up on <code>SS+2</code> &mdash; two days,
+which is tight enough that a trade normally has two or three fronts open at once and one crew to feed them.
+Curtain wall follows exterior framing on <code>SS+5</code>. Commissioning finishes two days after Level 3 finishes
+(<code>FF+2</code>) because it cannot close out ahead of the work it is testing. Remove those lags and the
+126-day contract is not buildable. Add a day to an <code>SS</code> predecessor and the successor moves with
+it, which is not obvious to a student staring at a bar chart.</p>
+
+<table class="tight">
+  <caption>Tutorial network &mdash; hand calculation the engine is tested against (working days, exclusive finish)</caption>
+  <thead>
+    <tr><th>Act</th><th>Description</th><th>Preds</th><th class="n">Dur</th><th class="n">ES</th><th class="n">EF</th><th class="n">LS</th><th class="n">LF</th><th class="n">TF</th><th class="n">FF</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>T1</td><td>Mobilize</td><td>&mdash;</td><td class="n">3</td><td class="n">0</td><td class="n">3</td><td class="n">0</td><td class="n">3</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T2</td><td>Excavate</td><td>T1 FS0</td><td class="n">5</td><td class="n">3</td><td class="n">8</td><td class="n">3</td><td class="n">8</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T3</td><td>Footings</td><td>T2 SS2</td><td class="n">6</td><td class="n">5</td><td class="n">11</td><td class="n">5</td><td class="n">11</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T4</td><td>Footing cure <i>(fixed)</i></td><td>T3 FS0</td><td class="n">4</td><td class="n">11</td><td class="n">15</td><td class="n">11</td><td class="n">15</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr class="hi"><td>T5</td><td>Site utilities</td><td>T2 FS0</td><td class="n">4</td><td class="n">8</td><td class="n">12</td><td class="n">11</td><td class="n">15</td><td class="n">3</td><td class="n">3</td></tr>
+    <tr><td>T6</td><td>Slab on grade</td><td>T4, T5 FS0</td><td class="n">5</td><td class="n">15</td><td class="n">20</td><td class="n">15</td><td class="n">20</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T7</td><td>Slab inspection <i>(fixed)</i></td><td>T6 FS0</td><td class="n">2</td><td class="n">20</td><td class="n">22</td><td class="n">20</td><td class="n">22</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T8</td><td>Steel frame</td><td>T4 FS0</td><td class="n">7</td><td class="n">15</td><td class="n">22</td><td class="n">15</td><td class="n">22</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T9</td><td>Roof &amp; dry-in</td><td>T8, T7 FS0</td><td class="n">4</td><td class="n">22</td><td class="n">26</td><td class="n">22</td><td class="n">26</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td>T10</td><td>Closeout</td><td>T9 FS0, T6 FF1</td><td class="n">3</td><td class="n">26</td><td class="n">29</td><td class="n">26</td><td class="n">29</td><td class="n">0</td><td class="n">0</td></tr>
+  </tbody>
+</table>
+
+<p class="note">Critical path <span class="act">T1&ndash;T2&ndash;T3&ndash;T4&ndash;T8&ndash;T9&ndash;T10</span>.
+T6 and T7 also carry zero total float &mdash; a parallel critical branch of identical length, which is worth
+naming out loud, because students expect exactly one path. T5 is the only activity in the job with float, and it
+has three days. The engine's self-tests check all sixty numbers in this table against the hand calculation, so
+if a student says the software is wrong, run the self-tests from the Settings menu in front of them.</p>
+
+<p class="note"><b>One indexing note.</b> The game numbers days from 0 and treats finish as exclusive, so
+EF = ES + duration. Textbook tables that number days 1 through <i>n</i> will read one higher on EF and LF.
+Say this once at the board and nobody argues about it later.</p>
+
+<h3>Why the critical path moves</h3>
+<p>Because it is recomputed every Monday against reality, not read off a baseline. Completed activities are
+pinned to the dates they actually happened; work in progress is anchored to its real start with its remaining
+duration recalculated from the crews now on it; work not yet started cannot begin before today. Consume float
+on a branch and the branch goes critical; accelerate the old critical chain and the path jumps somewhere else.
+The game announces the move and names the activity it moved to. Ask the class to predict it before the week
+runs.</p>
+
+<div class="box">
+  <span class="tag">Two conventions worth stating in class</span>
+  <p><b>Float is measured to project completion, so it is never negative.</b> If the job is running twelve days
+  behind you will not see &minus;12 in the float column; the network re-baselines against its own computed
+  finish, and performance against the contract is reported separately, in calendar days early or late, which is
+  the number that gets priced. Students who have seen negative float in P6 need this said explicitly.</p>
+  <p><b>Concrete cure and inspection holds are non-compressible.</b> Footing cure, foundation wall cure, slab
+  cure, deck cure and all four inspection holds burn exactly one working day per working day. No crew count, no
+  overtime level and no expediting fee touches them, and the check sits at the only place in the engine where
+  progress is ever made, so there is no path around it. Rain does not stop them either.</p>
+</div>
+
+<!-- ============================ 3. OVERTIME ============================ -->
+<h2><span class="num">3</span> Overtime decay, and where the numbers come from</h2>
+
+<p>Overtime is set per trade, per week, and it is the decision students get wrong most confidently. The model
+gives a grace period with no measurable loss, then compounds a weekly efficiency decay down to a documented
+floor. A 50-hour week gets two weeks of grace, then loses 10% per week to a floor of 0.75. A 60-hour week gets
+one week of grace, then loses 15% per week to a floor of 0.62. The cost premium, by contrast, applies in full
+from the very first week and never decays: 1.375&times; the daily rate at 50 hours, 1.75&times; at 60.</p>
+
+<table>
+  <caption>Net progress multiplier against a straight-time crew-week, by consecutive week at that level</caption>
+  <thead>
+    <tr>
+      <th style="width:24%">Consecutive week</th>
+      <th class="n">50 hr &mdash; efficiency</th><th class="n">50 hr &mdash; net progress</th>
+      <th class="n">60 hr &mdash; efficiency</th><th class="n">60 hr &mdash; net progress</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Week 1</td><td class="n">1.00</td><td class="n">1.250</td><td class="n">1.00</td><td class="n">1.500</td></tr>
+    <tr><td>Week 2</td><td class="n">1.00</td><td class="n">1.250</td><td class="n">0.85</td><td class="n">1.275</td></tr>
+    <tr><td>Week 3</td><td class="n">0.90</td><td class="n">1.125</td><td class="n">0.72</td><td class="n">1.084</td></tr>
+    <tr class="hi"><td>Week 4</td><td class="n">0.81</td><td class="n">1.013</td><td class="n">0.62</td><td class="n">0.930</td></tr>
+    <tr class="hi"><td>Week 5 and after</td><td class="n">0.75</td><td class="n">0.938</td><td class="n">0.62</td><td class="n">0.930</td></tr>
+    <tr><td><b>Labour cost, every week</b></td><td class="n" colspan="2"><b>1.375&times;</b></td><td class="n" colspan="2"><b>1.750&times;</b></td></tr>
+  </tbody>
+</table>
+
+<p><b>Point at week 4.</b> A fourth consecutive 50-hour week delivers 1.3% more progress than straight time and
+costs 37.5% more labour on every crew-day. By week 5 the crew is producing <i>less</i> than it would have on
+forty hours, and still billing the premium. That single row is the most valuable thing on this sheet. Sixty-hour
+weeks cross the line a week earlier, in week 4, and settle at 0.930 &mdash; seven per cent <i>below</i> straight
+time, at 75% more cost, forever.</p>
+
+<p class="note">One note on that 0.62 floor, because a student who reads the sources will find it. Business
+Roundtable puts sustained 60-hour productivity near 66% of baseline. Taken literally that nets
+1.50&nbsp;&times;&nbsp;0.66&nbsp;=&nbsp;0.99, which is fractionally <i>better</i> than the 50-hour floor of
+1.25&nbsp;&times;&nbsp;0.75&nbsp;=&nbsp;0.94 &mdash; a non-monotonic pair that would teach the wrong lesson, that
+if you are going to burn the crew out you may as well do it at sixty. The same report concludes that sustained
+60-hour weeks finish <i>later</i> than the same crew on forty, so the model uses a steeper floor of 0.62 to
+reproduce the report's own conclusion, well inside Thomas &amp; Raynar's measured range of no loss to 25%. The
+claim all three sources agree on is the one the model makes: sustained overtime at any level settles below
+straight time while costing 37% to 75% more, so it is a burst tool for a defined push and nothing else.</p>
+
+<h3>Sources, so a student can look them up</h3>
+
+<p class="src">Business Roundtable, Report C-2, <i>Scheduled Overtime Effect on Construction Projects</i>,
+Construction Industry Cost Effectiveness Project, 1980. The origin of the two floors in the table: sustained
+50-hour weeks settle near 75% of baseline productivity, 60-hour weeks near 66% by weeks eight and nine, and
+crews held above sixty hours for more than about two months finish <i>later</i> than the same crew would have
+on forty. Still the most-cited document in this argument, and short enough to assign.</p>
+
+<p class="src">H. R. Thomas and K. A. Raynar, "Scheduled Overtime and Labor Productivity: Quantitative
+Analysis," <i>ASCE Journal of Construction Engineering and Management</i>, vol. 123, no. 2, 1997; the same
+work also circulated through the Construction Industry Institute. This is where the grace period comes from:
+measured five- and six-day extended weeks lose roughly 10&ndash;15% efficiency, and crews commonly run three to
+four weeks before the loss is measurable at all. It also tempers the Roundtable's steeper claims with field
+data, which is a useful thing for students to see two sources do to each other.</p>
+
+<p class="src">MCAA overtime factors, derived from Bureau of Labor Statistics hours-and-earnings data:
+50 hours = 92%, 60 hours = 82%, applied flat across an overtime period. The game ramps toward the lower
+Roundtable floors instead, but these are the estimating convention most of these students will meet in practice,
+and a flat 92% against a curve that ends at 75% is a good five-minute argument.</p>
+
+<div class="box">
+  <span class="tag">Simplification you should disclose</span>
+  <p>In the model, one week back at straight time resets the streak completely: the next 50-hour week starts
+  again at 1.25. Real recovery is gradual, and the literature does not support instant reset. Students will
+  find this and try to alternate weeks to farm the grace period. Let them, then ask what a foreman would say
+  about a crew that goes on and off overtime every other week &mdash; turnover, absenteeism and the quality
+  rework that neither this model nor the citations above capture.</p>
+</div>
+
+<!-- ============================ 4. CREWS AND MONEY ============================ -->
+<h2><span class="num">4</span> Crews, stacking and money</h2>
+
+<h3>The crashing premium</h3>
+<p>Crews are limited per trade and the second crew of a trade is the B team: it works around the first, shares
+the hoist, the laydown and the foreman's attention. Marginal output runs 1.00, 0.80, 0.65, so two crews deliver
+1.80 crew-days a day, not 2.00 &mdash; doubling up buys about <b>44% off the duration for 100% more labour</b>.
+That is the classic crash-cost curve: always available, never free, worth it only when the activity is driving
+the finish. No activity accepts more than two crews and no trade hires past two, so what students feel is the
+1.00-to-0.80 step. Steel erection is capped at one crew throughout, so the front half of the job cannot be
+crashed with bodies at all.</p>
+
+<p>A new crew costs 60% of a week's rate as a one-time mobilization (a second concrete crew: $11,400 against
+concrete's $19,000 weekly), charged only above the highest headcount you have ever carried, so cutting back and
+re-hiring later is free. A trade is on the roster only while it has a work front open &mdash; in a genuine gap
+it demobilises and stops billing &mdash; but while it is on site, any crew you are carrying and have not put on
+a front bills at half rate for doing nothing, shown as hollow amber pips with the daily cost beside them. That
+is the price of an unopened work front, and it is why sequencing to keep crews fed matters as much as sequencing
+to protect the critical path.</p>
+
+<h3>Manpower is a forecast, and there is never enough of it</h3>
+<p>Adding a crew takes two weeks' notice: decide on Monday of week 12 and they stand on the floor on Monday of
+week 14, because the sub has to find bodies and does not keep them in the yard. Releasing one is immediate and
+free. The board shows what is coming as dashed pips reading
+<span style="font-family:monospace;font-size:.9em">+1 arrives wk 14</span>, and the mobilization charge lands when
+you order, not when they arrive. That lag is the point &mdash; manpower is committed against a schedule nobody
+has seen yet, so a team that waits until a trade is visibly behind orders too late to help and then pays the
+crew to stand around after the crisis. And the fronts outnumber the crews: on any given week
+you should expect at least one trade, and often two, with more open work in front of it than one crew can
+feed &mdash; MEP, drywall and finishes each ladder up three floors on a two-day stagger. No allocation covers
+everything, deliberately. Float stops being decoration the moment the question turns from "what do we
+work on" into "what do we starve this week".</p>
+
+<h3>The vocabulary problem, and what the game does about it</h3>
+<p>Every call is written the way it would be said on a jobsite, which means a first-year hits words they have
+never met: a proof roll that <i>pumped</i>, cylinder breaks, embeds, dry-in, fire-caulk at a penetration, shop
+drawings, a hot shot. Each call carries a <b>What this actually means</b> panel that unfolds under the text and
+explains the term and why it matters &mdash; a proof roll is a loaded truck driven slowly over the subgrade while
+the inspector watches the ground under the tyres, and if the surface flexes and rebounds in a visible wave behind
+the wheel it is pumping, which means the soil is too wet or soft to carry a slab and has to be undercut and
+replaced. The same terms are in the hover glossary. You do not need to pre-teach any of it; it is worth telling
+the room the panel is there, because students who do not know a word will guess rather than ask.</p>
+
+<h3>Trade stacking</h3>
+<p>A zone holds a limited number of crews comfortably: three on the site, two on each of Levels 1, 2 and 3, two
+on the roof, two on the exterior envelope. Past the cap, <i>everyone</i> in that zone loses 25% per crew over,
+floored at 35%. Four crews in a two-crew zone deliver 4 &times; 0.50 = 2.0 crew-days a day &mdash; what two
+crews deliver, for twice the money. Two and two across two zones gets you 4.0; five in that zone gets 1.75,
+less than two.</p>
+
+<p>The best moment for this is Level 1 late in the job. <span class="act">ELEV</span> is twelve days of work in
+zone L1 with a cap of two, and it sits there while insulation, drywall and finishes all want the same floor. A
+team that puts two drywall crews on <span class="act">DRY1</span> while the elevator crew is still in the zone
+takes 25% off everybody, including the elevator, which is on a different branch entirely.</p>
+
+<h3>Money and the score</h3>
+<table class="tight">
+  <tbody>
+    <tr><td style="width:44%">Contract value</td><td class="n" style="width:22%">$4,450,000</td><td>Subcontract buyout and materials of $2,600,000 are committed at award and no decision moves them. Margin is thin on purpose.</td></tr>
+    <tr><td>General conditions</td><td class="n">$3,600 / calendar day</td><td>Burns seven days a week, weekends included. Every week you save is $25,200.</td></tr>
+    <tr><td>Liquidated damages</td><td class="n">$14,000 / calendar day</td><td>Past contract completion: 134 working days = 176 calendar days from Mon 7 Sep 2026, i.e. 12 Mar 2027.</td></tr>
+    <tr><td>Early completion bonus</td><td class="n">$1,600 / calendar day</td><td>Capped at 20 days, so $32,000 maximum. Deliberately modest.</td></tr>
+    <tr><td>Overtime premium</td><td class="n">1.375&times; / 1.75&times;</td><td>On worked crew-days, at 50 and 60 hours.</td></tr>
+    <tr><td>Expedite fees</td><td class="n">$7,500&ndash;$24,000</td><td>Card by card; buys back a stated number of delay days.</td></tr>
+    <tr><td>Judgment calls</td><td class="n">$1,900&ndash;$22,000</td><td>Priced per option, paid the week you decide. Section 5.</td></tr>
+  </tbody>
+</table>
+
+<p>A week late costs $123,200 in general conditions and liquidated damages before you count labour; a week early
+returns $36,400 while the bonus cap holds. That 3.4:1 asymmetry should govern every expedite decision and every
+call, and almost no first-year student computes it unprompted. Score is profit: contract plus change orders,
+less buyout, labour, general conditions, event and call costs, expedite fees and hiring, less liquidated
+damages, plus bonus.</p>
+
+<p class="note">Name the liquidated damages figure as a modelling choice before a sharp student does. Fourteen
+thousand a day on a $4.45M job is steeper than most real contracts this size, where LDs sit nearer actual
+carrying cost; it is set there so schedule rather than cost-cutting dominates the score. Asking the class what
+behaviour a $2,000-a-day LD would produce instead is a better five minutes than defending the number.</p>
+
+<p class="note">Unimpeded, the network runs <b>89 working days against a 126-day contract</b> &mdash; 53 calendar
+days of cushion, which sounds generous until the deck goes to work on it. On the seeds in Section 8, a team that
+absorbs everything and never intervenes finishes two to four and a half weeks late and averages about $185,000,
+going <i>negative</i> on two of the eight. A team that reads float, prices its calls, orders manpower ahead of
+need and only fights the weather when the exposed work has no float averages about $351,000. The whole game
+lives in that gap.</p>
+
+<!-- ============================ 5. THE CALLS ============================ -->
+<h2><span class="num">4b</span> Money in two sets of books: profit and cash</h2>
+
+<p>Profit is still the score, but the game now keeps the second set of books every contractor lives by. Costs go
+out weekly &mdash; labour, general conditions, the subcontract buyout drawn as work goes in. Revenue comes back
+monthly: a <b>pay application</b> billed against the schedule of values, paid about thirty days later, with
+<b>5% retainage</b> held until closeout and released two weeks after the ribbon. The gap between those curves is
+the classic cash valley, financed on a line of credit at real interest (~9.4% APR) that comes off the score. The
+HUD carries the cash position all game &mdash; a team can be projecting a healthy profit while sitting
+$1,000,000 into the bank's money, which is precisely the conversation worth having out loud.</p>
+
+<p>Week one now opens with the schedule-of-values call: price it straight and finance the valley honestly, or
+<b>front-load</b> it so the job carries itself &mdash; against a 30% seeded chance the owner's reviewer audits a
+mid-job application and kicks it back three weeks. Both branches chart in the debrief's cash curve, valley
+marked in red with the interest bill printed under it. The misconception this section exists to kill:
+<i>profitable and solvent are the same thing.</i> They are not, and the S-curve chart is the proof.</p>
+
+<h3>Sub standing</h3>
+<p>Every trade carries a standing score you never see as a number &mdash; the crew card shows
+<span style="font-family:monospace;font-size:.85em">SOLID / WARY / BURNED</span>. Sustained 60-hour weeks,
+a second week of 50s, joint-checking their supplier, or leaving mobilized crews idle all grind it down; steady
+work slowly rebuilds it. A wary sub takes an extra week to field a crew you order. A burned one drags five
+per cent on everything. So overtime now costs three times: premium pay, decayed productivity, and a
+subcontractor who has stopped answering first. It recovers &mdash; slowly &mdash; which makes "rest the sub"
+a real scheduling move.</p>
+
+<h2><span class="num">5</span> The calls &mdash; decide now, find out later</h2>
+
+<p>A call is a judgment made <i>before</i> the work, whose consequence lands somewhere else. There are nine in
+<i>Racer Commons</i> and two in the tutorial. Each offers two or three options; each carries a price you pay
+this week &mdash; money, sometimes days &mdash; and an <b>exposure</b>: the probability the deferred consequence
+fires. Nothing is hidden. The card prints the exposure as a percentage and names the activity where it will show
+up, so it is a priced bet with the odds on it, which is what a real one is.</p>
+
+<table class="tight">
+  <caption>Two of the nine &mdash; the option you buy is the bar the roll has to clear</caption>
+  <thead>
+    <tr><th style="width:26%">The call, and where it lands</th><th>What you can buy</th><th class="n" style="width:15%">Price today</th><th class="n" style="width:12%">Exposure</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="3"><b>Bearing at column line 4</b> &mdash; offered wk 1 at <span class="act">FTG</span>, lands at <span class="act">INSP1</span>: +3 days on the hold and $8,500</td>
+      <td>Pour to plan</td><td class="n">&mdash;</td><td class="n">45%</td></tr>
+    <tr><td>Field determination by the EOR</td><td class="n">$3,200 + 2 d</td><td class="n">14%</td></tr>
+    <tr><td>Over-excavate and add rebar</td><td class="n">$9,800 + 1 d</td><td class="n">3%</td></tr>
+    <tr><td rowspan="3"><b>Start rough-in before the building is dry</b> &mdash; offered at <span class="act">MEP1</span>, lands at <span class="act">INSP3</span>: tear out three days of <span class="act">MEP1</span> and <span class="act">MEP2</span>, $7,400</td>
+      <td>Start now, weather be damned</td><td class="n">&mdash;</td><td class="n">40%</td></tr>
+    <tr><td>Temporary enclosure on the open elevations</td><td class="n">$8,600</td><td class="n">7%</td></tr>
+    <tr><td>Hold rough-in until the building is dry</td><td class="n">4 d</td><td class="n">0%</td></tr>
+  </tbody>
+</table>
+
+<p><b>Not answering is answering.</b> Every call defaults to its first option, which is always the free one and
+always the most exposed, and the card says so in as many words. A team that clicks Commit through the job has
+taken the 45%, the 40%, the 44% and all the rest without ever deciding to. That is not a gotcha; on a real job
+the default happens while you are busy.</p>
+
+<h3>Why it is not a dice game &mdash; the part to defend out loud</h3>
+<p>The roll a call is judged against is a hash of the seed and the call's identifier, and nothing else: not the
+week you answered, not the order you played, not anything any team did. <b>Every team on your seed faces the
+identical roll on every call.</b> What differs is the bar that roll has to clear. Two teams both looking at 0.31:
+the one that bought the exposure down to 3% is covered, the one that left it at 45% is not, and what separates
+them is a decision made in week 1, not a die thrown in week 9. Two engine self-tests hold this &mdash; identical
+rolls across two games on a seed, rolls unchanged after a whole game played differently &mdash; but the stronger
+move is simpler: the same roll is printed in the debrief of the team that complained and in the debrief of the
+team that beat them.</p>
+
+<h3>Grade the decision, not the outcome</h3>
+<p>The debrief prints one row per call: <b>Week / Call / You chose / Cost / Exposure / The roll / Outcome</b>.
+The last column is a verdict, and the verdicts are a two-by-two.</p>
+
+<table class="tight">
+  <caption>How the debrief grades a call</caption>
+  <thead>
+    <tr><th style="width:30%"></th><th>The roll went your way</th><th>The roll went against you</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><b>You bought the exposure down</b></td><td>Covered &mdash; never in doubt</td><td>Unlucky: you covered it and it still bit</td></tr>
+    <tr><td><b>You left yourself exposed</b></td><td class="hi">Got away with it</td><td>Went against you &mdash; and you were exposed</td></tr>
+  </tbody>
+</table>
+
+<p>The diagonal is the whole lesson. "Got away with it" is where the leaderboard's luckiest team lives, and it is
+the box that wins games and ends careers; "unlucky: you covered it and it still bit" is where a team that did
+everything right can be sitting. A good decision can have a bad outcome and a bad decision can have a good one.
+If you take one habit out of this guide, take the habit of making a team defend a call <i>before</i> you show
+them the roll.</p>
+
+<h3>The weather call</h3>
+<p>Weather-exposed work stands down on rain days by default and you lose them. You may instead work through:
+70% production in the wet, $2,600 a rain day in pumping and protection, and a chance of placing something you
+take back out &mdash; <code>min(0.62, 0.16 &times; rain&nbsp;days)</code>, so a one-day blip is 16% and a three-day
+washout is 48%, which are properly different decisions. Damage costs two days of rework on an in-progress
+concrete activity and $5,200. Weather is now something you act on rather than read, and it asks one question:
+<i>does the exposed work have float?</i> Standing down on roofing with six days of it is free; standing down on
+foundation walls at zero is a week of liquidated damages.</p>
+
+<h3>Why the deck never tells you the wrong thing is late</h3>
+<p>Every card that names activities carries a week window derived from where those activities sit in this
+project's own schedule, so a late rebar delivery cannot land ten weeks after the last pour went in. The window
+is computed from the network alone — the critical-path dates stretched to the pace a real run takes — which
+means it is identical for every team on a seed and the fairness guarantee is untouched. It also means the
+ten-activity tutorial is never told its curtain wall is late, because it has not got one. If a team is running
+far enough ahead that a card still arrives after the work it names is finished, the news says so plainly:
+<i>no impact, you are ahead of this one</i>. That is a reward, and it is worth pointing out when it happens.</p>
+
+<h3>The one call that is not a trade-off</h3>
+<p>Almost every call in the deck is a legitimate judgment with defensible answers on both sides. One is not. In
+week six or thereabouts, with the foundation walls up and green and nothing bracing them, backfill is sitting on
+the schedule. Waiting for strength and backfilling both sides evenly costs three days and carries no exposure.
+Engineered kickers buy those three days back for $6,400. And then there is the third option: backfill high
+against one side now and keep the machine moving &mdash; free, saves the three days, and marked
+<b style="color:#b3261e">&#9888; UNSAFE</b> on the button, with the reason printed underneath before anybody
+clicks it.</p>
+<p>It is in the game deliberately, because schedule pressure producing an unsafe shortcut is not a hypothetical
+in this industry and naming it in a classroom is cheaper than meeting it on a jobsite. An unbraced, uncured
+foundation wall with fill on one side only is loaded in a direction nobody designed for; when one lets go it
+rotates in on whoever is standing in the excavation. It is an OSHA excavation and structural-stability violation
+before it is a schedule decision.</p>
+<p>The important part is what happens afterwards. If a team takes it, the debrief opens &mdash; <i>above</i> the
+profit, before they can see their score &mdash; with a red block naming the call, quoting what they chose, and
+explaining why it is not available to them as professionals. It fires whether or not the wall stood. If the roll
+went their way the block says so in as many words: <i>and it held. That is the most dangerous possible outcome,
+because it teaches you it was fine.</i> If a team took it and topped the leaderboard, run the debrief in that
+order anyway: read the block, then read the number, then ask the room whether they would sign that decision with
+their own name on the citation. That is the whole lesson, and it lands better than any amount of safety
+lecturing because they chose it themselves under pressure you built.</p>
+
+<h3>Procurement &mdash; three chances to make a card land harmlessly</h3>
+<p>Three calls are buyouts: structural steel at footings, $15,500; switchgear and the elevator at slab on grade,
+$22,000; curtain wall at the structural inspection, $18,500. Pre-buying sets a flag, and when the matching
+late-delivery card comes up the news reads <i>"no impact &mdash; you bought that package out early"</i>. No delay,
+no expedite fee, nothing to recover from &mdash; a late delivery has become the consequence of a decision made
+twenty weeks earlier rather than pure bad luck. Say the other half too, or you are teaching insurance instead of
+judgment: covering all three costs $56,000 against a deck that may never deal you the card, and on a seed where
+the glazing card never comes up that $18,500 bought nothing and was still not a bad decision.</p>
+
+<!-- ============================ 6. MISCONCEPTIONS ============================ -->
+<h2><span class="num">6</span> Five misconceptions, and the moment that exposes each</h2>
+
+<h3>(a) Float is free time you can spend casually</h3>
+<p>Students treat any non-zero float column as permission. The exposure is the MEP branch. At baseline,
+<span class="act">MEP2</span> and <span class="act">MEP3</span> carry 8 and 4 days of total float and the
+rough-in inspection hold <span class="act">INSP3</span> carries 4. Then the switchgear card lands
+(<i>"Gear that used to take 12 weeks now takes 30"</i>, from week 8) for two days, and the failed rough-in
+inspection lands (<i>fire-caulk missing at thirty-odd penetrations</i>, from week 9) for three days on a hold
+nothing can compress. Two cards, five days on a branch that had four &mdash; and <span class="act">INSUL</span>,
+which needs both the rough-in inspection and the curtain wall, is now on the critical path with drywall and
+finishes stacked behind it. Ask the team that spent that float in week 6 what they thought it was for. (Ask the
+team that pre-bought the switchgear how much of this they saw at all.)</p>
+<p>The free-float half of this is sharper still: <span class="act">MEP1</span> has 9 days of total float but
+only <b>1 day of free float</b>. Slip it three days and the project has not moved, but Level 2 rough-in
+cannot start when it wanted to. Total float belongs to the path and gets consumed by whoever spends it first;
+free float is the only part that is genuinely yours.</p>
+
+<h3>(b) Overtime always accelerates</h3>
+<p>Two exposures, and you want both. The first is arithmetic: any team that puts drywall or finishes on
+50-hour weeks and leaves them there is producing 0.938 of a straight-time week by week 5 while paying 1.375.
+Pull their week-by-week overtime log onto the projector next to the table in Section 3.</p>
+<p>The second is structural and better. When the rough-in inspection fails and adds three days to
+<span class="act">INSP3</span>, teams reach for overtime and it does nothing, because holds and cures are
+non-compressible. Same with the four-day deck cure <span class="act">DKC</span> between the Level 3 deck pour and
+the structural inspection: a team crashes <span class="act">DECK3</span> with a second concrete crew, buys 44%
+off a four-day activity, and hands most of it straight back to the cure. Ask what they bought for that money.</p>
+
+<h3>(c) The critical path is fixed at baseline</h3>
+<p>At baseline the path runs through foundations, steel, deck and cure, the structural inspection, envelope,
+drywall, finishes, commissioning, final inspection and punchlist &mdash; and <span class="act">ROOF</span>,
+roofing membrane and flashing, sits off it with six days of float. Roofing is weather-flagged, and the curtain
+wall (<span class="act">ENV2</span>) cannot start until the roof is finished. Two rain days on roofing plus the
+membrane-backorder card and the roof is critical, at which point the glazing card that arrives later matters
+twice as much as it would have. The question for the debrief is not whether they saw the announcement &mdash; it
+is whether anyone changed their allocation the week <i>before</i>, when the float column was down to one day and
+still technically positive.</p>
+
+<h3>(d) Weather delays everything equally</h3>
+<p>Rain days only stop weather-flagged work: earthwork, concrete placement, roofing and envelope. Nothing else in
+the building is exposed. The clean demonstration is the same card in two places. <i>"Ground is soup"</i> costs
+earthwork and concrete up to three days; drawn in week 3 it takes three days off excavation, footings or
+foundation walls, all of which are critical, and the project moves. Drawn in week 18, with the building dried in
+and drywall and finishes running, it costs exactly nothing. Same card, same three days, same seed. And a cure
+keeps curing through a washout &mdash; a rained-out week still advances <span class="act">FTGC</span>.</p>
+<p class="note">Name the boundary out loud, because it is a modelling decision and not an accident. Steel
+erection carries no weather flag, so the wind-advisory card stops glazing and sheathing and leaves the crane
+alone, and real erectors do stand down in 40&nbsp;mph gusts. Whether a boundary drawn for teachability is drawn
+in a defensible place is a good question for the room; an engine self-test enforces it in both directions, so
+no activity outside those four trades can be flagged and no weather card can claim a trade with no exposed
+work.</p>
+
+<h3>(e) A good outcome means it was a good call</h3>
+<p>The gambler's fallacy in a hard hat, and the most expensive habit on this list, because the job keeps rewarding
+it right up until it does not. A team pours to plan at column line 4, the seed's roll comes in at 0.61, the
+inspector takes the pads without comment, and they leave convinced they read the geotech. They read nothing:
+they took a 45% chance of a three-day hold and $8,500 on a foundation inspection and the roll &mdash; the roll
+every other team in the room was handed &mdash; landed above the line.</p>
+<p>Put their calls table beside the row of a team that bought the same call down to 3%. Same seed, same roll,
+one verdict reading <i>"Got away with it"</i> and the other <i>"Covered &mdash; never in doubt"</i>. Then price
+it in front of them. If the branch that hold lands on still has float, pouring to plan cost an expected $3,800
+and the $9,800 was wasted money. If the foundation branch has gone critical &mdash; two rain days on excavation
+will do it &mdash; three days at $17,600 a calendar day turns the free option into an expected $27,000 and makes
+$9,800 the cheapest thing on the card. The question is never "did it work out", it is "what was it worth on the
+Monday you decided, given where the float was". Then ask which team they would want running the next job.</p>
+
+<!-- ============================ 7. DISCUSSION ============================ -->
+<h2><span class="num">7</span> Debrief questions keyed to what actually happened</h2>
+
+<ol class="q">
+  <li><b>Bearing at column line 4, week 1.</b> Free at 45%, $3,200 and two days at 14%, $9,800 and one day at
+  3%. Price all three before anyone admits what they picked. What is a day worth in week 1 while the job still
+  has cushion, and what is it worth if the ground-is-soup card has already taken three days out of excavation
+  and the foundation branch is at zero float? Same call, two different right answers, and what changed was the
+  float rather than the odds.</li>
+
+  <li><b>The roll everybody shared.</b> Find a call where the room split. Ask each team what it thought it was
+  buying, in dollars, <i>before</i> the roll goes on the screen. Then show it &mdash; every team on the seed had
+  that same number. Whose decision was right, and does your answer change now that you know how it came out? If
+  it does, say so out loud; that is the habit you are trying to break.</li>
+
+  <li><b>The weather call.</b> One rain day forecast buys back one day for $2,600 at 16% exposure; three days
+  buys three for $7,800 at 48%, and going wrong costs two days of rework and $5,200. Which is the better buy?
+  (Neither, until you say what is exposed. Roofing with six days of float, never. Foundation walls at zero on a
+  job already late, almost always. The forecast is not the decision &mdash; the float column is.)</li>
+
+  <li><b>The elevator cab.</b> The manufacturer pushes your slot three weeks and offers you someone else's
+  production slot for $21,000 against a three-day delay. At baseline <span class="act">ELEV</span> carries
+  <b>21 days of total float</b>. Who paid? Now work it the other way: three working days on a driving activity
+  costs roughly $53,000 to $88,000 in general conditions and liquidated damages, so what would the float have to
+  be for $21,000 to be right? And what did the team that pre-bought the elevator package pay for the same
+  protection, twelve weeks earlier?</li>
+
+  <li><b>The glazing card.</b> <i>"The curtain wall units are sitting at the port. Customs hold, no release
+  date."</i> Three days on <span class="act">ENV2</span>, $24,000 to broker and air-freight the first two
+  elevations. <span class="act">ENV2</span> is critical at baseline and it gates insulation, all three floors of
+  drywall and everything after them. Now compare three groups on the final scoresheet: the teams that paid the
+  $24,000, the teams that absorbed it, and the teams that spent $18,500 at the structural inspection and watched
+  the card land with the words <i>"no impact"</i> under it.</li>
+
+  <li><b>Switchgear.</b> Two days on <span class="act">MEP2</span> and <span class="act">MEP3</span>, $16,000 to
+  source a substitute assembly and submit it. MEP2 carries eight days of total float and four of free float;
+  MEP3 carries four and none. Which activity governs your answer, which float number governs it, and why do the
+  two numbers disagree?</li>
+
+  <li><b>The failed rough-in inspection.</b> Three days added to <span class="act">INSP3</span> plus $4,200 in
+  correction and re-inspection, and the card offers no expedite at all. No crew helps, no overtime helps. What
+  is actually left to you? (Answer: sequence. <span class="act">INSUL</span> needs the rough-in inspection
+  <i>and</i> the curtain wall. If glazing was going to be the later of the two anyway, the hold costs nothing.
+  Getting a work front finished early is the only defence against a card you cannot buy off.)</li>
+
+  <li><b>Suspect welds.</b> Two days on <span class="act">INSP2</span> and $8,000. The structural inspection
+  releases exterior framing, Level 3 rough-in <i>and</i> the elevator at once. Which of the three actually cost
+  you, and how would you have known that on the Monday?</li>
+
+  <li><b>The lobby change order.</b> $38,000 of revenue, $26,000 of cost, two days on <span class="act">FIN1</span>
+  &mdash; net twelve thousand dollars on an activity that is critical at baseline. Do you sign it, and what do
+  you need to know about the finishes ladder before you answer?</li>
+
+  <li><b>Level 1 in the last month.</b> Elevator, insulation, drywall, finishes, commissioning, final inspection
+  and punchlist all live in a zone that holds two crews. Who stacked it, what did the 25% cost, and what would
+  a two-and-two split across Level 1 and Level 2 have delivered instead?</li>
+
+  <li><b>The week the path moved.</b> Pull up the week the game announced it. Who was watching the float column,
+  and who found out from the announcement? What would you have had to do the week before?</li>
+</ol>
+
+<!-- ============================ 8. TROUBLESHOOTING ============================ -->
+<h2><span class="num">8</span> If it goes wrong</h2>
+
+<h3>Picking a seed</h3>
+<p>Any string works &mdash; it is hashed, and it is upper-cased first, so <code>msu-1</code> and
+<code>MSU-1</code> are the same run. Announce the difficulty with it: the deck is rolled from seed
+<i>and</i> difficulty together, so a team on the wrong setting is not playing your game and its score does not
+belong on your leaderboard. Check a seed before class by watching a do-nothing baseline run; you want one where
+absorbing everything finishes late enough to hurt but not so late that good play cannot recover it. Four
+measured starting points, all on Standard:</p>
+
+<table class="tight">
+  <caption>Two ways to play the same seed &mdash; defaults means absorb everything and take every free option</caption>
+  <thead><tr><th>Seed</th><th class="n">Wks</th><th class="n">Finish vs contract</th><th class="n">Defaults</th><th class="n">Judgment</th><th>Character</th></tr></thead>
+  <tbody>
+    <tr><td>MSU-1</td><td class="n">29</td><td class="n">27 days late</td><td class="n">$55,400</td><td class="n">$254,525</td><td>Middle of the road. Good first run.</td></tr>
+    <tr><td>CMGT-201</td><td class="n">30</td><td class="n">28 days late</td><td class="n">$26,700</td><td class="n">$525,200</td><td>Judgment pays most here &mdash; half a million of spread.</td></tr>
+    <tr><td>TOPPING</td><td class="n">30</td><td class="n">31 days late</td><td class="n">&minus;$75,550</td><td class="n">$116,088</td><td>Punishing. The defaults lose real money.</td></tr>
+    <tr class="hi"><td>CALLOWAY</td><td class="n">28</td><td class="n">14 days late</td><td class="n">$283,300</td><td class="n">$245,550</td><td>Rewards nerve: the cheap calls come in. Best debrief seed on the sheet.</td></tr>
+  </tbody>
+</table>
+
+<p>Across eight measured seeds the defaults average about $185,000 and go negative on two; judgment averages
+about $351,000 and wins on six of the eight. Well-played runs land between 24 and 28 weeks, and the best finish
+observed was <b>118 working days, eight working days inside the contract</b> &mdash; so the early bonus is
+reachable, though nobody has come near the 20-day cap.</p>
+
+<p><b>Some seeds reward caution and some punish it, and that is a feature.</b> On CALLOWAY the free options
+happen to clear their thresholds, so the team that spent nothing on the calls beats the team that covered them,
+and you will hear about it. Do not apologise and do not reroll. When a team complains, put the two calls tables
+side by side and read the <b>exposure</b> column rather than the profit column: the careful team paid twenty
+thousand or so to be covered on decisions it could not see the end of, while the lucky team carried 40-odd per
+cent four or five times and was owed a bad week that never came. Then ask the room to replay the seed with the
+same calls and predict who wins. Nothing changes, because the rolls are fixed, and that is the moment a student
+hears the difference between a repeatable process and a result.</p>
+
+<h3>Phones, projectors and the Racer paint job</h3>
+<p>The game is fully playable on a phone: under tablet width the interface folds into two tabs, SITE and
+MEETING, with the commit button always in reach &mdash; useful when a team of three has one laptop and two
+phones. The identity is Murray State throughout: navy and gold, the horseshoe, the pennant on the field office,
+and gold hard hats on every crew. The critical path stays red. Some things are sacred.</p>
+
+<h3>Setting difficulty</h3>
+<p><b>Easy</b> draws zero or one non-weather card a week, scales every delay, hold, cost and productivity loss
+to 60%, and takes a day off every rain forecast. <b>Standard</b> is the same card count at full severity.
+<b>Hard</b> draws one or two non-weather cards a week, scales severity to 130%, and adds a rain day. Severity
+scales delay days, hold days, event costs, expedite fees <i>and</i> the days an expedite fee buys back, so hard
+is harder because more goes wrong, not because the remedies quietly stop working. Use Standard for a first
+session, Easy if this is the class's first exposure to CPM at all, and Hard for a second run on a seed they have
+already seen.</p>
+
+<h3>Projector mode and the leaderboard</h3>
+<p>Run projector mode on the instructor machine from the Settings menu: larger type, the schedule and the
+computed critical path readable from the back row. Use it for THE NEWS each week so the whole room hears the
+same card at the same time, and for the leaderboard and the calls tables at minute 59. Clear the leaderboard from the same menu
+between sections &mdash; scores are held locally on that machine, so a second section starts clean and does not
+inherit the first section's spread.</p>
+
+<h3>When a score is disputed, or a browser is lost</h3>
+<p>The engine has no clock, no network call and no unseeded randomness. Same seed plus same decisions produces
+the same profit to the dollar, and this is one of the checks in the self-test suite. So a disputed score can be
+reproduced by replaying the seed with the team's decision log, and a team whose browser dies can rebuild from
+where they were. The same menu runs the whole self-test suite, including the tutorial CPM checked against the
+hand calculation in Section 2 and the two checks that hold the calls fair &mdash; twenty-eight checks, live, in
+front of the class. Running them is a surprisingly good two minutes of teaching if a student is convinced the
+software cheated.</p>
+
+<h3>Pace problems</h3>
+<p>The usual failure is a team that deliberates every week. Plenty of weeks carry a clear forecast, no open call
+and one card that misses their live work fronts entirely; those should commit in seconds. Tell the room at the
+checkpoint: read the news, ask whether it touches anything with zero or one day of float, and if it does not,
+commit. Save the deliberation for the nine calls, the weather weeks with critical work exposed, and the two or
+three weeks where manpower has to be ordered before the need is visible.</p>
+
+<div class="foot">
+  <span>Topping Out &mdash; Instructor Guide</span>
+  <span>Sheet IG-01</span>
+  <span>Racer Commons &mdash; 38 activities &mdash; 134 working days</span>
+</div>
+
+</body>
+</html>

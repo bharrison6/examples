@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Topping Out — Construction Scheduling Game</title>
+<!--
+  Topping Out — a deterministic, offline construction scheduling game
+  for construction management teaching.
+
+  Single file: open it in any modern browser. No build step, no server,
+  no network. Same seed = same project and same event sequence for every
+  team, so a class leaderboard measures decisions rather than luck.
+
+  Companion: teacher-guide.html (printable session plan).
+  Sources live in src/ and are concatenated by build.js.
+-->
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+
+<!-- ============================ SETUP ============================ -->
+<div id="setup">
+  <div id="setup-inner"></div>
+</div>
+
+<!-- ============================= APP ============================= -->
+<div id="app" hidden>
+  <header id="topbar">
+    <div id="brand"><span class="msu"><svg width="13" height="13" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#f1b82d" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE</span><span class="t1">TOPPING OUT</span><span class="t2">RACER CONSTRUCTION MGMT</span></div>
+    <div id="project-block"></div>
+    <div id="hud"></div>
+    <div id="topbar-actions">
+      <button class="btn sm ghost" id="btn-instructor" title="Settings — projector mode, instructor guide, engine self-test">⚙ Settings</button>
+    </div>
+  </header>
+
+  <main id="panes">
+    <section id="left">
+      <div id="view-tabs">
+        <button data-view="4d" class="active">4D View</button>
+        <button data-view="gantt">Gantt</button>
+        <button data-view="network">Network</button>
+        <span class="spacer"></span>
+        <span class="legend">
+          <span><i class="crit"></i>critical path</span>
+          <span><i class="norm"></i>has float</span>
+          <span><i class="flt"></i>float tail</span>
+          <span><i class="fix"></i>cure / hold</span>
+        </span>
+      </div>
+      <div id="view-host"></div>
+    </section>
+
+    <section id="right">
+      <div id="meeting">
+        <div id="meeting-head"></div>
+        <div id="meeting-body"></div>
+        <div id="meeting-foot"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ========================== OVERLAYS =========================== -->
+<div class="overlay" id="instructor" hidden>
+  <div class="modal" style="max-width:520px">
+    <div class="modal-head">
+      <div><h2>⚙ Settings</h2><div class="sub">PROJECTOR · INSTRUCTOR GUIDE · SELF-TEST</div></div>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>Display</label>
+        <label style="font-size:.88rem;display:flex;align-items:center;gap:7px;cursor:pointer">
+          <input type="checkbox" id="chk-big2"> Projector mode — large UI, readable from the back of the room
+        </label>
+      </div>
+      <div class="field">
+        <label>Instructor guide</label>
+        <a class="btn" href="teacher-guide.html" target="_blank">📄 Open the instructor guide</a>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          The 75-minute session plan, the CPM background, the overtime sources, and the misconceptions
+          to draw out in debrief. Printable.
+        </div>
+      </div>
+      <div class="field">
+        <label>Engine self-test</label>
+        <button class="btn" id="btn-selftest">🧪 Run the engine self-test</button>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          36 assertions run live — the CPM hand calculation, determinism, the non-compressible holds.
+          If a student says the software is wrong, run this in front of the class.
+        </div>
+      </div>
+      <div class="field">
+        <label>Session</label>
+        <button class="btn" id="btn-newgame">New game / change seed</button>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          Difficulty is chosen with the seed on the setup sheet — it scales how often events fire and how
+          hard they hit; the seed fixes which events fire and in what order.
+        </div>
+      </div>
+      <div class="field">
+        <label>Leaderboard</label>
+        <button class="btn danger" id="btn-lb-reset2">Reset leaderboard on this computer</button>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn primary" data-close="instructor">Close</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="debrief" hidden>
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2>Debrief</h2><div class="sub" id="debrief-head-sub"></div></div>
+      <button class="btn" id="btn-debrief-close">Close</button>
+    </div>
+    <div class="modal-body" id="debrief-body"></div>
+  </div>
+</div>
+
+<div class="overlay" id="selftest" hidden>
+  <div class="modal" style="max-width:720px">
+    <div class="modal-head">
+      <div><h2>Engine self-test</h2><div class="sub">CPM VS HAND CALCULATION · DETERMINISM · MODEL BOUNDS</div></div>
+    </div>
+    <div class="modal-body">
+      <div id="selftest-body"></div>
+      <div id="selftest-sum"></div>
+    </div>
+    <div class="modal-foot"><button class="btn primary" data-close="selftest">Close</button></div>
+  </div>
+</div>
+
+<nav id="m-nav" aria-label="Panels">
+  <button id="m-site" data-m="site">▦ SITE</button>
+  <button id="m-meet" data-m="meet" class="on">☰ MEETING</button>
+</nav>
+
+<div id="tip"></div>
+<div id="toast"></div>
+
+<script>
+/*__JS__*/
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>

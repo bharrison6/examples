@@ -177,10 +177,24 @@ function analyse(model) {
   var support = new Uint8Array(N);
   for (n = 0; n < N; n++) support[n] = (nodes[n].fixX || nodes[n].fixY) ? 1 : 0;
 
-  /* ---- applied load vector (before self weight, so "is this node loaded?"
-          means "does the vehicle / test load push on it") */
+  /* ---- applied load vector ------------------------------------------------
+     Self weight is added BEFORE the zero-force pass. A live member owns its
+     weight even if it ends at a loose joint: a vertical hanger carries that
+     load axially; a differently oriented loose member correctly exposes an
+     unsupported/mechanism load path instead of disappearing as a "zero-force"
+     stub. */
   var F = new Float64Array(2 * N);
   if (model.loads) for (i = 0; i < 2 * N; i++) F[i] = model.loads[i];
+  var selfWeightTotal = 0;
+  if (model.selfWeight) {
+    for (i = 0; i < M; i++) {
+      if (!live[i]) continue;
+      var memberWeight = MAT.selfWeightPerMetre * L[i];
+      selfWeightTotal += memberWeight;
+      F[2 * mem[i].a + 1] -= memberWeight * 0.5;
+      F[2 * mem[i].b + 1] -= memberWeight * 0.5;
+    }
+  }
   var applied = new Uint8Array(N);
   for (n = 0; n < N; n++)
     if (Math.abs(F[2 * n]) > 1e-9 || Math.abs(F[2 * n + 1]) > 1e-9) applied[n] = 1;
@@ -211,16 +225,6 @@ function analyse(model) {
       }
     }
     recount();
-  }
-
-  /* ---- optional self weight, lumped half to each end --------------------- */
-  if (model.selfWeight) {
-    for (i = 0; i < M; i++) {
-      if (!live[i] || stub[i]) continue;
-      var w = MAT.selfWeightPerMetre * L[i] * 0.5;
-      F[2 * mem[i].a + 1] -= w;
-      F[2 * mem[i].b + 1] -= w;
-    }
   }
 
   /* ---- collinear pass-through nodes --------------------------------------
@@ -303,7 +307,7 @@ function analyse(model) {
     buckLen: new Float64Array(M), capC: new Float64Array(M),
     zeroForce: new Uint8Array(M), live: live, stub: stub,
     pruned: pruned, passthrough: pt, reactions: [], chains: chains,
-    empty: false
+    empty: false, selfWeightTotal: selfWeightTotal
   };
   for (i = 0; i < M; i++) {
     result.buckLen[i] = L[i];
@@ -661,12 +665,22 @@ function crossTest(model, opt) {
     var r = solveWithBreaks({ nodes: nodes, members: members, live: live,
                               loads: wl.loads, selfWeight: opt.selfWeight }, 40);
     for (i = 0; i < M; i++) {
-      if (!live[i] || !r.live[i]) continue;
+      if (!live[i]) continue;
       var f = r.result.force[i];
       if (Math.abs(f) > Math.abs(maxForce[i])) maxForce[i] = f;
       if (f > maxT[i]) maxT[i] = f;
       if (f < maxC[i]) maxC[i] = f;
       if (r.result.util[i] > maxUtil[i]) maxUtil[i] = r.result.util[i];
+    }
+    /* solveWithBreaks removes the snapped member before returning its final
+       equilibrium. Preserve the actual over-limit sample for the debrief,
+       rather than filtering it out with the now-dead live mask. */
+    for (i = 0; i < r.broke.length; i++) {
+      var br = r.broke[i], bi = br.member, bf = br.force;
+      if (Math.abs(bf) > Math.abs(maxForce[bi])) maxForce[bi] = bf;
+      if (bf > maxT[bi]) maxT[bi] = bf;
+      if (bf < maxC[bi]) maxC[bi] = bf;
+      if (br.util > maxUtil[bi]) maxUtil[bi] = br.util;
     }
     if (r.result && r.result.maxDisp > peakDefl) { peakDefl = r.result.maxDisp; peakDeflAt = x; }
     if (r.broke.length) {

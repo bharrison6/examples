@@ -1,0 +1,346 @@
+/* =========================================================================
+   Ladder Lab — sim.css  (LL.Sim pane; all classes prefixed sim-)
+   Industrial-clean: dark asphalt scene, panel-metal input strip, big
+   legible lenses. Big-UI: body.bigui (app shell) OR .sim-root.sim-bigui
+   (driven by the bus 'bigui:changed' event) scales fonts ~1.35x and grows
+   the touch targets; the SVG scene scales with its container automatically.
+   NOTE: no CSS animation carries meaning — the CONFLICT flash and the motor
+   fan angle are set from SIM time by sim.js (classes/transforms only).
+   ========================================================================= */
+
+.sim-root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  color: #e8eaed;
+  -webkit-user-select: none;
+  user-select: none;
+}
+body.bigui .sim-root, .sim-root.sim-bigui { font-size: 19px; }
+
+/* ------------------------------ stage -------------------------------- */
+.sim-stage {
+  position: relative;
+  border: 2px solid #14161a;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #24292d;
+  line-height: 0;
+}
+.sim-svg { display: block; width: 100%; height: auto; }
+
+/* scene */
+.sim-ground { fill: #24292d; }
+.sim-pad    { fill: #40464d; }
+.sim-road   { fill: #33383f; }
+.sim-edge   { stroke: #99a1a9; stroke-width: 1.5; opacity: 0.45; }
+.sim-dash   { stroke: #d8c86d; stroke-width: 3; stroke-dasharray: 20 16; opacity: 0.85; }
+.sim-zebra rect { fill: #e8e9ea; opacity: 0.8; }
+.sim-stopbar   { fill: #f2f3f4; }
+.sim-compass polygon { fill: #aeb6be; }
+.sim-compass text    { fill: #aeb6be; font: 700 15px system-ui, sans-serif; }
+
+/* inductive loop */
+.sim-loop rect {
+  fill: rgba(90, 142, 168, 0.08);
+  stroke: #5a8ea8;
+  stroke-width: 2.5;
+  stroke-dasharray: 7 5;
+}
+.sim-loop-label { fill: #8fb4c6; font: 700 10px ui-monospace, Consolas, monospace; letter-spacing: 0.08em; }
+.sim-loop.on rect {
+  stroke: #54d8ff;
+  fill: rgba(84, 216, 255, 0.18);
+  filter: drop-shadow(0 0 6px rgba(84, 216, 255, 0.9));
+}
+.sim-loop.on .sim-loop-label { fill: #bdefff; }
+
+/* signal stacks */
+.sim-stack-housing { fill: #191c20; stroke: #454c55; stroke-width: 2.5; }
+.sim-stack-label   { fill: #f0ead6; font: 800 17px system-ui, sans-serif; letter-spacing: 0.06em; }
+.sim-lens .sim-face { stroke: #0b0d0f; stroke-width: 2; }
+.sim-lens .sim-halo { opacity: 0; }
+.sim-lens.red .sim-face { fill: #38191a; }
+.sim-lens.yel .sim-face { fill: #3a2c12; }
+.sim-lens.grn .sim-face { fill: #14301d; }
+.sim-lens.red.on .sim-face { fill: #ff453a; filter: drop-shadow(0 0 9px rgba(255, 69, 58, 0.95)); }
+.sim-lens.yel.on .sim-face { fill: #ffb340; filter: drop-shadow(0 0 9px rgba(255, 179, 64, 0.95)); }
+.sim-lens.grn.on .sim-face { fill: #30e069; filter: drop-shadow(0 0 9px rgba(48, 224, 105, 0.95)); }
+.sim-lens.red.on .sim-halo { fill: #ff453a; opacity: 0.25; }
+.sim-lens.yel.on .sim-halo { fill: #ffb340; opacity: 0.25; }
+.sim-lens.grn.on .sim-halo { fill: #30e069; opacity: 0.25; }
+
+/* walk signs */
+.sim-walksign-box  { fill: #17191d; stroke: #454c55; stroke-width: 2; }
+.sim-walksign-label { fill: #cfd4da; font: 700 11px system-ui, sans-serif; letter-spacing: 0.05em; }
+.sim-walk-fig circle { fill: #f4f6f8; }
+.sim-walk-fig path {
+  stroke: #f4f6f8; stroke-width: 1.9; fill: none;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.sim-walk-fig { filter: drop-shadow(0 0 4px rgba(244, 246, 248, 0.8)); }
+.sim-walk-hand rect { fill: #ff9f1c; }
+.sim-walk-hand { filter: drop-shadow(0 0 3px rgba(255, 159, 28, 0.6)); }
+
+/* cars */
+.sim-car-body  { stroke: #15181b; stroke-width: 1.5; }
+.sim-car-glass { fill: rgba(16, 22, 28, 0.55); }
+.sim-car-light { fill: #ffe9a8; opacity: 0.9; }
+
+/* pedestrian — dark halo keeps the figure readable on the light zebra */
+.sim-ped circle { fill: #ffd76a; }
+.sim-ped line   { stroke: #ffd76a; stroke-width: 2.2; stroke-linecap: round; }
+.sim-ped {
+  filter: drop-shadow(0 0 1.5px rgba(10, 12, 14, 0.95)) drop-shadow(0 0 3px rgba(10, 12, 14, 0.8));
+}
+
+/* crash spark */
+.sim-spark-outer { fill: #ff7a29; }
+.sim-spark-inner { fill: #ffd23e; }
+.sim-spark { filter: drop-shadow(0 0 10px rgba(255, 160, 40, 0.9)); }
+
+/* CONFLICT banner */
+.sim-conflict {
+  position: absolute; inset: 0;
+  display: none;
+  align-items: center; justify-content: center;
+  pointer-events: none;
+  z-index: 5;
+  background: rgba(180, 20, 20, 0.12);
+}
+.sim-conflict.on { display: flex; }
+.sim-conflict-text {
+  font-weight: 800;
+  font-size: 3em;
+  line-height: 1.1;
+  letter-spacing: 0.14em;
+  color: #fff;
+  background: #c81e1e;
+  border: 4px solid #fff;
+  border-radius: 10px;
+  padding: 0.3em 0.8em;
+  box-shadow: 0 0 34px rgba(255, 40, 40, 0.85);
+}
+/* flash phase is computed from plc.simTimeMs (400 ms period) in sim.js */
+.sim-conflict-text.dim { opacity: 0.12; }
+
+/* --------------------------- status widgets --------------------------- */
+.sim-widgets {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.sim-status {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  background: #1b1e22;
+  border: 2px solid #3a4046;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.82em;
+  font-weight: 600;
+  color: #aeb6be;
+  letter-spacing: 0.03em;
+}
+.sim-status-cell { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.sim-status b { color: #ffd23e; font-weight: 700; }
+
+.sim-motor {
+  display: flex; align-items: center; gap: 10px;
+  background: #1b1e22;
+  border: 2px solid #3a4046;
+  border-radius: 8px;
+  padding: 4px 12px;
+}
+.sim-motor[hidden] { display: none; }
+.sim-motor-head { display: flex; align-items: center; gap: 8px; }
+.sim-motor-title {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.82em; font-weight: 700; color: #cfd4da; letter-spacing: 0.08em;
+}
+.sim-motor-state { font-family: ui-monospace, Consolas, monospace; font-size: 0.82em; font-weight: 700; color: #8a9098; }
+.sim-motor.on .sim-motor-state { color: #30e069; }
+.sim-motor-svg { width: 96px; height: 54px; }
+body.bigui .sim-motor-svg, .sim-bigui .sim-motor-svg { width: 128px; height: 72px; }
+.sim-motor-body  { fill: #4a545e; stroke: #20242a; stroke-width: 2; }
+.sim-motor-fin   { stroke: #333b43; stroke-width: 2.5; }
+.sim-motor-shaft { fill: #7b858e; }
+.sim-fan-blade { fill: #9aa4ad; stroke: #20242a; stroke-width: 1.5; }
+.sim-fan-hub   { fill: #5d6770; stroke: #20242a; stroke-width: 1.5; }
+/* the fan's rotate() transform is set per-frame from MOTOR-on sim time */
+
+/* ------------------------ physical input panel ------------------------ */
+.sim-panel {
+  position: relative;
+  background: linear-gradient(#454b52, #363b41);
+  border: 2px solid #14161a;
+  border-radius: 10px;
+  padding: 26px 20px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 26px;
+  justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09), 0 3px 8px rgba(0, 0, 0, 0.35);
+}
+/* corner screws */
+.sim-panel::before {
+  content: "";
+  position: absolute; inset: 0;
+  pointer-events: none;
+  border-radius: 10px;
+  background-image:
+    radial-gradient(circle 4.5px at 13px 13px,               #a7afb8 0 2px, #4d545c 2px 4.5px, transparent 4.5px),
+    radial-gradient(circle 4.5px at calc(100% - 13px) 13px,  #a7afb8 0 2px, #4d545c 2px 4.5px, transparent 4.5px),
+    radial-gradient(circle 4.5px at 13px calc(100% - 13px),  #a7afb8 0 2px, #4d545c 2px 4.5px, transparent 4.5px),
+    radial-gradient(circle 4.5px at calc(100% - 13px) calc(100% - 13px), #a7afb8 0 2px, #4d545c 2px 4.5px, transparent 4.5px);
+}
+.sim-panel-title {
+  position: absolute;
+  top: 5px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.72em;
+  font-weight: 800;
+  letter-spacing: 0.28em;
+  color: #f5a800;
+}
+
+.sim-group { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.sim-group-title {
+  font-size: 0.68em; font-weight: 700; letter-spacing: 0.18em;
+  color: #b7bec6;
+  border-bottom: 1px solid #5a6169;
+  padding: 0 10px 2px;
+  margin-bottom: 4px;
+}
+.sim-group-controls { display: flex; gap: 16px; align-items: flex-start; }
+
+.sim-ctl { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 64px; }
+.sim-ctl-tag  { font-family: ui-monospace, Consolas, monospace; font-size: 0.76em; font-weight: 700; color: #e8eaed; }
+.sim-ctl-info { display: flex; align-items: center; gap: 5px; }
+.sim-ctl-name { font-size: 0.68em; font-weight: 600; color: #aeb6be; letter-spacing: 0.04em; }
+
+/* LED = what the PLC input image currently reads */
+.sim-led {
+  display: inline-block;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: #453a24;
+  border: 2px solid #1c1e22;
+  box-sizing: content-box;
+}
+.sim-led.on { background: #ffc247; box-shadow: 0 0 8px 2px rgba(255, 194, 71, 0.75); }
+body.bigui .sim-led, .sim-bigui .sim-led { width: 16px; height: 16px; }
+
+/* ped request registered lamp (guarded read of plc.bits.REQ_*) */
+.sim-req {
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: 0.62em; font-weight: 700;
+  color: #6e6650;
+  border: 1px solid #4c4436;
+  border-radius: 3px;
+  padding: 1px 4px;
+}
+.sim-req.on { color: #241a05; background: #ffb340; border-color: #ffb340; box-shadow: 0 0 8px rgba(255, 179, 64, 0.85); }
+
+/* pushbuttons — round, bezel ring, pressed state; all targets >= 44px */
+.sim-btn {
+  position: relative;
+  border: 0; padding: 5px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #6a7077, #2e3237);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+.sim-btn:focus-visible { outline: 3px solid #f5a800; outline-offset: 2px; }
+.sim-btn-cap {
+  display: block; width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 3px solid #101317;
+  box-sizing: border-box;
+  box-shadow: 0 3px 4px rgba(0, 0, 0, 0.5), inset 0 -4px 6px rgba(0, 0, 0, 0.35), inset 0 3px 4px rgba(255, 255, 255, 0.25);
+}
+.sim-btn.down .sim-btn-cap {
+  transform: translateY(2px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.6), inset 0 4px 8px rgba(0, 0, 0, 0.45);
+  filter: brightness(1.18);
+}
+.sim-btn-start { width: 54px; height: 54px; }
+.sim-btn-start .sim-btn-cap { background: radial-gradient(circle at 35% 30%, #57d472, #1f8f3d 65%, #14602a); }
+.sim-btn-stop { width: 66px; height: 66px; }
+.sim-btn-stop .sim-btn-cap { background: radial-gradient(circle at 35% 30%, #ff6459, #c22318 65%, #8f170f); }
+.sim-btn-ped { width: 50px; height: 50px; }
+.sim-btn-ped .sim-btn-cap { background: radial-gradient(circle at 35% 30%, #f2f5f7, #aeb6bd 60%, #7c848c); }
+.sim-btn-loop { width: 44px; height: 44px; }
+.sim-btn-loop .sim-btn-cap { background: radial-gradient(circle at 35% 30%, #7fd0ec, #2f89ae 65%, #1e5f7c); }
+
+/* selector switch (rotary look): knob rotates AUTO -> NIGHT */
+.sim-btn-sel { width: 58px; height: 58px; }
+.sim-sel-face {
+  position: relative;
+  display: block; width: 100%; height: 100%;
+  border-radius: 50%;
+  border: 3px solid #101317;
+  box-sizing: border-box;
+  background: radial-gradient(circle at 40% 35%, #23262b, #101215);
+}
+.sim-sel-knob {
+  position: absolute; left: 50%; top: 50%;
+  width: 12px; height: 38px;
+  margin: -19px 0 0 -6px;
+  border-radius: 6px;
+  background: linear-gradient(#dfe3e6, #8b9298);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  transform: rotate(-32deg);
+  transition: transform 0.12s;
+}
+.sim-btn-sel.on .sim-sel-knob { transform: rotate(32deg); }
+.sim-sel-caption {
+  display: flex; gap: 12px;
+  font-size: 0.6em; font-weight: 700; letter-spacing: 0.06em;
+  color: #aeb6be;
+}
+.sim-sel-caption span:first-child { color: #e8eaed; }
+.sim-sel-caption span:last-child { color: #676e76; }
+.sim-btn.on ~ .sim-sel-caption span:first-child { color: #676e76; }
+.sim-btn.on ~ .sim-sel-caption span:last-child { color: #ffb340; }
+
+/* maintained mushroom (E-stop look): cap sinks when engaged */
+.sim-btn-mushroom {
+  width: 66px; height: 66px;
+  padding: 6px;
+  background: radial-gradient(circle, #f7d117 0 57%, #b8960d 60%, #3a3f45 62%);
+}
+.sim-mushroom-cap {
+  display: block; width: 100%; height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff6b5e, #c22318 60%, #8f170f);
+  border: 3px solid #5c0d08;
+  box-sizing: border-box;
+  box-shadow: 0 5px 6px rgba(0, 0, 0, 0.5), inset 0 -5px 8px rgba(0, 0, 0, 0.35), inset 0 3px 4px rgba(255, 255, 255, 0.2);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+.sim-btn-mushroom.on .sim-mushroom-cap {
+  transform: translateY(3px) scale(0.94);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.7), inset 0 4px 9px rgba(0, 0, 0, 0.5);
+  filter: brightness(0.85);
+}
+
+/* ------------------------------- Big UI ------------------------------- */
+/* Touch targets grow ~1.3x alongside the 1.35x font bump. Both the app
+   shell's body.bigui and the bus-driven .sim-root.sim-bigui class work. */
+body.bigui .sim-btn-start,   .sim-bigui .sim-btn-start    { width: 70px; height: 70px; }
+body.bigui .sim-btn-stop,    .sim-bigui .sim-btn-stop     { width: 84px; height: 84px; }
+body.bigui .sim-btn-ped,     .sim-bigui .sim-btn-ped      { width: 64px; height: 64px; }
+body.bigui .sim-btn-loop,    .sim-bigui .sim-btn-loop     { width: 58px; height: 58px; }
+body.bigui .sim-btn-sel,     .sim-bigui .sim-btn-sel      { width: 74px; height: 74px; }
+body.bigui .sim-btn-mushroom, .sim-bigui .sim-btn-mushroom { width: 84px; height: 84px; }
+body.bigui .sim-sel-knob, .sim-bigui .sim-sel-knob {
+  width: 15px; height: 48px; margin: -24px 0 0 -7.5px;
+}

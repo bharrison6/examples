@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ladder Lab — PLC Trainer</title>
+<!--
+  Ladder Lab — a fully offline, deterministic PLC trainer for the classroom.
+  Single file: open it in any Chromium/Firefox browser, no network needed.
+  Companion: teacher-guide.html (printable one-page lesson plan).
+-->
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+  <header id="topbar">
+    <div id="brand"><span class="t1">LADDER LAB</span><span class="t2">MURRAY STATE · PLC TRAINER</span></div>
+
+    <div class="tb-group" id="program-group">
+      <span class="tb-label">Program</span>
+      <select id="program-select" title="Load a built-in program"></select>
+      <span id="variant-toggle" class="tb-group" style="border:0;padding:0;background:none">
+        <button id="btn-var-a" class="tb-btn" title="Rung order A">A</button>
+        <button id="btn-var-b" class="tb-btn" title="Rung order B (rungs swapped)">B</button>
+      </span>
+    </div>
+
+    <nav id="mode-tabs" aria-label="Mode">
+      <button data-mode="trainer" class="active">Trainer</button>
+      <button data-mode="editor">Editor</button>
+      <button data-mode="challenges">Challenges</button>
+      <button data-mode="troubleshoot">Troubleshoot</button>
+    </nav>
+
+    <div class="tb-group">
+      <button id="btn-run" class="tb-btn primary" title="Run / pause the PLC (Space)">⏸ Pause</button>
+      <button id="btn-step" class="tb-btn" title="Advance exactly one full scan ( . )">Step Scan</button>
+      <button id="btn-reset" class="tb-btn" title="Reset the PLC and the intersection">⟲ Reset</button>
+    </div>
+
+    <div class="tb-group">
+      <span class="tb-label">Speed</span>
+      <select id="speed-select" title="Simulation speed multiplier">
+        <option value="0.25">¼×</option>
+        <option value="0.5">½×</option>
+        <option value="1" selected>1×</option>
+        <option value="2">2×</option>
+        <option value="5">5×</option>
+        <option value="10">10×</option>
+        <option value="25">25×</option>
+      </select>
+      <span class="tb-label">Scan</span>
+      <select id="scan-select" title="Milliseconds of simulated time per PLC scan">
+        <option value="10">10 ms</option>
+        <option value="20" selected>20 ms</option>
+        <option value="50">50 ms</option>
+        <option value="100">100 ms</option>
+        <option value="200">200 ms</option>
+      </select>
+    </div>
+
+    <div id="run-status" class="tb-group" title="PLC run state">
+      <span id="run-led" class="on"></span>
+      <span id="scan-readout">scan 000000 · t=0.00 s</span>
+    </div>
+
+    <span id="sel-status"></span>
+
+    <button class="tb-btn student-guide-open">Guide</button>
+    <details id="teacher-menu">
+      <summary>☰ Teacher</summary>
+      <div id="teacher-drop">
+        <label><input type="checkbox" id="chk-bigui"> Projector mode (big UI)</label>
+        <label><input type="checkbox" id="chk-hideladder"> Hide ladder pane (predict-then-reveal)</label>
+        <div class="sep"></div>
+        <button class="teacher-guide-open">📄 Open teacher guide</button>
+        <button id="btn-selftest">🧪 Run engine self-test</button>
+        <div class="sep"></div>
+        <button id="btn-resetall" class="danger">⚠ Reset everything</button>
+      </div>
+    </details>
+  </header>
+
+  <main id="panes">
+    <section id="left-pane">
+      <div id="ladder-host" class="pane-host"></div>
+      <div id="challenge-host" class="pane-host" hidden></div>
+      <div id="editor-host" class="pane-host" hidden></div>
+      <footer id="bottom-pane">
+        <div id="bottom-bar">
+          <span class="bb-title">WATCH WINDOW · IMAGE TABLES</span>
+          <span class="bb-hint">Rows flash when a bit changes. Use Step Scan to watch exactly when.</span>
+          <button id="btn-watch-collapse">▾ Hide</button>
+        </div>
+        <div id="watch-host"></div>
+      </footer>
+    </section>
+    <section id="right-pane">
+      <div id="sim-host" class="pane-host"></div>
+      <div id="fault-host" class="pane-host" hidden></div>
+      <button id="btn-restore">✓ Restore working program</button>
+    </section>
+  </main>
+
+  <div id="toast" role="status"></div>
+
+  <dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
+    <div class="student-guide-head"><h2 id="student-guide-title">How to use Ladder Lab</h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
+    <div class="student-guide-body">
+      <p><b>Start in Trainer.</b> The ladder program is on the left; the live intersection or motor is on the right.</p>
+      <ol>
+        <li>Choose a program. Program 5 is the fastest introduction; Program 1 is the full stoplight.</li>
+        <li>Press an input on the simulator—START, STOP, a pedestrian button, or a car sensor—and watch the highlighted path through the ladder.</li>
+        <li>Pause, then use <b>Step Scan</b> to see the PLC read inputs, solve rungs top-to-bottom, and update outputs.</li>
+        <li>Use <b>Challenges</b> to build a program or <b>Troubleshoot</b> to diagnose an injected fault.</li>
+      </ol>
+      <h3>What to watch</h3>
+      <p>Green instructions are true. The Watch Window shows the input, internal-bit, timer, and output image tables; changed values flash.</p>
+    </div>
+    <form method="dialog" class="student-guide-actions"><button>Start exploring</button></form>
+  </dialog>
+
+  <div class="ll-overlay" id="selftest-overlay" hidden>
+    <div class="ll-modal">
+      <h2>Engine self-test</h2>
+      <div id="selftest-body"></div>
+      <div class="close-row"><button id="btn-selftest-close">Close</button></div>
+    </div>
+  </div>
+
+  <div class="msu-guide-overlay" id="msu-guide" hidden>
+    <section class="msu-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="msu-guide-title" tabindex="-1">
+      <div class="msu-guide-bar"><h2 id="msu-guide-title">Ladder Lab teacher guide</h2><span class="msu-guide-spacer"></span><button type="button" id="msu-guide-print">Open printable copy</button><button type="button" id="msu-guide-close" aria-label="Close teacher guide">Close</button></div>
+      <iframe class="msu-guide-frame" id="msu-guide-frame" data-guide="teacher-guide.html" title="Ladder Lab teacher guide"></iframe>
+    </section>
+  </div>
+
+<script>
+/*__JS__*/
+</script>
+<script>
+(() => {
+  const dialog=document.getElementById('student-guide');let opener=null;
+  document.addEventListener('click',event=>{const button=event.target.closest?.('.student-guide-open');if(!button)return;event.preventDefault();opener=button;dialog.showModal();dialog.querySelector('.student-guide-head button').focus()});
+  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
+  dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()});
+})();
+</script>
+<script>
+(() => {
+  const overlay=document.getElementById('msu-guide');if(!overlay)return;
+  const dialog=overlay.querySelector('.msu-guide-dialog'),frame=document.getElementById('msu-guide-frame'),close=document.getElementById('msu-guide-close');let returnFocus=null,inerted=[],overlayWasInert=false;
+  const show=opener=>{returnFocus=opener||document.activeElement;overlayWasInert=overlay.inert;overlay.inert=false;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.dataset.guide);overlay.hidden=false;inerted=[...document.body.children].filter(node=>node!==overlay&&!node.inert);inerted.forEach(node=>{node.inert=true});dialog.focus()};
+  const hide=()=>{overlay.hidden=true;inerted.forEach(node=>{node.inert=false});inerted=[];overlay.inert=overlayWasInert;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus()};
+  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(opener){event.preventDefault();show(opener)}});close.addEventListener('click',hide);
+  document.getElementById('msu-guide-print').addEventListener('click',()=>window.open(frame.dataset.guide,'_blank','noopener'));
+  overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
+})();
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
