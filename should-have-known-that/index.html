@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  SHOULD HAVE KNOWN THAT: Engineering Edition
+  A single-file, offline, slider-based estimation trivia game
+  for engineering students. No libraries, no network calls.
+
+  INSTRUCTORS: the question bank is the FIRST <script> block
+  below (search for "QUESTION BANK"). Edit or add questions
+  there — new categories appear on the start screen
+  automatically. Scoring thresholds live in the SCORING
+  object in the main script at the bottom of the file.
+  ============================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Should Have Known That: Engineering Edition</title>
+<style>
+  :root{
+    --bg1:#0d0b2e; --bg2:#251259;
+    --gold:#ffcf3f; --cyan:#35e0ff; --magenta:#ff3d8b; --green:#41ff97;
+    --ink:#f5f3ff; --dim:rgba(245,243,255,.55); --card:rgba(255,255,255,.07);
+    --band0:#ffd23f; --band1:#41ff97; --band2:#ffa23d; --band3:#4db8ff; --band4:#ff5d5d;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(130% 100% at 50% 0%, var(--bg2), var(--bg1) 72%) fixed;
+    color:var(--ink); overflow:hidden;
+    user-select:none;-webkit-user-select:none; touch-action:manipulation;
+  }
+  .hidden{display:none !important;}
+
+  /* ---------- screens ---------- */
+  .screen{
+    position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
+    height:100vh; height:100dvh;
+    padding:max(12px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));
+  }
+  .screen.active{display:flex;}
+  .screen.scrolly{overflow-y:auto; justify-content:flex-start;}
+
+  /* ---------- start screen ---------- */
+  .game-title{
+    margin:2vh 0 0; text-align:center; line-height:.95; font-weight:900;
+    font-size:clamp(2.4rem, 6vh + 2vw, 5.2rem); letter-spacing:.02em;
+    background:linear-gradient(100deg,var(--gold) 20%, #ff9d5c 45%, var(--magenta) 80%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    filter:drop-shadow(0 0 22px rgba(255,160,60,.35));
+  }
+  .subtitle{
+    margin-top:6px; font-weight:800; letter-spacing:.45em; text-indent:.45em;
+    color:var(--cyan); font-size:clamp(.8rem, 1.8vh, 1.2rem); text-align:center;
+  }
+  .tagline{color:var(--dim); font-size:clamp(.8rem,1.7vh,1rem); margin-top:8px; text-align:center;}
+  .setup{width:100%; max-width:640px; margin-top:2.5vh; display:flex; flex-direction:column; gap:2vh;}
+  .setup-label{
+    font-size:clamp(.72rem,1.6vh,.95rem); font-weight:800; letter-spacing:.25em;
+    color:var(--dim); margin-bottom:8px; text-transform:uppercase;
+  }
+  .btn-row{display:flex; gap:10px; flex-wrap:wrap;}
+  .opt{
+    flex:1; min-width:76px; min-height:56px; border-radius:14px; border:2px solid rgba(255,255,255,.18);
+    background:var(--card); color:var(--ink); font-weight:800; font-size:clamp(1rem,2.2vh,1.3rem);
+    cursor:pointer; transition:all .15s;
+  }
+  .opt small{display:block; font-weight:600; font-size:.68em; color:var(--dim);}
+  .opt.on{border-color:var(--gold); background:rgba(255,207,63,.16); box-shadow:0 0 14px rgba(255,207,63,.25);}
+  .opt:active{transform:scale(.96);}
+  .chip-row{display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{
+    padding:12px 14px; border-radius:999px; border:2px solid rgba(255,255,255,.18);
+    background:var(--card); color:var(--dim); font-weight:700; font-size:clamp(.82rem,1.9vh,1rem);
+    cursor:pointer; transition:all .15s; min-height:48px;
+  }
+  .chip.on{color:#14102e; border-color:transparent; font-weight:800;}
+  .team-names{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
+  .team-names input{
+    width:100%; min-height:52px; border-radius:12px; border:2px solid rgba(255,255,255,.18);
+    background:rgba(0,0,0,.25); color:var(--ink); font-size:1.05rem; font-weight:700;
+    padding:0 14px; outline:none;
+  }
+  .team-names input:focus{border-color:var(--cyan);}
+  .start-note{min-height:1.2em; text-align:center; color:var(--dim); font-size:clamp(.78rem,1.7vh,.95rem);}
+
+  /* ---------- buttons ---------- */
+  .big-btn{
+    width:100%; max-width:440px; min-height:64px; border:none; border-radius:18px;
+    background:linear-gradient(180deg,#ffe07a,var(--gold) 55%,#f0a92d);
+    color:#1c1233; font-size:clamp(1.15rem,2.8vh,1.5rem); font-weight:900; letter-spacing:.1em;
+    cursor:pointer; box-shadow:0 6px 24px rgba(255,193,49,.35), inset 0 -3px 0 rgba(0,0,0,.18);
+    transition:transform .1s; margin:0 auto;
+  }
+  .big-btn.cyan{
+    background:linear-gradient(180deg,#9df0ff,var(--cyan) 55%,#12b7d8);
+    box-shadow:0 6px 24px rgba(53,224,255,.3), inset 0 -3px 0 rgba(0,0,0,.18);
+  }
+  .big-btn:active{transform:scale(.96);}
+  .big-btn[disabled]{opacity:.35; pointer-events:none;}
+  .text-btn{background:none;border:none;color:var(--dim);font-size:.95rem;font-weight:700;
+    text-decoration:underline;cursor:pointer;padding:12px;}
+
+  /* ---------- question screen ---------- */
+  .topbar{
+    width:100%; max-width:900px; display:flex; gap:8px; align-items:center;
+    justify-content:space-between; flex-wrap:nowrap;
+  }
+  .pill{
+    padding:7px 13px; border-radius:999px; background:var(--card);
+    font-weight:800; font-size:clamp(.72rem,1.8vh,1rem); white-space:nowrap;
+  }
+  .pill.cat{color:#14102e; overflow:hidden; text-overflow:ellipsis; max-width:46vw;}
+  .pill.score{color:var(--gold);}
+  .team-strip{width:100%; max-width:900px; display:flex; gap:6px; margin-top:8px;}
+  .tchip{
+    flex:1; text-align:center; padding:6px 4px; border-radius:10px; background:var(--card);
+    font-size:clamp(.68rem,1.6vh,.92rem); font-weight:700; color:var(--dim);
+    border:2px solid transparent; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+  }
+  .tchip b{color:var(--ink);}
+  .tchip.now{border-color:var(--gold); color:var(--ink); background:rgba(255,207,63,.12);}
+  .stage{
+    flex:1; width:100%; max-width:900px; display:flex; flex-direction:column;
+    justify-content:space-evenly; min-height:0;
+  }
+  .prompt{
+    text-align:center; font-weight:900; line-height:1.15;
+    font-size:clamp(1.25rem, 3.2vh + .6vw, 2.6rem); text-wrap:balance;
+  }
+  .value-wrap{text-align:center; line-height:1;}
+  #value-display{
+    font-size:clamp(2.6rem, 9vh, 6rem); font-weight:900; color:var(--cyan);
+    text-shadow:0 0 28px rgba(53,224,255,.45); font-variant-numeric:tabular-nums;
+  }
+  #value-units{
+    font-size:clamp(1rem, 3vh, 2rem); font-weight:800; color:var(--dim); margin-left:8px;
+  }
+  .slider-zone{width:100%; padding:0 6px;}
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:72px;
+    background:transparent; margin:0; cursor:pointer; --fill:50%;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:16px; border-radius:10px;
+    background:linear-gradient(90deg, var(--cyan) var(--fill), rgba(255,255,255,.16) var(--fill));
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:56px; height:56px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff6d0, var(--gold) 62%);
+    border:4px solid #fff; box-shadow:0 4px 20px rgba(255,207,63,.6);
+    margin-top:-20px;
+  }
+  input[type=range]::-moz-range-track{height:16px; border-radius:10px; background:rgba(255,255,255,.16);}
+  input[type=range]::-moz-range-progress{height:16px; border-radius:10px; background:var(--cyan);}
+  input[type=range]::-moz-range-thumb{
+    width:56px; height:56px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff6d0, var(--gold) 62%);
+    border:4px solid #fff; box-shadow:0 4px 20px rgba(255,207,63,.6);
+  }
+  .range-labels{
+    display:flex; justify-content:space-between; align-items:center; margin-top:2px;
+    color:var(--dim); font-weight:700; font-size:clamp(.78rem,1.9vh,1.05rem);
+    font-variant-numeric:tabular-nums;
+  }
+  .scale-tag{
+    font-size:clamp(.6rem,1.4vh,.8rem); font-weight:800; letter-spacing:.2em;
+    color:var(--magenta); border:1.5px solid var(--magenta); border-radius:999px;
+    padding:3px 10px;
+  }
+
+  /* ---------- reveal ---------- */
+  #reveal-panel{display:flex; flex-direction:column; justify-content:space-evenly; flex:1; min-height:0; gap:4px;}
+  .track-wrap{width:100%; padding:30px 28px 34px;}
+  .track{
+    position:relative; height:14px; border-radius:9px; background:rgba(255,255,255,.16); width:100%;
+  }
+  .marker{
+    position:absolute; top:50%; width:28px; height:28px; border-radius:50%;
+    transform:translate(-50%,-50%); border:3px solid #fff;
+  }
+  .marker.guess{background:var(--gold); box-shadow:0 0 16px rgba(255,207,63,.7); z-index:2;}
+  .marker.truth{
+    background:var(--cyan); box-shadow:0 0 16px rgba(53,224,255,.7); z-index:3;
+    transition:left 1.1s cubic-bezier(.22,1,.36,1);
+  }
+  .mk-label{
+    position:absolute; left:50%; transform:translateX(-50%); font-size:clamp(.6rem,1.5vh,.8rem);
+    font-weight:900; letter-spacing:.12em; white-space:nowrap;
+  }
+  .marker.guess .mk-label{bottom:32px; color:var(--gold);}
+  .marker.truth .mk-label{top:32px; color:var(--cyan);}
+  .rev-values{
+    display:flex; justify-content:center; gap:26px; font-weight:800;
+    font-size:clamp(.95rem,2.4vh,1.4rem); font-variant-numeric:tabular-nums; flex-wrap:wrap;
+  }
+  .rv.you{color:var(--gold);} .rv.truth{color:var(--cyan);}
+  #band-badge{
+    align-self:center; padding:10px 26px; border-radius:14px; color:#14102e;
+    font-size:clamp(1.4rem,4.2vh,2.6rem); font-weight:900; letter-spacing:.06em;
+    opacity:0; transform:scale(.3);
+  }
+  #band-badge.show{animation:popIn .45s cubic-bezier(.34,1.56,.64,1) forwards;}
+  .points{
+    text-align:center; font-weight:900; color:var(--gold);
+    font-size:clamp(1.1rem,3vh,1.8rem); min-height:1.2em; font-variant-numeric:tabular-nums;
+  }
+  .points .offby{color:var(--dim); font-weight:700; font-size:.75em; margin-left:10px;}
+  .factoid{
+    text-align:center; color:var(--ink); opacity:0; max-width:640px; align-self:center;
+    font-size:clamp(.92rem,2.3vh,1.3rem); line-height:1.4;
+  }
+  .factoid.show{animation:fadeUp .5s ease forwards;}
+  .factoid .lead{color:var(--magenta); font-weight:900; letter-spacing:.04em; display:block;
+    font-size:.78em; margin-bottom:4px; text-transform:uppercase;}
+  #next-btn{opacity:0; pointer-events:none; transition:opacity .35s;}
+  #next-btn.show{opacity:1; pointer-events:auto;}
+
+  /* ---------- turn screen ---------- */
+  .turn-inner{margin:auto; text-align:center; display:flex; flex-direction:column; gap:3vh; width:100%; max-width:560px;}
+  .turn-kicker{font-weight:800; letter-spacing:.4em; text-indent:.4em; color:var(--dim);
+    font-size:clamp(.85rem,2vh,1.2rem);}
+  .turn-team{
+    font-size:clamp(2.4rem,8vh,5rem); font-weight:900; line-height:1; color:var(--gold);
+    text-shadow:0 0 30px rgba(255,207,63,.4); overflow-wrap:anywhere;
+  }
+  .turn-progress{color:var(--dim); font-weight:700; font-size:clamp(.9rem,2.2vh,1.2rem);}
+
+  /* ---------- end screen ---------- */
+  .end-inner{margin:auto; width:100%; max-width:640px; display:flex; flex-direction:column; gap:2vh; padding:2vh 0;}
+  .end-kicker{text-align:center; font-weight:800; letter-spacing:.4em; text-indent:.4em;
+    color:var(--dim); font-size:clamp(.85rem,2vh,1.2rem);}
+  .end-scores{display:flex; flex-direction:column; gap:10px;}
+  .score-row{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:var(--card); border-radius:16px; padding:14px 18px;
+    font-weight:800; font-size:clamp(1.05rem,2.6vh,1.5rem); border:2px solid transparent;
+  }
+  .score-row.win{border-color:var(--gold); background:rgba(255,207,63,.13);}
+  .score-row .sc{color:var(--gold); font-variant-numeric:tabular-nums; white-space:nowrap;}
+  .score-row .wintag{font-size:.62em; letter-spacing:.25em; color:var(--gold); margin-left:8px;}
+  .solo-final{
+    text-align:center; font-size:clamp(3.4rem,12vh,7rem); font-weight:900; color:var(--gold);
+    line-height:1; text-shadow:0 0 34px rgba(255,207,63,.45);
+  }
+  .solo-final small{display:block; font-size:.22em; color:var(--dim); letter-spacing:.3em; margin-top:6px;}
+  .end-cards{display:flex; gap:10px; flex-wrap:wrap;}
+  .end-card{
+    flex:1; min-width:240px; background:var(--card); border-radius:16px; padding:14px 16px;
+    font-size:clamp(.82rem,2vh,1rem); line-height:1.45;
+  }
+  .end-card .ec-title{font-weight:900; letter-spacing:.14em; font-size:.82em; margin-bottom:6px;}
+  .end-card.best .ec-title{color:var(--green);}
+  .end-card.worst .ec-title{color:var(--band4);}
+  .end-card .ec-q{font-weight:800;}
+  .end-card .ec-detail{color:var(--dim); margin-top:3px;}
+
+  /* ---------- animations ---------- */
+  @keyframes popIn{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .confetti{position:fixed; width:12px; height:12px; top:38%; left:50%; z-index:50; pointer-events:none; border-radius:2px;}
+</style>
+
+<script>
+/* =====================================================================
+   QUESTION BANK  —  INSTRUCTORS: EDIT HERE
+   ---------------------------------------------------------------------
+   Each question is one object with these fields:
+     id       unique number
+     category grouping shown as a chip ("new" categories work automatically)
+     prompt   the question text players see
+     units    unit label ("°" and "%" attach without a space)
+     value    the TRUE answer (must be > 0)
+     min,max  slider endpoints (both must be > 0 when scale is "log")
+     scale    "linear" | "log"  — use "log" when plausible guesses span
+              orders of magnitude (resistivity, current, energy, ...)
+     factoid  the one-line "You should have known that because..." reveal
+   Tips: keep the true value OFF-center in [min,max], and make the range
+   wide enough that the endpoints don't give the answer away.
+   Scoring band thresholds live in SCORING (main script, bottom of file).
+===================================================================== */
+const QUESTIONS = [
+
+  /* ---------------- STATICS & MECHANICS ---------------- */
+  { id: 1, category: "Statics & Mechanics",
+    prompt: "Acceleration due to gravity at Earth's surface",
+    units: "m/s²", value: 9.81, min: 2, max: 30, scale: "linear",
+    factoid: "g = 9.81 m/s² — 'ten minus a bit.' Misremember it and every answer downstream is wrong." },
+
+  { id: 2, category: "Statics & Mechanics",
+    prompt: "Speed of sound in air at room temperature",
+    units: "m/s", value: 343, min: 50, max: 1200, scale: "linear",
+    factoid: "343 m/s — count the seconds after lightning and divide by 5 to get miles away." },
+
+  { id: 3, category: "Statics & Mechanics",
+    prompt: "Atmospheric pressure at sea level",
+    units: "psi", value: 14.7, min: 2, max: 60, scale: "linear",
+    factoid: "14.7 psi (101 kPa) — about a ton of air force rests on your shoulders; it cancels out." },
+
+  { id: 4, category: "Statics & Mechanics",
+    prompt: "Density of steel",
+    units: "kg/m³", value: 7850, min: 1000, max: 20000, scale: "linear",
+    factoid: "7,850 kg/m³ (specific gravity 7.85) — a one-meter cube of steel weighs almost 8 tons." },
+
+  { id: 5, category: "Statics & Mechanics",
+    prompt: "Weight of one cubic foot of water",
+    units: "lb", value: 62.4, min: 10, max: 250, scale: "linear",
+    factoid: "62.4 lb/ft³ — the anchor number for buoyancy, tank weights, and the 0.433 psi/ft rule." },
+
+  { id: 6, category: "Statics & Mechanics",
+    prompt: "How many feet per second is 60 mph?",
+    units: "ft/s", value: 88, min: 20, max: 250, scale: "linear",
+    factoid: "60 mph is exactly 88 ft/s — at highway speed you cover ~6 car lengths every second." },
+
+  { id: 7, category: "Statics & Mechanics",
+    prompt: "Angle of repose of dry sand (steepest stable pile)",
+    units: "°", value: 34, min: 5, max: 85, scale: "linear",
+    factoid: "Dry sand won't stack steeper than ~34° — the same physics shapes hoppers, stockpiles, and dunes." },
+
+  { id: 8, category: "Statics & Mechanics",
+    prompt: "Speed of sound in steel",
+    units: "m/s", value: 5900, min: 800, max: 15000, scale: "linear",
+    factoid: "~5,900 m/s — about 17× faster than in air, which is why you'd hear a train through the rail first." },
+
+  /* ---------------- MATERIALS ---------------- */
+  { id: 9, category: "Materials",
+    prompt: "Young's modulus of structural steel",
+    units: "GPa", value: 200, min: 10, max: 800, scale: "linear",
+    factoid: "200 GPa is the stiffness yardstick — aluminum ~70, concrete ~30, wood ~10." },
+
+  { id: 10, category: "Materials",
+    prompt: "Yield strength of A36 mild steel",
+    units: "MPa", value: 250, min: 20, max: 1200, scale: "linear",
+    factoid: "The '36' in A36 is the yield strength in ksi — 36 ksi ≈ 250 MPa, the default mild-steel number." },
+
+  { id: 11, category: "Materials",
+    prompt: "Young's modulus of aluminum",
+    units: "GPa", value: 70, min: 5, max: 400, scale: "linear",
+    factoid: "~70 GPa — a third of steel, so an aluminum beam deflects 3× more under the same load." },
+
+  { id: 12, category: "Materials",
+    prompt: "Typical compressive strength of standard concrete",
+    units: "psi", value: 4000, min: 500, max: 15000, scale: "linear",
+    factoid: "Sidewalks run ~3,000 psi, structural work 4,000–5,000 — and concrete is ~10× weaker in tension, hence rebar." },
+
+  { id: 13, category: "Materials",
+    prompt: "Approximate melting point of carbon steel",
+    units: "°C", value: 1500, min: 200, max: 3500, scale: "linear",
+    factoid: "Pure iron melts at 1,538 °C, carbon steel a bit lower — a building fire won't melt steel, but it softens it enough to fail." },
+
+  { id: 14, category: "Materials",
+    prompt: "Density of aluminum",
+    units: "kg/m³", value: 2700, min: 500, max: 10000, scale: "linear",
+    factoid: "2,700 kg/m³ — SG 2.7, one-third of steel. Fun twist: their stiffness-to-weight ratios are nearly identical." },
+
+  { id: 15, category: "Materials",
+    prompt: "Coefficient of thermal expansion of steel",
+    units: "µm/m·°C", value: 12, min: 1, max: 50, scale: "linear",
+    factoid: "~12 µm/m·°C — almost exactly the same as concrete, the happy coincidence that makes reinforced concrete work." },
+
+  { id: 16, category: "Materials",
+    prompt: "Density of reinforced concrete",
+    units: "lb/ft³", value: 150, min: 40, max: 500, scale: "linear",
+    factoid: "~150 lb/ft³ — 2.4× water. One cubic yard of concrete weighs about two tons." },
+
+  /* ---------------- ELECTRICAL ---------------- */
+  { id: 17, category: "Electrical",
+    prompt: "Nominal voltage of a standard US wall outlet",
+    units: "V", value: 120, min: 20, max: 500, scale: "linear",
+    factoid: "120 V is the RMS value — the waveform actually swings to ±170 V peak, 60 times a second." },
+
+  { id: 18, category: "Electrical",
+    prompt: "Smallest standard circuit breaker size in a US home",
+    units: "A", value: 15, min: 2, max: 80, scale: "linear",
+    factoid: "15 A × 120 V = 1,800 W — why a hair dryer plus a space heater on one circuit trips the breaker." },
+
+  { id: 19, category: "Electrical",
+    prompt: "Electrical resistivity of copper",
+    units: "Ω·m", value: 1.7e-8, min: 1e-10, max: 1e-4, scale: "log",
+    factoid: "1.7×10⁻⁸ Ω·m — the benchmark all conductors are measured against; aluminum is ~60% more resistive." },
+
+  { id: 20, category: "Electrical",
+    prompt: "Rated power of a typical countertop microwave",
+    units: "W", value: 1000, min: 100, max: 4000, scale: "linear",
+    factoid: "Most microwaves run 700–1,200 W of cooking power — the one in the break room is probably 1,000." },
+
+  { id: 21, category: "Electrical",
+    prompt: "Voltage of a single AA alkaline battery",
+    units: "V", value: 1.5, min: 0.2, max: 12, scale: "linear",
+    factoid: "1.5 V per alkaline cell — a 9 V battery is literally six tiny cells stacked in series." },
+
+  { id: 22, category: "Electrical",
+    prompt: "Speed of light in a vacuum",
+    units: "m/s", value: 3e8, min: 1e4, max: 1e12, scale: "log",
+    factoid: "3×10⁸ m/s — about one foot per nanosecond, the number that sets the speed limit for every circuit." },
+
+  { id: 23, category: "Electrical",
+    prompt: "Electric current across the chest that can trigger cardiac arrest",
+    units: "mA", value: 100, min: 0.01, max: 10000, scale: "log",
+    factoid: "About 100 mA — a tenth of an amp — can cause fibrillation. It's the current, not the voltage, that kills." },
+
+  { id: 24, category: "Electrical",
+    prompt: "Minimum voltage you can feel as a static shock",
+    units: "V", value: 3000, min: 10, max: 1e7, scale: "log",
+    factoid: "Below ~3,000 V you feel nothing; a doorknob zap is 5–25 kV at almost zero energy. Voltage alone isn't danger." },
+
+  /* ---------------- FLUIDS & THERMO ---------------- */
+  { id: 25, category: "Fluids & Thermo",
+    prompt: "How much lower is water's boiling point in Denver (5,280 ft) than at sea level?",
+    units: "°F", value: 10, min: 1, max: 50, scale: "linear",
+    factoid: "Boiling drops ~2 °F per 1,000 ft of altitude — Denver loses ~10 °F, boiling at ~202 °F, so pasta takes longer." },
+
+  { id: 26, category: "Fluids & Thermo",
+    prompt: "Water pressure gained per foot of depth",
+    units: "psi/ft", value: 0.433, min: 0.05, max: 2, scale: "linear",
+    factoid: "0.433 psi per foot — divers pick up one full atmosphere every 33.9 ft of water." },
+
+  { id: 27, category: "Fluids & Thermo",
+    prompt: "Density of air at sea level",
+    units: "kg/m³", value: 1.225, min: 0.1, max: 5, scale: "linear",
+    factoid: "1.2 kg/m³ — sounds like nothing, but the air in your classroom weighs more than you do." },
+
+  { id: 28, category: "Fluids & Thermo",
+    prompt: "Typical city water pressure at your tap",
+    units: "psi", value: 60, min: 5, max: 200, scale: "linear",
+    factoid: "Municipal mains deliver 40–80 psi; above 80, plumbing code requires a pressure regulator." },
+
+  { id: 29, category: "Fluids & Thermo",
+    prompt: "Latent heat of vaporization of water",
+    units: "kJ/kg", value: 2260, min: 200, max: 6000, scale: "linear",
+    factoid: "2,260 kJ/kg — boiling water away takes over 5× the energy of heating it from 0 to 100 °C. It's why sweating works." },
+
+  { id: 30, category: "Fluids & Thermo",
+    prompt: "Specific heat capacity of liquid water",
+    units: "J/g·°C", value: 4.18, min: 0.5, max: 15, scale: "linear",
+    factoid: "4.18 J/g·°C — one calorie. Water's huge heat capacity is why coastal cities have mild weather." },
+
+  { id: 31, category: "Fluids & Thermo",
+    prompt: "Energy content of one gallon of gasoline",
+    units: "kWh", value: 33.7, min: 5, max: 120, scale: "linear",
+    factoid: "The EPA 'e-gallon' is 33.7 kWh — roughly one full day of an average US home's electricity in a single gallon." },
+
+  { id: 32, category: "Fluids & Thermo",
+    prompt: "Heat output of a resting human body",
+    units: "W", value: 100, min: 10, max: 600, scale: "linear",
+    factoid: "You idle at ~100 W — a warm light bulb. HVAC engineers literally count room loads in people." },
+
+  /* ---------------- EVERYDAY ENGINEERING ---------------- */
+  { id: 33, category: "Everyday Engineering",
+    prompt: "Weight of a gallon of water",
+    units: "lbs", value: 8.34, min: 1, max: 30, scale: "linear",
+    factoid: "'A pint's a pound the world around' — plus a little: 8.34 lbs per gallon." },
+
+  { id: 34, category: "Everyday Engineering",
+    prompt: "Proper angle between an extension ladder and the ground",
+    units: "°", value: 75, min: 20, max: 90, scale: "linear",
+    factoid: "OSHA's 4-to-1 rule — base out one foot for every four feet up — works out to 75°." },
+
+  { id: 35, category: "Everyday Engineering",
+    prompt: "Maximum current rating of a 16-gauge extension cord",
+    units: "A", value: 13, min: 1, max: 50, scale: "linear",
+    factoid: "Light-duty 16 AWG cords are rated 13 A — plug a 1,500 W space heater into one and the cord becomes the heater." },
+
+  { id: 36, category: "Everyday Engineering",
+    prompt: "Maximum grade allowed on US Interstate highways",
+    units: "%", value: 6, min: 1, max: 25, scale: "linear",
+    factoid: "Interstates are capped at 6% grade (7% in mountain terrain) — runaway-truck ramps exist for what happens past that." },
+
+  { id: 37, category: "Everyday Engineering",
+    prompt: "Total energy stored in one AA alkaline battery",
+    units: "J", value: 13500, min: 100, max: 1e7, scale: "log",
+    factoid: "1.5 V × 2,500 mAh ≈ 13.5 kJ (3.7 Wh) — enough energy to lift a small car about one meter." },
+
+  { id: 38, category: "Everyday Engineering",
+    prompt: "Maximum stair riser height under US residential code",
+    units: "in", value: 7.75, min: 3, max: 16, scale: "linear",
+    factoid: "The IRC caps risers at 7¾ in — and your feet can detect a ⅜ in difference between steps. Uneven stairs cause falls." },
+
+  { id: 39, category: "Everyday Engineering",
+    prompt: "Recommended home water heater temperature setting",
+    units: "°F", value: 120, min: 60, max: 210, scale: "linear",
+    factoid: "The DOE sweet spot is 120 °F — hot enough to fight bacteria, but 140 °F water scalds skin in seconds." },
+
+  { id: 40, category: "Everyday Engineering",
+    prompt: "Typical cruising altitude of a commercial jet",
+    units: "ft", value: 35000, min: 5000, max: 80000, scale: "linear",
+    factoid: "~35,000 ft — the air is ¼ sea-level density (less drag) while engines still breathe. It's −55 °C outside." },
+];
+</script>
+</head>
+<body>
+
+  <!-- ================= START SCREEN ================= -->
+  <section id="screen-start" class="screen scrolly active">
+    <h1 class="game-title">SHOULD HAVE<br>KNOWN THAT</h1>
+    <div class="subtitle">ENGINEERING EDITION</div>
+    <div class="tagline">Drag the slider. Trust your gut. Own the consequences.</div>
+    <div class="setup">
+      <div>
+        <div class="setup-label">Game Length</div>
+        <div class="btn-row" id="length-row"></div>
+      </div>
+      <div>
+        <div class="setup-label">Categories</div>
+        <div class="chip-row" id="cat-row"></div>
+      </div>
+      <div>
+        <div class="setup-label">Mode</div>
+        <div class="btn-row" id="mode-row"></div>
+      </div>
+      <div id="team-setup" class="hidden">
+        <div class="setup-label">How Many Teams?</div>
+        <div class="btn-row" id="teamcount-row"></div>
+        <div class="team-names" id="team-names"></div>
+      </div>
+      <div class="start-note" id="start-note"></div>
+      <button id="start-btn" class="big-btn">START THE GAME</button>
+    </div>
+  </section>
+
+  <!-- ================= TURN (PASS-AND-PLAY) SCREEN ================= -->
+  <section id="screen-turn" class="screen">
+    <div class="turn-inner">
+      <div class="turn-kicker">PASS IT TO</div>
+      <div class="turn-team" id="turn-team"></div>
+      <div class="turn-progress" id="turn-progress"></div>
+      <button id="turn-go" class="big-btn cyan">WE'RE READY</button>
+    </div>
+  </section>
+
+  <!-- ================= QUESTION SCREEN ================= -->
+  <section id="screen-question" class="screen">
+    <header class="topbar">
+      <div class="pill" id="q-counter"></div>
+      <div class="pill cat" id="q-category"></div>
+      <div class="pill score" id="q-score"></div>
+    </header>
+    <div class="team-strip hidden" id="team-strip"></div>
+    <main class="stage">
+      <div class="prompt" id="q-prompt"></div>
+
+      <!-- guessing UI -->
+      <div id="guess-panel" style="display:flex;flex-direction:column;justify-content:space-evenly;flex:1;min-height:0;">
+        <div class="value-wrap">
+          <span id="value-display"></span><span id="value-units"></span>
+        </div>
+        <div class="slider-zone">
+          <input type="range" id="slider" min="0" max="1000" value="500" step="1"
+                 aria-label="Drag to set your guess">
+          <div class="range-labels">
+            <span id="range-min"></span>
+            <span class="scale-tag hidden" id="scale-tag">LOG SCALE</span>
+            <span id="range-max"></span>
+          </div>
+        </div>
+        <button id="lock-btn" class="big-btn">LOCK IT IN</button>
+      </div>
+
+      <!-- reveal UI -->
+      <div id="reveal-panel" class="hidden">
+        <div class="track-wrap">
+          <div class="track">
+            <div class="marker guess" id="mk-guess"><span class="mk-label">YOU</span></div>
+            <div class="marker truth" id="mk-truth"><span class="mk-label">TRUTH</span></div>
+          </div>
+        </div>
+        <div class="rev-values">
+          <span class="rv you" id="rv-you"></span>
+          <span class="rv truth" id="rv-truth"></span>
+        </div>
+        <div id="band-badge"></div>
+        <div class="points" id="points"></div>
+        <div class="factoid" id="factoid"></div>
+        <button id="next-btn" class="big-btn cyan">NEXT</button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ================= END SCREEN ================= -->
+  <section id="screen-end" class="screen scrolly">
+    <div class="end-inner">
+      <div class="end-kicker">FINAL SCORE</div>
+      <div id="end-scores" class="end-scores"></div>
+      <div class="end-cards">
+        <div class="end-card best" id="best-card"></div>
+        <div class="end-card worst" id="worst-card"></div>
+      </div>
+      <button id="again-btn" class="big-btn">PLAY AGAIN</button>
+      <button id="setup-btn" class="text-btn">Change setup</button>
+    </div>
+  </section>
+
+<script>
+"use strict";
+/* =====================================================================
+   MAIN GAME LOGIC
+===================================================================== */
+const $ = id => document.getElementById(id);
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+function shuffle(a){
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------- scoring configuration (instructors may tune) ----------
+   linear thresholds are FRACTIONAL error  |guess-true|/true
+   log thresholds are DECADES off          |log10(guess/true)|
+   Band i applies when error <= thresholds[i]; past the last -> Way Off. */
+const SCORING = {
+  linear: [0.05, 0.15, 0.35, 0.60],
+  log:    [0.10, 0.33, 0.70, 1.20]
+};
+const BANDS = [
+  { label: "BULLSEYE", pts: 100, color: "var(--band0)" },
+  { label: "CLOSE",    pts: 75,  color: "var(--band1)" },
+  { label: "WARM",     pts: 40,  color: "var(--band2)" },
+  { label: "COLD",     pts: 10,  color: "var(--band3)" },
+  { label: "WAY OFF",  pts: 0,   color: "var(--band4)" }
+];
+
+/* ---------- slider math: position (0..1000) <-> value ---------- */
+const STEPS = 1000;
+function posToValue(q, pos){
+  const t = pos / STEPS;
+  if (q.scale === "log") {
+    const lo = Math.log10(q.min), hi = Math.log10(q.max);
+    return Math.pow(10, lo + (hi - lo) * t);
+  }
+  return q.min + (q.max - q.min) * t;
+}
+function valueToPos(q, v){
+  let t;
+  if (q.scale === "log") {
+    const lo = Math.log10(q.min), hi = Math.log10(q.max);
+    t = (Math.log10(v) - lo) / (hi - lo);
+  } else {
+    t = (v - q.min) / (q.max - q.min);
+  }
+  return clamp(t, 0, 1) * STEPS;
+}
+
+/* ---------- number formatting ---------- */
+const SUP = {"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹","-":"⁻"};
+function sci(v){
+  const e = Math.floor(Math.log10(Math.abs(v)));
+  const m = Math.round((v / Math.pow(10, e)) * 100) / 100;
+  return m + "×10" + String(e).split("").map(c => SUP[c] || c).join("");
+}
+function roundSig(v, n){
+  if (v === 0) return 0;
+  const p = n - 1 - Math.floor(Math.log10(Math.abs(v)));
+  const m = Math.pow(10, p);
+  return Math.round(v * m) / m;
+}
+function fmt(v){
+  if (!isFinite(v)) return "–";
+  if (v === 0) return "0";
+  const a = Math.abs(v);
+  if (a < 1e-3 || a >= 1e6) return sci(v);
+  if (a >= 1000) return Math.round(v).toLocaleString("en-US");
+  if (a >= 10)   return String(Math.round(v * 10) / 10);
+  if (a >= 1)    return String(Math.round(v * 100) / 100);
+  return String(Math.round(v * 1000) / 1000);
+}
+function withUnits(v, units){
+  const tight = (units === "°" || units === "%");
+  return fmt(v) + (tight ? "" : " ") + units;
+}
+
+/* ---------- scoring ---------- */
+function scoreGuess(q, guess){
+  let err;
+  if (q.scale === "log") err = Math.abs(Math.log10(guess / q.value));
+  else                   err = Math.abs(guess - q.value) / Math.abs(q.value);
+  const th = SCORING[q.scale === "log" ? "log" : "linear"];
+  let band = th.length;                       // default: Way Off
+  for (let i = 0; i < th.length; i++){
+    if (err <= th[i]) { band = i; break; }
+  }
+  /* normErr lets us compare linear ("12% off") and log ("3.2x off")
+     answers on one scale when picking best/worst of the game */
+  const normErr = (q.scale === "log") ? Math.pow(10, err) - 1 : err;
+  const offBy   = (q.scale === "log")
+    ? (Math.round(Math.pow(10, err) * 10) / 10) + "× off"
+    : Math.round(err * 100) + "% off";
+  return { band, err, normErr, offBy, pts: BANDS[band].pts };
+}
+
+/* ---------- category colors (assigned automatically) ---------- */
+const CAT_PALETTE = ["#35e0ff", "#ffcf3f", "#ff3d8b", "#41ff97", "#b18cff", "#ff9d5c"];
+const CATS = [...new Set(QUESTIONS.map(q => q.category))];
+const catColor = c => CAT_PALETTE[CATS.indexOf(c) % CAT_PALETTE.length];
+
+/* ---------- setup-screen state ---------- */
+const sel = { len: 10, mode: "solo", teamCount: 2, cats: new Set(CATS) };
+const teamNameDefaults = ["Team 1", "Team 2", "Team 3", "Team 4"];
+
+function buildStartScreen(){
+  // game length
+  const lr = $("length-row");
+  lr.innerHTML = "";
+  [5, 10, 15].forEach(n => {
+    const b = document.createElement("button");
+    b.className = "opt" + (sel.len === n ? " on" : "");
+    b.innerHTML = n + "<small id='len-sub-" + n + "'>questions</small>";
+    b.addEventListener("click", () => { sel.len = n; buildStartScreen(); });
+    lr.appendChild(b);
+  });
+  // categories
+  const cr = $("cat-row");
+  cr.innerHTML = "";
+  CATS.forEach(c => {
+    const b = document.createElement("button");
+    const on = sel.cats.has(c);
+    b.className = "chip" + (on ? " on" : "");
+    if (on) b.style.background = catColor(c);
+    b.textContent = c;
+    b.addEventListener("click", () => {
+      if (sel.cats.has(c)) sel.cats.delete(c); else sel.cats.add(c);
+      buildStartScreen();
+    });
+    cr.appendChild(b);
+  });
+  // mode
+  const mr = $("mode-row");
+  mr.innerHTML = "";
+  [["solo","SOLO"],["teams","TEAMS"]].forEach(([m, label]) => {
+    const b = document.createElement("button");
+    b.className = "opt" + (sel.mode === m ? " on" : "");
+    b.innerHTML = label + "<small>" + (m === "solo" ? "just you" : "pass & play") + "</small>";
+    b.addEventListener("click", () => { sel.mode = m; buildStartScreen(); });
+    mr.appendChild(b);
+  });
+  // team setup
+  $("team-setup").classList.toggle("hidden", sel.mode !== "teams");
+  if (sel.mode === "teams"){
+    const tr = $("teamcount-row");
+    tr.innerHTML = "";
+    [2, 3, 4].forEach(n => {
+      const b = document.createElement("button");
+      b.className = "opt" + (sel.teamCount === n ? " on" : "");
+      b.textContent = n;
+      b.addEventListener("click", () => { sel.teamCount = n; buildStartScreen(); });
+      tr.appendChild(b);
+    });
+    const tn = $("team-names");
+    // preserve typed names before rebuilding
+    [...tn.querySelectorAll("input")].forEach((inp, i) => { teamNameDefaults[i] = inp.value || teamNameDefaults[i]; });
+    tn.innerHTML = "";
+    for (let i = 0; i < sel.teamCount; i++){
+      const inp = document.createElement("input");
+      inp.maxLength = 16;
+      inp.value = teamNameDefaults[i];
+      inp.setAttribute("aria-label", "Team " + (i + 1) + " name");
+      inp.addEventListener("input", () => { teamNameDefaults[i] = inp.value; });
+      tn.appendChild(inp);
+    }
+  }
+  updateStartNote();
+}
+
+function poolSize(){ return QUESTIONS.filter(q => sel.cats.has(q.category)).length; }
+
+function updateStartNote(){
+  const pool = poolSize();
+  const nTeams = sel.mode === "teams" ? sel.teamCount : 1;
+  const per = Math.min(sel.len, Math.floor(pool / nTeams));
+  const note = $("start-note");
+  const startBtn = $("start-btn");
+  if (pool === 0){
+    note.textContent = "Pick at least one category to play.";
+    startBtn.disabled = true;
+    return;
+  }
+  if (per === 0){
+    note.textContent = "Not enough questions for that many teams — add categories.";
+    startBtn.disabled = true;
+    return;
+  }
+  startBtn.disabled = false;
+  let t = pool + " questions in the pool";
+  if (sel.mode === "teams"){
+    t += per < sel.len
+      ? " — capped at " + per + " questions per team"
+      : " — " + sel.len + " questions per team";
+  } else if (per < sel.len){
+    t += " — capped at " + per + " questions";
+  }
+  note.textContent = t;
+}
+
+/* ---------- game state ---------- */
+let G = null;            // active game
+let pendingTimers = [];  // reveal animation timers
+function clearTimers(){ pendingTimers.forEach(clearTimeout); pendingTimers = []; }
+function later(fn, ms){ pendingTimers.push(setTimeout(fn, ms)); }
+
+function showScreen(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  $(id).classList.add("active");
+}
+
+function startGame(){
+  const pool = shuffle(QUESTIONS.filter(q => sel.cats.has(q.category)).slice());
+  const nTeams = sel.mode === "teams" ? sel.teamCount : 1;
+  const per = Math.min(sel.len, Math.floor(pool.length / nTeams));
+  if (per === 0) return;
+  const teams = [];
+  for (let i = 0; i < nTeams; i++){
+    teams.push({ name: sel.mode === "teams" ? (teamNameDefaults[i].trim() || "Team " + (i + 1)) : "You", score: 0 });
+  }
+  G = {
+    mode: sel.mode, teams, per,
+    deck: pool.slice(0, per * nTeams),
+    i: 0, answers: []
+  };
+  $("team-strip").classList.toggle("hidden", G.mode !== "teams");
+  beginQuestion();
+}
+
+function currentTeamIdx(){ return G.i % G.teams.length; }
+
+function beginQuestion(){
+  clearTimers();
+  if (G.i >= G.deck.length){ endGame(); return; }
+  if (G.mode === "teams"){
+    const t = G.teams[currentTeamIdx()];
+    $("turn-team").textContent = t.name;
+    const round = Math.floor(G.i / G.teams.length) + 1;
+    $("turn-progress").textContent = "Question " + round + " of " + G.per + "  ·  " + t.score + " pts so far";
+    showScreen("screen-turn");
+  } else {
+    showQuestion();
+  }
+}
+
+function renderTeamStrip(){
+  if (G.mode !== "teams") return;
+  const strip = $("team-strip");
+  strip.innerHTML = "";
+  G.teams.forEach((t, i) => {
+    const d = document.createElement("div");
+    d.className = "tchip" + (i === currentTeamIdx() ? " now" : "");
+    const name = document.createElement("span");
+    name.textContent = t.name + " ";
+    const b = document.createElement("b");
+    b.textContent = t.score;
+    d.appendChild(name); d.appendChild(b);
+    strip.appendChild(d);
+  });
+}
+
+function showQuestion(){
+  clearTimers();
+  const q = G.deck[G.i];
+  const qNum = G.mode === "teams" ? Math.floor(G.i / G.teams.length) + 1 : G.i + 1;
+  $("q-counter").textContent = "Q " + qNum + "/" + G.per;
+  const catPill = $("q-category");
+  catPill.textContent = q.category;
+  catPill.style.background = catColor(q.category);
+  const me = G.teams[currentTeamIdx()];
+  $("q-score").textContent = (G.mode === "teams" ? me.name + " · " : "") + me.score + " pts";
+  renderTeamStrip();
+  $("q-prompt").textContent = q.prompt;
+  $("value-units").textContent = (q.units === "°" || q.units === "%") ? q.units : " " + q.units;
+  $("range-min").textContent = fmt(q.min);
+  $("range-max").textContent = fmt(q.max);
+  $("scale-tag").classList.toggle("hidden", q.scale !== "log");
+  const slider = $("slider");
+  slider.value = 500;
+  updateSliderReadout();
+  $("guess-panel").classList.remove("hidden");
+  $("guess-panel").style.display = "flex";
+  $("reveal-panel").classList.add("hidden");
+  $("reveal-panel").style.display = "none";
+  $("lock-btn").disabled = false;
+  showScreen("screen-question");
+}
+
+function updateSliderReadout(){
+  const q = G.deck[G.i];
+  const slider = $("slider");
+  const raw = posToValue(q, Number(slider.value));
+  const snapped = roundSig(raw, 3);
+  $("value-display").textContent = fmt(snapped);
+  slider.style.setProperty("--fill", (Number(slider.value) / 10) + "%");
+}
+
+function lockIn(){
+  const q = G.deck[G.i];
+  const slider = $("slider");
+  $("lock-btn").disabled = true;
+  const guess = roundSig(posToValue(q, Number(slider.value)), 3);
+  const result = scoreGuess(q, guess);
+  const team = G.teams[currentTeamIdx()];
+  G.answers.push({
+    team: team.name, q,
+    guess, band: result.band, pts: result.pts,
+    normErr: result.normErr, offBy: result.offBy
+  });
+
+  /* ---- build the reveal ---- */
+  $("guess-panel").style.display = "none";
+  const rp = $("reveal-panel");
+  rp.classList.remove("hidden");
+  rp.style.display = "flex";
+
+  const guessPct = valueToPos(q, guess) / 10;
+  const truthPct = valueToPos(q, q.value) / 10;
+  const mkG = $("mk-guess"), mkT = $("mk-truth");
+  mkG.style.left = guessPct + "%";
+  mkT.style.transition = "none";
+  mkT.style.left = guessPct + "%";      // truth starts under your guess...
+  $("rv-you").textContent = "You: " + withUnits(guess, q.units);
+  $("rv-truth").textContent = "Truth: " + withUnits(q.value, q.units);
+  const badge = $("band-badge");
+  badge.className = "";
+  badge.style.background = BANDS[result.band].color;
+  badge.textContent = BANDS[result.band].label;
+  $("points").textContent = "";
+  const facto = $("factoid");
+  facto.className = "factoid";
+  facto.innerHTML = "";
+  const lead = document.createElement("span");
+  lead.className = "lead";
+  lead.textContent = "You should have known that because...";
+  const body = document.createElement("span");
+  body.textContent = q.factoid;
+  facto.appendChild(lead); facto.appendChild(body);
+  const nextBtn = $("next-btn");
+  nextBtn.classList.remove("show");
+  nextBtn.textContent = (G.i + 1 >= G.deck.length) ? "SEE FINAL SCORES" : "NEXT";
+
+  /* ---- animate: truth marker slides into place ---- */
+  later(() => {
+    void mkT.offsetWidth;            // commit the starting position
+    mkT.style.transition = "";       // restore CSS transition
+    mkT.style.left = truthPct + "%"; // ...then slides to the truth
+  }, 120);
+
+  /* ---- band + points count-up ---- */
+  later(() => {
+    badge.classList.add("show");
+    if (result.band === 0) confettiBurst();
+    const t0 = performance.now(), dur = 700;
+    (function tick(now){
+      const k = Math.min(1, (now - t0) / dur);
+      $("points").innerHTML = "+" + Math.round(result.pts * k) + " pts" +
+        "<span class='offby'>" + result.offBy + "</span>";
+      if (k < 1) requestAnimationFrame(tick);
+    })(performance.now());
+  }, 1300);
+
+  /* ---- factoid, score update, next button ---- */
+  later(() => { facto.classList.add("show"); }, 1750);
+  later(() => {
+    team.score += result.pts;
+    $("q-score").textContent = (G.mode === "teams" ? team.name + " · " : "") + team.score + " pts";
+    renderTeamStrip();
+    nextBtn.classList.add("show");
+  }, 2150);
+}
+
+function confettiBurst(){
+  const colors = ["#ffcf3f", "#35e0ff", "#ff3d8b", "#41ff97", "#b18cff", "#ffffff"];
+  for (let i = 0; i < 28; i++){
+    const c = document.createElement("div");
+    c.className = "confetti";
+    c.style.background = colors[i % colors.length];
+    document.body.appendChild(c);
+    const ang = Math.random() * Math.PI * 2;
+    const dist = 90 + Math.random() * 260;
+    const dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist - 120;
+    const rot = (Math.random() * 900 - 450);
+    c.animate(
+      [ { transform: "translate(0,0) rotate(0deg)", opacity: 1 },
+        { transform: "translate(" + dx + "px," + (dy + 260) + "px) rotate(" + rot + "deg)", opacity: 0 } ],
+      { duration: 1100 + Math.random() * 700, easing: "cubic-bezier(.15,.6,.4,1)" }
+    ).onfinish = () => c.remove();
+  }
+}
+
+function advance(){
+  G.i++;
+  beginQuestion();
+}
+
+/* ---------- end screen ---------- */
+function endGame(){
+  clearTimers();
+  const es = $("end-scores");
+  es.innerHTML = "";
+  if (G.mode === "solo"){
+    const max = G.per * 100;
+    const d = document.createElement("div");
+    d.className = "solo-final";
+    d.innerHTML = G.teams[0].score + "<small>OUT OF " + max + " POINTS</small>";
+    es.appendChild(d);
+  } else {
+    const ranked = G.teams.slice().sort((a, b) => b.score - a.score);
+    const top = ranked[0].score;
+    ranked.forEach(t => {
+      const row = document.createElement("div");
+      row.className = "score-row" + (t.score === top ? " win" : "");
+      const nm = document.createElement("span");
+      nm.textContent = t.name;
+      if (t.score === top){
+        const w = document.createElement("span");
+        w.className = "wintag";
+        w.textContent = ranked.filter(x => x.score === top).length > 1 ? "TIE" : "WINNER";
+        nm.appendChild(w);
+      }
+      const sc = document.createElement("span");
+      sc.className = "sc";
+      sc.textContent = t.score + " pts";
+      row.appendChild(nm); row.appendChild(sc);
+      es.appendChild(row);
+    });
+  }
+  // best & worst guesses
+  const byErr = G.answers.slice().sort((a, b) => a.normErr - b.normErr);
+  fillCard($("best-card"),  "SHARPEST GUESS", byErr[0]);
+  fillCard($("worst-card"), "SHOULD HAVE KNOWN THAT", byErr[byErr.length - 1]);
+  showScreen("screen-end");
+}
+
+function fillCard(card, title, a){
+  card.innerHTML = "";
+  if (!a){ card.classList.add("hidden"); return; }
+  card.classList.remove("hidden");
+  const t = document.createElement("div"); t.className = "ec-title"; t.textContent = title;
+  const qd = document.createElement("div"); qd.className = "ec-q"; qd.textContent = a.q.prompt;
+  const dd = document.createElement("div"); dd.className = "ec-detail";
+  dd.textContent = (G.mode === "teams" ? a.team + " — " : "") +
+    "guessed " + withUnits(a.guess, a.q.units) +
+    ", truth " + withUnits(a.q.value, a.q.units) +
+    " (" + a.offBy + ", " + BANDS[a.band].label.toLowerCase() + ")";
+  card.appendChild(t); card.appendChild(qd); card.appendChild(dd);
+}
+
+/* ---------- wiring ---------- */
+$("slider").addEventListener("input", updateSliderReadout);
+$("lock-btn").addEventListener("click", lockIn);
+$("next-btn").addEventListener("click", () => { if ($("next-btn").classList.contains("show")) advance(); });
+$("turn-go").addEventListener("click", showQuestion);
+$("start-btn").addEventListener("click", startGame);
+$("again-btn").addEventListener("click", startGame);
+$("setup-btn").addEventListener("click", () => { buildStartScreen(); showScreen("screen-start"); });
+
+document.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  if (e.target.tagName === "INPUT" && e.target.type === "text") return;
+  const active = document.querySelector(".screen.active");
+  if (!active) return;
+  if (active.id === "screen-question"){
+    e.preventDefault();
+    if ($("guess-panel").style.display !== "none" && !$("lock-btn").disabled) lockIn();
+    else if ($("next-btn").classList.contains("show")) advance();
+  } else if (active.id === "screen-turn"){
+    e.preventDefault(); showQuestion();
+  }
+});
+
+buildStartScreen();
+</script>
+</body>
+</html>
