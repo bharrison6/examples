@@ -808,8 +808,68 @@ $('dbSave').addEventListener('click', () => {
 });
 
 /* ---------- modals ---------- */
-function openModal(id) { $(id).classList.add('show'); }
-function closeModal(id) { $(id).classList.remove('show'); }
+const modalOpeners = new Map();
+const backgroundA11y = new Map();
+function dialogFocusables(modal) {
+  return [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')]
+    .filter(el => !el.hidden && el.getClientRects().length);
+}
+function setBackgroundInert(inert) {
+  [...document.body.children].filter(el => !el.classList.contains('modal')).forEach(el => {
+    if (inert) {
+      if (!backgroundA11y.has(el)) backgroundA11y.set(el, el.getAttribute('aria-hidden'));
+      el.inert = true;
+      el.setAttribute('aria-hidden', 'true');
+    } else {
+      el.inert = false;
+      const old = backgroundA11y.get(el);
+      if (old === null || old === undefined) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', old);
+    }
+  });
+  if (!inert) backgroundA11y.clear();
+}
+function focusModal(modal) {
+  const target = modal.querySelector('[data-dialog-initial]') || dialogFocusables(modal)[0] || modal;
+  target.focus();
+}
+function openModal(id, opener) {
+  const modal = $(id);
+  modal.tabIndex = -1;
+  if (!modal.classList.contains('show')) {
+    const candidate = opener || document.activeElement;
+    modalOpeners.set(id, candidate && candidate !== document.body ? candidate : null);
+    modal.classList.add('show');
+  }
+  setBackgroundInert(true);
+  focusModal(modal);
+}
+function closeModal(id) {
+  const modal = $(id);
+  if (!modal.classList.contains('show')) return;
+  modal.classList.remove('show');
+  const stillOpen = document.querySelector('.modal.show');
+  if (stillOpen) { focusModal(stillOpen); return; }
+  setBackgroundInert(false);
+  const opener = modalOpeners.get(id);
+  modalOpeners.delete(id);
+  // A detached opener is not a valid restoration point; Help is the safe
+  // boot/no-opener fallback.
+  const restore = opener && opener.isConnected && !opener.closest('.modal') ? opener : $('btnHelp');
+  if (restore) restore.focus();
+}
+document.addEventListener('keydown', (e) => {
+  const modal = document.querySelector('.modal.show');
+  if (!modal) return;
+  if (e.key === 'Escape') {
+    e.preventDefault(); e.stopPropagation(); closeModal(modal.id); return;
+  }
+  if (e.key !== 'Tab') return;
+  const focusables = dialogFocusables(modal);
+  if (!focusables.length) { e.preventDefault(); modal.focus(); return; }
+  const first = focusables[0], last = focusables[focusables.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+}, true);
 $('dbRetry').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
 $('dbNext').addEventListener('click', () => loadLevel(Math.min(LEVELS.indexOf(lvl) + 1, LEVELS.length - 1)));
 $('dbClose').addEventListener('click', () => closeModal('debriefModal'));
@@ -838,8 +898,10 @@ function renderLevelGrid() {
     const best = (store.get(LB_KEY(L.id), [])[0] || null);
     const pr = prog[L.id];
     if (pr && pr.done) { done++; if (L.par !== Infinity) { scored++; if (pr.underPar) underPar++; } }
-    const card = document.createElement('div');
+    const card = document.createElement('button');
+    card.type = 'button';
     card.className = 'levelcard' + (pr && pr.done ? ' done' : '') + (lvl && lvl.id === L.id ? ' current' : '');
+    card.setAttribute('aria-label', `Load level ${L.id}: ${L.name}. ${L.subtitle}. Par ${L.par === Infinity ? 'no par' : fmtMS(L.par)}.`);
     const badge = pr && pr.done
       ? (pr.underPar ? '<span class="badge par" title="Made par">🏆</span>' : '<span class="badge" title="Completed">✓</span>')
       : '';

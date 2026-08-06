@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ladder Lab — Teacher Guide (printable)</title>
+<style>
+  :root { --ink:#1d2126; --accent:#b57e00; --rule:#c9c9c2; }
+  * { box-sizing: border-box; }
+  body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background:#e9e9e5;
+         margin:0; padding:20px; font-size: 10.4px; line-height: 1.28; }
+  .page { background:#fff; width: 8.5in; margin: 0 auto; padding: .34in .4in;
+          box-shadow: 0 6px 30px rgba(0,0,0,.25); }
+  h1 { font-family: system-ui, sans-serif; letter-spacing:.6px; font-size: 17px; margin:0;
+       border-bottom: 2.5px solid var(--accent); padding-bottom: 3px; }
+  h1 small { font-weight: 400; color:#666; font-size: 9.6px; letter-spacing: 0; }
+  h2 { font-family: system-ui, sans-serif; font-size: 10.4px; text-transform: uppercase;
+       letter-spacing: 1px; color: var(--accent); margin: 8px 0 2px; }
+  p, li { margin: 2px 0; }
+  ul, ol { margin: 2px 0; padding-left: 15px; }
+  .cols { display: flex; gap: 14px; }
+  .cols > div { flex: 1; min-width: 0; }
+  .trio { display: flex; gap: 14px; }
+  .trio > div { flex: 1; min-width: 0; }
+  .trio h2 { margin-top: 6px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 2px; }
+  td, th { border: 1px solid var(--rule); padding: 2px 4px; vertical-align: top; text-align: left; }
+  th { font-family: system-ui, sans-serif; font-size: 9px; background: #f4f1e8; }
+  .mins { white-space: nowrap; font-family: system-ui, sans-serif; font-weight: 700; font-size: 9px; }
+  .tag { font-family: ui-monospace, Consolas, monospace; font-size: 9.4px; background:#f2f2ee; padding: 0 2px; }
+  .foot { margin-top: 7px; border-top: 1px solid var(--rule); padding-top: 4px; font-size: 9px; color:#555;
+          display:flex; justify-content: space-between; gap: 10px; }
+  .printbtn { position: fixed; top: 14px; right: 14px; font-family: system-ui,sans-serif; font-size: 14px;
+              background: var(--accent); color:#fff; border:0; border-radius: 8px; padding: 10px 16px; cursor:pointer; }
+  @media print {
+    body { background:#fff; padding:0; }
+    .page { box-shadow:none; width:auto; padding: 0; }
+    .printbtn { display:none; }
+    @page { size: letter; margin: .38in; }
+  }
+</style>
+</head>
+<body>
+<button class="printbtn" onclick="window.print()">🖨 Print</button>
+<div class="page">
+
+  <h1>LADDER LAB — Teacher Guide <small>· the stoplight PLC lab · one page · runs fully offline</small></h1>
+
+  <div class="trio">
+    <div>
+      <h2>The scan cycle, in plain terms</h2>
+      <p>A PLC is not event-driven. Forever, it: <b>(1) reads all inputs</b> into an <i>input image table</i> (a snapshot),
+      <b>(2) solves the ladder top-to-bottom, left-to-right</b> using that snapshot, <b>(3) writes all outputs</b> at once from the
+      <i>output image table</i>. One lap = one <b>scan</b> (real PLCs: ~1–20&nbsp;ms). Pressing a button does <i>nothing</i> until the next
+      input read — Ladder Lab's <b>Step Scan</b> button and the image tables let students watch this happen, which no physical trainer can show.</p>
+    </div>
+    <div>
+      <h2>Why rung order matters</h2>
+      <p>A rung that writes a bit affects <b>later rungs in the same scan</b>, but <b>earlier rungs only see it next scan</b>.
+      Load <b>Program 6 (Scan Order Demo)</b>, hold START, and single-step the A and B variants: the same two rungs, in opposite
+      order, differ by one full scan. That one-scan difference is the root of real interlock and sequencing bugs.</p>
+    </div>
+    <div>
+      <h2>Latch (OTL/OTU) vs. seal-in (OTE)</h2>
+      <p>An <b>OTE</b> coil is re-solved every scan — true rung, on; false rung, off. A <b>seal-in</b> keeps an OTE on by wiring the
+      output's own contact in parallel with START (Program 5): power loss = motor stays off (usually the safe choice). <b>OTL</b> stays on
+      until an explicit <b>OTU</b> — it "remembers" through a false rung, which is why the crosswalk request in Program 2 uses one.</p>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div>
+      <h2>45-minute lesson plan</h2>
+      <table>
+        <tr><th style="width:52px">Time</th><th>Activity</th></tr>
+        <tr><td class="mins">0–5</td><td><b>Hook:</b> Trainer mode, Program 1 running. "What is deciding when the lights change?" Introduce the PLC.</td></tr>
+        <tr><td class="mins">5–12</td><td><b>Scan cycle:</b> Pause → Step Scan with the watch window open. Press <span class="tag">PED_NS</span> while paused; step once — <i>now</i> it appears in the input image. Show Program 6 A/B for rung order.</td></tr>
+        <tr><td class="mins">12–20</td><td><b>Read the ladder:</b> Program 5 (seal-in). Click each instruction to see its plain-English role. Then Program 1: find the 4 step bits, the timers, the interlock contacts.</td></tr>
+        <tr><td class="mins">20–32</td><td><b>Build:</b> Challenges → students do (a) seal-in, then (b) delayed start. Auto-grader gives step-by-step feedback. Fast finishers: challenge (c).</td></tr>
+        <tr><td class="mins">32–42</td><td><b>Troubleshoot:</b> Hide the ladder pane. Inject a random fault into Program 1 or 2; class predicts the bug from the intersection's behavior alone; reveal the ladder and confirm. Solve times make a friendly leaderboard.</td></tr>
+        <tr><td class="mins">42–45</td><td><b>Debrief</b> with discussion questions; assign challenge (d) as extension.</td></tr>
+      </table>
+    </div>
+    <div>
+      <h2>Common misconceptions (address head-on)</h2>
+      <ul>
+        <li><b>"Ladder is a schematic."</b> It <i>looks</i> like relay wiring but is a <b>program</b>: solved in order, one rung at a time, over and over. Electricity flows everywhere at once; a scan does not.</li>
+        <li><b>"Outputs change mid-rung."</b> Real outputs update only at the <b>end of the scan</b>, all together (watch the output image table while stepping).</li>
+        <li><b>"Pressing a button acts instantly."</b> It acts at the <b>next input scan</b>. In step mode a press does nothing until you step.</li>
+        <li><b>"A timer counts wall-clock."</b> TON accumulates only while its rung is true, in scan-time increments, and resets when the rung goes false.</li>
+        <li><b>"Two coils with the same tag both work."</b> The <b>last rung wins</b> every scan (see the double-coil fault).</li>
+      </ul>
+      <h2>Discussion questions</h2>
+      <ol>
+        <li>Why can't both directions ever be green in Program 1, even if a timer misbehaves? (Two independent defenses: the step sequence <i>and</i> the XIO interlock contacts.)</li>
+        <li>Why is the walk request latched instead of wired straight to the walk sign? What would happen if it weren't?</li>
+        <li>In the Scan Order Demo, which variant would you choose for an emergency-stop rung, and why?</li>
+        <li>Seal-in vs. OTL for the motor: which restarts by itself after a power blip? Which is safer, and when?</li>
+        <li>Our simulated scan is 20 ms. What real-world inputs could a PLC miss entirely between scans, and how would you catch them?</li>
+      </ol>
+    </div>
+  </div>
+
+  <h2>Cheat sheet</h2>
+  <table>
+    <tr><th>Program</th><th>Teaches</th><th>Key tags</th></tr>
+    <tr><td>1 Basic stoplight</td><td>timers chained into a 4-step sequence; interlock</td><td><span class="tag">STEP1–4</span> <span class="tag">NS_GRN</span> <span class="tag">EW_GRN</span></td></tr>
+    <tr><td>2 + Crosswalk</td><td>latched request honored at next safe phase (ONS at phase start)</td><td><span class="tag">PED_NS</span> <span class="tag">REQ_NS</span> <span class="tag">WALK_NS</span></td></tr>
+    <tr><td>3 Sensor-actuated</td><td>rest state + demand from the <span class="tag">LOOP_EW</span> car sensor, minimum green</td><td><span class="tag">LOOP_EW</span></td></tr>
+    <tr><td>4 Night flash</td><td>selector switch modes; two-timer flasher</td><td><span class="tag">SW_NIGHT</span> <span class="tag">FLASH</span></td></tr>
+    <tr><td>5 Motor seal-in</td><td>start/stop/seal-in — teach before the stoplight</td><td><span class="tag">PB_START</span> <span class="tag">PB_STOP</span> <span class="tag">MOTOR</span></td></tr>
+    <tr><td>6 Scan order A/B</td><td>rung order = one-scan difference (use Step Scan)</td><td><span class="tag">B_SRC</span> <span class="tag">B_ECHO</span></td></tr>
+  </table>
+
+  <div class="foot">
+    <span><b>Teacher menu (☰):</b> projector big-UI · hide ladder (predict-then-reveal) · engine self-test · reset everything</span>
+    <span>Ladder Lab · fully offline · deterministic</span>
+  </div>
+</div>
+</body>
+</html>

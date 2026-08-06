@@ -1,0 +1,308 @@
+/* ==========================================================================
+   ladder-watch.css — styles for LL.Ladder (lad-*) and LL.Watch (watch-*)
+   Concatenated into styles.css by the build. Industrial-panel aesthetic:
+   charcoal #23272b, panel card #f4f4f2, safety yellow #f5a800,
+   energize green #39e04f, fault red #ff453a.
+   ========================================================================== */
+
+/* ---------------- Ladder pane ---------------- */
+
+.lad-container {
+  position: relative;            /* popover positions against this */
+  overflow: auto;                /* SVG grows; container scrolls */
+  background: #1b1e21;
+  background-image: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,0) 90px);
+  border: 2px solid #101214;
+  border-radius: 4px;
+  min-height: 120px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.lad-svg { display: block; }
+
+/* Power rails. Left rail is HOT (always energized). */
+.lad-rail            { stroke: #7f8992; stroke-width: 5; stroke-linecap: round; }
+.lad-rail-left       { stroke: #39e04f; filter: drop-shadow(0 0 3px rgba(57,224,79,.75)); }
+.lad-rail-right      { stroke: #6c7680; }
+
+/* Wires: dead = steel grey, energized = green glow */
+.lad-wire            { stroke: #4d555d; stroke-width: 2.5; fill: none; }
+.lad-wire.lad-hot    { stroke: #39e04f; filter: drop-shadow(0 0 3.5px rgba(57,224,79,.85)); }
+
+/* Branch junction dots */
+.lad-dot             { fill: #4d555d; stroke: none; }
+.lad-dot.lad-hot     { fill: #39e04f; filter: drop-shadow(0 0 3.5px rgba(57,224,79,.85)); }
+
+/* Symbol strokes (contact bars, coil parens, ONS box outline, slash) */
+.lad-sym             { stroke: #ccd3d9; stroke-width: 2.75; fill: none; stroke-linecap: round; }
+.lad-symtext         { fill: #ccd3d9; font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.lad-elem.lad-energized .lad-sym     { stroke: #52ff6b; filter: drop-shadow(0 0 4px rgba(57,224,79,.9)); }
+.lad-elem.lad-energized .lad-symtext { fill: #52ff6b; }
+
+/* Tag label above each element — safety yellow, mono, >=12px */
+.lad-tag     { fill: #f5a800; font: 600 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.lad-elem.lad-energized .lad-tag { fill: #ffc63d; }
+
+/* Rung furniture */
+.lad-rungnum { fill: #7d8790; font: 700 12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.lad-comment { fill: #9aa4ad; font: italic 12.5px system-ui, sans-serif; }
+
+/* Instruction boxes (TON/TOF/CTU/CTD) */
+.lad-boxrect  { fill: #23272b; stroke: #ccd3d9; stroke-width: 2.5; rx: 3; }
+.lad-elem.lad-energized .lad-boxrect { stroke: #52ff6b; filter: drop-shadow(0 0 4px rgba(57,224,79,.75)); }
+.lad-boxtype  { fill: #f5a800; font: 700 14px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.lad-boxtag   { fill: #e8ecef; font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.lad-boxline  { stroke: #4d555d; stroke-width: 1.5; }
+.lad-boxtext  { fill: #c3cad0; font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* EN/TT/DN (or CU/CD/DN) pips on instruction boxes */
+.lad-pip          { fill: #33383d; stroke: #565e66; stroke-width: 1.5; }
+.lad-pip.lad-pip-on { fill: #39e04f; stroke: #b9ffc4; filter: drop-shadow(0 0 3.5px rgba(57,224,79,.95)); }
+.lad-piplabel     { fill: #9aa4ad; font: 700 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+/* Invisible hit target on every element; doubles as the fault outline */
+.lad-hit {
+  fill: rgba(0,0,0,0);
+  stroke: none;
+  cursor: pointer;
+  pointer-events: all;
+}
+.lad-elem.lad-fault > .lad-hit {
+  stroke: #ff453a;
+  stroke-width: 2.5;
+  stroke-dasharray: 6 3;
+  filter: drop-shadow(0 0 4px rgba(255,69,58,.8));
+}
+
+/* Inspector popover */
+.lad-pop {
+  position: absolute;
+  width: 300px;
+  background: #f4f4f2;
+  color: #23272b;
+  border: 2px solid #16181a;
+  border-radius: 5px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.55);
+  font: 13px/1.45 system-ui, sans-serif;
+  z-index: 40;
+  overflow: hidden;
+}
+.lad-pop-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  background: #23272b;
+  color: #f5a800;
+  padding: 6px 10px;
+  font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.lad-pop-kind  { color: #c3cad0; font-weight: 400; font-size: 11.5px; white-space: nowrap; }
+.lad-pop-state {
+  background: #e6e6e2;
+  border-bottom: 1px solid #cfcfc9;
+  padding: 5px 10px;
+  font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.lad-pop-desc  { padding: 7px 10px 9px; }
+.lad-pop-close {
+  background: none; border: 0; color: #c3cad0; cursor: pointer;
+  font: 700 14px system-ui, sans-serif; padding: 0 0 0 6px; line-height: 1;
+}
+.lad-pop-close:hover { color: #fff; }
+
+/* Big-UI: the SVG itself is re-rendered at 1.35x by LL.Ladder; scale the popover here */
+.bigui .lad-pop       { width: 380px; font-size: 17px; }
+.bigui .lad-pop-head  { font-size: 17px; }
+.bigui .lad-pop-state { font-size: 16px; }
+
+/* ---------------- Watch window ---------------- */
+
+.watch-container {
+  background: #f4f4f2;
+  border: 2px solid #16181a;
+  border-radius: 4px;
+  color: #23272b;
+  font: 14px system-ui, sans-serif;
+  overflow: hidden;
+}
+
+.watch-sec { border-bottom: 1px solid #cfcfc9; }
+.watch-sec:last-child { border-bottom: 0; }
+
+/* Section header: dark strip with corner-screw motif, collapsible */
+.watch-sec-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #31363b, #24282c);
+  color: #f5a800;
+  border: 0;
+  border-bottom: 2px solid #16181a;
+  padding: 7px 26px;
+  font: 700 12.5px system-ui, sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  text-align: left;
+  cursor: pointer;
+  min-height: 40px;             /* touch target */
+}
+.watch-sec-head::before,
+.watch-sec-head::after {        /* corner screws */
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 8px; height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #b9bec3, #5c6369 70%);
+  box-shadow: inset 0 0 0 1px #16181a;
+}
+.watch-sec-head::before { left: 8px; }
+.watch-sec-head::after  { right: 8px; }
+.watch-sec-head .watch-caret {
+  margin-left: 12px;
+  transition: transform .15s ease;
+  font-size: 11px;
+  color: #c3cad0;
+}
+.watch-sec.watch-collapsed .watch-caret { transform: rotate(-90deg); }
+.watch-sec.watch-collapsed .watch-sec-body { display: none; }
+
+.watch-sec-body { padding: 8px 10px 10px; }
+
+/* Section 1: grouped tag tables */
+.watch-groups { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: flex-start; }
+.watch-group  { min-width: 168px; flex: 0 1 auto; }
+.watch-group-title {
+  font: 700 11.5px system-ui, sans-serif;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #5a6167;
+  border-bottom: 2px solid #f5a800;
+  padding: 1px 2px 2px;
+  margin-bottom: 2px;
+}
+.watch-table { border-collapse: collapse; width: 100%; }
+.watch-row td {
+  padding: 2.5px 6px 2.5px 2px;
+  font: 12.5px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: nowrap;
+  border-bottom: 1px solid #e4e4e0;
+}
+.watch-tag { color: #23272b; font-weight: 600; }
+.watch-val { text-align: right; }
+.watch-num { color: #3a4046; }
+
+/* LED dot (shared by rows and image-table cells) */
+.watch-led {
+  display: inline-block;
+  width: 12px; height: 12px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #4b5157;
+  border: 1px solid #16181a;
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.5);
+  vertical-align: -1px;
+}
+.watch-led.watch-on {
+  background: #2fd84a;
+  box-shadow: 0 0 6px rgba(47,216,74,.85), inset 0 0 2px rgba(255,255,255,.6);
+}
+
+/* EN/TT/DN chips */
+.watch-chips { text-align: left; }
+.watch-chip {
+  display: inline-block;
+  min-width: 20px;
+  text-align: center;
+  margin-right: 3px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  font: 700 10px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #dcdcd7;
+  color: #7a8086;
+  border: 1px solid #c4c4be;
+}
+.watch-chip.watch-on {
+  background: #2fd84a;
+  color: #06340f;
+  border-color: #1d9a34;
+  box-shadow: 0 0 5px rgba(47,216,74,.7);
+}
+
+/* Row flash when tag is in plc.changedBits (~400 ms, CSS-timed) */
+.watch-flash { animation: watch-flash-kf .4s ease-out 1; }
+@keyframes watch-flash-kf {
+  0%   { background-color: #ffd75e; }
+  100% { background-color: rgba(255,215,94,0); }
+}
+
+/* Section 2: image tables / scan debugger */
+.watch-scanline {
+  font: 700 13px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #23272b;
+  background: #e6e6e2;
+  border: 1px solid #cfcfc9;
+  border-radius: 3px;
+  padding: 4px 10px;
+  margin-bottom: 8px;
+}
+.watch-scanline b { color: #b25e00; }
+
+.watch-grids { display: flex; flex-wrap: wrap; gap: 10px; }
+.watch-imgblock { flex: 1 1 260px; min-width: 240px; }
+.watch-imgtitle {
+  font: 700 11.5px system-ui, sans-serif;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #5a6167;
+  margin-bottom: 3px;
+}
+.watch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(86px, 1fr));
+  gap: 5px;
+  background: #23272b;
+  border: 2px solid #16181a;
+  border-radius: 4px;
+  padding: 7px;
+}
+.watch-cell {
+  display: flex;
+  align-items: center;
+  background: #2c3136;
+  border: 1px solid #3a4046;
+  border-radius: 3px;
+  padding: 4px 5px;
+  min-height: 22px;
+}
+.watch-cell .watch-led { margin-right: 5px; flex: 0 0 auto; }
+.watch-cell-tag {
+  font: 600 11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #c3cad0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* highlight ring: this bit changed during the last scan */
+.watch-cell.watch-ring {
+  border-color: #f5a800;
+  box-shadow: 0 0 0 1.5px #f5a800, 0 0 8px rgba(245,168,0,.6);
+}
+.watch-cell.watch-ring .watch-cell-tag { color: #ffd75e; }
+
+/* Big-UI scaling (~1.35x) for the watch window (app toggles body.bigui) */
+.bigui .watch-container   { font-size: 19px; }
+.bigui .watch-sec-head    { font-size: 16px; min-height: 48px; }
+.bigui .watch-row td      { font-size: 17px; padding: 4px 8px 4px 3px; }
+.bigui .watch-group-title,
+.bigui .watch-imgtitle    { font-size: 15px; }
+.bigui .watch-led         { width: 16px; height: 16px; }
+.bigui .watch-chip        { font-size: 13px; min-width: 26px; }
+.bigui .watch-scanline    { font-size: 17px; }
+.bigui .watch-grid        { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+.bigui .watch-cell-tag    { font-size: 14px; }

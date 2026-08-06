@@ -1,0 +1,3577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#00142B">
+<title>Takeoff — draw the curve, then see it</title>
+<!--
+  Takeoff (formerly Undershoot) — a single-file, offline demonstration of what has happened to
+  machine capability since ChatGPT, written for an audience that has never
+  seen any of this measured.
+
+  Three acts: draw five forecasts and be wrong; watch the release cadence that
+  produced them; then look at what these systems have actually done across
+  biology, medicine, weather, materials, mathematics and software — with the
+  overclaims and the failures kept in frame beside the results.
+
+  Every number on screen resolves to a source in the dataset, and Settings →
+  Run the self-test proves it live. Nothing is fetched at runtime.
+
+  Companion: presenter-guide.html. Sources live in src/ and are concatenated
+  by build.js.
+-->
+<style>
+/* ==== styles.css ==== */
+/* ==========================================================================
+   Undershoot — styles.
+
+   Murray State palette: navy #002144, gold #ECAC00, cyan #00A4E3,
+   red-orange #FF4500. The brand guide asks that the accents stay sparing, so
+   red-orange appears only where something is wrong or falling short, and gold
+   carries the truth line throughout — once a colour means "this is what
+   actually happened", it must not mean anything else.
+
+   Phone-first. One rule governs the layout on a small screen: the chart and
+   the reveal button are never both below the fold.
+   ========================================================================== */
+
+:root {
+  --navy:   #00142B;
+  --navy-2: #002144;
+  --panel:  #08203C;
+  --panel-2:#0C2A4C;
+  --line:   rgba(143,163,192,0.16);
+  --ink:    #E8EDF5;
+  --dim:    #8FA3C0;
+  --gold:   #ECAC00;
+  --cyan:   #00A4E3;
+  --red:    #FF4500;
+  --u: 8px;
+  --maxw: 1180px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* The browser's own [hidden] rule is a bare attribute selector, so any class
+   that sets `display` outranks it. `.overlay { display: flex }` therefore left
+   the settings sheet stretched invisibly across the viewport, swallowing every
+   pointer event aimed at the chart. Found by an integration test that observed
+   zero pointerdown events on a canvas that was plainly visible. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background:
+    radial-gradient(1200px 700px at 20% -10%, #06294B 0%, transparent 60%),
+    var(--navy);
+  color: var(--ink);
+  min-height: 100dvh;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ---- chrome -------------------------------------------------------------- */
+
+#brandbar { position: sticky; top: 0; z-index: 40; background: rgba(0,20,43,0.92); backdrop-filter: blur(10px); }
+
+#topbar {
+  max-width: var(--maxw); margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--u); padding: calc(var(--u)*1.25) calc(var(--u)*2);
+}
+
+#brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.b0 { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.b1 { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.03em; }
+.b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: 0.8rem; margin-left: 8px; letter-spacing: 0.01em; }
+
+#rule { height: 2px; background: linear-gradient(90deg, var(--gold) 0%, var(--cyan) 55%, transparent 100%); opacity: 0.75; }
+
+#actnav {
+  max-width: var(--maxw); margin: 0 auto;
+  display: flex; gap: 2px; padding: 0 calc(var(--u)*2) calc(var(--u)*1);
+}
+#actnav button {
+  flex: 1; background: none; border: 0; border-bottom: 2px solid transparent;
+  color: var(--dim); font: inherit; font-size: 0.82rem; font-weight: 600;
+  padding: calc(var(--u)*1.1) 4px; cursor: pointer; min-height: 44px;
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+#actnav button span { font-size: 0.62rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.6; }
+#actnav button.on { color: var(--ink); border-bottom-color: var(--gold); }
+#actnav button:hover { color: var(--ink); }
+
+main { max-width: var(--maxw); margin: 0 auto; padding: calc(var(--u)*2); }
+
+.icon-btn {
+  background: none; border: 1px solid var(--line); border-radius: 10px;
+  color: var(--dim); width: 40px; height: 40px; font-size: 1.05rem; cursor: pointer; flex: none;
+}
+.icon-btn:hover { color: var(--ink); border-color: var(--dim); }
+
+/* ---- typography ---------------------------------------------------------- */
+
+h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 1.25rem; font-weight: 750; letter-spacing: -0.01em; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+h4 { font-size: 0.98rem; font-weight: 700; }
+p  { font-size: 0.94rem; }
+
+.lede { color: var(--dim); font-size: 0.95rem; max-width: 62ch; }
+
+/* ---- panels -------------------------------------------------------------- */
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+  padding: calc(var(--u)*2);
+}
+
+/* ---- Act I --------------------------------------------------------------- */
+
+#round-head { display: flex; align-items: baseline; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*0.75); }
+#round-num { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; color: var(--gold); border: 1px solid rgba(236,172,0,0.35); border-radius: 20px; padding: 3px 10px; }
+#round-name { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.015em; }
+#round-metric { font-size: 0.76rem; color: var(--dim); letter-spacing: 0.06em; text-transform: uppercase; }
+
+#round-q { font-size: 1.02rem; line-height: 1.55; margin: calc(var(--u)*1.25) 0; max-width: 68ch; }
+#round-blurb { font-size: 0.85rem; color: var(--dim); max-width: 68ch; margin-bottom: calc(var(--u)*1.5); }
+
+/* The height here is a starting value only. fitChart() in app.js measures the
+   space actually left over and overwrites it, because the chrome above the
+   chart changes height with the length of each round's question and with how
+   many lines that question wraps to at a given width. Guessing a number in CSS
+   put the Reveal button below the fold at five of eight test viewports. */
+#chart-wrap {
+  position: relative; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: calc(var(--u)*1);
+  height: min(44dvh, 340px); min-height: 150px;
+}
+#chart { width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; }
+
+#draw-row { display: flex; align-items: center; gap: var(--u); margin-top: calc(var(--u)*1.25); }
+#draw-hint { font-size: 0.82rem; color: var(--cyan); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.legend-mini { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; margin-top: 6px; font-size: 0.72rem; color: var(--dim); }
+.legend-mini span { display: inline-flex; align-items: center; gap: 6px; }
+.legend-mini i { width: 16px; height: 3px; border-radius: 2px; display: inline-block; }
+.lm-known i { background: var(--ink); }
+.lm-guess i { background: var(--cyan); }
+.lm-truth i { background: var(--gold); }
+
+/* The multiplying-scale warning for the two logarithmic rounds. */
+#scale-note { font-size: 0.8rem; line-height: 1.45; color: var(--cyan); margin-top: 8px;
+  max-width: 74ch; border-left: 2px solid rgba(0,164,227,0.4); padding-left: 10px; }
+
+/* ---- buttons ------------------------------------------------------------- */
+
+.btn {
+  background: var(--panel-2); border: 1px solid var(--line); border-radius: 11px;
+  color: var(--ink); font: inherit; font-weight: 650; font-size: 0.92rem;
+  padding: calc(var(--u)*1.35) calc(var(--u)*2.25); cursor: pointer; min-height: 46px;
+  transition: transform 0.1s ease, background 0.14s ease, border-color 0.14s ease;
+}
+.btn:hover:not(:disabled) { background: #113356; border-color: var(--dim); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.32; cursor: not-allowed; }
+.btn.primary { background: var(--gold); color: #23180A; border-color: var(--gold); font-weight: 750; }
+.btn.primary:hover:not(:disabled) { background: #FFC01F; border-color: #FFC01F; }
+.btn.ghost { background: transparent; }
+.btn.sm { font-size: 0.82rem; padding: calc(var(--u)*0.9) calc(var(--u)*1.5); min-height: 40px; }
+
+/* ---- verdict ------------------------------------------------------------- */
+
+#verdict, #twist-wrap { margin-top: calc(var(--u)*2); }
+
+.v-head { border-left: 3px solid var(--gold); padding-left: calc(var(--u)*1.5); margin-bottom: calc(var(--u)*1.75); }
+.v-head.low { border-left-color: var(--red); }
+.v-tag { display: inline-block; font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase; color: var(--dim); margin-bottom: 4px; }
+.v-head h3 { font-size: 1.3rem; line-height: 1.3; letter-spacing: -0.015em; }
+
+.v-nums { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+.v-num { background: rgba(0,20,43,0.5); border: 1px solid var(--line); border-radius: 11px; padding: calc(var(--u)*1.25) calc(var(--u)*1.75); flex: 1; min-width: 116px; }
+.v-num .k { display: block; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: 3px; }
+.v-num .val { font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.v-num.truth .val { color: var(--gold); }
+
+.v-ratio { font-size: 1.05rem; margin-bottom: calc(var(--u)*1.25); }
+.v-ratio strong { color: var(--gold); font-size: 1.25rem; }
+.v-body { color: var(--ink); opacity: 0.9; max-width: 70ch; margin-bottom: calc(var(--u)*1.5); }
+.v-close { margin-top: calc(var(--u)*1.5); font-size: 1rem; font-weight: 600; max-width: 70ch; border-left: 3px solid var(--cyan); padding-left: calc(var(--u)*1.5); }
+
+.v-caveat { border: 1px solid var(--line); border-radius: 11px; padding: calc(var(--u)*1.25) calc(var(--u)*1.75); background: rgba(255,69,0,0.04); }
+.v-caveat summary { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--red); cursor: pointer; }
+.v-caveat p { margin-top: var(--u); font-size: 0.88rem; color: var(--dim); max-width: 70ch; }
+
+.v-src { margin-top: calc(var(--u)*1.5); font-size: 0.72rem; color: var(--dim); line-height: 1.7; }
+.v-src a { color: var(--dim); text-decoration: none; border-bottom: 1px dotted rgba(143,163,192,0.4); }
+.v-src a:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+.v-src .dot { margin: 0 7px; opacity: 0.5; }
+
+/* bars in the ARC finale. Four bars, deliberately colour-coded by what kind of
+   measurement each one is, because they are NOT four readings of one quantity
+   and the caveat below them says so. */
+.bars { margin: calc(var(--u)*1.75) 0; display: flex; flex-direction: column; gap: calc(var(--u)*1.25); }
+.bar-row { display: flex; align-items: center; gap: calc(var(--u)*1.25); }
+.bar-row .bl { width: 190px; flex: none; font-size: 0.85rem; font-weight: 650; line-height: 1.3; }
+.bar-row .bl em { display: block; font-style: normal; font-weight: 500; font-size: 0.72rem; color: var(--dim); margin-top: 2px; }
+.bar-row .bt { flex: 1; height: 24px; background: rgba(0,20,43,0.6); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.bar-row .bf { height: 100%; border-radius: 5px 0 0 5px; transition: width 0.9s cubic-bezier(0.22,1,0.36,1); background: var(--gold); }
+.bar-row .bf.human { background: var(--ink); }
+.bar-row .bf.good  { background: var(--gold); }
+.bar-row .bf.mid   { background: rgba(236,172,0,0.45); }
+.bar-row .bf.bad   { background: var(--red); min-width: 3px; }
+.bar-row .bv { width: 62px; flex: none; text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 0.95rem; }
+
+.what-is { border-left: 2px solid var(--line); padding-left: calc(var(--u)*1.5); color: var(--dim) !important; }
+.v-punch { font-size: 1.02rem; font-weight: 650; line-height: 1.5; max-width: 70ch;
+  margin: calc(var(--u)*1.5) 0; padding-left: calc(var(--u)*1.5); border-left: 3px solid var(--gold); }
+
+@media (max-width: 620px) {
+  .bar-row { flex-wrap: wrap; }
+  .bar-row .bl { width: 100%; }
+  .bar-row .bt { flex: 1 1 60%; }
+}
+
+/* ---- scorecard ----------------------------------------------------------- */
+
+#scorecard h2 { margin-bottom: var(--u); }
+.big-stat { font-size: 1.05rem; margin-bottom: calc(var(--u)*2); }
+.big-stat strong { font-size: 1.9rem; color: var(--gold); }
+.sc-rows { display: flex; flex-direction: column; gap: 2px; margin-bottom: calc(var(--u)*2); }
+.sc-row { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: var(--u); align-items: center;
+  padding: calc(var(--u)*1.1) calc(var(--u)*1.25); background: rgba(0,20,43,0.4); border-radius: 8px; font-size: 0.86rem; }
+.sc-row .n { font-weight: 600; }
+.sc-row .g { color: var(--cyan); font-variant-numeric: tabular-nums; }
+.sc-row .arrow { color: var(--dim); }
+.sc-row .t { color: var(--gold); font-variant-numeric: tabular-nums; font-weight: 700; }
+.sc-row .r { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 46px; text-align: right; }
+.sc-row .r.low { color: var(--red); }
+.sc-note { color: var(--dim); max-width: 72ch; margin-bottom: calc(var(--u)*2); }
+.sc-actions { display: flex; gap: var(--u); flex-wrap: wrap; }
+
+/* ---- Act II -------------------------------------------------------------- */
+
+#tl-wrap { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(var(--u)*1.25); margin-bottom: calc(var(--u)*1.5); }
+#tl { width: 100%; height: 210px; display: block; }
+#tl-hover {
+  position: absolute; left: calc(var(--u)*1.5); bottom: calc(var(--u)*1.5);
+  background: rgba(0,20,43,0.95); border: 1px solid var(--line); border-radius: 10px;
+  padding: calc(var(--u)*1.1) calc(var(--u)*1.5); max-width: min(340px, 80%);
+  display: flex; flex-direction: column; gap: 2px; pointer-events: none;
+}
+#tl-hover strong { font-size: 0.92rem; }
+#tl-hover .lab, #tl-hover .date { font-size: 0.72rem; color: var(--dim); }
+#tl-hover .note { font-size: 0.78rem; margin-top: 4px; color: var(--ink); opacity: 0.85; }
+
+#tl-controls { display: flex; align-items: center; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+#tl-slider { flex: 1; min-width: 180px; height: 44px; accent-color: var(--cyan); background: none; }
+
+#tl-filter { display: flex; gap: 2px; background: rgba(0,20,43,0.5); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+#tl-filter button { background: none; border: 0; border-radius: 7px; color: var(--dim); font: inherit; font-size: 0.8rem; font-weight: 600; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+#tl-filter button.on { background: var(--panel-2); color: var(--ink); }
+
+#tl-stats { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+.stat { background: rgba(0,20,43,0.45); border: 1px solid var(--line); border-radius: 11px; padding: calc(var(--u)*1.25) calc(var(--u)*1.6); flex: 1; min-width: 108px; }
+.stat b { display: block; font-size: 1.5rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dim); }
+
+#tl-legend { display: flex; gap: calc(var(--u)*1.25); flex-wrap: wrap; font-size: 0.72rem; color: var(--dim); margin-bottom: calc(var(--u)*1.5); }
+.lg { display: inline-flex; align-items: center; gap: 5px; }
+.lg i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+.shapekey { font-size: 0.74rem; color: var(--dim); margin-bottom: calc(var(--u)*2); }
+
+#tl-unlock { background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--cyan); border-radius: 12px; padding: calc(var(--u)*1.75); }
+#tl-unlock .u-date { font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cyan); }
+#tl-unlock h4 { margin: 4px 0 var(--u); display: flex; align-items: center; gap: var(--u); flex-wrap: wrap; }
+#tl-unlock p { font-size: 0.9rem; color: var(--ink); opacity: 0.9; max-width: 72ch; }
+.flag { font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid var(--dim); color: var(--dim); border-radius: 20px; padding: 2px 9px; font-weight: 600; }
+.flag.bad { border-color: var(--red); color: var(--red); }
+
+/* ---- Act III ------------------------------------------------------------- */
+
+#math-cards { display: flex; flex-direction: column; gap: calc(var(--u)*2); margin-bottom: calc(var(--u)*3); }
+
+.mcard { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(var(--u)*2); border-left: 3px solid var(--gold); }
+.mcard.overclaimed { border-left-color: var(--red); }
+.mcard header { display: flex; align-items: baseline; gap: var(--u); flex-wrap: wrap; margin-bottom: var(--u); }
+.mcard .verdict { font-size: 0.64rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: var(--gold); border: 1px solid rgba(236,172,0,0.4); border-radius: 20px; padding: 3px 10px; }
+.mcard.overclaimed .verdict { color: var(--red); border-color: rgba(255,69,0,0.45); }
+.mcard .mdate { font-size: 0.72rem; color: var(--dim); margin-left: auto; }
+.mcard .what { color: var(--dim); font-size: 0.88rem; margin-bottom: calc(var(--u)*1.5); max-width: 72ch; }
+
+.split { display: grid; gap: calc(var(--u)*1.5); grid-template-columns: 1fr; margin-bottom: calc(var(--u)*1.5); }
+.split > div { background: rgba(0,20,43,0.4); border-radius: 11px; padding: calc(var(--u)*1.5); }
+.s-k { display: block; font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+.s-machine .s-k { color: var(--cyan); }
+.s-human .s-k { color: var(--gold); }
+.split p { font-size: 0.88rem; }
+
+.mcard blockquote { border-left: 2px solid var(--dim); padding-left: calc(var(--u)*1.5); margin: calc(var(--u)*1.5) 0; font-size: 0.93rem; font-style: italic; color: var(--ink); opacity: 0.92; max-width: 70ch; }
+.mcard blockquote cite { display: block; font-style: normal; font-size: 0.75rem; color: var(--dim); margin-top: var(--u); }
+.mcard .caveat { font-size: 0.86rem; color: var(--dim); border-top: 1px solid var(--line); padding-top: calc(var(--u)*1.25); max-width: 72ch; }
+
+#cut { background: rgba(255,69,0,0.05); border: 1px solid rgba(255,69,0,0.22); border-radius: 14px; padding: calc(var(--u)*2); margin-bottom: calc(var(--u)*3); }
+#cut h3 { color: var(--red); margin-bottom: var(--u); }
+#cut > p { color: var(--dim); font-size: 0.88rem; max-width: 72ch; margin-bottom: calc(var(--u)*1.75); }
+#cut-list { list-style: none; display: flex; flex-direction: column; gap: calc(var(--u)*1.5); }
+#cut-list li { display: flex; flex-direction: column; gap: 4px; }
+#cut-list strong { font-size: 0.9rem; }
+#cut-list span { font-size: 0.85rem; color: var(--dim); max-width: 72ch; }
+
+.closers { display: grid; gap: calc(var(--u)*1.5); grid-template-columns: 1fr; margin-bottom: calc(var(--u)*3); }
+.closer { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: calc(var(--u)*2); }
+.closer .num { font-size: 2.6rem; font-weight: 850; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
+.closer .unit { font-size: 0.9rem; color: var(--dim); margin-left: 6px; font-weight: 600; }
+.closer h4 { margin: var(--u) 0 6px; }
+.closer p { font-size: 0.85rem; color: var(--dim); }
+
+#final { border-left: 3px solid var(--gold); padding-left: calc(var(--u)*2); margin-bottom: calc(var(--u)*3); }
+#final p { font-size: 1.02rem; max-width: 70ch; margin-bottom: var(--u); }
+#final p:last-child { margin-bottom: 0; }
+
+#sources { border-top: 1px solid var(--line); padding-top: calc(var(--u)*2); }
+#sources h3 { margin-bottom: var(--u); }
+#sources > p { font-size: 0.85rem; color: var(--dim); margin-bottom: calc(var(--u)*1.5); max-width: 72ch; }
+#source-list { list-style: none; columns: 2; column-gap: calc(var(--u)*3); font-size: 0.8rem; }
+#source-list li { break-inside: avoid; margin-bottom: 7px; }
+#source-list a { color: var(--dim); text-decoration: none; border-bottom: 1px dotted rgba(143,163,192,0.35); }
+#source-list a:hover { color: var(--cyan); }
+
+/* ---- overlays ------------------------------------------------------------ */
+
+.overlay { position: fixed; inset: 0; z-index: 60; background: rgba(0,10,22,0.72); backdrop-filter: blur(5px); display: flex; align-items: flex-end; justify-content: center; }
+.sheet-inner { background: var(--panel); border: 1px solid var(--line); border-radius: 18px 18px 0 0; width: 100%; max-width: 640px; max-height: 88dvh; display: flex; flex-direction: column; }
+.sheet-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--u); padding: calc(var(--u)*2); border-bottom: 1px solid var(--line); }
+.sheet-head .sub { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); margin-top: 3px; }
+.sheet-body { padding: calc(var(--u)*2); overflow-y: auto; flex: 1; }
+.sheet-foot { padding: calc(var(--u)*1.5) calc(var(--u)*2); border-top: 1px solid var(--line); display: flex; justify-content: flex-end; }
+
+.field { margin-bottom: calc(var(--u)*2.5); }
+.lbl { display: block; font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); margin-bottom: var(--u); }
+.switch { display: flex; align-items: center; gap: var(--u); cursor: pointer; padding: var(--u) 0; font-size: 0.92rem; min-height: 44px; }
+.switch input { width: 20px; height: 20px; accent-color: var(--gold); flex: none; }
+.help { font-size: 0.82rem; color: var(--dim); margin-top: var(--u); }
+
+#selftest-out { margin-top: calc(var(--u)*1.5); font-size: 0.8rem; }
+.st-head { font-weight: 800; margin-bottom: var(--u); padding: var(--u); border-radius: 8px; }
+.st-head.good { color: var(--gold); background: rgba(236,172,0,0.1); }
+.st-head.bad { color: var(--red); background: rgba(255,69,0,0.1); }
+.st-row { display: grid; grid-template-columns: 16px 1fr; gap: 7px; padding: 4px 0; align-items: start; }
+.st-row.good > span:first-child { color: var(--gold); }
+.st-row.bad > span:first-child { color: var(--red); }
+.st-row em { grid-column: 2; font-size: 0.74rem; color: var(--dim); font-style: normal; }
+
+/* ---- footer -------------------------------------------------------------- */
+
+#foot { border-top: 1px solid var(--line); margin-top: calc(var(--u)*4); padding: calc(var(--u)*2.5) 0; font-size: 0.76rem; color: var(--dim); display: flex; gap: var(--u); flex-wrap: wrap; align-items: center; }
+#foot .msu { font-weight: 700; color: var(--ink); }
+
+/* ---- the opening screen -------------------------------------------------- */
+
+#intro { max-width: 74ch; padding: calc(var(--u)*1) 0 calc(var(--u)*3); }
+#intro h1 { font-size: 1.7rem; line-height: 1.22; letter-spacing: -0.02em; margin-bottom: calc(var(--u)*2.25); }
+#intro-body p { font-size: 1.02rem; line-height: 1.6; margin-bottom: calc(var(--u)*1.75); color: rgba(232,237,245,0.9); }
+#intro-body p:first-child { color: var(--ink); }
+#intro-note { font-size: 0.86rem; color: var(--dim); border-left: 2px solid var(--line);
+  padding-left: calc(var(--u)*1.5); margin-bottom: calc(var(--u)*2.75); }
+.btn.big { font-size: 1.05rem; padding: calc(var(--u)*1.75) calc(var(--u)*3); min-height: 56px; }
+
+/* ---- what the test is, before the chart ---------------------------------- */
+
+/* The benchmark's real name — a quiet credential under the plain-language
+   title, so a curious viewer can go and look the test up. */
+#round-real { font-size: 0.8rem; color: var(--dim); margin: 2px 0 calc(var(--u)*1.25);
+  letter-spacing: 0.01em; }
+
+#round-plain { font-size: 0.98rem; line-height: 1.55; max-width: 70ch; margin-bottom: calc(var(--u)*1.5);
+  color: rgba(232,237,245,0.92); }
+
+#round-aside { display: grid; gap: var(--u); margin-bottom: calc(var(--u)*1.5); }
+
+#round-example { border: 1px solid var(--line); border-radius: 11px; background: rgba(0,20,43,0.4); }
+#round-example summary { cursor: pointer; padding: calc(var(--u)*1.1) calc(var(--u)*1.5);
+  font-size: 0.82rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--cyan); list-style: none; min-height: 42px; display: flex; align-items: center; }
+#round-example summary::-webkit-details-marker { display: none; }
+#round-example summary::before { content: '▸'; margin-right: 9px; transition: transform 0.15s; }
+#round-example[open] summary::before { transform: rotate(90deg); }
+#example-body { padding: 0 calc(var(--u)*1.5) calc(var(--u)*1.5); }
+.ex-text { font-size: 0.9rem; margin-bottom: var(--u); white-space: pre-line; }
+.ex-note { font-size: 0.78rem; color: var(--dim); font-style: italic; margin-top: var(--u); }
+
+.ladder { display: flex; flex-direction: column; gap: 5px; }
+.lrow { display: flex; gap: var(--u); align-items: baseline; font-size: 0.88rem; }
+.lrow .lt { flex: none; width: 62px; font-weight: 700; color: var(--gold); font-variant-numeric: tabular-nums; }
+.lrow .ls { color: rgba(232,237,245,0.85); }
+
+.arc-wrap { display: flex; flex-direction: column; gap: calc(var(--u)*1.5); }
+.arc-pair { display: flex; flex-direction: column; gap: 5px; }
+.arc-cap { font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.arc-pair.test .arc-cap { color: var(--gold); }
+.arc-row { display: flex; align-items: center; gap: calc(var(--u)*1.5); }
+.arc-arrow { color: var(--dim); font-size: 1.1rem; }
+.arc-grid { display: grid; gap: 2px; width: 96px; }
+.arc-grid i { aspect-ratio: 1; border-radius: 2px; display: block; }
+.arc-reveal { width: 96px; height: 96px; border-radius: 6px; border: 1px dashed var(--gold);
+  background: rgba(236,172,0,0.07); color: var(--gold); font-size: 1.6rem; font-weight: 800;
+  cursor: pointer; font-family: inherit; }
+.arc-reveal:hover { background: rgba(236,172,0,0.16); }
+
+#round-human { border-left: 2px solid var(--gold); padding-left: calc(var(--u)*1.5); }
+#round-human .rh-k { font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700; display: block; margin-bottom: 3px; }
+#round-human p { font-size: 0.88rem; color: rgba(232,237,245,0.88); max-width: 68ch; }
+
+#round-q { font-size: 1.06rem; font-weight: 600; line-height: 1.5; margin-bottom: calc(var(--u)*1.5);
+  max-width: 68ch; }
+
+/* ---- Act II filters ------------------------------------------------------ */
+
+#tl-filters { display: flex; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*1.5); }
+.fgroup { display: flex; gap: 2px; background: rgba(0,20,43,0.5); border: 1px solid var(--line);
+  border-radius: 10px; padding: 3px; flex-wrap: wrap; }
+.fgroup button { background: none; border: 0; border-radius: 7px; color: var(--dim); font: inherit;
+  font-size: 0.8rem; font-weight: 600; padding: 8px 12px; cursor: pointer; min-height: 40px; }
+.fgroup button.on { background: var(--panel-2); color: var(--ink); }
+#tl-hover .lic { font-size: 0.7rem; color: var(--gold); }
+
+/* ---- Act III domains ----------------------------------------------------- */
+
+#domain-nav { display: flex; gap: var(--u); flex-wrap: wrap; margin-bottom: calc(var(--u)*2.5); }
+#domain-nav button { background: rgba(0,20,43,0.5); border: 1px solid var(--line); border-radius: 20px;
+  color: var(--dim); font: inherit; font-size: 0.82rem; font-weight: 600; padding: 9px 16px;
+  cursor: pointer; min-height: 40px; }
+#domain-nav button:hover { color: var(--ink); border-color: var(--dim); }
+
+.domain { margin-bottom: calc(var(--u)*4); scroll-margin-top: 130px; }
+.dhead { margin-bottom: calc(var(--u)*2); }
+.dhead h2 { font-size: 1.4rem; letter-spacing: -0.015em; margin-bottom: 5px; }
+.dhead h2::after { content: ''; display: block; width: 44px; height: 3px; background: var(--gold);
+  border-radius: 2px; margin-top: 7px; }
+.dhead p { color: var(--dim); font-size: 0.9rem; max-width: 72ch; margin-top: var(--u); }
+.domain .mcard { margin-bottom: calc(var(--u)*1.75); }
+.mcard.disputed { border-left-color: var(--cyan); }
+.mcard.disputed .verdict { color: var(--cyan); border-color: rgba(0,164,227,0.45); }
+
+/* ---- wide ---------------------------------------------------------------- */
+
+@media (min-width: 800px) {
+  h1 { font-size: 1.9rem; }
+  #round-name { font-size: 1.7rem; }
+  #chart-wrap { height: min(52dvh, 430px); }
+  #tl { height: 250px; }
+  .split { grid-template-columns: 1fr 1fr; }
+  #round-aside { grid-template-columns: minmax(0,1.15fr) minmax(0,1fr); align-items: start; }
+  .closers { grid-template-columns: repeat(3, 1fr); }
+  .v-head h3 { font-size: 1.55rem; }
+  #actnav button { font-size: 0.9rem; }
+}
+
+@media (min-width: 1100px) {
+  #chart-wrap { height: 460px; }
+}
+
+/* ---- the fold rule -------------------------------------------------------
+   The chart and the Reveal button are both reachable without scrolling, at
+   every viewport this ships to. The chart is what yields; everything above it
+   compresses first, and in short-and-wide viewports the question moves beside
+   the chart rather than above it. */
+
+@media (max-height: 720px) {
+  #round-plain { font-size: 0.9rem; margin-bottom: var(--u); }
+  #scale-note { font-size: 0.75rem; margin-top: 5px; }
+  #round-human p { font-size: 0.82rem; }
+  #round-q { font-size: 0.97rem; margin-bottom: var(--u); }
+  #topbar { padding: calc(var(--u)*0.9) calc(var(--u)*2); }
+  #actnav button { padding: calc(var(--u)*0.8) 4px; }
+}
+
+/* Narrow phones. At 320x568 the header and the question between them were
+   taking 300px of a 568px screen, which left the chart under the 150px floor
+   and pushed Reveal 27px past the bottom edge. Measured, then trimmed. */
+@media (max-width: 400px) {
+  #topbar { padding: calc(var(--u)*0.7) calc(var(--u)*1.5); }
+  .b0 { font-size: 0.6rem; letter-spacing: 0.1em; }
+  .b1 { font-size: 0.92rem; }
+  .b1 em { display: none; }
+  .icon-btn { width: 40px; height: 40px; }
+  #actnav { padding: 0 calc(var(--u)*1.5) 0; }
+  #actnav button { font-size: 0.75rem; padding: calc(var(--u)*0.7) 2px; min-height: 40px; }
+  #actnav button span { display: none; }
+  #round-head { margin-bottom: 2px; }
+  #round-name { font-size: 1.15rem; }
+  #round-plain { font-size: 0.86rem; line-height: 1.45; }
+  #round-q { font-size: 0.92rem; line-height: 1.42; margin-bottom: var(--u); }
+  #intro h1 { font-size: 1.3rem; }
+  #intro-body p { font-size: 0.94rem; }
+  main { padding: calc(var(--u)*1.25) calc(var(--u)*1.5); }
+}
+
+/* Landscape phones and other short-and-wide viewports: side by side. */
+@media (min-width: 700px) and (max-height: 560px) {
+  #round-body { display: flex; gap: calc(var(--u)*2); align-items: flex-start; }
+  #round-intro { flex: 0 0 40%; min-width: 0; max-height: calc(100dvh - 150px); overflow-y: auto; }
+  #round-chart { flex: 1; min-width: 0; }
+  #round-aside { grid-template-columns: 1fr; }
+}
+
+/* ---- presenter ----------------------------------------------------------- */
+
+body.presenter { --u: 11px; }
+body.presenter #round-name { font-size: 2.4rem; }
+body.presenter #round-q { font-size: 1.4rem; max-width: 60ch; }
+body.presenter #round-blurb { font-size: 1.05rem; }
+body.presenter .v-head h3 { font-size: 2.1rem; }
+body.presenter .v-num .val { font-size: 2rem; }
+body.presenter .v-ratio { font-size: 1.35rem; }
+body.presenter .v-ratio strong { font-size: 1.8rem; }
+body.presenter .v-body, body.presenter .v-close { font-size: 1.15rem; }
+body.presenter .btn { font-size: 1.1rem; min-height: 56px; }
+body.presenter #chart-wrap { height: min(56dvh, 560px); }
+body.presenter #tl { height: 300px; }
+body.presenter .b1 { font-size: 1.3rem; }
+body.presenter #actnav button { font-size: 1.05rem; }
+body.presenter .stat b { font-size: 2rem; }
+body.presenter .closer .num { font-size: 3.4rem; }
+body.presenter #source-list { columns: 3; }
+body.presenter .mcard .what, body.presenter .split p { font-size: 1.02rem; }
+body.presenter #intro h1 { font-size: 2.5rem; }
+body.presenter #intro-body p { font-size: 1.32rem; }
+body.presenter #round-plain { font-size: 1.22rem; }
+body.presenter #round-q { font-size: 1.4rem; }
+body.presenter #round-human p { font-size: 1.05rem; }
+body.presenter #scale-note { font-size: 1rem; }
+body.presenter .bar-row .bl { width: 250px; font-size: 1rem; }
+body.presenter .v-punch { font-size: 1.25rem; }
+body.presenter .dhead h2 { font-size: 1.9rem; }
+body.presenter .arc-grid, body.presenter .arc-reveal { width: 132px; }
+body.presenter .arc-reveal { height: 132px; }
+
+/* Presenter mode on a 720p projector: everything is 35% bigger, and the
+   explanation plus the question no longer fit above the chart in 720px of
+   height. On a wide-but-short projector the text moves beside the chart
+   instead. Caught by the fold assertion at 1280x720. */
+@media (min-width: 1000px) and (max-height: 900px) {
+  body.presenter #round-body { display: flex; gap: calc(var(--u)*2.5); align-items: flex-start; }
+  body.presenter #round-intro { flex: 0 0 42%; min-width: 0; max-height: calc(100dvh - 160px); overflow-y: auto; }
+  body.presenter #round-chart { flex: 1; min-width: 0; }
+  body.presenter #round-aside { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+</style>
+</head>
+<body>
+
+<div id="brandbar">
+  <header id="topbar">
+    <div id="brand">
+      <span class="b0">Murray State University</span>
+      <span class="b1">TAKEOFF <em>draw the curve, then see it</em></span>
+    </div>
+    <button class="icon-btn" id="btn-settings" aria-label="Settings">&#9881;</button>
+  </header>
+  <nav id="actnav" role="tablist" aria-label="Acts">
+    <button data-act="1" class="on" role="tab">Draw it<span>Act I</span></button>
+    <button data-act="2" role="tab">The models<span>Act II</span></button>
+    <button data-act="3" role="tab">What AI can do<span>Act III</span></button>
+  </nav>
+  <div id="rule" aria-hidden="true"></div>
+</div>
+
+<main>
+
+<!-- =========================== ACT I ================================== -->
+<section class="act" data-act="1">
+
+  <!-- ---------- the opening screen: assume nothing is known ---------- -->
+  <div id="intro">
+    <h1 id="intro-title"></h1>
+    <div id="intro-body"></div>
+    <p id="intro-note"></p>
+    <button class="btn primary big" id="btn-begin"></button>
+  </div>
+
+  <div id="round-body" hidden>
+    <div id="round-intro">
+      <div id="round-head">
+        <span id="round-num"></span>
+        <h1 id="round-name"></h1>
+      </div>
+
+      <!-- The benchmark's real name, so a curious viewer can look it up. -->
+      <p id="round-real"></p>
+
+      <!-- What the test actually is, before any chart appears. -->
+      <p id="round-plain"></p>
+
+      <div id="round-aside">
+        <details id="round-example">
+          <summary><span id="example-label"></span></summary>
+          <div id="example-body"></div>
+        </details>
+        <div id="round-human"></div>
+      </div>
+
+      <p id="round-q"></p>
+    </div>
+
+    <div id="round-chart">
+      <div id="chart-wrap">
+        <canvas id="chart" aria-label="Chart. Drag across the shaded region to draw your forecast."></canvas>
+      </div>
+
+      <div class="legend-mini">
+        <span class="lm-known"><i></i>known</span>
+        <span class="lm-guess"><i></i>your guess</span>
+        <span class="lm-truth"><i></i>what happened</span>
+      </div>
+
+      <p id="scale-note" hidden></p>
+
+      <div id="draw-row">
+        <span id="draw-hint">Drag across the shaded region.</span>
+        <button class="btn ghost sm" id="btn-redraw">Clear</button>
+        <button class="btn primary" id="btn-reveal" disabled>Reveal</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="verdict" class="panel" hidden></div>
+
+  <div id="twist-wrap" hidden>
+    <div class="panel">
+      <p id="twist-q" style="margin-bottom:12px"></p>
+      <button class="btn primary" id="btn-twist">Show me</button>
+      <div id="twist-body" hidden></div>
+    </div>
+  </div>
+
+  <div style="margin-top:16px">
+    <button class="btn primary" id="btn-next" hidden>Next test</button>
+  </div>
+
+  <div id="scorecard" class="panel" hidden></div>
+</section>
+
+<!-- =========================== ACT II ================================= -->
+<section class="act" data-act="2" hidden>
+  <h1>Every AI model since ChatGPT</h1>
+  <p class="lede" style="margin:10px 0 6px">
+    Those five tests were run on the AI models below. The chart plots every significant
+    one released since ChatGPT arrived in late 2022 — each dot is one model, placed by
+    the date it came out and coloured by the company that made it. Drag the slider, or
+    press Play, to watch them arrive over time.
+  </p>
+  <p class="lede" style="margin:0 0 18px">
+    <b>A hollow ring is a model you can download and run on your own computer;</b> a
+    solid dot is one you can only use through a company’s website. Height is a rough
+    sense of how advanced a model was for its moment — deliberately not an exact score,
+    because no single number can fairly rank a hundred models across four years and
+    twenty companies. That over-simplification is one of the things this demo argues
+    against.
+  </p>
+
+  <div id="tl-wrap">
+    <canvas id="tl" aria-label="Timeline of model releases"></canvas>
+    <div id="tl-hover" hidden></div>
+  </div>
+
+  <div id="tl-controls">
+    <button class="btn sm" id="btn-play">Play</button>
+    <input type="range" id="tl-slider" min="0" max="1000" value="1000" aria-label="Scrub through time">
+  </div>
+
+  <div id="tl-filters">
+    <div class="fgroup" id="tl-filter" role="group" aria-label="Filter by openness">
+      <button data-filter="all" class="on">All</button>
+      <button data-filter="open">Downloadable</button>
+      <button data-filter="closed">Rented</button>
+    </div>
+    <div class="fgroup" id="tl-region" role="group" aria-label="Filter by region">
+      <button data-region="all" class="on">Everywhere</button>
+      <button data-region="US">US</button>
+      <button data-region="China">China</button>
+      <button data-region="Europe">Europe</button>
+      <button data-region="Other">Other</button>
+    </div>
+  </div>
+
+  <div id="tl-stats">
+    <div class="stat"><b id="tl-date">—</b><span>showing up to</span></div>
+    <div class="stat"><b id="tl-total">0</b><span>releases so far</span></div>
+    <div class="stat"><b id="tl-year">0</b><span>in the last 12 months</span></div>
+    <div class="stat"><b id="tl-open">0</b><span>of those, downloadable</span></div>
+  </div>
+
+  <div id="tl-legend"></div>
+  <p class="shapekey">
+    “Downloadable” is not the same as “open source”. Several of these carry licences
+    with commercial restrictions or acceptable-use clauses. The field calls them open
+    source anyway; the licence is shown when you hover a dot.
+  </p>
+
+  <div id="tl-unlock" hidden></div>
+
+  <div style="margin-top:20px">
+    <button class="btn primary" id="btn-toact3">So what can it actually do?</button>
+  </div>
+</section>
+
+<!-- =========================== ACT III ================================ -->
+<section class="act" data-act="3" hidden>
+  <h1>What AI has actually done</h1>
+  <p class="lede" style="margin:10px 0 8px">
+    A test score is only a stand-in for the real question: has any of this made a
+    difference outside of an exam? Here is what AI has actually done in six fields where
+    the results can be checked — proteins, medicine, weather, materials, mathematics and
+    software. Some of it earned a Nobel Prize. Some of it turned out to be a compound
+    first reported in 1972.
+  </p>
+  <p class="lede" style="margin:0 0 20px">
+    Each result below separates <b>what the machine did</b> from <b>what the people
+    around it did</b>, because that gap is where almost all of the overclaiming happens.
+  </p>
+
+  <div id="domain-nav" role="group" aria-label="Jump to a domain"></div>
+  <div id="domains"></div>
+
+  <div id="cut">
+    <h3>Cut from this demo</h3>
+    <p>
+      Claims that were researched for this app and deliberately left out. A demo that
+      only shows its wins is an advertisement, and the problem in this field is not a
+      shortage of impressive claims — it is that impressive claims travel faster than
+      their corrections.
+    </p>
+    <ul id="cut-list"></ul>
+  </div>
+
+  <div class="closers">
+    <div class="closer">
+      <div><span class="num" id="closer-doubling">—</span><span class="unit">days</span></div>
+      <h4>How often the length of job AI can do on its own doubles</h4>
+      <p id="closer-doubling-note"></p>
+    </div>
+    <div class="closer">
+      <div><span class="num" id="closer-fit">—</span><span class="unit">days</span></div>
+      <h4>The same doubling, worked out live from this app’s own chart</h4>
+      <p>Calculated on the spot from the five points plotted in the third test, so the number here and the chart there cannot drift apart. It will not match the published figure exactly — five points are not the full dataset — and saying so is the honest version.</p>
+    </div>
+    <div class="closer">
+      <div><span class="num" id="closer-gap">—</span><span class="unit">months</span></div>
+      <h4>How far the best downloadable models trail the best paid ones</h4>
+      <p id="closer-gap-note"></p>
+    </div>
+  </div>
+
+  <div id="final">
+    <p>
+      The five tests you drew came from the same handful of AI models, over the same few
+      years. Most of them ended up further along than people tend to guess. The last one
+      climbed to nearly solved — and then, on a harder version of the same test, dropped
+      back to almost nothing.
+    </p>
+    <p>
+      And the most careful study anyone has run on these tools found experienced
+      programmers working <b>19% slower</b> with them, while being sure they were working
+      faster.
+    </p>
+    <p>
+      So the honest conclusion is neither “AI is racing ahead” nor “AI is overhyped”.
+      Both are visible in the same data, in the same months. It is that “how good is AI”
+      is not one number that rises together: the edge of what it can do is jagged, and
+      the only reliable way to know which side of that edge a particular job falls on is
+      to try the job and measure it. Intuition will not tell you — including the
+      intuition you just tested over five rounds.
+    </p>
+  </div>
+
+  <div id="sources">
+    <h3>Every source</h3>
+    <p>
+      Each was checked against the lab, the benchmark maintainer, the journal or the
+      leaderboard while this was built. Where a widely-repeated number could not be
+      traced to one of those, it was cut rather than softened — see above.
+      Settings → Run the self-test checks the dataset’s integrity live.
+    </p>
+    <ul id="source-list"></ul>
+  </div>
+</section>
+
+<footer id="foot">
+  <span class="msu">Murray State University</span>
+  One HTML file · runs offline · nothing leaves this device
+</footer>
+
+</main>
+
+<!-- ========================== SETTINGS ============================== -->
+<div class="overlay" id="settings" hidden>
+  <div class="sheet-inner">
+    <div class="sheet-head">
+      <div><h2>Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presenter mode &mdash; oversized UI for a projector</span>
+        </label>
+      </div>
+      <div class="field">
+        <label class="lbl">Proof</label>
+        <button class="btn" id="btn-selftest">Run the self-test</button>
+        <p class="help">
+          Checks that every plotted point resolves to a declared source, that no
+          source is cited and never used, that each series runs forward in time,
+          that the hidden data really does follow the shown data, that every
+          result in Act III says what the machine did AND what the humans did,
+          that the scoring is monotone and scores a perfect guess at 1.0&times;,
+          and that the doubling time stated in Act III matches the points
+          actually plotted in Act I. Results appear here and in the console.
+        </p>
+        <div id="selftest-out"></div>
+      </div>
+      <div class="field">
+        <label class="lbl">About</label>
+        <p class="help">
+          Built for Murray State University by Bryant Harrison. All data is embedded; the app makes
+          no network requests and stores nothing. Reloading resets it.
+          Figures were verified against primary sources in August 2026 &mdash;
+          several are already moving.
+        </p>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="settings">Done</button></div>
+  </div>
+</div>
+
+<script>
+/* ==== data.js ==== */
+/* ==========================================================================
+   Undershoot — the dataset.
+
+   Every number on screen comes from this file, and every number in this file
+   carries a source. Nothing is here because it sounded right.
+
+   `status` on a datum is one of:
+     'primary'  — checked against the lab, the benchmark maintainer, the
+                  paper, or the leaderboard itself during the build.
+     'reported' — a credible secondary source, not contradicted, but not
+                  confirmed at the primary source.
+     'disputed' — the claim exists and is contested. Shown WITH the dispute.
+
+   Nothing rated below 'reported' is displayed. Claims that failed that bar
+   were cut, and the cuts are listed in CUT at the bottom, because what a
+   dataset refuses to include is part of its argument.
+   ========================================================================== */
+
+const DATA = (() => {
+
+/* --------------------------------------------------------------------------
+   The opening screen. Assume the room knows nothing — not what a benchmark
+   is, not what any of these models are called, not that any of this is
+   measured at all.
+   -------------------------------------------------------------------------- */
+
+const INTRO = {
+  title: 'How much has AI changed since ChatGPT? Draw your guess, then see the real answer.',
+  body: [
+    'In late 2022 ChatGPT arrived and AI became something anyone could use. Ever since, it has been measured constantly — graded on public tests, the same idea as an exam, except the questions and the scores are out in the open for anyone to check. Fix this real software bug. Answer this PhD-level chemistry question. Solve this puzzle.',
+    'This is a short, hands-on look at what those measurements show. You will see five of these tests. For each one, the real scores are already drawn up to a point in the past. Your job is to drag a line across the chart — with your finger or your mouse — showing where you think the score went next. Then the true line appears on top of yours.',
+    'There is nothing to beat and no score to earn. It is just a way to check your own sense of how this has gone against what actually happened, and people are often surprised. The usual surprise is that the numbers ran further than felt reasonable — which is where this demo gets its name: undershoot. But it is not one smooth story, and the last of the five tests is where that becomes clear.'
+  ],
+  note: 'No AI is used anywhere in this app. Everything you see is a chart, a set of published numbers, and a link to the original source of each one.',
+  cta: 'Start the first test'
+};
+
+/* --------------------------------------------------------------------------
+   ACT I — the five rounds.
+
+   Each shows a real series up to a cutoff, asks the viewer to draw the rest,
+   then reveals it. Every round carries: what the test actually is in plain
+   words, a concrete example of one task from it, and what a human scores.
+   The first four tend to land higher than people guess (hence "undershoot").
+   The fifth climbs steeply and then, on a harder version, collapses — the
+   turn the whole demo is built around.
+   -------------------------------------------------------------------------- */
+
+/* Every chart's time axis runs to here, whatever its data does, so the five
+   are visually comparable and none of them look like they stopped caring in
+   2025. Where a series genuinely has no data past some date, the line ends and
+   the chart says so — see `endNote`. */
+const AXIS_END = '2026-08-15';
+
+const ROUNDS = [
+
+/* ---- 1. SWE-bench Verified ---------------------------------------------- */
+{
+  id: 'swebench',
+  name: 'Fixing real bugs',
+  metric: 'SWE-bench Verified',
+  real: 'Researchers call this test SWE-bench Verified.',
+  unit: '%',
+  scale: 'linear',
+  yMin: 0, yMax: 100,
+  xLabel: 'When the model was released',
+  yLabel: 'Bugs actually fixed',
+  yLabelShort: 'Bugs fixed',
+  askDate: '2025-09-29',
+
+  plain: 'Someone files a bug report on a real, working piece of software. The AI is given the bug report and the entire codebase, and has to write the fix itself. It is marked right only if the project’s own tests pass afterwards. No hints, no human help.',
+  human: 'These are real bugs that real programmers took real time to fix. There is no tidy "human score" to compare against — the honest comparison is that a professional developer resolves essentially all of them, given long enough.',
+  example: {
+    kind: 'text',
+    label: 'A task from this test looks like',
+    body: '“Calling .fit() twice on the same estimator gives a different result the second time. Expected: identical output. Actual: coefficients differ by ~1e-3.”\n\nThe model gets that report and 1.2 million lines of code. It has to find the cause and write the patch.',
+    note: 'Paraphrased to be readable; the real tasks are historical GitHub issues from projects like Django, scikit-learn and SymPy.'
+  },
+  question: 'In mid-2024 the best model fixed about a third of them. Where is it a year later?',
+
+  shown: [
+    { date: '2024-06-20', label: 'Claude 3.5 Sonnet', value: 33.4, status: 'primary', src: 'anthropic-computer-use' },
+    { date: '2024-10-22', label: 'Claude 3.5 Sonnet (new)', value: 49.0, status: 'primary', src: 'anthropic-computer-use' }
+  ],
+  hidden: [
+    { date: '2025-02-24', label: 'Claude 3.7 Sonnet', value: 63.7, note: 'no scaffold; 70.3% with parallel-compute scaffold', status: 'primary', src: 'anthropic-37' },
+    { date: '2025-05-22', label: 'Claude Opus 4', value: 72.5, status: 'primary', src: 'anthropic-4' },
+    { date: '2025-08-07', label: 'GPT-5', value: 74.9, status: 'primary', src: 'openai-gpt5' },
+    { date: '2025-09-29', label: 'Claude Sonnet 4.5', value: 82.0, note: 'parallel test-time compute; 77.2% base', status: 'primary', src: 'anthropic-45' }
+  ],
+  endNote: 'no lab has published this score since',
+  reveal: {
+    headline: 'A third of them, to four in five, in fifteen months.',
+    body: 'Then something more telling than another number: the labs stopped reporting this test. Anthropic’s Opus 4.7 page mentions it only to say it screens for memorisation of it. The Opus 4.8 page does not mention it at all. Opus 5 reports a different test entirely. An exam gets retired when passing it stops telling anyone apart — and this one was retired about two years after it was built to be hard.',
+    caveat: 'These scores are reported by the companies that make the models, and how you run the test matters: the same model scores several points apart depending on how many attempts it is allowed. The 82% figure allows several; the single-attempt score was 77%.'
+  }
+},
+
+/* ---- 2. GPQA Diamond ----------------------------------------------------- */
+{
+  id: 'gpqa',
+  name: 'Questions that beat PhDs',
+  metric: 'GPQA Diamond',
+  real: 'Researchers call this test GPQA Diamond.',
+  unit: '%',
+  scale: 'linear',
+  yMin: 0, yMax: 100,
+  xLabel: 'When the model was released',
+  yLabel: 'Questions answered correctly',
+  yLabelShort: 'Answered right',
+  askDate: '2026-06-01',
+
+  plain: 'This test is a set of a few hundred multiple-choice questions in physics, chemistry and biology, written by PhDs to be hard for other PhDs. The questions were built to resist a web search: the writers gave them to clever people with unlimited internet access and thirty minutes, and kept only the ones those people still got wrong.',
+  human: 'Someone holding a PhD, answering questions in their own narrow subfield, scores 69.7%. A clever non-expert with Google and half an hour scores 34%. Both are measured numbers from the test’s own paper, and they are the two dashed lines on the chart.',
+  example: {
+    kind: 'text',
+    label: 'A question from this test looks like',
+    body: 'One question names three specific chemical reagents, asks which product forms and why the competing reaction is disfavoured, and offers four plausible answers — three of which are exactly what you would get by making one reasonable mistake.',
+    note: 'Described rather than quoted: the real questions are deliberately kept out of easy reach so that models cannot be trained on them.'
+  },
+  question: 'GPT-4 scored 39% in 2023. Draw what happened — and whether the PhD line gets crossed.',
+
+  markers: [
+    { value: 69.7, label: 'A PhD, in their own subfield', status: 'primary', src: 'gpqa-epoch' },
+    { value: 34.0, label: 'Clever non-expert, Google, 30 min', status: 'primary', src: 'gpqa-paper' }
+  ],
+  shown: [
+    { date: '2023-03-14', label: 'GPT-4', value: 39.0, status: 'reported', src: 'aa-gpqa' }
+  ],
+  hidden: [
+    { date: '2024-09-12', label: 'o1', value: 77.3, note: 'first model past the PhD line', status: 'primary', src: 'openai-o1' },
+    { date: '2025-11-18', label: 'Gemini 3 Pro', value: 91.9, status: 'primary', src: 'gemini3' },
+    { date: '2026-06-01', label: 'GPT-5.6 Sol / Gemini 3.1 Pro', value: 94.1, note: 'tied', status: 'primary', src: 'aa-gpqa' }
+  ],
+  reveal: {
+    headline: 'The PhD line was crossed in September 2024, and nobody threw a party.',
+    body: 'Eighteen months after GPT-4 scored 39%, a model went past the score of a PhD working in their own subject. The interesting part is not the crossing. It is that the crossing was a Thursday — no threshold, no ceremony — and that the number kept climbing afterwards as though nothing in particular had happened.',
+    caveat: 'A test of multiple-choice science questions is not a scientist. Beating the expert score here means the model answers questions like an expert. It does not mean it can do an expert’s job, which mostly consists of deciding which questions are worth asking.'
+  }
+},
+
+/* ---- 3. METR time horizon ------------------------------------------------ */
+{
+  id: 'metr',
+  name: 'How long it can work alone',
+  metric: 'METR time horizon',
+  real: 'This is METR’s “time horizon” measure.',
+  unit: 'min',
+  scale: 'log',
+  yMin: 1, yMax: 4000,
+  xLabel: 'When the model was released',
+  yLabel: 'How long that job takes a person',
+  yLabelShort: 'Job length, in human time',
+  askDate: '2026-06-26',
+
+  plain: 'Instead of scoring answers, this measures how big a job the AI can finish on its own. Take a pile of real tasks and label each one by how long it takes a skilled human. Then find the length at which the AI succeeds about half the time. Short jobs it nearly always finishes. Long ones it nearly always fails. This is where the line crosses.',
+  human: 'Read the scale carefully: it is how long the task would take a person to do, not how long the machine runs. A model with a "four-hour" score is finishing jobs that would occupy a professional for four hours — and doing so about half the times it tries.',
+  example: {
+    kind: 'ladder',
+    label: 'Jobs of different sizes',
+    items: [
+      { t: '2 min',  s: 'Rename a variable everywhere it appears' },
+      { t: '15 min', s: 'Write a small script to reformat a data file' },
+      { t: '1 hour', s: 'Track down why one test fails only on Tuesdays' },
+      { t: '4 hours', s: 'Add a feature across several files, with tests' },
+      { t: '1 day+', s: 'Port a component to a different framework' }
+    ]
+  },
+  question: 'In March 2023 it was about three minutes. Where is it now?',
+  scaleNote: 'The vertical scale multiplies rather than adds — each gridline is several times the one below it, not a fixed step. A straight line drawn on this chart is already explosive growth.',
+
+  shown: [
+    { date: '2023-03-14', label: 'GPT-4', value: 3.5, lo: 1.6, hi: 6.9, status: 'primary', src: 'metr-th11' },
+    { date: '2024-05-13', label: 'GPT-4o', value: 6.0, lo: 2.8, hi: 12.4, status: 'primary', src: 'metr-th11' },
+    { date: '2025-02-24', label: 'Claude 3.7 Sonnet', value: 60, lo: 32, hi: 106, status: 'primary', src: 'metr-th11' }
+  ],
+  hidden: [
+    { date: '2025-04-16', label: 'o3', value: 121, lo: 74, hi: 201, status: 'primary', src: 'metr-th11' },
+    { date: '2025-05-22', label: 'Claude Opus 4', value: 101, lo: 58, hi: 170, status: 'primary', src: 'metr-th11' },
+    { date: '2025-08-07', label: 'GPT-5', value: 214, lo: 117, hi: 480, status: 'primary', src: 'metr-th11' },
+    { date: '2025-11-24', label: 'Claude Opus 4.5', value: 320, lo: 170, hi: 729, status: 'primary', src: 'metr-th11' },
+    { date: '2026-06-26', label: 'GPT-5.6 Sol', value: 678, lo: 300, hi: 2400, status: 'primary', src: 'metr-sol' }
+  ],
+  reveal: {
+    headline: 'Three minutes, to eleven hours.',
+    body: 'METR’s own fit: across the whole period the number doubles every 196 days. Restrict it to models released since 2024 and it doubles every 89 days. The line is not just going up. It is bending upwards.',
+    caveat: 'The shaded band is the uncertainty, and it is enormous — the eleven-hour figure has a range from five hours to forty. The tasks are almost all software and research engineering, models do measurably worse on messy jobs where success is not clearly defined, and METR says measurements above sixteen hours are unreliable with its current task set. Its own lead author, on how this chart travels: “the hype machine will basically, whatever we do, just strip out all the caveats.”'
+  }
+},
+
+/* ---- 4. Price of capability ---------------------------------------------- */
+{
+  id: 'price',
+  name: 'What it costs',
+  metric: 'Price for GPT-4-level ability',
+  real: 'This is Epoch AI’s price-of-capability tracker.',
+  unit: '$',
+  scale: 'log',
+  yMin: 0.05, yMax: 60,
+  xLabel: 'Date',
+  yLabel: 'Dollars per million words in',
+  yLabelShort: 'Dollars per million',
+  askDate: '2025-02-05',
+
+  plain: 'This one measures money, not ability — and it is the only chart here that goes down. Pick one fixed level of ability and hold it there: whatever GPT-4 could do when it launched in 2023. Then ask, at each later date, what the cheapest model that still reaches that level charges to run. Models get better and they get cheaper at the same time, and holding the ability still is the only way to see the price on its own.',
+  human: 'Prices are quoted per million “tokens” — the small chunks of text models read and write, which come to roughly 750,000 words, or about eight novels. At the 2023 price, running those eight novels through a GPT-4-grade model cost $37.50.',
+  example: {
+    kind: 'text',
+    label: 'Why hold the ability fixed',
+    body: 'If you just track “what does the newest model cost”, you learn nothing, because the newest model keeps being more capable. Holding capability constant and watching the price fall is what tells you whether something that was expensive last year is cheap this year.',
+    note: 'This is Epoch AI’s method, not ours.'
+  },
+  question: 'It launched at $37.50 per million. Where does it land?',
+  scaleNote: 'The vertical scale multiplies here too, so each gridline down is several times cheaper than the one above — a straight line drawn on this chart is a steep collapse in price.',
+
+  shown: [
+    { date: '2023-03-14', label: 'GPT-4', value: 37.50, status: 'primary', src: 'epoch-price' },
+    { date: '2023-11-06', label: 'GPT-4 Turbo', value: 15.00, status: 'primary', src: 'epoch-price' },
+    { date: '2024-05-13', label: 'GPT-4o', value: 7.50, status: 'primary', src: 'epoch-price' }
+  ],
+  hidden: [
+    { date: '2024-05-23', label: 'Gemini 1.5 Pro', value: 2.19, status: 'primary', src: 'epoch-price' },
+    { date: '2025-02-05', label: 'Gemini 2.0 Flash', value: 0.18, status: 'primary', src: 'epoch-price' }
+  ],
+  endNote: 'Epoch stopped publishing here',
+  reveal: {
+    headline: '208 times cheaper, in 23 months.',
+    body: 'Epoch measured this decline across several ability levels and found it running between 9× and 900× per year depending which level you pick. For GPT-4-grade performance on PhD science questions: 40× per year. Every sentence that begins “it is too expensive to…” has a shelf life, and the shelf life is months.',
+    caveat: 'This line stops in February 2025 because that is where Epoch stopped publishing. Continuing it to today would be a guess drawn in the same ink as a measurement, so the demo does not do it.'
+  }
+},
+
+/* ---- 5. ARC-AGI — the turn ----------------------------------------------- */
+{
+  id: 'arc',
+  turn: true,
+  name: 'The one that turns',
+  metric: 'ARC-AGI-1',
+  real: 'This is the ARC-AGI benchmark, created by François Chollet.',
+  unit: '%',
+  scale: 'linear',
+  yMin: 0, yMax: 100,
+  xLabel: 'Date',
+  yLabel: 'Puzzles solved',
+  yLabelShort: 'Puzzles solved',
+  askDate: '2024-12-20',
+
+  plain: 'This test is made of small coloured grids. You are shown two or three examples of some rule being applied, and then a fresh grid to apply the same rule to. Nobody tells you what the rule is — working it out from those few examples is the whole test.',
+  human: 'Try the example below. Most people get it in a couple of seconds, and children do fine on these. For five years, AI systems scored close to zero.',
+  example: {
+    kind: 'arc',
+    label: 'One puzzle from this test',
+    pairs: [
+      { in: [[0,2,0,0],[0,0,0,3],[0,0,0,0],[0,0,0,0]], out: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,2,0,3]] },
+      { in: [[1,0,4,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]], out: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[1,0,4,0]] }
+    ],
+    test: [[0,0,0,5],[6,0,0,0],[0,0,7,0],[0,0,0,0]],
+    answer: [[0,0,0,0],[0,0,0,0],[0,0,0,0],[6,0,7,5]],
+    note: 'An ARC-style task in the real format. The actual test set is hundreds of these, and they get much harder.'
+  },
+  question: 'For five years models scored near zero on this. In December 2024, OpenAI ran a new model called o3 against it. Draw what happened.',
+
+  shown: [
+    { date: '2020-06-11', label: 'GPT-3', value: 0, status: 'primary', src: 'arc-o3' },
+    { date: '2024-05-13', label: 'GPT-4o', value: 5, status: 'primary', src: 'arc-o3' }
+  ],
+  hidden: [
+    { date: '2024-12-20', label: 'o3, cheap setting', value: 75.7, note: '~$26 per puzzle', status: 'primary', src: 'arc-o3' },
+    { date: '2024-12-20', label: 'o3, expensive setting', value: 87.5, note: '~$4,560 per puzzle — 172× the compute for 12 points', status: 'primary', src: 'arc-o3' }
+  ],
+  reveal: {
+    headline: 'Five years near zero, then 87.5% in a single announcement.',
+    body: 'By this fifth test, most people have learned to draw these lines steeply — and here that instinct is right. Which is exactly the moment to turn the test over.',
+    caveat: 'The high score cost about $4,560 per puzzle — 172 times the computing power of the cheaper run, to gain twelve points. ARC Prize also disclosed that the model they tested had been trained on 75% of the public practice set. François Chollet, who built the test, in the same announcement: “Passing ARC-AGI does not equate to achieving AGI, and, as a matter of fact, I don’t think o3 is AGI yet. o3 still fails on some very easy tasks, indicating fundamental differences with human intelligence.”'
+  },
+
+  twist: {
+    metric: 'ARC-AGI-2, then ARC-AGI-3',
+    question: 'Three months later the same author published a second version — same idea, harder puzzles, built specifically to resist what o3 had done. Watch what the very same model scores.',
+    series: [
+      { date: '2025-03-24', label: 'o3 on version 2', value: 4, note: 'the same model that scored 87.5%', status: 'reported', src: 'arc-agi2' },
+      { date: '2025-07-09', label: 'Grok 4', value: 15.9, status: 'primary', src: 'grok4' },
+      { date: '2025-11-18', label: 'Gemini 3 Pro', value: 31.1, status: 'primary', src: 'arc-2025' },
+      { date: '2025-12-05', label: 'Best system of 2025', value: 54, note: 'a scaffold around Gemini 3 Pro, ~$31/puzzle — not a model on its own', status: 'primary', src: 'arc-2025' }
+    ],
+    humanBaseline: 100,
+    finale: {
+      headline: 'And then version three, March 2026.',
+      what: 'ARC-AGI-3 is 135 small interactive games. The agent sees a grid of coloured squares, can press a few keys, and gets a new picture back. It is told nothing: not the rules, not the goal, not how it will be scored. It has to poke at the thing, work out what winning even means, and carry that into the next level. A person just plays it. 486 people were tested in person to set the baseline.',
+      body: 'Two numbers get quoted for how AI does on this, and they are three months and one design decision apart.',
+      bars: [
+        { label: 'An average person', value: 48, kind: 'human',
+          note: 'average human tester, public games' },
+        { label: 'GPT-5.6 Sol, allowed to remember', value: 38.3, kind: 'good',
+          note: 'same model, same games, July 2026' },
+        { label: 'GPT-5.6 Sol, standard wiring', value: 13.3, kind: 'mid',
+          note: 'reasoning discarded between turns' },
+        { label: 'Best model on ARC Prize’s own run', value: 0.51, kind: 'bad',
+          note: 'March 2026 — different game set, no agent harness' }
+      ],
+      punch: 'The middle two are the same model, on the same games, in the same week. The only difference is whether it was allowed to keep its own reasoning from one turn to the next, and how its memory was compacted. Two settings. Three times the score.',
+      caveat: 'These four bars are not four measurements of one thing, and it matters. The top three are OpenAI’s own runs on the 25 public games. The bottom one is ARC Prize’s run of bare models on a private set of 55, through a standard harness with no agent scaffolding around it. Anyone quoting a single number for “how AI does on ARC-AGI-3” — including this demo, in an earlier draft — is quoting a harness as much as a model.',
+      status: 'primary', src: 'arc-3',
+      close: 'So the lesson is not “AI is hopeless at this”, and it is not “AI has nearly caught up”. It is that in the same month, the same systems were beating PhDs on science questions, scoring 4% on a puzzle set they had aced a version earlier, and swinging from 13% to 38% on a third one because of two configuration flags. Capability here is not one number that rises. The edge is jagged, the notches are not where intuition puts them, and a startling share of the headline figure is decided by how somebody wired the thing up.'
+    }
+  }
+}
+];
+
+/* --------------------------------------------------------------------------
+   ACT II — the release cadence.
+
+   "Open weights" means the file is downloadable and you can run it yourself.
+   It is NOT the same as open source: several of these carry licences with
+   commercial restrictions, and the field conflates the two constantly.
+   -------------------------------------------------------------------------- */
+
+const LABS = {
+  openai:    { name: 'OpenAI',            region: 'US',     hue: 174 },
+  anthropic: { name: 'Anthropic',         region: 'US',     hue: 22  },
+  google:    { name: 'Google DeepMind',   region: 'US',     hue: 210 },
+  meta:      { name: 'Meta',              region: 'US',     hue: 262 },
+  microsoft: { name: 'Microsoft',         region: 'US',     hue: 196 },
+  xai:       { name: 'xAI',               region: 'US',     hue: 320 },
+  nvidia:    { name: 'NVIDIA',            region: 'US',     hue: 88  },
+  ai2:       { name: 'Allen Institute',   region: 'US',     hue: 45  },
+  ibm:       { name: 'IBM',               region: 'US',     hue: 232 },
+  usother:   { name: 'Other US',          region: 'US',     hue: 300 },
+  mistral:   { name: 'Mistral',           region: 'Europe', hue: 34  },
+  euother:   { name: 'Other European',    region: 'Europe', hue: 12  },
+  deepseek:  { name: 'DeepSeek',          region: 'China',  hue: 145 },
+  alibaba:   { name: 'Alibaba (Qwen)',    region: 'China',  hue: 120 },
+  moonshot:  { name: 'Moonshot (Kimi)',   region: 'China',  hue: 100 },
+  zhipu:     { name: 'Zhipu / Z.ai (GLM)',region: 'China',  hue: 162 },
+  cnother:   { name: 'Other Chinese',     region: 'China',  hue: 132 },
+  tii:       { name: 'TII (UAE)',         region: 'Other',  hue: 60  },
+  other:     { name: 'Others',            region: 'Other',  hue: 250 }
+};
+
+/* `tier` positions a dot vertically. It is a coarse generation band and the
+   interface says so — it is NOT a benchmark score. No single number ranks a
+   hundred models across four years and twenty labs, and asserting one would
+   be the exact error this demo argues against. */
+const MODELS = [
+  /* 2022 */
+  { d:'2022-11-30', lab:'openai',   name:'ChatGPT (GPT-3.5)', open:false, tier:1, note:'The starting gun. A million users in five days.' },
+
+  /* 2023 */
+  { d:'2023-02-24', lab:'meta',     name:'LLaMA 1',        open:true,  lic:'Research only', tier:1, note:'Leaked within a week. The open-weight ecosystem starts here.' },
+  { d:'2023-03-14', lab:'openai',   name:'GPT-4',          open:false, tier:2, note:'The bar-exam claim came from this launch. It did not survive peer review.' },
+  { d:'2023-03-14', lab:'anthropic',name:'Claude 1',       open:false, tier:2, note:'Shipped the same day as GPT-4 and was buried by it.' },
+  { d:'2023-05-04', lab:'usother',  name:'StarCoder (BigCode)', open:true, lic:'OpenRAIL-M', tier:1, note:'Hugging Face and ServiceNow: an openly-trained code model.' },
+  { d:'2023-05-25', lab:'tii',      name:'Falcon 40B',     open:true,  lic:'Apache 2.0', tier:2, note:'First Gulf-funded model to top the open leaderboard.', approx:true },
+  { d:'2023-06-20', lab:'microsoft',name:'Phi-1',          open:true,  lic:'MIT', tier:1, note:'1.3B parameters beating far larger models — the small-model thesis.' },
+  { d:'2023-07-18', lab:'meta',     name:'Llama 2',        open:true,  lic:'Llama Community', tier:2, note:'First openly downloadable model licensed for commercial use.' },
+  { d:'2023-08-03', lab:'alibaba',  name:'Qwen-7B',        open:true,  lic:'Tongyi Qianwen', tier:2, note:'Alibaba opens what becomes the most-forked family in the world.' },
+  { d:'2023-09-06', lab:'tii',      name:'Falcon 180B',    open:true,  lic:'Falcon licence', tier:2, note:'Largest openly downloadable model at the time.', approx:true },
+  { d:'2023-09-27', lab:'mistral',  name:'Mistral 7B',     open:true,  lic:'Apache 2.0', tier:2, note:'Beat models twice its size, fully permissive. Europe arrives.' },
+  { d:'2023-11-02', lab:'cnother',  name:'Yi-34B (01.AI)', open:true,  lic:'Apache 2.0', tier:2, note:'Kai-Fu Lee’s lab enters the open-weight race.' },
+  { d:'2023-11-06', lab:'openai',   name:'GPT-4 Turbo',    open:false, tier:2, note:'128K context and a price cut.' },
+  { d:'2023-11-29', lab:'deepseek', name:'DeepSeek LLM 67B', open:true, lic:'DeepSeek licence', tier:2, note:'The first release from a lab nobody had heard of yet.' },
+  { d:'2023-12-06', lab:'google',   name:'Gemini 1.0',     open:false, tier:2, note:'Natively multimodal — and a launch demo Google admitted was edited.' },
+  { d:'2023-12-11', lab:'mistral',  name:'Mixtral 8x7B',   open:true,  lic:'Apache 2.0', tier:2, note:'Put mixture-of-experts in everyone’s hands.' },
+  { d:'2023-12-12', lab:'microsoft',name:'Phi-2',          open:true,  lic:'MIT', tier:1, note:'2.7B beating 13B peers.', approx:true },
+
+  /* 2024 */
+  { d:'2024-02-01', lab:'ai2',      name:'OLMo',           open:true,  lic:'Apache 2.0 · data + code too', tier:2, note:'Not just open weights — the training data and code as well. Genuinely reproducible.', approx:true },
+  { d:'2024-02-15', lab:'google',   name:'Gemini 1.5 Pro', open:false, tier:3, note:'A million tokens of context. An hour of video in one prompt.' },
+  { d:'2024-02-21', lab:'google',   name:'Gemma 1',        open:true,  lic:'Gemma licence', tier:2, note:'Google’s first open weights, built from the Gemini research.' },
+  { d:'2024-03-04', lab:'anthropic',name:'Claude 3 family', open:false, tier:3, note:'First non-OpenAI model to take the top of the public leaderboard.' },
+  { d:'2024-03-07', lab:'euother',  name:'Occiglot (EU5)', open:true,  lic:'Apache 2.0', tier:1, note:'A European research collective: five EU languages, openly.' },
+  { d:'2024-03-17', lab:'xai',      name:'Grok-1 (weights opened)', open:true, lic:'Apache 2.0', tier:2, note:'The only Grok generation ever open-weighted.' },
+  { d:'2024-03-27', lab:'usother',  name:'DBRX (Databricks)', open:true, lic:'Databricks Open Model', tier:2, note:'132B mixture-of-experts from an enterprise data company.' },
+  { d:'2024-03-28', lab:'other',    name:'Jamba (AI21, Israel)', open:true, lic:'Apache 2.0', tier:2, note:'First production-scale hybrid Mamba/Transformer.' },
+  { d:'2024-04-02', lab:'euother',  name:'Poro 34B (Finland)', open:true, lic:'Apache 2.0', tier:2, note:'Nordic open model trained on the LUMI supercomputer.' },
+  { d:'2024-04-09', lab:'google',   name:'CodeGemma',      open:true,  lic:'Gemma licence', tier:2, note:'The first specialist Gemma.', approx:true },
+  { d:'2024-04-18', lab:'meta',     name:'Llama 3',        open:true,  lic:'Llama Community', tier:3, note:'Became the most fine-tuned open model of the year.' },
+  { d:'2024-04-22', lab:'usother',  name:'OpenELM (Apple)', open:true, lic:'Apple ASCL', tier:1, note:'Apple releases open weights, aimed at devices.' },
+  { d:'2024-04-23', lab:'microsoft',name:'Phi-3 family',   open:true,  lic:'MIT', tier:2, note:'A phone-runnable model rivalling much larger ones.' },
+  { d:'2024-04-24', lab:'usother',  name:'Arctic (Snowflake)', open:true, lic:'Apache 2.0', tier:2, note:'Enterprise-focused open mixture-of-experts.' },
+  { d:'2024-05-06', lab:'deepseek', name:'DeepSeek-V2',    open:true,  lic:'DeepSeek licence', tier:3, note:'Started China’s API price war.' },
+  { d:'2024-05-13', lab:'openai',   name:'GPT-4o',         open:false, tier:3, note:'One model for text, vision and audio. 232ms voice latency.' },
+  { d:'2024-05-29', lab:'mistral',  name:'Codestral',      open:true,  lic:'Research only', tier:2, note:'Mistral’s first code model.' },
+  { d:'2024-06-06', lab:'alibaba',  name:'Qwen2',          open:true,  lic:'Apache 2.0 (most)', tier:3 },
+  { d:'2024-06-14', lab:'nvidia',   name:'Nemotron-4 340B', open:true, lic:'NVIDIA Open Model', tier:3, note:'A chip company releasing a huge model — to generate training data for everyone else.' },
+  { d:'2024-06-20', lab:'anthropic',name:'Claude 3.5 Sonnet', open:false, tier:3, note:'33.4% on the bug-fixing test — round one’s first point.' },
+  { d:'2024-06-27', lab:'google',   name:'Gemma 2',        open:true,  lic:'Gemma licence', tier:3 },
+  { d:'2024-06-27', lab:'cnother',  name:'InternLM2.5 (Shanghai AI Lab)', open:true, lic:'Free for commercial use', tier:2 },
+  { d:'2024-07-09', lab:'google',   name:'PaliGemma',      open:true,  lic:'Gemma licence', tier:2, note:'Gemma that can see.' },
+  { d:'2024-07-16', lab:'mistral',  name:'Codestral Mamba / Mathstral', open:true, lic:'Apache 2.0', tier:2, note:'A code model that is not a Transformer, and a maths specialist.' },
+  { d:'2024-07-23', lab:'meta',     name:'Llama 3.1 405B', open:true,  lic:'Llama Community', tier:3, note:'First open-weight model credibly compared to the closed frontier.' },
+  { d:'2024-08-20', lab:'other',    name:'Jamba 1.5 (AI21)', open:true, lic:'Jamba Open Model', tier:3 },
+  { d:'2024-09-12', lab:'openai',   name:'o1-preview',     open:false, tier:4, note:'Thinking before answering becomes a product. A second way to buy capability opens up.' },
+  { d:'2024-09-19', lab:'alibaba',  name:'Qwen2.5',        open:true,  lic:'Apache 2.0 (most)', tier:3, note:'Became the default base model for everyone else’s fine-tunes.' },
+  { d:'2024-09-25', lab:'meta',     name:'Llama 3.2',      open:true,  lic:'Llama Community', tier:3, note:'First Llama that can see, and first small enough for a phone.' },
+  { d:'2024-09-25', lab:'ai2',      name:'Molmo',          open:true,  lic:'Apache 2.0 · fully open', tier:3, note:'A fully open multimodal model competitive with closed ones.' },
+  { d:'2024-10-02', lab:'nvidia',   name:'Llama-3.1-Nemotron-70B', open:true, lic:'NVIDIA Open Model', tier:3, approx:true },
+  { d:'2024-10-21', lab:'ibm',      name:'Granite 3.0',    open:true,  lic:'Apache 2.0', tier:2, note:'IBM commits to fully permissive enterprise models.' },
+  { d:'2024-10-22', lab:'anthropic',name:'Claude 3.5 Sonnet (new)', open:false, tier:4, note:'Computer use: it looks at a screen and moves the cursor. 49% on the bug test.' },
+  { d:'2024-11-20', lab:'alibaba',  name:'QwQ-32B-Preview', open:true, lic:'Apache 2.0', tier:3, note:'An open thinking model, two months after o1.' },
+  { d:'2024-11-22', lab:'ai2',      name:'Tülu 3',         open:true,  lic:'Llama Community', tier:3, note:'The whole post-training recipe published, not just the result.' },
+  { d:'2024-12-02', lab:'euother',  name:'EuroLLM-9B',     open:true,  lic:'Open', tier:2, note:'EU-funded, every official EU language.' },
+  { d:'2024-12-12', lab:'microsoft',name:'Phi-4',          open:true,  lic:'MIT', tier:3, note:'Strong reasoning from synthetic data, fully permissive.' },
+  { d:'2024-12-17', lab:'tii',      name:'Falcon 3',       open:true,  lic:'Falcon licence', tier:2, approx:true },
+  { d:'2024-12-20', lab:'openai',   name:'o3 (announced)', open:false, tier:5, note:'87.5% on the grid puzzles at ~$4,560 a task. See round five.' },
+  { d:'2024-12-26', lab:'deepseek', name:'DeepSeek-V3',    open:true,  lic:'MIT', tier:4, note:'$5.6M for the final training run — a figure that excluded the cluster it ran on.' },
+  { d:'2024-12-31', lab:'ai2',      name:'OLMo 2',         open:true,  lic:'Apache 2.0 · fully open', tier:3 },
+
+  /* 2025 */
+  { d:'2025-01-14', lab:'cnother',  name:'MiniMax-01',     open:true,  lic:'Custom', tier:3, note:'456B mixture-of-experts built for extremely long context.' },
+  { d:'2025-01-20', lab:'deepseek', name:'DeepSeek-R1',    open:true,  lic:'MIT', tier:4, note:'Open weights, o1-class reasoning. Nvidia lost $589B of market value the following Monday.' },
+  { d:'2025-01-20', lab:'moonshot', name:'Kimi k1.5',      open:false, tier:4, note:'Matched o1 on maths and code the same week as R1.' },
+  { d:'2025-02-04', lab:'usother',  name:'SmolLM2 (Hugging Face)', open:true, lic:'Apache 2.0', tier:1, note:'Tiny, fully open, runs on almost anything.' },
+  { d:'2025-02-24', lab:'anthropic',name:'Claude 3.7 Sonnet', open:false, tier:4, note:'One model with a dial between answering fast and thinking hard. 63.7% on the bug test.' },
+  { d:'2025-03-07', lab:'cnother',  name:'Ling (Ant Group)', open:true, lic:'MIT', tier:3 },
+  { d:'2025-03-12', lab:'google',   name:'Gemma 3',        open:true,  lic:'Gemma licence', tier:3, note:'Multimodal, 140+ languages, 128K context — openly downloadable.' },
+  { d:'2025-03-13', lab:'ai2',      name:'OLMo 2 32B',     open:true,  lic:'Apache 2.0 · fully open', tier:3, note:'AI2 claims the first fully-open model past GPT-3.5 class.' },
+  { d:'2025-03-16', lab:'cnother',  name:'Ernie 4.5 / X1 (Baidu)', open:true, lic:'Apache 2.0 (opened later)', tier:4, note:'Baidu reverses course and open-sources its flagship.' },
+  { d:'2025-03-18', lab:'google',   name:'TxGemma',        open:true,  lic:'Health AI Dev Foundations', tier:2, note:'A Gemma tuned for drug discovery.' },
+  { d:'2025-03-25', lab:'google',   name:'Gemini 2.5 Pro', open:false, tier:5, note:'Took the top of every public leaderboard on release.' },
+  { d:'2025-04-01', lab:'other',    name:'Command A (Cohere, Canada)', open:true, lic:'CC-BY-NC', tier:3 },
+  { d:'2025-04-05', lab:'meta',     name:'Llama 4',        open:true,  lic:'Llama Community', tier:4, note:'The leaderboard submission was a tuned variant that was not the released model.' },
+  { d:'2025-04-16', lab:'openai',   name:'o3 / o4-mini',   open:false, tier:5, note:'Tools used inside the chain of thought.' },
+  { d:'2025-04-28', lab:'alibaba',  name:'Qwen3',          open:true,  lic:'Apache 2.0', tier:4 },
+  { d:'2025-04-30', lab:'microsoft',name:'Phi-4-reasoning', open:true, lic:'MIT', tier:3 },
+  { d:'2025-05-12', lab:'cnother',  name:'MiMo-7B (Xiaomi)', open:true, lic:'MIT', tier:2, note:'A phone company ships an open reasoning model.' },
+  { d:'2025-05-15', lab:'usother',  name:'SWE-1 (Windsurf)', open:false, tier:3, note:'A coding tool trains its own model — the first of several.' },
+  { d:'2025-05-20', lab:'google',   name:'MedGemma',       open:true,  lic:'Health AI Dev Foundations', tier:3, note:'An open medical model. Google is explicit that it is not clinical grade.' },
+  { d:'2025-05-20', lab:'google',   name:'Gemma 3n',       open:true,  lic:'Gemma licence', tier:3, note:'Built to run on a phone, multimodal.' },
+  { d:'2025-05-21', lab:'mistral',  name:'Devstral',       open:true,  lic:'Apache 2.0', tier:3, note:'Open agentic coding model.' },
+  { d:'2025-05-21', lab:'tii',      name:'Falcon-H1',      open:true,  lic:'Falcon licence', tier:3 },
+  { d:'2025-05-22', lab:'anthropic',name:'Claude Opus 4 / Sonnet 4', open:false, tier:5, note:'72.5% on the bug test.' },
+  { d:'2025-06-06', lab:'cnother',  name:'dots.llm1 (RedNote)', open:true, lic:'MIT', tier:3 },
+  { d:'2025-06-16', lab:'cnother',  name:'MiniMax-M1',     open:true,  lic:'Apache 2.0', tier:4 },
+  { d:'2025-06-27', lab:'cnother',  name:'Hunyuan-A13B (Tencent)', open:true, lic:'Tencent licence', tier:3 },
+  { d:'2025-07-09', lab:'xai',      name:'Grok 4',         open:false, tier:5, note:'15.9% on the harder grid puzzles — roughly double the field.' },
+  { d:'2025-07-11', lab:'moonshot', name:'Kimi K2',        open:true,  lic:'Modified MIT', tier:4, note:'A trillion parameters, openly downloadable.' },
+  { d:'2025-07-22', lab:'alibaba',  name:'Qwen3-Coder 480B', open:true, lic:'Apache 2.0', tier:4, note:'An open model aimed squarely at the paid coding agents.' },
+  { d:'2025-07-25', lab:'cnother',  name:'Step3 (StepFun)', open:true, lic:'Apache 2.0', tier:3 },
+  { d:'2025-08-05', lab:'openai',   name:'gpt-oss 120b / 20b', open:true, lic:'Apache 2.0', tier:4, note:'OpenAI’s first open weights since 2019.' },
+  { d:'2025-08-07', lab:'openai',   name:'GPT-5',          open:false, tier:5, note:'Routes between a fast model and a thinking one. 74.9% on the bug test.' },
+  { d:'2025-08-08', lab:'zhipu',    name:'GLM-4.5',        open:true,  lic:'MIT', tier:4 },
+  { d:'2025-08-18', lab:'nvidia',   name:'Nemotron Nano 2', open:true, lic:'NVIDIA Open Model', tier:3 },
+  { d:'2025-08-20', lab:'cnother',  name:'Seed-OSS-36B (ByteDance)', open:true, lic:'Apache 2.0', tier:3 },
+  { d:'2025-08-21', lab:'deepseek', name:'DeepSeek-V3.1',  open:true,  lic:'MIT', tier:4 },
+  { d:'2025-09-01', lab:'cnother',  name:'LongCat-Flash (Meituan)', open:true, lic:'MIT', tier:3, note:'A food-delivery company ships a 560B open model.' },
+  { d:'2025-09-29', lab:'anthropic',name:'Claude Sonnet 4.5', open:false, tier:5, note:'82% on the bug test. Anthropic reported 30+ hours of unbroken autonomous work.' },
+  { d:'2025-09-29', lab:'deepseek', name:'DeepSeek-V3.2-Exp', open:true, lic:'MIT', tier:4 },
+  { d:'2025-10-02', lab:'ibm',      name:'Granite 4.0',    open:true,  lic:'Apache 2.0', tier:3 },
+  { d:'2025-10-29', lab:'usother',  name:'Composer (Cursor)', open:false, tier:4, note:'The coding tool everyone uses ships its own frontier model.' },
+  { d:'2025-11-18', lab:'google',   name:'Gemini 3 Pro',   open:false, tier:6, note:'91.9% on the PhD questions, 31.1% on the harder grid puzzles.' },
+  { d:'2025-11-20', lab:'ai2',      name:'OLMo 3',         open:true,  lic:'Apache 2.0 · fully open', tier:4, note:'Weights, data, code and the training traces.' },
+  { d:'2025-11-24', lab:'anthropic',name:'Claude Opus 4.5', open:false, tier:6 },
+  { d:'2025-12-01', lab:'deepseek', name:'DeepSeek-V3.2',  open:true,  lic:'MIT', tier:5 },
+  { d:'2025-12-02', lab:'mistral',  name:'Mistral Large 3', open:true, lic:'Open weights', tier:4, note:'Europe returns to a large open flagship.' },
+  { d:'2025-12-11', lab:'openai',   name:'GPT-5.2',        open:false, tier:6, note:'Three weeks after Gemini 3, amid reports of an internal “Code Red”.' },
+
+  /* 2026 */
+  { d:'2026-01-05', lab:'tii',      name:'Falcon-H1R / Arabic', open:true, lic:'Falcon licence', tier:4 },
+  { d:'2026-02-05', lab:'anthropic',name:'Claude Opus 4.6', open:false, tier:6 },
+  { d:'2026-02-11', lab:'zhipu',    name:'GLM-5',          open:true,  lic:'Open weights', tier:5, note:'744B parameters, openly downloadable. Led every open model on the independent index.' },
+  { d:'2026-02-16', lab:'alibaba',  name:'Qwen3.5',        open:true,  lic:'Apache 2.0', tier:5, approx:true },
+  { d:'2026-02-19', lab:'google',   name:'Gemini 3.1 Pro', open:false, tier:7, note:'94.1% on the PhD questions. Still top of the hardest exam leaderboard in August 2026.' },
+  { d:'2026-03-05', lab:'openai',   name:'GPT-5.4',        open:false, tier:7 },
+  { d:'2026-04-08', lab:'meta',     name:'Muse Spark',     open:false, tier:6, note:'Meta’s first model from its new lab — and closed. The Llama era ends.' },
+  { d:'2026-04-15', lab:'alibaba',  name:'Qwen3.6',        open:true,  lic:'Apache 2.0', tier:5, approx:true },
+  { d:'2026-04-16', lab:'anthropic',name:'Claude Opus 4.7', open:false, tier:7 },
+  { d:'2026-04-24', lab:'deepseek', name:'DeepSeek V4',    open:true,  lic:'MIT', tier:6, note:'1.6T parameters, a million tokens of context by default.', approx:true },
+  { d:'2026-04-28', lab:'nvidia',   name:'Nemotron 3',     open:true,  lic:'NVIDIA Open Model', tier:5, approx:true },
+  { d:'2026-05-28', lab:'anthropic',name:'Claude Opus 4.8', open:false, tier:7 },
+  { d:'2026-06-09', lab:'anthropic',name:'Claude Fable 5 / Mythos 5', open:false, tier:7, note:'A new tier above the Opus line.' },
+  { d:'2026-06-30', lab:'anthropic',name:'Claude Sonnet 5', open:false, tier:7 },
+  { d:'2026-07-09', lab:'openai',   name:'GPT-5.6 (Sol / Terra / Luna)', open:false, tier:8, note:'METR measured Sol finishing eleven-hour jobs, half the time.' },
+  { d:'2026-07-09', lab:'xai',      name:'Grok 4.5',       open:false, tier:7 },
+  { d:'2026-07-17', lab:'moonshot', name:'Kimi K3',        open:true,  lic:'Kimi K3 licence', tier:7, note:'2.8T parameters. The largest openly released model so far — from a startup, in Beijing.' },
+  { d:'2026-07-24', lab:'anthropic',name:'Claude Opus 5',  open:false, tier:8 }
+];
+
+/* --------------------------------------------------------------------------
+   ACT II (b) — capability unlocks, fired by the scrubber.
+   Where a claim was later walked back, the walk-back travels with it.
+   -------------------------------------------------------------------------- */
+
+const UNLOCKS = [
+  { d:'2022-11-30', title:'Anyone can use it',
+    body:'Not a new technique — the underlying method was a year old — but the moment it stopped requiring an API key and a knack for phrasing.',
+    status:'primary', src:'chatgpt' },
+  { d:'2023-03-14', title:'It passes the exams (with an asterisk)',
+    body:'GPT-4 launched claiming the 90th percentile on the bar exam. A peer-reviewed re-analysis in 2024 found the comparison group was people re-sitting the exam after failing. Against first-time takers it lands near the 62nd percentile; against those who passed, the 48th, and the 15th on the essays.',
+    status:'primary', src:'bar-exam', flag:'walked back' },
+  { d:'2023-09-25', title:'It can see',
+    body:'Image input arrives in ChatGPT. Show it a photo, a screenshot, a diagram, a whiteboard.',
+    status:'primary', src:'gpt4v' },
+  { d:'2023-12-14', title:'It found new mathematics',
+    body:'FunSearch, in Nature: a language model paired with a search loop improves the best-known construction for a real open problem. The first documented case of one of these systems producing genuinely new mathematics.',
+    status:'primary', src:'funsearch' },
+  { d:'2024-02-15', title:'A million tokens of context',
+    body:'An hour of video, or an entire codebase, in a single prompt. Later research found that what a model can reliably use is far shorter than the amount it will accept.',
+    status:'primary', src:'gemini15', flag:'caveat' },
+  { d:'2024-07-25', title:'Silver at the Mathematical Olympiad',
+    body:'A DeepMind system scored 28/42 at the 2024 IMO — silver-medal standard. Humans had to translate the problems into formal logic first, and it took up to three days per problem against a student’s 4.5 hours. Graded by Timothy Gowers and Joseph Myers.',
+    status:'primary', src:'imo2024' },
+  { d:'2024-09-12', title:'It thinks before it answers',
+    body:'o1. Spending longer on a hard question now buys accuracy — a second lever, separate from making the model bigger.',
+    status:'primary', src:'openai-o1' },
+  { d:'2024-10-09', title:'A Nobel Prize',
+    body:'The 2024 Chemistry Nobel goes to David Baker “for computational protein design”, and to Demis Hassabis and John Jumper “for protein structure prediction”.',
+    status:'primary', src:'nobel' },
+  { d:'2024-10-22', title:'It can drive a computer',
+    body:'Claude is given a screen, a cursor and a keyboard. On a benchmark of real desktop tasks, success went from the teens to the low seventies in about a year.',
+    status:'primary', src:'anthropic-computer-use' },
+  { d:'2025-01-20', title:'The frontier gets open weights',
+    body:'DeepSeek-R1: downloadable by anyone, MIT licence, reasoning on par with the best closed model. Nvidia lost $589 billion of market value the following Monday — the largest one-day loss for any company to that point.',
+    status:'primary', src:'r1' },
+  { d:'2025-05-14', title:'It improves the algorithms',
+    body:'AlphaEvolve finds a way to multiply two 4×4 matrices in 48 multiplications instead of 49 — the first improvement in that case in 56 years — and a better sphere-packing arrangement in 11 dimensions.',
+    status:'primary', src:'alphaevolve' },
+  { d:'2025-07-10', title:'And it can make you slower',
+    body:'METR ran a randomised trial: sixteen experienced open-source developers, real tasks in codebases they knew well. With AI tools they took 19% longer. They had predicted a 24% speed-up beforehand, and still believed they had been 20% faster afterwards.',
+    status:'primary', src:'metr-rct', flag:'counterweight' },
+  { d:'2025-07-21', title:'Gold at the Olympiad, in plain English',
+    body:'Gemini Deep Think scored 35/42 at the 2025 IMO — gold — reading the problems in ordinary language, inside the students’ own 4.5-hour sessions, graded by the competition’s own coordinators. OpenAI announced the same score two days earlier, graded by former medallists it hired itself, ahead of the closing ceremony organisers had asked labs to wait for.',
+    status:'primary', src:'imo2025', flag:'contested' },
+  { d:'2026-03-25', title:'A test where the wiring matters more than the model',
+    body:'ARC-AGI-3: small interactive games with no instructions and no stated goal. Bare frontier models run through the standard harness scored 0.51%. Four months later, the same generation of model — allowed to keep its own reasoning between turns — scored 38.3% on the public games, against an average human tester’s 48%. Two configuration settings, three times the score.',
+    status:'primary', src:'arc-3-openai', flag:'caveat' }
+];
+
+/* --------------------------------------------------------------------------
+   ACT III — what it can actually do.
+
+   Mathematics is one domain among several, and it is here because it is where
+   the potential showed up earliest and is checkable most rigorously — a proof
+   is either right or it is not. Every entry separates what the machine did
+   from what the humans did, because that is where the overclaiming lives.
+   -------------------------------------------------------------------------- */
+
+const DOMAINS = [
+{
+  id: 'bio',
+  name: 'Proteins and biology',
+  lede: 'This is the most settled case of the six. A problem that had stayed open for fifty years is now routine infrastructure that biologists use every day, and it has a Nobel Prize attached.',
+  items: [
+    { verdict:'verified', date:'2024-10-09', title:'A Nobel Prize for protein structure',
+      what:'Predicting how a protein folds from its sequence alone — a fifty-year-old grand challenge in biology.',
+      machine:'AlphaFold2 predicted structures at close to experimental accuracy, turning a job that took years of laboratory work into minutes, across essentially all 200 million known proteins.',
+      human:'The 2024 Nobel Prize in Chemistry went one half to David Baker “for computational protein design”, and the other half jointly to Demis Hassabis and John Jumper “for protein structure prediction”.',
+      status:'primary', src:'nobel' },
+    { verdict:'verified', date:'2024-05-08', title:'AlphaFold 3, and a fight about the code',
+      what:'Extending structure prediction from proteins alone to proteins together with DNA, RNA, drug molecules and ions.',
+      machine:'On an independent test set of structures published after its training cut-off, it beat the standard classical docking tool by a statistically decisive margin.',
+      human:'Nature published an editorial about the backlash when the paper shipped with pseudocode rather than working code. Under pressure DeepMind released it; the model weights still require individual application and clinical use is contractually prohibited.',
+      caveat:'A broader study of this class of tool found that no deep-learning docking method yet beats classical tools once you check whether the predicted poses are physically plausible, rather than scoring on distance alone.',
+      status:'primary', src:'alphafold3' },
+    { verdict:'verified', date:'2025-02-21', title:'A fluorescent protein that evolution never made',
+      what:'Designing a working protein far outside anything in nature.',
+      machine:'A protein language model generated esmGFP, a fluorescent protein 96 mutations away from the nearest known natural one — around 58% sequence identity.',
+      human:'The protein was then built in a laboratory and its glow measured, and the work was published in Science.',
+      caveat:'The company’s framing — that this equals 500 million years of evolution — is its own interpretation, not a measured quantity. The first candidate was about 50× dimmer than natural versions, and esmGFP took a week to reach comparable brightness against under a day for the natural ones.',
+      status:'primary', src:'esm3' },
+    { verdict:'verified', date:'2024-10-02', title:'A whole brain, wired',
+      what:'The complete connectome of an adult fruit fly: every neuron, every connection.',
+      machine:'Automated segmentation and synapse detection produced the initial reconstruction of 139,255 neurons and about 54.5 million synapses.',
+      human:'Roughly 33 person-years of manual proofreading by research groups and citizen scientists. This was AI-assisted and human-verified, not an autonomous result.',
+      caveat:'Postsynapse detection was only 44.7% complete against 93.7% for presynapses, electrical synapses were not captured, and it is one individual fly.',
+      status:'primary', src:'flywire' }
+  ]
+},
+{
+  id: 'med',
+  name: 'Medicine',
+  lede: 'This is where the gap between a test score and a real clinical result is widest. The wins here involve real trials and real patients — and so do the failures.',
+  items: [
+    { verdict:'verified', date:'2025-06-01', title:'An AI-discovered drug reaches human trials',
+      what:'Idiopathic pulmonary fibrosis, a lung disease with few good options.',
+      machine:'One system identified the biological target and another designed the molecule. Both steps ran on Insilico Medicine’s own pipeline, and that division of labour is their account of it.',
+      human:'A randomised Phase 2a trial of 71 patients over 12 weeks, published in Nature Medicine. At the highest dose, lung capacity improved by 98.4 mL against a 20.3 mL decline on placebo.',
+      caveat:'The authors’ own stated limits: “small cohort size of each arm, the geographical and demographic homogeneity of the participants… and a short period of follow-up.” No AI-discovered drug has completed Phase 3 or been approved as of August 2026.',
+      status:'primary', src:'rentosertib' },
+    { verdict:'verified', date:'2020-01-01', title:'Catching cancers that radiologists missed',
+      what:'Breast cancer screening from mammograms.',
+      machine:'An AI system read the same scans as six independent radiologists.',
+      human:'In a peer-reviewed retrospective study in Nature, it reduced false negatives by 9.4% on the US dataset and 2.7% on the UK dataset relative to the radiologists’ original readings.',
+      caveat:'Retrospective, not a live deployment. The datasets differ between countries, and restricted training data limits reproducibility. The authors framed it as groundwork for clinical trials, not a finished clinical claim.',
+      status:'primary', src:'mammo' },
+    { verdict:'overclaimed', date:'2024-07-04', title:'And on real patient records, it is worse than the doctors',
+      what:'Diagnosis from actual emergency-department records rather than exam questions.',
+      machine:'Open models were tested on 2,400 real cases across four abdominal conditions.',
+      human:'Published in Nature Medicine: the models performed significantly worse than clinicians, with a 16–25 percentage-point gap, and were sensitive to both the quantity and the order of the information they were given.',
+      caveat:'Set this against every headline about models passing medical licensing exams. The exam is not the job. Google’s own open medical model ships with an explicit warning that its output is “not intended to directly inform clinical diagnosis, patient management decisions, treatment recommendations.”',
+      status:'primary', src:'mimic-cdm' }
+  ]
+},
+{
+  id: 'weather',
+  name: 'Weather',
+  lede: 'This is the quietest success of the six, and probably the one that touches the most people day to day. It is already running in production at Europe’s main forecasting centre.',
+  items: [
+    { verdict:'verified', date:'2024-12-04', title:'Better forecasts, in eight minutes',
+      what:'Ten-to-fifteen day global weather prediction.',
+      machine:'GenCast beat the European Centre’s own ensemble forecast on 97.2% of 1,320 targets tested, with the biggest gains three to five days out, and produced a fifteen-day forecast in eight minutes on a single chip. Its predecessor GraphCast beat the deterministic forecast on over 90% of targets.',
+      human:'Both were published in Nature and Science respectively, evaluated against the operational system rather than a strawman.',
+      caveat:'The authors are explicit that this does not replace physics: the AI is trained on, and initialised from, data that conventional weather models produce. It is a layer on top, not a substitute. ECMWF has since put an AI forecasting system into operational use alongside the physical one.',
+      status:'primary', src:'gencast' }
+  ]
+},
+{
+  id: 'materials',
+  name: 'Materials',
+  lede: 'This is the cautionary field. The claimed output is enormous, but a pattern keeps repeating: a result announced as “new” turns out to mean only “new to this particular database”.',
+  items: [
+    { verdict:'verified', date:'2023-11-29', title:'2.2 million candidate crystals',
+      what:'Searching for stable inorganic materials that nobody has made.',
+      machine:'GNoME predicted 2.2 million structures, of which 381,000 were assessed as newly stable — against roughly 48,000 previously known.',
+      human:'The work was published in Nature, and 736 of the predicted structures were independently matched against an existing materials database.',
+      caveat:'The authors themselves flag that stability on paper is not the same as being makeable. A peer-reviewed critique in Chemistry of Materials disputes how much of this is genuinely new. And the companion robotic-synthesis paper claims 41 new compounds in its abstract while its own main text confirms only 36 of 57 targets.',
+      status:'primary', src:'gnome' },
+    { verdict:'overclaimed', date:'2026-01-01', title:'The flagship new material was reported in 1972',
+      what:'Microsoft’s MatterGen generated a compound to hit a specific mechanical target, and it was synthesised and measured.',
+      machine:'It produced TaCr₂O₆, which was made and measured at 158–169 GPa against a 200 GPa design target.',
+      human:'A peer-reviewed paper in Materials Horizons found the compound is essentially identical to one already reported in 1972 — and present in MatterGen’s own training data.',
+      caveat:'This is the clearest documented case in the whole demo of a generative model retrieving rather than inventing, published in a refereed journal. No AI-designed material has been confirmed in industrial production.',
+      status:'primary', src:'mattergen-critique' }
+  ]
+},
+{
+  id: 'math',
+  name: 'Mathematics',
+  lede: 'This is where the potential showed up earliest, because a proof can be checked exactly in a way a drug candidate cannot. It holds two genuine results from 2026 — and the field’s loudest false alarm.',
+  items: [
+    { verdict:'verified', date:'2026-05-01', title:'Erdős Problem #1196',
+      what:'A 1966 conjecture about primitive sets — sets of integers where no member divides another.',
+      machine:'GPT-5.4 Pro, queried autonomously, produced the key idea: bounding the sums using Markov chains with von Mangoldt weights. The paper’s abstract says the method was “suggested from output of GPT-5.4 Pro”.',
+      human:'Eight mathematicians, Terence Tao among them, verified it, generalised it and wrote it up. Two of the six main theorems are machine-checked in Lean; the other four rest on human review.',
+      quote:'proof generation, proof verification, and proof digestion. In this particular case, the first two steps were extremely rapid due to modern AI tools; however, properly digesting the AI-generated proofs into a coherent exposition that places the arguments in context with both past literature and future directions remains a slower process that requires expert human attention.',
+      quoteBy:'Terence Tao, 3 May 2026',
+      status:'primary', src:'erdos1196' },
+    { verdict:'verified', date:'2026-05-21', title:'An eighty-year-old conjecture, disproved',
+      what:'Erdős conjectured in 1946 how many pairs of points in a plane can sit exactly one unit apart. It stood for eighty years.',
+      machine:'An OpenAI model produced the counterexample construction autonomously, using algebraic number theory — an approach nobody had brought to the problem.',
+      human:'Nine mathematicians, including Noga Alon, Timothy Gowers and Jacob Tsimerman, wrote up and analysed the disproof. Will Sawin then improved the bound further.',
+      caveat:'The conjecture is disproved; the problem is not solved. The true growth rate remains unknown.',
+      status:'primary', src:'unitdistance' },
+    { verdict:'verified', date:'2025-11-05', title:'AlphaEvolve, and what testing it honestly looks like',
+      what:'A system that writes candidate programs and evolves them against a checker.',
+      machine:'Beat a 1969 record for multiplying 4×4 matrices — 48 multiplications instead of 49. Improved a sphere-packing arrangement in 11 dimensions. Across 50+ open problems it matched the state of the art on about 75% and improved it on about 20%.',
+      human:'Terence Tao and three colleagues then ran it across 67 problems and published everything, including what did not work.',
+      quote:'AlphaEvolve was extremely good at locating ‘exploits’ in the verification code we provided, for instance using degenerate solutions or overly forgiving scoring.',
+      quoteBy:'Terence Tao et al., 5 November 2025',
+      caveat:'On problems well-known enough to be in its training data it returned optimal answers almost instantly, and the authors had to disguise problems to tell recall from search. It disproved no major open conjecture. Substantial human effort goes into designing a checker it cannot cheat.',
+      status:'primary', src:'alphaevolve-tao' },
+    { verdict:'overclaimed', date:'2025-10-19', title:'The ten problems that were never open',
+      what:'The field’s loudest false alarm, and worth telling carefully.',
+      machine:'GPT-5 searched the mathematical literature and found published papers solving problems listed as open on a well-known database.',
+      human:'An OpenAI vice-president posted that “GPT-5 found solutions to 10 (!) previously unsolved Erdős problems and made progress on 11 others”. Thomas Bloom, who maintains the database, called it “a dramatic misrepresentation” and explained that “open” on his site means only “I personally am unaware of a paper which solves it”. Demis Hassabis: “This is embarrassing.” The post was deleted.',
+      caveat:'Be fair to everyone in this: the researcher who ran the search described it accurately as a literature-search result. An executive inflated it. The correction took about a day and came from the person best placed to make it. The system worked — but only because somebody checked.',
+      status:'primary', src:'erdosgate' }
+  ]
+},
+{
+  id: 'software',
+  name: 'Software',
+  lede: 'This is the field where these systems are used the most and measured the most — and it is where the best-controlled study of them found the opposite of what almost everyone expected.',
+  items: [
+    { verdict:'verified', date:'2025-09-29', title:'Thirty hours without supervision',
+      what:'How long an AI can be left running on a programming job.',
+      machine:'Anthropic reported observing a model hold focus for more than 30 hours on a complex multi-step task; OpenAI reported more than 24 hours for its coding model.',
+      human:'Both are observations reported by the companies that make the models, from internal evaluation. Neither is an independently published benchmark.',
+      status:'primary', src:'anthropic-45' },
+    { verdict:'overclaimed', date:'2025-07-10', title:'It made experienced developers 19% slower',
+      what:'The best-controlled study of AI coding tools yet run, and the result nobody expected.',
+      machine:'Sixteen experienced open-source developers, 246 real tasks in large repositories they already knew well, randomly assigned to allow or forbid AI tools.',
+      human:'METR found they took 19% longer with the AI tools. They had forecast a 24% speed-up beforehand — and after finishing, still believed they had been 20% faster.',
+      caveat:'METR is explicit that this does not necessarily generalise to less experienced developers, unfamiliar codebases, other kinds of work, or later models. But it is a randomised controlled trial, and the perception gap it documents — being slower while feeling faster — should make anyone cautious about self-reported productivity gains from any tool.',
+      status:'primary', src:'metr-rct' },
+    { verdict:'verified', date:'2023-09-15', title:'Help is not evenly distributed',
+      what:'A pre-registered field experiment with 758 consultants at Boston Consulting Group.',
+      machine:'On 18 tasks inside the model’s effective range, people using GPT-4 completed 12.2% more tasks, 25.1% faster, at higher quality.',
+      human:'On one task deliberately placed outside that range, the people using AI were 19% less likely to reach the right answer.',
+      caveat:'This is the study the phrase “jagged frontier” comes from. The same tool, in the same workflow, on the same afternoon, helps considerably and hurts measurably depending on which side of an invisible line the task falls — and the line is not marked.',
+      status:'primary', src:'jagged' }
+  ]
+},
+{
+  id: 'other',
+  name: 'Elsewhere',
+  lede: 'A few more fields worth a mention: quantum computing, nuclear fusion and chip design — the last of which is still an unresolved dispute.',
+  items: [
+    { verdict:'verified', date:'2024-11-20', title:'Decoding quantum errors',
+      what:'Quantum computers need constant error correction to work at all.',
+      machine:'AlphaQubit, a transformer trained on simulated noise and tuned on real hardware data, achieved lower error rates than the best previous decoder on Google’s actual quantum chip.',
+      human:'The work was published in Nature.',
+      caveat:'It is still too slow for the real-time loop a superconducting quantum computer needs — roughly a microsecond per round. A proof of concept, not deployed.',
+      status:'primary', src:'alphaqubit' },
+    { verdict:'verified', date:'2022-02-16', title:'Holding a fusion plasma in shape',
+      what:'Controlling the magnetic coils of a tokamak reactor.',
+      machine:'A reinforcement-learning controller trained entirely in simulation, then transferred to the real TCV reactor with no further tuning, including configurations nobody had run before.',
+      human:'The work was published in Nature by DeepMind and EPFL.',
+      caveat:'One mid-scale research reactor, not a power station. The authors note the controllers are “not guaranteed to avoid plasma disruptions” in reality.',
+      status:'primary', src:'fusion' },
+    { verdict:'disputed', date:'2024-09-26', title:'Chip design, and an argument that has not ended',
+      what:'Using reinforcement learning to lay out the physical blocks on a chip.',
+      machine:'Google published in Nature that its system produced floorplans comparable to or better than human engineers in hours, and says it was used in several generations of its own TPU chips.',
+      human:'A detailed methodological critique was published in Communications of the ACM alleging selective benchmarks and unfair baselines. Independent researchers at UC San Diego re-implemented the method and did not reproduce the advantage. A Google engineer who challenged the results internally was dismissed and sued. Nature added an editorial note, then removed it without explanation, then published an addendum.',
+      caveat:'No chip-design vendor has adopted the approach, and no independent positive replication has appeared. This one is genuinely unresolved, and it belongs here precisely because it is not tidy.',
+      status:'primary', src:'alphachip' }
+  ]
+}
+];
+
+/* Claims researched and deliberately excluded. Shown in the app, because a
+   demo that only shows its wins is an advertisement. */
+const CUT = [
+  { claim:'A counterexample to the Jacobian conjecture (July 2026)',
+    why:'It could be traced only to a hobbyist website — no paper, no coverage in the mathematical press, and an attribution that contradicted itself between sources. An extraordinary claim with no evidence behind it does not go on a chart.' },
+  { claim:'Erdős Problem #793 solved by GPT-5.6',
+    why:'This came from a post by a credible mathematician, but no corresponding paper exists anywhere. It is plausible but unsourceable, which is not the same as false — it simply is not shown here.' },
+  { claim:'Perfect scores by several AI systems at the 2026 Mathematical Olympiad',
+    why:'There was only one secondary source, and no corroboration in the places that would certainly have covered a result like this, so it was cut.' },
+  { claim:'“Claude Fable 5 scores 95% on the bug-fixing test” and “Claude Opus 5 scores 64.7% on the hardest exam”',
+    why:'Neither number appears on the benchmarks’ own leaderboards — the real leader on the hardest exam is Gemini 3.1 Pro at 46.44%. Aggregator sites that publish unsourced numbers tend to rank well in search results, which is how figures like these spread.' },
+  { claim:'A 2026 point on the cost curve',
+    why:'Epoch AI has not published one since March 2025, so the line stops where the data stops rather than being extended by guesswork.' },
+  { claim:'A widely-cited critique that a robotic lab’s 41 “new” materials were already known',
+    why:'It could not be located or verified during the build, despite being repeated in several places. It was replaced with two claims that could be verified: a peer-reviewed critique in Chemistry of Materials, and the fact that the original paper’s own abstract and main text disagree with each other.' },
+  { claim:'Gemma 4, and MiniMax M3',
+    why:'Both appeared in an early research pass, and neither model actually exists. They were removed from the timeline before it shipped.' }
+];
+
+/* --------------------------------------------------------------------------
+   Sources.
+   -------------------------------------------------------------------------- */
+
+const SOURCES = {
+  'anthropic-computer-use': { t:'Anthropic — Claude 3.5 Sonnet and computer use', u:'https://www.anthropic.com/news/3-5-models-and-computer-use' },
+  'anthropic-37':  { t:'Anthropic — Claude 3.7 Sonnet', u:'https://www.anthropic.com/news/claude-3-7-sonnet' },
+  'anthropic-4':   { t:'Anthropic — Claude 4', u:'https://www.anthropic.com/news/claude-4' },
+  'anthropic-45':  { t:'Anthropic — Claude Sonnet 4.5', u:'https://www.anthropic.com/news/claude-sonnet-4-5' },
+  'openai-gpt5':   { t:'OpenAI — Introducing GPT-5', u:'https://openai.com/index/introducing-gpt-5/' },
+  'openai-o1':     { t:'OpenAI — Learning to reason with LLMs', u:'https://openai.com/index/learning-to-reason-with-llms/' },
+  'gpt4v':         { t:'OpenAI — GPT-4V system card', u:'https://openai.com/index/gpt-4v-system-card/' },
+  'gpqa-epoch':    { t:'Epoch AI — GPQA Diamond', u:'https://epoch.ai/benchmarks/gpqa-diamond' },
+  'gpqa-paper':    { t:'GPQA: A Graduate-Level Google-Proof Q&A Benchmark', u:'https://arxiv.org/abs/2311.12022' },
+  'aa-gpqa':       { t:'Artificial Analysis — GPQA Diamond', u:'https://artificialanalysis.ai/evaluations/gpqa-diamond' },
+  'gemini3':       { t:'Google DeepMind — Gemini 3 Pro', u:'https://deepmind.google/models/gemini/pro/' },
+  'metr-th11':     { t:'METR — Time Horizon 1.1', u:'https://metr.org/blog/2026-1-29-time-horizon-1-1/' },
+  'metr-sol':      { t:'METR — GPT-5.6 Sol evaluation', u:'https://metr.org/blog/2026-06-26-gpt-5-6-sol/' },
+  'metr-rct':      { t:'METR — Measuring the impact of early-2025 AI on experienced developer productivity', u:'https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/' },
+  'mittr-metr':    { t:'MIT Technology Review — The most misunderstood graph in AI', u:'https://www.technologyreview.com/2026/02/05/1132254/this-is-the-most-misunderstood-graph-in-ai/' },
+  'epoch-price':   { t:'Epoch AI — LLM inference price trends', u:'https://epoch.ai/data-insights/llm-inference-price-trends' },
+  'epoch-eci':     { t:'Epoch AI — Open models lag closed models by four months', u:'https://epoch.ai/data-insights/open-closed-eci-gap' },
+  'arc-o3':        { t:'ARC Prize — OpenAI o3 breakthrough', u:'https://arcprize.org/blog/oai-o3-pub-breakthrough' },
+  'arc-agi2':      { t:'ARC Prize — Announcing ARC-AGI-2', u:'https://arcprize.org/blog/announcing-arc-agi-2-and-arc-prize-2025' },
+  'arc-2025':      { t:'ARC Prize — 2025 results and analysis', u:'https://arcprize.org/blog/arc-prize-2025-results-analysis' },
+  'arc-3':         { t:'ARC Prize — ARC-AGI-3 launch', u:'https://arcprize.org/blog/arc-agi-3-launch' },
+  'arc-3-human':   { t:'ARC Prize — the ARC-AGI-3 human dataset', u:'https://arcprize.org/blog/arc-agi-3-human-dataset' },
+  'arc-3-openai':  { t:'OpenAI — How two settings tripled our ARC-AGI-3 scores', u:'https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/' },
+  'grok4':         { t:'xAI — Grok 4', u:'https://x.ai/news/grok-4' },
+  'hle':           { t:'Scale AI — Humanity’s Last Exam leaderboard', u:'https://labs.scale.com/leaderboard/humanitys_last_exam' },
+  'chatgpt':       { t:'OpenAI — Introducing ChatGPT', u:'https://openai.com/index/chatgpt/' },
+  'bar-exam':      { t:'Martínez — Re-evaluating GPT-4’s bar exam performance (AI & Law)', u:'https://link.springer.com/article/10.1007/s10506-024-09396-9' },
+  'funsearch':     { t:'FunSearch — Nature', u:'https://www.nature.com/articles/s41586-023-06924-6' },
+  'gemini15':      { t:'Google — Gemini 1.5 Pro', u:'https://blog.google/technology/ai/google-gemini-next-generation-model-february-2024/' },
+  'nolima':        { t:'NoLiMa — long-context evaluation beyond literal matching', u:'https://arxiv.org/abs/2502.05167' },
+  'imo2024':       { t:'Google DeepMind — AI solves IMO problems at silver-medal level', u:'https://deepmind.google/discover/blog/ai-solves-imo-problems-at-silver-medal-level/' },
+  'imo2025':       { t:'Google DeepMind — Gemini Deep Think achieves gold-medal standard at the IMO', u:'https://deepmind.google/discover/blog/advanced-version-of-gemini-with-deep-think-officially-achieves-gold-medal-standard-at-the-international-mathematical-olympiad/' },
+  'nobel':         { t:'The Nobel Prize in Chemistry 2024', u:'https://www.nobelprize.org/prizes/chemistry/2024/popular-information/' },
+  'alphafold3':    { t:'AlphaFold 3 — Nature 630:493', u:'https://www.nature.com/articles/s41586-024-07487-w' },
+  'esm3':          { t:'Simulating 500 million years of evolution with a language model — Science', u:'https://www.science.org/doi/10.1126/science.ads0018' },
+  'flywire':       { t:'FlyWire — whole-brain connectome of the fruit fly, Nature 634:124', u:'https://www.nature.com/articles/s41586-024-07558-y' },
+  'rentosertib':   { t:'Rentosertib Phase 2a — Nature Medicine', u:'https://www.nature.com/articles/s41591-025-03743-2' },
+  'mammo':         { t:'International evaluation of an AI system for breast cancer screening — Nature 577', u:'https://www.nature.com/articles/s41586-019-1799-6' },
+  'mimic-cdm':     { t:'Clinical decision making on real records — Nature Medicine, July 2024', u:'https://www.nature.com/nm/' },
+  'gencast':       { t:'GenCast — Nature, December 2024', u:'https://www.nature.com/articles/s41586-024-08252-9' },
+  'gnome':         { t:'GNoME — Nature 624:80', u:'https://www.nature.com/articles/s41586-023-06735-9' },
+  'mattergen-critique': { t:'MatterGen predicts compounds from the training dataset — Materials Horizons', u:'https://doi.org/10.1039/d6mh00268d' },
+  'r1':            { t:'Epoch AI — What went into training DeepSeek-R1', u:'https://epoch.ai/gradient-updates/what-went-into-training-deepseek-r1' },
+  'alphaevolve':   { t:'Google DeepMind — AlphaEvolve', u:'https://deepmind.google/discover/blog/alphaevolve-a-gemini-powered-coding-agent-for-designing-advanced-algorithms/' },
+  'alphaevolve-tao': { t:'Tao, Georgiev, Gómez-Serrano, Wagner — Mathematical exploration and discovery at scale', u:'https://terrytao.wordpress.com/2025/11/05/mathematical-exploration-and-discovery-at-scale/' },
+  'erdos1196':     { t:'Primitive sets and von Mangoldt chains: Erdős Problem #1196 (arXiv:2605.00301)', u:'https://arxiv.org/abs/2605.00301' },
+  'erdos1196-tao': { t:'Terence Tao — Primitive sets and von Mangoldt chains', u:'https://terrytao.wordpress.com/2026/05/03/primitive-sets-and-von-mangoldt-chains-erdos-problem-1196-and-beyond/' },
+  'unitdistance':  { t:'Gil Kalai — The unit distance problem was disproved, by AI', u:'https://gilkalai.wordpress.com/2026/05/21/amazing-erdos-unit-distance-problem-was-disproved-it-was-achieved-by-ai/' },
+  'erdosgate':     { t:'TechCrunch — OpenAI’s embarrassing math', u:'https://techcrunch.com/2025/10/19/openais-embarrassing-math/' },
+  'jagged':        { t:'Navigating the Jagged Technological Frontier — Harvard Business School / BCG', u:'https://www.hbs.edu/faculty/Pages/item.aspx?num=64700' },
+  'alphaqubit':    { t:'AlphaQubit — Nature, November 2024', u:'https://www.nature.com/articles/s41586-024-08148-8' },
+  'fusion':        { t:'Magnetic control of tokamak plasmas through deep reinforcement learning — Nature', u:'https://www.nature.com/articles/s41586-021-04301-9' },
+  'alphachip':     { t:'Markov — The False Dawn: Reevaluating Google’s RL for chip macro placement (CACM)', u:'https://cacm.acm.org/research/the-false-dawn-reevaluating-googles-reinforcement-learning-for-chip-macro-placement/' },
+  'kimi-k3':       { t:'Moonshot AI — Kimi K3', u:'https://www.kimi.com/blog/kimi-k3' },
+  'gemma':         { t:'Gemma — open models from Google DeepMind', u:'https://en.wikipedia.org/wiki/Gemma_(language_model)' },
+  'olmo':          { t:'Allen Institute for AI — OLMo 3', u:'https://allenai.org/blog/olmo3' },
+  'cursor':        { t:'Cursor — Composer', u:'https://cursor.com/blog/composer' },
+  'gpt-oss':       { t:'OpenAI — gpt-oss', u:'https://huggingface.co/openai/gpt-oss-120b' }
+};
+
+/* Closing facts for Act III's summary panel. */
+const CLOSERS = {
+  gapMonths: 4,
+  gapNote: 'Epoch AI reported on 29 May 2026 that since the start of that year, the best openly downloadable models had trailed the closed frontier by an average of four months. That figure was published seven weeks before Kimi K3, which narrowed the gap again.',
+  gapSrc: 'epoch-eci',
+  doubling: 89,
+  doublingNote: 'This is METR’s fit over the models released since 2024. Measured across the whole period back to 2019, the doubling time is 196 days.',
+  doublingSrc: 'metr-th11'
+};
+
+return { INTRO, AXIS_END, ROUNDS, LABS, MODELS, UNLOCKS, DOMAINS, CUT, SOURCES, CLOSERS };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = DATA;
+
+
+/* ==== engine.js ==== */
+/* ==========================================================================
+   Undershoot — engine.
+
+   Pure functions: date and value scaling, the guess curve, and the scoring
+   that turns "the line you drew" into "the factor you were out by". No DOM,
+   no canvas — so node can test all of it.
+   ========================================================================== */
+
+const ENGINE = (() => {
+
+/* ---- dates --------------------------------------------------------------- */
+
+const DAY = 86400000;
+
+/** ISO date string -> epoch ms. Parsed as UTC so the chart does not shift
+ *  by a day depending on which side of the Atlantic the laptop is on. */
+function t(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+}
+
+function isoOf(ms) {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function fmtDate(ms, style) {
+  const d = new Date(ms);
+  if (style === 'short') return MONTHS[d.getUTCMonth()] + ' ’' + String(d.getUTCFullYear()).slice(2);
+  if (style === 'year')  return String(d.getUTCFullYear());
+  return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCFullYear();
+}
+
+/**
+ * Time-axis ticks.
+ *
+ * Picks a month step so the axis carries roughly four to seven marks whatever
+ * the span. The first version drew a gridline only at each 1 January, which
+ * meant the bug-fixing round — sixteen months wide — had exactly ONE labelled
+ * mark on its x axis. A reader cannot get the scale off a single tick: they
+ * cannot tell whether the gap they are being asked to forecast across is three
+ * months or three years, which is the one thing they need in order to answer.
+ */
+function timeTicks(t0, t1, target) {
+  const want = target || 8;
+  const months = (t1 - t0) / (30.44 * DAY);
+  const steps = [1, 2, 3, 6, 12, 24, 60];
+  let step = steps[steps.length - 1];
+  for (const s of steps) if (months / s <= want) { step = s; break; }
+
+  const d0 = new Date(t0);
+  let y = d0.getUTCFullYear();
+  let m = Math.ceil(d0.getUTCMonth() / step) * step;
+  while (m >= 12) { m -= 12; y++; }
+
+  const out = [];
+  for (let guard = 0; guard < 500; guard++) {
+    const ms = Date.UTC(y, m, 1);
+    if (ms > t1) break;
+    if (ms >= t0) out.push({ ms, step, major: m === 0 });
+    m += step;
+    while (m >= 12) { m -= 12; y++; }
+  }
+  return out;
+}
+
+/** Label for a time tick. Sub-year steps carry the year too — "Apr" alone is
+ *  ambiguous on an axis spanning more than one of them. */
+function tickLabel(ms, step) {
+  const d = new Date(ms);
+  if (step >= 12) return String(d.getUTCFullYear());
+  return MONTHS[d.getUTCMonth()] + ' \u2019' + String(d.getUTCFullYear()).slice(2);
+}
+
+/* ---- value formatting ---------------------------------------------------- */
+
+/** Minutes -> the unit a human would actually say out loud. */
+function fmtMinutes(v) {
+  if (v < 1)   return Math.round(v * 60) + ' sec';
+  if (v < 90)  return round(v, 1) + ' min';
+  const h = v / 60;
+  if (h < 48)  return round(h, 1) + ' hr';
+  return round(h / 24, 1) + ' days';
+}
+
+function fmtValue(v, unit) {
+  if (unit === 'min') return fmtMinutes(v);
+  if (unit === '$')   return '$' + (v >= 1 ? round(v, 2) : v.toFixed(2));
+  return round(v, 1) + '%';
+}
+
+function round(v, dp) {
+  const f = Math.pow(10, dp);
+  return Math.round(v * f) / f;
+}
+
+/* ---- scales -------------------------------------------------------------- */
+
+/** Maps a domain to [0,1]. Log scale clamps at a floor so a zero datum (which
+ *  ARC-AGI-1 legitimately has) does not blow up — linear rounds never use it. */
+function makeScale(kind, min, max) {
+  if (kind === 'log') {
+    const lo = Math.log10(Math.max(min, 1e-6));
+    const hi = Math.log10(max);
+    return {
+      kind,
+      to:   v => (Math.log10(Math.max(v, min)) - lo) / (hi - lo),
+      from: u => Math.pow(10, lo + u * (hi - lo)),
+      min, max
+    };
+  }
+  return {
+    kind: 'linear',
+    to:   v => (v - min) / (max - min),
+    from: u => min + u * (max - min),
+    min, max
+  };
+}
+
+/**
+ * Durations a person would actually say out loud. A log axis built from the
+ * usual 1-2-5 ladder produced "1.7 hr", "3.3 hr", "16.7 hr" and "33.3 hr" on
+ * the task-length round — arithmetically correct, and meaningless to read.
+ * Nobody thinks in 3.3 hours. These are the round numbers of time.
+ */
+const DURATIONS = [1, 2, 5, 10, 15, 30, 60, 120, 240, 480, 720, 1440, 2880, 5760, 10080];
+
+/** Pick durations spread evenly in log space, so the axis stays legible
+ *  whatever range it covers. */
+function durationTicks(min, max, count) {
+  const want = count || 7;
+  const cands = DURATIONS.filter(v => v >= min && v <= max);
+  if (cands.length <= want) return cands;
+  const gap = Math.log10(max / min) / (want - 1);
+  const out = [];
+  let last = -Infinity;
+  for (const v of cands) {
+    const l = Math.log10(v);
+    if (l - last >= gap - 1e-9) { out.push(v); last = l; }
+  }
+  return out;
+}
+
+/** Every value on the ladder divides cleanly, so these labels never carry a
+ *  decimal point. That is the whole point of the ladder. */
+function fmtDurationTick(v) {
+  if (v < 60) return v + ' min';
+  if (v < 1440) return (v / 60) + ' hr';
+  const d = v / 1440;
+  return d + (d === 1 ? ' day' : ' days');
+}
+
+/** Nice tick values for an axis. A log axis thins from a 1-2-5 ladder to 1-5
+ *  and then to decades rather than stacking eleven gridlines on a 300px plot. */
+function ticks(scale, count) {
+  if (scale.kind === 'log') {
+    const want = count || 7;
+    const lo = Math.floor(Math.log10(scale.min));
+    const hi = Math.ceil(Math.log10(scale.max));
+    let last = [];
+    for (const mults of [[1, 2, 5], [1, 5], [1]]) {
+      const out = [];
+      for (let e = lo; e <= hi; e++) {
+        for (const m of mults) {
+          const v = round(m * Math.pow(10, e), 10);
+          if (v >= scale.min && v <= scale.max) out.push(v);
+        }
+      }
+      last = out;
+      if (out.length <= want) return out;
+    }
+    return last;
+  }
+  const step = niceStep((scale.max - scale.min) / (count || 5));
+  const out = [];
+  for (let v = Math.ceil(scale.min / step) * step; v <= scale.max + 1e-9; v += step) out.push(round(v, 6));
+  return out;
+}
+
+function niceStep(raw) {
+  const e = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / e;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * e;
+}
+
+/* ---- the guess curve ----------------------------------------------------- */
+
+/** The guess is stored as an array of {x, y} in unit space (0..1 across the
+ *  predicted region, 0..1 up the value axis), built by dragging. It is
+ *  resampled onto a fixed grid so that a fast drag with sparse pointer events
+ *  and a slow one produce the same object. */
+const GUESS_N = 64;
+
+function emptyGuess(y0) {
+  const pts = [];
+  for (let i = 0; i < GUESS_N; i++) pts.push({ x: i / (GUESS_N - 1), y: y0 });
+  return pts;
+}
+
+/** Paint a drag sample into the guess: sets the nearest grid column and
+ *  linearly fills any columns skipped since the last sample, so a quick swipe
+ *  leaves a continuous line rather than a dotted one. */
+function paint(guess, x, y, lastX) {
+  const clampedX = clamp(x, 0, 1), clampedY = clamp(y, 0, 1);
+  const i = Math.round(clampedX * (GUESS_N - 1));
+  if (lastX == null) { guess[i] = { x: i / (GUESS_N - 1), y: clampedY }; return i; }
+  const j = Math.round(clamp(lastX, 0, 1) * (GUESS_N - 1));
+  const from = Math.min(i, j), to = Math.max(i, j);
+  const yFrom = j <= i ? guess[j].y : clampedY;
+  const yTo   = j <= i ? clampedY   : guess[j].y;
+  for (let k = from; k <= to; k++) {
+    const f = to === from ? 1 : (k - from) / (to - from);
+    guess[k] = { x: k / (GUESS_N - 1), y: yFrom + (yTo - yFrom) * f };
+  }
+  return i;
+}
+
+/** Has the room actually drawn something, or just tapped once? */
+function guessDrawn(guess, y0) {
+  return guess.some(p => Math.abs(p.y - y0) > 0.004);
+}
+
+/** A forecast is an answer over time, not a changed pixel in its middle. The
+ * ask-date endpoint must be deliberately touched and the line must cover most
+ * of the unknown period before scoring can use it. */
+function guessComplete(guess, y0) {
+  const changed = guess.map((p, i) => Math.abs(p.y - y0) > 0.004 ? i : -1).filter(i => i >= 0);
+  if (!changed.length) return false;
+  const first = changed[0] / (GUESS_N - 1);
+  const last = changed[changed.length - 1] / (GUESS_N - 1);
+  return first <= 0.15 && last >= 0.95 && last - first >= 0.70;
+}
+
+function guessAt(guess, x) {
+  const u = clamp(x, 0, 1) * (GUESS_N - 1);
+  const i = Math.floor(u), f = u - i;
+  if (i >= GUESS_N - 1) return guess[GUESS_N - 1].y;
+  return guess[i].y + (guess[i + 1].y - guess[i].y) * f;
+}
+
+function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+/* ---- scoring ------------------------------------------------------------- */
+
+/**
+ * Compare the drawn curve to the truth at the ask date.
+ *
+ * The headline number is a RATIO, not a percentage-point difference, because
+ * the whole point is that people are wrong multiplicatively. Being told you
+ * were "40 points low" on SWE-bench does not land; being told the real answer
+ * was 2.4x your guess does.
+ *
+ * For a percentage metric the ratio is taken on the value itself. For the
+ * price round — where the truth falls — the ratio is inverted so that
+ * "undershot the change" still reads as a number greater than one.
+ */
+function score(round_, guess) {
+  const truth = finalValue(round_);
+  const scale = makeScale(round_.scale, round_.yMin, round_.yMax);
+  const predicted = scale.from(guessAt(guess, 1));
+  const falling = isFalling(round_);
+
+  const ratio = falling
+    ? (predicted <= 0 ? Infinity : predicted / truth)
+    : (predicted <= 0 ? Infinity : truth / predicted);
+
+  return {
+    predicted,
+    truth,
+    ratio,
+    miss: isFinite(ratio) ? Math.max(ratio, 1 / ratio) : Infinity,
+    under: ratio > 1.0,
+    /* Percentage-point gap is still shown for the linear rounds, where it is
+       the unit the audience already thinks in. */
+    points: round_.unit === '%' ? truth - predicted : null,
+    falling
+  };
+}
+
+function isFalling(round_) {
+  const all = allPoints(round_);
+  return all[all.length - 1].value < all[0].value;
+}
+
+function allPoints(round_) {
+  return round_.shown.concat(round_.hidden);
+}
+
+function finalValue(round_) {
+  const h = round_.hidden;
+  return h[h.length - 1].value;
+}
+
+/** Median of the per-round ratios, for the closing card. Median rather than
+ *  mean because one Infinity (someone drew a flat line on the price round)
+ *  should not eat the summary. */
+function medianRatio(results) {
+  const rs = results.map(r => r.ratio).filter(r => isFinite(r)).sort((a, b) => a - b);
+  if (!rs.length) return null;
+  const m = Math.floor(rs.length / 2);
+  return rs.length % 2 ? rs[m] : (rs[m - 1] + rs[m]) / 2;
+}
+
+function medianMiss(results) {
+  const rs = results.map(r => r.miss == null ? Math.max(r.ratio, 1 / r.ratio) : r.miss)
+    .filter(r => isFinite(r)).sort((a, b) => a - b);
+  if (!rs.length) return null;
+  const m = Math.floor(rs.length / 2);
+  return rs.length % 2 ? rs[m] : (rs[m - 1] + rs[m]) / 2;
+}
+
+/* ---- doubling time ------------------------------------------------------- */
+
+/** Least-squares fit of log2(value) against time, returned as days per
+ *  doubling. Used to state METR's trend from the plotted points rather than
+ *  quoting a number the chart does not support. */
+function doublingDays(points) {
+  const pts = points.filter(p => p.value > 0);
+  if (pts.length < 2) return null;
+  const xs = pts.map(p => t(p.date) / DAY);
+  const ys = pts.map(p => Math.log2(p.value));
+  const n = xs.length;
+  const mx = xs.reduce((a, b) => a + b, 0) / n;
+  const my = ys.reduce((a, b) => a + b, 0) / n;
+  let num = 0, den = 0;
+  for (let i = 0; i < n; i++) { num += (xs[i] - mx) * (ys[i] - my); den += (xs[i] - mx) ** 2; }
+  if (den === 0 || num === 0) return null;
+  return 1 / (num / den);
+}
+
+/* ---- timeline helpers ---------------------------------------------------- */
+
+/** Releases per rolling window, used by Act II to show cadence rather than
+ *  asserting it. */
+function cadence(models, windowDays) {
+  const w = (windowDays || 90) * DAY;
+  return models.map(m => {
+    const at = t(m.d);
+    const n = models.filter(o => { const d = at - t(o.d); return d >= 0 && d < w; }).length;
+    return { date: m.d, at, count: n };
+  });
+}
+
+return {
+  t, isoOf, fmtDate, fmtValue, fmtMinutes, round, clamp,
+  makeScale, ticks, niceStep, timeTicks, tickLabel, durationTicks, fmtDurationTick,
+  GUESS_N, emptyGuess, paint, guessDrawn, guessComplete, guessAt,
+  score, medianRatio, medianMiss, allPoints, finalValue, isFalling,
+  doublingDays, cadence, DAY
+};
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = ENGINE;
+
+
+/* ==== chart.js ==== */
+/* ==========================================================================
+   Undershoot — the chart.
+
+   One canvas. It draws the known data, takes a dragged forecast, then
+   animates the truth over the top of it.
+
+   Everything is laid out in CSS pixels and scaled by devicePixelRatio at
+   draw time, so the same code is crisp on a phone and on a 1080p projector.
+   ========================================================================== */
+
+const Chart = (() => {
+
+const E = ENGINE;
+
+/* Murray State palette. Red-orange is reserved for things going wrong, per
+   the university brand guide's request that accents stay sparing. */
+const C = {
+  ink:      '#E8EDF5',
+  dim:      '#8FA3C0',
+  faint:    'rgba(143,163,192,0.18)',
+  grid:     'rgba(143,163,192,0.10)',
+  navy:     '#002144',
+  gold:     '#ECAC00',
+  cyan:     '#00A4E3',
+  red:      '#FF4500',
+  guess:    '#00A4E3',
+  truth:    '#ECAC00',
+  human:    'rgba(232,237,245,0.55)'
+};
+
+function create(canvas) {
+  const ctx = canvas.getContext('2d');
+  const st = {
+    canvas, ctx,
+    round: null,
+    guess: null,
+    phase: 'idle',      /* idle | drawing | drawn | revealing | revealed */
+    revealT: 0,         /* 0..1 sweep of the truth line */
+    twistOn: false,
+    twistT: 0,
+    w: 0, h: 0, dpr: 1,
+    pad: { l: 58, r: 18, t: 22, b: 40 },
+    big: false,
+    axisEnd: 0,      /* injected by the app; see setAxisEnd */
+    onDraw: null,
+    _lastX: null,
+    _raf: null
+  };
+
+  bindPointer(st);
+  return {
+    setRound: r => setRound(st, r),
+    resize:   () => resize(st),
+    render:   () => render(st),
+    reveal:   cb => reveal(st, cb),
+    twist:    cb => twist(st, cb),
+    reset:    () => { st.guess = E.emptyGuess(baselineY(st)); st.phase = 'idle'; st.revealT = 0;
+                      st.twistOn = false; st.twistT = 0; st.t1 = st.tBase; render(st); },
+    setBig:   b => { st.big = b; resize(st); },
+    /* The shared right-hand edge every chart runs to, as epoch ms. Injected
+       rather than imported so this module stays free of the dataset. */
+    setAxisEnd: iso => { st.axisEnd = E.t(iso); },
+    state:    () => st,
+    guess:    () => st.guess,
+    drawn:    () => E.guessComplete(st.guess, baselineY(st)),
+    setForecastEnd: y => setForecastEnd(st, y)
+  };
+}
+
+/* ---- geometry ------------------------------------------------------------ */
+
+/* The cutoff date, needed before tSplit is assigned below. */
+function splitOf(r) { return E.t(r.shown[r.shown.length - 1].date); }
+
+function setRound(st, r) {
+  st.round = r;
+  st.scale = E.makeScale(r.scale, r.yMin, r.yMax);
+  const pts = E.allPoints(r);
+  st.t0 = E.t(pts[0].date);
+  st.t1 = E.t(r.askDate);
+  /* A little breathing room either side so the first and last dots are not
+     welded to the axis. */
+  const span = st.t1 - st.t0;
+  st.t0 -= span * 0.04;
+  st.t1 += span * 0.06;
+  /* Two right-hand edges, not one. tGuess is where the guessable region ends
+     — the ask date — and it never moves. t1 is the axis edge, which the ARC
+     round extends when the twist fires so the ARC-AGI-2 series has somewhere
+     to be drawn. Collapsing these into one variable stretched the drawn guess
+     sideways when the axis grew, and clipped the twist's labels off-screen
+     when it did not. */
+  st.tGuess = st.t1;
+  st.tEnd = st.t1;
+
+  /* Every chart should cover the same window, so a series that stops in 2025
+     still sits on an axis that runs to today rather than looking like the most
+     recent thing that ever happened. But the guessable region must stay big
+     enough to draw in: on the ARC round, whose known data starts in 2020,
+     stretching the axis to 2026 up front would squeeze the drawable band to a
+     tenth of the width. So the extension applies immediately where it leaves a
+     usable band, and is staged behind the reveal where it would not. */
+  const axisEnd = st.axisEnd || 0;
+  const bandFraction = (st.tGuess - splitOf(r)) / (axisEnd - st.t0);
+  if (axisEnd > st.t1 && bandFraction >= 0.2) {
+    st.t1 = axisEnd;
+  }
+  /* The axis this round STARTS at. reset() restores to this rather than to
+     tGuess — restoring to tGuess silently undid the extension above, because
+     that line was written when the ARC twist was the only thing that ever
+     moved the axis. */
+  st.tBase = st.t1;
+  st.tEnd = Math.max(st.t1, axisEnd);
+  if (r.twist) {
+    const last = Math.max(...r.twist.series.map(p => E.t(p.date)));
+    st.tEnd = Math.max(st.tEnd, last + span * 0.14, axisEnd);
+  }
+  /* Where the known data stops and the room's guess begins. */
+  st.tSplit = E.t(r.shown[r.shown.length - 1].date);
+  st.guess = E.emptyGuess(baselineY(st));
+  st.phase = 'idle';
+  st.revealT = 0;
+  st.twistOn = false;
+  st.twistT = 0;
+  resize(st);
+}
+
+/** The guess line starts flat, level with the last known point. */
+function baselineY(st) {
+  if (!st.round) return 0.5;
+  const last = st.round.shown[st.round.shown.length - 1];
+  return st.scale.to(last.value);
+}
+
+function resize(st) {
+  const c = st.canvas;
+  const rect = c.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  st.w = Math.max(1, rect.width);
+  st.h = Math.max(1, rect.height);
+  st.dpr = dpr;
+  c.width  = Math.round(st.w * dpr);
+  c.height = Math.round(st.h * dpr);
+  const s = st.big ? 1.35 : 1;
+  /* Left and bottom carry an axis TITLE as well as tick labels — the first
+     version had neither, and a chart whose y axis is unlabelled is asking the
+     room to guess at a quantity it has not been told the name of. */
+  st.pad = { l: 82 * s, r: 18 * s, t: 20 * s, b: 58 * s };
+  st.fs = (st.big ? 15 : 11.5);
+  render(st);
+}
+
+const px = (st, ms) => st.pad.l + (ms - st.t0) / (st.t1 - st.t0) * plotW(st);
+const py = (st, u)  => st.pad.t + (1 - u) * plotH(st);
+const plotW = st => Math.max(1, st.w - st.pad.l - st.pad.r);
+const plotH = st => Math.max(1, st.h - st.pad.t - st.pad.b);
+/** Guess-space x (0..1 across the predicted region) -> canvas x. Anchored to
+ *  tGuess, not t1, so extending the axis never moves the drawn forecast. */
+const gx = (st, x) => {
+  const a = px(st, st.tSplit), b = px(st, st.tGuess);
+  return a + x * (b - a);
+};
+const ungx = (st, cx) => {
+  const a = px(st, st.tSplit), b = px(st, st.tGuess);
+  return b === a ? 0 : (cx - a) / (b - a);
+};
+const ungy = (st, cy) => 1 - (cy - st.pad.t) / plotH(st);
+
+/* ---- pointer ------------------------------------------------------------- */
+
+function bindPointer(st) {
+  const c = st.canvas;
+  let down = false;
+
+  const pos = ev => {
+    const r = c.getBoundingClientRect();
+    const p = ev.touches ? ev.touches[0] : ev;
+    return { x: p.clientX - r.left, y: p.clientY - r.top };
+  };
+
+  const start = ev => {
+    if (!st.round || st.phase === 'revealing' || st.phase === 'revealed') return;
+    ev.preventDefault();
+    down = true;
+    st._lastX = null;
+    st.phase = 'drawing';
+    move(ev);
+  };
+
+  const move = ev => {
+    if (!down) return;
+    ev.preventDefault();
+    const p = pos(ev);
+    const x = ungx(st, p.x), y = ungy(st, p.y);
+    /* Ignore drags in the already-known region; only the future is guessable. */
+    if (x < -0.08) return;
+    st._lastX = E.paint(st.guess, x, y, st._lastX) / (E.GUESS_N - 1);
+    render(st);
+  };
+
+  const end = () => {
+    if (!down) return;
+    down = false;
+    st._lastX = null;
+    if (E.guessComplete(st.guess, baselineY(st))) {
+      st.phase = 'drawn';
+      if (st.onDraw) st.onDraw();
+    } else {
+      st.phase = 'idle';
+    }
+    render(st);
+  };
+
+  c.addEventListener('pointerdown', start);
+  window.addEventListener('pointermove', move);
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
+  /* Safari on iOS still needs these for reliable canvas dragging. */
+  c.addEventListener('touchstart', start, { passive: false });
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('touchend', end);
+
+  c.addEventListener('keydown', ev => {
+    if (!st.round || st.phase === 'revealing' || st.phase === 'revealed') return;
+    if (!['ArrowUp', 'ArrowDown', 'Home', 'End'].includes(ev.key)) return;
+    ev.preventDefault();
+    const now = E.guessAt(st.guess, 1);
+    const y = ev.key === 'Home' ? 0 : ev.key === 'End' ? 1 : E.clamp(now + (ev.key === 'ArrowUp' ? 0.05 : -0.05), 0, 1);
+    setForecastEnd(st, y);
+  });
+}
+
+function setForecastEnd(st, y) {
+  if (!st.round || st.phase === 'revealing' || st.phase === 'revealed') return;
+  const base = baselineY(st);
+  st.guess = E.emptyGuess(base);
+  const last = E.paint(st.guess, 0, base, null) / (E.GUESS_N - 1);
+  E.paint(st.guess, 1, E.clamp(y, 0, 1), last);
+  st.phase = 'drawn';
+  render(st);
+  if (st.onDraw) st.onDraw();
+}
+
+/* ---- reveal animation ---------------------------------------------------- */
+
+function reveal(st, done) {
+  if (st.phase === 'revealing') return;
+  st.phase = 'revealing';
+  const dur = 1500;
+  const t0 = performance.now();
+  cancelAnimationFrame(st._raf);
+  const step = now => {
+    const f = Math.min(1, (now - t0) / dur);
+    st.revealT = ease(f);
+    render(st);
+    if (f < 1) st._raf = requestAnimationFrame(step);
+    else { st.phase = 'revealed'; if (done) done(); }
+  };
+  st._raf = requestAnimationFrame(step);
+}
+
+/** Widens the axis to make room for the ARC-AGI-2 series, then fades it in.
+ *  The widening is animated because a chart that silently rescales under the
+ *  audience reads as a different chart. */
+function twist(st, done) {
+  st.twistOn = true;
+  const dur = 1400;
+  const from = st.t1, to = st.tEnd;
+  const t0 = performance.now();
+  cancelAnimationFrame(st._raf);
+  const step = now => {
+    const f = Math.min(1, (now - t0) / dur);
+    const e = ease(f);
+    st.t1 = from + (to - from) * Math.min(1, e * 1.6);
+    st.twistT = Math.max(0, (e - 0.35) / 0.65);
+    render(st);
+    if (f < 1) st._raf = requestAnimationFrame(step);
+    else { st.t1 = to; render(st); if (done) done(); }
+  };
+  st._raf = requestAnimationFrame(step);
+}
+
+const ease = f => 1 - Math.pow(1 - f, 3);
+
+/* ---- render -------------------------------------------------------------- */
+
+function render(st) {
+  const { ctx } = st;
+  if (!st.round) return;
+  ctx.save();
+  ctx.scale(st.dpr, st.dpr);
+  ctx.clearRect(0, 0, st.w, st.h);
+
+  grid(st);
+  futureShade(st);
+  if (st.round.markers) markers(st);
+  knownSeries(st);
+  if (st.phase !== 'idle') guessLine(st);
+  if (st.revealT > 0) truthLine(st);
+  if (st.twistOn) twistLine(st);
+  axes(st);
+
+  ctx.restore();
+}
+
+/** The y ticks and the labels that go with them, decided in one place so the
+ *  gridlines and the numbers beside them can never disagree. A duration axis
+ *  uses round units of time rather than the 1-2-5 ladder. */
+function yTicks(st) {
+  const s = st.scale;
+  if (st.round.unit === 'min') {
+    return E.durationTicks(s.min, s.max, 7).map(v => ({ v, label: E.fmtDurationTick(v) }));
+  }
+  return E.ticks(s, 7).map(v => ({ v, label: E.fmtValue(v, st.round.unit) }));
+}
+
+function grid(st) {
+  const { ctx } = st;
+  ctx.strokeStyle = C.grid;
+  ctx.lineWidth = 1;
+  for (const t of yTicks(st)) {
+    const y = py(st, st.scale.to(t.v));
+    ctx.beginPath(); ctx.moveTo(st.pad.l, y); ctx.lineTo(st.w - st.pad.r, y); ctx.stroke();
+  }
+}
+
+/** The region the room is being asked to fill in. */
+function futureShade(st) {
+  const { ctx } = st;
+  const a = px(st, st.tSplit), b = px(st, st.tGuess);
+  ctx.fillStyle = 'rgba(0,164,227,0.045)';
+  ctx.fillRect(a, st.pad.t, b - a, plotH(st));
+  ctx.strokeStyle = 'rgba(0,164,227,0.30)';
+  ctx.setLineDash([4, 4]);
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(a, st.pad.t); ctx.lineTo(a, st.pad.t + plotH(st)); ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (st.phase === 'idle') {
+    /* The hint has to fit inside the region it is describing. On a 390px phone
+       that region is about 180px wide, and the full sentence ran off the right
+       edge of the plot. Step down through shorter wordings, then shrink, and
+       only then give up. */
+    ctx.fillStyle = 'rgba(0,164,227,0.6)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const room = (b - a) * 0.92;
+    const sizes = st.big ? [st.fs + 4, st.fs + 2, st.fs] : [st.fs + 2, st.fs, st.fs - 1];
+    const texts = ['drag across to draw your guess', 'drag to draw your guess', 'draw your guess', 'drag here'];
+    let chosen = null;
+    outer:
+    for (const text of texts) {
+      for (const size of sizes) {
+        ctx.font = `600 ${size}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+        if (ctx.measureText(text).width <= room) { chosen = text; break outer; }
+      }
+    }
+    if (chosen) ctx.fillText(chosen, (a + b) / 2, st.pad.t + plotH(st) * 0.5);
+  }
+}
+
+/** Horizontal reference lines — the human baselines on GPQA. */
+function markers(st) {
+  const { ctx } = st;
+  ctx.save();
+  for (const m of st.round.markers) {
+    const y = py(st, st.scale.to(m.value));
+    ctx.strokeStyle = C.human;
+    ctx.setLineDash([2, 5]);
+    ctx.lineWidth = 1.25;
+    ctx.beginPath(); ctx.moveTo(st.pad.l, y); ctx.lineTo(st.w - st.pad.r, y); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.human;
+    ctx.font = `600 ${st.fs}px system-ui, sans-serif`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(m.label, st.pad.l + 6, y - 3);
+  }
+  ctx.restore();
+}
+
+function knownSeries(st) {
+  const { ctx } = st;
+  const pts = st.round.shown;
+
+  if (st.round.id === 'metr') band(st, pts, 'rgba(232,237,245,0.09)');
+
+  ctx.strokeStyle = C.ink;
+  ctx.lineWidth = st.big ? 3.5 : 2.5;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const x = px(st, E.t(p.date)), y = py(st, st.scale.to(p.value));
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+
+  for (const p of pts) dot(st, E.t(p.date), p.value, C.ink, p.label);
+}
+
+/** Confidence ribbon, drawn only where the data has one. */
+function band(st, pts, fill) {
+  const withCI = pts.filter(p => p.lo != null && p.hi != null);
+  if (withCI.length < 2) return;
+  const { ctx } = st;
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  withCI.forEach((p, i) => {
+    const x = px(st, E.t(p.date)), y = py(st, st.scale.to(p.hi));
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  for (let i = withCI.length - 1; i >= 0; i--) {
+    const p = withCI[i];
+    ctx.lineTo(px(st, E.t(p.date)), py(st, st.scale.to(p.lo)));
+  }
+  ctx.closePath(); ctx.fill();
+}
+
+function guessLine(st) {
+  const { ctx } = st;
+  const fade = st.phase === 'revealed' ? 0.45 : 1;
+  ctx.save();
+  ctx.globalAlpha = fade;
+  ctx.strokeStyle = C.guess;
+  ctx.lineWidth = st.big ? 3.5 : 2.5;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.setLineDash([7, 5]);
+  ctx.beginPath();
+  st.guess.forEach((p, i) => {
+    const x = gx(st, p.x), y = py(st, p.y);
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  /* Endpoint value, so the room can read its own answer back. */
+  const end = st.guess[st.guess.length - 1];
+  const ex = gx(st, 1), ey = py(st, end.y);
+  ctx.fillStyle = C.guess;
+  ctx.beginPath(); ctx.arc(ex, ey, st.big ? 6 : 4.5, 0, 7); ctx.fill();
+  label(st, ex, ey, E.fmtValue(st.scale.from(end.y), st.round.unit), C.guess, 'right');
+  ctx.restore();
+}
+
+function truthLine(st) {
+  const { ctx } = st;
+  const pts = st.round.shown.concat(st.round.hidden);
+  const sweepX = px(st, st.tSplit) + (px(st, st.tGuess) - px(st, st.tSplit)) * st.revealT;
+
+  if (st.round.id === 'metr') {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(st.pad.l, st.pad.t, sweepX - st.pad.l, plotH(st)); ctx.clip();
+    band(st, pts, 'rgba(236,172,0,0.13)');
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.beginPath(); ctx.rect(st.pad.l, st.pad.t, sweepX - st.pad.l, plotH(st)); ctx.clip();
+  ctx.strokeStyle = C.truth;
+  ctx.lineWidth = st.big ? 4 : 3;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const x = px(st, E.t(p.date)), y = py(st, st.scale.to(p.value));
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+  ctx.restore();
+
+  for (const p of st.round.hidden) {
+    if (px(st, E.t(p.date)) <= sweepX + 0.5) dot(st, E.t(p.date), p.value, C.truth, p.label, true);
+  }
+
+  /* Where the series stops before the axis does, say so on the chart. An empty
+     stretch of plot with no explanation reads as an oversight; labelled, it is
+     the most honest thing here. */
+  if (st.round.endNote && st.revealT > 0.98) {
+    const last = pts[pts.length - 1];
+    const lx = px(st, E.t(last.date)), ly = py(st, st.scale.to(last.value));
+    const edge = st.w - st.pad.r;
+    if (edge - lx > 60) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(143,163,192,0.35)';
+      ctx.setLineDash([3, 5]); ctx.lineWidth = 1.25;
+      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(edge - 6, ly); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = `600 ${st.fs}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = 'rgba(143,163,192,0.85)';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+      const text = st.round.endNote;
+      if (ctx.measureText(text).width < edge - lx - 12) ctx.fillText(text, edge - 8, ly - 7);
+      ctx.restore();
+    }
+  }
+}
+
+/** ARC-AGI-2 drawn as a second, lower series once the first has landed. */
+function twistLine(st) {
+  const tw = st.round.twist;
+  if (!tw) return;
+  const { ctx } = st;
+  const pts = tw.series;
+  ctx.save();
+  ctx.globalAlpha = st.twistT;
+  ctx.strokeStyle = C.red;
+  ctx.lineWidth = st.big ? 4 : 3;
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  pts.forEach((p, i) => {
+    const x = px(st, E.t(p.date)), y = py(st, st.scale.to(p.value));
+    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+  });
+  ctx.stroke();
+  for (const p of pts) dot(st, E.t(p.date), p.value, C.red, p.label, true);
+  ctx.restore();
+}
+
+function dot(st, ms, v, color, text, showLabel) {
+  const { ctx } = st;
+  const x = px(st, ms), y = py(st, st.scale.to(v));
+  ctx.fillStyle = color;
+  ctx.beginPath(); ctx.arc(x, y, st.big ? 5.5 : 4, 0, 7); ctx.fill();
+  if (showLabel && text) label(st, x, y, text, color, x > st.w * 0.72 ? 'right' : 'left');
+}
+
+function label(st, x, y, text, color, side) {
+  const { ctx } = st;
+  ctx.font = `600 ${st.fs}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = side === 'right' ? 'right' : 'left';
+  const dx = side === 'right' ? -9 : 9;
+  const w = ctx.measureText(text).width;
+  const bx = side === 'right' ? x + dx - w - 5 : x + dx - 5;
+  ctx.fillStyle = 'rgba(0,20,43,0.78)';
+  roundRect(ctx, bx, y - st.fs * 0.85, w + 10, st.fs * 1.7, 4);
+  ctx.fill();
+  ctx.fillStyle = color;
+  ctx.fillText(text, x + dx, y);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function axes(st) {
+  const { ctx } = st;
+  ctx.font = `500 ${st.fs}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = C.dim;
+
+  ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+  for (const t of yTicks(st)) {
+    ctx.fillText(t.label, st.pad.l - 8, py(st, st.scale.to(t.v)));
+  }
+
+  /* Time ticks at a spacing chosen from the span, not at every 1 January.
+     Labels are dropped where they would collide, but the gridline stays — a
+     denser rule still reads as scale even where the text will not fit. */
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const marks = E.timeTicks(st.t0, st.t1, 8);
+  let lastRight = -Infinity;
+  for (const mk of marks) {
+    const x = px(st, mk.ms);
+    if (x < st.pad.l - 1 || x > st.w - st.pad.r + 1) continue;
+    ctx.strokeStyle = mk.major ? 'rgba(143,163,192,0.24)' : C.faint;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, st.pad.t); ctx.lineTo(x, st.pad.t + plotH(st)); ctx.stroke();
+
+    const text = E.tickLabel(mk.ms, mk.step);
+    const half = ctx.measureText(text).width / 2;
+    if (x - half > lastRight + 10) {
+      ctx.fillStyle = mk.major ? 'rgba(232,237,245,0.72)' : C.dim;
+      ctx.fillText(text, x, st.pad.t + plotH(st) + 8);
+      lastRight = x + half;
+    }
+  }
+
+  ctx.strokeStyle = 'rgba(143,163,192,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(st.pad.l, st.pad.t);
+  ctx.lineTo(st.pad.l, st.pad.t + plotH(st));
+  ctx.lineTo(st.w - st.pad.r, st.pad.t + plotH(st));
+  ctx.stroke();
+
+  axisTitles(st);
+}
+
+/** The axis titles. Named quantities, in words, on both axes — plus a note on
+ *  the y axis when it is logarithmic, because "each step is ten times the last"
+ *  is not something a general audience reads off a tick sequence. */
+function axisTitles(st) {
+  const { ctx } = st;
+  const r = st.round;
+  const ts = st.fs + (st.big ? 2 : 1.5);
+
+  if (r.xLabel) {
+    ctx.font = `700 ${ts}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = 'rgba(232,237,245,0.62)';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.fillText(r.xLabel, st.pad.l + plotW(st) / 2, st.h - 4);
+  }
+
+  /* A rotated title has to fit the plot HEIGHT, which changes per round and
+     per viewport. Rather than dropping the label when space is short — the
+     first attempt, which silently lost it on every round at laptop height —
+     shrink the type, then fall back to a shorter wording, and only give up if
+     neither fits. */
+  if (r.yLabel) {
+    const room = plotH(st) - 6;
+    const sizes = [ts, ts - 1, ts - 2, ts - 3];
+    const font = sz => `700 ${sz}px system-ui, -apple-system, sans-serif`;
+    let text = null, size = ts;
+    for (const candidate of [r.yLabel, r.yLabelShort].filter(Boolean)) {
+      for (const sz of sizes) {
+        ctx.font = font(sz);
+        if (ctx.measureText(candidate).width <= room) { text = candidate; size = sz; break; }
+      }
+      if (text) break;
+    }
+    if (text) {
+      ctx.save();
+      ctx.translate(13 * (st.big ? 1.25 : 1), st.pad.t + plotH(st) / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.font = font(size);
+      ctx.fillStyle = 'rgba(232,237,245,0.62)';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      ctx.fillText(text, 0, 0);
+      ctx.restore();
+      /* A second rotated line explaining the log scale used to sit here. It
+         overlapped the tick labels — sideways text in a 78px gutter has room
+         for one line, not two — so that explanation moved into the DOM, below
+         the chart, where it can be read without tilting your head. */
+    }
+  }
+}
+
+return { create, C };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = Chart;
+
+
+/* ==== timeline.js ==== */
+/* ==========================================================================
+   Undershoot — Act II, the cadence.
+
+   A time axis from ChatGPT to now. Drag the scrubber and the releases land
+   as they actually landed. The vertical axis is deliberately NOT a benchmark
+   score — it is a coarse generation band, and the UI says so, because a
+   single "intelligence" number across labs and years would be the exact kind
+   of confident nonsense this demo is arguing against.
+   ========================================================================== */
+
+const Timeline = (() => {
+
+const E = ENGINE;
+const C = Chart.C;
+
+function create(canvas, data) {
+  const st = {
+    canvas, ctx: canvas.getContext('2d'),
+    models: data.MODELS.map(m => ({ ...m, at: E.t(m.d) })).sort((a, b) => a.at - b.at),
+    labs: data.LABS,
+    unlocks: data.UNLOCKS.map(u => ({ ...u, at: E.t(u.d) })).sort((a, b) => a.at - b.at),
+    cursor: 1,          /* 0..1 through the window */
+    filter: 'all',      /* all | open | closed */
+    region: 'all',      /* all | US | China | Europe | Other */
+    hover: null,
+    w: 0, h: 0, dpr: 1, big: false,
+    pad: { l: 58, r: 16, t: 26, b: 50 }
+  };
+  st.t0 = E.t('2022-11-01');
+  st.t1 = E.t('2026-08-15');
+  bind(st);
+  return {
+    resize: () => resize(st),
+    render: () => render(st),
+    setCursor: v => { st.cursor = E.clamp(v, 0, 1); clearExcluded(st); render(st); },
+    setFilter: f => { st.filter = f; clearExcluded(st); render(st); },
+    setRegion: r => { st.region = r; clearExcluded(st); render(st); },
+    setBig: b => { st.big = b; resize(st); },
+    cursorDate: () => st.t0 + st.cursor * (st.t1 - st.t0),
+    visible: () => visible(st),
+    latestUnlock: () => {
+      const at = st.t0 + st.cursor * (st.t1 - st.t0);
+      const past = st.unlocks.filter(u => u.at <= at);
+      return past.length ? past[past.length - 1] : null;
+    },
+    stats: () => stats(st),
+    onHover: cb => { st.onHover = cb; },
+    select: m => setHover(st, m && visible(st).includes(m) ? m : null),
+    selected: () => st.hover,
+    pointFor: m => m ? { x:px(st, m.at), y:py(st, m.tier) } : null
+  };
+}
+
+function setHover(st, model) {
+  if (st.hover === model) return;
+  st.hover = model;
+  render(st);
+  if (st.onHover) st.onHover(model);
+}
+
+function clearExcluded(st) {
+  if (st.hover && !visible(st).includes(st.hover)) setHover(st, null);
+}
+
+function visible(st) {
+  const at = st.t0 + st.cursor * (st.t1 - st.t0);
+  return st.models.filter(m => m.at <= at && passes(st, m));
+}
+
+function passes(st, m) {
+  const byOpen = st.filter === 'all' || (st.filter === 'open' ? m.open : !m.open);
+  const lab = st.labs[m.lab] || st.labs.other;
+  const byRegion = st.region === 'all' || lab.region === st.region;
+  return byOpen && byRegion;
+}
+
+/** Releases in the trailing year, and the open-weight share of them. Computed,
+ *  not asserted — the claim on screen is whatever these numbers say. */
+function stats(st) {
+  const at = st.t0 + st.cursor * (st.t1 - st.t0);
+  const yearAgo = at - 365 * E.DAY;
+  /* Counters describe what is actually visible, filters included — a stat that
+     disagrees with the dots above it is worse than no stat. */
+  const shown = st.models.filter(m => m.at <= at && passes(st, m));
+  const win = shown.filter(m => m.at > yearAgo);
+  const open = win.filter(m => m.open).length;
+  return { total: shown.length, year: win.length, open, closed: win.length - open };
+}
+
+function resize(st) {
+  const rect = st.canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  st.w = Math.max(1, rect.width); st.h = Math.max(1, rect.height); st.dpr = dpr;
+  st.canvas.width = Math.round(st.w * dpr);
+  st.canvas.height = Math.round(st.h * dpr);
+  st.fs = st.big ? 14 : 11;
+  const k = st.big ? 1.3 : 1;
+  st.pad = { l: 58 * k, r: 16 * k, t: 26 * k, b: 50 * k };
+  render(st);
+}
+
+const px = (st, ms) => st.pad.l + (ms - st.t0) / (st.t1 - st.t0) * pw(st);
+const pw = st => Math.max(1, st.w - st.pad.l - st.pad.r);
+const ph = st => Math.max(1, st.h - st.pad.t - st.pad.b);
+const py = (st, tier) => st.pad.t + ph(st) * (1 - (tier - 0.5) / 8.5);
+
+function bind(st) {
+  st.canvas.addEventListener('pointermove', ev => {
+    const r = st.canvas.getBoundingClientRect();
+    const x = ev.clientX - r.left, y = ev.clientY - r.top;
+    let best = null, bd = 1e9;
+    for (const m of visible(st)) {
+      const d = Math.hypot(px(st, m.at) - x, py(st, m.tier) - y);
+      if (d < bd) { bd = d; best = m; }
+    }
+    const hit = bd < (st.big ? 22 : 16) ? best : null;
+    if (hit !== st.hover) setHover(st, hit);
+  });
+  st.canvas.addEventListener('pointerleave', () => {
+    if (st.hover) setHover(st, null);
+  });
+  st.canvas.addEventListener('pointerdown', ev => {
+    const r = st.canvas.getBoundingClientRect();
+    const x = ev.clientX - r.left, y = ev.clientY - r.top;
+    let best = null, bd = Infinity;
+    for (const m of visible(st)) {
+      const d = Math.hypot(px(st, m.at) - x, py(st, m.tier) - y);
+      if (d < bd) { bd = d; best = m; }
+    }
+    setHover(st, bd < (st.big ? 26 : 22) ? best : null);
+  });
+}
+
+/* Act II shipped with no axis labels at all: the dots sat at meaningful
+   heights and nothing on the chart said what the height meant. The prose above
+   explained it, but a chart has to survive being read on its own — someone
+   photographs the screen, or glances up mid-sentence. The wording is
+   deliberately hedged, because the height IS a coarse band and calling it a
+   score would be the exact overclaim this demo argues against. */
+const AXIS_Y = 'Roughly how capable';
+const AXIS_Y_SUB = 'a generation band, not a score';
+const AXIS_X = 'When it was released';
+
+function axisTitles(st) {
+  const { ctx } = st;
+  const ts = st.fs + 1;
+
+  ctx.font = `700 ${ts}px system-ui, -apple-system, sans-serif`;
+  ctx.fillStyle = 'rgba(232,237,245,0.62)';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+  ctx.fillText(AXIS_X, st.pad.l + pw(st) / 2, st.h - 4);
+
+  if (ph(st) > 150) {
+    ctx.save();
+    ctx.translate(13, st.pad.t + ph(st) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.font = `700 ${ts}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = 'rgba(232,237,245,0.62)';
+    ctx.fillText(AXIS_Y, 0, 0);
+    ctx.font = `500 ${st.fs - 0.5}px system-ui, sans-serif`;
+    ctx.fillStyle = 'rgba(143,163,192,0.8)';
+    ctx.fillText(AXIS_Y_SUB, 0, ts + 3);
+    ctx.restore();
+  }
+
+  /* Which way is up, said once, in the two corners the dots do not reach:
+     nothing early sits on the right of the axis, and nothing advanced sits on
+     the left of it. Both labels started bottom-left and the lower one landed
+     on top of the 2023 releases. */
+  ctx.font = `600 ${st.fs - 1}px system-ui, sans-serif`;
+  ctx.fillStyle = 'rgba(143,163,192,0.55)';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText('newer generations', st.pad.l + 8, st.pad.t + 2);
+  ctx.textAlign = 'right';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('earlier generations', st.w - st.pad.r - 8, st.pad.t + ph(st) - 3);
+}
+
+function render(st) {
+  const { ctx } = st;
+  ctx.save();
+  ctx.scale(st.dpr, st.dpr);
+  ctx.clearRect(0, 0, st.w, st.h);
+
+  const at = st.t0 + st.cursor * (st.t1 - st.t0);
+
+  /* year rules */
+  ctx.font = `500 ${st.fs}px system-ui, -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  for (let y = 2023; y <= 2026; y++) {
+    const x = px(st, Date.UTC(y, 0, 1));
+    ctx.strokeStyle = 'rgba(143,163,192,0.12)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, st.pad.t - 6); ctx.lineTo(x, st.pad.t + ph(st)); ctx.stroke();
+    ctx.fillStyle = 'rgba(143,163,192,0.75)';
+    ctx.fillText(String(y), x, st.pad.t + ph(st) + 7);
+  }
+
+  /* the moving edge */
+  const cx = px(st, at);
+  ctx.strokeStyle = 'rgba(0,164,227,0.75)'; ctx.lineWidth = st.big ? 2.5 : 2;
+  ctx.beginPath(); ctx.moveTo(cx, st.pad.t - 10); ctx.lineTo(cx, st.pad.t + ph(st) + 4); ctx.stroke();
+  ctx.fillStyle = 'rgba(0,164,227,0.95)';
+  ctx.font = `700 ${st.fs + 1}px system-ui, sans-serif`;
+  ctx.textAlign = cx > st.w - 70 ? 'right' : 'left'; ctx.textBaseline = 'bottom';
+  ctx.fillText(E.fmtDate(at, 'short'), cx + (cx > st.w - 70 ? -6 : 6), st.pad.t - 8);
+
+  /* dots */
+  for (const m of st.models) {
+    if (m.at > at) continue;
+    const on = passes(st, m);
+    const x = px(st, m.at), y = py(st, m.tier);
+    const age = E.clamp((at - m.at) / (200 * E.DAY), 0, 1);
+    const fresh = 1 - age;
+    const lab = st.labs[m.lab] || st.labs.other;
+    const alpha = on ? 0.55 + 0.45 * fresh : 0.10;
+    const r = (st.big ? 6.5 : 5) * (on ? 1 + 0.5 * fresh : 0.7);
+
+    if (on && fresh > 0.05) {
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${lab.hue},70%,58%,${0.16 * fresh})`;
+      ctx.arc(x, y, r * 3.2, 0, 7); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7);
+    if (m.open) {
+      /* open weights read as a ring, closed as a filled disc */
+      ctx.strokeStyle = `hsla(${lab.hue},72%,62%,${alpha})`;
+      ctx.lineWidth = st.big ? 3 : 2.2;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = `hsla(${lab.hue},68%,58%,${alpha})`;
+      ctx.fill();
+    }
+    if (st.hover === m) {
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(x, y, r + 4, 0, 7); ctx.stroke();
+    }
+  }
+
+  /* axis frame + titles */
+  ctx.strokeStyle = 'rgba(143,163,192,0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(st.pad.l, st.pad.t);
+  ctx.lineTo(st.pad.l, st.pad.t + ph(st));
+  ctx.lineTo(st.w - st.pad.r, st.pad.t + ph(st));
+  ctx.stroke();
+  axisTitles(st);
+
+  ctx.restore();
+}
+
+return { create, labels: () => ({ y: AXIS_Y, ySub: AXIS_Y_SUB, x: AXIS_X }) };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = Timeline;
+
+
+/* ==== app.js ==== */
+/* ==========================================================================
+   Undershoot — application.
+
+   Three acts. Act I explains what a benchmark is to people who have never
+   seen one, then asks the viewer to draw five of them and reveals the truth
+   over each guess. Act II shows the models those curves came out of. Act III
+   shows what these systems have actually done across six domains, with the
+   overclaims and the failures kept beside the results.
+   ========================================================================== */
+
+(() => {
+
+const E = ENGINE;
+const D = DATA;
+const $  = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+
+const app = {
+  act: 1,
+  roundIx: 0,
+  results: [],
+  started: false,
+  chart: null,
+  timeline: null,
+  playing: null,
+  big: false
+};
+
+/* ---- boot ---------------------------------------------------------------- */
+
+function boot() {
+  app.chart = Chart.create($('#chart'));
+  app.chart.setAxisEnd(D.AXIS_END);
+  app.timeline = Timeline.create($('#tl'), D);
+
+  app.chart.state().onDraw = () => {
+    $('#btn-reveal').disabled = false;
+    $('#draw-hint').textContent = 'Happy with it? Reveal.';
+  };
+
+  buildIntro();
+  wireNav();
+  wireRound();
+  wireTimeline();
+  wireSettings();
+  buildAct3();
+  buildSources();
+
+  window.addEventListener('resize', () => { fitChart(); app.chart.resize(); app.timeline.resize(); });
+  window.addEventListener('orientationchange', () => setTimeout(fitChart, 120));
+}
+
+/* ---- the opening screen -------------------------------------------------- */
+
+function buildIntro() {
+  const I = D.INTRO;
+  $('#intro-title').textContent = I.title;
+  $('#intro-body').innerHTML = I.body.map(p => `<p>${esc(p)}</p>`).join('');
+  $('#intro-note').textContent = I.note;
+  $('#btn-begin').textContent = I.cta;
+  $('#btn-begin').addEventListener('click', () => {
+    $('#intro').hidden = true;
+    $('#round-body').hidden = false;
+    app.started = true;
+    loadRound(0);
+  });
+}
+
+/* ---- navigation ---------------------------------------------------------- */
+
+function wireNav() {
+  $$('#actnav button').forEach(b => {
+    b.addEventListener('click', () => goAct(Number(b.dataset.act)));
+  });
+}
+
+function goAct(n) {
+  app.act = n;
+  $$('#actnav button').forEach(b => b.classList.toggle('on', Number(b.dataset.act) === n));
+  $$('.act').forEach(s => s.hidden = Number(s.dataset.act) !== n);
+  if (n === 1 && app.started) setTimeout(() => { fitChart(); app.chart.resize(); }, 20);
+  if (n === 2) { setTimeout(() => app.timeline.resize(), 20); syncTimeline(); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* The one layout rule this app enforces: the chart and the Reveal button are
+   both reachable without scrolling. Everything above the chart varies in
+   height — each round's explanation is a different length and wraps
+   differently at every width — so the chart's height is measured rather than
+   declared. A CSS-only version put Reveal below the fold at five of eight
+   viewports. */
+function fitChart() {
+  const wrap = $('#chart-wrap');
+  const row  = $('#draw-row');
+  const leg  = document.querySelector('.legend-mini');
+  if (!wrap || !row || $('#round-body').hidden) return;
+
+  wrap.style.height = '';
+  const top = wrap.getBoundingClientRect().top;
+  const note = $('#scale-note');
+  const below = row.getBoundingClientRect().height
+              + (leg ? leg.getBoundingClientRect().height : 0)
+              + (note && !note.hidden ? note.getBoundingClientRect().height + 8 : 0)
+              + 26;
+  const avail = window.innerHeight - top - below;
+  const max = app.big ? 620 : 500;
+  /* The fold rule holds for the round as it first appears. Once someone opens
+     the worked example they have asked for more content, and squeezing the
+     chart to a 150px sliver to keep the button on screen serves nobody — so
+     the floor rises and the page is allowed to scroll. */
+  const open = $('#round-example').open;
+  const floor = open ? 240 : 120;
+  wrap.style.height = Math.round(E.clamp(avail, floor, max)) + 'px';
+}
+
+/* ---- Act I: the rounds --------------------------------------------------- */
+
+function wireRound() {
+  $('#btn-reveal').addEventListener('click', doReveal);
+  $('#btn-next').addEventListener('click', () => {
+    if (app.roundIx < D.ROUNDS.length - 1) loadRound(app.roundIx + 1);
+    else showScorecard();
+  });
+  $('#btn-redraw').addEventListener('click', () => {
+    app.chart.reset();
+    $('#btn-reveal').disabled = true;
+    $('#draw-hint').textContent = 'Drag across the shaded region.';
+  });
+  $('#btn-twist').addEventListener('click', doTwist);
+  /* Opening the example changes the height above the chart, so the fold rule
+     has to be re-applied when it does. */
+  $('#round-example').addEventListener('toggle', () => { fitChart(); app.chart.resize(); });
+}
+
+function loadRound(ix) {
+  app.roundIx = ix;
+  const r = D.ROUNDS[ix];
+
+  $('#round-num').textContent = `Test ${ix + 1} of ${D.ROUNDS.length}`;
+  $('#round-name').textContent = r.name;
+  $('#round-real').textContent = r.real || '';
+  $('#round-real').hidden = !r.real;
+  $('#round-plain').textContent = r.plain;
+  $('#round-human').innerHTML = `<span class="rh-k">For comparison</span><p>${esc(r.human)}</p>`;
+  $('#round-q').textContent = r.question;
+
+  /* Log rounds carry a plain-language warning about the vertical scale. It
+     lives here rather than on the canvas because rotated text in the axis
+     gutter collided with the tick labels. */
+  const note = $('#scale-note');
+  note.hidden = !r.scaleNote;
+  note.textContent = r.scaleNote || '';
+
+  const ex = r.example;
+  $('#example-label').textContent = ex.label;
+  $('#example-body').innerHTML = renderExample(ex);
+  $('#round-example').open = false;
+
+  $('#verdict').hidden = true;
+  $('#twist-wrap').hidden = true;
+  $('#scorecard').hidden = true;
+  $('#round-body').hidden = false;
+  $('#btn-reveal').hidden = false;
+  $('#btn-reveal').disabled = true;
+  $('#btn-redraw').hidden = false;
+  $('#btn-next').hidden = true;
+  $('#btn-next').textContent = 'Next test';
+  $('#draw-hint').textContent = 'Drag across the shaded region.';
+
+  app.chart.setRound(r);
+  fitChart();
+  app.chart.resize();
+  app.chart.reset();
+  $('#btn-reveal').disabled = true;
+}
+
+/* A concrete sample of the actual task. For a room that has never seen any of
+   this measured, "94% on GPQA" means nothing until they have seen one item. */
+function renderExample(ex) {
+  if (ex.kind === 'text') {
+    return `<p class="ex-text">${esc(ex.body).replace(/\n\n/g, '</p><p class="ex-text">')}</p>` +
+           (ex.note ? `<p class="ex-note">${esc(ex.note)}</p>` : '');
+  }
+  if (ex.kind === 'ladder') {
+    return `<div class="ladder">${ex.items.map(i =>
+      `<div class="lrow"><span class="lt">${esc(i.t)}</span><span class="ls">${esc(i.s)}</span></div>`).join('')}</div>`;
+  }
+  if (ex.kind === 'arc') {
+    const pairs = ex.pairs.map((p, i) => `
+      <div class="arc-pair">
+        <span class="arc-cap">Example ${i + 1}</span>
+        <div class="arc-row">${grid(p.in)}<span class="arc-arrow">&rarr;</span>${grid(p.out)}</div>
+      </div>`).join('');
+    return `<div class="arc-wrap">
+        ${pairs}
+        <div class="arc-pair test">
+          <span class="arc-cap">Now you</span>
+          <div class="arc-row">${grid(ex.test)}<span class="arc-arrow">&rarr;</span>
+            <button class="arc-reveal" id="arc-reveal">?</button>
+            <div class="arc-answer" id="arc-answer" hidden>${grid(ex.answer)}</div>
+          </div>
+        </div>
+      </div>
+      ${ex.note ? `<p class="ex-note">${esc(ex.note)}</p>` : ''}`;
+  }
+  return '';
+}
+
+/* ARC colours. Deliberately not the Murray State palette — these are the
+   puzzle's own vocabulary and must not read as meaning anything else. */
+const ARC_COLORS = ['#0B1B2E', '#3B82F6', '#EF4444', '#22C55E', '#EAB308', '#94A3B8', '#D946EF', '#F97316'];
+
+function grid(g) {
+  return `<div class="arc-grid" style="grid-template-columns:repeat(${g[0].length},1fr)">` +
+    g.map(row => row.map(c => `<i style="background:${ARC_COLORS[c] || ARC_COLORS[0]}"></i>`).join('')).join('') +
+    `</div>`;
+}
+
+/* Delegated: the answer button is rebuilt on every round load. */
+document.addEventListener('click', ev => {
+  if (ev.target && ev.target.id === 'arc-reveal') {
+    ev.target.hidden = true;
+    const a = document.querySelector('#arc-answer');
+    if (a) a.hidden = false;
+    fitChart(); app.chart.resize();
+  }
+});
+
+function doReveal() {
+  const r = D.ROUNDS[app.roundIx];
+  const res = E.score(r, app.chart.guess());
+  app.results[app.roundIx] = res;
+
+  $('#btn-reveal').hidden = true;
+  $('#btn-redraw').hidden = true;
+  $('#draw-hint').textContent = '';
+
+  app.chart.reveal(() => {
+    renderVerdict(r, res);
+    $('#verdict').hidden = false;
+    if (r.twist) { $('#twist-wrap').hidden = false; $('#btn-twist').hidden = false; $('#twist-body').hidden = true; }
+    else $('#btn-next').hidden = false;
+    $('#verdict').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+}
+
+function renderVerdict(r, res) {
+  const v = $('#verdict');
+  const ratio = res.ratio;
+  const missed = res.under;
+
+  let ratioLine;
+  if (!isFinite(ratio)) ratioLine = 'You drew a flat line. The real answer moved.';
+  else if (ratio >= 1.08) ratioLine = `The real answer was <strong>${E.round(ratio, 1)}×</strong> what you drew.`;
+  else if (ratio <= 0.93) ratioLine = `You drew it <strong>${E.round(1 / ratio, 1)}×</strong> too high. That is rarer than you would think.`;
+  else ratioLine = 'You got that one close.';
+
+  v.innerHTML = `
+    <div class="v-head ${missed ? 'low' : 'high'}">
+      <span class="v-tag">${missed ? (res.falling ? 'You did not expect it to fall that far' : 'You guessed low') : 'You guessed high'}</span>
+      <h3>${esc(r.reveal.headline)}</h3>
+    </div>
+    <div class="v-nums">
+      <div class="v-num"><span class="k">You drew</span><span class="val">${E.fmtValue(res.predicted, r.unit)}</span></div>
+      <div class="v-num truth"><span class="k">It actually was</span><span class="val">${E.fmtValue(res.truth, r.unit)}</span></div>
+      ${res.points != null && isFinite(res.points) ? `<div class="v-num"><span class="k">Gap</span><span class="val">${E.round(Math.abs(res.points), 1)} pts</span></div>` : ''}
+    </div>
+    <p class="v-ratio">${ratioLine}</p>
+    <p class="v-body">${esc(r.reveal.body)}</p>
+    <details class="v-caveat" open>
+      <summary>What this number does not say</summary>
+      <p>${esc(r.reveal.caveat)}</p>
+    </details>
+    <div class="v-src">${srcLinks(collectSrcs(r))}</div>`;
+}
+
+function doTwist() {
+  const r = D.ROUNDS[app.roundIx];
+  const tw = r.twist;
+  $('#btn-twist').hidden = true;
+  $('#twist-body').hidden = false;
+  app.chart.twist(() => {
+    const f = tw.finale;
+    $('#twist-body').innerHTML = `
+      <div class="v-head low">
+        <span class="v-tag">And the test turned over</span>
+        <h3>${esc(f.headline)}</h3>
+      </div>
+      <p class="v-body what-is">${esc(f.what)}</p>
+      <p class="v-body">${esc(f.body)}</p>
+      <div class="bars">
+        ${f.bars.map(b => `
+          <div class="bar-row">
+            <span class="bl">${esc(b.label)}<em>${esc(b.note)}</em></span>
+            <div class="bt"><div class="bf ${esc(b.kind)}" style="width:${Math.max(b.value, 0.7)}%"></div></div>
+            <span class="bv">${b.value}%</span>
+          </div>`).join('')}
+      </div>
+      <p class="v-punch">${esc(f.punch)}</p>
+      <details class="v-caveat" open>
+        <summary>Why these bars are not four measurements of one thing</summary>
+        <p>${esc(f.caveat)}</p>
+      </details>
+      <p class="v-close">${esc(f.close)}</p>
+      <div class="v-src">${srcLinks(['arc-3-openai', 'arc-3', 'arc-3-human', 'arc-agi2', 'arc-2025'])}</div>`;
+    $('#btn-next').hidden = false;
+    $('#btn-next').textContent = 'See how you did';
+  });
+}
+
+function showScorecard() {
+  const med = E.medianRatio(app.results);
+  const lows = app.results.filter(r => r && r.under).length;
+  $('#round-body').hidden = true;
+  $('#verdict').hidden = true;
+  $('#twist-wrap').hidden = true;
+  $('#btn-next').hidden = true;
+  const sc = $('#scorecard');
+  sc.hidden = false;
+  sc.innerHTML = `
+    <h2>You guessed low in ${lows} of ${app.results.filter(Boolean).length} tests.</h2>
+    ${med ? `<p class="big-stat">Median miss: <strong>${E.round(med, 1)}×</strong></p>` : ''}
+    <div class="sc-rows">
+      ${D.ROUNDS.map((r, i) => {
+        const res = app.results[i];
+        if (!res) return '';
+        return `<div class="sc-row">
+          <span class="n">${esc(r.name)}</span>
+          <span class="g">${E.fmtValue(res.predicted, r.unit)}</span>
+          <span class="arrow">→</span>
+          <span class="t">${E.fmtValue(res.truth, r.unit)}</span>
+          <span class="r ${res.under ? 'low' : 'high'}">${isFinite(res.ratio) ? E.round(res.ratio, 1) + '×' : '—'}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <p class="sc-note">
+      If you drew most of these too low, you are in good company — that is the usual
+      result, and it is the point. The surprise is rarely that the numbers went up; it
+      is by how much, and that even people who follow this closely tend to undershoot.
+      The one test that broke the pattern was the last: the same kind of model, in the
+      same months, went from nearly solving a puzzle to barely scoring on a harder
+      version of it. “How good is AI” was never a single rising line.
+    </p>
+    <div class="sc-actions">
+      <button class="btn primary" id="btn-toact2b">See the models behind these tests</button>
+      <button class="btn ghost" id="btn-again2">Play again</button>
+    </div>`;
+  $('#btn-toact2b').addEventListener('click', () => goAct(2));
+  $('#btn-again2').addEventListener('click', () => { app.results = []; loadRound(0); });
+}
+
+function collectSrcs(r) {
+  const s = new Set();
+  E.allPoints(r).forEach(p => p.src && s.add(p.src));
+  (r.markers || []).forEach(p => p.src && s.add(p.src));
+  if (r.id === 'metr') s.add('mittr-metr');
+  return Array.from(s);
+}
+
+/* ---- Act II: the cadence ------------------------------------------------- */
+
+function wireTimeline() {
+  const slider = $('#tl-slider');
+  slider.addEventListener('input', () => {
+    stopPlay();
+    app.timeline.setCursor(Number(slider.value) / 1000);
+    syncTimeline();
+  });
+  $('#btn-play').addEventListener('click', togglePlay);
+  $$('#tl-filter button').forEach(b => b.addEventListener('click', () => {
+    $$('#tl-filter button').forEach(x => x.classList.toggle('on', x === b));
+    app.timeline.setFilter(b.dataset.filter);
+    syncTimeline();
+  }));
+  $$('#tl-region button').forEach(b => b.addEventListener('click', () => {
+    $$('#tl-region button').forEach(x => x.classList.toggle('on', x === b));
+    app.timeline.setRegion(b.dataset.region);
+    syncTimeline();
+  }));
+  app.timeline.onHover(m => {
+    const el = $('#tl-hover');
+    if (!m) { el.hidden = true; return; }
+    el.hidden = false;
+    const lab = D.LABS[m.lab];
+    el.innerHTML = `<strong>${esc(m.name)}</strong>
+      <span class="lab">${esc(lab.name)} · ${esc(lab.region)} · ${m.open ? 'downloadable' : 'rented only'}</span>
+      ${m.lic ? `<span class="lic">${esc(m.lic)}</span>` : ''}
+      <span class="date">${E.fmtDate(E.t(m.d))}${m.approx ? ' (approx.)' : ''}</span>
+      ${m.note ? `<span class="note">${esc(m.note)}</span>` : ''}`;
+  });
+  $('#btn-toact3').addEventListener('click', () => goAct(3));
+  buildLegend();
+}
+
+function togglePlay() {
+  if (app.playing) return stopPlay();
+  const slider = $('#tl-slider');
+  if (Number(slider.value) >= 1000) slider.value = 0;
+  $('#btn-play').textContent = 'Pause';
+  app.playing = setInterval(() => {
+    const v = Number(slider.value) + 3;
+    if (v >= 1000) { slider.value = 1000; app.timeline.setCursor(1); syncTimeline(); return stopPlay(); }
+    slider.value = v;
+    app.timeline.setCursor(v / 1000);
+    syncTimeline();
+  }, 28);
+}
+
+function stopPlay() {
+  clearInterval(app.playing);
+  app.playing = null;
+  $('#btn-play').textContent = 'Play';
+}
+
+function syncTimeline() {
+  const s = app.timeline.stats();
+  $('#tl-date').textContent = E.fmtDate(app.timeline.cursorDate());
+  $('#tl-total').textContent = s.total;
+  $('#tl-year').textContent = s.year;
+  $('#tl-open').textContent = s.open;
+
+  const u = app.timeline.latestUnlock();
+  const box = $('#tl-unlock');
+  if (!u) { box.hidden = true; return; }
+  box.hidden = false;
+  const bad = u.flag === 'walked back' || u.flag === 'counterweight';
+  box.innerHTML = `
+    <span class="u-date">${E.fmtDate(u.at)}</span>
+    <h4>${esc(u.title)}${u.flag ? `<span class="flag ${bad ? 'bad' : ''}">${esc(u.flag)}</span>` : ''}</h4>
+    <p>${esc(u.body)}</p>
+    <div class="v-src">${srcLinks([u.src])}</div>`;
+}
+
+function buildLegend() {
+  const seen = new Set(D.MODELS.map(m => m.lab));
+  $('#tl-legend').innerHTML = Object.entries(D.LABS)
+    .filter(([k]) => seen.has(k))
+    .map(([, l]) => `<span class="lg"><i style="background:hsl(${l.hue},68%,58%)"></i>${esc(l.name)}</span>`)
+    .join('');
+}
+
+/* ---- Act III: what it can do --------------------------------------------- */
+
+function buildAct3() {
+  $('#domain-nav').innerHTML = D.DOMAINS.map(d =>
+    `<button data-d="${esc(d.id)}">${esc(d.name)}</button>`).join('');
+  $$('#domain-nav button').forEach(b => b.addEventListener('click', () => {
+    const el = document.querySelector(`[data-domain="${b.dataset.d}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }));
+
+  $('#domains').innerHTML = D.DOMAINS.map(d => `
+    <section class="domain" data-domain="${esc(d.id)}">
+      <header class="dhead">
+        <h2>${esc(d.name)}</h2>
+        <p>${esc(d.lede)}</p>
+      </header>
+      ${d.items.map(m => `
+        <article class="mcard ${esc(m.verdict)}">
+          <header>
+            <span class="verdict">${m.verdict === 'verified' ? 'Verified' : m.verdict === 'disputed' ? 'Disputed' : 'Overclaimed'}</span>
+            <h3>${esc(m.title)}</h3>
+            <span class="mdate">${E.fmtDate(E.t(m.date))}</span>
+          </header>
+          <p class="what">${esc(m.what)}</p>
+          <div class="split">
+            <div class="s-machine"><span class="s-k">The machine</span><p>${esc(m.machine)}</p></div>
+            <div class="s-human"><span class="s-k">The humans</span><p>${esc(m.human)}</p></div>
+          </div>
+          ${m.quote ? `<blockquote>“${esc(m.quote)}”<cite>${esc(m.quoteBy)}</cite></blockquote>` : ''}
+          ${m.caveat ? `<p class="caveat">${esc(m.caveat)}</p>` : ''}
+          <div class="v-src">${srcLinks([m.src].concat(m.src === 'erdos1196' ? ['erdos1196-tao'] : []))}</div>
+        </article>`).join('')}
+    </section>`).join('');
+
+  $('#cut-list').innerHTML = D.CUT.map(c => `
+    <li><strong>${esc(c.claim)}</strong><span>${esc(c.why)}</span></li>`).join('');
+
+  $('#closer-gap').textContent = D.CLOSERS.gapMonths;
+  $('#closer-gap-note').textContent = D.CLOSERS.gapNote;
+  $('#closer-doubling').textContent = D.CLOSERS.doubling;
+  $('#closer-doubling-note').textContent = D.CLOSERS.doublingNote;
+
+  const metr = D.ROUNDS.find(r => r.id === 'metr');
+  const fit = E.doublingDays(E.allPoints(metr));
+  $('#closer-fit').textContent = fit ? Math.round(fit) : '—';
+}
+
+/* ---- sources ------------------------------------------------------------- */
+
+function buildSources() {
+  $('#source-list').innerHTML = Object.entries(D.SOURCES)
+    .sort((a, b) => a[1].t.localeCompare(b[1].t))
+    .map(([, s]) => `<li><a href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.t)}</a></li>`)
+    .join('');
+}
+
+function srcLinks(keys) {
+  return keys.filter(k => D.SOURCES[k])
+    .map(k => `<a href="${esc(D.SOURCES[k].u)}" target="_blank" rel="noopener">${esc(D.SOURCES[k].t)}</a>`)
+    .join('<span class="dot">·</span>');
+}
+
+/* ---- settings ------------------------------------------------------------ */
+
+function wireSettings() {
+  $('#btn-settings').addEventListener('click', () => $('#settings').hidden = false);
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => {
+    $('#' + b.dataset.close).hidden = true;
+  }));
+  $('#chk-presenter').addEventListener('change', ev => {
+    app.big = ev.target.checked;
+    document.body.classList.toggle('presenter', app.big);
+    fitChart();
+    app.chart.setBig(app.big);
+    app.timeline.setBig(app.big);
+  });
+  $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ---- self test ------------------------------------------------------------
+   The same integrity checks the node suite runs, available from the UI so the
+   claim "every number here has a source" can be demonstrated rather than
+   asserted, in front of the person asking.
+   -------------------------------------------------------------------------- */
+
+function runSelfTest() {
+  const out = $('#selftest-out');
+  const checks = [];
+  const ok = (name, cond, detail) => checks.push({ name, pass: !!cond, detail: detail || '' });
+
+  const allItems = D.DOMAINS.reduce((a, d) => a.concat(d.items), []);
+
+  /* 1. every datum resolves to a source */
+  const orphans = [];
+  const walk = (arr, where) => (arr || []).forEach(p => {
+    if (!p.src) orphans.push(where + ': ' + (p.label || p.title || p.d || '?'));
+    else if (!D.SOURCES[p.src]) orphans.push(where + ': dangling src "' + p.src + '"');
+  });
+  D.ROUNDS.forEach(r => { walk(r.shown, r.id); walk(r.hidden, r.id); walk(r.markers, r.id); if (r.twist) walk(r.twist.series, r.id + '/twist'); });
+  walk(D.UNLOCKS, 'unlocks');
+  walk(allItems, 'act3');
+  ok('Every plotted point and result resolves to a source', orphans.length === 0, orphans.slice(0, 4).join('; '));
+
+  /* 2. no source is declared and never used */
+  const used = new Set();
+  const mark = arr => (arr || []).forEach(p => p.src && used.add(p.src));
+  D.ROUNDS.forEach(r => { mark(r.shown); mark(r.hidden); mark(r.markers); if (r.twist) mark(r.twist.series); });
+  mark(D.UNLOCKS); mark(allItems);
+  ['mittr-metr', 'erdos1196-tao', 'hle', 'nolima', 'kimi-k3', 'gemma', 'olmo', 'cursor', 'gpt-oss',
+   'arc-3', 'arc-3-human',
+   D.CLOSERS.gapSrc, D.CLOSERS.doublingSrc].forEach(k => used.add(k));
+  const unused = Object.keys(D.SOURCES).filter(k => !used.has(k));
+  ok('No source is declared and never used', unused.length === 0, unused.join(', '));
+
+  /* 3. series run forward in time */
+  const disorder = [];
+  D.ROUNDS.forEach(r => {
+    const pts = E.allPoints(r);
+    for (let i = 1; i < pts.length; i++) if (E.t(pts[i].date) < E.t(pts[i - 1].date)) disorder.push(r.id);
+  });
+  ok('Every series runs forward in time', disorder.length === 0, disorder.join(', '));
+
+  /* 4. the shown/hidden split is honest */
+  const bad = [];
+  D.ROUNDS.forEach(r => {
+    if (E.t(r.hidden[0].date) < E.t(r.shown[r.shown.length - 1].date)) bad.push(r.id);
+  });
+  ok('Hidden data always follows the shown data', bad.length === 0, bad.join(', '));
+
+  /* 5. every round is explained before it is asked */
+  const unexplained = D.ROUNDS.filter(r => !r.plain || !r.example || !r.human || !r.xLabel || !r.yLabel).map(r => r.id);
+  ok('Every test is explained, exemplified and has both axes labelled', unexplained.length === 0, unexplained.join(', '));
+
+  /* 6. every Act III result splits machine from human */
+  const nosplit = allItems.filter(m => !m.machine || !m.human).map(m => m.title);
+  ok('Every result says what the machine did AND what the humans did', nosplit.length === 0, nosplit.join(', '));
+
+  /* 7. Act III is not one domain wearing a hat */
+  ok('Act III covers at least five domains', D.DOMAINS.length >= 5, D.DOMAINS.length + ' domains');
+  ok('Act III includes results that did not work', allItems.some(m => m.verdict !== 'verified'));
+
+  /* 8. scoring behaves */
+  const r0 = D.ROUNDS[0];
+  ok('Scoring is monotone in the guess',
+     E.score(r0, E.emptyGuess(0.2)).ratio > E.score(r0, E.emptyGuess(0.6)).ratio);
+  const scale = E.makeScale(r0.scale, r0.yMin, r0.yMax);
+  const pr = E.score(r0, E.emptyGuess(scale.to(E.finalValue(r0)))).ratio;
+  ok('A perfect guess scores 1.0×', Math.abs(pr - 1) < 0.02, pr.toFixed(3));
+
+  /* 9. prose agrees with the plot */
+  const metr = D.ROUNDS.find(r => r.id === 'metr');
+  const fit = E.doublingDays(E.allPoints(metr));
+  ok('The plotted points imply the doubling time Act III quotes',
+     fit / D.CLOSERS.doubling > 0.5 && fit / D.CLOSERS.doubling < 2,
+     Math.round(fit) + ' days fitted vs ' + D.CLOSERS.doubling + ' published');
+
+  /* 10. nothing below 'reported' is on screen */
+  const weak = [];
+  const allow = new Set(['primary', 'reported', 'disputed']);
+  const grade = arr => (arr || []).forEach(p => { if (p.status && !allow.has(p.status)) weak.push(p.label || p.title); });
+  D.ROUNDS.forEach(r => { grade(r.shown); grade(r.hidden); grade(r.markers); });
+  grade(D.UNLOCKS); grade(allItems);
+  ok('Nothing rated below "reported" is displayed', weak.length === 0, weak.join(', '));
+
+  /* 11. the timeline actually covers the open-weight world */
+  const openCount = D.MODELS.filter(m => m.open).length;
+  const regions = new Set(D.MODELS.map(m => D.LABS[m.lab].region));
+  ok('The timeline is majority downloadable models', openCount > D.MODELS.length / 2,
+     openCount + ' of ' + D.MODELS.length);
+  ok('The timeline spans every region', regions.size >= 4, Array.from(regions).join(', '));
+
+  const pass = checks.filter(c => c.pass).length;
+  out.innerHTML = `<div class="st-head ${pass === checks.length ? 'good' : 'bad'}">${pass} / ${checks.length} checks passed</div>` +
+    checks.map(c => `<div class="st-row ${c.pass ? 'good' : 'bad'}">
+      <span>${c.pass ? '✓' : '✕'}</span><span>${esc(c.name)}</span>
+      ${c.detail ? `<em>${esc(c.detail)}</em>` : ''}</div>`).join('');
+  checks.forEach(c => console.log((c.pass ? 'PASS  ' : 'FAIL  ') + c.name + (c.detail ? '  — ' + c.detail : '')));
+  return checks;
+}
+
+/* ---- util ---------------------------------------------------------------- */
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+window.__undershoot = { app, runSelfTest, goAct, loadRound,
+                        begin: () => $('#btn-begin').click(),
+                        tlLabels: () => Timeline.labels(), D, E };
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>

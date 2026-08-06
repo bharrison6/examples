@@ -17,10 +17,10 @@ var S = {
   nodes: [], members: [],
   tool: 'build', phase: 'build',
   xray: true, nums: false, selfWeight: false,
-  big: false, showPar: true,
+  big: false, showPar: true, keyboard: false,
   undo: [], analysis: null, sel: -1, drag: null, hover: null,
-  test: null, coll: null, debris: [], shake: 0, ver: 0, foldC: null,
-  vehKey: null, lastDebrief: null, name: ''
+  test: null, coll: null, debris: [], shake: 0, ver: 0, foldC: null, unbraced: [],
+  vehKey: null, lastDebrief: null, name: '', kcur: null, kstart: null
 };
 var V = { s: 30, ox: 0, oy: 0 };
 
@@ -33,6 +33,7 @@ function savePrefs() {
   var p = ls(PREF_K, {});
   p.big = S.big; p.showPar = S.showPar; p.xray = S.xray; p.nums = S.nums;
   p.selfWeight = S.selfWeight; p.li = S.li; p.name = S.name; p.overload = S.overload;
+  p.keyboard = S.keyboard;
   ss(PREF_K, p);
 }
 function saveDesign() {
@@ -77,6 +78,8 @@ function loadLevel(i, fresh) {
   } else if (S.L.starter === 'ladder' && !ls(DESIGN_K, {})[S.L.id]) {
     applyDesign(LV.ladderStarter(S.L), true);
   }
+  mergeCoincident(); cleanup();
+  S.kcur = { x: S.L.gap.x0, y: S.L.deckY }; S.kstart = null;
   computeView(); renderVehSel(); refresh(); renderLevelChip();
 }
 
@@ -148,7 +151,16 @@ function refresh() {
   $('parVal').textContent = (par && S.showPar) ? 'par ' + money(par) : (S.L.sandbox ? 'sandbox' : '');
   var cov = P.deckCoverage(S.nodes, S.members, null, S.L.deckY, S.L.gap.x0, S.L.gap.x1);
   $('btnTest').disabled = !cov.ok;
-  setStatus(cov.ok ? '' : 'The roadway must run unbroken along the deck line before you can test.', cov.ok ? '' : 'warn');
+  S.unbraced = unbracedDeckJoints();
+  if (!cov.ok) {
+    setStatus('The roadway must run unbroken along the deck line before you can test.', 'warn');
+  } else if (S.unbraced.length) {
+    var u0 = S.nodes[S.unbraced[0]];
+    setStatus(S.unbraced.length === 1
+      ? 'The joint at (' + u0.x + ', ' + u0.y + ') has nothing bracing it — a wheel there will push straight through.'
+      : S.unbraced.length + ' roadway joints have nothing bracing them — a wheel on any of them will push straight through.',
+      'err');
+  } else setStatus('');
   $('btnUndo').disabled = !S.undo.length;
   $('hint').innerHTML = S.phase === 'build'
     ? '<b>' + S.L.name + '</b> — ' + S.L.blurb + (S.L.hint ? ' <span style="opacity:.8">' + S.L.hint + '</span>' : '')
@@ -285,9 +297,25 @@ function draw(t) {
   if (S.nums && S.showForces() && S.analysis && !S.analysis.mechanism) drawNumbers(lw);
   if (S.drag) drawDragPreview(lw);
   if (S.tool === 'inspect' && S.sel >= 0) drawFBD();
+  if (S.phase === 'build' && S.unbraced && S.unbraced.length) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,69,0,' + (0.55 + 0.4 * Math.abs(Math.sin(t / 260))) + ')';
+    ctx.lineWidth = 3;
+    for (var ub = 0; ub < S.unbraced.length; ub++) {
+      var un = np(S.unbraced[ub]);
+      ctx.beginPath(); ctx.arc(SX(un.x), SY(un.y), Math.max(9, V.s * 0.19), 0, 7); ctx.stroke();
+    }
+    ctx.restore();
+  }
   if (S.hover != null && S.phase === 'build' && S.tool === 'build') {
     ctx.fillStyle = 'rgba(236,172,0,.6)';
     ctx.beginPath(); ctx.arc(SX(S.hover.x), SY(S.hover.y), r * 0.75, 0, 7); ctx.fill();
+  }
+  if (S.keyboard && S.phase === 'build' && document.activeElement === cv && S.kcur) {
+    ctx.save(); ctx.strokeStyle = '#ECAC00'; ctx.lineWidth = 2; ctx.setLineDash([4, 3]);
+    ctx.beginPath(); ctx.arc(SX(S.kcur.x), SY(S.kcur.y), Math.max(8, r * 1.7), 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]); ctx.fillStyle = '#ECAC00'; ctx.font = '700 11px system-ui';
+    ctx.fillText('KEYBOARD CURSOR', SX(S.kcur.x) + 10, SY(S.kcur.y) - 10); ctx.restore();
   }
   if (S.analysis && S.analysis.mechanism && S.phase === 'build' && S.xray && S.members.length) {
     /* nothing tied into the supports: there is no fold to show, because there
@@ -535,20 +563,46 @@ function drawFBD() {
   if (!a || i < 0) { $('fbd').classList.add('hidden'); return; }
   /* A mechanism has no equilibrium to report, but silently showing nothing is
      what made this tool look broken. Say why, and say what to do about it. */
-  if (a.mechanism) {
-    var deg = 0;
-    for (var q = 0; q < S.members.length; q++)
-      if (isLive(q) && (S.members[q].a === i || S.members[q].b === i)) deg++;
+  var unb = S.unbraced && S.unbraced.indexOf(i) >= 0;
+  if (a.mechanism || unb) {
+    var deg = 0, dirs = [];
+    for (var q = 0; q < S.members.length; q++) {
+      if (!isLive(q) || (S.members[q].a !== i && S.members[q].b !== i)) continue;
+      deg++;
+      var oq = S.members[q].a === i ? S.members[q].b : S.members[q].a;
+      var ang = Math.atan2(S.nodes[oq].y - S.nodes[i].y, S.nodes[oq].x - S.nodes[i].x);
+      dirs.push(((ang * 180 / Math.PI) + 360) % 180);   // line direction, 0-180
+    }
     var pm = np(i);
     ctx.save();
-    ctx.strokeStyle = 'rgba(236,172,0,.95)'; ctx.lineWidth = 2;
+    ctx.strokeStyle = unb ? 'rgba(255,69,0,.95)' : 'rgba(236,172,0,.95)'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.arc(SX(pm.x), SY(pm.y), Math.max(8, V.s * 0.15), 0, 7); ctx.stroke();
     ctx.restore();
     var e2 = $('fbd');
-    var html2 = '<h4>Joint ' + i + (S.nodes[i].anchor ? ' (support)' : '') + '</h4>' +
-      '<div style="line-height:1.5">' + deg + ' member' + (deg === 1 ? '' : 's') + ' meet here, but there are ' +
-      '<b>no forces to show yet</b>: this structure can still fold, so it never reaches equilibrium. ' +
-      'Brace it until the mechanism warning clears and the force arrows will appear.</div>';
+    var body2;
+    if (unb) {
+      /* the confusing case: several members meet, yet the joint is flagged.
+         Say the actual reason — they all run along one line. */
+      var uniq = [];
+      for (q = 0; q < dirs.length; q++) {
+        var seenDir = false;
+        for (var w = 0; w < uniq.length; w++)
+          if (Math.abs(dirs[q] - uniq[w]) < 0.1 || Math.abs(dirs[q] - uniq[w] - 180) < 0.1) seenDir = true;
+        if (!seenDir) uniq.push(dirs[q]);
+      }
+      body2 = '<div style="line-height:1.5"><b>' + deg + ' member' + (deg === 1 ? '' : 's') +
+        ' meet here, but they all lie along the same straight line</b>' +
+        (uniq.length ? ' (' + uniq.map(function (d) { return d.toFixed(0) + '°'; }).join(' and ') + ')' : '') +
+        '. A member only resists being stretched or squashed along its own axis, so nothing here can ' +
+        'push back against a wheel pressing <i>across</i> that line. Run a diagonal or a post from this ' +
+        'joint to somewhere off the line — or erase the joint and let the roadway run straight through.</div>';
+    } else {
+      body2 = '<div style="line-height:1.5">' + deg + ' member' + (deg === 1 ? '' : 's') +
+        ' meet here, but there are <b>no forces to show yet</b>: this structure can still fold, so it never ' +
+        'reaches equilibrium. Brace it until the mechanism warning clears and the force arrows will appear.</div>';
+    }
+    var html2 = '<h4>Joint ' + i + (S.nodes[i].anchor ? ' (support)' : '') +
+      (unb ? ' — nothing bracing it' : '') + '</h4>' + body2;
     if (e2.dataset.key !== html2) { e2.dataset.key = html2; e2.innerHTML = html2; }
     e2.style.maxWidth = '22em';
     e2.classList.remove('hidden');
@@ -731,7 +785,7 @@ function stepTest(dt) {
                                 loads: wl.loads, selfWeight: S.selfWeight }, 40);
   S.analysis = out.result;
   for (var i = 0; i < S.members.length; i++) {
-    if (!T.live[i] || !out.live[i]) continue;
+    if (!T.live[i]) continue;
     var f = out.result.force[i];
     if (f > T.maxT[i]) T.maxT[i] = f;
     if (f < T.maxC[i]) T.maxC[i] = f;
@@ -742,6 +796,10 @@ function stepTest(dt) {
 
   if (out.broke.length) {
     for (i = 0; i < out.broke.length; i++) {
+      var br = out.broke[i], bi = br.member, bf = br.force;
+      if (bf > T.maxT[bi]) T.maxT[bi] = bf;
+      if (bf < T.maxC[bi]) T.maxC[bi] = bf;
+      if (br.util > T.maxU[bi]) T.maxU[bi] = br.util;
       addDebris(out.broke[i].member);
       T.broke.push({ x: T.x, member: out.broke[i].member, util: out.broke[i].util,
                      force: out.broke[i].force });
@@ -772,7 +830,7 @@ function startCollapse(res) {
   for (var i = 0; i < S.nodes.length; i++) {
     var n = S.nodes[i];
     p.push({ x: n.x, y: n.y, ox: n.x, oy: n.y, px: n.x, py: n.y,
-             fixed: !!(n.fixX || n.fixY) && !!n.anchor });
+             fixX: !!n.fixX, fixY: !!n.fixY });
   }
   var links = [];
   for (i = 0; i < S.members.length; i++) {
@@ -780,7 +838,7 @@ function startCollapse(res) {
     var m = S.members[i];
     links.push({ i: i, a: m.a, b: m.b, rest: mlen(m) });
   }
-  var mode = res.mode, amp = 0;
+  var mode = chooseCollapseMode(res), amp = 0;
   if (mode) {
     var mx = 0;
     for (i = 0; i < S.nodes.length; i++) mx = Math.max(mx, Math.hypot(mode[2 * i], mode[2 * i + 1]));
@@ -791,17 +849,47 @@ function startCollapse(res) {
   S.analysis = null;
   S.shake = 1;
 }
+/* A rank-deficient frame can expose several valid folds. Prefer a projected
+   one that moves the roller along its bearing, so the actual failure shows
+   the support constraint instead of an arbitrary stationary-roller basis. */
+function chooseCollapseMode(res) {
+  var choices = [res.mode].concat(res.modes || []), best = res.mode, bestSlide = -1;
+  for (var ci = 0; ci < choices.length; ci++) {
+    var candidate = choices[ci];
+    if (!candidate) continue;
+    var mx = 0;
+    for (var ni = 0; ni < S.nodes.length; ni++) mx = Math.max(mx, Math.hypot(candidate[2 * ni], candidate[2 * ni + 1]));
+    if (mx < 1e-12) continue;
+    var f = P.foldShape(S.nodes, S.members, S.test.live, candidate, 1.1 / mx, 120);
+    if (f.err > 0.005) continue;
+    var slide = 0;
+    for (ni = 0; ni < S.nodes.length; ni++) {
+      var n = S.nodes[ni];
+      if (!n.fixX && n.fixY) slide = Math.max(slide, Math.abs(f.pts[ni].x - n.x));
+    }
+    if (slide > bestSlide) { best = candidate; bestSlide = slide; }
+  }
+  return best;
+}
+/* The visible phase-one collapse must be a projected finite mechanism, not
+   the raw linear null vector (which stretches members at finite amplitude). */
+function collapseFrame(C, progress) {
+  if (!C.mode) return null;
+  return P.foldShape(S.nodes, S.members, S.test.live, C.mode, C.amp * progress, 120);
+}
 function stepCollapse(dt) {
   var C = S.coll;
   C.t += dt;
   if (!C.fall) {
     /* phase 1 — ride the mechanism mode the solver found */
     var k = Math.min(1, C.t / 0.55), e = k * k;
+    var projected = collapseFrame(C, e);
     for (var i = 0; i < C.p.length; i++) {
       var q = C.p[i];
-      if (q.fixed) continue;
-      q.x = q.ox + (C.mode ? C.mode[2 * i] * C.amp * e : 0);
-      q.y = q.oy + (C.mode ? C.mode[2 * i + 1] * C.amp * e : -1.1 * e);
+      /* Keep each support coordinate separately: a pin holds x+y, while a
+         roller holds y but must follow the projected mechanism in x. */
+      q.x = q.fixX ? q.ox : (projected ? projected.pts[i].x : q.ox);
+      q.y = q.fixY ? q.oy : (projected ? projected.pts[i].y : q.oy - 1.1 * e);
       q.px = q.x; q.py = q.y;
     }
     C.vy = deckYAt(C.vx) - 0.05;
@@ -813,10 +901,11 @@ function stepCollapse(dt) {
   for (var s = 0; s < sub; s++) {
     for (i = 0; i < C.p.length; i++) {
       var n = C.p[i];
-      if (n.fixed) continue;
-      var vx = (n.x - n.px) * 0.995, vy = (n.y - n.py) * 0.995;
+      var vx = n.fixX ? 0 : (n.x - n.px) * 0.995;
+      var vy = n.fixY ? 0 : (n.y - n.py) * 0.995;
       n.px = n.x; n.py = n.y;
-      n.x += vx; n.y += vy - 9.81 * h * h;
+      n.x = n.fixX ? n.ox : n.x + vx;
+      n.y = n.fixY ? n.oy : n.y + vy - 9.81 * h * h;
     }
     for (var it = 0; it < 3; it++) {
       for (var li = C.links.length - 1; li >= 0; li--) {
@@ -824,12 +913,17 @@ function stepCollapse(dt) {
         var dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy) || 1e-6;
         var strain = (d - L2.rest) / L2.rest;
         if (Math.abs(strain) > 0.42) { addDebris(L2.i); S.test.live[L2.i] = 0; C.links.splice(li, 1); continue; }
-        var diff = (d - L2.rest) / d * 0.5, wA = A.fixed ? 0 : 1, wB = B.fixed ? 0 : 1;
-        var tot = wA + wB; if (!tot) continue;
-        A.x += dx * diff * (wA / tot) * 2 * (wB ? 0.5 : 1);
-        A.y += dy * diff * (wA / tot) * 2 * (wB ? 0.5 : 1);
-        B.x -= dx * diff * (wB / tot) * 2 * (wA ? 0.5 : 1);
-        B.y -= dy * diff * (wB / tot) * 2 * (wA ? 0.5 : 1);
+        /* Coordinate-wise position projection: rollers may slide on x while
+           their bearing holds y; pins hold both. */
+        var ax = A.fixX ? 0 : 1, ay = A.fixY ? 0 : 1;
+        var bx = B.fixX ? 0 : 1, by = B.fixY ? 0 : 1;
+        var denom = (ax + bx) * dx * dx + (ay + by) * dy * dy;
+        if (denom < 1e-12) continue;
+        var lambda = (d - L2.rest) / denom;
+        if (ax) A.x += dx * lambda;
+        if (ay) A.y += dy * lambda;
+        if (bx) B.x -= dx * lambda;
+        if (by) B.y -= dy * lambda;
       }
     }
   }
@@ -1028,18 +1122,54 @@ function finishDebriefButtons(d) {
 
 /* ---------------------------------------------------------- interaction */
 function snap(wx, wy) {
-  var b = S.L.build;
+  var b = S.L.build, i;
   var gx = Math.round(wx / GRID) * GRID, gy = Math.round(wy / GRID) * GRID;
   gx = Math.max(b.xmin, Math.min(b.xmax, gx));
   gy = Math.max(b.ymin, Math.min(b.ymax, gy));
-  /* prefer an existing joint nearby (anchors included, even outside the zone) */
+  /* A joint sitting exactly on the snapped point wins outright. Testing only
+     proximity to the raw pointer is not enough: on a level that forbids
+     building below the deck, a pointer under the deck CLAMPS up onto the deck
+     line and can land on a joint further from the pointer than the search
+     radius — which used to stack a second joint on top of the first. */
+  for (i = 0; i < S.nodes.length; i++)
+    if (Math.abs(S.nodes[i].x - gx) < 1e-6 && Math.abs(S.nodes[i].y - gy) < 1e-6)
+      return { x: S.nodes[i].x, y: S.nodes[i].y, node: i };
+  /* otherwise the nearest joint to the pointer (anchors included) */
   var best = -1, bd = 0.42;
-  for (var i = 0; i < S.nodes.length; i++) {
+  for (i = 0; i < S.nodes.length; i++) {
     var d = Math.hypot(S.nodes[i].x - wx, S.nodes[i].y - wy);
     if (d < bd) { bd = d; best = i; }
   }
   if (best >= 0) return { x: S.nodes[best].x, y: S.nodes[best].y, node: best };
   return { x: gx, y: gy, node: -1 };
+}
+
+/* Two joints can never occupy the same point: the members meeting there would
+   be split between them, so the structure would look connected while carrying
+   load through only some of it. Also repairs any design saved before the snap
+   fix above. */
+function mergeCoincident() {
+  var i, j;
+  for (i = 0; i < S.nodes.length; i++) {
+    for (j = S.nodes.length - 1; j > i; j--) {
+      if (Math.abs(S.nodes[i].x - S.nodes[j].x) > 1e-6) continue;
+      if (Math.abs(S.nodes[i].y - S.nodes[j].y) > 1e-6) continue;
+      if (S.nodes[j].anchor && !S.nodes[i].anchor) continue;   // never discard an abutment
+      var jj = j;
+      S.members.forEach(function (m) { if (m.a === jj) m.a = i; if (m.b === jj) m.b = i; });
+      S.nodes.splice(j, 1);
+      S.members.forEach(function (m) { if (m.a > jj) m.a--; if (m.b > jj) m.b--; });
+    }
+  }
+  var seen = {}, out = [];
+  for (var k = 0; k < S.members.length; k++) {
+    var m2 = S.members[k];
+    if (m2.a === m2.b) continue;                                // collapsed to nothing
+    var key = Math.min(m2.a, m2.b) + ':' + Math.max(m2.a, m2.b);
+    if (seen[key]) continue;                                    // merged into a twin
+    seen[key] = 1; out.push(m2);
+  }
+  S.members = out;
 }
 function nodeAt(wx, wy, tol) {
   var best = -1, bd = tol || 0.4;
@@ -1067,6 +1197,8 @@ function inZone(x, y) {
 }
 function ensureNode(p) {
   if (p.node >= 0) return p.node;
+  for (var i = 0; i < S.nodes.length; i++)      // belt and braces: never stack joints
+    if (Math.abs(S.nodes[i].x - p.x) < 1e-6 && Math.abs(S.nodes[i].y - p.y) < 1e-6) return i;
   S.nodes.push({ x: p.x, y: p.y, anchor: false, fixX: 0, fixY: 0 });
   return S.nodes.length - 1;
 }
@@ -1098,16 +1230,18 @@ function pointer(e) {
 }
 cv.addEventListener('pointerdown', function (e) {
   if (S.phase !== 'build') return;
+  cv.focus();
   cv.setPointerCapture(e.pointerId);
   var w = pointer(e);
+  S.kcur = snap(w.x, w.y);
   if (S.tool === 'build') {
     var p = snap(w.x, w.y);
     S.drag = { p0: p, p1: p };
   } else if (S.tool === 'erase') {
     var mi = memberAt(w.x, w.y);
-    if (mi >= 0) { pushUndo(); S.members.splice(mi, 1); cleanup(); refresh(); return; }
+    if (mi >= 0) { pushUndo(); S.members.splice(mi, 1); cleanup(); unweldAll(); refresh(); return; }
     var ni = nodeAt(w.x, w.y, 0.4);
-    if (ni >= 0 && !S.nodes[ni].anchor) { pushUndo(); removeNode(ni); refresh(); }
+    if (ni >= 0 && !S.nodes[ni].anchor) { pushUndo(); removeNode(ni); unweldAll(); refresh(); }
   } else {
     var k = nodeAt(w.x, w.y, 0.5);
     S.sel = k;
@@ -1136,9 +1270,10 @@ function endDrag() {
     pushUndo();
     var a = ensureNode(d.p0), b = ensureNode(d.p1);
     if (a !== b && hasMember(a, b) < 0) S.members.push({ a: a, b: b, broken: false });
+    mergeCoincident();
     weldAll();
   }
-  cleanup(); refresh(); setStatus('');
+  cleanup(); refresh();   // refresh() owns the status line, including warnings
 }
 
 /* A joint dropped part-way along a member has to actually BE a joint: split the
@@ -1176,12 +1311,113 @@ cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag);
 cv.addEventListener('pointerleave', function () { S.hover = null; });
 
+/* Keyboard-only editing mirrors the pointer tools at one snapped grid point.
+   B chooses a start then an end, E erases what is under the cursor, and I
+   inspects a joint; the canvas label and live status make this discoverable. */
+function keyboardPoint() { return snap(S.kcur.x, S.kcur.y); }
+function keyboardBuild() {
+  var p = keyboardPoint();
+  if (!S.kstart) { S.kstart = p; setStatus('Member start at (' + p.x + ', ' + p.y + '). Move the cursor, then press B to finish.', ''); return; }
+  S.drag = { p0: S.kstart, p1: p }; S.kstart = null; endDrag();
+  setStatus('Member built at the keyboard cursor. B starts the next member.', '');
+}
+function keyboardErase() {
+  var p = keyboardPoint(), mi = memberAt(p.x, p.y);
+  if (mi >= 0) { pushUndo(); S.members.splice(mi, 1); cleanup(); unweldAll(); refresh(); setStatus('Erased member at cursor.', ''); return; }
+  var ni = nodeAt(p.x, p.y, 0.4);
+  if (ni >= 0 && !S.nodes[ni].anchor) { pushUndo(); removeNode(ni); unweldAll(); refresh(); setStatus('Erased joint at cursor.', ''); return; }
+  setStatus('Nothing removable at the keyboard cursor.', 'warn');
+}
+function keyboardInspect() {
+  var p = keyboardPoint(), ni = nodeAt(p.x, p.y, 0.5);
+  S.sel = ni;
+  if (ni < 0) { $('fbd').classList.add('hidden'); setStatus('No joint at the keyboard cursor.', 'warn'); }
+  else { setStatus('Inspecting joint at (' + S.nodes[ni].x + ', ' + S.nodes[ni].y + ').', ''); refresh(); }
+}
+cv.addEventListener('keydown', function (e) {
+  if (!S.keyboard || S.phase !== 'build') return;
+  if (!S.kcur) S.kcur = { x: S.L.gap.x0, y: S.L.deckY };
+  var dx = 0, dy = 0;
+  if (e.key === 'ArrowLeft') dx = -GRID; else if (e.key === 'ArrowRight') dx = GRID;
+  else if (e.key === 'ArrowUp') dy = GRID; else if (e.key === 'ArrowDown') dy = -GRID;
+  if (dx || dy) {
+    e.preventDefault(); var b = S.L.build;
+    S.kcur.x = Math.max(b.xmin, Math.min(b.xmax, S.kcur.x + dx));
+    S.kcur.y = Math.max(b.ymin, Math.min(b.ymax, S.kcur.y + dy));
+    setStatus('Cursor at (' + S.kcur.x + ', ' + S.kcur.y + '). B build, E erase, I inspect.', ''); return;
+  }
+  if (e.key === 'b' || e.key === 'B') { e.preventDefault(); keyboardBuild(); }
+  if (e.key === 'e' || e.key === 'E') { e.preventDefault(); keyboardErase(); }
+  if (e.key === 'i' || e.key === 'I') { e.preventDefault(); keyboardInspect(); }
+});
+
 function removeNode(ni) {
   S.members = S.members.filter(function (m) { return m.a !== ni && m.b !== ni; });
   S.nodes.splice(ni, 1);
   S.members.forEach(function (m) { if (m.a > ni) m.a--; if (m.b > ni) m.b--; });
   cleanup();
 }
+/* The inverse of weldAll: a joint left with exactly two members running
+   straight through it is a scar, not a joint. It carries no load a single
+   member would not, it charges $180, and — because the solver only condenses
+   it while it is UNLOADED — the bridge fails the moment a wheel lands on it.
+   Erasing a member must put the topology back the way it was. */
+function unweldAll() {
+  var guard = 0, changed = true;
+  while (changed && guard++ < 80) {
+    changed = false;
+    for (var n = 0; n < S.nodes.length && !changed; n++) {
+      if (S.nodes[n].anchor) continue;
+      var inc = [];
+      for (var i = 0; i < S.members.length; i++)
+        if (S.members[i].a === n || S.members[i].b === n) inc.push(i);
+      if (inc.length !== 2) continue;
+      var m1 = S.members[inc[0]], m2 = S.members[inc[1]];
+      var o1 = m1.a === n ? m1.b : m1.a, o2 = m2.a === n ? m2.b : m2.a;
+      if (o1 === o2) continue;
+      var A = S.nodes[o1], B = S.nodes[n], C = S.nodes[o2];
+      var d1x = B.x - A.x, d1y = B.y - A.y, d2x = C.x - B.x, d2y = C.y - B.y;
+      var l1 = Math.hypot(d1x, d1y), l2 = Math.hypot(d2x, d2y);
+      if (!(l1 > 1e-9 && l2 > 1e-9)) continue;
+      if (Math.abs(d1x * d2y - d1y * d2x) / (l1 * l2) > 1e-6) continue;  // not collinear
+      if (d1x * d2x + d1y * d2y <= 0) continue;                          // doubles back
+      if (l1 + l2 > MAXLEN + 1e-6) continue;                             // merged piece illegal
+      if (hasMember(o1, o2) >= 0) continue;
+      S.members.splice(Math.max(inc[0], inc[1]), 1);
+      S.members.splice(Math.min(inc[0], inc[1]), 1);
+      S.members.push({ a: o1, b: o2, broken: false });
+      changed = true;
+    }
+    if (changed) cleanup();
+  }
+}
+
+/* A roadway joint braced only by members in ONE straight line cannot resist a
+   wheel pushing down on it. Unloaded it condenses away and looks fine, so this
+   has to be flagged during the build or the test failure looks random. */
+function unbracedDeckJoints() {
+  var out = [], i, n;
+  for (n = 0; n < S.nodes.length; n++) {
+    if (S.nodes[n].anchor) continue;
+    if (Math.abs(S.nodes[n].y - S.L.deckY) > 1e-6) continue;
+    var dirs = [];
+    for (i = 0; i < S.members.length; i++) {
+      var m = S.members[i];
+      if (m.broken || (m.a !== n && m.b !== n)) continue;
+      var o = m.a === n ? m.b : m.a;
+      var dx = S.nodes[o].x - S.nodes[n].x, dy = S.nodes[o].y - S.nodes[n].y;
+      var L = Math.hypot(dx, dy) || 1;
+      dirs.push([dx / L, dy / L]);
+    }
+    if (!dirs.length) continue;
+    var spans = false;
+    for (i = 1; i < dirs.length; i++)
+      if (Math.abs(dirs[0][0] * dirs[i][1] - dirs[0][1] * dirs[i][0]) > 1e-6) { spans = true; break; }
+    if (!spans) out.push(n);
+  }
+  return out;
+}
+
 /* drop joints that no longer hold anything (anchors always stay) */
 function cleanup() {
   var used = {};
@@ -1230,6 +1466,16 @@ $('tglBig').addEventListener('change', function () {
   resize();
 });
 $('tglPar').addEventListener('change', function () { S.showPar = this.checked; savePrefs(); refresh(); });
+$('tglKeyboard').addEventListener('change', function () {
+  S.keyboard = this.checked;
+  cv.tabIndex = S.keyboard ? 0 : -1;
+  cv.setAttribute('role', S.keyboard ? 'application' : 'img');
+  cv.setAttribute('aria-label', S.keyboard
+    ? 'Bridge editing canvas. Arrow keys move the grid cursor; B starts or completes a member, E erases, and I inspects.'
+    : 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode.');
+  if (!S.keyboard) S.kstart = null;
+  savePrefs(); refresh();
+});
 
 function renderVehSel() {
   var allow = S.L.sandbox || S.overload;
@@ -1302,12 +1548,12 @@ function renderLevels() {
   var prog = ls(PROG_K, {}), h = '';
   LV.LEVELS.forEach(function (L, i) {
     var best = prog[L.id];
-    h += '<div class="card' + (best ? ' done' : '') + '" data-i="' + i + '">' +
+    h += '<button type="button" class="card' + (best ? ' done' : '') + '" data-i="' + i + '" aria-label="Load level ' + L.n + ': ' + esc(L.name) + '. ' + esc(L.blurb) + '">' +
       '<h3>' + L.n + '. ' + L.name + '</h3><p>' + L.blurb + '</p>' +
       '<div class="meta"><span>' + (L.gap.x1 - L.gap.x0) + ' m · ' + LV.VEHICLES[L.vehicle].name + '</span>' +
       '<span>' + (L.par ? 'par ' + money(L.par) : 'sandbox') + '</span></div>' +
       (best ? '<div class="meta" style="color:#49c47a">✔ your best ' + money(best) + '</div>' : '') +
-      '</div>';
+      '</button>';
   });
   $('lvGrid').innerHTML = h;
   $('lvGrid').querySelectorAll('.card').forEach(function (c) {
@@ -1336,11 +1582,11 @@ function renderGallery() {
     });
     var bad = maxLen > MAXLEN + 1e-6 ? 'members up to ' + maxLen.toFixed(1) + ' m — too long, add panels'
             : (p.h > S.L.build.ymax ? 'too tall for this level' : null);
-    h += '<div class="card' + (bad ? ' bad' : '') + '" data-i="' + i + '"' + (bad ? ' data-bad="1"' : '') + '>' +
+    h += '<button type="button" class="card' + (bad ? ' bad' : '') + '" data-i="' + i + '" aria-label="Load ' + esc(G.name) + ' truss"' + (bad ? ' data-bad="1" disabled' : '') + '>' +
       '<h3>' + G.name + ' <span class="sub">' + G.year + '</span></h3>' +
       svgOf(d) + '<p>' + G.note + '</p>' +
       '<div class="meta"><span>' + d.members.length + ' members</span><span>' +
-      (bad ? '<span style="color:#ff8f8f">' + bad + '</span>' : money(cost)) + '</span></div></div>';
+      (bad ? '<span style="color:#ff8f8f">' + bad + '</span>' : money(cost)) + '</span></div></button>';
   });
   $('glGrid').innerHTML = h;
   $('glGrid').querySelectorAll('.card').forEach(function (c) {
@@ -1426,10 +1672,15 @@ function frame(t) {
   var pref = ls(PREF_K, {});
   S.big = !!pref.big; S.showPar = pref.showPar !== false;
   S.xray = pref.xray !== false; S.nums = !!pref.nums; S.selfWeight = !!pref.selfWeight;
-  S.name = pref.name || ''; S.overload = !!pref.overload;
+  S.name = pref.name || ''; S.overload = !!pref.overload; S.keyboard = !!pref.keyboard;
   $('tglOverload').checked = S.overload;
   document.body.classList.toggle('big', S.big);
-  $('tglBig').checked = S.big; $('tglPar').checked = S.showPar;
+  $('tglBig').checked = S.big; $('tglPar').checked = S.showPar; $('tglKeyboard').checked = S.keyboard;
+  cv.tabIndex = S.keyboard ? 0 : -1;
+  cv.setAttribute('role', S.keyboard ? 'application' : 'img');
+  cv.setAttribute('aria-label', S.keyboard
+    ? 'Bridge editing canvas. Arrow keys move the grid cursor; B starts or completes a member, E erases, and I inspects.'
+    : 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode.');
   $('tglXray').checked = S.xray; $('tglNums').checked = S.nums; $('tglWeight').checked = S.selfWeight;
   [['tglXray', S.xray], ['tglNums', S.nums], ['tglWeight', S.selfWeight]].forEach(function (p) {
     $(p[0]).closest('.tgl').classList.toggle('on', p[1]);

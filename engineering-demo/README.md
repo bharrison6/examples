@@ -85,8 +85,8 @@ Nothing may exceed 4 m. Par is golf-style: survive the crossing for less than pa
 ## Verifying the physics
 
 ```
-node test-physics.js   # 60 checks against the shipped solver and level definitions
-node ui-smoke.js       # headless Playwright playthrough (needs `npm i playwright`)
+node test-physics.js   # shipped solver and level-definition regression suite
+node ui-smoke.js       # headless Playwright playthrough (test-only setup below)
 ```
 
 `test-physics.js` imports the exact files the browser loads (`physics.js`, `levels.js`) and
@@ -104,3 +104,13 @@ running cost, opens the free-body inspector and asserts ΣF = 0, runs a crossing
 debrief, saves to the leaderboard, overloads the same bridge with a crane and confirms the
 collapse, watches the level-2 frame fold, braces it and confirms it then survives, and loads a
 Warren from the gallery and reads the alternating colour pattern off the live analysis.
+
+With self-weight enabled, every live member contributes its lumped load before the solver's
+zero-force-stub cleanup. A loose vertical hanger therefore retains its own 900 N/m load; if its
+geometry cannot route that load through axial members, the solver reports the resulting mechanism
+instead of silently deleting the member.
+
+The demo itself is build-free and offline. Browser smoke coverage is optional and needs the
+test-only Playwright setup (`npm install --save-dev playwright`, then `npx playwright install
+chromium`); the smoke script exits loudly when it is unavailable. Keep the offline standalone
+edition exact with `node sync-standalone.js --check` (or regenerate it with `node sync-standalone.js`).

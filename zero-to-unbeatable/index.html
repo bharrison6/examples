@@ -1,0 +1,3509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#00142B">
+<title>Zero to Unbeatable — watch an AI learn</title>
+<!--
+  Zero to Unbeatable — a single-file, offline demonstration of reinforcement learning.
+
+  Play tic-tac-toe against an agent that starts knowing nothing, train it
+  in bursts, and play it again. All learning happens on this device. No
+  network, no accounts, no install, no AI service is called at any point.
+
+  Companion: demo-guide.html (printable 15-minute session plan).
+  Sources live in src/ and are concatenated by build.js.
+-->
+<style>
+/* ==== styles.css ==== */
+/* =====================================================================
+   Zero to Unbeatable — Murray State theme, phone first.
+
+   Palette is the university's own, from the Murray State brand guide:
+     Murray State Blue  #002144  (PMS 289)
+     Murray State Gold  #ECAC00  (PMS 123)
+     Lite Blue accent   #00A4E3  (PMS 2995)
+     Red Orange accent  #FF4500  (Pantone Warm Red) — "use sparingly",
+                        so it appears only where something is going wrong:
+                        a losing value, a game you lost.
+
+   Value heatmaps run red-orange -> navy -> gold rather than the usual
+   red -> green, so the whole app stays inside the brand palette. Every
+   heat square also carries its signed number, so nothing depends on
+   telling two warm hues apart.
+
+   Layout rule: everything scales off --u. Presenter mode changes --u
+   and nothing else. Sizes that must survive a short phone screen are
+   expressed in dvh so the board shrinks instead of pushing the TRAIN
+   button off the bottom of the screen.
+   ===================================================================== */
+
+/* student-facing quick guide */
+.student-guide {
+  width: min(660px, calc(100% - 24px)); max-height: min(88dvh, 760px); padding: 0;
+  color: #172231; background: #fff; border: 2px solid #002144;
+  border-top: 5px solid #ECAC00; border-radius: 12px; box-shadow: 0 24px 70px rgba(0,0,0,.65);
+}
+.student-guide::backdrop { background: rgba(0,10,24,.84); backdrop-filter: blur(3px); }
+.student-guide-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #002144; color: #fff; }
+.student-guide-head h2 { flex: 1; margin: 0; color: #fff; font: 750 1.12rem system-ui, sans-serif; }
+.student-guide-head button { min-width: 40px; min-height: 40px; border: 1px solid #ECAC00; border-radius: 7px; background: #ECAC00; color: #002144; font-weight: 800; cursor: pointer; }
+.student-guide-body { padding: 16px 18px 8px; overflow-y: auto; font: 400 .95rem/1.48 system-ui, sans-serif; }
+.student-guide-body h3 { margin: 14px 0 4px; color: #002144; font-size: 1rem; }
+.student-guide-body p { margin: 0 0 10px; }
+.student-guide-body ol, .student-guide-body ul { margin: 5px 0 12px; padding-left: 22px; }
+.student-guide-body li { margin: 5px 0; }
+.student-guide-actions { display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
+.student-guide-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #002144; border-radius: 7px; background: #002144; color: #fff; font-weight: 750; cursor: pointer; }
+@media (max-width: 600px) {
+  .student-guide { width: 100%; max-width: none; max-height: 100dvh; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
+  .student-guide-body { padding: 14px 14px 6px; }
+}
+
+:root {
+  --u: 1rem;
+
+  --navy:    #002144;          /* brand */
+  --gold:    #ECAC00;          /* brand */
+  --lite:    #00A4E3;          /* brand accent */
+  --warm:    #FF4500;          /* brand accent, sparingly */
+
+  --bg:      #00142B;          /* a shade under brand navy */
+  --bg-2:    #001B3A;
+  --panel:   #002144;
+  --panel-2: #0A3161;
+  --line:    #14406F;
+  --line-2:  #1E5490;
+
+  --ink:     #F3F7FF;
+  --ink-2:   #A9C0DD;
+  --ink-3:   #7392B8;
+
+  --you:     #FFFFFF;          /* the third official colour */
+  --ai:      var(--gold);
+
+  --r: 12px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+}
+
+/* Very short portrait screens — an iPhone SE 1st gen is 320x568 — get the
+   whole layout scaled down a notch rather than letting the board push the
+   TRAIN button off the bottom. 0.94rem keeps every tap target over 40px.
+   body.presenter out-specifies this, so presenter mode still wins. */
+@media (orientation: portrait) and (max-height: 660px) {
+  :root { --u: .94rem; }
+}
+
+body.presenter { --u: 1.5rem; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* display rules below would otherwise out-specify the browser default */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background:
+    radial-gradient(120% 60% at 50% 0%, #063061 0%, transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  font-size: var(--u);
+  line-height: 1.4;
+  min-height: 100vh; min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+:focus-visible { outline: 3px solid var(--lite); outline-offset: 2px; }
+
+#app { max-width: calc(29 * var(--u)); margin: 0 auto; padding: 0 calc(.7 * var(--u)); }
+body.presenter #app { max-width: calc(25 * var(--u)); }
+
+/* ---------------------------------------------------------------- top */
+/* The wordmark and the gold rule stay pinned together, so the brand bar
+   reads as one object and page content never peeks through it. */
+#brandbar {
+  position: sticky; top: 0; z-index: 30;
+  background: var(--bg); padding-bottom: calc(.55 * var(--u));
+}
+#topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: calc(.5 * var(--u));
+  padding: calc(.5 * var(--u) + var(--safe-t)) calc(.1 * var(--u)) calc(.4 * var(--u));
+}
+#brand { min-width: 0; }
+#brand .b0 {
+  display: block; font-size: calc(.56 * var(--u)); letter-spacing: .2em; font-weight: 700;
+  text-transform: uppercase; color: var(--gold); white-space: nowrap;
+}
+#brand .b1 {
+  display: block; font-weight: 800; letter-spacing: .1em; line-height: 1.05;
+  font-size: calc(1.22 * var(--u)); color: var(--ink); margin-top: 1px;
+}
+#brand .b1 em {
+  font-style: normal; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
+  font-size: calc(.5 * var(--u)); color: var(--ink-3); margin-left: .5em; white-space: nowrap;
+}
+.icon-btn {
+  flex: 0 0 auto;
+  background: var(--panel); border: 1px solid var(--line-2); color: var(--gold);
+  width: calc(2.7 * var(--u)); height: calc(2.7 * var(--u));
+  border-radius: 50%; font-size: calc(1.1 * var(--u)); cursor: pointer;
+  display: grid; place-items: center; line-height: 1;
+}
+.icon-btn:active { background: var(--panel-2); }
+.icon-btn.guide-btn { width: auto; padding: 0 calc(.7 * var(--u)); border-radius: calc(.55 * var(--u)); font-size: calc(.72 * var(--u)); font-weight: 800; }
+@media (max-width: 430px) {
+  #brand .b1 { white-space: nowrap; font-size: calc(1.05 * var(--u)); letter-spacing: .055em; }
+  #brand .b1 em { display: none; }
+}
+
+/* the brand rule: gold, then the accent blue */
+#rule { height: 3px; border-radius: 3px;
+        background: linear-gradient(90deg, var(--gold) 0 62%, var(--lite) 62% 100%); }
+
+#main { padding-bottom: calc(1.2 * var(--u) + var(--safe-b)); }
+
+/* ------------------------------------------------------------- panels */
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: calc(.7 * var(--u));
+  margin-bottom: calc(.6 * var(--u));
+}
+.lbl {
+  font-size: calc(.6 * var(--u)); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700;
+}
+.help { font-size: calc(.72 * var(--u)); color: var(--ink-3); line-height: 1.5; margin-top: calc(.4 * var(--u)); }
+.row { display: flex; gap: calc(.5 * var(--u)); align-items: center; flex-wrap: wrap; }
+
+/* ---------------------------------------------------------- opponent */
+#opponent-panel { padding: calc(.6 * var(--u)); }
+#opp-row { display: flex; flex-direction: column; gap: calc(.25 * var(--u)); margin-top: calc(.45 * var(--u)); }
+select {
+  width: 100%; min-width: 0;
+  background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2);
+  border-radius: 10px; padding: calc(.45 * var(--u)) calc(.55 * var(--u));
+  font-size: calc(.88 * var(--u)); font-family: inherit; font-weight: 700;
+  min-height: calc(2.8 * var(--u));
+}
+#score-row { display: flex; gap: calc(.35 * var(--u)); margin-top: calc(.45 * var(--u)); }
+.sc {
+  flex: 1; display: flex; align-items: baseline; justify-content: center; gap: .4em;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 8px; padding: calc(.3 * var(--u)) 2px; min-height: calc(2.1 * var(--u));
+}
+.sc .n { font-size: calc(1.1 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1; }
+.sc .k { font-size: calc(.56 * var(--u)); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+.sc.win .n  { color: var(--gold); }
+.sc.loss .n { color: var(--warm); }
+.sc.draw .n { color: var(--ink-2); }
+
+#era-strip {
+  display: flex; flex-wrap: wrap; gap: calc(.28 * var(--u)); align-items: center;
+  margin-top: calc(.45 * var(--u)); font-size: calc(.64 * var(--u));
+}
+#era-strip .k { letter-spacing: .14em; text-transform: uppercase; color: var(--ink-3); font-weight: 700; }
+#era-strip .chip {
+  background: var(--bg-2); border: 1px solid var(--line); border-radius: 99px;
+  padding: calc(.18 * var(--u)) calc(.45 * var(--u)); font-variant-numeric: tabular-nums;
+  color: var(--ink-3); white-space: nowrap;
+}
+#era-strip .chip.on { border-color: var(--gold); color: var(--ink); }
+#era-strip .chip .w { color: var(--gold); }
+#era-strip .chip .d { color: var(--ink-2); }
+#era-strip .chip .l { color: var(--warm); }
+
+/* ------------------------------------------------------------- board */
+#board-wrap { margin-bottom: calc(.55 * var(--u)); }
+#board {
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  gap: calc(.4 * var(--u)); aspect-ratio: 1; width: 100%;
+  /* The board yields first when the screen is short, so the TRAIN button
+     -- the whole point of the app -- never gets pushed below the fold.
+     29u is the measured height of everything else stacked above and
+     below it in the one-column layout; the floor stops the board
+     collapsing to nothing on a very short window. */
+  max-width: min(100%, max(calc(11 * var(--u)), calc(100dvh - 29 * var(--u))));
+  margin-inline: auto;
+}
+.cell {
+  position: relative; border: 1px solid var(--line-2);
+  background: linear-gradient(180deg, #0A3161, #052A55);
+  border-radius: var(--r); display: grid; place-items: center;
+  font-size: calc(2.6 * var(--u)); font-weight: 800; line-height: 1;
+  color: var(--ink); cursor: pointer; padding: 0; font-family: inherit;
+  transition: background .12s ease, border-color .12s ease, transform .08s ease;
+  overflow: hidden;
+}
+.cell:disabled { cursor: default; }
+.cell.mk1 { color: var(--you); }
+.cell.mk2 { color: var(--ai); }
+.cell.open:active { background: var(--line); transform: scale(.97); }
+.cell.win { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
+.cell.last::after {
+  content: ''; position: absolute; inset: auto auto calc(.28 * var(--u)) 50%;
+  transform: translateX(-50%); width: calc(1.1 * var(--u)); height: 3px;
+  border-radius: 3px; background: currentColor; opacity: .65;
+}
+.cell .v {
+  position: absolute; top: calc(.22 * var(--u)); left: 0; right: 0;
+  font-size: calc(.68 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.cell .n {
+  position: absolute; bottom: calc(.2 * var(--u)); left: 0; right: 0;
+  font-size: calc(.5 * var(--u)); font-weight: 600; opacity: .78;
+  font-variant-numeric: tabular-nums;
+}
+.cell.heat { font-size: calc(1.8 * var(--u)); border-color: var(--line); }
+.cell.pick { box-shadow: 0 0 0 3px var(--lite) inset; }
+
+#status {
+  margin-top: calc(.5 * var(--u)); text-align: center;
+  font-size: calc(.88 * var(--u)); min-height: calc(2.2 * var(--u));
+  display: grid; place-items: center; padding: calc(.15 * var(--u));
+}
+#status .big { font-weight: 800; font-size: calc(1.02 * var(--u)); }
+#status .sub { color: var(--ink-3); font-size: calc(.72 * var(--u)); }
+#status.you-win .big  { color: var(--gold); }
+#status.you-lose .big { color: var(--warm); }
+#status.drawn .big    { color: var(--lite); }
+
+/* ----------------------------------------------------------- buttons */
+.btn {
+  appearance: none; border: 1px solid var(--line-2); background: var(--panel-2);
+  color: var(--ink); font-family: inherit; font-size: calc(.85 * var(--u));
+  font-weight: 700; border-radius: 10px; padding: calc(.55 * var(--u)) calc(.7 * var(--u));
+  cursor: pointer; min-height: calc(2.75 * var(--u)); flex: 1;
+  display: inline-flex; align-items: center; justify-content: center; gap: .4em;
+}
+.btn:active { transform: translateY(1px); }
+.btn.primary {
+  background: linear-gradient(180deg, #FFC42B, var(--gold));
+  border-color: #B98700; color: var(--navy);
+}
+.btn.ghost { background: transparent; color: var(--ink-2); }
+.btn.sm { font-size: calc(.76 * var(--u)); min-height: calc(2.7 * var(--u)); padding: calc(.4 * var(--u)) calc(.6 * var(--u)); flex: 0 0 auto; }
+.btn[aria-pressed="true"] { background: var(--lite); border-color: #6FD4FF; color: var(--navy); }
+.btn.big { flex-direction: column; gap: 1px; min-height: calc(3.5 * var(--u)); width: 100%; }
+.btn.big .t-main { font-size: calc(1.02 * var(--u)); font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.btn.big .t-sub { font-size: calc(.68 * var(--u)); opacity: .78; font-weight: 700; }
+.btn:disabled { opacity: .45; cursor: default; }
+
+#play-controls { display: flex; gap: calc(.45 * var(--u)); padding: calc(.4 * var(--u)); }
+
+/* ------------------------------------------------------ brain readout */
+#brain-readout {
+  background: var(--panel); border: 1px solid var(--lite); border-radius: var(--r);
+  padding: calc(.65 * var(--u)); margin-bottom: calc(.6 * var(--u));
+  font-size: calc(.74 * var(--u)); color: var(--ink-2); line-height: 1.5;
+}
+#brain-readout b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.legend { display: flex; align-items: center; gap: calc(.35 * var(--u)); margin-top: calc(.45 * var(--u)); font-size: calc(.62 * var(--u)); color: var(--ink-3); }
+.legend .ramp { flex: 1; height: calc(.5 * var(--u)); border-radius: 99px;
+  background: linear-gradient(90deg, #FF4500, #8A2C33, #0A3161, #97781A, #ECAC00); }
+
+/* -------------------------------------------------------------- train */
+#train-panel { border-color: var(--line-2); background: linear-gradient(180deg, #04264D, #002144); }
+.seg { display: flex; gap: calc(.35 * var(--u)); margin-top: calc(.5 * var(--u)); }
+.seg button {
+  flex: 1; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--ink-2);
+  border-radius: 8px; padding: calc(.4 * var(--u)) 0; font-family: inherit;
+  font-size: calc(.76 * var(--u)); font-weight: 700; cursor: pointer;
+  min-height: calc(2.7 * var(--u)); font-variant-numeric: tabular-nums;
+}
+.seg button.on { background: var(--lite); border-color: #6FD4FF; color: var(--navy); }
+#train-stats {
+  margin-top: calc(.5 * var(--u)); display: flex; gap: calc(.35 * var(--u));
+}
+#train-stats .st { flex: 1; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: calc(.32 * var(--u)) calc(.2 * var(--u)); text-align: center; }
+#train-stats .st .n { display: block; font-size: calc(.9 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--gold); line-height: 1.15; }
+#train-stats .st .k { display: block; font-size: calc(.5 * var(--u)); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
+#btn-learned { width: 100%; margin-top: calc(.5 * var(--u)); flex: none; }
+
+/* ------------------------------------------------------------- banner */
+#banner {
+  border-radius: var(--r); padding: calc(.85 * var(--u));
+  margin-bottom: calc(.6 * var(--u));
+  background: linear-gradient(160deg, #0A3161, #002144 70%);
+  border: 2px solid var(--gold);
+}
+#banner h3 { font-size: calc(1.02 * var(--u)); line-height: 1.25; margin-bottom: calc(.4 * var(--u)); color: var(--gold); }
+#banner p { font-size: calc(.77 * var(--u)); color: var(--ink-2); line-height: 1.55; }
+#banner p + p { margin-top: calc(.45 * var(--u)); }
+#banner .proof {
+  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--ink-3);
+  border-top: 1px solid var(--line-2); padding-top: calc(.45 * var(--u));
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------- accordion */
+.accordion { padding: 0; overflow: hidden; }
+.acc-head {
+  width: 100%; background: none; border: 0; color: var(--ink);
+  font-family: inherit; font-size: calc(.86 * var(--u)); font-weight: 700;
+  padding: calc(.7 * var(--u)); display: flex; justify-content: space-between;
+  align-items: center; cursor: pointer; min-height: calc(2.9 * var(--u)); text-align: left;
+}
+.acc-head .chev { transition: transform .18s ease; color: var(--gold); }
+.acc-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--ink-2); line-height: 1.6; }
+.acc-body h4 { color: var(--gold); font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
+.acc-body h4:first-child { margin-top: 0; }
+.acc-body p + p { margin-top: calc(.5 * var(--u)); }
+.acc-body b { color: var(--ink); }
+.acc-body code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; color: var(--lite); }
+
+#foot { text-align: center; color: var(--ink-3); font-size: calc(.64 * var(--u)); padding: calc(.7 * var(--u)) 0; line-height: 1.6; }
+#foot .msu { color: var(--gold); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; display: block; }
+
+/* ------------------------------------------------------------ overlay */
+.overlay {
+  position: fixed; inset: 0; z-index: 60; background: rgba(0, 12, 26, .88);
+  backdrop-filter: blur(3px); display: grid; place-items: center;
+  padding: calc(.7 * var(--u)); overflow-y: auto; overscroll-behavior: contain;
+}
+.overlay.sheet { place-items: end center; padding: 0; }
+.sheet-inner {
+  background: var(--bg-2); border: 1px solid var(--line-2); border-top: 3px solid var(--gold);
+  border-radius: var(--r) var(--r) 0 0; width: 100%;
+  max-width: calc(29 * var(--u)); max-height: 92dvh; display: flex; flex-direction: column;
+  animation: rise .22s ease;
+}
+@keyframes rise { from { transform: translateY(18px); opacity: .4 } to { transform: none; opacity: 1 } }
+.sheet-head {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: calc(.5 * var(--u));
+  padding: calc(.8 * var(--u)); border-bottom: 1px solid var(--line);
+}
+.sheet-head h2 { font-size: calc(1.02 * var(--u)); }
+.sheet-head .sub { font-size: calc(.6 * var(--u)); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+.sheet-body { padding: calc(.8 * var(--u)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sheet-foot { padding: calc(.7 * var(--u)); padding-bottom: calc(.7 * var(--u) + var(--safe-b)); border-top: 1px solid var(--line); display: flex; gap: calc(.5 * var(--u)); }
+.field { margin-bottom: calc(1.1 * var(--u)); }
+.field:last-child { margin-bottom: 0; }
+.switch { display: flex; align-items: center; gap: calc(.6 * var(--u)); font-size: calc(.8 * var(--u)); padding: calc(.4 * var(--u)) 0; cursor: pointer; }
+.switch input { width: calc(1.3 * var(--u)); height: calc(1.3 * var(--u)); accent-color: var(--gold); flex: 0 0 auto; }
+input[type=text] {
+  flex: 1 1 8em; min-width: 0; background: var(--panel-2); border: 1px solid var(--line-2);
+  color: var(--ink); border-radius: 10px; padding: calc(.5 * var(--u)) calc(.6 * var(--u));
+  font-family: inherit; font-size: calc(.85 * var(--u)); min-height: calc(2.8 * var(--u));
+}
+input[type=text]::placeholder { color: var(--ink-3); }
+
+/* ------------------------------------------------------------ montage */
+.montage-inner { width: 100%; max-width: calc(24 * var(--u)); text-align: center; margin: auto 0; }
+.m-label { font-size: calc(.62 * var(--u)); letter-spacing: .34em; color: var(--gold); font-weight: 800; }
+.m-count {
+  font-size: calc(2.9 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1.05; margin-top: calc(.1 * var(--u)); color: var(--ink);
+  text-shadow: 0 0 calc(.8 * var(--u)) rgba(236, 172, 0, .5);
+}
+.m-count.blur { filter: blur(1.1px); }
+.m-count-sub { font-size: calc(.62 * var(--u)); color: var(--ink-3); margin-bottom: calc(.7 * var(--u)); }
+.m-boards { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(.45 * var(--u));
+  margin-bottom: calc(.75 * var(--u)); max-width: min(100%, 42dvh); margin-inline: auto; }
+.mini { aspect-ratio: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px;
+  background: var(--line); border-radius: 6px; overflow: hidden; padding: 2px; }
+.mini i { background: var(--panel); display: grid; place-items: center; font-style: normal;
+  font-size: calc(.58 * var(--u)); font-weight: 800; line-height: 1; }
+.mini i.m1 { color: var(--you); } .mini i.m2 { color: var(--ai); }
+.m-bars { display: grid; gap: calc(.5 * var(--u)); margin-bottom: calc(.7 * var(--u)); }
+.m-bar-head { display: flex; justify-content: space-between; font-size: calc(.68 * var(--u)); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.m-bar-note { font-size: calc(.55 * var(--u)); color: var(--ink-3); margin-top: 2px; text-align: left; }
+.track { height: calc(.4 * var(--u)); background: var(--panel); border-radius: 99px; overflow: hidden; margin-top: 3px; }
+.track.big { height: calc(.5 * var(--u)); }
+.fill { height: 100%; width: 0; border-radius: 99px; transition: width .1s linear; }
+.fill.eps  { background: var(--lite); }
+.fill.wr   { background: var(--gold); }
+.fill.prog { background: linear-gradient(90deg, var(--lite), var(--gold)); }
+
+/* ------------------------------------------------------ learned cards */
+.lc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  padding: calc(.65 * var(--u)); margin-bottom: calc(.6 * var(--u)); }
+.lc h3 { font-size: calc(.88 * var(--u)); margin-bottom: calc(.1 * var(--u)); color: var(--gold); }
+.lc .ask { font-size: calc(.71 * var(--u)); color: var(--ink-3); line-height: 1.5; margin-bottom: calc(.55 * var(--u)); }
+.lc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(.28 * var(--u));
+  max-width: min(100%, calc(10.5 * var(--u))); margin: 0 auto; }
+.lc-cell { aspect-ratio: 1; border-radius: 7px; display: grid; place-items: center;
+  position: relative; border: 1px solid var(--line); font-weight: 800; font-size: calc(1 * var(--u)); }
+.lc-cell.mk1 { color: var(--you); background: var(--panel-2); }
+.lc-cell.mk2 { color: var(--ai); background: var(--panel-2); }
+.lc-cell .lv { font-size: calc(.68 * var(--u)); font-variant-numeric: tabular-nums; font-weight: 800; }
+.lc-cell .dl { position: absolute; bottom: 2px; left: 0; right: 0; font-size: calc(.48 * var(--u)); font-weight: 800; }
+.lc-cell.up   { box-shadow: 0 0 0 2px var(--gold) inset; }
+.lc-cell.down { box-shadow: 0 0 0 2px var(--warm) inset; }
+.lc .delta { margin-top: calc(.55 * var(--u)); font-size: calc(.75 * var(--u)); line-height: 1.5; }
+.lc .delta .up   { color: var(--gold); font-weight: 800; }
+.lc .delta .down { color: var(--warm); font-weight: 800; }
+.lc .delta .flat { color: var(--ink-2); font-weight: 700; }
+.headline {
+  background: linear-gradient(150deg, #0A3161, #002144); border: 1px solid var(--gold);
+  border-radius: var(--r); padding: calc(.7 * var(--u)); margin-bottom: calc(.7 * var(--u));
+  font-size: calc(.82 * var(--u)); line-height: 1.55;
+}
+.headline b { color: var(--gold); }
+
+#selftest-out { margin-top: calc(.6 * var(--u)); font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: calc(.64 * var(--u)); line-height: 1.7; white-space: pre-wrap; color: var(--ink-2);
+  background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: calc(.5 * var(--u));
+  overflow-x: auto; }
+#selftest-out .ok { color: var(--gold); } #selftest-out .no { color: var(--warm); }
+
+/* ---------------------------------------------------- two-column wide */
+/* Wide AND not much taller than it is wide: catches laptops, tablets in
+   landscape and a phone turned sideways, but leaves a portrait tablet as
+   one tall column where it belongs. */
+@media (min-width: 760px) and (min-aspect-ratio: 4/5) {
+  /* presenter mode is listed too: `body.presenter #app` out-specifies a
+     bare `#app`, so without it a projector collapses back to one column
+     with an enormous board and the TRAIN button off the bottom */
+  #app, body.presenter #app { max-width: calc(50 * var(--u)); }
+  #main { display: flex; align-items: flex-start; gap: calc(.8 * var(--u)); flex-wrap: wrap; }
+  #col-a { flex: 1 1 calc(20 * var(--u)); min-width: 0; }
+  #col-b { flex: 1 1 calc(18 * var(--u)); min-width: 0; }
+  #foot  { flex: 1 0 100%; }
+  /* side by side, so only column A has to fit the board */
+  #board { max-width: min(100%, max(calc(11 * var(--u)), calc(100dvh - 13 * var(--u)))); }
+}
+
+/* A phone held sideways has almost no height to spare. Stop the sticky
+   header eating a fifth of it, tighten the rhythm, and fold the opponent
+   picker and the scoreboard onto one line so the board keeps its size. */
+@media (orientation: landscape) and (max-height: 560px) {
+  #brandbar { position: static; padding-bottom: calc(.35 * var(--u)); }
+  #topbar { padding-top: calc(.3 * var(--u) + var(--safe-t)); }
+  .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
+  #board-wrap { margin-bottom: calc(.4 * var(--u)); }
+  #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
+  #mode-seg { flex: 0 0 auto; }
+  #score-row { margin-top: 0; flex: 0 0 auto; }
+  .sc { padding-inline: calc(.4 * var(--u)); }
+  #board { max-width: min(100%, max(calc(9 * var(--u)), calc(100dvh - 14 * var(--u)))); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+@media (prefers-contrast: more) {
+  :root { --ink-2: #CFE0F5; --ink-3: #A6BEDA; --line: #2A63A0; }
+}
+
+/* ================================================================== *
+ * Nine boards at once
+ *
+ * Two square panes side by side: the whole match on the left, and the
+ * one board you are actually playing in on the right, at full size.
+ * Eighty-one live cells on a phone would be 36px each; this way the
+ * squares you tap stay as big as they are in the one-board game, and
+ * the overview stays readable rather than becoming a wall of glyphs.
+ * ================================================================== */
+
+#nine-wrap { margin-bottom: calc(.55 * var(--u)); }
+#nine-panes { display: flex; gap: calc(.55 * var(--u)); align-items: flex-start; }
+#nine-grid, #nine-focus { flex: 1 1 0; min-width: 0; aspect-ratio: 1; display: grid; }
+#nine-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: calc(.22 * var(--u)); }
+#nine-focus { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: calc(.28 * var(--u)); }
+
+.nb {
+  position: relative; padding: calc(.14 * var(--u)); border-radius: 7px;
+  background: var(--panel); border: 1px solid var(--line);
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  gap: 1px; cursor: pointer; font-family: inherit; overflow: hidden;
+}
+.nb i { border-radius: 2px; background: rgba(255, 255, 255, .05); }
+.nb i.m1 { background: var(--you); }
+.nb i.m2 { background: var(--ai); }
+.nb.focus { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
+.nb.last  { border-color: var(--lite); }
+.nb.done  { cursor: default; }
+.nb.done i { opacity: .28; }
+.nb .tag {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-weight: 800; font-size: calc(1.05 * var(--u)); line-height: 1; pointer-events: none;
+}
+.nb.r1 { background: #123a5e; } .nb.r1 .tag { color: var(--you); }
+.nb.r2 { background: #3d2f06; } .nb.r2 .tag { color: var(--ai); }
+.nb.r3 .tag { color: var(--ink-3); }
+
+#nine-focus .cell { font-size: calc(1.9 * var(--u)); border-radius: 9px; }
+#nine-focus .cell.heat { font-size: calc(1.2 * var(--u)); }
+#nine-focus .cell .v { font-size: calc(.6 * var(--u)); top: calc(.14 * var(--u)); }
+#nine-focus .cell .n { font-size: calc(.44 * var(--u)); bottom: calc(.12 * var(--u)); }
+
+#nine-tally {
+  display: flex; gap: calc(.35 * var(--u)); margin-top: calc(.5 * var(--u));
+  font-size: calc(.62 * var(--u)); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-3);
+}
+#nine-tally .nt {
+  flex: 1; text-align: center; background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 8px; padding: calc(.3 * var(--u)) 2px; min-height: calc(2.1 * var(--u));
+  display: flex; align-items: center; justify-content: center; gap: .45em;
+}
+#nine-tally b { font-size: calc(1.05 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; }
+#nine-tally .you b { color: var(--you); }
+#nine-tally .ai b  { color: var(--ai); }
+#nine-tally .dr b  { color: var(--ink-2); }
+#nine-tally .mid   { flex: 1.1; color: var(--gold); }
+
+/* nine-board thumbnails in the montage */
+.m-boards.nine { grid-template-columns: repeat(3, 1fr); }
+.mini9 {
+  aspect-ratio: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  gap: 2px; background: var(--line); border-radius: 7px; padding: 2px;
+}
+.m9b {
+  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+  gap: 1px; background: var(--panel); border-radius: 3px; padding: 1px;
+}
+.m9b i { border-radius: 1px; background: rgba(255, 255, 255, .06); }
+.m9b i.m1 { background: var(--you); } .m9b i.m2 { background: var(--ai); }
+.m9b.r1 { background: #123a5e; } .m9b.r2 { background: #3d2f06; } .m9b.r3 { opacity: .5; }
+
+/* comparison table and match score on the nine-board card */
+table.cmp { width: 100%; border-collapse: collapse; font-size: calc(.72 * var(--u)); margin-top: calc(.2 * var(--u)); }
+table.cmp th, table.cmp td { padding: calc(.28 * var(--u)) calc(.3 * var(--u)); text-align: right; border-bottom: 1px solid var(--line); }
+table.cmp th:first-child, table.cmp td:first-child { text-align: left; color: var(--ink-3); }
+table.cmp th { color: var(--gold); font-size: calc(.62 * var(--u)); letter-spacing: .1em; text-transform: uppercase; }
+table.cmp td { font-variant-numeric: tabular-nums; }
+table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font-size: calc(.86 * var(--u)); }
+.score3 { display: flex; gap: calc(.35 * var(--u)); margin: calc(.4 * var(--u)) 0; }
+.score3 .s3 {
+  flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
+  padding: calc(.35 * var(--u)) 2px; text-align: center;
+  font-size: calc(.56 * var(--u)); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3);
+}
+.score3 .s3 b { display: block; font-size: calc(1.15 * var(--u)); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.score3 .w b { color: var(--gold); } .score3 .d b { color: var(--ink-2); } .score3 .l b { color: var(--warm); }
+
+/* the quieter banner used where no proof is possible */
+#banner.quiet { border-color: var(--line-2); border-width: 1px; background: linear-gradient(160deg, #052a55, #002144 70%); }
+#banner.quiet h3 { color: var(--ink); }
+
+/* Shorter still — a 320x568 iPhone SE 1st gen. Nothing is dropped, the
+   rhythm just tightens, because the TRAIN button has to stay on screen
+   and the board has already given up all it can. */
+@media (orientation: portrait) and (max-height: 610px) {
+  #brandbar { padding-bottom: calc(.3 * var(--u)); }
+  #brand .b1 { font-size: calc(1.1 * var(--u)); }
+  .panel { padding: calc(.5 * var(--u)); margin-bottom: calc(.45 * var(--u)); }
+  #score-row { margin-top: calc(.3 * var(--u)); }
+  .sc { min-height: calc(1.55 * var(--u)); }
+  .sc .n { font-size: calc(.95 * var(--u)); }
+  #status { min-height: calc(1.8 * var(--u)); margin-top: calc(.35 * var(--u)); }
+  #board-wrap, #nine-wrap { margin-bottom: calc(.4 * var(--u)); }
+  .seg { margin-top: calc(.4 * var(--u)); }
+}
+
+/* in-app presenter guide */
+
+/* ================================================================== *
+ * Presenter notes
+ *
+ * The printable guide, embedded rather than linked: a sibling file
+ * would be a dead link the moment somebody mails just the HTML, and
+ * "one self-contained file" is the promise this demo makes. build.js
+ * injects the guide's own stylesheet and markup, so there is still one
+ * source of truth and the paper version cannot drift from this one.
+ * ================================================================== */
+
+#notes .sheet-inner { max-width: calc(46 * var(--u)); }
+#notes .sheet-body { padding: 0; background: #eef1f6; }
+#notes .guide {
+  font-size: calc(.82 * var(--u));      /* readable on a phone, scales with presenter mode */
+  box-shadow: none; margin: 0; max-width: none;
+  padding: calc(1.6 * var(--u)) calc(1.1 * var(--u));
+}
+#notes .guide .cols { column-count: 1; }
+#notes .guide .act2 { break-before: auto; }
+#notes .guide header, #notes .guide footer { flex-wrap: wrap; }
+#notes .guide .meta { text-align: left; }
+/* the notes are a light document inside a dark app; keep links legible */
+#notes .guide ::selection { background: #ffe9a8; color: #111820; }
+
+@media (min-width: 760px) {
+  #notes .guide { padding: calc(2 * var(--u)); }
+  #notes .guide .cols { column-count: 2; }
+}
+
+/* Printing from inside the app prints the notes and nothing else. Keyed
+   on a class the app sets while the sheet is open, so printing the page
+   with the notes closed still prints the app. */
+@media print {
+  body.notes-open > *:not(#notes) { display: none !important; }
+  /* The page is declared dark for the app, and a dark colour-scheme makes
+     the browser paint the page MARGINS #121212 even when the html
+     background is white — so the scheme is flipped back to light for the
+     duration of the print, and the fixed gradient is dropped. */
+  html:has(body.notes-open) { color-scheme: light; background: #fff !important; }
+  body.notes-open { color-scheme: light; background: #fff !important; background-image: none !important; }
+  body.notes-open #notes {
+    position: static; display: block; background: #fff; padding: 0;
+    overflow: visible; backdrop-filter: none;
+  }
+  body.notes-open #notes .sheet-inner {
+    display: block; max-width: none; max-height: none; border: 0;
+    border-radius: 0; background: #fff; animation: none;
+  }
+  body.notes-open #notes .sheet-head, body.notes-open #notes .sheet-foot { display: none !important; }
+  body.notes-open #notes .sheet-body { padding: 0; overflow: visible; background: #fff; }
+  body.notes-open #notes .guide {
+    font-size: 7.4pt; padding: 0; max-width: none;
+  }
+  body.notes-open #notes .guide .cols { column-count: 2; }
+  body.notes-open #notes .guide .act2 { break-before: page; }
+  body.notes-open #notes .guide header, body.notes-open #notes .guide footer { flex-wrap: nowrap; }
+  body.notes-open #notes .guide .meta { text-align: right; }
+}
+
+</style>
+<style>
+/* the printable guide's own stylesheet, injected by build.js */
+
+  /* --------------------------------------------------------------
+     Everything is scoped to .guide and sized in em off one base, so
+     this same stylesheet and markup can be dropped straight into the
+     app's Presenter notes sheet and simply scaled up for a screen.
+     Print keeps the base at 7.4pt, which is what fits the page.
+     Murray State palette: navy is the ink, gold is a rule and a fill
+     — never small type, it does not carry on white paper.
+     -------------------------------------------------------------- */
+  @page { size: A4 portrait; margin: 10mm 9mm; }
+
+  .guide {
+    --g-ink:#111820; --g-ink2:#41505f; --g-ink3:#71808f; --g-line:#c2cede;
+    --g-navy:#002144; --g-gold:#ECAC00; --g-hi:#FFF7E4;
+    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+    color: var(--g-ink); background: #fff; font-size: 7.4pt; line-height: 1.26;
+    max-width: 210mm; margin: 0 auto; padding: 3.8em 3.45em;
+  }
+  .guide * { box-sizing: border-box; margin: 0; padding: 0; }
+  .guide header { border-bottom: .32em solid var(--g-navy); padding-bottom: .69em; margin-bottom: .84em;
+           display: flex; justify-content: space-between; align-items: flex-end; gap: 2.3em; }
+  .guide .eyebrow { font-size: .865em; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
+             color: var(--g-navy); border-bottom: .22em solid var(--g-gold);
+             display: inline-block; padding-bottom: .22em; margin-bottom: .53em; }
+  .guide h1 { font-size: 1.89em; letter-spacing: .03em; line-height: 1; color: var(--g-navy); }
+  .guide h1 small { display: block; font-size: .493em; font-weight: 600; letter-spacing: .2em;
+             text-transform: uppercase; color: var(--g-ink2); margin-top: .72em; }
+  .guide .meta { text-align: right; font-size: .892em; color: var(--g-ink2); line-height: 1.35; }
+  .guide .cols { column-count: 2; column-gap: 1.92em; column-rule: .06em solid var(--g-line); }
+  .guide section { break-inside: avoid; margin-bottom: .77em; }
+  .guide h2 { font-size: 1.027em; text-transform: uppercase; letter-spacing: .1em; color: var(--g-navy);
+       border-bottom: .16em solid var(--g-gold); padding-bottom: .19em; margin-bottom: .38em; }
+  .guide p { margin-bottom: .38em; }
+  .guide ol { margin: 0 0 .38em 1.3em; }
+  .guide ul { margin: 0 0 .38em 1.15em; }
+  .guide li { margin-bottom: .23em; }
+  .guide .beat { display: grid; grid-template-columns: 3.64em 1fr; gap: .46em; margin-bottom: .46em; break-inside: avoid; }
+  .guide .beat .t { font-weight: 800; color: var(--g-navy); font-variant-numeric: tabular-nums; font-size: .946em; }
+  .guide .beat > div > b:first-of-type { display: block; }
+  .guide .say { background: var(--g-hi); border-left: .22em solid var(--g-gold); padding: .35em .5em;
+         margin: .23em 0; font-style: italic; break-inside: avoid; }
+  .guide .mis { border: .07em solid var(--g-line); border-radius: .54em; padding: .42em .54em;
+         margin-bottom: .46em; break-inside: avoid; }
+  .guide .mis .claim { font-weight: 700; color: var(--g-navy); }
+  .guide .mis .claim::before { content: "\201C"; } .guide .mis .claim::after { content: "\201D"; }
+  .guide .mis .ans { color: var(--g-ink2); margin-top: .12em; }
+  .guide .kv { font-size: .919em; color: var(--g-ink2); }
+  .guide .kv b { color: var(--g-navy); }
+  .guide code { font-family: ui-monospace, Consolas, monospace; font-size: .93em; }
+  .guide footer { margin-top: .77em; padding-top: .46em; border-top: .08em solid var(--g-line);
+           font-size: .865em; color: var(--g-ink3); display: flex; justify-content: space-between; gap: 1.5em; }
+  .guide .warn { color: #a3341f; font-weight: 600; }
+  .guide .act2 { break-before: page; padding-top: .77em; }
+  .guide .act2 > h2 { font-size: 1.216em; }
+
+  /* On a screen the print size is unreadable, so the base grows and the
+     two columns collapse when there is not room for them. */
+  @media screen {
+    body { background: #eef1f6; margin: 0; }
+    .guide { font-size: 12pt; box-shadow: 0 0 0 1px #dfe5ee; margin: 16px auto; }
+  }
+  @media screen and (max-width: 900px) {
+    .guide { font-size: 13pt; padding: 1.6em 1.3em; }
+    .guide .cols { column-count: 1; }
+    .guide .act2 { break-before: auto; }
+    .guide header, .guide footer { flex-wrap: wrap; }
+    .guide .meta { text-align: left; }
+  }
+  @media print { .guide { font-size: 7.4pt; padding: 0; max-width: none; margin: 0; box-shadow: none; } }
+
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <div id="brandbar">
+  <header id="topbar">
+    <div id="brand">
+      <span class="b0">Murray State University</span>
+      <span class="b1">ZERO TO UNBEATABLE <em>watch it learn</em></span>
+    </div>
+    <button class="icon-btn guide-btn student-guide-open">Guide</button>
+    <button class="icon-btn" id="btn-settings" aria-label="Settings">&#9881;</button>
+  </header>
+  <div id="rule" aria-hidden="true"></div>
+  </div>
+
+  <main id="main">
+
+    <!-- Two wrappers, not a bare grid. On a phone #main is a plain block,
+         so column A stacks above column B and the reading order is the
+         playing order: opponent, board, controls, then TRAIN. On a wide
+         screen #main becomes a flex row and they sit side by side with no
+         placement gaps. -->
+    <div class="col" id="col-a">
+
+    <!-- ===================== OPPONENT / SCORE ===================== -->
+    <section class="panel" id="opponent-panel">
+      <div class="seg" id="mode-seg" role="group" aria-label="Which game">
+        <button data-mode="one" class="on" aria-pressed="true">One board</button>
+        <button data-mode="nine" aria-pressed="false">Nine at once</button>
+      </div>
+      <div id="opp-row">
+        <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
+      </div>
+      <div id="score-row"></div>
+      <div id="era-strip" hidden></div>
+    </section>
+
+    <!-- ============================ BOARD ========================= -->
+    <section id="board-wrap">
+      <div id="board" role="grid" aria-label="Tic tac toe board"></div>
+    </section>
+
+    <!-- ====================== NINE BOARDS AT ONCE ================= -->
+    <section id="nine-wrap" hidden>
+      <div id="nine-panes">
+        <div id="nine-grid" role="group" aria-label="All nine boards"></div>
+        <div id="nine-focus" role="grid" aria-label="The board you are playing in"></div>
+      </div>
+      <div id="nine-tally"></div>
+    </section>
+
+    <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <section class="panel" id="play-controls">
+      <button class="btn" id="btn-newgame">New game</button>
+      <button class="btn" id="btn-brain" aria-pressed="false">Show its brain</button>
+    </section>
+
+    <div id="brain-readout" hidden></div>
+    </div><!-- /col-a -->
+
+    <div class="col" id="col-b">
+
+    <!-- ============================ TRAIN ========================= -->
+    <section class="panel" id="train-panel">
+      <button class="btn primary big" id="btn-train">
+        <span class="t-main">Train the AI</span>
+        <span class="t-sub" id="train-sub">5,000 games</span>
+      </button>
+      <div class="seg" id="burst-seg" role="group" aria-label="Games per training burst"></div>
+      <div id="train-stats"></div>
+      <button class="btn ghost sm" id="btn-learned" hidden>What it learned last time</button>
+    </section>
+
+    <!-- =========================== BANNER ========================= -->
+    <div id="banner" hidden></div>
+
+    <!-- ========================== EXPLAINER ======================= -->
+    <section class="panel accordion" id="how-panel">
+      <button class="acc-head" id="how-head" aria-expanded="false">
+        <span>How is it learning?</span><span class="chev">&#9662;</span>
+      </button>
+      <div class="acc-body" id="how-body" hidden></div>
+    </section>
+    </div><!-- /col-b -->
+
+    <footer id="foot">
+      <span class="msu">Murray State University</span>
+      One HTML file · runs offline · nothing leaves this device
+    </footer>
+  </main>
+</div>
+
+<dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
+  <div class="student-guide-head"><h2 id="student-guide-title">How to play Zero to Unbeatable</h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
+  <div class="student-guide-body">
+    <p>You are playing tic-tac-toe against an AI that begins with no strategy at all.</p>
+    <ol>
+      <li>Play Era 0. It chooses randomly, so you should be able to beat it.</li>
+      <li>Press <b>Train the AI</b>. It plays thousands of games, keeps what worked, and creates a new era.</li>
+      <li>Play the new era, then train again. Use <b>Show its brain</b> to see the live value learned for each square.</li>
+      <li>Continue until the app proves there is no line of play that can beat it.</li>
+    </ol>
+    <h3>What the colors mean</h3>
+    <p>Gold squares look promising to the AI; red-orange squares look dangerous. Era 0 has all zeros because it genuinely knows nothing.</p>
+  </div>
+  <form method="dialog" class="student-guide-actions"><button>Play Era 0</button></form>
+</dialog>
+
+<!-- ======================= TRAINING MONTAGE ====================== -->
+<div class="overlay" id="montage" hidden>
+  <div class="montage-inner">
+    <div class="m-label">TRAINING</div>
+    <div class="m-count" id="m-count">0</div>
+    <div class="m-count-sub" id="m-count-sub">games played against itself and against chance</div>
+    <div class="m-boards" id="m-boards"></div>
+    <div class="m-bars">
+      <div class="m-bar">
+        <div class="m-bar-head"><span>exploration &epsilon;</span><span id="m-eps">1.00</span></div>
+        <div class="track"><div class="fill eps" id="m-eps-fill"></div></div>
+        <div class="m-bar-note">how often it tries a random square instead of its best one</div>
+      </div>
+      <div class="m-bar">
+        <div class="m-bar-head"><span id="m-wr-label">wins vs a random player</span><span id="m-wr">&mdash;</span></div>
+        <div class="track"><div class="fill wr" id="m-wr-fill"></div></div>
+        <div class="m-bar-note">measured live, 200 fresh games each sample</div>
+      </div>
+    </div>
+    <div class="track big"><div class="fill prog" id="m-prog"></div></div>
+  </div>
+</div>
+
+<!-- ====================== WHAT IT LEARNED ======================== -->
+<div class="overlay sheet" id="learned" hidden role="dialog" aria-modal="true" aria-labelledby="learned-title">
+  <div class="sheet-inner" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="learned-title">What it learned</h2><div class="sub" id="learned-sub"></div></div>
+      <button class="icon-btn" data-close="learned" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body" id="learned-body"></div>
+    <div class="sheet-foot"><button class="btn primary" data-close="learned">Play it</button></div>
+  </div>
+</div>
+
+<!-- ========================== SETTINGS =========================== -->
+<div class="overlay sheet" id="notes" hidden role="dialog" aria-modal="true" aria-labelledby="notes-title">
+  <div class="sheet-inner" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">15-minute demo &middot; 5-minute second act</div></div>
+      <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body" id="notes-body">
+<div class="guide">
+
+<header>
+  <div>
+    <div class="eyebrow">Murray State University</div>
+    <h1>Zero to Unbeatable<small>15-minute demo &middot; 5-minute second act &middot; how machines learn</small></h1>
+  </div>
+  <div class="meta">
+    <b>You need:</b> one phone, tablet or laptop. Open <code>index.html</code>.<br>
+    No install, no login, no network. Projecting? Settings &rarr; <b>Presenter mode</b>.<br>
+    <b class="warn">Do not train before the session</b>, and do not refresh mid-demo.
+  </div>
+</header>
+
+<div class="cols">
+
+<section>
+  <h2>Setup (60 seconds)</h2>
+  <p>Open the file. Turn on <b>Presenter mode</b> if projecting. To reproduce a rehearsed run exactly,
+  type your seed into <b>Rehearsal seed</b> and press <b>Reset to Era 0</b>. Leave the burst on
+  <b>5,000</b> — the arc is tuned for it and takes three to five presses.</p>
+</section>
+
+<section>
+  <h2>The script</h2>
+
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>Hand it to a student. "Beat it."</b>
+    Era 0 has never played a game. It loses fast and stupidly — it will ignore a row you have almost
+    finished. Let two or three people beat it. Let the room laugh at it.
+    <div class="say">"This has played zero games. It does not know what winning is. It knows how to put
+    a mark in an empty square, and that is all."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">2:00</div><div>
+    <b>Press "Show its brain".</b>
+    Every square reads <code>+0.00</code>, seen 0 times.
+    <div class="say">"That is the entire mind of your opponent. Nine numbers, all zero. No strategy, no
+    line of code that says 'block the row'. When every number ties it flips a coin — which is exactly
+    what you just watched."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">3:00</div><div>
+    <b>Press "Train the AI". Say nothing for three seconds.</b>
+    Let them watch the counter blur past five thousand games. Point at the two live readings:
+    <b>&epsilon;</b> falling — how often it still tries a random square — and its <b>win rate against
+    random play</b> climbing. Then read the card: it now takes a free win and blocks your row.
+  </div></div>
+
+  <div class="beat"><div class="t">4:30</div><div>
+    <b>Play Era 1. Two or three games.</b>
+    It blocks now. It is annoying. You can still beat it — about one game in six — and when somebody
+    does, that is your line:
+    <div class="say">"Five thousand games of experience and you still got it. So what is it missing?"</div>
+  </div></div>
+
+  <div class="beat"><div class="t">6:30</div><div>
+    <b>Train again. Play Era 2.</b>
+    This is the turn. Wins dry up, draws start, somebody loses and is annoyed about it. Let that land
+    before moving on — the frustration <em>is</em> the lesson.
+  </div></div>
+
+  <div class="beat"><div class="t">9:00</div><div>
+    <b>Train twice more. Play the newest era.</b>
+    Between the third and fifth press the purple banner appears. Every game is a draw now. Invite the
+    best player in the room to try. They will draw.
+  </div></div>
+
+  <div class="beat"><div class="t">11:30</div><div>
+    <b>The beat that makes it stick: go back.</b>
+    Choose <b>Era 0</b> from the dropdown and stomp it again. Then switch to the newest era and draw
+    again. Same program, same code, different numbers.
+    <div class="say">"Nobody rewrote this. The only thing that changed is a list of numbers, and the
+    only thing that changed the numbers was playing games and being told won, lost or drew."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">13:00</div><div>
+    <b>Read the banner aloud, then close on the bridge.</b>
+    Tic-tac-toe has about five and a half thousand positions, so a table holds all of them. Chess and
+    language cannot be listed at all — which is the whole reason big AI uses a neural network instead.
+    <div class="say">"Different brain. Same idea: play, get told how it went, adjust, repeat."</div>
+  </div></div>
+</section>
+
+<section>
+  <h2>Discussion questions</h2>
+  <ol>
+    <li>It played 5,000 games in three seconds. How many had you played before you stopped losing at
+    this? What does that comparison tell us — and what does it hide?</li>
+    <li>Why does it deliberately play a bad square during training? What breaks if it always plays the
+    move it currently rates best?</li>
+    <li>Forty per cent of its training is against an opponent playing at random. Why not train it only
+    against itself, which is far stronger?</li>
+    <li>The last thing it learns is that answering two opposite corners in a corner loses. Why would
+    that arrive after "block the row"?</li>
+    <li>Once trained, every opening square scores the same. Has it failed to learn something, or
+    learned something?</li>
+    <li>It can never lose now. Is it <em>good at</em> tic-tac-toe, or has it memorised tic-tac-toe? Is
+    there a difference, and does the difference matter?</li>
+  </ol>
+</section>
+
+<section>
+  <h2>Misconceptions to draw out</h2>
+
+  <div class="mis">
+    <div class="claim">It was secretly programmed with strategy and just pretends to start dumb.</div>
+    <div class="ans">Meet this head on. Show the brain at Era 0 — every value exactly zero. Then run
+    <b>Settings &rarr; Run the full self-test</b> in front of them: it chi-squared tests 9,000 moves by
+    a newborn and reports it indistinguishable from a coin flip. The code also measures that a newborn
+    takes a free win no more often than chance. A hidden rule would show in both.</div>
+  </div>
+
+  <div class="mis">
+    <div class="claim">It understands tic-tac-toe now.</div>
+    <div class="ans">It has a number attached to each of about five thousand board pictures. It cannot
+    say what a row is, cannot play on a 4&times;4 board, cannot explain one choice. Ask the room what
+    "understands" would have to mean and whether anything on screen meets it. Best argument you can
+    have in the last two minutes.</div>
+  </div>
+
+  <div class="mis">
+    <div class="claim">More training always keeps making it visibly better.</div>
+    <div class="ans">Watch the card across bursts. The first changes almost everything; by the third
+    the landmark positions stop moving at all and only "positions it would now play differently" keeps
+    falling. Improvement goes invisible, then stops — it has hit the ceiling of the game, and nothing
+    goes past a draw.</div>
+  </div>
+
+  <p class="kv"><b>And if someone says it is unbeatable only because it has won a lot:</b> it is not a
+  win record. After every burst the app searches <em>every</em> game still playable against it, in
+  both roles, following every square you could pick and every coin flip it could make — about 15,000
+  complete games in some 20 milliseconds — and finds no line where it loses. That is a proof, not a
+  sample.</p>
+</section>
+
+<section>
+  <h2>What is actually running</h2>
+  <p class="kv">Tabular <b>afterstate value learning</b>: one number per board position meaning "how did
+  this turn out for whoever just moved". Update is <code>+1</code> for a win, <code>0</code> for a
+  draw, otherwise the best thing the opponent can do to you, negated and discounted. Learning rate
+  <b>0.8</b>, discount <b>0.95</b>, &epsilon; from <b>1.00</b> to <b>0.25</b> over 14,000 games,
+  <b>60%</b> self-play and <b>40%</b> versus random play in both roles, <b>20%</b> of games started
+  from a dealt position so rare endgames get practised. No minimax, no heuristics, no opening book
+  anywhere in the agent. Sources and the full test suite sit beside this file.</p>
+</section>
+
+<section>
+  <h2>Notes for the presenter</h2>
+  <ul>
+    <li><b>Short of time?</b> Press train twice in a row and skip Era 2. It always lands by the fifth
+    press.</li>
+    <li><b>A student beats Era 3?</b> They cannot beat a <em>verified</em> era, but they can beat one
+    before the banner. That is real and it is a gift — say so, then train again.</li>
+    <li><b>500 and 2,000</b> exist to show the wobble in slow motion; they need many more presses.
+    Keep 5,000 for a timed session.</li>
+    <li>The maths for 5,000 games finishes in well under a tenth of a second. The montage is stretched
+    to about two and a half seconds so there is something to watch — the app admits this itself, and
+    so should you.</li>
+  </ul>
+</section>
+
+</div><!-- /cols -->
+
+<section class="act2">
+  <h2>Second act: nine boards at once (5 minutes)</h2>
+  <p>The toggle at the top switches to the nine-board game: a mark per turn on <em>any</em> unfinished
+  board, finished boards lock, first to five boards takes the match. Run this after the banner, when
+  the room has just watched something become perfect. The point is what happens to that method when
+  the world gets one step bigger.</p>
+
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>Switch to "Nine at once" and play it.</b>
+    It is beatable again — sometimes badly. Nothing was taken away from it. Ask the room why.
+    <div class="say">"Same opponent. Same table. It just got moved somewhere slightly bigger."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">1:30</div><div>
+    <b>Turn on "Show its brain" and read the last line.</b>
+    It reports what fraction of the squares it is weighing up sit on a board picture it has never
+    seen — often most of them. On one board the marks tell you whose turn it is; here you can play
+    twice in the same board while your opponent is busy elsewhere, so about half the pictures you meet
+    <em>cannot happen</em> in ordinary tic-tac-toe. Only 14% of what this game needs came across.
+  </div></div>
+
+  <div class="beat"><div class="t">2:30</div><div>
+    <b>Train it, then read the first card.</b>
+    It counts, by playing, how often any position comes round twice. On one board about ten times. On
+    nine boards about once.
+    <div class="say">"Learning from experience needs the experience to repeat. Here it never does. So
+    why does this work at all?"</div>
+    Because it looks at <b>one board at a time</b> and adds up what it finds — and a person chose that
+    shortcut. Finding the shortcut yourself is what a neural network is for.
+  </div></div>
+
+  <div class="beat"><div class="t">4:00</div><div>
+    <b>Point at the missing banner.</b>
+    Where Act I printed a proof, this mode prints a refusal: nobody can check every game here, so
+    nobody can promise. Then show the score against the hand-written opponent — take any win, block
+    any loss, else prefer the middle, the way a person would explain the game. It stops losing to
+    those rules within a few bursts, having never been shown them.
+    <div class="say">"Good, but not proven. That is where every real AI system lives."</div>
+  </div></div>
+
+  <p class="kv"><b>Two more questions for this act.</b> (1) The agent scores a move by how much it
+  improves the one board it is played in, and ignores the other eight. When would that be exactly
+  right, and when would it be wrong? (2) It explores by trying whatever it has seen least, rather than
+  at random. Why does rolling a die stop working when the space gets big?</p>
+</section>
+
+<footer>
+  <span>Murray State University &middot; Zero to Unbeatable &middot; single-file offline demo &middot; no network, no accounts, no AI service</span>
+  <span>Donald Michie's MENACE (1961) did this with 304 matchboxes and coloured beads.</span>
+</footer>
+
+</div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn" id="btn-print-notes">Print</button>
+      <button class="btn primary" data-close="notes">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay sheet" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
+  <div class="sheet-inner" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="settings-title">Settings</h2><div class="sub">PRESENTATION &middot; REHEARSAL &middot; PROOF</div></div>
+      <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presenter mode &mdash; oversized UI for a projector</span>
+        </label>
+        <label class="switch">
+          <input type="checkbox" id="chk-first">
+          <span>I always move first (otherwise it alternates)</span>
+        </label>
+      </div>
+      <div class="field">
+        <label class="lbl" for="in-seed">Rehearsal seed</label>
+        <div class="row">
+          <input type="text" id="in-seed" placeholder="blank = different every time" autocomplete="off" spellcheck="false">
+          <button class="btn sm" id="btn-reset">Reset to Era 0</button>
+        </div>
+        <p class="help">Type a seed and reset: training then unfolds identically every
+        time, so a rehearsal matches the lesson. Your own moves are still yours.</p>
+      </div>
+      <div class="field">
+        <label class="lbl">Proof</label>
+        <button class="btn" id="btn-selftest">Run the full self-test</button>
+        <p class="help">Checks a newborn is statistically random, searches every game
+        line against the current agent as both first and second player, and plays
+        5,000 games in each role against a random opponent. In nine-board mode it runs
+        sampled benchmarks only, never a proof. Results appear here and in the
+        browser console.</p>
+        <div id="selftest-out"></div>
+      </div>
+      <div class="field">
+        <label class="lbl">Presenter notes</label>
+        <button class="btn" id="btn-notes">Open the presenter notes</button>
+        <p class="help">The complete session plan &mdash; the timed script, the discussion questions
+        and the misconceptions to draw out, plus the five-minute second act. Built into this file, so
+        it works with no network and nothing else to download. There is a print button inside.</p>
+      </div>
+      <div class="field">
+        <label class="lbl">About</label>
+        <p class="help" id="about-text"></p>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="settings">Done</button></div>
+  </div>
+</div>
+
+
+
+<script>
+/* ==== engine.js ==== */
+/* =====================================================================
+   Zero to Unbeatable — learning engine
+
+   Everything the agent knows lives in ONE table of numbers indexed by
+   board position. There is no strategy in this file. Nothing anywhere
+   says "take the centre", "block a row", "corners are good". The only
+   information that ever enters the table is the result of a finished
+   game: win = +1, draw = 0, loss = -1.
+
+   Representation
+   --------------
+   A board is a base-3 integer. Cell i holds 0 (empty), 1 (X) or 2 (O),
+   and the board's code is  sum(cell_i * 3^i).  There are 3^9 = 19,683
+   codes, so every lookup is a plain array index and a whole training
+   burst is a few million array reads.
+
+   What is learned
+   ---------------
+   AFTERSTATE VALUES.  V[c] is the value of the position that exists
+   immediately after somebody moved into it, from the point of view of
+   the player who just moved. One table serves both players and both
+   roles, because the position itself says whose turn it is: equal mark
+   counts means X is to move, otherwise O is.
+
+   The update (off-policy, negamax form of one-step TD / Q-learning):
+
+       if the move just made won the game       target = +1
+       else if the board is full                target =  0
+       else                target = -gamma * max over the opponent's
+                                     replies of V[reply]
+
+   The third line is the whole trick. My position is worth exactly what
+   the best thing my opponent can do to me is worth to them, negated.
+   Using max rather than the reply the opponent actually played makes
+   the update off-policy, so heavy random exploration during training
+   does not permanently poison the values it converges to.
+
+   Nothing in the update calls a rule-of-thumb. WINNER[] is consulted
+   only to decide whether a game has ENDED and what the reward is --
+   that is the reward signal, not strategy.
+
+   ===================================================================== */
+
+const OG = (function () {
+'use strict';
+
+/* ------------------------------------------------------------------ *
+ * 1. Board tables — precomputed once at load (~200k ops, instant)
+ * ------------------------------------------------------------------ */
+
+const POW3 = new Int32Array(10);
+POW3[0] = 1;
+for (let i = 1; i < 10; i++) POW3[i] = POW3[i - 1] * 3;
+const NCODE = POW3[9];                       // 19683
+
+const LINES = [
+  [0, 1, 2], [3, 4, 5], [6, 7, 8],           // rows
+  [0, 3, 6], [1, 4, 7], [2, 5, 8],           // columns
+  [0, 4, 8], [2, 4, 6]                       // diagonals
+];
+
+const CELLS  = new Uint8Array(NCODE * 9);    // decoded board, 9 per code
+const WINNER = new Uint8Array(NCODE);        // 0 none, 1 X, 2 O, 3 impossible
+const NEMPTY = new Uint8Array(NCODE);        // empty squares left
+const TOMOVE = new Uint8Array(NCODE);        // 1 X to move, 2 O to move, 0 unreachable
+
+(function buildTables() {
+  for (let code = 0; code < NCODE; code++) {
+    let c = code, nx = 0, no = 0, ne = 0;
+    const off = code * 9;
+    for (let i = 0; i < 9; i++) {
+      const v = c % 3; c = (c / 3) | 0;
+      CELLS[off + i] = v;
+      if (v === 1) nx++; else if (v === 2) no++; else ne++;
+    }
+    NEMPTY[code] = ne;
+    let wx = false, wo = false;
+    for (let L = 0; L < 8; L++) {
+      const a = LINES[L][0], b = LINES[L][1], d = LINES[L][2];
+      const v = CELLS[off + a];
+      if (v !== 0 && v === CELLS[off + b] && v === CELLS[off + d]) {
+        if (v === 1) wx = true; else wo = true;
+      }
+    }
+    WINNER[code] = (wx && wo) ? 3 : wx ? 1 : wo ? 2 : 0;
+    TOMOVE[code] = (nx === no) ? 1 : (nx === no + 1) ? 2 : 0;
+  }
+})();
+
+function isTerminal(code) { return WINNER[code] !== 0 || NEMPTY[code] === 0; }
+function moverOf(code)    { return TOMOVE[code] === 1 ? 2 : 1; }   // who just moved
+function cellsOf(code)    { return CELLS.subarray(code * 9, code * 9 + 9); }
+function encode(arr)      { let c = 0; for (let i = 0; i < 9; i++) c += arr[i] * POW3[i]; return c; }
+function child(code, cell, mark) { return code + mark * POW3[cell]; }
+
+/* legal moves into a caller-supplied buffer; returns how many */
+function legalInto(code, out) {
+  const off = code * 9; let n = 0;
+  for (let i = 0; i < 9; i++) if (CELLS[off + i] === 0) out[n++] = i;
+  return n;
+}
+function legalList(code) {
+  const off = code * 9, out = [];
+  for (let i = 0; i < 9; i++) if (CELLS[off + i] === 0) out.push(i);
+  return out;
+}
+
+/* ------------------------------------------------------------------ *
+ * 2. Seeded RNG — mulberry32. Same seed, same rehearsal.
+ * ------------------------------------------------------------------ */
+
+function hashSeed(s) {
+  if (typeof s === 'number') return s >>> 0;
+  let h = 2166136261 >>> 0;
+  const str = String(s);
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+function mulberry32(a) {
+  a = a >>> 0;
+  return function () {
+    a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function makeRng(seed) {
+  if (seed === null || seed === undefined || seed === '') return Math.random;
+  return mulberry32(hashSeed(seed));
+}
+
+/* ------------------------------------------------------------------ *
+ * 3. Hyperparameters
+ *
+ * These are tuned, not guessed. tools/tune.mjs sweeps them and scores
+ * each setting on the demo arc, not on final strength: a setting that
+ * reaches perfect play in one burst SCORES BADLY, because a student who
+ * never sees the clumsy middle never sees the lesson. The chosen values
+ * and the measured arc are written up in README.md.
+ * ------------------------------------------------------------------ */
+
+const HP = {
+  /* Chosen by tools/tune.mjs over 24 seeds. Measured arc with the default
+     5,000-game burst: verified unbeatable at burst 3, 4 or 5 (mean 3.9,
+     never earlier than 3, never later than 5); era 1 still loses 11-21%
+     of games to a casual player who blocks and takes wins. */
+  alphaFloor: 0.80,  // learning rate once a position is familiar. Tic-tac-toe
+                     // is deterministic, so the TD target carries no noise
+                     // and a high rate is correct rather than reckless.
+  alphaWarm:  1,     // alpha = max(floor, warm / (warm + visits))
+  gamma:   0.95,     // discount: prefer winning sooner, losing later
+  epsStart: 1.00,    // era 0 is pure coin-flipping
+  epsEnd:   0.25,
+  epsTau:   14000,   // games; eps = end + (start-end) * exp(-games/tau).
+                     // Long on purpose: exploration is what fills in the
+                     // odd corners of the board a student might wander into.
+  mixSelfPlay: 0.60, // 60% against itself; the other 40% split evenly between
+                     // playing first and second against a random mover
+  exploringStarts: 0.20, // fraction of training games that begin from a dealt
+                     // position instead of an empty board
+  burst:   5000,     // default burst size
+  bursts:  [500, 2000, 5000]
+};
+
+function epsilonAt(games) {
+  return HP.epsEnd + (HP.epsStart - HP.epsEnd) * Math.exp(-games / HP.epsTau);
+}
+
+/* ------------------------------------------------------------------ *
+ * 4. The agent — a table, a visit counter, and a game counter
+ * ------------------------------------------------------------------ */
+
+function newAgent() {
+  return {
+    V: new Float32Array(NCODE),   // learned value of every afterstate
+    N: new Uint32Array(NCODE),    // how many times each was updated
+    games: 0,                     // training games lived through
+    seen: 0                       // distinct positions with N > 0
+  };
+}
+
+function cloneAgent(a) {
+  return { V: new Float32Array(a.V), N: new Uint32Array(a.N), games: a.games, seen: a.seen };
+}
+
+/* Best value the side to move can reach from `code`, per the table
+   alone. Used for the bootstrap target and for greedy play. */
+const _buf = new Uint8Array(9);
+function bestChildValue(agent, code) {
+  const mover = TOMOVE[code], V = agent.V;
+  const n = legalInto(code, _buf);
+  let best = -Infinity;
+  for (let i = 0; i < n; i++) {
+    const v = V[code + mover * POW3[_buf[i]]];
+    if (v > best) best = v;
+  }
+  return best;
+}
+
+/* Every move the agent might actually play from `code`: the moves whose
+   afterstate ties for the highest learned value, minus any it has never
+   once tried if a tried move ties with it.
+ *
+ * That second clause is the only tie-break rule in the agent and it is
+ * worth being precise about, because "no hard-coded strategy" is the
+ * central promise of this demo. It contains no tic-tac-toe knowledge --
+ * it does not know what a row is. It says: an unplayed square and a
+ * square known to draw both read 0.00, and between two things that look
+ * identical, go with the one you have evidence for. Without it a fully
+ * trained agent still throws away roughly one game in a thousand by
+ * coin-flipping onto a square it has never seen, which is enough to
+ * fail the unbeatability proof.
+ *
+ * Ties among *tried* moves are still broken by coin flip, so the agent
+ * keeps varying its play, and a newborn -- every count zero, every value
+ * zero -- is still uniformly random over all nine squares. */
+function policyMoves(agent, code) {
+  const mover = TOMOVE[code], V = agent.V, N = agent.N;
+  const legal = legalList(code);
+  let best = -Infinity;
+  for (const m of legal) { const v = V[code + mover * POW3[m]]; if (v > best) best = v; }
+  const tied = [];
+  for (const m of legal) if (V[code + mover * POW3[m]] >= best - 1e-9) tied.push(m);
+  const tried = tied.filter(m => N[code + mover * POW3[m]] > 0);
+  return tried.length ? tried : tied;
+}
+const argmaxMoves = policyMoves;   // name used by the verifier and the UI
+
+function greedyMove(agent, code, rnd) {
+  const ties = policyMoves(agent, code);
+  return ties[(rnd() * ties.length) | 0];
+}
+
+function epsGreedyMove(agent, code, eps, rnd) {
+  if (rnd() < eps) {
+    const n = legalInto(code, _buf);
+    return _buf[(rnd() * n) | 0];
+  }
+  return greedyMove(agent, code, rnd);
+}
+
+function randomMove(code, rnd) {
+  const n = legalInto(code, _buf);
+  return _buf[(rnd() * n) | 0];
+}
+
+/* Move-by-move view for the brain inspector. */
+function moveValues(agent, code) {
+  const mover = TOMOVE[code];
+  return legalList(code).map(cell => {
+    const c = child(code, cell, mover);
+    return { cell, code: c, value: agent.V[c], visits: agent.N[c] };
+  });
+}
+
+/* ------------------------------------------------------------------ *
+ * 5. Training
+ * ------------------------------------------------------------------ */
+
+/* modes: 0 = self-play (one brain, both chairs)
+          1 = agent is X, opponent plays uniformly at random
+          2 = agent is O, opponent plays uniformly at random          */
+/* Every position that can legally occur and is not already finished,
+   found by walking the rules out from an empty board. This is a list of
+   POSITIONS, not of moves to make in them -- it carries no more
+   information than "here is what a legal tic-tac-toe board looks like".
+   There are 4,520 of them. */
+const OPEN_POSITIONS = (function () {
+  const seen = new Uint8Array(NCODE), out = [];
+  (function walk(code) {
+    if (seen[code]) return;
+    seen[code] = 1;
+    if (WINNER[code] !== 0 || NEMPTY[code] === 0) return;
+    out.push(code);
+    const mover = TOMOVE[code];
+    for (let i = 0; i < 9; i++) if (CELLS[code * 9 + i] === 0) walk(code + mover * POW3[i]);
+  })(0);
+  return Int32Array.from(out);
+})();
+
+/* An exploring start: instead of always starting from an empty board,
+   drop the trainer into a legal position and play on from there.
+ *
+ * This is Sutton & Barto's exploring-starts device and it is the single
+ * change that makes a provably perfect agent reachable in a few
+ * thousand games. Games that all start from move one pile almost every
+ * bit of practice onto opening positions -- the nine openings get
+ * thousands of visits each while a seven-mark endgame gets two -- and
+ * two visits is not enough for a position to learn what it is worth.
+ *
+ * The starts are dealt round-robin from a shuffled deck rather than
+ * drawn at random, because random draws leave a third of the deck
+ * untouched after a full deck's worth of draws (the coupon-collector
+ * problem) and it is exactly those unpractised endgames that keep the
+ * agent one blunder short of perfect.
+ *
+ * It tells the agent WHERE to practise, never WHAT TO PLAY. */
+function reshuffle(agent, rnd) {
+  const d = Int32Array.from(OPEN_POSITIONS);
+  for (let i = d.length - 1; i > 0; i--) {
+    const j = (rnd() * (i + 1)) | 0;
+    const t = d[i]; d[i] = d[j]; d[j] = t;
+  }
+  agent.deck = d; agent.deckAt = 0;
+}
+function exploringStart(agent, rnd) {
+  if (!agent.deck || agent.deckAt >= agent.deck.length) reshuffle(agent, rnd);
+  return agent.deck[agent.deckAt++];
+}
+
+function playTrainingGame(agent, rnd, mode, eps, traj, fromExploringStart) {
+  let code = 0;
+  traj.length = 0;
+  if (fromExploringStart) {
+    code = exploringStart(agent, rnd);
+    /* The position we were dropped into is an afterstate too -- somebody
+       "moved" into it. Put it at the head of the trajectory so the
+       reverse pass updates it last, once the game that followed has
+       corrected everything underneath it. Without this, a deep position
+       gets its children practised but its own value keeps whatever it
+       had, and its parent goes on believing the wrong thing. */
+    if (code !== 0) traj.push(code);
+  }
+  for (;;) {
+    const mover = TOMOVE[code];
+    const agentSeat = mode === 0 || (mode === 1 && mover === 1) || (mode === 2 && mover === 2);
+    const cell = agentSeat ? epsGreedyMove(agent, code, eps, rnd) : randomMove(code, rnd);
+    code += mover * POW3[cell];
+    traj.push(code);
+    if (WINNER[code] !== 0 || NEMPTY[code] === 0) return traj;
+  }
+}
+
+/* One-step TD over the afterstates of a finished game, applied in
+   REVERSE order -- last move first. Reverse order lets the result of
+   the game reach the opening move of that same game immediately,
+   instead of creeping back one ply per replay. Forward order is the
+   more obvious way to write it and was tried first; it leaves deep
+   endgame positions with two or three visits and values still near
+   zero after 16,000 games, and the agent plateaus a hair short of
+   perfect forever. */
+function learnFrom(agent, traj) {
+  const V = agent.V, N = agent.N, gm = HP.gamma;
+  const floor = HP.alphaFloor, warm = HP.alphaWarm;
+  for (let t = traj.length - 1; t >= 0; t--) {
+    const code = traj[t];
+    let target;
+    if (WINNER[code] !== 0) target = 1;             // the move just made won
+    else if (NEMPTY[code] === 0) target = 0;        // full board, drawn
+    else target = -gm * bestChildValue(agent, code);
+    if (N[code] === 0) agent.seen++;
+    const a = Math.max(floor, warm / (warm + N[code]));
+    N[code]++;
+    V[code] += a * (target - V[code]);
+  }
+}
+
+/* Run `count` training games. Callers run this in small chunks so the
+   phone can paint a frame between them. */
+function trainGames(agent, count, rnd, opts) {
+  opts = opts || {};
+  const sampleEvery = opts.sampleEvery | 0;
+  const samples = [];
+  const traj = [];
+  let selfPlay = 0, vsRandom = 0;
+  const half = HP.mixSelfPlay + (1 - HP.mixSelfPlay) / 2;
+  for (let g = 0; g < count; g++) {
+    const eps = epsilonAt(agent.games);
+    const r = rnd();
+    const mode = r < HP.mixSelfPlay ? 0 : (r < half ? 1 : 2);
+    if (mode === 0) selfPlay++; else vsRandom++;
+    playTrainingGame(agent, rnd, mode, eps, traj, rnd() < HP.exploringStarts);
+    learnFrom(agent, traj);
+    agent.games++;
+    if (sampleEvery && (g % sampleEvery) === 0) samples.push(traj.slice());
+  }
+  return { samples, selfPlay, vsRandom, eps: epsilonAt(agent.games) };
+}
+
+/* ------------------------------------------------------------------ *
+ * 6. Opponents used for measurement only (never by the agent)
+ * ------------------------------------------------------------------ */
+
+/* The "naive student": takes a win if it is sitting there, otherwise
+   plays anywhere. No blocking, no plan. Era 1 must still lose to this
+   sometimes or the demo has no middle. */
+function naiveMove(code, rnd) {
+  const mover = TOMOVE[code];
+  const legal = legalList(code);
+  for (const m of legal) if (WINNER[child(code, m, mover)] === mover) return m;
+  return legal[(rnd() * legal.length) | 0];
+}
+
+/* result from the agent's point of view: 1 win, 0 draw, -1 loss */
+function playAgainst(agent, oppMove, rnd, agentMark) {
+  let code = 0;
+  for (;;) {
+    const mover = TOMOVE[code];
+    const cell = (mover === agentMark) ? greedyMove(agent, code, rnd) : oppMove(code, rnd);
+    code += mover * POW3[cell];
+    const w = WINNER[code];
+    if (w !== 0) return w === agentMark ? 1 : -1;
+    if (NEMPTY[code] === 0) return 0;
+  }
+}
+
+function scoreVs(agent, oppMove, games, rnd, agentMark) {
+  let w = 0, l = 0, d = 0;
+  for (let i = 0; i < games; i++) {
+    const marks = agentMark ? [agentMark] : [1, 2];
+    const m = marks[i % marks.length];
+    const r = playAgainst(agent, oppMove, rnd, m);
+    if (r > 0) w++; else if (r < 0) l++; else d++;
+  }
+  return { wins: w, losses: l, draws: d, games, winRate: w / games, lossRate: l / games };
+}
+
+const vsRandom = (agent, games, rnd, mark) => scoreVs(agent, randomMove, games, rnd, mark);
+const vsNaive  = (agent, games, rnd, mark) => scoreVs(agent, naiveMove,  games, rnd, mark);
+
+/* ------------------------------------------------------------------ *
+ * 7. Verification — proof, not sampling
+ *
+ * The adversary is not a minimax player, it is EVERY player: at each of
+ * its turns it branches on every legal move, so the search covers every
+ * game line reachable against this agent, minimax lines included.
+ *
+ * On the agent's turn we branch over its entire argmax set, not one
+ * pick, because ties are broken by coin flip at play time. So "safe"
+ * means: no sequence of legal opponent moves and no tie-break the agent
+ * could flip leads to the agent losing. That is a proof for the policy
+ * as it is actually played, not for one lucky tie-break ordering.
+ * ------------------------------------------------------------------ */
+
+function verifyRole(agent, mark) {
+  const opp = mark === 1 ? 2 : 1;
+  const memo = new Int8Array(NCODE);       // 0 unknown, 1 safe, 2 losable
+  let positions = 0;
+  let worstLine = null;
+
+  function safe(code, path) {
+    if (memo[code]) return memo[code] === 1;
+    positions++;
+    let ok;
+    if (WINNER[code] === opp) { ok = false; if (!worstLine) worstLine = path.slice(); }
+    else if (WINNER[code] === mark || NEMPTY[code] === 0) ok = true;
+    else {
+      const mover = TOMOVE[code];
+      const moves = (mover === mark) ? argmaxMoves(agent, code) : legalList(code);
+      ok = true;
+      for (const m of moves) {
+        path.push(m);
+        const s = safe(code + mover * POW3[m], path);
+        path.pop();
+        if (!s) { ok = false; break; }
+      }
+    }
+    memo[code] = ok ? 1 : 2;
+    return ok;
+  }
+
+  const ok = safe(0, []);
+
+  /* Count complete game lines in the same tree (DAG-counted). */
+  const lineMemo = new Float64Array(NCODE);
+  const lineSeen = new Uint8Array(NCODE);
+  function lines(code) {
+    if (lineSeen[code]) return lineMemo[code];
+    lineSeen[code] = 1;
+    let n;
+    if (isTerminal(code)) n = 1;
+    else {
+      const mover = TOMOVE[code];
+      const moves = (mover === mark) ? argmaxMoves(agent, code) : legalList(code);
+      n = 0;
+      for (const m of moves) n += lines(code + mover * POW3[m]);
+    }
+    lineMemo[code] = n;
+    return n;
+  }
+
+  return { safe: ok, positions, lines: lines(0), worstLine };
+}
+
+function verifyUnbeatable(agent) {
+  const first  = verifyRole(agent, 1);
+  const second = verifyRole(agent, 2);
+  return {
+    safe: first.safe && second.safe,
+    asFirst: first,
+    asSecond: second,
+    lines: first.lines + second.lines,
+    positions: first.positions + second.positions
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * 8. Landmark positions for the "what it learned" card
+ *
+ * Chosen so the three lessons land in the order a person learns them:
+ * finish your own row, stop theirs, then the one that takes longest --
+ * that a corner reply to the double-corner opening loses to a fork.
+ * ------------------------------------------------------------------ */
+
+const _b = (s) => encode(s.split('').map(ch => ch === 'X' ? 1 : ch === 'O' ? 2 : 0));
+
+const LANDMARKS = [
+  {
+    id: 'win',
+    title: 'Finish it',
+    code: _b('XX.OO...X'),        // X:0,1,8  O:3,4  — O to move, 5 wins now
+    key: 5,
+    ask: 'It can win right now by taking the square that completes its own row.',
+    learned: 'completing its own row',
+    order: 1
+  },
+  {
+    id: 'block',
+    title: 'Block your row',
+    code: _b('XX..O....'),        // X:0,1  O:4  — O to move, must take 2
+    key: 2,
+    ask: 'You are one square from three in a row. It has to take that square.',
+    learned: 'blocking your open row',
+    order: 2
+  },
+  {
+    id: 'fork',
+    title: 'The corner trap',
+    code: _b('X...O...X'),        // X:0,8  O:4  — O to move, only an edge survives
+    key: 1,
+    keyAlso: [3, 5, 7],
+    ask: 'You took two opposite corners. Answering in a corner loses to a fork three moves later — only an edge holds the draw.',
+    learned: 'answering the double corner on an edge',
+    order: 3
+  },
+  {
+    id: 'open',
+    title: 'The opening',
+    code: 0,                      // empty board, X to move
+    key: null,
+    ask: 'Which square to take first. Watch this one flatten out: against a weak opponent the centre looks best, but against a good one every opening is a draw.',
+    learned: 'that the opening barely matters',
+    order: 4
+  }
+];
+
+/* ------------------------------------------------------------------ *
+ * 9. Statistical check that a newborn really is a coin flip
+ * ------------------------------------------------------------------ */
+
+function chiSquareUniform(counts) {
+  const k = counts.length;
+  let n = 0; for (const c of counts) n += c;
+  const exp = n / k;
+  let x2 = 0;
+  for (const c of counts) x2 += (c - exp) * (c - exp) / exp;
+  return { chi2: x2, df: k - 1, n };
+}
+
+function sampleMoveCounts(agent, code, samples, rnd) {
+  const legal = legalList(code);
+  const idx = new Map(legal.map((m, i) => [m, i]));
+  const counts = new Array(legal.length).fill(0);
+  for (let i = 0; i < samples; i++) counts[idx.get(greedyMove(agent, code, rnd))]++;
+  return { counts, legal };
+}
+
+/* ------------------------------------------------------------------ */
+
+return {
+  POW3, NCODE, LINES, CELLS, WINNER, NEMPTY, TOMOVE, HP, LANDMARKS,
+  OPEN_POSITIONS,
+  isTerminal, moverOf, cellsOf, encode, child, legalList, epsilonAt,
+  makeRng, mulberry32, hashSeed,
+  newAgent, cloneAgent, argmaxMoves, greedyMove, epsGreedyMove, randomMove,
+  naiveMove, moveValues, bestChildValue,
+  trainGames, learnFrom, playTrainingGame,
+  playAgainst, scoreVs, vsRandom, vsNaive,
+  verifyUnbeatable, verifyRole,
+  chiSquareUniform, sampleMoveCounts
+};
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = OG;
+
+
+/* ==== nine.js ==== */
+/* =====================================================================
+   Zero to Unbeatable — nine boards at once
+
+   The second act. Same nine squares, nine times over: nine independent
+   boards, one mark per turn on ANY unfinished board, finished boards
+   lock, and the first player to win five boards takes the match.
+
+   Why this is not just "more tic-tac-toe"
+   ---------------------------------------
+   Two things break, and both are the lesson.
+
+   1. THE SPACE EXPLODES. One board has 5,478 legal positions and the
+      whole table fits in memory with room to spare. A nine-board match
+      position is nine boards at once, so the count is astronomical --
+      the app measures the practical consequence rather than quoting the
+      arithmetic: during a burst it counts how many match positions it
+      sees and how many it sees TWICE. On one board almost everything
+      recurs, hundreds of times. Here, essentially nothing does. Learning
+      from experience needs the experience to repeat.
+
+   2. THE OLD TABLE DOES NOT FIT. In one-board tic-tac-toe the marks on
+      the board tell you whose turn it is: equal counts means X. Here you
+      may move twice in the same board while your opponent plays
+      elsewhere, so a board can hold three X's and one O. Those positions
+      cannot occur in real tic-tac-toe, so Act I's table has never seen
+      them and -- worse -- its whole "value to whoever just moved"
+      convention is undefined for them.
+
+   So the table grows by exactly one bit — whose turn it is:
+
+     U[board, turn] = how this board ends up, from X's point of view,
+                      given it is `turn`'s move.   +1 X takes it,
+                      -1 O takes it, 0 drawn.
+
+   Two numbers per board picture instead of one, 39,366 in all. The
+   learning rule is ACT I'S RULE, unchanged: a position is worth the best
+   thing the player to move can reach from it, and a finished board is
+   worth its result. Carrying the turn explicitly instead of reading it
+   off the mark counts is the only change, and it is what makes an
+   unbalanced board representable at all.
+
+   That one bit is not cosmetic. Without it the agent takes 100% of the
+   free wins and blocks 0% of the threats — measured, not guessed —
+   because a board with two O's and an empty third is only dangerous if
+   O is the one about to move, and a table that cannot say which will
+   average the two and shrug.
+
+   Which board to play in falls out of arithmetic rather than a rule
+   someone wrote. The match is worth the sum of its nine boards, and a
+   move changes one board and hands the turn over, so
+
+     value to me of playing cell c in board b
+        = ±( U[board b after the move, THEM] - U[board b now, THEM] )
+
+   — everything else in that sum is identical whichever move is chosen,
+   so it cancels. Both terms are read with the opponent to move, which is
+   precisely why blocking scores: leaving them on move in a board they
+   are about to win is worth -1, and blocking it is worth 0.
+
+   An untrained brain — every number zero — picks uniformly at random
+   over all 81 squares, exactly as in Act I.
+
+   What Act I knows is handed over rather than thrown away: every
+   balanced position it learned converts exactly into this form, because
+   for those positions the mover IS implied by the counts. The positions
+   that only exist here start at zero, and the app shows you how often it
+   is looking at one of them.
+
+   heuristicMove at the bottom is a rule-based opponent, written by hand
+   the way a person would: take any win, block any loss, otherwise
+   prefer the middle. The learner never consults it. It is there as a
+   benchmark, so the question "is learning actually better than the
+   rules a person would write down?" has a number attached.
+   ===================================================================== */
+
+const NINE = (function (OG) {
+'use strict';
+
+const { POW3, NCODE, WINNER, NEMPTY, TOMOVE, CELLS, moverOf } = OG;
+
+const BOARDS = 9;
+const TO_WIN = 5;              /* first to five boards takes the match */
+
+/* ------------------------------------------------------------------ *
+ * Match state
+ * ------------------------------------------------------------------ */
+
+function newMatch() {
+  return {
+    b: new Int32Array(BOARDS),     /* board codes */
+    r: new Uint8Array(BOARDS),     /* 0 live, 1 X took it, 2 O took it, 3 drawn */
+    turn: 1,
+    over: false,
+    winner: 0,                     /* 0 none yet, 1 X, 2 O, 3 drawn match */
+    plies: 0,
+    last: null                     /* {board, cell, mark} */
+  };
+}
+
+function cloneMatch(m) {
+  return { b: Int32Array.from(m.b), r: Uint8Array.from(m.r), turn: m.turn,
+           over: m.over, winner: m.winner, plies: m.plies, last: m.last };
+}
+
+function boardOutcome(code) {
+  const w = WINNER[code];
+  if (w === 1 || w === 2) return w;
+  if (NEMPTY[code] === 0) return 3;
+  return 0;
+}
+
+function tally(m) {
+  let x = 0, o = 0, d = 0;
+  for (let i = 0; i < BOARDS; i++) {
+    if (m.r[i] === 1) x++; else if (m.r[i] === 2) o++; else if (m.r[i] === 3) d++;
+  }
+  return { x, o, d };
+}
+
+function movesOf(m, out) {
+  out.length = 0;
+  for (let i = 0; i < BOARDS; i++) {
+    if (m.r[i] !== 0) continue;
+    const off = m.b[i] * 9;
+    for (let c = 0; c < 9; c++) if (CELLS[off + c] === 0) out.push(i * 9 + c);
+  }
+  return out;
+}
+function legalMoves(m) { return movesOf(m, []); }
+
+/* returns true if the match ended on this move */
+function applyMove(m, move) {
+  const board = (move / 9) | 0, cell = move % 9, mark = m.turn;
+  m.b[board] += mark * POW3[cell];
+  m.last = { board, cell, mark };
+  m.plies++;
+  const out = boardOutcome(m.b[board]);
+  if (out) m.r[board] = out;
+
+  const t = tally(m);
+  if (t.x >= TO_WIN || t.o >= TO_WIN) {
+    m.over = true; m.winner = t.x > t.o ? 1 : 2;
+  } else if (legalMoves(m).length === 0) {
+    m.over = true; m.winner = t.x === t.o ? 3 : (t.x > t.o ? 1 : 2);
+  } else {
+    m.turn = mark === 1 ? 2 : 1;
+  }
+  return m.over;
+}
+
+/* the position of every board, as one key, for counting repeats */
+function matchKey(m) {
+  let s = '';
+  for (let i = 0; i < BOARDS; i++) s += m.b[i] + ',';
+  return s;
+}
+
+/* ------------------------------------------------------------------ *
+ * The brain: one number per board picture, from X's point of view
+ * ------------------------------------------------------------------ */
+
+const HP9 = {
+  /* Tuned the same way Act I was: on the shape of the arc. Measured over
+     a run seeded from a finished Act I agent, against the hand-written
+     rule-based opponent, 400 matches per era —
+     losses 200 -> 385 -> 255 -> 110 -> 0, and zero from there on. */
+  alphaFloor: 0.60,   /* the target is a Bellman backup, not a noisy sample,
+                         so a high rate is correct here as in Act I */
+  alphaWarm: 1,
+  gamma:    0.90,     /* A board banked now is worth more than the same board
+                         banked in three moves' time, because the match can
+                         end at five boards and an undecided board scores
+                         nothing. Without this the agent correctly works out
+                         that a board it already has locked up is safe, and
+                         then never bothers to actually finish it. */
+  epsStart: 1.00,
+  epsEnd:   0.20,
+  epsTau:   2500,     /* matches, not games */
+  mixSelfPlay: 0.60,
+  exploringStarts: 0.35, /* fraction of training matches that open with a run
+                            of random moves. With nine boards a great many
+                            board pictures — including winning ones — are
+                            only ever reached down an odd line, and a
+                            position it has never been rewarded on reads 0,
+                            so it walks straight past a free win. Measured:
+                            without this it takes 6% of its free wins, with
+                            it, 96%. */
+  burst: 1000,        /* a match runs ~35 moves and updates every live board
+                         every move, so 1,000 matches is comparable work to
+                         a 5,000-game Act I burst */
+  bursts: [250, 1000, 3000]
+};
+
+function epsilonAt(matches) {
+  return HP9.epsEnd + (HP9.epsStart - HP9.epsEnd) * Math.exp(-matches / HP9.epsTau);
+}
+
+/* U is indexed by code * 2 + (turn - 1). */
+const USIZE = NCODE * 2;
+const ui = (code, t) => code * 2 + t - 1;
+
+function newBrain() {
+  return {
+    U: new Float32Array(USIZE),   /* board value to X, given whose turn it is */
+    N: new Uint32Array(USIZE),
+    matches: 0,
+    seen: 0,
+    seeded: 0,                    /* entries handed over from Act I */
+    blindLookups: 0,              /* squares weighed up on a picture never seen */
+    lookups: 0
+  };
+}
+
+function cloneBrain(b) {
+  return { U: new Float32Array(b.U), N: new Uint32Array(b.N),
+           matches: b.matches, seen: b.seen, seeded: b.seeded,
+           blindLookups: b.blindLookups, lookups: b.lookups };
+}
+
+/* Hand over everything Act I learned that still means something here.
+   Act I's V[code] is the value to whoever just moved into `code`, and for
+   a balanced position the mark counts say who that was — so it converts
+   exactly into "value to X with the OTHER player to move". The entries
+   that only exist with nine boards open, and the second turn value of
+   every position, start at zero: unknown, and visibly so. */
+function seedFromAgent(brain, agent) {
+  let n = 0;
+  for (let code = 1; code < NCODE; code++) {
+    const t = TOMOVE[code];
+    if (t === 0 || WINNER[code] === 3) continue;      /* cannot occur */
+    if (agent.N[code] === 0) continue;                /* never learned */
+    const x = moverOf(code) === 1 ? agent.V[code] : -agent.V[code];
+    const k = ui(code, t);
+    brain.U[k] = x;
+    brain.N[k] = agent.N[code];
+    n++;
+  }
+  brain.seen = n;
+  brain.seeded = n;
+  return n;
+}
+
+/* Value of a candidate move to the player making it. Both terms are read
+   with the OPPONENT to move — see the derivation at the top of the file. */
+function moveValue(brain, code, cell, mark) {
+  const opp = mark === 1 ? 2 : 1;
+  const d = brain.U[ui(code + mark * POW3[cell], opp)] - brain.U[ui(code, opp)];
+  return mark === 1 ? d : -d;
+}
+
+/* Every move that ties for best, minus any whose resulting board picture
+   it has never seen when a seen one ties with it — the same confidence
+   tie-break as Act I, and the same reason: an unseen picture and a
+   picture known to be even both read 0.00. */
+function policyMoves(brain, m) {
+  const moves = legalMoves(m), mark = m.turn, opp = mark === 1 ? 2 : 1;
+  let best = -Infinity;
+  const vals = moves.map(mv => {
+    const v = moveValue(brain, m.b[(mv / 9) | 0], mv % 9, mark);
+    if (v > best) best = v;
+    return v;
+  });
+  const tied = moves.filter((mv, i) => vals[i] >= best - 1e-9);
+  const tried = tied.filter(mv =>
+    brain.N[ui(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp)] > 0);
+  return tried.length ? tried : tied;
+}
+
+function greedyMove(brain, m, rnd) {
+  const t = policyMoves(brain, m);
+  return t[(rnd() * t.length) | 0];
+}
+
+/* Exploration for training only, and NOT a coin flip.
+ *
+ * With one board, rolling a die when you want to explore is fine: there
+ * are 5,478 positions and random play trips over all of them. With nine
+ * boards open there are far too many, and undirected exploration leaves
+ * gaps that never close — measured, on a real run: 26% of the winning
+ * board pictures were still unvisited after 10,000 matches, and because
+ * an unvisited picture reads 0.00, the agent walked past a free win
+ * again and again in exactly those positions.
+ *
+ * So when it explores it goes where it knows least: the move whose
+ * resulting board picture it has seen the fewest times, ties broken by
+ * coin flip. Count-based exploration, and it contains no knowledge of
+ * tic-tac-toe — it cannot tell a winning square from any other, only a
+ * familiar one from a strange one. It is off during play. */
+function exploreMove(brain, m, rnd) {
+  const moves = legalMoves(m), mark = m.turn, opp = mark === 1 ? 2 : 1;
+  let fewest = Infinity;
+  const counts = moves.map(mv => {
+    const n = brain.N[ui(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp)];
+    if (n < fewest) fewest = n;
+    return n;
+  });
+  const rarest = moves.filter((mv, i) => counts[i] === fewest);
+  return rarest[(rnd() * rarest.length) | 0];
+}
+
+function epsGreedyMove(brain, m, eps, rnd) {
+  if (rnd() < eps) return exploreMove(brain, m, rnd);
+  return greedyMove(brain, m, rnd);
+}
+
+function randomMove(m, rnd) {
+  const mv = legalMoves(m);
+  return mv[(rnd() * mv.length) | 0];
+}
+
+/* How many of the squares it is weighing up right now sit on a board
+   picture it has never seen. The honest measure of "out of its depth",
+   and the number that makes the transfer from Act I visible: right after
+   the handover it is high, and it falls as this act trains. */
+function blindFraction(brain, m) {
+  const moves = legalMoves(m);
+  if (!moves.length) return 0;
+  const mark = m.turn, opp = mark === 1 ? 2 : 1;
+  let blind = 0;
+  for (const mv of moves) {
+    const after = m.b[(mv / 9) | 0] + mark * POW3[mv % 9];
+    if (brain.N[ui(after, opp)] === 0) blind++;
+  }
+  return blind / moves.length;
+}
+
+/* board pictures that can only happen with nine boards open: one player
+   has moved in this board more often than alternating turns would allow */
+function isImpossibleAlone(code) { return TOMOVE[code] === 0; }
+
+/* ------------------------------------------------------------------ *
+ * Training
+ *
+ * Act I's rule, with the turn carried explicitly. Every live board is a
+ * real situation being experienced on every ply, so every live board
+ * gets a backup on every ply: what this board is worth to X, given whose
+ * move it is, is the best the player on move can reach from it.
+ *
+ * Nothing here consults the rules of winning. A finished board's value
+ * arrives as a reward when a game actually finishes on it, exactly as in
+ * Act I; the backup below only ever reads numbers already in the table.
+ * ------------------------------------------------------------------ */
+
+function backup(brain, code, t) {
+  const U = brain.U, N = brain.N;
+  const off = code * 9;
+  let best = t === 1 ? -Infinity : Infinity;
+  const opp = t === 1 ? 2 : 1;
+  for (let c = 0; c < 9; c++) {
+    if (CELLS[off + c] !== 0) continue;
+    const v = U[ui(code + t * POW3[c], opp)];
+    if (t === 1) { if (v > best) best = v; } else { if (v < best) best = v; }
+  }
+  if (best === Infinity || best === -Infinity) return;      /* no legal move */
+  const k = ui(code, t);
+  if (N[k] === 0) brain.seen++;
+  const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + N[k]));
+  N[k]++;
+  U[k] += a * (HP9.gamma * best - U[k]);
+}
+
+/* a board just finished: its result is the reward, and it is worth that
+   whoever is to move */
+function reward(brain, code, z) {
+  const U = brain.U, N = brain.N;
+  for (const t of [1, 2]) {
+    const k = ui(code, t);
+    if (N[k] === 0) brain.seen++;
+    const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + N[k]));
+    N[k]++;
+    U[k] += a * (z - U[k]);
+  }
+}
+
+function playMatch(brain, rnd, mode, eps, learn, wildPlies) {
+  const m = newMatch();
+  let wild = wildPlies | 0;
+  for (;;) {
+    const brainSeat = mode === 0 || (mode === 1 && m.turn === 1) || (mode === 2 && m.turn === 2);
+    const mv = (wild-- > 0) ? randomMove(m, rnd)
+             : brainSeat ? epsGreedyMove(brain, m, eps, rnd) : randomMove(m, rnd);
+    const board = (mv / 9) | 0, turn = m.turn;
+    applyMove(m, mv);
+
+    if (learn) {
+      /* the board that changed, if it just ended */
+      const r = m.r[board];
+      if (r !== 0) reward(brain, m.b[board], r === 1 ? 1 : r === 2 ? -1 : 0);
+      /* every board still in play, with the turn that now applies */
+      const nextTurn = m.over ? (turn === 1 ? 2 : 1) : m.turn;
+      for (let b = 0; b < BOARDS; b++) {
+        if (m.r[b] === 0) backup(brain, m.b[b], nextTurn);
+      }
+      /* and the board that changed, from the mover's own turn, so the
+         position they left behind is valued too */
+      if (m.r[board] === 0) backup(brain, m.b[board], turn);
+    }
+    if (m.over) return m;
+  }
+}
+
+const KEY_CAP = 400000;        /* stop growing the repeat counter here */
+
+function trainMatches(brain, count, rnd, opts) {
+  opts = opts || {};
+  const sampleEvery = opts.sampleEvery | 0;
+  const samples = [];
+  let selfPlay = 0, vsRandom = 0, plies = 0;
+  const half = HP9.mixSelfPlay + (1 - HP9.mixSelfPlay) / 2;
+
+  for (let g = 0; g < count; g++) {
+    const eps = epsilonAt(brain.matches);
+    const r = rnd();
+    const mode = r < HP9.mixSelfPlay ? 0 : (r < half ? 1 : 2);
+    if (mode === 0) selfPlay++; else vsRandom++;
+    const wild = rnd() < HP9.exploringStarts ? 1 + ((rnd() * 26) | 0) : 0;
+    const m = playMatch(brain, rnd, mode, eps, true, wild);
+    brain.matches++;
+    plies += m.plies;
+    if (sampleEvery && (g % sampleEvery) === 0) samples.push(cloneMatch(m));
+  }
+  return { samples, selfPlay, vsRandom, plies, eps: epsilonAt(brain.matches) };
+}
+
+/* How often does a whole-match position ever come round again? This is
+   the number that decides whether a table over match positions could
+   ever work, so it is measured rather than asserted. */
+function measureRecurrence(brain, matches, rnd) {
+  const seen = new Map();
+  let positions = 0, repeats = 0;
+  for (let g = 0; g < matches; g++) {
+    const m = newMatch();
+    const eps = epsilonAt(brain.matches);
+    for (;;) {
+      const k = matchKey(m);
+      positions++;
+      const c = seen.get(k);
+      if (c !== undefined) { seen.set(k, c + 1); repeats++; }
+      else if (seen.size < KEY_CAP) seen.set(k, 1);
+      applyMove(m, epsGreedyMove(brain, m, eps, rnd));
+      if (m.over) break;
+    }
+  }
+  return { positions, repeats, distinct: seen.size, rate: repeats / positions };
+}
+
+/* the same measurement on one board, so the two numbers can sit side by
+   side on the card */
+function measureRecurrenceSingle(agent, games, rnd) {
+  const seen = new Map();
+  let positions = 0, repeats = 0;
+  for (let g = 0; g < games; g++) {
+    let code = 0;
+    for (;;) {
+      positions++;
+      const c = seen.get(code);
+      if (c !== undefined) { seen.set(code, c + 1); repeats++; } else seen.set(code, 1);
+      code += TOMOVE[code] * POW3[OG.epsGreedyMove(agent, code, OG.epsilonAt(agent.games), rnd)];
+      if (WINNER[code] !== 0 || NEMPTY[code] === 0) break;
+    }
+  }
+  return { positions, repeats, distinct: seen.size, rate: repeats / positions };
+}
+
+/* ------------------------------------------------------------------ *
+ * Opponents, for measurement only
+ * ------------------------------------------------------------------ */
+
+const LINES = OG.LINES;
+
+/* A rule-based opponent, written out by hand the way a person would:
+   take a win anywhere, else block a loss anywhere, else score every
+   square by where it sits and what is already on its lines. Hand-written
+   knowledge, which is exactly why it is worth racing a learner against
+   it. Nothing in the learner ever reads this function. */
+function heuristicMove(m, mark, rnd) {
+  const opp = mark === 1 ? 2 : 1;
+  const live = [];
+  for (let b = 0; b < BOARDS; b++) if (m.r[b] === 0) live.push(b);
+
+  for (const who of [mark, opp]) {
+    for (const b of live) {
+      const off = m.b[b] * 9;
+      for (const L of LINES) {
+        let mine = 0, empty = -1, other = 0;
+        for (const i of L) {
+          const v = CELLS[off + i];
+          if (v === who) mine++; else if (v === 0) empty = i; else other++;
+        }
+        if (mine === 2 && other === 0 && empty >= 0) return b * 9 + empty;
+      }
+    }
+  }
+
+  let best = -Infinity, bestMove = -1;
+  for (const b of live) {
+    const off = m.b[b] * 9;
+    for (let c = 0; c < 9; c++) {
+      if (CELLS[off + c] !== 0) continue;
+      let score = c === 4 ? 14 : (c === 0 || c === 2 || c === 6 || c === 8) ? 8 : 4;
+      for (const L of LINES) {
+        if (!L.includes(c)) continue;
+        let mine = 0, theirs = 0;
+        for (const i of L) {
+          const v = CELLS[off + i];
+          if (v === mark) mine++; else if (v === opp) theirs++;
+        }
+        if (theirs === 0) score += 5 + mine * 10;
+        if (mine === 0) score += theirs * 6;
+      }
+      if (score > best) { best = score; bestMove = b * 9 + c; }
+    }
+  }
+  if (bestMove < 0) { const mv = legalMoves(m); return mv[(rnd() * mv.length) | 0]; }
+  return bestMove;
+}
+
+/* result from the brain's point of view: 1 win, 0 draw, -1 loss */
+function playAgainst(brain, oppMove, rnd, brainMark) {
+  const m = newMatch();
+  for (;;) {
+    const mv = (m.turn === brainMark) ? greedyMove(brain, m, rnd)
+                                      : oppMove(m, m.turn, rnd);
+    applyMove(m, mv);
+    if (m.over) {
+      if (m.winner === 3) return 0;
+      return m.winner === brainMark ? 1 : -1;
+    }
+  }
+}
+
+function scoreVs(brain, oppMove, matches, rnd, brainMark) {
+  let w = 0, l = 0, d = 0;
+  for (let i = 0; i < matches; i++) {
+    const mark = brainMark || (1 + (i % 2));
+    const r = playAgainst(brain, oppMove, rnd, mark);
+    if (r > 0) w++; else if (r < 0) l++; else d++;
+  }
+  return { wins: w, losses: l, draws: d, matches, winRate: w / matches, lossRate: l / matches };
+}
+
+const randomOpponent = (m, mark, rnd) => randomMove(m, rnd);
+const vsRandom    = (brain, n, rnd, mark) => scoreVs(brain, randomOpponent, n, rnd, mark);
+const vsHeuristic = (brain, n, rnd, mark) => scoreVs(brain, heuristicMove, n, rnd, mark);
+
+/* ------------------------------------------------------------------ */
+
+return {
+  BOARDS, TO_WIN, HP9,
+  newMatch, cloneMatch, applyMove, legalMoves, tally, boardOutcome, matchKey,
+  newBrain, cloneBrain, seedFromAgent, moveValue, policyMoves, greedyMove,
+  epsGreedyMove, randomMove, blindFraction, isImpossibleAlone, epsilonAt, ui,
+  trainMatches, playMatch, backup, reward, measureRecurrence, measureRecurrenceSingle,
+  heuristicMove, playAgainst, scoreVs, vsRandom, vsHeuristic
+};
+})(typeof OG !== 'undefined' ? OG : require('./engine.js'));
+
+if (typeof module !== 'undefined' && module.exports) module.exports = NINE;
+
+
+/* ==== app.js ==== */
+/* =====================================================================
+   Zero to Unbeatable — user interface
+
+   Owns: the game you play, the training montage, the era ledger, the
+   brain inspector and the explainers. All of the learning lives in
+   engine.js; nothing in this file touches the value table except to
+   read it for display.
+   ===================================================================== */
+
+(function () {
+'use strict';
+
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const MARK = ['', '✕', '◯'];              // ✕ and ◯
+const CELLNAME = ['top left', 'top middle', 'top right',
+                  'middle left', 'the centre', 'middle right',
+                  'bottom left', 'bottom middle', 'bottom right'];
+
+const S = {
+  mode: 'one',         // 'one' board, or 'nine' at once
+  live: null,          // the one-board agent that keeps training
+  live9: null,         // the nine-board brain
+  eras: [],            // frozen snapshots, index === era number
+  era: 0,              // which one you are playing
+  game: null,          // one-board game in progress
+  match: null,         // nine-board match in progress
+  focus: 0,            // which of the nine boards you are pointing at
+  burst: OG.HP.burst,
+  burst9: NINE.HP9.burst,
+  brain: false,
+  seed: '',
+  // These streams deliberately never share state.  A reader (the report) or
+  // a player must not be able to alter the next training example.
+  rng: Math.random,              // training only
+  liveRng: { one: Math.random, nine: Math.random }, // independent playable-game streams
+  measureSalt: '',               // immutable for one reset/session
+  humanFirstNext: true,
+  alwaysFirst: false,
+  training: false,
+  lastLearned: null
+};
+const isNine = () => S.mode === 'nine';
+
+const fmt = n => n.toLocaleString('en-US');
+/* compact so an era label still fits a projector-sized dropdown */
+const fmtk = n => n >= 1000 ? (n / 1000).toFixed(n % 1000 && n < 10000 ? 1 : 0).replace(/\.0$/, '') + 'k' : String(n);
+const sgn = v => (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2);
+
+/* A value in [-1,1] as a colour, staying inside the Murray State palette:
+   red-orange for losing, brand navy for even, gold for winning. Warm
+   hues at both ends are hard to tell apart with some kinds of colour
+   blindness, so every heat square also prints its signed number and the
+   ink flips to navy on the light end to keep that number legible. */
+const HEAT_LOSE = [255, 69, 0];     /* #FF4500 */
+const HEAT_EVEN = [10, 49, 97];     /* #0A3161 */
+const HEAT_WIN  = [236, 172, 0];    /* #ECAC00 */
+
+function heatRGB(v) {
+  const t = Math.max(-1, Math.min(1, v));
+  const mix = (a, b, k) => a.map((x, i) => Math.round(x + (b[i] - x) * k));
+  return t < 0 ? mix(HEAT_EVEN, HEAT_LOSE, -t) : mix(HEAT_EVEN, HEAT_WIN, t);
+}
+function heat(v) { const c = heatRGB(v); return `rgb(${c[0]},${c[1]},${c[2]})`; }
+function heatInk(v) {
+  const c = heatRGB(v);
+  const lin = x => { x /= 255; return x <= 0.04045 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+  const L = 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+  return L > 0.34 ? '#00142B' : '#F3F7FF';
+}
+
+/* ------------------------------------------------------------------ *
+ * Eras
+ * ------------------------------------------------------------------ */
+
+function snapshotLandmarks(agent) {
+  return OG.LANDMARKS.map(L => ({
+    id: L.id,
+    values: OG.moveValues(agent, L.code)
+  }));
+}
+
+/* How many positions would this agent now play differently from the
+   last one? A number that keeps moving after the landmark cards have
+   gone quiet -- which is itself the point being made. */
+function policyDiff(a, b) {
+  let n = 0;
+  for (let i = 0; i < OG.OPEN_POSITIONS.length; i++) {
+    const c = OG.OPEN_POSITIONS[i];
+    const x = OG.argmaxMoves(a, c).join(','), y = OG.argmaxMoves(b, c).join(',');
+    if (x !== y) n++;
+  }
+  return n;
+}
+
+function makeEra(n, agent, prevAgent, mix, kind, nineStats) {
+  const verified = OG.verifyUnbeatable(agent);
+  const e = {
+    n, agent, brain: NINE.cloneBrain(S.live9),
+    kind: kind || 'one',
+    games: agent.games, seen: agent.seen,
+    matches: S.live9.matches, seen9: S.live9.seen, seeded9: S.live9.seeded,
+    eps: OG.epsilonAt(agent.games), eps9: NINE.epsilonAt(S.live9.matches),
+    verified, mix: mix || null, nine: nineStats || null,
+    landmarks: snapshotLandmarks(agent),
+    changed: prevAgent ? policyDiff(prevAgent, agent) : null,
+    rec: { w: 0, l: 0, d: 0 },
+    rec9: { w: 0, l: 0, d: 0 }
+  };
+  console.log(
+    `[Zero to Unbeatable] Era ${n} — ${fmt(e.games)} training games, ${fmt(e.seen)} positions seen.\n` +
+    `           Exhaustive check, agent moving first:  ${verified.asFirst.safe ? 'no losing line exists' : 'A LOSING LINE EXISTS'}` +
+    ` (${fmt(verified.asFirst.lines)} lines, ${fmt(verified.asFirst.positions)} positions)\n` +
+    `           Exhaustive check, agent moving second: ${verified.asSecond.safe ? 'no losing line exists' : 'A LOSING LINE EXISTS'}` +
+    ` (${fmt(verified.asSecond.lines)} lines, ${fmt(verified.asSecond.positions)} positions)\n` +
+    `           VERDICT: ${verified.safe ? 'UNBEATABLE — zero losses across every reachable line, both roles.'
+                                          : 'still beatable.'}`);
+  return e;
+}
+
+function currentEra() { return S.eras[S.era]; }
+
+function resetAll() {
+  S.rng = OG.makeRng(S.seed || null);
+  /* Keep one-board and nine-board play in distinct streams.  Switching
+     modes must not make a prior one-board move alter a rehearsed nine-board
+     reply (or vice versa).  A blank seed deliberately starts fresh streams. */
+  const liveSeed = mode => S.seed
+    ? 'live-play:' + S.seed + ':' + mode
+    : 'live-play:' + Math.random().toString(36).slice(2) + ':' + mode;
+  S.liveRng = { one: OG.makeRng(liveSeed('one')), nine: OG.makeRng(liveSeed('nine')) };
+  S.measureSalt = S.seed ? 'measure:' + S.seed : 'measure:' + Math.random().toString(36).slice(2);
+  S.live = OG.newAgent();
+  S.live9 = NINE.newBrain();
+  S.eras = [makeEra(0, OG.cloneAgent(S.live), null, null, 'one')];
+  S.era = 0;
+  S.humanFirstNext = true;
+  S.lastLearned = null;
+  $('#btn-learned').hidden = true;
+  renderEraSelect();
+  newGame();
+  renderTrain();
+  renderBanner();
+}
+
+/* Measurement is a pure reader.  Its seed is derived from a frozen era, not
+   from S.rng, so reopening a card cannot perturb a later burst. */
+function measureRng(era, label) {
+  return OG.makeRng(S.measureSalt + ':' + era.n + ':' + era.games + ':' + era.matches + ':' + label);
+}
+
+/* Hand Act I's table over to the nine-board brain. Done on entering the
+   mode, and repeated on every entry until Act II has actually trained,
+   so the handover always reflects whatever Act I knows by then. */
+function maybeSeed() {
+  if (S.live9.matches > 0) return 0;
+  S.live9 = NINE.newBrain();
+  const n = NINE.seedFromAgent(S.live9, S.live);
+  S.eras.forEach(e => {
+    if (e.brain.matches === 0) {
+      e.brain = NINE.cloneBrain(S.live9);
+      e.seen9 = S.live9.seen; e.seeded9 = S.live9.seeded;
+    }
+  });
+  return n;
+}
+
+function currentRec() { return isNine() ? currentEra().rec9 : currentEra().rec; }
+
+/* ------------------------------------------------------------------ *
+ * The game
+ * ------------------------------------------------------------------ */
+
+function newGame() {
+  if (isNine()) return newMatch();
+  const humanFirst = S.alwaysFirst ? true : S.humanFirstNext;
+  S.humanFirstNext = !humanFirst;
+  S.game = {
+    code: 0,
+    humanMark: humanFirst ? 1 : 2,
+    aiMark: humanFirst ? 2 : 1,
+    over: false, result: null, lastCell: -1, winLine: null,
+    thinking: false
+  };
+  renderBoard();
+  renderStatus();
+  if (!humanFirst) aiTurn(420);
+}
+
+function winningLine(code) {
+  const w = OG.WINNER[code];
+  if (!w) return null;
+  const cells = OG.cellsOf(code);
+  for (const L of OG.LINES) if (cells[L[0]] === w && cells[L[1]] === w && cells[L[2]] === w) return L;
+  return null;
+}
+
+function applyMove(cell) {
+  const g = S.game;
+  const mover = OG.TOMOVE[g.code];
+  g.code = OG.child(g.code, cell, mover);
+  g.lastCell = cell;
+  const w = OG.WINNER[g.code];
+  if (w !== 0) {
+    g.over = true;
+    g.winLine = winningLine(g.code);
+    g.result = (w === g.humanMark) ? 'win' : 'loss';
+  } else if (OG.NEMPTY[g.code] === 0) {
+    g.over = true;
+    g.result = 'draw';
+  }
+  if (g.over) {
+    const rec = currentEra().rec;
+    if (g.result === 'win') rec.w++; else if (g.result === 'loss') rec.l++; else rec.d++;
+    renderScore();
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Nine at once
+ * ------------------------------------------------------------------ */
+
+function newMatch() {
+  const humanFirst = S.alwaysFirst ? true : S.humanFirstNext;
+  S.humanFirstNext = !humanFirst;
+  S.match = NINE.newMatch();
+  S.match.humanMark = humanFirst ? 1 : 2;
+  S.focus = 4;                       /* the middle board, arbitrarily */
+  renderNine(); renderStatus();
+  if (!humanFirst) nineAiTurn(500);
+}
+
+function nineResult() {
+  const m = S.match;
+  if (!m.over) return null;
+  if (m.winner === 3) return 'draw';
+  return m.winner === m.humanMark ? 'win' : 'loss';
+}
+
+/* Point at the board just played in — unless that move finished it, in
+   which case there is nothing to tap there and we move on to a live one. */
+function pickFocus(m, prefer) {
+  if (m.r[prefer] === 0) return prefer;
+  for (let i = 0; i < 9; i++) if (m.r[(prefer + i) % 9] === 0) return (prefer + i) % 9;
+  return prefer;
+}
+
+function applyNine(move) {
+  const m = S.match;
+  NINE.applyMove(m, move);
+  S.focus = pickFocus(m, m.last.board);
+  if (m.over) {
+    const rec = currentEra().rec9, r = nineResult();
+    if (r === 'win') rec.w++; else if (r === 'loss') rec.l++; else rec.d++;
+    renderScore();
+  }
+}
+
+function onNineCell(cell) {
+  const m = S.match;
+  if (!m || m.over || m.thinking || S.training) return;
+  if (m.turn !== m.humanMark) return;
+  if (m.r[S.focus] !== 0) return;
+  if (OG.cellsOf(m.b[S.focus])[cell] !== 0) return;
+  applyNine(S.focus * 9 + cell);
+  renderNine(); renderStatus();
+  if (!m.over) nineAiTurn(360);
+}
+
+function nineAiTurn(delay) {
+  const m = S.match;
+  m.thinking = true;
+  renderNine(); renderStatus();
+  setTimeout(() => {
+    if (!S.match || S.match !== m || m.over) return;
+    applyNine(NINE.greedyMove(currentEra().brain, m, S.liveRng.nine));
+    m.thinking = false;
+    renderNine(); renderStatus();
+  }, S.brain ? Math.max(delay, 1300) : delay);
+}
+
+function onCell(cell) {
+  const g = S.game;
+  if (!g || g.over || g.thinking || S.training) return;
+  if (OG.TOMOVE[g.code] !== g.humanMark) return;
+  if (OG.cellsOf(g.code)[cell] !== 0) return;
+  applyMove(cell);
+  renderBoard(); renderStatus();
+  if (!g.over) aiTurn(340);
+}
+
+function aiTurn(delay) {
+  const g = S.game;
+  g.thinking = true;
+  /* Paint before it moves: with the inspector on, this is the moment the
+     heatmap shows ITS options rather than yours, so hold it long enough
+     to be read. */
+  renderBoard(); renderStatus();
+  setTimeout(() => {
+    if (!S.game || S.game !== g || g.over) return;
+    const cell = OG.greedyMove(currentEra().agent, g.code, S.liveRng.one);
+    applyMove(cell);
+    g.thinking = false;
+    renderBoard(); renderStatus();
+  }, S.brain ? Math.max(delay, 1250) : delay);
+}
+
+/* ------------------------------------------------------------------ *
+ * Rendering — board
+ * ------------------------------------------------------------------ */
+
+const boardEl = $('#board');
+for (let i = 0; i < 9; i++) {
+  const b = document.createElement('button');
+  b.className = 'cell'; b.dataset.i = i; b.setAttribute('role', 'gridcell');
+  b.addEventListener('click', () => onCell(i));
+  boardEl.appendChild(b);
+}
+
+function renderBoard() {
+  const g = S.game, cells = OG.cellsOf(g.code);
+  const agent = currentEra().agent;
+  const showHeat = S.brain && !g.over;
+  const vals = showHeat ? OG.moveValues(agent, g.code) : [];
+  const picks = showHeat ? OG.argmaxMoves(agent, g.code) : [];
+  const byCell = {}; vals.forEach(v => byCell[v.cell] = v);
+
+  $$('.cell', boardEl).forEach((el, i) => {
+    const m = cells[i];
+    el.className = 'cell' + (m ? ' mk' + m : ' open') +
+      (g.lastCell === i && m ? ' last' : '') +
+      (g.winLine && g.winLine.includes(i) ? ' win' : '') +
+      (showHeat && !m ? ' heat' : '') +
+      (showHeat && picks.includes(i) ? ' pick' : '');
+    el.disabled = !!m || g.over || g.thinking || OG.TOMOVE[g.code] !== g.humanMark;
+    el.style.background = '';
+    el.style.color = '';
+    if (m) {
+      el.textContent = MARK[m];
+      el.setAttribute('aria-label', CELLNAME[i] + ', ' + (m === g.humanMark ? 'yours' : 'its'));
+      return;
+    }
+    if (showHeat && byCell[i]) {
+      const v = byCell[i];
+      el.style.background = heat(v.value);
+      el.style.color = heatInk(v.value);
+      el.innerHTML = `<span class="v">${sgn(v.value)}</span>` +
+                     `<span class="n">seen ${fmt(v.visits)}×</span>`;
+      el.setAttribute('aria-label',
+        `${CELLNAME[i]}: value ${v.value.toFixed(2)}, seen ${v.visits} times`);
+    } else {
+      el.textContent = '';
+      el.setAttribute('aria-label', CELLNAME[i] + ', empty');
+    }
+  });
+  renderBrainReadout();
+}
+
+/* the overview grid, plus the one board you are actually playing in */
+const nineGrid = $('#nine-grid'), nineFocus = $('#nine-focus');
+for (let b = 0; b < 9; b++) {
+  const nb = document.createElement('button');
+  nb.className = 'nb'; nb.dataset.b = b; nb.type = 'button';
+  for (let c = 0; c < 9; c++) { const i = document.createElement('i'); nb.appendChild(i); }
+  nb.addEventListener('click', () => {
+    if (!S.match || S.match.r[b] !== 0) return;
+    S.focus = b; renderNine(); renderStatus();
+  });
+  nineGrid.appendChild(nb);
+}
+for (let c = 0; c < 9; c++) {
+  const el = document.createElement('button');
+  el.className = 'cell'; el.dataset.c = c; el.setAttribute('role', 'gridcell');
+  el.addEventListener('click', () => onNineCell(c));
+  nineFocus.appendChild(el);
+}
+
+function renderNine() {
+  const m = S.match;
+  if (!m) return;
+  const brain = currentEra().brain;
+  const RES = ['', 'X', 'O', '—'];
+
+  $$('.nb', nineGrid).forEach((nb, b) => {
+    const cells = OG.cellsOf(m.b[b]);
+    nb.className = 'nb' + (m.r[b] ? ' done r' + m.r[b] : '') +
+      (b === S.focus ? ' focus' : '') +
+      (m.last && m.last.board === b ? ' last' : '');
+    nb.disabled = m.r[b] !== 0;
+    $$('i', nb).forEach((i, c) => { i.className = cells[c] ? 'm' + cells[c] : ''; });
+    nb.setAttribute('aria-label', 'Board ' + (b + 1) +
+      (m.r[b] === 0 ? ', in play' : m.r[b] === 3 ? ', drawn' :
+       ', won by ' + (m.r[b] === m.humanMark ? 'you' : 'it')));
+    let tag = nb.querySelector('.tag');
+    if (!tag) { tag = document.createElement('span'); tag.className = 'tag'; nb.appendChild(tag); }
+    tag.textContent = m.r[b] ? RES[m.r[b]] : '';
+  });
+
+  const code = m.b[S.focus], cells = OG.cellsOf(code);
+  const yours = !m.over && m.turn === m.humanMark;
+  const showHeat = S.brain && !m.over && m.r[S.focus] === 0;
+  const mark = m.turn;
+  const picks = showHeat ? NINE.policyMoves(brain, m).filter(mv => ((mv / 9) | 0) === S.focus)
+                              .map(mv => mv % 9) : [];
+  $$('.cell', nineFocus).forEach((el, c) => {
+    const v = cells[c];
+    el.className = 'cell' + (v ? ' mk' + v : ' open') +
+      (m.last && m.last.board === S.focus && m.last.cell === c && v ? ' last' : '') +
+      (showHeat && !v ? ' heat' : '') + (picks.includes(c) ? ' pick' : '');
+    el.disabled = !!v || m.over || m.thinking || !yours || m.r[S.focus] !== 0;
+    el.style.background = ''; el.style.color = '';
+    if (v) { el.textContent = MARK[v]; el.setAttribute('aria-label', CELLNAME[c] + ', taken'); return; }
+    if (showHeat) {
+      const val = NINE.moveValue(brain, code, c, mark);
+      const seen = brain.N[NINE.ui(code + mark * OG.POW3[c], mark === 1 ? 2 : 1)];
+      el.style.background = heat(val); el.style.color = heatInk(val);
+      el.innerHTML = `<span class="v">${sgn(val)}</span>` +
+        `<span class="n">${seen ? 'seen ' + fmt(seen) + '×' : 'never seen'}</span>`;
+      el.setAttribute('aria-label', CELLNAME[c] + ': ' + val.toFixed(2) +
+        (seen ? ', seen ' + seen + ' times' : ', never seen'));
+    } else {
+      el.textContent = '';
+      el.setAttribute('aria-label', CELLNAME[c] + ', empty');
+    }
+  });
+
+  const t = NINE.tally(m);
+  const you = m.humanMark === 1 ? t.x : t.o, it = m.humanMark === 1 ? t.o : t.x;
+  $('#nine-tally').innerHTML =
+    `<span class="nt you"><b>${you}</b> yours</span>` +
+    `<span class="nt mid">first to ${NINE.TO_WIN}</span>` +
+    `<span class="nt ai"><b>${it}</b> its</span>` +
+    (t.d ? `<span class="nt dr"><b>${t.d}</b> drawn</span>` : '');
+  renderBrainReadout();
+}
+
+function renderStatus() {
+  if (isNine()) return renderNineStatus();
+  const g = S.game, el = $('#status');
+  el.className = '';
+  if (g.over) {
+    const t = g.result === 'win' ? ['You win.', 'Era ' + S.era + ' let you through.']
+            : g.result === 'loss' ? ['It beat you.', 'Era ' + S.era + ' found a line you missed.']
+            : ['Drawn.', 'Neither of you got through.'];
+    el.classList.add(g.result === 'win' ? 'you-win' : g.result === 'loss' ? 'you-lose' : 'drawn');
+    el.innerHTML = `<div><span class="big">${t[0]}</span><br><span class="sub">${t[1]}</span></div>`;
+    return;
+  }
+  if (g.thinking) { el.innerHTML = `<div><span class="sub">Era ${S.era} is choosing…</span></div>`; return; }
+  const yours = OG.TOMOVE[g.code] === g.humanMark;
+  el.innerHTML = `<div><span class="big">${yours ? 'Your move' : 'Its move'}</span><br>` +
+    `<span class="sub">you are ${MARK[g.humanMark]} ${g.humanMark === 1 ? '(you go first)' : '(it goes first)'}</span></div>`;
+}
+
+function renderNineStatus() {
+  const m = S.match, el = $('#status');
+  el.className = '';
+  if (!m) return;
+  if (m.over) {
+    const r = nineResult();
+    const t = r === 'win' ? ['You win the match.', 'It could not take five boards.']
+            : r === 'loss' ? ['It wins the match.', 'Nine boards is a different problem.']
+            : ['Match drawn.', 'Neither of you got to five.'];
+    el.classList.add(r === 'win' ? 'you-win' : r === 'loss' ? 'you-lose' : 'drawn');
+    el.innerHTML = `<div><span class="big">${t[0]}</span><br><span class="sub">${t[1]}</span></div>`;
+    return;
+  }
+  if (m.thinking) { el.innerHTML = `<div><span class="sub">Era ${S.era} is choosing a board…</span></div>`; return; }
+  const yours = m.turn === m.humanMark;
+  el.innerHTML = `<div><span class="big">${yours ? 'Your move' : 'Its move'}</span><br>` +
+    `<span class="sub">you are ${MARK[m.humanMark]} · playing board ${S.focus + 1}` +
+    ` · tap another board to switch</span></div>`;
+}
+
+function renderBrainReadout() {
+  const el = $('#brain-readout');
+  el.hidden = !S.brain;
+  if (!S.brain) return;
+  if (isNine()) return renderNineReadout();
+  const e = currentEra(), g = S.game;
+  const yours = !g.over && OG.TOMOVE[g.code] === g.humanMark;
+  const whose = g.over ? 'The game is over, so there is nothing left to score.'
+    : yours ? 'These are its scores for <b>your</b> options — higher is better for you. The same table reads both sides of the board.'
+            : 'These are its scores for <b>its own</b> options. It will play one of the outlined squares.';
+  el.innerHTML =
+    `<div>${whose}</div>` +
+    `<div style="margin-top:.5em">Era ${e.n}’s entire mind: <b>${fmt(e.seen)}</b> positions with a number attached, ` +
+    `out of <b>${fmt(OG.OPEN_POSITIONS.length + 958)}</b> that can occur. That is the whole thing. There is nothing else in there.</div>` +
+    `<div class="legend"><span>losing</span><span class="ramp"></span><span>winning</span></div>`;
+}
+
+function renderNineReadout() {
+  const el = $('#brain-readout'), e = currentEra(), m = S.match, brain = e.brain;
+  const blind = m && !m.over ? NINE.blindFraction(brain, m) : 0;
+  const total = OG.NCODE * 2;
+  el.innerHTML =
+    `<div>Scores for board ${S.focus + 1} only — how much each square would improve ` +
+    `<b>that</b> board. The other eight do not change, so this is the whole comparison.</div>` +
+    `<div style="margin-top:.5em">Era ${e.n}'s nine-board table: <b>${fmt(brain.seen)}</b> of ` +
+    `<b>${fmt(total)}</b> board pictures have a number in them` +
+    (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from the one-board table` : '') +
+    `.</div>` +
+    (m && !m.over
+      ? `<div style="margin-top:.5em">Right now <b>${Math.round(blind * 100)}%</b> of the squares it is ` +
+        `weighing up sit on a board picture it has <b>never seen</b>.</div>` : '') +
+    `<div class="legend"><span>losing</span><span class="ramp"></span><span>winning</span></div>`;
+}
+
+function renderScore() {
+  const r = currentRec();
+  $('#score-row').innerHTML =
+    `<div class="sc win"><span class="n">${r.w}</span><span class="k">you won</span></div>` +
+    `<div class="sc draw"><span class="n">${r.d}</span><span class="k">drawn</span></div>` +
+    `<div class="sc loss"><span class="n">${r.l}</span><span class="k">you lost</span></div>`;
+  renderEraStrip();
+}
+
+function renderEraSelect() {
+  const sel = $('#era-select');
+  sel.innerHTML = S.eras.map(e =>
+    `<option value="${e.n}">Era ${e.n} · ` +
+    (isNine()
+      ? (e.matches ? fmtk(e.matches) + ' matches' : 'no nine-board practice')
+      : (e.n === 0 ? 'newborn' : fmtk(e.games) + ' games') + (e.verified.safe ? ' · unbeatable' : '')) +
+    `</option>`).join('');
+  sel.value = String(S.era);
+  renderEraStrip();
+}
+
+/* "You vs Era 0: 3-0-0. You vs Era 4: 0-1-4." — the whole arc in one line. */
+function renderEraStrip() {
+  const key = isNine() ? 'rec9' : 'rec';
+  const played = S.eras.filter(e => e[key].w + e[key].l + e[key].d > 0);
+  const el = $('#era-strip');
+  el.hidden = played.length === 0;
+  if (!played.length) return;
+  el.innerHTML = '<span class="k">your record</span>' + played.map(e =>
+    `<span class="chip${e.n === S.era ? ' on' : ''}">E${e.n} ` +
+    `<b class="w">${e[key].w}</b>–<b class="d">${e[key].d}</b>–<b class="l">${e[key].l}</b></span>`).join('');
+}
+
+function renderTrain() {
+  const e = S.eras[S.eras.length - 1];
+  const nine = isNine();
+  $('.t-main', $('#btn-train')).textContent = nine ? 'Train on nine boards' : 'Train the AI';
+  $('#train-sub').textContent = nine ? fmt(S.burst9) + ' matches' : fmt(S.burst) + ' games';
+  const sizes = nine ? NINE.HP9.bursts : OG.HP.bursts;
+  const cur = nine ? S.burst9 : S.burst;
+  $('#burst-seg').innerHTML = sizes.map(b =>
+    `<button data-b="${b}" class="${b === cur ? 'on' : ''}" aria-pressed="${b === cur}">${fmt(b)}</button>`).join('');
+  $$('#burst-seg button').forEach(b => b.addEventListener('click', () => {
+    if (isNine()) S.burst9 = +b.dataset.b; else S.burst = +b.dataset.b;
+    renderTrain();
+  }));
+  $('#train-stats').innerHTML = nine
+    ? `<div class="st"><span class="n">${fmt(e.matches)}</span><span class="k">matches trained</span></div>` +
+      `<div class="st"><span class="n">${fmt(e.seen9)}</span><span class="k">pictures seen</span></div>` +
+      `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">table slots</span></div>`
+    : `<div class="st"><span class="n">${S.eras.length - 1}</span><span class="k">eras</span></div>` +
+      `<div class="st"><span class="n">${fmt(e.games)}</span><span class="k">games trained</span></div>` +
+      `<div class="st"><span class="n">${fmt(e.seen)}</span><span class="k">positions seen</span></div>`;
+}
+
+function renderBanner() {
+  const el = $('#banner');
+  const top = S.eras[S.eras.length - 1];
+  if (isNine()) {
+    el.hidden = false;
+    el.classList.add('quiet');
+    el.innerHTML =
+      `<h3>There is no banner for this one, and that is the point.</h3>` +
+      `<p>On one board the app can search every game that could still be played — about fifteen ` +
+      `thousand of them — and tell you for certain that it cannot lose. Here it cannot. Nine boards ` +
+      `at once has so many positions that checking them all is not a slow job, it is an impossible ` +
+      `one.</p>` +
+      `<p>So this agent is only ever <b>good</b>. Not proven. That is the ordinary situation for every ` +
+      `serious AI system: chess engines, self-driving cars, language models. Nobody can check all the ` +
+      `cases, so nobody can promise. They measure instead — which is what the card after each burst ` +
+      `does.</p>` +
+      `<div class="proof">Handed over from the one-board table: ` +
+      `${fmt(S.live9.seeded)} of the ${fmt(OG.NCODE * 2)} entries this game needs · ` +
+      `filled so far ${fmt(S.live9.seen)} · matches trained ${fmt(S.live9.matches)}</div>`;
+    return;
+  }
+  el.classList.remove('quiet');
+  if (!top.verified.safe) { el.hidden = true; return; }
+  el.hidden = false;
+  el.innerHTML =
+    `<h3>You can no longer beat this. Neither can anyone. The best a human can do is tie.</h3>` +
+    `<p>That is not a claim from playing it a lot of times. Every game that can still be played ` +
+    `against Era ${top.n} was searched, with Era ${top.n} moving first and moving second, and in ` +
+    `none of them does it lose.</p>` +
+    `<p>Tic-tac-toe ends here because it is small: about five and a half thousand positions, so a ` +
+    `table can hold all of them. Chess has more positions than there are atoms on Earth, and language ` +
+    `has no fixed number at all — no table can hold either. So the big systems throw the table away ` +
+    `and use a neural network, which stores a compressed guess instead of an exact entry. Different ` +
+    `brain, same idea: play, get feedback, adjust, repeat.</p>` +
+    `<div class="proof">Proof: ${fmt(top.verified.lines)} complete game lines searched · ` +
+    `${fmt(top.verified.positions)} positions examined · 0 losses · both roles · ` +
+    `re-run any time from Settings &rarr; Run the full self-test.</div>`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Training montage
+ * ------------------------------------------------------------------ */
+
+const MONTAGE_MS = 2400;         /* the maths takes ~30ms; see the note in
+                                    the explainer panel. This is a paced
+                                    visualisation, honestly labelled. */
+
+function raf() { return new Promise(r => requestAnimationFrame(r)); }
+async function pauseUntil(t) { while (performance.now() < t) await raf(); }
+
+function miniHTML(code) {
+  const c = OG.cellsOf(code);
+  return '<div class="mini">' + Array.from(c).map(v =>
+    `<i class="${v ? 'm' + v : ''}">${MARK[v] || ''}</i>`).join('') + '</div>';
+}
+
+async function train() {
+  if (S.training) return;
+  if (isNine()) return trainNine();
+  S.training = true;
+  const size = S.burst;
+  const prev = OG.cloneAgent(S.live);
+  const ov = $('#montage'); ov.hidden = false;
+  $('#m-count').classList.add('blur');
+  $('#m-count-sub').textContent = 'games played against itself and against chance';
+  $('#m-wr-label').textContent = 'wins vs a random player';
+  $('#m-boards').classList.remove('nine');
+  $('#m-boards').innerHTML = Array.from({ length: 6 }, () => miniHTML(0)).join('');
+
+  const STEPS = 36, per = Math.ceil(size / STEPS);
+  const t0 = performance.now();
+  let done = 0, selfPlay = 0, vsRandom = 0, wr = null, pool = [];
+
+  for (let i = 0; i < STEPS; i++) {
+    const n = Math.min(per, size - done);
+    if (n > 0) {
+      const r = OG.trainGames(S.live, n, S.rng, { sampleEvery: Math.max(1, Math.floor(n / 3)) });
+      done += n; selfPlay += r.selfPlay; vsRandom += r.vsRandom;
+      pool = pool.concat(r.samples).slice(-24);
+    }
+    if (i % 6 === 3) {
+      const s = OG.vsRandom(S.live, 200, S.rng);
+      wr = s.winRate;
+    }
+    /* paint */
+    $('#m-count').textContent = fmt(done);
+    const eps = OG.epsilonAt(S.live.games);
+    $('#m-eps').textContent = eps.toFixed(2);
+    $('#m-eps-fill').style.width = (eps * 100).toFixed(1) + '%';
+    if (wr !== null) {
+      $('#m-wr').textContent = (wr * 100).toFixed(0) + '%';
+      $('#m-wr-fill').style.width = (wr * 100).toFixed(1) + '%';
+    }
+    $('#m-prog').style.width = ((i + 1) / STEPS * 100).toFixed(1) + '%';
+    if (pool.length) {
+      $('#m-boards').innerHTML = Array.from({ length: 6 }, () => {
+        const t = pool[(Math.random() * pool.length) | 0];
+        return miniHTML(t[(Math.random() * t.length) | 0]);
+      }).join('');
+    }
+    await pauseUntil(t0 + MONTAGE_MS * (i + 1) / STEPS);
+  }
+
+  $('#m-count').classList.remove('blur');
+  await pauseUntil(t0 + MONTAGE_MS + 160);
+
+  const era = makeEra(S.eras.length, OG.cloneAgent(S.live), prev, { selfPlay, vsRandom });
+  S.eras.push(era);
+  S.era = era.n;
+  ov.hidden = true;
+  S.training = false;
+  renderEraSelect(); renderTrain(); renderBanner();
+  newGame(); renderScore();
+  buildLearned(era, S.eras[era.n - 1]);
+  $('#btn-learned').hidden = false;
+  openSheet('learned');
+}
+
+function mini9HTML(m) {
+  let h = '<div class="mini9">';
+  for (let b = 0; b < 9; b++) {
+    const c = OG.cellsOf(m.b[b]);
+    h += `<div class="m9b${m.r[b] ? ' r' + m.r[b] : ''}">`;
+    for (let i = 0; i < 9; i++) h += `<i class="${c[i] ? 'm' + c[i] : ''}"></i>`;
+    h += '</div>';
+  }
+  return h + '</div>';
+}
+
+async function trainNine() {
+  S.training = true;
+  const size = S.burst9;
+  const ov = $('#montage'); ov.hidden = false;
+  $('#m-count').classList.add('blur');
+  $('#m-count-sub').textContent = 'matches played against itself and against chance';
+  $('#m-boards').classList.add('nine');
+  $('#m-boards').innerHTML = mini9HTML(NINE.newMatch()).repeat(3);
+  $('#m-wr-label').textContent = 'holds or beats the hand-written player';
+
+  const STEPS = 30, per = Math.ceil(size / STEPS);
+  const t0 = performance.now();
+  let done = 0, selfPlay = 0, vsRandom = 0, hold = null, pool = [];
+
+  for (let i = 0; i < STEPS; i++) {
+    const n = Math.min(per, size - done);
+    if (n > 0) {
+      const r = NINE.trainMatches(S.live9, n, S.rng, { sampleEvery: Math.max(1, Math.floor(n / 2)) });
+      done += n; selfPlay += r.selfPlay; vsRandom += r.vsRandom;
+      pool = pool.concat(r.samples).slice(-12);
+    }
+    if (i % 7 === 4) {
+      const sc = NINE.vsHeuristic(S.live9, 60, S.rng);
+      hold = (sc.wins + sc.draws) / sc.matches;
+    }
+    $('#m-count').textContent = fmt(done);
+    const eps = NINE.epsilonAt(S.live9.matches);
+    $('#m-eps').textContent = eps.toFixed(2);
+    $('#m-eps-fill').style.width = (eps * 100).toFixed(1) + '%';
+    if (hold !== null) {
+      $('#m-wr').textContent = (hold * 100).toFixed(0) + '%';
+      $('#m-wr-fill').style.width = (hold * 100).toFixed(1) + '%';
+    }
+    $('#m-prog').style.width = ((i + 1) / STEPS * 100).toFixed(1) + '%';
+    if (pool.length) {
+      $('#m-boards').innerHTML = Array.from({ length: 3 }, () =>
+        mini9HTML(pool[(Math.random() * pool.length) | 0])).join('');
+    }
+    await pauseUntil(t0 + MONTAGE_MS * (i + 1) / STEPS);
+  }
+  $('#m-count').classList.remove('blur');
+  await pauseUntil(t0 + MONTAGE_MS + 160);
+
+  const era = makeEra(S.eras.length, OG.cloneAgent(S.live), null, null, 'nine',
+    { selfPlay, vsRandom, matches: size });
+  S.eras.push(era);
+  S.era = era.n;
+  ov.hidden = true;
+  $('#m-boards').classList.remove('nine');
+  S.training = false;
+  renderEraSelect(); renderTrain(); renderBanner();
+  newGame(); renderScore();
+  buildLearnedNine(era, S.eras[era.n - 1]);
+  $('#btn-learned').hidden = false;
+  openSheet('learned');
+}
+
+/* ------------------------------------------------------------------ *
+ * "What it learned"
+ * ------------------------------------------------------------------ */
+
+function landmarkCard(L, now, before) {
+  const cells = OG.cellsOf(L.code);
+  const nowBy = {}, beforeBy = {};
+  now.values.forEach(v => nowBy[v.cell] = v);
+  if (before) before.values.forEach(v => beforeBy[v.cell] = v);
+
+  const picks = new Set(now.values
+    .filter(v => v.value >= Math.max.apply(null, now.values.map(x => x.value)) - 1e-9)
+    .map(v => v.cell));
+
+  let grid = '';
+  for (let i = 0; i < 9; i++) {
+    if (cells[i]) {
+      grid += `<div class="lc-cell mk${cells[i]}">${MARK[cells[i]]}</div>`;
+      continue;
+    }
+    const v = nowBy[i], b = beforeBy[i];
+    const d = b ? v.value - b.value : 0;
+    const cls = Math.abs(d) < 0.02 ? '' : (d > 0 ? ' up' : ' down');
+    grid += `<div class="lc-cell${cls}" style="background:${heat(v.value)};color:${heatInk(v.value)}">` +
+      `<span class="lv">${sgn(v.value)}</span>` +
+      (Math.abs(d) >= 0.02 ? `<span class="dl">${sgn(d)}</span>` : '') +
+      `</div>`;
+  }
+
+  /* the sentence */
+  let line;
+  if (L.key === null) {
+    const spread = Math.max.apply(null, now.values.map(v => v.value)) -
+                   Math.min.apply(null, now.values.map(v => v.value));
+    line = spread < 0.05
+      ? `<span class="flat">Every opening square scores the same.</span> That is not a gap in its ` +
+        `knowledge — it is the knowledge. Played properly, tic-tac-toe is a draw from any first move.`
+      : `It still rates some openings above others. Give it more training and this row will flatten out, ` +
+        `because against a good opponent no first move is better than any other.`;
+  } else {
+    const keys = [L.key].concat(L.keyAlso || []);
+    /* "it knows this" means EVERY square it might now pick is a right one.
+       Getting it right sometimes is not getting it right: the agent breaks
+       ties by coin flip, so one wrong square in the tie set is a loss
+       waiting to happen. */
+    const allRight = set => set.size > 0 && Array.from(set).every(m => keys.includes(m));
+    const rightNow = allRight(picks);
+    const rightBefore = before ? (function () {
+      const best = Math.max.apply(null, before.values.map(x => x.value));
+      return allRight(new Set(before.values.filter(v => v.value >= best - 1e-9).map(v => v.cell)));
+    })() : false;
+    const kv = nowBy[L.key], kb = before ? beforeBy[L.key] : null;
+    const worst = now.values.reduce((a, b) => a.value < b.value ? a : b);
+    /* Only talk about the squares that lose once they actually read as
+       losses. Early on nothing is negative yet, and "the squares that
+       lose have fallen to +0.00" is nonsense on a projector. */
+    const punished = worst.value < -0.05;
+    if (rightNow && !rightBefore) {
+      line = `<span class="up">It learned this one.</span> ${cap(L.learned)}: ` +
+             `was ${kb ? sgn(kb.value) : '+0.00'}, now ${sgn(kv.value)}.` +
+             (punished ? ` The squares that lose have fallen to ${sgn(worst.value)}.`
+                       : ` It has not yet worked out that the other squares are bad.`);
+    } else if (rightNow) {
+      line = `<span class="flat">It already knew this.</span> ${cap(L.learned)} is still its choice ` +
+             `at ${sgn(kv.value)}` +
+             (punished ? `, against ${sgn(worst.value)} for the squares that lose.` : '.');
+    } else {
+      line = `<span class="down">Not yet.</span> It still rates a losing square as highly as ` +
+             `${L.learned}. Train it again.`;
+    }
+  }
+
+  return `<div class="lc"><h3>${L.title}</h3><div class="ask">${L.ask}</div>` +
+         `<div class="lc-grid">${grid}</div><div class="delta">${line}</div></div>`;
+}
+
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+
+function buildLearned(era, before) {
+  $('#learned-title').textContent = 'Era ' + era.n + ' — what changed';
+  $('#learned-sub').textContent =
+    fmt(era.games) + ' training games · exploration ' + era.eps.toFixed(2);
+
+  const mix = era.mix
+    ? `${fmt(era.mix.selfPlay)} against itself and ${fmt(era.mix.vsRandom)} against a random mover`
+    : '';
+  const head =
+    `<div class="headline">` +
+    `It played <b>${mix}</b>. Its table now holds <b>${fmt(era.seen)}</b> positions ` +
+    (era.changed !== null
+      ? `and it would now play <b>${fmt(era.changed)}</b> of them differently than it did before this burst.`
+      : `.`) +
+    (era.verified.safe
+      ? ` <b>Every reachable line has been searched and it does not lose in any of them.</b>`
+      : ` A full search still finds lines where it loses.`) +
+    `</div>`;
+
+  const cards = OG.LANDMARKS.map(L => landmarkCard(
+    L,
+    era.landmarks.find(x => x.id === L.id),
+    before ? before.landmarks.find(x => x.id === L.id) : null)).join('');
+
+  const tail = era.changed !== null && era.changed < 40 && !era.verified.safe
+    ? `<div class="lc"><div class="delta"><span class="flat">Notice how little moved this time.</span> ` +
+      `Learning curves flatten. The first burst changes almost everything; later ones argue about a ` +
+      `handful of rare positions. Those rare positions are the difference between very good and perfect.</div></div>`
+    : '';
+
+  $('#learned-body').innerHTML = head + cards + tail;
+  S.lastLearned = era.n;
+}
+
+/* The nine-board card does not show landmark positions, because the
+   interesting thing here is not what it learned about any one picture —
+   it is whether a table can work at all. So it reports the measurements
+   that answer that. */
+function buildLearnedNine(era, before) {
+  $('#learned-title').textContent = 'Era ' + era.n + ' — nine at once';
+  $('#learned-sub').textContent =
+    fmt(era.matches) + ' matches · exploration ' + era.eps9.toFixed(2);
+
+  const total = OG.NCODE * 2;
+  /* the same budget each act actually trains on, so the comparison is fair */
+  // Cache a report once.  Every measurement has its own deterministic stream,
+  // and the card becomes a literal read-only view of this frozen era.
+  const metrics = era.metrics9 || (era.metrics9 = {
+    rec9: NINE.measureRecurrence(era.brain, NINE.HP9.burst, measureRng(era, 'rec9')),
+    rec1: NINE.measureRecurrenceSingle(era.agent, OG.HP.burst, measureRng(era, 'rec1')),
+    cpu: NINE.vsHeuristic(era.brain, 200, measureRng(era, 'heuristic')),
+    rnd: NINE.vsRandom(era.brain, 100, measureRng(era, 'random'))
+  });
+  const { rec9, rec1, cpu, rnd } = metrics;
+  const grew = before ? era.seen9 - before.seen9 : era.seen9;
+
+  const head =
+    `<div class="headline">It played <b>${fmt(era.nine.selfPlay)} matches against itself and ` +
+    `${fmt(era.nine.vsRandom)} against a random mover</b>. Its nine-board table now holds ` +
+    `<b>${fmt(era.seen9)}</b> of ${fmt(total)} board pictures` +
+    (grew > 0 ? `, ${fmt(grew)} of them new this burst` : '') +
+    (era.seeded9 ? `. <b>${fmt(era.seeded9)}</b> were handed straight over from what it learned on one board — ` +
+      `${Math.round(100 * era.seeded9 / total)}% of the table, free.` : '.') +
+    `</div>`;
+
+  const cards = [
+    `<div class="lc"><h3>Does anything ever come round twice?</h3>` +
+    `<div class="ask">Learning from experience only works if the experience repeats. Counted by playing ` +
+    `one burst's worth of each — ${fmt(OG.HP.burst)} single games, ${fmt(NINE.HP9.burst)} matches — and ` +
+    `keeping a tally of every position met.</div>` +
+    `<table class="cmp"><tr><th></th><th>one board</th><th>nine at once</th></tr>` +
+    `<tr><td>positions met</td><td>${fmt(rec1.positions)}</td><td>${fmt(rec9.positions)}</td></tr>` +
+    `<tr><td>different ones</td><td>${fmt(rec1.distinct)}</td><td>${fmt(rec9.distinct)}</td></tr>` +
+    `<tr class="hi"><td>times each came round</td><td>${(rec1.positions / rec1.distinct).toFixed(1)}×</td>` +
+    `<td>${(rec9.positions / rec9.distinct).toFixed(2)}×</td></tr></table>` +
+    `<div class="delta"><span class="down">Essentially nothing repeats.</span> A table of whole ` +
+    `nine-board positions could never learn anything, because it would never see the same page twice. ` +
+    `The only reason this works at all is that it looks at <b>one board at a time</b> — and a person ` +
+    `chose that. A neural network is the machine that finds such a shortcut for itself.</div></div>`,
+
+    `<div class="lc"><h3>Against rules a person wrote by hand</h3>` +
+    `<div class="ask">A fixed opponent, written out the way somebody would explain the game to you: ` +
+    `take any win, block any loss, otherwise prefer the middle. This agent has never been shown those ` +
+    `rules and has no way to read them.</div>` +
+    `<div class="score3">` +
+    `<span class="s3 w"><b>${cpu.wins}</b>won</span>` +
+    `<span class="s3 d"><b>${cpu.draws}</b>drawn</span>` +
+    `<span class="s3 l"><b>${cpu.losses}</b>lost</span></div>` +
+    `<div class="delta">${cpu.losses === 0
+        ? `<span class="up">It is no longer losing to the hand-written rules.</span> It worked that out ` +
+          `from results alone.`
+        : `Still losing ${cpu.losses} of ${cpu.matches}. Train it again.`}` +
+    ` Against a player choosing at random it wins ${rnd.wins} of ${rnd.matches}.</div></div>`,
+
+    `<div class="lc"><h3>What it could not carry over</h3>` +
+    `<div class="ask">On one board, the marks tell you whose turn it is. Here you can play twice in the ` +
+    `same board while your opponent works elsewhere, so a board can hold three of yours and one of ` +
+    `theirs — a picture that cannot occur in ordinary tic-tac-toe at all.</div>` +
+    `<div class="delta">Act I handed over <b>${fmt(era.seeded9)}</b> entries. The table here has ` +
+    `<b>${fmt(total)}</b> slots, so <b>${Math.round(100 - 100 * era.seeded9 / total)}%</b> of what it ` +
+    `needed had to be learned from scratch. Turn the inspector on during a match and it will tell you ` +
+    `how many of the squares it is weighing up right now are ones it has never seen.</div></div>`
+  ].join('');
+
+  $('#learned-body').innerHTML = head + cards;
+  S.lastLearned = era.n;
+}
+
+/* ------------------------------------------------------------------ *
+ * Sheets
+ * ------------------------------------------------------------------ */
+
+let sheetOpener = null;
+function focusables(root) { return $$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])', root).filter(x => !x.disabled); }
+function openSheet(id, opener) {
+  const sheet = $('#' + id);
+  sheetOpener = opener || document.activeElement;
+  $('#app').inert = true; $('#app').setAttribute('aria-hidden', 'true');
+  sheet.hidden = false;
+  /* the print rules key off this, so printing while the notes are open
+     prints the notes and nothing else */
+  if (id === 'notes') { document.body.classList.add('notes-open'); $('#notes-body').scrollTop = 0; }
+  const target = focusables(sheet)[0]; if (target) target.focus();
+}
+function closeSheet(id) {
+  const sheet = $('#' + id); sheet.hidden = true;
+  if (id === 'notes') document.body.classList.remove('notes-open');
+  if (!$$('.overlay.sheet').some(x => !x.hidden)) { $('#app').inert = false; $('#app').removeAttribute('aria-hidden'); }
+  if (sheetOpener && document.contains(sheetOpener) && !sheetOpener.disabled) sheetOpener.focus();
+  sheetOpener = null;
+}
+$$('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.dataset.close)));
+$$('.overlay.sheet').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeSheet(o.id); }));
+document.addEventListener('keydown', e => {
+  const sheet = $$('.overlay.sheet').find(x => !x.hidden); if (!sheet) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeSheet(sheet.id); return; }
+  if (e.key !== 'Tab') return;
+  const items = focusables(sheet); if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
+/* ------------------------------------------------------------------ *
+ * Self-test — the proof, on demand, in the console and on screen
+ * ------------------------------------------------------------------ */
+
+function selfTest() {
+  const out = [];
+  const line = (ok, txt) => out.push(`<span class="${ok ? 'ok' : 'no'}">${ok ? 'PASS' : 'FAIL'}</span>  ${txt}`);
+  let fails = 0;
+  const check = (ok, txt) => { if (!ok) fails++; line(ok, txt); };
+
+  const e = currentEra();
+  if (isNine()) {
+    const r = measureRng(e, 'selftest-nine');
+    const cpu = NINE.vsHeuristic(e.brain, 200, r), random = NINE.vsRandom(e.brain, 200, r);
+    check(e.brain && e.matches >= 0, 'nine-board brain is present and measurable');
+    check(cpu.matches === 200 && random.matches === 200, 'sampled benchmarks ran: 200 hand-written and 200 random matches');
+    out.push('');
+    out.push(fails ? `<span class="no">${fails} sampled benchmark check(s) failed for Era ${e.n}</span>`
+                   : `<span class="ok">sampled benchmarks passed for Era ${e.n} — not a proof</span>`);
+    $('#selftest-out').innerHTML = out.join('\n');
+    return;
+  }
+  /* 1. a newborn is a coin flip */
+  const fresh = OG.newAgent(), r = OG.makeRng('selftest');
+  const s1 = OG.sampleMoveCounts(fresh, 0, 9000, r);
+  const c1 = OG.chiSquareUniform(s1.counts);
+  check(c1.chi2 < 26.12,
+    `newborn plays uniformly at random — chi-squared ${c1.chi2.toFixed(2)} on ${fmt(c1.n)} moves, ` +
+    `df ${c1.df} (fails above 26.12, p=0.001)`);
+
+  /* 2. exhaustive unbeatability of the era on the board */
+  const v = OG.verifyUnbeatable(e.agent);
+  check(v.asFirst.safe, `Era ${e.n} moving first: no losing line among ${fmt(v.asFirst.lines)} searched`);
+  check(v.asSecond.safe, `Era ${e.n} moving second: no losing line among ${fmt(v.asSecond.lines)} searched`);
+
+  /* 3. blind-spot check against uniform random play */
+  const rr = OG.makeRng('blindspot');
+  const b1 = OG.vsRandom(e.agent, 5000, rr, 1), b2 = OG.vsRandom(e.agent, 5000, rr, 2);
+  check(b1.losses === 0, `5,000 games vs a random opponent, moving first: ${b1.losses} losses`);
+  check(b2.losses === 0, `5,000 games vs a random opponent, moving second: ${b2.losses} losses`);
+
+  out.push('');
+  out.push(fails ? `<span class="no">${fails} check(s) failed for Era ${e.n}</span>`
+                 : `<span class="ok">all checks passed for Era ${e.n}</span>`);
+  if (!v.safe) out.push('(Era ' + e.n + ' is still beatable — that is expected until it has trained enough.)');
+
+  $('#selftest-out').innerHTML = out.join('\n');
+  console.log('[Zero to Unbeatable] self-test for Era ' + e.n + '\n' +
+    out.join('\n').replace(/<[^>]+>/g, ''));
+}
+
+/* ------------------------------------------------------------------ *
+ * Explainer copy
+ * ------------------------------------------------------------------ */
+
+$('#how-body').innerHTML = `
+<h4>What it actually is</h4>
+<p>The opponent you are playing is a list. On one side of the list is a board position; on the
+other is a single number saying how good that position turned out to be for whoever just moved.
+Nothing else. No rules of thumb, no strategy, no notion of a "row". You can read the numbers
+yourself with <b>Show its brain</b>.</p>
+
+<h4>Where the numbers come from</h4>
+<p>It plays a game. At the end it gets one piece of feedback: <b>+1</b> if it won, <b>0</b> for a
+draw, <b>−1</b> if it lost. That number is written against the last position, and then walked
+back down the game — a position is worth whatever the best thing your opponent can do from it
+is worth to them, with the sign flipped. Repeat a few thousand times and the numbers stop moving.</p>
+
+<h4>Why it plays stupid moves early</h4>
+<p>A player that always picks its current best move only ever finds out about the moves it already
+likes. So a fraction of the time — shown in training as <b>&epsilon;</b> — it deliberately
+plays a random square just to see what happens. &epsilon; starts at 1.00, meaning a newborn is pure
+coin-flipping, and decays as it gains experience. This is the explore-versus-exploit trade: try new
+things, or cash in on what you know. When it plays <i>you</i>, &epsilon; is zero — it always
+plays its best.</p>
+
+<h4>Why it also plays a random opponent</h4>
+<p>An agent trained only against itself gets very good at the lines it likes to play and can stay
+blind to a line no sensible player would choose — which is exactly the sort of thing a student
+tries in a demo. So about 40% of its training games are against an opponent playing at random,
+first and second, and one game in five starts from a position dealt at random rather than an empty
+board, so odd corners of the board get practised too.</p>
+
+<h4>What happens when the game gets bigger</h4>
+<p>Switch to <b>Nine at once</b>: nine boards side by side, a turn is one mark on any unfinished
+board, finished boards lock, and the first to win five boards takes the match. The rules are barely
+harder. Everything else changes. A table over whole nine-board positions could never learn
+anything, because it would essentially never meet the same position twice: on one board a position
+comes round about ten times in a training burst, here about once. The card after a nine-board burst
+measures both, live.</p>
+<p>It works at all only because it looks at <b>one board at a time</b> and adds up what it finds —
+and a person chose that shortcut. Finding such shortcuts by itself is exactly what a neural network
+is for. Two other things break in ways worth watching: about half the board pictures you meet cannot
+occur in ordinary tic-tac-toe at all (you can play twice in the same board while your opponent is
+busy elsewhere), so most of what Act I learned does not transfer; and there is no proof at the end,
+because no one can check every game.</p>
+
+<h4>Be honest: this is a lookup table, not a brain</h4>
+<p>This agent is a <b>tabular</b> learner. Its knowledge is one number per position and it can hold
+every position tic-tac-toe has. That is why it can become perfect and why you can read its whole
+mind on the screen. Real systems — a chess engine, a language model — face a space far too
+large to list, so they replace the table with a neural network that <i>approximates</i> the same
+numbers and generalises to positions it has never seen. The learning idea in this demo is the real
+one. The storage is a toy.</p>
+
+<h4>This was a box of matchboxes in 1961</h4>
+<p>Donald Michie built <b>MENACE</b> — the Matchbox Educable Noughts And Crosses Engine —
+from 304 matchboxes, one per board position, each holding coloured beads, one colour per square. To
+move, you shook the box for the current position and drew a bead. If MENACE won the game, you added
+beads of the colours it had played; if it lost, you took them away. That is a physical
+implementation of exactly what is running on this page: a table of positions, a number per move,
+adjusted by whether the game was won or lost. It took Michie a couple of hundred games to make it
+unbeatable, by hand, with no computer at all.</p>
+
+<h4>Where the presenter notes are</h4>
+<p>Settings &rarr; <b>Presenter notes</b> opens the whole session plan — the timed script, the
+questions to ask, the misconceptions worth drawing out, and the second act — with a print button.
+It is built into this file rather than linked to another one, so it still works with no network and
+nothing else downloaded.</p>
+
+<h4>About the training animation</h4>
+<p>The arithmetic for ${fmt(OG.HP.burst)} games finishes in a few hundredths of a second. The
+montage is deliberately stretched to about two and a half seconds so there is something to watch.
+The counter, the &epsilon; reading and the win rate are all real numbers from the run in progress
+— only the pacing is for your benefit.</p>
+`;
+
+$('#about-text').innerHTML =
+  `Zero to Unbeatable was built by Bryant Harrison, Murray State University. ` +
+  `It runs entirely on this device: no network request is made, no account exists, ` +
+  `nothing is stored, and no AI service is involved. Reloading the page returns it to Era 0. ` +
+  `Learning rate ${OG.HP.alphaFloor}, discount ${OG.HP.gamma}, &epsilon; ${OG.HP.epsStart.toFixed(2)}→` +
+  `${OG.HP.epsEnd.toFixed(2)} over ${fmt(OG.HP.epsTau)} games, ` +
+  `${Math.round(OG.HP.mixSelfPlay * 100)}% self-play, ` +
+  `${Math.round(OG.HP.exploringStarts * 100)}% dealt starts.`;
+
+/* ------------------------------------------------------------------ *
+ * Wiring
+ * ------------------------------------------------------------------ */
+
+$$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
+  if (S.training || S.mode === btn.dataset.mode) return;
+  S.mode = btn.dataset.mode;
+  $$('#mode-seg button').forEach(x => { x.classList.toggle('on', x === btn); x.setAttribute('aria-pressed', String(x === btn)); });
+  const nine = isNine();
+  $('#board-wrap').hidden = nine;
+  $('#nine-wrap').hidden = !nine;
+  if (nine) maybeSeed();
+  renderEraSelect(); renderTrain(); renderBanner(); renderScore();
+  newGame();
+}));
+
+$('#btn-train').addEventListener('click', train);
+$('#btn-newgame').addEventListener('click', newGame);
+function renderPlay() { if (isNine()) renderNine(); else renderBoard(); }
+
+$('#btn-brain').addEventListener('click', () => {
+  S.brain = !S.brain;
+  $('#btn-brain').setAttribute('aria-pressed', String(S.brain));
+  $('#btn-brain').textContent = S.brain ? 'Hide its brain' : 'Show its brain';
+  renderPlay();
+});
+$('#era-select').addEventListener('change', e => {
+  S.era = +e.target.value;
+  renderScore(); newGame();
+});
+$('#btn-learned').addEventListener('click', e => {
+  if (S.lastLearned === null) return;
+  const era = S.eras[S.lastLearned], prev = S.eras[S.lastLearned - 1];
+  if (era.kind === 'nine') buildLearnedNine(era, prev); else buildLearned(era, prev);
+  openSheet('learned', e.currentTarget);
+});
+$('#btn-settings').addEventListener('click', e => openSheet('settings', e.currentTarget));
+$('#btn-notes').addEventListener('click', e => { closeSheet('settings'); openSheet('notes', e.currentTarget); });
+$('#btn-print-notes').addEventListener('click', () => window.print());
+$('#btn-selftest').addEventListener('click', () => {
+  $('#selftest-out').textContent = 'working…';
+  setTimeout(selfTest, 30);
+});
+$('#chk-presenter').addEventListener('change', e =>
+  document.body.classList.toggle('presenter', e.target.checked));
+$('#chk-first').addEventListener('change', e => { S.alwaysFirst = e.target.checked; });
+$('#in-seed').addEventListener('change', e => { S.seed = e.target.value.trim(); });
+$('#btn-reset').addEventListener('click', () => {
+  S.seed = $('#in-seed').value.trim();
+  resetAll();
+  closeSheet('settings');
+});
+
+const howHead = $('#how-head');
+howHead.addEventListener('click', () => {
+  const open = howHead.getAttribute('aria-expanded') === 'true';
+  howHead.setAttribute('aria-expanded', String(!open));
+  $('#how-body').hidden = open;
+});
+
+/* ------------------------------------------------------------------ */
+
+resetAll();
+renderScore();
+console.log('[Zero to Unbeatable] ready. Era 0 knows nothing: every value in its table is zero, ' +
+            'so every legal move ties and it picks uniformly at random.');
+
+})();
+
+</script>
+<script>
+(() => {
+  const dialog=document.getElementById('student-guide');let opener=null;
+  document.addEventListener('click',event=>{const button=event.target.closest?.('.student-guide-open');if(!button)return;event.preventDefault();opener=button;dialog.showModal();dialog.querySelector('.student-guide-head button').focus()});
+  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
+  dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()});
+})();
+</script>
+
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>

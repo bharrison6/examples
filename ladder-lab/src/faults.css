@@ -1,0 +1,175 @@
+/* Ladder Lab — faults.css
+ * Troubleshoot panel (LL.Faults.initPanel). Industrial-panel look per spec:
+ * light card on dark charcoal, 2px borders, corner-screw motif, safety
+ * yellow accents, monospace tags. All classes are flt-*. CSS transitions
+ * are polish only — no logic depends on them. */
+
+.flt-panel {
+  position: relative;
+  background: #f4f4f2;
+  border: 2px solid #23272b;
+  border-radius: 4px;
+  padding: 14px 16px;
+  color: #23272b;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+.bigui .flt-panel { font-size: 19px; }
+
+/* Corner screws motif (top corners are enough — the panel usually sits
+ * against the pane bottom). */
+.flt-panel::before,
+.flt-panel::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #d8d8d4, #7c7f83 70%);
+  box-shadow: inset 0 0 0 1px #4a4e53;
+}
+.flt-panel::before { left: 5px; }
+.flt-panel::after { right: 5px; }
+
+.flt-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-bottom: 2px solid #f5a800;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+/* Fault-active indicator lamp: dark lens at rest, amber when a fault is in. */
+.flt-lamp {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #3a3d40;
+  border: 2px solid #23272b;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.flt-lamp-on {
+  background: #f5a800;
+  box-shadow: 0 0 8px 2px rgba(245, 168, 0, 0.65), inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.flt-status {
+  min-height: 2.4em;
+  margin: 4px 0 8px;
+  line-height: 1.35;
+}
+
+.flt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Panel pushbutton look. Touch targets >= 40px per spec. */
+.flt-btn {
+  min-height: 40px;
+  padding: 6px 14px;
+  font: inherit;
+  font-weight: 600;
+  color: #f4f4f2;
+  background: linear-gradient(#4a4e53, #33373b);
+  border: 2px solid #23272b;
+  border-radius: 6px;
+  box-shadow: 0 2px 0 #17191c;
+  cursor: pointer;
+  transition: filter 0.1s, transform 0.05s, box-shadow 0.05s;
+}
+.flt-btn:hover:not(:disabled) { filter: brightness(1.12); }
+.flt-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 0 0 #17191c; }
+.flt-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.flt-inject { background: linear-gradient(#f5a800, #cf8e00); color: #23272b; }
+.flt-reveal { background: linear-gradient(#2e7d32, #1f5a23); }
+
+/* Solve timer: seven-segment flavor. */
+.flt-timer {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 1.35em;
+  font-weight: 700;
+  color: #f5a800;
+  background: #23272b;
+  border: 2px solid #17191c;
+  border-radius: 4px;
+  display: inline-block;
+  min-width: 5.5em;
+  text-align: center;
+  padding: 3px 10px;
+  margin-bottom: 8px;
+}
+
+/* Teacher drawer: deliberately quiet. */
+.flt-teacher { margin: 4px 0 8px; }
+.flt-teacher summary {
+  cursor: pointer;
+  color: #6b6f74;
+  font-size: 0.85em;
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+.flt-teacher-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+  padding: 8px;
+  background: #e8e8e4;
+  border: 1px dashed #9a9da1;
+  border-radius: 4px;
+}
+.flt-select {
+  font: inherit;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  min-height: 40px;
+  max-width: 100%;
+  border: 2px solid #23272b;
+  border-radius: 4px;
+  background: #f4f4f2;
+  padding: 4px 6px;
+}
+
+/* Reveal card. */
+.flt-reveal-box {
+  border: 2px solid #f5a800;
+  border-left-width: 8px;
+  border-radius: 4px;
+  background: #fff8e6;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+.flt-reveal-box p { margin: 6px 0 0; line-height: 1.4; }
+.flt-reveal-title {
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+.flt-reveal-symptom { color: #8a5a00; }
+.flt-reveal-time { font-weight: 600; }
+
+/* Best-times list. */
+.flt-best { margin-top: 8px; }
+.flt-best-title {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  font-size: 0.85em;
+  color: #4a4e53;
+  text-transform: uppercase;
+}
+.flt-best-list {
+  margin: 4px 0 0;
+  padding-left: 1.6em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+.flt-best-list li { margin: 2px 0; }

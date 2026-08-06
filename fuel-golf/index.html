@@ -96,6 +96,7 @@
     background: var(--panel); color: var(--text);
     border: 1px solid var(--border); border-radius: 8px;
     padding: 6px 12px; font-size: calc(13px * var(--fs)); cursor: pointer;
+    min-width: 40px; min-height: 40px;
     transition: border-color 0.12s, background 0.12s;
   }
   button:hover:not(:disabled) { border-color: var(--msu-gold); }
@@ -105,6 +106,9 @@
   button.active { background: var(--msu-gold); color: #001b39; border-color: var(--msu-gold); font-weight: 700; }
   button.danger { color: var(--msu-alert); border-color: rgba(255,69,0,0.45); }
   button:disabled { opacity: 0.38; cursor: default; }
+  button:focus-visible, input:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--msu-gold); outline-offset: 3px;
+  }
 
   /* ---------- bottom controls ---------- */
   #controls {
@@ -211,7 +215,7 @@
   }
   #hint.show { display: block; }
   #hintClose {
-    position: absolute; top: 6px; right: 8px; padding: 2px 7px;
+    position: absolute; top: 1px; right: 2px; padding: 2px 7px;
     background: transparent; border: none; color: var(--muted); font-size: calc(15px * var(--fs));
   }
   #hintClose:hover { color: var(--msu-gold); }
@@ -264,9 +268,10 @@
   .levelcard {
     background: var(--panel-2); border: 1px solid var(--border);
     border-radius: 12px; padding: 12px; cursor: pointer; position: relative;
-    transition: border-color 0.12s, transform 0.12s;
+    transition: border-color 0.12s, transform 0.12s; display: block;
+    width: 100%; text-align: left;
   }
-  .levelcard:hover { border-color: var(--msu-gold); transform: translateY(-2px); }
+  .levelcard:hover, .levelcard:focus-visible { border-color: var(--msu-gold); transform: translateY(-2px); }
   .levelcard.done { border-left: 3px solid var(--good); }
   .levelcard.current { border-color: var(--msu-gold); }
   .levelcard h4 { font-size: calc(13.5px * var(--fs)); margin-bottom: 4px; padding-right: 22px; }
@@ -368,7 +373,7 @@
     .hide-sm { display: none; }
     #topbar { gap: 6px; padding: 6px 8px 7px; }
     .brand .title { font-size: calc(14px * var(--fs)); }
-    button { padding: 6px 9px; }
+    button { padding: 6px 9px; min-width: 40px; min-height: 40px; }
     #fuelbar { width: calc(64px * var(--fs)); }
     #hud {
       top: auto !important; bottom: 108px; right: 8px; left: 8px;
@@ -389,6 +394,29 @@
   }
   @media (max-height: 620px) {
     #planner { max-height: calc(100vh - 86px); }
+  }
+
+  /* ---------- in-app presenter guide ---------- */
+  .msu-guide-overlay {
+    position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center;
+    justify-content: center; padding: 12px; background: rgba(0, 10, 24, .84);
+  }
+  .msu-guide-overlay[hidden] { display: none; }
+  .msu-guide-dialog {
+    width: min(1000px, 100%); height: min(92dvh, 900px); background: #fff; color: #172231;
+    border: 2px solid #002144; border-top: 5px solid #ECAC00; border-radius: 12px;
+    display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.65);
+  }
+  .msu-guide-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: #002144; color: #fff; }
+  .msu-guide-bar h2 { margin: 0; font-size: 1.05rem; }
+  .msu-guide-spacer { flex: 1; }
+  .msu-guide-bar button { min-height: 40px; background: #fff; color: #002144; border-color: #fff; }
+  .msu-guide-bar button:last-child { background: #ECAC00; border-color: #ECAC00; }
+  .msu-guide-frame { width: 100%; flex: 1; border: 0; background: #fff; }
+  @media (max-width: 600px) {
+    .msu-guide-overlay { padding: 0; }
+    .msu-guide-dialog { width: 100%; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
+    .msu-guide-bar h2 { flex: 1 1 100%; }
   }
 </style>
 </head>
@@ -417,7 +445,7 @@
   <button id="btnHud" title="Physics HUD (H)">📊<span class="btxt"> Physics HUD</span></button>
   <button id="btnUndo" title="Undo last burn (Z)" disabled>↶<span class="btxt"> Undo</span></button>
   <button id="btnRestart" title="Restart level (R)">↻<span class="btxt"> Restart</span></button>
-  <button id="btnHelp" title="How to play">?</button>
+  <button id="btnHelp" title="How to play">📖<span class="btxt"> Guide</span></button>
   <button id="btnTeacher" title="Teacher mode">⚙</button>
 </div>
 
@@ -509,7 +537,7 @@
 </div>
 
 <!-- Mission briefing -->
-<div class="modal" id="missionModal">
+<div class="modal" id="missionModal" role="dialog" aria-modal="true" aria-labelledby="msTitle" aria-describedby="msSubtitle">
   <div class="box">
     <div class="eyebrow">Mission briefing</div>
     <h2 id="msTitle">–</h2>
@@ -528,11 +556,11 @@
 </div>
 
 <!-- Level select -->
-<div class="modal" id="levelsModal">
+<div class="modal" id="levelsModal" role="dialog" aria-modal="true" aria-labelledby="levelsTitle" aria-describedby="levelsIntro">
   <div class="box">
     <div class="eyebrow">Murray State Racers Flight Lab</div>
-    <h2>⛳ Fuel Golf — mission list</h2>
-    <p>Complete each mission using the least Δv. Par is the fuel-efficient benchmark — beat it like golf.</p>
+    <h2 id="levelsTitle">⛳ Fuel Golf — mission list</h2>
+    <p id="levelsIntro">Complete each mission using the least Δv. Par is the fuel-efficient benchmark — beat it like golf.</p>
     <div class="progressbar"><div id="progFill"></div></div>
     <p style="margin:0" id="progText">–</p>
     <div class="levelgrid" id="levelGrid"></div>
@@ -542,7 +570,7 @@
 </div>
 
 <!-- Debrief -->
-<div class="modal" id="debriefModal">
+<div class="modal" id="debriefModal" role="dialog" aria-modal="true" aria-labelledby="debriefTitle" aria-describedby="dbVerdict">
   <div class="box">
     <div class="eyebrow" id="dbEyebrow">Mission complete</div>
     <h2 id="debriefTitle">Mission complete</h2>
@@ -573,10 +601,10 @@
 </div>
 
 <!-- Crash -->
-<div class="modal" id="crashModal">
+<div class="modal" id="crashModal" role="dialog" aria-modal="true" aria-labelledby="crashTitle" aria-describedby="crashMsg">
   <div class="box">
     <div class="eyebrow" style="color:var(--msu-alert)">Flight terminated</div>
-    <h2>💥 Lithobraking detected</h2>
+    <h2 id="crashTitle">💥 Lithobraking detected</h2>
     <p class="big" id="crashMsg">Your spacecraft hit the planet.</p>
     <div class="actions">
       <button id="crashUndo" class="primary">↶ Undo last burn</button>
@@ -586,10 +614,10 @@
 </div>
 
 <!-- Teacher -->
-<div class="modal" id="teacherModal">
+<div class="modal" id="teacherModal" role="dialog" aria-modal="true" aria-labelledby="teacherTitle">
   <div class="box">
     <div class="eyebrow">Instructor controls</div>
-    <h2>Teacher mode</h2>
+    <h2 id="teacherTitle">Teacher mode</h2>
     <div class="togglerow">
       <div><b>Projector mode</b><p>Larger UI, readable from the back row.</p></div>
       <button id="tgProjector">Off</button>
@@ -610,18 +638,19 @@
       <button id="tgResetProg" class="danger">Clear</button>
     </div>
     <h3>Teacher guide</h3>
-    <p>Open <b>teacher-guide.html</b> in this folder for the printable one-pager: 20-minute session plan, the Oberth math, common misconceptions, and discussion questions.</p>
+    <p>The complete 20-minute session plan, Oberth math, common misconceptions, and discussion questions are available inside the demo and as a printable copy.</p>
+    <button class="teacher-guide-open">Open teacher guide</button>
     <div class="actions"><button id="closeTeacher" class="primary">Close</button></div>
     <div class="msufoot">Murray State University · <b>Racers</b> · Physics Department</div>
   </div>
 </div>
 
 <!-- Help -->
-<div class="modal" id="helpModal">
+<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro">
   <div class="box">
     <div class="eyebrow">Murray State Racers Flight Lab</div>
-    <h2>⛳ Fuel Golf — how to play</h2>
-    <p class="big">You have a spacecraft, a tank of Δv, and a mission. Lowest Δv wins.</p>
+    <h2 id="helpTitle">⛳ Fuel Golf — how to play</h2>
+    <p class="big" id="helpIntro">You have a spacecraft, a tank of Δv, and a mission. Lowest Δv wins.</p>
     <h3>Flying</h3>
     <p>Time-warp with ⏸ / 1× / 10× / 50× / 200×, or jump straight to <b>periapsis</b> (→ Pe, the low fast point) or <b>apoapsis</b> (→ Ap, the high slow point). Set a <b>lead</b> in minutes to stop short of the apsis — essential once your engine takes real time to burn. Drag the map to pan, scroll or pinch to zoom, <b>⊕ Follow</b> keeps the camera on your craft.</p>
     <h3>Burning</h3>
@@ -650,6 +679,50 @@
   </div>
 </div>
 
+<div class="msu-guide-overlay" id="msu-guide" hidden>
+  <section class="msu-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="msu-guide-title" tabindex="-1">
+    <div class="msu-guide-bar">
+      <h2 id="msu-guide-title">Fuel Golf teacher guide</h2><span class="msu-guide-spacer"></span>
+      <button type="button" id="msu-guide-print">Open printable copy</button>
+      <button type="button" id="msu-guide-close" aria-label="Close teacher guide">Close</button>
+    </div>
+    <iframe class="msu-guide-frame" id="msu-guide-frame" data-guide="teacher-guide.html" title="Fuel Golf teacher guide"></iframe>
+  </section>
+</div>
+
 <script src="game.js"></script>
+<script>
+(() => {
+  const overlay = document.getElementById('msu-guide');
+  if (!overlay) return;
+  const dialog = overlay.querySelector('.msu-guide-dialog');
+  const frame = document.getElementById('msu-guide-frame');
+  const close = document.getElementById('msu-guide-close');
+  let returnFocus = null, inerted = [], overlayWasInert = false;
+  const show = opener => {
+    returnFocus = opener || document.activeElement;
+    overlayWasInert = overlay.inert;
+    overlay.inert = false;
+    if (!frame.getAttribute('src')) frame.setAttribute('src', frame.dataset.guide);
+    overlay.hidden = false;
+    inerted = [...document.body.children].filter(node => node !== overlay && !node.inert);
+    inerted.forEach(node => { node.inert = true; });
+    dialog.focus();
+  };
+  const hide = () => {
+    overlay.hidden = true;
+    inerted.forEach(node => { node.inert = false; });
+    inerted = [];
+    overlay.inert = overlayWasInert;
+    if (returnFocus && typeof returnFocus.focus === 'function') returnFocus.focus();
+  };
+  document.addEventListener('click', event => { const opener = event.target.closest?.('.teacher-guide-open'); if (opener) { event.preventDefault(); show(opener); } });
+  close.addEventListener('click', hide);
+  document.getElementById('msu-guide-print').addEventListener('click', () => window.open(frame.dataset.guide, '_blank', 'noopener'));
+  overlay.addEventListener('pointerdown', event => { if (event.target === overlay) hide(); });
+  window.addEventListener('keydown', event => { if (!overlay.hidden && event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); hide(); } }, true);
+})();
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

@@ -3,86 +3,246 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Examples — Demo Launcher</title>
+<title>AI: From Zero to Takeoff — live demos · Bryant Harrison · Murray State University</title>
+<meta name="description" content="A hands-on tour of what AI is, how generative AI works, how to prompt it, how fast it is moving, and what it looks like in the disciplines. Bryant Harrison, Murray State University.">
 <style>
   :root {
-    --bg: #0f1420;
-    --card: #1a2233;
-    --card-hover: #222d44;
-    --text: #e8ecf4;
-    --muted: #93a0b8;
-    --accent: #5b9dff;
+    --navy: #002144;
+    --navy-2: #04304f;
+    --card: #0a2c50;
+    --card-hover: #0f3a66;
+    --edge: #1d4570;
+    --text: #eef3fa;
+    --muted: #9fb2ca;
+    --gold: #ECAC00;
+    --blue: #00A4E3;
+    --alert: #FF4500;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    background: linear-gradient(180deg, #001730 0%, var(--navy) 40%, #00294f 100%);
     color: var(--text);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 48px 24px;
+    padding: 40px 18px 60px;
   }
-  h1 { font-size: 2rem; margin-bottom: 8px; }
-  p.sub { color: var(--muted); margin-bottom: 40px; }
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 20px;
-    width: 100%;
-    max-width: 900px;
+  .wrap { width: 100%; max-width: 880px; }
+
+  header { text-align: center; margin-bottom: 14px; }
+  .eyebrow {
+    color: var(--gold); font-weight: 700; letter-spacing: .18em;
+    font-size: .72rem; text-transform: uppercase; margin-bottom: 10px;
   }
+  h1 { font-size: clamp(1.7rem, 6vw, 2.6rem); line-height: 1.12; }
+  h1 .lift { color: var(--gold); }
+  .presenter {
+    margin-top: 12px; color: var(--text); font-size: .98rem; font-weight: 600;
+  }
+  .presenter span { color: var(--muted); font-weight: 400; }
+  p.sub { color: var(--muted); margin: 14px auto 0; max-width: 620px; font-size: .95rem; line-height: 1.5; }
+
+  .section { margin-top: 38px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
+  .sec-num {
+    color: var(--gold); font-weight: 800; font-size: 1.05rem; letter-spacing: .06em;
+    white-space: nowrap;
+  }
+  .sec-title { font-size: 1.22rem; font-weight: 750; }
+  .sec-sub { color: var(--muted); font-size: .9rem; line-height: 1.5; margin-bottom: 14px; }
+
   a.card {
-    display: block;
-    background: var(--card);
-    border: 1px solid #2a3550;
-    border-radius: 12px;
-    padding: 24px;
-    text-decoration: none;
-    color: var(--text);
-    transition: transform 0.12s ease, background 0.12s ease;
+    display: block; background: var(--card); border: 1px solid var(--edge);
+    border-radius: 14px; padding: 20px 22px; text-decoration: none; color: var(--text);
+    transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    margin-bottom: 12px;
   }
-  a.card:hover {
-    background: var(--card-hover);
-    transform: translateY(-3px);
+  a.card:hover, a.card:focus-visible { background: var(--card-hover); border-color: #2c5c92; transform: translateY(-2px); }
+  .card .topic {
+    color: var(--blue); font-size: .72rem; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; margin-bottom: 6px;
   }
-  .card .emoji { font-size: 2rem; display: block; margin-bottom: 12px; }
-  .card h2 { font-size: 1.15rem; margin-bottom: 6px; color: var(--accent); }
-  .card p { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
-  footer { margin-top: 48px; color: var(--muted); font-size: 0.8rem; }
+  .card h2 { font-size: 1.18rem; margin-bottom: 6px; color: var(--gold); }
+  .card h2 .emoji { margin-right: 8px; }
+  .card p { color: var(--muted); font-size: .9rem; line-height: 1.5; }
+  .card .go { margin-top: 10px; font-size: .82rem; color: var(--blue); font-weight: 700; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } .grid2 a.card { margin-bottom: 0; } }
+
+  .takeaways {
+    background: var(--navy-2); border: 1px solid var(--edge); border-radius: 14px;
+    padding: 24px 24px 18px; margin-top: 14px;
+  }
+  .takeaways ol { list-style: none; counter-reset: t; }
+  .takeaways li {
+    counter-increment: t; position: relative; padding: 0 0 16px 44px;
+    color: var(--text); font-size: .95rem; line-height: 1.55;
+  }
+  .takeaways li::before {
+    content: counter(t); position: absolute; left: 0; top: 1px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--gold); color: var(--navy); font-weight: 800; font-size: .95rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .takeaways li b { color: var(--gold); }
+  .takeaways li .muted { color: var(--muted); }
+
+  .contact {
+    margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--edge);
+    display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between;
+  }
+  .contact .who { font-size: 1rem; font-weight: 750; }
+  .contact .who small { display: block; color: var(--muted); font-weight: 400; margin-top: 3px; }
+  .qr { text-align: center; }
+  .qr img { width: 132px; height: 132px; border-radius: 10px; background: #fff; padding: 4px; display: block; }
+  .qr .cap { color: var(--muted); font-size: .72rem; margin-top: 6px; letter-spacing: .04em; }
+
+  footer { margin-top: 40px; color: var(--muted); font-size: .8rem; text-align: center; line-height: 1.6; }
+  footer b { color: var(--gold); }
 </style>
 </head>
 <body>
-  <h1>Examples</h1>
-  <p class="sub">Small self-contained browser demos — pick one to play.</p>
-  <div class="grid">
-    <a class="card" href="tic-tac-toe/index.html">
-      <span class="emoji">⭕</span>
-      <h2>Nine Board Tic Tac Toe</h2>
-      <p>Nine independent boards, pass-and-play and CPU modes. First to win five boards takes the match.</p>
-    </a>
-    <a class="card" href="snake/index.html">
-      <span class="emoji">🐍</span>
-      <h2>Snake</h2>
-      <p>Classic snake on a canvas. Arrow keys or WASD, score tracking, and the game speeds up as you grow.</p>
-    </a>
-    <a class="card" href="memory-match/index.html">
-      <span class="emoji">🃏</span>
-      <h2>Memory Match</h2>
-      <p>Flip cards to find matching pairs. Tracks your moves and time — try to beat your best.</p>
-    </a>
-    <a class="card" href="fuel-golf/index.html">
-      <span class="emoji">⛳</span>
-      <h2>Fuel Golf</h2>
-      <p>Orbital mechanics golf: real Newtonian gravity, impulsive and finite-thrust burns, and eight missions that teach the Oberth effect. Lowest Δv wins.</p>
-    </a>
-    <a class="card" href="engineering-demo/index.html">
-      <span class="emoji">🌉</span>
-      <h2>Bridge Works</h2>
-      <p>Truss bridge builder for physics class: a real direct-stiffness solver, live tension/compression colouring, Euler buckling and progressive collapse. Cheapest bridge that survives wins.</p>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Live demos &middot; scan &amp; play along on your phone</div>
+    <h1>AI: From Zero to <span class="lift">Takeoff</span></h1>
+    <div class="presenter">Bryant Harrison <span>&middot; Murray State University</span></div>
+    <p class="sub">A hands-on tour: what AI actually is, how generative AI works, how to talk to it,
+    how fast it is moving — and what it looks like inside real coursework. Every demo below runs
+    right in your browser. Follow along in order, or jump to whatever is on screen.</p>
+  </header>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">DEMO 1</span><span class="sec-title">What AI is — and what it isn&rsquo;t</span></div>
+    <p class="sec-sub">Real artificial intelligence with zero language ability. It learns purely by playing —
+    and it is <b>not</b> generative AI. &ldquo;AI&rdquo; on a label does not mean ChatGPT is inside.</p>
+    <a class="card" href="zero-to-unbeatable/index.html">
+      <div class="topic">Machine learning &middot; not generative AI</div>
+      <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
+      <p>Play tic-tac-toe against an AI that has played zero games — and beat it easily. Train it in
+      three-second bursts and play again, era by era, until you cannot beat it and the app <i>proves</i>
+      you never will. The only thing that changed is a list of numbers.</p>
+      <div class="go">Open demo →</div>
     </a>
   </div>
-  <footer>Plain HTML/CSS/JS · no build step · open any demo's index.html directly</footer>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">How generative AI works</span></div>
+    <p class="sec-sub">Inside the black box: what a base language model is, how a <i>reasoning</i> model is made
+    from one, and how a reasoning model plus tools becomes an <i>agent</i>.</p>
+    <a class="card" href="glass-box/index.html">
+      <div class="topic">Base model → reasoning model → agent</div>
+      <h2><span class="emoji">🔍</span>Glass Box</h2>
+      <p>Watch a real transformer train from scratch in your browser — gibberish to words to sentences —
+      and tap its attention maps. Then see chain-of-thought beat direct answers in a fair fight, buy
+      accuracy with thinking time, and drive a tool-using agent yourself — then break it by shrinking its memory.</p>
+      <div class="go">Open demo →</div>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Getting good answers out</span></div>
+    <p class="sec-sub">The single highest-leverage skill: what you put in the prompt. Three levers —
+    context, a success spec, and the domain&rsquo;s vocabulary — each fixes a different kind of bad answer.</p>
+    <a class="card" href="the-stranger/index.html">
+      <div class="topic">Prompting techniques</div>
+      <h2><span class="emoji">💬</span>The Stranger</h2>
+      <p>A question sits beside three toggleable levers, and the answer changes in exactly one dimension
+      per lever. Sixty-four hand-written answers, a deck that decides your answer&rsquo;s shape whenever
+      you don&rsquo;t, and a meter counting the expert vocabulary you got for free.</p>
+      <div class="go">Open demo →</div>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">How fast this is moving</span></div>
+    <p class="sec-sub">Almost nobody draws the curve steeply enough. Draw your own forecast first —
+    then watch the real numbers land.</p>
+    <a class="card" href="takeoff/index.html">
+      <div class="topic">The pace of AI progress</div>
+      <h2><span class="emoji">📈</span>Takeoff</h2>
+      <p>Five benchmarks: draw where you think machine capability went, then see the truth animate over
+      your line. A timeline of 123 model releases, six domains of real-world evidence — with the failures
+      and overclaims kept in frame — and every number backed by a source.</p>
+      <div class="go">Open demo →</div>
+    </a>
+  </div>
+
+  <div class="section">
+    <div class="sec-head"><span class="sec-num">DEMO SET 5</span><span class="sec-title">AI in the disciplines</span></div>
+    <p class="sec-sub">The same ideas put to work: four classroom simulations for real course content.
+    Pick your field.</p>
+    <div class="grid2">
+      <a class="card" href="fuel-golf/index.html">
+        <div class="topic">Physics &middot; Oberth Effect</div>
+        <h2><span class="emoji">⛳</span>Fuel Golf</h2>
+        <p>Orbital-mechanics golf with real Newtonian gravity. Eight missions teach why burning fuel
+        deep in a gravity well buys more energy — lowest &Delta;v wins.</p>
+        <div class="go">Open demo →</div>
+      </a>
+      <a class="card" href="engineering-demo/index.html">
+        <div class="topic">Engineering &middot; Statics</div>
+        <h2><span class="emoji">🌉</span>Bridge Works</h2>
+        <p>Truss bridge builder on a real direct-stiffness solver: live tension and compression,
+        Euler buckling, progressive collapse. Cheapest bridge that survives wins.</p>
+        <div class="go">Open demo →</div>
+      </a>
+      <a class="card" href="ladder-lab/index.html">
+        <div class="topic">Applied Engineering &middot; PLC</div>
+        <h2><span class="emoji">🚦</span>Ladder Lab</h2>
+        <p>A PLC trainer on the classic stoplight program: genuine scan-cycle engine, single-scan step
+        mode, a ladder editor with auto-graded challenges, and injectable faults to troubleshoot.</p>
+        <div class="go">Open demo →</div>
+      </a>
+      <a class="card" href="topping-out/index.html">
+        <div class="topic">Construction Management &middot; Scheduling</div>
+        <h2><span class="emoji">🏗️</span>Topping Out</h2>
+        <p>Competitive construction scheduling on a real CPM engine: a critical path that moves under
+        you, cure times nothing can shorten, and a seeded event deck — same bad luck for every team.</p>
+        <div class="go">Open demo →</div>
+      </a>
+    </div>
+  </div>
+
+  <div class="section" id="takeaways">
+    <div class="sec-head"><span class="sec-num">FINALE</span><span class="sec-title">Takeaways</span></div>
+    <div class="takeaways">
+      <ol>
+        <li><b>&ldquo;AI&rdquo; is bigger than chatbots.</b> The tic-tac-toe learner is real AI with no language
+        in it at all. <span class="muted">When something is labeled AI, ask what kind — it is often not generative AI.</span></li>
+        <li><b>Generative AI is not magic.</b> It is a predictor trained on data; reasoning models and agents
+        are layers built on top. <span class="muted">You watched every layer get built in Glass Box.</span></li>
+        <li><b>The answer is only as good as the ask.</b> Context, a success spec, and the domain&rsquo;s own
+        vocabulary are free performance. <span class="muted">When you get a bad answer, ask which lever you left unpulled.</span></li>
+        <li><b>The curve is steeper than you drew it.</b> Capability has been compounding for years and the
+        gaps between releases keep shrinking. <span class="muted">Plan for the trend, not the snapshot.</span></li>
+        <li><b>The opportunity is in your discipline.</b> Pair AI with your subject expertise and you get
+        tools like the four above — tailored, classroom-ready, and fast to build.
+        <span class="muted">The tools are ready for your field.</span></li>
+      </ol>
+      <div class="contact">
+        <div class="who">Want these for your class — or want to build your own?<br>
+          Talk to <span style="color:var(--gold)">Bryant Harrison</span>
+          <small>Murray State University</small>
+        </div>
+        <div class="qr">
+          <img alt="QR code linking to this page" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAE+ElEQVR4nO3dQWpkNxRA0Tj0SrKXrDp7yVYqgx4FrhoEEpLa5wwbu/zd5Yvgv9LX1+fz+QP4vz9PXwDcSBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAHhx+w3fP31947rWO7z7z/576Prn/363T93ld0/9/W/hxErBgRhQBAGBGFAEAYEYUAQBoTpOcbI7vvxI6vuo6+ab6x6nd3zkFXzmVVfv8qqvwcrBgRhQBAGBGFAEAYEYUAQBoRlc4yRVfeVT90XH9k9Nzi1f2O3V/4erBgQhAFBGBCEAUEYEIQBQRgQts8xbrPq+VG7n6e0+zlX/JoVA4IwIAgDgjAgCAOCMCAIA8K3m2Pcdj7GKb/rfo9VrBgQhAFBGBCEAUEYEIQBQRgQts8xbrsvbp/DT6fOI3/l/82KAUEYEIQBQRgQhAFBGBCEAWHZHOO2/QYju/dj7H79kVNziZFX/h5GrBgQhAFBGBCEAUEYEIQBQRgQvj6fz+lruMKq+cPuecLu1xl5ZR/FKlYMCMKAIAwIwoAgDAjCgCAMCNP7MU7dR7/Nbff1Z9+X2+Ynp/arjFgxIAgDgjAgCAOCMCAIA4IwIGw/H+PUvoXZ65n9+lPX88q+i1NzqlXXb8WAIAwIwoAgDAjCgCAMCMKAMD3HmL1PvPu5TKvM/txV843bft/dXjkv3IoBQRgQhAFBGBCEAUEYEIQB4dhzpVZZtT/hld9r1XzjlX0ap55/ZcWAIAwIwoAgDAjCgCAMCMKAsH0/xqnnMu2eP7zye+3e13Hb/GcVKwYEYUAQBgRhQBAGBGFAEAaEr8/nM/cNm89dXvV5/dueQ3Wb18/BmGU/BiwgDAjCgCAMCMKAIAwIwoCw/ZzvVXafs/HKPOT1rx+57f2yYkAQBgRhQBAGBGFAEAYEYUBY9lyp3fs0Tn39rFPnWJ+aw9w2F1rFigFBGBCEAUEYEIQBQRgQhAFh+3OlVn3OfvZ6Xjmf4bbzPUZ2vy+3vY9WDAjCgCAMCMKAIAwIwoAgDAjHzscYOXVuw6n79LN2n/N929xp9/s4YsWAIAwIwoAgDAjCgCAMCMKAcGw/xqrXn3Xqem673/+KU/tzrBgQhAFBGBCEAUEYEIQBQRgQntmP8d3Opb7tuVi3za92//9YMSAIA4IwIAgDgjAgCAOCMCBcdz7GbrufW/XK72v/xq9ZMSAIA4IwIAgDgjAgCAOCMCBMzzFed2pfx6l9IKu8cm7JKlYMCMKAIAwIwoAgDAjCgCAMCD9mv+GVz/Hvfq7Rbc+DOnXux23/D6tYMSAIA4IwIAgDgjAgCAOCMCBMzzFGTt23vu28jtt+7uh1dr/+rNvmHlYMCMKAIAwIwoAgDAjCgCAMCMvmGCOr7vffNie5bb4xsnvfxSqr9nWseh0rBgRhQBAGBGFAEAYEYUAQBoTtc4xX7N5XcNs8ZGTV9b/OigFBGBCEAUEYEIQBQRgQhAHh280xdn++/7bnTb2yf+O2eY4VA4IwIAgDgjAgCAOCMCAIA8L2OcYrn9dfNa84de7Eqf0ks68zctvcw4oBQRgQhAFBGBCEAUEYEIQB4evz+cx9w6HPx8/afZ/7lfnGyG1zg9vmXVYMCMKAIAwIwoAgDAjCgCAMCNNzDPgOrBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAFBGBD+A2jRLxsHDAPFAAAAAElFTkSuQmCC">
+          <div class="cap">bharrison6.github.io/examples</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <b>Bryant Harrison</b> &middot; Murray State University<br>
+    Every demo is plain HTML/CSS/JS, runs entirely in your browser, and makes no network requests once loaded.
+  </footer>
+
+</div>
 </body>
 </html>

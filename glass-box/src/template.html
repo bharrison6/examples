@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Glass Box — how modern AI works, live on this device</title>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brandline">
+    <h1>Glass <b>Box</b></h1>
+    <div class="msu-brand">Murray State University · AI Learning Lab</div>
+    <div class="sub">how modern AI works<br>predictor → reasoner → agent</div>
+  </div>
+  <div class="top-tools"><button class="btn small ghost student-guide-open">Guide</button><button class="btn small ghost" id="glass-settings-open">Settings</button></div>
+  <nav class="acts">
+    <button id="nav1" class="on">Act 1<small>the predictor</small></button>
+    <button id="nav2">Act 2<small>the reasoner</small></button>
+    <button id="nav3">Act 3<small>the agent</small></button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ══════════════════════════ ACT 1 ══════════════════════════ -->
+<section class="act on" id="act1">
+
+  <div class="card">
+    <h2>A language model is a guess-the-next-piece machine</h2>
+    <p class="exp">Underneath every chatbot is a single trick: given some text, predict what comes next
+    — over and over, one piece at a time. This page carries a complete, working language model with
+    <b><span id="a1params">42,458</span> parameters</b>. It is about fifty million times smaller than a
+    frontier model, but it is the same kind of machine: same layers, same attention, same training rule.
+    You are going to watch it learn to write, from nothing, on this device.</p>
+    <p class="exp">It starts <b>untrained</b> — random numbers, no knowledge of English, no knowledge of
+    anything. Nothing here is faked or downloaded: every number you will see is computed in front of you.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">1.1</span> First, text becomes tokens</h2>
+    <p class="exp">A model cannot read letters. Text is chopped into <b>tokens</b> and each token gets a
+    number. Our little model uses one token per character. Type anything:</p>
+    <input type="text" id="tokinput" aria-label="Text to tokenize" value="the robot saw the cat" autocomplete="off" autocapitalize="none">
+    <div class="tokens" id="tokout"></div>
+    <p class="note"><b>At frontier scale:</b> real models chop text into word-pieces instead of characters
+    — <span style="font-family:ui-monospace,Consolas,monospace">unbelievable</span> might become
+    <span class="pill">un</span> <span class="pill">believ</span> <span class="pill">able</span> — with a
+    vocabulary of 50,000–200,000 pieces instead of our <span id="a1vocab">26</span> characters. The idea
+    is identical: text in, numbers in a list out.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">1.2</span> The machine itself: parameters in layers</h2>
+    <p class="exp">The model is a stack of arithmetic. Numbers flow in, get multiplied by big tables of
+    learned numbers — the <b>parameters</b>, also called weights — and a prediction falls out the far end.
+    This is the actual layout of the model on this page. <b>Tap a row</b> to see the real numbers it holds
+    right now:</p>
+    <div class="pmap" id="pmap"></div>
+    <div class="wpeek" id="wpeek" style="display:none">
+      <p class="note" id="wpeekcap"></p>
+      <canvas id="wpeekcanvas" role="img" aria-label="Heatmap of the selected live parameter matrix"></canvas>
+    </div>
+    <p class="exp" style="margin-top:12px">Two kinds of layer alternate, and they split the work:
+    <b style="color:var(--gold)">attention</b> layers let each position look back at earlier tokens and
+    pull in the relevant ones, and <b style="color:#66c7ef">feed-forward</b> layers transform what
+    attention gathered. Stack that pair a few times — our model does it twice, frontier models do it
+    around a hundred times — and that is the whole architecture.</p>
+    <div class="scale" id="scalebars"></div>
+    <p class="note">Parameter counts of well-known models, on a <b>logarithmic</b> scale — each full bar
+    is 1,000× the one above. Frontier models are the same recipe, scaled up and trained on trillions of
+    tokens instead of one children's story.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">1.3</span> Training: watch it learn to write</h2>
+    <p class="exp">Training shows the model millions of tiny quizzes — <i>here are 40 characters of a
+    story; guess character 41</i> — and after each guess, nudges all <span id="a1params2">42,458</span>
+    parameters a hair in the direction that would have made the right answer more likely. That nudge rule
+    (gradient descent) is the entire teacher. Its textbook is one small original story about a robot in a
+    garden, and it starts from pure static:</p>
+    <details class="fold" style="margin:0 0 10px"><summary>Read its entire textbook — the whole story</summary>
+      <p class="note" id="corpusstats" style="margin-top:6px"></p>
+      <div class="rawctx" id="corpusbox" style="max-height:220px"></div>
+    </details>
+    <div class="livebox" id="livesample"><span class="dim">press train and watch this box…</span></div>
+    <div class="statline">
+      <span>step <b id="statstep">0</b></span>
+      <span>loss <b id="statloss">—</b></span>
+      <span>speed <b id="statsps">—</b>/s</span>
+      <span id="statphase" class="pill">untrained</span>
+    </div>
+    <div class="lossline"><canvas class="chart" id="losschart" role="img" aria-label="Training loss chart" aria-describedby="losschart-desc"></canvas></div>
+    <p class="sr-only" id="losschart-desc">No loss samples yet.</p>
+    <p class="note"><b>Loss</b> is how wrong its guesses are, on average (lower is better). Watching this
+    number fall <i>is</i> watching it learn — there is no other teacher anywhere in the code.</p>
+    <div class="trainbar"><button class="btn" id="trainbtn">Train ▸ era 1 · babble</button></div>
+    <div class="eras" id="erachips"></div>
+    <div class="compare" id="eracompare"></div>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">1.4</span> Prediction: the only thing it ever does</h2>
+    <p class="exp">Give the trained model some text and it produces one thing: a <b>probability for every
+    token in its vocabulary</b> to come next. Chat, essays, code — all of it is this table, sampled one
+    token at a time, fed back in, repeated. Try it (and try switching eras to see the same machine with
+    different numbers inside):</p>
+    <div class="row" style="margin-bottom:8px">
+      <div class="grow"><input type="text" id="pginput" aria-label="Text for next-token prediction" value="the robot sat in the " autocomplete="off" autocapitalize="none"></div>
+    </div>
+    <div class="row" style="margin-bottom:4px">
+      <span class="note" style="margin:0">era&nbsp;</span><span id="pgeras"></span>
+    </div>
+    <div class="probbars" id="probbars"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn small" id="pgstep">write 1 token</button>
+      <button class="btn small ghost" id="pgauto">write 60</button>
+      <div class="grow"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <span class="note" style="margin:0;white-space:nowrap">temperature <b id="tempval">0.8</b></span>
+      <div class="grow"><input type="range" id="temp" aria-label="Sampling temperature" min="0" max="1.6" step="0.1" value="0.8"></div>
+    </div>
+    <p class="note"><b>Temperature</b> rescales the dice before rolling. Near 0 it always takes the top
+    guess — safe, repetitive. Higher, and it takes risks — creative, then unhinged. This is the same
+    knob you see in every AI API.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">1.5</span> Attention: reading the model's mind</h2>
+    <p class="exp">Inside each attention layer, every position computes how much to look at every earlier
+    token. These weights are not drawn for show — they are read out of the live model on this page.
+    <b>Tap any character</b> to see where the model looks while predicting the next one; gold means
+    looking hard.</p>
+    <input type="text" id="attinput" aria-label="Text for attention visualization" value="the cat sat on the warm stone path" autocomplete="off" autocapitalize="none">
+    <div class="attheads" id="attheads"></div>
+    <div class="attwrap"><div class="atttext" id="atttext"></div></div>
+    <div class="attmatrix"><canvas id="attmatrix" role="img" aria-label="Attention matrix. Select a character above to highlight its row."></canvas></div>
+    <p class="note">The full map: each row is a position, each column an earlier position it may attend
+    to. The lower-left triangle shape is the rule that you cannot look at the future. Different heads
+    learn different habits — one may track the previous word, another hunts for a repeated word far back.
+    Attention is what lets "it" find what "it" refers to — and it is why models handle long, winding
+    sentences at all.</p>
+    <div class="reality"><b>What is real here:</b> everything. A hand-written transformer — embeddings,
+    two attention-plus-feed-forward blocks, layer norm, Adam optimizer — training and running in plain
+    JavaScript on this device. No network, no AI service, nothing pre-trained. What frontier models add
+    is scale: more layers, wider layers, vastly more text — and after that, the training in Acts 2 and 3.</div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════ ACT 2 ══════════════════════════ -->
+<section class="act" id="act2">
+
+  <div class="card">
+    <h2>A predictor imitates. A reasoner works things out.</h2>
+    <p class="exp">Act 1's model has a ceiling: it answers in one reflex guess. Ask a hard question and
+    there is nowhere for intermediate work to happen. <b>Reasoning models</b> are ordinary language
+    models given two extra things: they are trained to <b>write out their working before answering</b>,
+    and that working is graded and reinforced. That is the recipe behind the current wave of "thinking"
+    models.</p>
+    <p class="exp">To see it without hand-waving, we shrink the problem to something a phone can train:
+    <b>3-digit addition</b>. Hard enough that a one-reflex guess fails; simple enough that everything is
+    checkable.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">2.1</span> One brain, two educations</h2>
+    <p class="exp">Two copies of the same tiny transformer — same width, same depth, same step budget of
+    wall-clock time. One is shown only <b>problem → answer</b>. The other is shown the <b>written-out
+    column arithmetic</b> between them. Then both sit the same 100-question exam of unseen problems:</p>
+    <div class="duo">
+      <div class="mcard direct">
+        <h3>Model D — direct answer</h3>
+        <div class="fmt" id="fmtD">347+285=<b>632.</b></div>
+        <div class="pline"><i id="pbarD" style="width:0%"></i></div>
+        <div class="statline"><span>step <b id="stepD">0</b></span><span>loss <b id="lossD">—</b></span></div>
+        <div class="livebox" id="liveD" style="margin-top:6px;min-height:2.4em"><span class="dim">waiting…</span></div>
+        <div class="bignum acc-d dim" id="accD">?</div>
+      </div>
+      <div class="mcard scratch">
+        <h3>Model S — shows its work</h3>
+        <div class="fmt" id="fmtS">347+285=<b> 7+5=12 c1 4+8+1=13 c1 3+2+1=6 c0 632.</b></div>
+        <div class="pline"><i id="pbarS" style="width:0%"></i></div>
+        <div class="statline"><span>step <b id="stepS">0</b></span><span>loss <b id="lossS">—</b></span></div>
+        <div class="livebox" id="liveS" style="margin-top:6px;min-height:2.4em"><span class="dim">waiting…</span></div>
+        <div class="bignum acc-s dim" id="accS">?</div>
+      </div>
+    </div>
+    <div class="trainbar"><button class="btn" id="a2trainbtn">Run the experiment ▸ train both</button></div>
+    <p class="note" id="a2status">Trains Model D, then Model S, then examines both — about two to three
+    minutes total on a recent phone. Accuracy checkpoints appear as each model trains.</p>
+    <p class="note"><b>Why this matters:</b> the chain of thought gives the same small network somewhere
+    to put intermediate results. Each little step is easy to learn; the direct leap is not. "Thinking" in
+    modern AI is exactly this — extra tokens the model writes to itself before committing to an answer.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">2.2</span> Read their exams</h2>
+    <p class="exp">Same test, both models. Wrong answers in red — notice <i>how</i> Model D fails: the
+    answer is usually the right shape and close in size, because it learned the vibe of the answer but
+    not the procedure. Model S fails differently: a slip in one written step.</p>
+    <div class="duo">
+      <div><h3 class="note" style="margin:0 0 4px">Model D</h3><div class="exlist" id="exD"></div></div>
+      <div><h3 class="note" style="margin:0 0 4px">Model S</h3><div class="exlist" id="exS"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">2.3</span> Thinking longer: test-time compute</h2>
+    <p class="exp">Once the work is written down, it can be <b>checked</b>. We deliberately use an
+    under-trained sibling of Model S — same recipe, stopped at 400 steps (<b><span id="midacc">—</span></b>
+    on its own) — let it try each problem several times with the dice turned up, and keep only attempts
+    whose written steps a small <b>verifier</b> certifies — every column sum true, every carry consistent, the final answer assembled
+    from the steps. The verifier is never told the true answer. More attempts, more accuracy — paid for
+    in compute, not in training:</p>
+    <div class="votebars" id="votebars"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="votebtn" disabled>Run ▸ 1, 2, 4, 8 attempts</button>
+    </div>
+    <p class="note" id="votestatus">Train the models in §2.1 first.</p>
+    <div class="chainpeek" id="chainpeek"></div>
+    <p class="note"><b>This is the "thinking time" dial</b> on modern reasoning models: sample more
+    chains, check them, keep the good ones. Accuracy climbs with no new training at all.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">2.4</span> Teaching itself: reinforcement</h2>
+    <p class="exp">Now close the loop. The same half-trained model poses itself fresh problems, tries
+    each a few times, and the attempts its verifier certifies as correct become <b>new training data</b>.
+    Nothing else changes — it studies its own best work. This is reinforcement learning in miniature: the
+    verifier is the reward signal, and it is the essence of how reasoning models are made.</p>
+    <div class="starbars" id="starbars"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="starbtn" disabled>Self-improvement round ▸</button>
+    </div>
+    <p class="note" id="starstatus">Train the models in §2.1 first. Each round: ~120 self-posed problems,
+    up to 3 attempts each, then fine-tune on the kept work. Press it three or four times.</p>
+    <div class="reality"><b>What is real here:</b> both models genuinely train on this device, the exam
+    problems are genuinely unseen, the verifier genuinely checks arithmetic, and the self-improvement
+    rounds genuinely reuse the model's own certified chains. What frontier labs add: the graded work is
+    math, code, science and dialogue instead of column addition; the verifier may be unit tests, proof
+    checkers, or humans comparing answers (RLHF); and the loop runs on thousands of GPUs. The shape of
+    the idea is the one on this page.</div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════ ACT 3 ══════════════════════════ -->
+<section class="act" id="act3">
+
+  <div class="card">
+    <h2>A reasoner that can only talk. An agent can <i>do</i>.</h2>
+    <p class="exp">Act 2's model still lives in a sealed box: text in, text out. An <b>agent</b> is a
+    reasoning model given <b>tools</b> — search, calculators, code, files — and put in a <b>loop</b>:
+    the model writes an action, the tool really runs, the result is appended to the conversation, and the
+    model reads it and acts again. The model never stops being a next-token predictor. It is just
+    predicting in a loop whose text has consequences.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">3.1</span> The loop</h2>
+    <div class="loopdia" id="loopdia">
+      <div class="lstep" data-k="ctx"><b>context</b>everything so far, as text</div>
+      <div class="lstep" data-k="model"><b>model</b>predicts next action</div>
+      <div class="lstep" data-k="tool"><b>tool</b>really executes</div>
+      <div class="lstep" data-k="obs"><b>observation</b>appended to context</div>
+    </div>
+    <p class="note" style="margin-top:8px">Four beats, repeated until the model chooses
+    <span class="pill">finish</span>. The tools are described to the model the same way real systems do
+    it — as typed function signatures:</p>
+    <details class="fold"><summary>Show the tool definitions the model sees</summary>
+      <div class="schemas"><pre id="schemapre"></pre></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">3.2</span> Run the agent</h2>
+    <p class="exp"><b>The task:</b> <span id="goaltext"></span></p>
+    <p class="exp">The trap is that the cheapest pizza is not the right answer — one shop closes too
+    early, one is closed Wednesdays. The agent has to discover that the way you would: by reading. Play
+    it two ways. In <b>you are the model</b>, the loop pauses each turn and you choose the next action —
+    including the tempting wrong ones, which really execute.</p>
+    <div class="row">
+      <button class="btn small" id="agmode-you">▸ you are the model</button>
+      <button class="btn small ghost" id="agmode-auto">watch it run</button>
+      <button class="btn small ghost" id="agreset">reset</button>
+      <div class="grow"></div>
+      <select id="agwindow" title="context window">
+        <option value="0">full context window</option>
+        <option value="900">small window: last 900 chars</option>
+        <option value="450">tiny window: last 450 chars</option>
+      </select>
+    </div>
+    <div class="ctxmeter">
+      <span class="cnum">context</span>
+      <div class="cbar"><i id="ctxfill" style="width:2%"></i></div>
+      <span class="cnum"><b id="ctxtok">0</b> tokens</span>
+    </div>
+    <div class="transcript" id="transcript"></div>
+    <div class="candidates" id="candidates"></div>
+    <details class="fold"><summary>Show exactly what the model sees (the raw context)</summary>
+      <div class="rawctx" id="rawctx"></div>
+    </details>
+  </div>
+
+  <div class="card">
+    <h2><span class="no">3.3</span> What the loop teaches</h2>
+    <p class="exp"><b>Errors are survivable.</b> Watch the calculator turn — the agent writes
+    <span class="pill">9 x $13.00</span>, the tool genuinely rejects it, and the error message lands in
+    the context like any other observation. The next prediction reads the error and corrects. Agents do
+    not need to be perfect; they need to see what happened.</p>
+    <p class="exp"><b>The context window is the agent's entire memory.</b> The model itself is frozen —
+    nothing is written to its parameters between turns. Re-run the task with the <b>tiny window</b>
+    setting: once the goal scrolls out of view, this agent — honestly wired to see only that window —
+    stops dead, because it no longer knows what it is doing. Every real agent system is a fight against
+    exactly this.</p>
+    <p class="exp"><b>Tools are powers, and powers are scoped.</b> Our agent can read five documents and
+    do arithmetic — nothing else. Real agents are given real powers (your files, your browser, your
+    terminal), which is why serious systems run them in sandboxes, ask before irreversible actions, and
+    log every tool call. The loop you just watched is also the audit trail.</p>
+    <div class="reality"><b>What is real here:</b> the tools are real — the calculator genuinely parses
+    and errors, search genuinely searches, the loop and the context genuinely work as shown, and the
+    decision function genuinely sees only the visible window (that is why the tiny-window run breaks).
+    The one scripted part is the decision itself: a hand-written rulebook plays the role of Act 2's
+    reasoning model, because a model good enough to plan this runs in a data center, not a phone. Wire
+    Act 2's idea to Act 3's loop at scale and you have Claude, ChatGPT's agents, coding assistants — all
+    of it.</div>
+  </div>
+
+</section>
+
+</main>
+
+<div class="footer">
+  Glass Box · everything computes live on this device — no network, no AI service, nothing pre-trained<span id="modenote"></span>
+</div>
+
+<dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
+  <div class="student-guide-head"><h2 id="student-guide-title">How to use Glass Box</h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
+  <div class="student-guide-body">
+    <p>This is a hands-on tour of modern AI. Work through the three acts in order; every model and graph computes live on this device.</p>
+    <ol>
+      <li><b>Act 1 — Predictor:</b> tokenize text, inspect the model’s real weights, press Train, then try next-token prediction and attention.</li>
+      <li><b>Act 2 — Reasoner:</b> compare direct answers with visible scratchpad reasoning, then test verification and repeated attempts.</li>
+      <li><b>Act 3 — Agent:</b> choose actions yourself or watch the agent use tools, recover from an error, and finish a task.</li>
+    </ol>
+    <h3>The rule</h3>
+    <p>Tap, train, and change the controls. Explanations marked “What is real here” distinguish live computation from the few deliberately scripted teaching pieces.</p>
+  </div>
+  <form method="dialog" class="student-guide-actions"><button>Begin Act 1</button></form>
+</dialog>
+
+<dialog class="student-guide" id="glass-settings" aria-labelledby="glass-settings-title">
+  <div class="student-guide-head"><h2 id="glass-settings-title">Settings</h2><form method="dialog"><button aria-label="Close settings">×</button></form></div>
+  <div class="student-guide-body">
+    <h3>Presentation</h3>
+    <p><button class="btn" id="presbtn">Toggle presenter mode</button></p>
+    <h3>Teacher guide</h3>
+    <p>The complete session plan, timing, talking points, and printable copy.</p>
+    <button class="btn teacher-guide-open">Open teacher guide</button>
+  </div>
+  <form method="dialog" class="student-guide-actions"><button>Done</button></form>
+</dialog>
+
+<div class="msu-guide-overlay" id="msu-guide" hidden>
+  <section class="msu-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="msu-guide-title" tabindex="-1">
+    <div class="msu-guide-bar"><h2 id="msu-guide-title">Glass Box teacher guide</h2><span class="msu-guide-spacer"></span><button type="button" id="msu-guide-print">Open printable copy</button><button type="button" id="msu-guide-close" aria-label="Close teacher guide">Close</button></div>
+    <iframe class="msu-guide-frame" id="msu-guide-frame" data-guide="demo-guide.html" title="Glass Box teacher guide"></iframe>
+  </section>
+</div>
+
+<script>
+/*__CORE__*/
+</script>
+<script>
+/*__WORKER__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+<script>
+(() => {
+  const guide=document.getElementById('student-guide'),settings=document.getElementById('glass-settings');let opener=null;
+  document.addEventListener('click',event=>{const button=event.target.closest?.('.student-guide-open');if(!button)return;event.preventDefault();opener=button;guide.showModal();guide.querySelector('.student-guide-head button').focus()});
+  document.getElementById('glass-settings-open').addEventListener('click',event=>{opener=event.currentTarget;settings.showModal();settings.querySelector('.student-guide-head button').focus()});
+  [guide,settings].forEach(dialog=>{dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()})});
+})();
+</script>
+<script>
+(() => {
+  const overlay=document.getElementById('msu-guide');if(!overlay)return;
+  const dialog=overlay.querySelector('.msu-guide-dialog'),frame=document.getElementById('msu-guide-frame'),close=document.getElementById('msu-guide-close');let returnFocus=null,inerted=[],overlayWasInert=false;
+  const show=opener=>{returnFocus=opener||document.activeElement;overlayWasInert=overlay.inert;overlay.inert=false;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.dataset.guide);overlay.hidden=false;inerted=[...document.body.children].filter(node=>node!==overlay&&!node.inert);inerted.forEach(node=>{node.inert=true});dialog.focus()};
+  const hide=()=>{overlay.hidden=true;inerted.forEach(node=>{node.inert=false});inerted=[];overlay.inert=overlayWasInert;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus()};
+  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(!opener)return;event.preventDefault();const nativeDialog=opener.closest('dialog[open]');const restore=nativeDialog?document.getElementById('glass-settings-open'):opener;if(nativeDialog)nativeDialog.close();show(restore)});close.addEventListener('click',hide);
+  document.getElementById('msu-guide-print').addEventListener('click',()=>window.open(frame.dataset.guide,'_blank','noopener'));
+  overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
+})();
+</script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
