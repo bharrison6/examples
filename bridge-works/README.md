@@ -9,8 +9,13 @@ statics because the solver is real, not because the game says so.
 ## Play
 
 Open `index.html` in any browser. Fully offline, no install, no build step, mouse + touch
-(Chromebook-friendly). Teachers: open `teacher-guide.html` for a printable one-page session
-plan (also included pre-rendered as `teacher-guide.pdf`).
+(Chromebook-friendly, phone-sized screens included). A **How to play** card opens on every
+load — dismiss it with ✕, Escape, a tap outside or **Start building**, and reopen it any time
+with the **?** button in the top bar.
+
+Teachers: open `teacher-guide.html` for a printable one-page session plan (also included
+pre-rendered as `teacher-guide.pdf`). `bridge-works-standalone.html` is the same game as a
+single file, for handing out on a stick or a locked-down machine.
 
 ## What's real
 
@@ -78,9 +83,17 @@ Nothing may exceed 4 m. Par is golf-style: survive the crossing for less than pa
 - **Gallery** of Pratt, Howe, Warren and bowstring at adjustable depth and panel count — load
   them into the current level and compare where each sends the load.
 - **Leaderboard** per level, stored in the browser, so each machine keeps its own class list.
-- **Teacher mode (⚙)**: projector-friendly large UI, leaderboard resets, and an option to pick
-  the test vehicle on any level — for showing a class what happens when a bridge that comfortably
-  carried a car meets a 20 tonne crane. Demo runs stay off the leaderboard.
+- **Settings (⚙)** holds everything a presenter needs:
+  - **Presentation mode** — large UI for the back of the room, and it parks a **🗒 Notes** button
+    in the top bar so the stage notes stay one tap away mid-demo.
+  - **Presenter's notes** — a 30-minute run of show distilled from the teacher guide: the beat for
+    each block of the session, the numbers to have ready (300 kN pulled at any length; 180/180/80/45 kN
+    pushed at 1/2/3/4 m; $45/m of steel plus $180 a joint), the determinacy count, the three
+    misconceptions with the move that kills each, and the discussion questions. The full guide is one
+    button away from there.
+  - Leaderboard resets, projector display options, keyboard editing, and an option to pick the test
+    vehicle on any level — for showing a class what happens when a bridge that comfortably carried a
+    car meets a 20 tonne crane. Demo runs stay off the leaderboard.
 
 ## Verifying the physics
 
@@ -104,6 +117,12 @@ running cost, opens the free-body inspector and asserts ΣF = 0, runs a crossing
 debrief, saves to the leaderboard, overloads the same bridge with a crane and confirms the
 collapse, watches the level-2 frame fold, braces it and confirms it then survives, and loads a
 Warren from the gallery and reads the alternating colour pattern off the live analysis.
+
+It also holds the demo to the repo's UX contract: the how-to opens on load and is dismissible four
+ways and reopenable from **?**; ⚙ opens a settings menu offering presentation mode; the presenter's
+notes open from settings and from the top-bar shortcut presentation mode adds; the attribution names
+author and institution; the how-to and the notes fit a 390 × 844 phone and the canvas still draws
+there; and **not one request leaves the folder** — the offline claim is asserted, not assumed.
 
 With self-weight enabled, every live member contributes its lumped load before the solver's
 zero-force-stub cleanup. A loose vertical hanger therefore retains its own 900 N/m load; if its

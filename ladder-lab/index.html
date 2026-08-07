@@ -43,26 +43,58 @@
 body.bigui { --fs: 19px; }
 
 
-/* student-facing quick guide */
+/* ---------- modal sheet shell ----------
+   Shared by the how-to sheet (#student-guide, shown on every load) and the
+   presenter's notes (#presenter-notes). Head and footer are pinned; only the
+   body scrolls, so a long sheet still fits a phone. */
 .student-guide {
   width: min(660px, calc(100% - 24px)); max-height: min(88dvh, 760px); padding: 0;
   color: #172231; background: #fff; border: 2px solid #002144;
   border-top: 5px solid #ECAC00; border-radius: 12px; box-shadow: 0 24px 70px rgba(0,0,0,.65);
 }
+/* [open] only — a closed <dialog> must keep the UA's display:none */
+.student-guide[open] { display: flex; flex-direction: column; }
 .student-guide::backdrop { background: rgba(0,10,24,.84); backdrop-filter: blur(3px); }
-.student-guide-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #002144; color: #fff; }
+.student-guide-head { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #002144; color: #fff; }
 .student-guide-head h2 { flex: 1; margin: 0; color: #fff; font: 750 1.12rem system-ui, sans-serif; }
 .student-guide-head button { min-width: 40px; min-height: 40px; border: 1px solid #ECAC00; border-radius: 7px; background: #ECAC00; color: #002144; font-weight: 800; cursor: pointer; }
-.student-guide-body { padding: 16px 18px 8px; overflow-y: auto; font: 400 .95rem/1.48 system-ui, sans-serif; }
+.student-guide-body { flex: 1 1 auto; min-height: 0; padding: 16px 18px 8px; overflow-y: auto; -webkit-overflow-scrolling: touch; font: 400 .95rem/1.48 system-ui, sans-serif; }
 .student-guide-body h3 { margin: 14px 0 4px; color: #002144; font-size: 1rem; }
+.student-guide-body h3:first-child { margin-top: 0; }
 .student-guide-body p { margin: 0 0 10px; }
 .student-guide-body ol, .student-guide-body ul { margin: 5px 0 12px; padding-left: 22px; }
 .student-guide-body li { margin: 5px 0; }
-.student-guide-actions { display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
+.student-guide-body kbd {
+  font: 700 .82em var(--font-mono, ui-monospace, Consolas, monospace); color: #002144;
+  background: #eef4fa; border: 1px solid #b9cede; border-bottom-width: 2px; border-radius: 5px; padding: 1px 5px;
+}
+.student-guide-body code { font: 600 .88em var(--font-mono, ui-monospace, Consolas, monospace); background: #f2f2ee; border-radius: 3px; padding: 0 3px; }
+.sg-lede { border-left: 4px solid #00A4E3; background: #f2f9fd; padding: 9px 12px; border-radius: 0 7px 7px 0; }
+.sg-scan { counter-reset: none; }
+.sg-scan li { margin: 4px 0; }
+.sg-foot { margin-top: 14px; padding-top: 9px; border-top: 1px solid #d9dde2; color: #4a5560; font-size: .9em; }
+.student-guide-actions { flex: 0 0 auto; display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
 .student-guide-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #002144; border-radius: 7px; background: #002144; color: #fff; font-weight: 750; cursor: pointer; }
+
+/* presenter's notes — same shell, wider and denser (a lectern read, not a lesson) */
+.presenter-notes { width: min(760px, calc(100% - 24px)); }
+.pn-run { list-style: none; padding-left: 0; }
+.pn-run li { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid #e6e9ec; }
+.pn-run li:first-child { border-top: 0; }
+.pn-time {
+  flex: 0 0 auto; min-width: 52px; text-align: center; font: 800 .8rem var(--font-ui, system-ui, sans-serif);
+  color: #002144; background: #ECAC00; border-radius: 999px; padding: 2px 7px;
+}
+.pn-myths li b { color: #002144; }
+.pn-table { width: 100%; border-collapse: collapse; margin: 4px 0 12px; font-size: .88em; }
+.pn-table th, .pn-table td { border: 1px solid #d5d9dd; padding: 3px 6px; text-align: left; vertical-align: top; }
+.pn-table th { background: #eef4fa; color: #002144; font-weight: 700; }
+
 @media (max-width: 600px) {
   .student-guide { width: 100%; max-width: none; max-height: 100dvh; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
   .student-guide-body { padding: 14px 14px 6px; }
+  .pn-run li { flex-wrap: wrap; }
+  .pn-table { font-size: .82em; }
 }
 
 * { box-sizing: border-box; }
@@ -111,7 +143,16 @@ select:focus, .tb-btn:focus { outline: 2px solid var(--accent); }
 #run-led.paused { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
 #scan-readout { color: #aab1b8; white-space: nowrap; }
 
-#teacher-menu { position: relative; margin-left: auto; }
+/* help + settings cluster, parked at the right end of the top bar and always
+   on screen (#topbar never scrolls away) */
+#help-settings { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.tb-btn.tb-icon { min-width: 40px; padding: 6px 10px; font-weight: 800; font-size: 1.05em; }
+.tb-btn.tb-icon:hover { border-color: var(--msu-lite); color: #fff; }
+/* the quick-notes button is a presentation-mode affordance only */
+#btn-notes-quick { display: none; }
+body.presentation #btn-notes-quick { display: inline-flex; align-items: center; }
+
+#teacher-menu { position: relative; }
 #teacher-menu summary {
   list-style: none; cursor: pointer; background: #343a41; border: 1px solid #565e67; border-radius: 6px;
   padding: 7px 12px; min-height: 40px; display: flex; align-items: center; gap: 6px; font-weight: 600;
@@ -227,7 +268,7 @@ body.bigui #mode-tabs button, body.bigui .tb-btn, body.bigui select { min-height
     display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   #mode-tabs button { min-width: 0; padding-inline: 4px; }
-  #teacher-menu { margin-left: 0; }
+  #help-settings { margin-left: 0; }
   #teacher-drop { left: 0; right: auto; width: min(280px, calc(100vw - 16px)); min-width: 0; }
 }
 
@@ -2214,19 +2255,23 @@ body[data-mode="editor"] #editor-host { min-height: 240px; }
 
     <span id="sel-status"></span>
 
-    <button class="tb-btn student-guide-open">Guide</button>
-    <details id="teacher-menu">
-      <summary>☰ Teacher</summary>
-      <div id="teacher-drop">
-        <label><input type="checkbox" id="chk-bigui"> Projector mode (big UI)</label>
-        <label><input type="checkbox" id="chk-hideladder"> Hide ladder pane (predict-then-reveal)</label>
-        <div class="sep"></div>
-        <button class="teacher-guide-open">📄 Open teacher guide</button>
-        <button id="btn-selftest">🧪 Run engine self-test</button>
-        <div class="sep"></div>
-        <button id="btn-resetall" class="danger">⚠ Reset everything</button>
-      </div>
-    </details>
+    <div id="help-settings">
+      <button type="button" id="btn-notes-quick" class="tb-btn" data-sheet="presenter-notes" title="Presenter's notes">📝 Notes</button>
+      <button type="button" id="btn-howto" class="tb-btn tb-icon student-guide-open" title="How to use Ladder Lab" aria-label="How to use Ladder Lab">?</button>
+      <details id="teacher-menu">
+        <summary>⚙ Settings</summary>
+        <div id="teacher-drop">
+          <label><input type="checkbox" id="chk-bigui"> Presentation mode (big UI + presenter notes)</label>
+          <label><input type="checkbox" id="chk-hideladder"> Hide ladder pane (predict-then-reveal)</label>
+          <div class="sep"></div>
+          <button type="button" id="btn-notes" data-sheet="presenter-notes">📝 Presenter's notes</button>
+          <button class="teacher-guide-open">📄 Open teacher guide</button>
+          <button id="btn-selftest">🧪 Run engine self-test</button>
+          <div class="sep"></div>
+          <button id="btn-resetall" class="danger">⚠ Reset everything</button>
+        </div>
+      </details>
+    </div>
   </header>
 
   <main id="panes">
@@ -2255,17 +2300,91 @@ body[data-mode="editor"] #editor-host { min-height: 240px; }
   <dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
     <div class="student-guide-head"><h2 id="student-guide-title">How to use Ladder Lab</h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
     <div class="student-guide-body">
-      <p><b>Start in Trainer.</b> The ladder program is on the left; the live intersection or motor is on the right.</p>
-      <ol>
-        <li>Choose a program. Program 5 is the fastest introduction; Program 1 is the full stoplight.</li>
-        <li>Press an input on the simulator—START, STOP, a pedestrian button, or a car sensor—and watch the highlighted path through the ladder.</li>
-        <li>Pause, then use <b>Step Scan</b> to see the PLC read inputs, solve rungs top-to-bottom, and update outputs.</li>
-        <li>Use <b>Challenges</b> to build a program or <b>Troubleshoot</b> to diagnose an injected fault.</li>
+      <p class="sg-lede">This is a real PLC, not an animation. The ladder program sits on the left, the live intersection (or motor) on the right, and every tag value underneath.</p>
+
+      <h3>The scan cycle</h3>
+      <p>The PLC never stops looping. Every lap — one <b>scan</b> — it does three things, strictly in this order:</p>
+      <ol class="sg-scan">
+        <li><b>Reads every input</b> into a snapshot: the input image table.</li>
+        <li><b>Solves the rungs</b> top-to-bottom, left-to-right, from that snapshot.</li>
+        <li><b>Writes every output</b> at once, from the output image table.</li>
       </ol>
-      <h3>What to watch</h3>
-      <p>Green instructions are true. The Watch Window shows the input, internal-bit, timer, and output image tables; changed values flash.</p>
+      <p>So pressing a button does <i>nothing</i> until the next input read — and a bit written by rung 5 reaches rung 6 in the <i>same</i> scan, but rung 4 only on the <i>next</i> one.</p>
+
+      <h3>Step mode — what no physical trainer can show you</h3>
+      <p>Press <b>⏸ Pause</b>, then <b>Step Scan</b> to advance exactly one scan at a time with both image tables on screen. Rows flash when a bit changes, so you can see precisely <i>when</i> it changed. Keyboard: <kbd>Space</kbd> to run or pause, <kbd>.</kbd> to step one scan.</p>
+
+      <h3>Challenges and troubleshooting</h3>
+      <p><b>Challenges</b> gives you four graded builds — motor seal-in, delayed start, the stoplight from a written spec, then the crosswalk. Build yours in the editor and the grader runs it against a scripted input sequence, then tells you which step failed and when.</p>
+      <p><b>Troubleshoot</b> injects one of eleven faults into a working program. Diagnose it from the intersection's misbehaviour and the ladder, then reveal the explanation.</p>
+
+      <h3>Getting started</h3>
+      <ol>
+        <li>Pick a program. <b>5 — Motor Seal-In</b> is the quickest way in; <b>1 — Basic Timed Stoplight</b> is the full thing.</li>
+        <li>Press an input on the panel — START, STOP, a pedestrian button, a car sensor — and watch the live power path light up through the ladder. Green means true.</li>
+        <li>Pause and step a few scans with the watch window open.</li>
+        <li>Click any instruction for a plain-English account of what it is doing <i>right now</i>.</li>
+      </ol>
+
+      <p class="sg-foot">Reopen this any time with the <b>?</b> button in the top bar. Teaching with it? <b>⚙ Settings</b> holds presentation mode, the presenter's notes, and the printable teacher guide.</p>
     </div>
     <form method="dialog" class="student-guide-actions"><button>Start exploring</button></form>
+  </dialog>
+
+  <dialog class="student-guide presenter-notes" id="presenter-notes" aria-labelledby="presenter-notes-title">
+    <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter's notes</h2><form method="dialog"><button aria-label="Close presenter's notes">×</button></form></div>
+    <div class="student-guide-body">
+      <p class="sg-lede">Stage notes for the 45-minute lab, distilled from the teacher guide. The full printable version is under <b>⚙ Settings → Open teacher guide</b>.</p>
+
+      <h3>Run of show</h3>
+      <ul class="pn-run">
+        <li><span class="pn-time">0–5</span><span><b>Hook.</b> Trainer mode, Program 1 running. Ask the room: "what is deciding when the lights change?" Introduce the PLC.</span></li>
+        <li><span class="pn-time">5–12</span><span><b>Scan cycle.</b> Pause, then Step Scan with the watch window open. Press <code>PED_NS</code> while paused and step once — <i>now</i> it appears in the input image. Then Program 6 A/B for rung order.</span></li>
+        <li><span class="pn-time">12–20</span><span><b>Read the ladder.</b> Program 5 (seal-in): click each instruction for its plain-English role. Then Program 1 — find the four step bits, the timers, the interlock contacts.</span></li>
+        <li><span class="pn-time">20–32</span><span><b>Build.</b> Challenges 1 (seal-in) then 2 (delayed start); the auto-grader gives step-by-step feedback. Fast finishers take challenge 3.</span></li>
+        <li><span class="pn-time">32–42</span><span><b>Troubleshoot.</b> Hide the ladder pane. Inject a random fault into Program 1 or 2; the class predicts the bug from the intersection alone, then reveal the ladder and confirm. Solve times make a friendly leaderboard.</span></li>
+        <li><span class="pn-time">42–45</span><span><b>Debrief</b> with the questions below; assign challenge 4 as an extension.</span></li>
+      </ul>
+
+      <h3>Three things to say out loud</h3>
+      <ul>
+        <li><b>The scan cycle.</b> Reads all inputs into a snapshot, solves the ladder top-to-bottom and left-to-right from that snapshot, writes all outputs at once. One lap = one scan; real PLCs run ~1–20 ms. A button press does nothing until the next input read.</li>
+        <li><b>Why rung order matters.</b> A rung that writes a bit affects later rungs in the same scan, but earlier rungs only see it next scan. That one-scan difference is the root of real interlock and sequencing bugs.</li>
+        <li><b>Latch vs. seal-in.</b> An OTE coil is re-solved every scan. A seal-in holds it on by wiring the output's own contact in parallel with START (Program 5) — lose power and the motor stays off, usually the safe choice. OTL stays on until an explicit OTU, which is why the crosswalk request in Program 2 uses one.</li>
+      </ul>
+
+      <h3>Misconceptions to head off</h3>
+      <ul class="pn-myths">
+        <li><b>"Ladder is a schematic."</b> It looks like relay wiring but it is a <i>program</i>, solved in order, one rung at a time. Electricity flows everywhere at once; a scan does not.</li>
+        <li><b>"Outputs change mid-rung."</b> They update at the <i>end</i> of the scan, all together — watch the output image table while stepping.</li>
+        <li><b>"Pressing a button acts instantly."</b> It acts at the next input scan. In step mode a press does nothing until you step.</li>
+        <li><b>"A timer counts wall-clock."</b> TON accumulates only while its rung is true, in scan-time, and resets when the rung goes false.</li>
+        <li><b>"Two coils with the same tag both work."</b> The last rung wins, every scan — see the double-coil fault.</li>
+      </ul>
+
+      <h3>Debrief questions</h3>
+      <ol>
+        <li>Why can both directions never be green in Program 1, even if a timer misbehaves? <i>(Two independent defenses: the step sequence and the XIO interlock contacts.)</i></li>
+        <li>Why is the walk request latched instead of wired straight to the walk sign? What would happen if it weren't?</li>
+        <li>In the Scan Order Demo, which variant would you pick for an emergency-stop rung, and why?</li>
+        <li>Seal-in vs. OTL for the motor: which restarts by itself after a power blip? Which is safer, and when?</li>
+        <li>Our simulated scan is 20 ms. What real-world inputs could a PLC miss entirely between scans, and how would you catch them?</li>
+      </ol>
+
+      <h3>Programs at a glance</h3>
+      <table class="pn-table">
+        <tr><th>Program</th><th>Teaches</th><th>Key tags</th></tr>
+        <tr><td>1 Basic stoplight</td><td>timers chained into a 4-step sequence; interlock</td><td><code>STEP1–4</code> <code>NS_GRN</code> <code>EW_GRN</code></td></tr>
+        <tr><td>2 + Crosswalk</td><td>latched request honored at the next safe phase</td><td><code>PED_NS</code> <code>REQ_NS</code> <code>WALK_NS</code></td></tr>
+        <tr><td>3 Sensor-actuated</td><td>rest state plus demand from the car sensor, minimum green</td><td><code>LOOP_EW</code></td></tr>
+        <tr><td>4 Night flash</td><td>selector switch modes; two-timer flasher</td><td><code>SW_NIGHT</code> <code>FLASH</code></td></tr>
+        <tr><td>5 Motor seal-in</td><td>start/stop/seal-in — teach before the stoplight</td><td><code>PB_START</code> <code>PB_STOP</code> <code>MOTOR</code></td></tr>
+        <tr><td>6 Scan order A/B</td><td>rung order = a one-scan difference (use Step Scan)</td><td><code>B_SRC</code> <code>B_ECHO</code></td></tr>
+      </table>
+
+      <p class="sg-foot">Driving it: <kbd>Space</kbd> run/pause, <kbd>.</kbd> step one scan. <b>⚙ Settings</b> also has hide-ladder for predict-then-reveal, the engine self-test to run in front of the class, and reset everything.</p>
+    </div>
+    <form method="dialog" class="student-guide-actions"><button>Close notes</button></form>
   </dialog>
 
   <div class="ll-overlay" id="selftest-overlay" hidden>
@@ -9541,11 +9660,16 @@ LL.App = (function () {
       toast('Working (pristine) program restored.', 2000);
     });
 
-    /* teacher menu */
+    /* settings menu
+       Presentation mode = the projector big-UI scale PLUS the presenter's-notes
+       affordance in the top bar. The notes sheet itself stays openable from the
+       menu at any time; body.presentation only surfaces the one-tap button. */
     document.getElementById('chk-bigui').addEventListener('change', function () {
       ctx.bigUI = this.checked;
       document.body.classList.toggle('bigui', this.checked);
+      document.body.classList.toggle('presentation', this.checked);
       bus.emit('bigui:changed', { bigUI: this.checked });
+      if (this.checked) toast('Presentation mode on — presenter’s notes are in the top bar.', 3000);
     });
     document.getElementById('chk-hideladder').addEventListener('change', function () {
       hideLadderPref = this.checked;
@@ -9618,10 +9742,19 @@ LL.App = (function () {
 </script>
 <script>
 (() => {
-  const dialog=document.getElementById('student-guide');let opener=null;
-  document.addEventListener('click',event=>{const button=event.target.closest?.('.student-guide-open');if(!button)return;event.preventDefault();opener=button;dialog.showModal();dialog.querySelector('.student-guide-head button').focus()});
-  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
-  dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()});
+  /* Modal-sheet controller. Any [data-sheet] button opens the <dialog> whose id
+     it names; .student-guide-open is the legacy alias for the how-to sheet.
+     Esc, the × and the footer button all close (native <dialog>), as does a
+     tap on the backdrop. */
+  const openerOf=new WeakMap();
+  const open=(id,opener)=>{const dialog=document.getElementById(id);if(!dialog||dialog.open)return;if(opener)openerOf.set(dialog,opener);dialog.showModal();dialog.querySelector('.student-guide-head button')?.focus()};
+  document.addEventListener('click',event=>{const button=event.target.closest?.('[data-sheet], .student-guide-open');if(!button)return;event.preventDefault();button.closest('details[open]')?.removeAttribute('open');open(button.dataset.sheet||'student-guide',button)});
+  document.querySelectorAll('dialog.student-guide').forEach(dialog=>{
+    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
+    dialog.addEventListener('close',()=>{const opener=openerOf.get(dialog);if(opener?.isConnected)opener.focus()});
+  });
+  /* The how-to sheet greets every load; the ? button reopens it any time. */
+  open('student-guide');
 })();
 </script>
 <script>
@@ -9630,7 +9763,7 @@ LL.App = (function () {
   const dialog=overlay.querySelector('.msu-guide-dialog'),frame=document.getElementById('msu-guide-frame'),close=document.getElementById('msu-guide-close');let returnFocus=null,inerted=[],overlayWasInert=false;
   const show=opener=>{returnFocus=opener||document.activeElement;overlayWasInert=overlay.inert;overlay.inert=false;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.dataset.guide);overlay.hidden=false;inerted=[...document.body.children].filter(node=>node!==overlay&&!node.inert);inerted.forEach(node=>{node.inert=true});dialog.focus()};
   const hide=()=>{overlay.hidden=true;inerted.forEach(node=>{node.inert=false});inerted=[];overlay.inert=overlayWasInert;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus()};
-  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(opener){event.preventDefault();show(opener)}});close.addEventListener('click',hide);
+  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(opener){event.preventDefault();opener.closest('details[open]')?.removeAttribute('open');show(opener)}});close.addEventListener('click',hide);
   document.getElementById('msu-guide-print').addEventListener('click',()=>window.open(frame.dataset.guide,'_blank','noopener'));
   overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
 })();

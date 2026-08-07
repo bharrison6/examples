@@ -830,7 +830,13 @@ function setBackgroundInert(inert) {
 }
 function focusModal(modal) {
   const target = modal.querySelector('[data-dialog-initial]') || dialogFocusables(modal)[0] || modal;
-  target.focus();
+  // A long dialog must open at its beginning. Focusing a control that sits near
+  // the bottom (the how-to popup's "Fly", the notes' guide button) would
+  // otherwise scroll the reader straight past the part that explains things —
+  // badly wrong on a phone, where every dialog overflows.
+  target.focus({ preventScroll: true });
+  const box = modal.querySelector('.box');
+  if (box) box.scrollTop = 0;
 }
 function openModal(id, opener) {
   const modal = $(id);
@@ -870,6 +876,12 @@ document.addEventListener('keydown', (e) => {
   if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 }, true);
+/* Tap/click the dimmed backdrop to dismiss the informational dialogs. The
+   debrief and the crash screen are deliberately left out — those ask for a
+   decision (retry / undo / next), so a stray tap must not answer for you. */
+document.querySelectorAll('.modal[data-lightdismiss]').forEach((m) => {
+  m.addEventListener('pointerdown', (e) => { if (e.target === m) closeModal(m.id); });
+});
 $('dbRetry').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
 $('dbNext').addEventListener('click', () => loadLevel(Math.min(LEVELS.indexOf(lvl) + 1, LEVELS.length - 1)));
 $('dbClose').addEventListener('click', () => closeModal('debriefModal'));
@@ -941,21 +953,35 @@ $('hintClose').addEventListener('click', () => $('hint').classList.remove('show'
 $('btnLevels').addEventListener('click', () => { renderLevelGrid(); openModal('levelsModal'); });
 $('closeLevels').addEventListener('click', () => closeModal('levelsModal'));
 
-/* teacher modal */
+/* settings modal */
 $('btnTeacher').addEventListener('click', () => openModal('teacherModal'));
 $('closeTeacher').addEventListener('click', () => closeModal('teacherModal'));
 $('tgProjector').addEventListener('click', () => {
   const on = document.body.classList.toggle('projector');
-  $('tgProjector').textContent = on ? 'On' : 'Off';
+  setProjectorLabel(on);
   store.set('fuelgolf_projector', on);
 });
+function setProjectorLabel(on) {
+  $('tgProjector').textContent = on ? 'On' : 'Off';
+  $('tgProjector').setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+
+/* presenter's notes — stage notes for whoever is running the room */
+function showNotes() {
+  const opener = document.activeElement;
+  closeModal('teacherModal');
+  openModal('notesModal', opener && opener.id === 'tgNotes' ? $('btnTeacher') : opener);
+}
+$('tgNotes').addEventListener('click', showNotes);
+$('btnNotes').addEventListener('click', showNotes);
+$('closeNotes').addEventListener('click', () => closeModal('notesModal'));
 $('tgReset').addEventListener('click', () => { $('resetConfirmRow').style.display = 'flex'; });
 $('tgResetNo').addEventListener('click', () => { $('resetConfirmRow').style.display = 'none'; });
 $('tgResetYes').addEventListener('click', () => {
   LEVELS.forEach(L => store.del(LB_KEY(L.id)));
   $('resetConfirmRow').style.display = 'none';
 });
-if (store.get('fuelgolf_projector', false)) { document.body.classList.add('projector'); $('tgProjector').textContent = 'On'; }
+if (store.get('fuelgolf_projector', false)) { document.body.classList.add('projector'); setProjectorLabel(true); }
 
 /* HUD toggle */
 $('btnHud').addEventListener('click', () => {
@@ -1151,6 +1177,8 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'p') { warpToApsis('pe'); }
   else if (k === 'a') { warpToApsis('ap'); }
   else if (k === 'r') { loadLevel(LEVELS.indexOf(lvl)); }
+  else if (k === 'n') { showNotes(); }
+  else if (k === '?' || k === '/') { e.preventDefault(); openModal('helpModal', $('btnHelp')); }
 });
 
 /* new top-bar + modal wiring */

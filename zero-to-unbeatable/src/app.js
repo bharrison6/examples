@@ -1141,6 +1141,12 @@ $('#btn-learned').addEventListener('click', e => {
   openSheet('learned', e.currentTarget);
 });
 $('#btn-settings').addEventListener('click', e => openSheet('settings', e.currentTarget));
+/* The instructions have one home and two doors: the ? in the brand bar,
+   which is on screen at every size, and the entry in Settings. Both land
+   on the same sheet, so there is nothing to keep in step. */
+const openHowto = () => openSheet('howto', $('#btn-howto'));
+$('#btn-howto').addEventListener('click', openHowto);
+$('#btn-howto-2').addEventListener('click', () => { closeSheet('settings'); openHowto(); });
 $('#btn-notes').addEventListener('click', e => { closeSheet('settings'); openSheet('notes', e.currentTarget); });
 $('#btn-print-notes').addEventListener('click', () => window.print());
 $('#btn-selftest').addEventListener('click', () => {
@@ -1168,6 +1174,11 @@ howHead.addEventListener('click', () => {
 
 resetAll();
 renderScore();
+/* Shown on every load, not once per browser: this thing is handed to a
+   new person constantly, and nothing about the app is remembered between
+   loads anyway. Escape, a tap on the backdrop or either button closes
+   it, and the ? in the brand bar brings it back. */
+openHowto();
 console.log('[Zero to Unbeatable] ready. Era 0 knows nothing: every value in its table is zero, ' +
             'so every legal move ties and it picks uniformly at random.');
 

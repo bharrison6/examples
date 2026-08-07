@@ -65,10 +65,27 @@
     acts.forEach((a, j) => a.classList.toggle('on', i === j));
     window.scrollTo({ top: 0 });
   }));
-  $('presbtn').addEventListener('click', (e) => {
-    e.preventDefault();
+  // ---------- presentation mode ----------
+  // One CSS variable scales the whole page; the body class also reveals the
+  // header's quick route to the presenter's notes. Reachable from Settings and
+  // from the footer, so a presenter never has to hunt for it mid-session.
+  const presBtn = $('presbtn'), presFoot = $('presfoot');
+  function syncPresenterUI() {
+    const on = document.body.classList.contains('presenter');
+    presBtn.textContent = 'Presentation mode: ' + (on ? 'on' : 'off');
+    presBtn.setAttribute('aria-pressed', String(on));
+    presFoot.textContent = on ? 'leave presentation mode' : 'presentation mode';
+  }
+  function togglePresenter(e) {
+    if (e) e.preventDefault();
     document.body.classList.toggle('presenter');
-  });
+    syncPresenterUI();
+    // canvases are sized in device pixels from their laid-out width
+    window.dispatchEvent(new Event('resize'));
+  }
+  presBtn.addEventListener('click', togglePresenter);
+  presFoot.addEventListener('click', togglePresenter);
+  syncPresenterUI();
 
   // ════════════════════════ ACT 1 ════════════════════════
 

@@ -123,6 +123,38 @@ TO.App = (function () {
     toast._t = setTimeout(function () { t.classList.remove('on'); }, ms || 2600);
   }
 
+  /* ---------- overlays -------------------------------------------- */
+  /* Every modal in the game is a .overlay that toggles [hidden]. These
+     two wrap that so Esc, the backdrop and the close buttons all go
+     through the same door. */
+  function openOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) el.hidden = false;
+  }
+  function closeOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) el.hidden = true;
+  }
+  /* topmost open overlay, for Esc — later in the document wins, which
+     is the one drawn on top */
+  function topOverlay() {
+    var open = document.querySelectorAll('.overlay:not([hidden])');
+    return open.length ? open[open.length - 1] : null;
+  }
+
+  /* ---------- presentation mode -----------------------------------
+     One switch: the large-type UI the room can read from the back, and
+     the 🎙 shortcut to the presenter's notes in the title bar. Stored
+     under the old key so an instructor's machine keeps its setting. */
+  function setPresentation(on) {
+    document.body.classList.toggle('big', !!on);
+    document.body.classList.toggle('presenting', !!on);
+    store('to.big', !!on);
+    var a = document.getElementById('chk-big'), b = document.getElementById('chk-big2');
+    if (a) a.checked = !!on;
+    if (b) b.checked = !!on;
+  }
+
   /* =================================================================
      SETUP
      ================================================================= */
@@ -145,7 +177,7 @@ TO.App = (function () {
     host.innerHTML =
       '<div class="sheet">' +
         '<div class="sheet-title">' +
-          '<div><div class="msu-line"><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#f1b82d" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div><h1>TOPPING OUT</h1>' +
+          '<div><div class="msu-line"><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div><h1>TOPPING OUT</h1>' +
             '<div class="tagline">Competitive construction scheduling. Same building, same weather, same bad luck — the only variable is what you decide. Go Racers.</div></div>' +
           '<div class="stamp">RACER CONSTRUCTION MGMT<br>SCHEDULING SIMULATION<br>REV 3.0</div>' +
         '</div>' +
@@ -175,8 +207,9 @@ TO.App = (function () {
           '</div>' +
           '<div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">' +
             '<button class="btn primary" id="btn-start" style="font-size:1rem;padding:11px 24px">Start the job</button>' +
+            '<button class="btn ghost" id="btn-howto3">? How to play</button>' +
             '<label style="font-size:.85rem;display:flex;align-items:center;gap:6px;cursor:pointer">' +
-              '<input type="checkbox" id="chk-big"' + (document.body.classList.contains('big') ? ' checked' : '') + '> Projector mode</label>' +
+              '<input type="checkbox" id="chk-big"' + (document.body.classList.contains('big') ? ' checked' : '') + '> Presentation mode</label>' +
             '<a class="btn ghost" href="teacher-guide.html" target="_blank">📄 Instructor guide</a>' +
             '<button class="btn ghost" id="btn-selftest2">🧪 Engine self-test</button>' +
           '</div>' +
@@ -198,10 +231,8 @@ TO.App = (function () {
       setupState.seed = randomSeedCode();
       document.getElementById('in-seed').value = setupState.seed;
     };
-    document.getElementById('chk-big').onchange = function () {
-      document.body.classList.toggle('big', this.checked);
-      store('to.big', this.checked);
-    };
+    document.getElementById('chk-big').onchange = function () { setPresentation(this.checked); };
+    document.getElementById('btn-howto3').onclick = function () { openOverlay('howto'); };
     document.getElementById('btn-start').onclick = startGame;
     document.getElementById('btn-selftest2').onclick = showSelfTest;
     var reset = document.getElementById('btn-lb-reset');
@@ -1313,9 +1344,14 @@ TO.App = (function () {
      ================================================================= */
   function init() {
     initTooltips();
-    if (store('to.big')) document.body.classList.add('big');
+    if (store('to.big')) setPresentation(true);
     setupState.seed = '';
     renderSetup();
+
+    /* The briefing opens on every load, over the setup sheet. It is the
+       first thing a team sees and the last thing that should need
+       explaining, so it is not remembered-dismissed. */
+    openOverlay('howto');
 
     /* mobile tab bar: SITE shows the drawings, MEETING shows the loop.
        During the week animation we flip to the site so the player sees
@@ -1335,16 +1371,21 @@ TO.App = (function () {
       view = b.getAttribute('data-view');
       renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
     };
-    document.getElementById('btn-instructor').onclick = function () {
-      document.getElementById('instructor').hidden = false;
+    document.getElementById('btn-instructor').onclick = function () { openOverlay('instructor'); };
+    document.getElementById('btn-howto').onclick = function () { openOverlay('howto'); };
+    document.getElementById('btn-howto2').onclick = function () {
+      closeOverlay('instructor'); openOverlay('howto');
     };
+    document.getElementById('btn-notes').onclick = function () {
+      closeOverlay('instructor'); openOverlay('presenter');
+    };
+    document.getElementById('btn-notes-top').onclick = function () { openOverlay('presenter'); };
     document.getElementById('btn-selftest').onclick = function () {
-      document.getElementById('instructor').hidden = true;
+      closeOverlay('instructor');
       showSelfTest();
     };
     document.getElementById('chk-big2').onchange = function () {
-      document.body.classList.toggle('big', this.checked);
-      store('to.big', this.checked);
+      setPresentation(this.checked);
       if (g) renderAll();
     };
     document.getElementById('btn-newgame').onclick = function () {
@@ -1361,7 +1402,15 @@ TO.App = (function () {
       store('to.leaderboard', []); toast('Leaderboard cleared.');
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) {
-      b.onclick = function () { document.getElementById(b.getAttribute('data-close')).hidden = true; };
+      b.onclick = function () { closeOverlay(b.getAttribute('data-close')); };
+    });
+    /* Tap the paper around the briefing to dismiss it — the same gesture
+       on a phone as clicking away from it on a laptop. Scoped to the
+       briefing and the notes: nobody wants to lose a debrief to a
+       stray tap. */
+    ['howto', 'presenter'].forEach(function (id) {
+      var ov = document.getElementById(id);
+      ov.addEventListener('click', function (e) { if (e.target === ov) closeOverlay(id); });
     });
     document.getElementById('btn-debrief-close').onclick = function () {
       document.getElementById('debrief').hidden = true;
@@ -1370,7 +1419,14 @@ TO.App = (function () {
       if (g && !animating && view !== '4d') renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !document.getElementById('setup').hidden) startGame();
+      if (e.key === 'Escape') {
+        var top = topOverlay();
+        if (top) { top.hidden = true; e.preventDefault(); }
+        return;
+      }
+      /* Enter starts the job — but not while a modal is up over the
+         setup sheet, or the briefing dismisses straight into a run. */
+      if (e.key === 'Enter' && !document.getElementById('setup').hidden && !topOverlay()) startGame();
     });
   }
 

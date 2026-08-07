@@ -241,8 +241,11 @@ a glance, the one board you are playing in at full size on the right. Tapping a 
 moves you into it. The fold, overflow and tap-target checks now run in both modes at all eight
 viewports.
 
-**The presenter notes are embedded, not linked.** Settings → Presenter notes opens the whole guide
-inside the app. It is not a link to `demo-guide.html` and not an iframe pointing at it: either
+**The presenter notes are embedded, not linked.** Settings → Presentation mode → Open the presenter
+notes opens a one-screen stage cue card followed by the whole guide, inside the app. The cue card is
+distilled from the guide immediately below it — running order, the timed beats, and the two things
+most likely to go sideways mid-session — and is dropped by the print rules, so Print still produces
+the guide's own one-pager and there is still exactly one printable source. It is not a link to `demo-guide.html` and not an iframe pointing at it: either
 dead-ends the moment somebody mails just the HTML, and "one self-contained file, fully offline" is a
 headline claim this demo makes and tests. `build.js` lifts the guide's own stylesheet and markup —
 both scoped to `.guide` — straight into the single file, so there is one source of truth and the

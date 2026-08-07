@@ -62,11 +62,21 @@ catch (managedError) {
   browser = await chromium.launch({ headless: !HEADED, executablePath });
 }
 
-/** Act I now opens on an explanation screen. Everything that drives a round
- *  has to get past it first. */
+/** A block that throws used to take the whole run with it, so one missing
+ *  selector cost every check after it. Now the throw is recorded as a failure
+ *  and the suite carries on — the gap stays visible, the signal survives. */
+async function guard(label, fn) {
+  try { await fn(); }
+  catch (e) { ok(`${label}: ran to completion`, false, String(e.message || e).split('\n')[0]); }
+}
+
+/** Act I opens on an explanation screen, and the how-to overlay sits over that
+ *  on every load. Everything that drives a round has to get past both. */
 async function open_(page, wait) {
   await page.goto(FILE);
   await page.waitForTimeout(wait || 300);
+  await page.locator('#howto .sheet-foot .btn').click();
+  await page.waitForTimeout(120);
   await page.locator('#btn-begin').click();
   await page.waitForTimeout(180);
 }
@@ -137,8 +147,93 @@ async function drawGuess(page, fromY, toY) {
   await page.context().close();
 }
 
+/* ---- 2a. the how-to popup, the settings menu, the notes, the byline ----- */
+await guard('How-to, settings and notes', async () => {
+  const page = await (await browser.newContext()).newPage();
+  await page.goto(FILE);
+  await page.waitForTimeout(300);
+
+  ok('The how-to popup is shown on load', await page.locator('#howto').isVisible());
+  const ht = await page.locator('#howto .sheet-body').innerText();
+  ok('The how-to explains the drawing exercise', /drag/i.test(ht) && /reveal/i.test(ht), ht.length + ' chars');
+  ok('The how-to names the controls it is reopened from', /presenter/i.test(ht) && /self-test/i.test(ht));
+  ok('The how-to is a labelled modal over an inert page',
+     await page.locator('#howto .sheet-inner').evaluate(e =>
+       e.getAttribute('role') === 'dialog' && e.getAttribute('aria-modal') === 'true' &&
+       !!e.getAttribute('aria-labelledby') && e.contains(document.activeElement) &&
+       document.querySelector('main').inert));
+
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(140);
+  ok('Escape dismisses the how-to', !(await page.locator('#howto').isVisible()));
+  ok('Dismissing the how-to releases the page',
+     !(await page.evaluate(() => document.querySelector('main').inert)));
+
+  await page.locator('#btn-howto').click();
+  await page.waitForTimeout(140);
+  ok('The always-visible ? control reopens the how-to', await page.locator('#howto').isVisible());
+
+  /* Tapping the dimmed area outside the sheet is what a phone user tries. */
+  await page.locator('#howto').click({ position: { x: 6, y: 6 } });
+  await page.waitForTimeout(140);
+  ok('Tapping outside the sheet dismisses the how-to', !(await page.locator('#howto').isVisible()));
+
+  await page.reload();
+  await page.waitForTimeout(320);
+  ok('The how-to returns on the next load, every load', await page.locator('#howto').isVisible());
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(140);
+
+  /* Settings: presentation mode, and the presenter's notes inside it. */
+  await page.locator('#btn-settings').click();
+  await page.waitForTimeout(140);
+  ok('The settings menu offers presentation mode',
+     await page.locator('#chk-presenter').isVisible());
+  ok('Presentation mode offers openable presenter notes',
+     await page.locator('#btn-notes').isVisible());
+
+  await page.locator('#btn-notes').click();
+  await page.waitForTimeout(180);
+  ok('The presenter notes open from the settings menu', await page.locator('#notes').isVisible());
+  const notes = await page.locator('#notes .sheet-body').innerText();
+  ok('The notes carry a beat for every round', /Test 1/.test(notes) && /Test 5/.test(notes));
+  ok('The notes keep the guide figures rather than paraphrasing them',
+     /19% slower/.test(notes) && /38\.3/.test(notes) && /13\.3/.test(notes) &&
+     /69\.7/.test(notes) && /208/.test(notes), 'guide figures');
+  ok('The notes carry the twelve-minute cut', /twelve minutes/i.test(notes));
+  ok('The notes point at the printable guide they were distilled from',
+     /presenter-guide\.html/.test(notes));
+
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(140);
+  ok('Escape closes the notes and leaves settings open underneath',
+     !(await page.locator('#notes').isVisible()) && await page.locator('#settings').isVisible());
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(140);
+  ok('A second Escape closes settings and releases the page',
+     !(await page.locator('#settings').isVisible()) &&
+     !(await page.evaluate(() => document.querySelector('main').inert)));
+
+  /* Attribution, on the demo surface rather than buried in an About box. */
+  const credit = await page.locator('.bh-credit').innerText();
+  ok('The byline names the author and the institution',
+     /Bryant Harrison/.test(credit) && /Murray State University/.test(credit), credit);
+  ok('The byline is visible without opening anything',
+     await page.locator('.bh-credit').isVisible());
+  ok('The byline stands aside while a sheet is open',
+     await page.evaluate(async () => {
+       document.querySelector('#btn-settings').click();
+       await new Promise(r => setTimeout(r, 250));
+       const o = getComputedStyle(document.querySelector('.bh-credit')).opacity;
+       document.querySelector('#settings [data-close]').click();
+       return Number(o) < 0.1;
+     }));
+
+  await page.context().close();
+});
+
 /* ---- 2b. modal and tab semantics --------------------------------------- */
-{
+await guard('Modal and tab semantics', async () => {
   const page = await (await browser.newContext()).newPage();
   await open_(page);
   await page.locator('#btn-settings').click();
@@ -149,7 +244,7 @@ async function drawGuess(page, fromY, toY) {
   await page.locator('#act-tab-1').focus(); await page.keyboard.press('ArrowRight');
   ok('Act tabs use roving focus and selected state', await page.locator('#act-tab-2').evaluate(e => document.activeElement === e && e.getAttribute('aria-selected') === 'true' && e.tabIndex === 0));
   await page.context().close();
-}
+});
 
 /* ---- 3. the core loop: drag, reveal, verdict ---------------------------- */
 {
@@ -164,9 +259,11 @@ async function drawGuess(page, fromY, toY) {
   await page.mouse.click(midpoint.x + midpoint.width * 0.75, midpoint.y + midpoint.height * 0.5);
   await page.waitForTimeout(80);
   ok('A midpoint-only chart tap cannot enable Reveal', await page.locator('#btn-reveal').isDisabled());
-  await page.locator('#forecast-end').evaluate(e => { e.value = '80'; e.dispatchEvent(new Event('input', { bubbles:true })); });
-  await page.waitForTimeout(80);
-  ok('The keyboard forecast control creates a complete forecast', await page.locator('#btn-reveal').isEnabled());
+  await guard('Keyboard forecast control', async () => {
+    await page.locator('#forecast-end').evaluate(e => { e.value = '80'; e.dispatchEvent(new Event('input', { bubbles:true })); });
+    await page.waitForTimeout(80);
+    ok('The keyboard forecast control creates a complete forecast', await page.locator('#btn-reveal').isEnabled());
+  });
   await page.locator('#btn-redraw').click();
 
   /* The round must explain itself before it asks anything. */
@@ -354,9 +451,11 @@ async function drawGuess(page, fromY, toY) {
   await page.locator('#tl-filter button[data-filter="all"]').click();
   await page.waitForTimeout(140);
 
-  await page.locator('#tl-list .tl-release').first().click();
-  ok('A timeline release is keyboard-accessible in the synchronized list',
-     await page.locator('#tl-list .tl-release[aria-selected="true"]').count() === 1);
+  await guard('Synchronized timeline list', async () => {
+    await page.locator('#tl-list .tl-release').first().click();
+    ok('A timeline release is keyboard-accessible in the synchronized list',
+       await page.locator('#tl-list .tl-release[aria-selected="true"]').count() === 1);
+  });
   const dot = await page.evaluate(() => {
     const tl = window.__undershoot.app.timeline;
     const model = tl.visible().at(-1), canvas = document.querySelector('#tl');
@@ -417,6 +516,22 @@ async function drawGuess(page, fromY, toY) {
 /* ---- 6. layout at every viewport --------------------------------------- */
 for (const v of VIEWPORTS) {
   const page = await (await browser.newContext({ viewport: { width: v.w, height: v.h } })).newPage();
+
+  /* The how-to is the first thing anyone sees, on every screen this ships to,
+     so it is checked before it is dismissed. A bottom sheet that runs off the
+     bottom of a 393px-tall landscape phone hides its own dismiss button. */
+  await page.goto(FILE);
+  await page.waitForTimeout(240);
+  const htBox = await page.evaluate(() => {
+    const s = document.querySelector('#howto .sheet-inner').getBoundingClientRect();
+    const b = document.querySelector('#howto .sheet-foot .btn').getBoundingClientRect();
+    return { right: s.right, bottom: b.bottom, vw: innerWidth, vh: innerHeight,
+             oflow: document.documentElement.scrollWidth - document.documentElement.clientWidth };
+  });
+  ok(`${v.name}: the how-to sheet fits the viewport`,
+     htBox.right <= htBox.vw + 1 && htBox.bottom <= htBox.vh + 1 && htBox.oflow <= 1,
+     `sheet ${Math.round(htBox.right)}/${htBox.vw} wide, dismiss at ${Math.round(htBox.bottom)}/${htBox.vh}`);
+
   await open_(page, 280);
 
   const oflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -525,9 +640,11 @@ for (const v of [{ name: '720p', w: 1280, h: 720 }, { name: '1080p', w: 1920, h:
   await page.waitForTimeout(150);
   ok('A midpoint-only touch cannot complete a forecast',
      !(await page.evaluate(() => window.__undershoot.app.chart.drawn())));
-  await page.locator('#forecast-end').evaluate(e => { e.value = '80'; e.dispatchEvent(new Event('input', { bubbles:true })); });
-  ok('The phone-accessible forecast control completes a forecast',
-     await page.evaluate(() => window.__undershoot.app.chart.drawn()));
+  await guard('Phone forecast control', async () => {
+    await page.locator('#forecast-end').evaluate(e => { e.value = '80'; e.dispatchEvent(new Event('input', { bubbles:true })); });
+    ok('The phone-accessible forecast control completes a forecast',
+       await page.evaluate(() => window.__undershoot.app.chart.drawn()));
+  });
   await ctx.close();
 }
 

@@ -61,9 +61,51 @@ page.on('console', m => { if (m.type() === 'error') consoleErrors.push(m.text())
 page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
 page.on('request', r => requests.push(r.url()));
 
+/* The how-to sheet opens on every load and makes the app inert behind it,
+   which is the point — so every page this suite opens has to dismiss it
+   first, exactly as a student does. */
+async function dismissHowto(p) {
+  await p.waitForSelector('#howto:not([hidden])');
+  await p.click('#howto .sheet-foot button');
+  await p.waitForSelector('#howto', { state: 'hidden' });
+}
+
 /* ---------- 6. one file, no network -------------------------------- */
 await page.goto(FILE);
 await page.waitForSelector('#board .cell');
+
+/* ---------- the how-to popup, per the demo contract ----------------- */
+check('the how-to popup opens on load without being asked for',
+  !(await page.locator('#howto').isHidden()));
+check('it is a labelled modal that takes focus and makes the page inert',
+  await page.locator('#howto').getAttribute('role') === 'dialog' &&
+  await page.locator('#howto').getAttribute('aria-modal') === 'true' &&
+  await page.evaluate(() => document.activeElement.closest('#howto') !== null) &&
+  await page.evaluate(() => document.querySelector('#app').inert === true));
+const howtoText = await page.locator('#howto').innerText();
+check('it says how to play in the demo\'s own terms',
+  /beat era 0/i.test(howtoText) && /press train/i.test(howtoText) &&
+  /show its brain/i.test(howtoText) && /proof, not a win record/i.test(howtoText),
+  howtoText.slice(0, 120));
+if (SHOTS) await page.screenshot({ path: '/tmp/og-0-howto.png' });
+await page.keyboard.press('Escape');
+check('Escape dismisses it', await page.locator('#howto').isHidden());
+await page.click('#btn-howto');
+check('the ? control in the brand bar reopens it', !(await page.locator('#howto').isHidden()));
+await page.click('#howto', { position: { x: 6, y: 6 } });
+check('tapping outside dismisses it', await page.locator('#howto').isHidden());
+await page.click('#btn-howto');
+await dismissHowto(page);
+check('dismissing it hands the app back',
+  await page.evaluate(() => document.querySelector('#app').inert === false));
+
+/* ---------- attribution --------------------------------------------- */
+check('Bryant Harrison is credited on screen without being asked for',
+  await page.locator('.bh-credit').isVisible() &&
+  /bryant harrison/i.test(await page.locator('.bh-credit').innerText()) &&
+  /murray state university/i.test(await page.locator('.bh-credit').innerText()));
+check('the byline never sits in front of a control',
+  await page.evaluate(() => getComputedStyle(document.querySelector('.bh-credit')).pointerEvents === 'none'));
 
 const external = requests.filter(u => !u.startsWith('file://'));
 check('opens straight from a local file with no server', requests[0].startsWith('file://'));
@@ -383,13 +425,31 @@ await page.waitForTimeout(300);
 /* ---------- presenter notes, embedded in the single file -------------- */
 await page.click('#btn-settings');
 await page.waitForTimeout(150);
+const settingsText = await page.locator('#settings').innerText();
 check('Settings offers the presenter notes',
-  /presenter notes/i.test(await page.locator('#settings').innerText()));
+  /presenter notes/i.test(settingsText));
+check('Settings offers presentation mode', /presentation mode/i.test(settingsText), settingsText.slice(0, 120));
+check('Settings can reopen the how-to as well', /how to play/i.test(settingsText));
+await page.click('#btn-howto-2');
+check('the Settings entry really opens the how-to and closes Settings behind it',
+  !(await page.locator('#howto').isHidden()) && await page.locator('#settings').isHidden());
+await dismissHowto(page);
+await page.click('#btn-settings');
+await page.waitForTimeout(150);
 await page.click('#btn-notes');
 await page.waitForTimeout(300);
 check('opening the notes closes Settings behind them', await page.locator('#settings').isHidden());
 check('the notes open', !(await page.locator('#notes').isHidden()));
 const notes = await page.locator('#notes-body').innerText();
+check('the notes open on a stage cue card before the full guide',
+  !(await page.locator('#stage-notes').isHidden()) &&
+  /at a glance/i.test(await page.locator('#stage-notes').innerText()) &&
+  await page.evaluate(() => {
+    const card = document.querySelector('#stage-notes'), guide = document.querySelector('#notes .guide');
+    return !!(card && guide) && (card.compareDocumentPosition(guide) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  }));
+check('the cue card is distilled from the guide, not invented',
+  /Do not train before the session/i.test(await page.locator('#stage-notes').innerText()));
 check('the notes carry the timed script', /THE SCRIPT/i.test(notes) && /11:30/.test(notes));
 check('the notes carry the discussion questions', /DISCUSSION QUESTIONS/i.test(notes));
 check('the notes carry the misconceptions', /MISCONCEPTIONS TO DRAW OUT/i.test(notes));
@@ -416,6 +476,8 @@ const printState = await page.evaluate(() => {
     app: vis(document.querySelector('#app')),
     notes: vis(document.querySelector('#notes')),
     chrome: vis(document.querySelector('#notes .sheet-head')),
+    cue: vis(document.querySelector('#stage-notes')),
+    byline: vis(document.querySelector('.bh-credit')),
     guideSize: getComputedStyle(document.querySelector('#notes .guide')).fontSize,
     cols: getComputedStyle(document.querySelector('#notes .guide .cols')).columnCount,
     scheme: getComputedStyle(document.documentElement).colorScheme
@@ -424,6 +486,9 @@ const printState = await page.evaluate(() => {
 check('printing hides the app', !printState.app);
 check('printing keeps the notes', printState.notes);
 check('printing drops the sheet chrome', !printState.chrome);
+check('printing drops the on-screen cue card, leaving the guide as printed',
+  !printState.cue);
+check('printing drops the floating byline', !printState.byline);
 check('printing restores the page-sized type', parseFloat(printState.guideSize) < 12, printState.guideSize);
 check('printing restores the two-column page', printState.cols === '2', printState.cols);
 check('printing switches to a light colour scheme so the margins are white',
@@ -549,6 +614,7 @@ for (const [label, w, h] of SIZES) {
   await vp.setViewportSize({ width: w, height: h });
   await vp.goto(FILE);
   await vp.waitForSelector('#board .cell');
+  await dismissHowto(vp);
   if (mode === 'nine') { await vp.click('#mode-seg button[data-mode="nine"]'); await vp.waitForTimeout(150); }
   const m = await vp.evaluate((mode) => {
     const r = el => document.querySelector(el).getBoundingClientRect();
@@ -583,6 +649,7 @@ for (const [label, w, h] of [['720p projector', 1280, 800], ['1080p projector', 
   await pp.setViewportSize({ width: w, height: h });
   await pp.goto(FILE);
   await pp.waitForSelector('#board .cell');
+  await dismissHowto(pp);
   await pp.click('#btn-settings');
   await pp.check('#chk-presenter');
   await pp.click('#settings [data-close]');

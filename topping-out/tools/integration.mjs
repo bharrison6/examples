@@ -41,6 +41,36 @@ page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
 await page.goto(FILE);
 await page.waitForSelector('#setup-inner .sheet');
 
+/* ---------- the how-to briefing -------------------------------------
+   It opens on every load, over the setup sheet, so every entry point
+   below has to get past it first. */
+const hidden = (pg, id) => pg.locator('#' + id).evaluate(n => n.hidden);
+
+check('the how-to briefing opens on load', (await hidden(page, 'howto')) === false);
+const brief = await page.locator('#howto .modal-body').innerText();
+check('the briefing explains the weekly turn loop',
+  /the news/i.test(brief) && /decisions/i.test(brief) && /commit/i.test(brief) &&
+  /the week runs/i.test(brief), brief.slice(0, 120));
+check('the briefing explains all three views',
+  /4D cutaway/i.test(brief) && /gantt/i.test(brief) && /network/i.test(brief));
+check('the briefing paints above the setup sheet', await page.evaluate(() =>
+  parseInt(getComputedStyle(document.getElementById('howto')).zIndex, 10) >
+  parseInt(getComputedStyle(document.getElementById('setup')).zIndex, 10)));
+await page.keyboard.press('Escape');
+check('Esc dismisses the briefing', (await hidden(page, 'howto')) === true);
+await page.click('#btn-howto3');
+check('the setup sheet reopens the briefing', (await hidden(page, 'howto')) === false);
+await page.click('#howto', { position: { x: 6, y: 6 } });   /* the backdrop, not the sheet */
+check('a tap on the paper around the briefing dismisses it', (await hidden(page, 'howto')) === true);
+
+/* ---------- attribution ---------------------------------------------- */
+check('Bryant Harrison is credited on screen',
+  /Bryant Harrison/.test(await page.locator('.bh-credit').innerText()) &&
+  /Murray State University/.test(await page.locator('.bh-credit').innerText()));
+check('the credit is visible and does not eat taps',
+  (await page.locator('.bh-credit').isVisible()) &&
+  (await page.locator('.bh-credit').evaluate(n => getComputedStyle(n).pointerEvents)) === 'none');
+
 /* ---------- setup screen ------------------------------------------- */
 check('setup sheet renders', await page.locator('#setup-inner h1').innerText() === 'TOPPING OUT');
 
@@ -133,12 +163,51 @@ check('debrief separates a good decision from a lucky one',
 await page.click('#btn-debrief-close');
 check('the topbar button reads as Settings',
   /settings/i.test(await page.locator('#btn-instructor').innerText()));
+check('a ? control sits in the title bar', await page.locator('#btn-howto').isVisible());
+await page.click('#btn-howto');
+check('the title-bar ? reopens the briefing mid-game', (await hidden(page, 'howto')) === false);
+await page.keyboard.press('Escape');
+
 await page.click('#btn-instructor');
 const panel = await page.locator('#instructor .modal-body').innerText();
 check('Settings holds projector mode, the instructor guide, and the self-test',
   /projector mode/i.test(panel) && /instructor guide/i.test(panel) && /self-test/i.test(panel));
+check('Settings offers presentation mode', /presentation mode/i.test(panel));
+check('Settings offers the presenter\'s notes', /presenter's notes/i.test(panel));
 check('the instructor guide link points at the guide',
   (await page.locator('#instructor a[href="teacher-guide.html"]').count()) >= 1);
+
+/* ---------- presentation mode and the presenter's notes -------------- */
+await page.click('#btn-notes');
+check('the presenter\'s notes open from Settings', (await hidden(page, 'presenter')) === false);
+const notes = await page.locator('#presenter .modal-body').innerText();
+check('the notes carry the running order and the debrief material',
+  /running order/i.test(notes) && /misconception/i.test(notes) && /debrief/i.test(notes),
+  notes.slice(0, 140));
+check('the notes are sectioned and openable',
+  (await page.locator('#presenter details').count()) === 5 &&
+  (await page.locator('#presenter details[open]').count()) >= 1);
+check('the notes link out to the full printable guide',
+  (await page.locator('#presenter a[href="teacher-guide.html"]').count()) === 1);
+await page.keyboard.press('Escape');
+check('Esc closes the notes', (await hidden(page, 'presenter')) === true);
+
+await page.click('#btn-instructor');
+await page.check('#chk-big2');
+check('presentation mode enlarges the UI and reveals the notes shortcut',
+  (await page.locator('body.presenting').count()) === 1 &&
+  (await page.locator('body.big').count()) === 1);
+await page.keyboard.press('Escape');
+check('the notes shortcut is reachable from the title bar while presenting',
+  await page.locator('#btn-notes-top').isVisible());
+await page.click('#btn-notes-top');
+check('the shortcut opens the notes', (await hidden(page, 'presenter')) === false);
+await page.keyboard.press('Escape');
+await page.click('#btn-instructor');
+await page.uncheck('#chk-big2');
+check('presentation mode turns back off',
+  (await page.locator('body.presenting').count()) === 0);
+
 await page.click('#btn-selftest');
 await page.waitForSelector('#selftest:not([hidden])');
 const sum = await page.locator('#selftest-sum').innerText();
@@ -257,6 +326,20 @@ const phoneErrors = [];
 phone.on('pageerror', e => phoneErrors.push(e.message));
 await phone.goto(FILE);
 await phone.waitForSelector('#setup-inner .sheet');
+check('phone: the briefing opens on load', (await hidden(phone, 'howto')) === false);
+check('phone: the briefing fits the screen and scrolls inside itself',
+  await phone.locator('#howto .modal').evaluate(n => {
+    const b = n.getBoundingClientRect();
+    return b.left >= 0 && b.right <= innerWidth && b.height <= innerHeight &&
+           n.scrollHeight > n.clientHeight;
+  }));
+check('phone: nothing inside the briefing overflows it',
+  await phone.locator('#howto .modal').evaluate(n => {
+    const r = n.getBoundingClientRect().right;
+    return [...n.querySelectorAll('*')].every(c => c.getBoundingClientRect().right <= r + 1);
+  }));
+await phone.tap('#howto', { position: { x: 6, y: 6 } });
+check('phone: a tap outside dismisses the briefing', (await hidden(phone, 'howto')) === true);
 check('phone: setup sheet renders and scrolls', await phone.locator('#setup-inner h1').count() === 1);
 await phone.fill('#in-team', 'Phone Crew');
 await phone.fill('#in-seed', 'MSU-2601');
@@ -274,6 +357,27 @@ const noHScroll = await phone.evaluate(() => {
   return window.scrollX === 0;      // the page must refuse to pan sideways
 });
 check('phone: the page cannot be panned sideways', noHScroll);
+check('phone: the credit sits clear of the SITE / MEETING tab bar', await phone.evaluate(() => {
+  const c = document.querySelector('.bh-credit').getBoundingClientRect();
+  const n = document.getElementById('m-nav').getBoundingClientRect();
+  return c.width > 0 && c.bottom <= n.top + 0.5;
+}));
+check('phone: the ? control is a real touch target in the title bar',
+  await phone.locator('#btn-howto').evaluate(n => {
+    const b = n.getBoundingClientRect();
+    return b.width >= 34 && b.height >= 34 && b.right <= innerWidth;
+  }));
+await phone.click('#btn-instructor');
+await phone.click('#btn-notes');
+check('phone: the presenter\'s notes fit the screen',
+  await phone.locator('#presenter .modal').evaluate(n => {
+    const r = n.getBoundingClientRect();
+    return r.left >= 0 && r.right <= innerWidth &&
+           [...n.querySelectorAll('*')].every(c => c.getBoundingClientRect().right <= r.right + 1);
+  }));
+check('phone: a notes section is a 40px+ tap target',
+  await phone.locator('#presenter summary').first().evaluate(n => n.getBoundingClientRect().height >= 40));
+await phone.keyboard.press('Escape');
 /* answer any calls, then commit one week end to end */
 const pcards = await phone.locator('.call').count();
 for (let k = 0; k < pcards; k++) {

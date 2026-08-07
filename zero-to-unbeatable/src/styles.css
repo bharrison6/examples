@@ -20,28 +20,6 @@
    button off the bottom of the screen.
    ===================================================================== */
 
-/* student-facing quick guide */
-.student-guide {
-  width: min(660px, calc(100% - 24px)); max-height: min(88dvh, 760px); padding: 0;
-  color: #172231; background: #fff; border: 2px solid #002144;
-  border-top: 5px solid #ECAC00; border-radius: 12px; box-shadow: 0 24px 70px rgba(0,0,0,.65);
-}
-.student-guide::backdrop { background: rgba(0,10,24,.84); backdrop-filter: blur(3px); }
-.student-guide-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #002144; color: #fff; }
-.student-guide-head h2 { flex: 1; margin: 0; color: #fff; font: 750 1.12rem system-ui, sans-serif; }
-.student-guide-head button { min-width: 40px; min-height: 40px; border: 1px solid #ECAC00; border-radius: 7px; background: #ECAC00; color: #002144; font-weight: 800; cursor: pointer; }
-.student-guide-body { padding: 16px 18px 8px; overflow-y: auto; font: 400 .95rem/1.48 system-ui, sans-serif; }
-.student-guide-body h3 { margin: 14px 0 4px; color: #002144; font-size: 1rem; }
-.student-guide-body p { margin: 0 0 10px; }
-.student-guide-body ol, .student-guide-body ul { margin: 5px 0 12px; padding-left: 22px; }
-.student-guide-body li { margin: 5px 0; }
-.student-guide-actions { display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
-.student-guide-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #002144; border-radius: 7px; background: #002144; color: #fff; font-weight: 750; cursor: pointer; }
-@media (max-width: 600px) {
-  .student-guide { width: 100%; max-width: none; max-height: 100dvh; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
-  .student-guide-body { padding: 14px 14px 6px; }
-}
-
 :root {
   --u: 1rem;
 
@@ -136,7 +114,6 @@ body.presenter #app { max-width: calc(25 * var(--u)); }
   display: grid; place-items: center; line-height: 1;
 }
 .icon-btn:active { background: var(--panel-2); }
-.icon-btn.guide-btn { width: auto; padding: 0 calc(.7 * var(--u)); border-radius: calc(.55 * var(--u)); font-size: calc(.72 * var(--u)); font-weight: 800; }
 @media (max-width: 430px) {
   #brand .b1 { white-space: nowrap; font-size: calc(1.05 * var(--u)); letter-spacing: .055em; }
   #brand .b1 em { display: none; }
@@ -341,6 +318,19 @@ select {
 
 #foot { text-align: center; color: var(--ink-3); font-size: calc(.64 * var(--u)); padding: calc(.7 * var(--u)) 0; line-height: 1.6; }
 #foot .msu { color: var(--gold); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; display: block; }
+/* Standing byline, always on screen. It sits under the overlays rather
+   than over them (z-index below .overlay), never takes a pointer event,
+   and settles back so it cannot compete with the board. Fixed in px, not
+   in --u, so presenter mode does not blow it up on a projector. */
+.bh-credit {
+  position: fixed; left: 8px; bottom: calc(6px + var(--safe-b)); z-index: 50;
+  pointer-events: none; font: 600 10px/1.3 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--gold); background: rgba(0, 33, 68, .85); border: 1px solid rgba(236, 172, 0, .4);
+  padding: 3px 10px; border-radius: 999px; letter-spacing: .03em; white-space: nowrap;
+  animation: bh-settle 9s ease forwards;
+}
+@keyframes bh-settle { 0%, 65% { opacity: .93 } 100% { opacity: .5 } }
+@media print { .bh-credit { display: none !important; } }
 
 /* ------------------------------------------------------------ overlay */
 .overlay {
@@ -364,6 +354,33 @@ select {
 .sheet-head .sub { font-size: calc(.6 * var(--u)); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
 .sheet-body { padding: calc(.8 * var(--u)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .sheet-foot { padding: calc(.7 * var(--u)); padding-bottom: calc(.7 * var(--u) + var(--safe-b)); border-top: 1px solid var(--line); display: flex; gap: calc(.5 * var(--u)); }
+/* ---------------------------------------------------- how to play */
+/* The instructions sheet borrows the app's sheet chrome wholesale; only
+   the prose inside it needs rules. Everything sizes off --u, so it grows
+   with presenter mode and shrinks on a short phone like the rest. */
+#howto .howto-lede { font-size: calc(.82 * var(--u)); line-height: 1.55; color: var(--ink); }
+#howto .howto-steps {
+  list-style: none; counter-reset: howto; margin: calc(.8 * var(--u)) 0;
+  display: grid; gap: calc(.55 * var(--u));
+}
+#howto .howto-steps li {
+  counter-increment: howto; position: relative;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  padding: calc(.55 * var(--u)) calc(.6 * var(--u)) calc(.55 * var(--u)) calc(2.5 * var(--u));
+  font-size: calc(.76 * var(--u)); line-height: 1.5; color: var(--ink-2);
+}
+#howto .howto-steps li b { color: var(--ink); }
+#howto .howto-steps li::before {
+  content: counter(howto); position: absolute; left: calc(.55 * var(--u)); top: calc(.5 * var(--u));
+  width: calc(1.5 * var(--u)); height: calc(1.5 * var(--u)); border-radius: 50%;
+  background: var(--gold); color: var(--navy); font-weight: 800; font-size: calc(.72 * var(--u));
+  display: grid; place-items: center; line-height: 1;
+}
+#howto .howto-note { font-size: calc(.74 * var(--u)); line-height: 1.55; color: var(--ink-2); margin-top: calc(.6 * var(--u)); }
+#howto .howto-note b { color: var(--gold); }
+#howto .howto-note.quiet { color: var(--ink-3); font-size: calc(.7 * var(--u)); }
+#howto .howto-note.quiet b { color: var(--ink-2); }
+
 .field { margin-bottom: calc(1.1 * var(--u)); }
 .field:last-child { margin-bottom: 0; }
 .switch { display: flex; align-items: center; gap: calc(.6 * var(--u)); font-size: calc(.8 * var(--u)); padding: calc(.4 * var(--u)) 0; cursor: pointer; }
@@ -600,6 +617,34 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
   box-shadow: none; margin: 0; max-width: none;
   padding: calc(1.6 * var(--u)) calc(1.1 * var(--u));
 }
+/* The stage cue card above the guide: same navy-and-gold, on the same
+   paper, but it is a screen aid — the print rules below drop it so the
+   Print button still produces the guide's own one-pager unchanged. */
+.stagecard {
+  background: #fff; color: #172231; border-bottom: 2px solid #c2cede;
+  padding: calc(1.1 * var(--u)) calc(1.1 * var(--u)) calc(1.2 * var(--u));
+  font-size: calc(.78 * var(--u)); line-height: 1.5;
+}
+.stagecard .sc-eyebrow {
+  font-size: calc(.6 * var(--u)); letter-spacing: .2em; text-transform: uppercase;
+  font-weight: 800; color: var(--navy); border-bottom: 2px solid var(--gold);
+  display: inline-block; padding-bottom: 2px; margin-bottom: calc(.6 * var(--u));
+}
+.stagecard h3 {
+  font-size: calc(.72 * var(--u)); letter-spacing: .1em; text-transform: uppercase;
+  color: var(--navy); margin: calc(.8 * var(--u)) 0 calc(.3 * var(--u));
+}
+.stagecard h3:first-of-type { margin-top: 0; }
+.stagecard p { margin-bottom: calc(.3 * var(--u)); }
+.stagecard code { font-family: ui-monospace, Consolas, monospace; }
+.stagecard .sc-warn { color: #A3341F; }
+.stagecard .sc-beats, .stagecard .sc-notes { list-style: none; display: grid; gap: calc(.3 * var(--u)); }
+.stagecard .sc-beats li { display: grid; grid-template-columns: calc(2.6 * var(--u)) 1fr; gap: calc(.4 * var(--u)); }
+.stagecard .sc-beats li span { font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; }
+.stagecard .sc-notes li { padding-left: calc(.8 * var(--u)); border-left: 2px solid #dfe5ee; }
+.stagecard .sc-more { margin-top: calc(.7 * var(--u)); color: #41505f; font-size: calc(.7 * var(--u)); }
+@media print { .stagecard { display: none !important; } }
+
 #notes .guide .cols { column-count: 1; }
 #notes .guide .act2 { break-before: auto; }
 #notes .guide header, #notes .guide footer { flex-wrap: wrap; }

@@ -34,6 +34,46 @@ console.log('load + Act 1');
 await page.goto(page_url);
 await page.waitForFunction(() => document.getElementById('livesample').textContent.includes('era 0'), null, { timeout: 30000 });
 ok(true, 'worker boots and the newborn model reports in');
+
+// ---- required UX (CONTRACT.md): how-to on load, settings, presenter's notes ----
+// Runs first because these are modal: everything after needs them dismissed.
+const isOpen = (id) => page.$eval('#' + id, (el) => el.open);
+ok(await isOpen('student-guide'), 'the how-to card is shown on load');
+await page.keyboard.press('Escape');
+await page.waitForTimeout(60);
+ok(!(await isOpen('student-guide')), 'Escape dismisses it');
+await page.click('#howto-open');
+ok(await isOpen('student-guide'), 'the always-visible ? control reopens it');
+await page.click('#student-guide .student-guide-actions button');
+await page.waitForTimeout(60);
+ok(!(await isOpen('student-guide')), 'and its footer button closes it again');
+
+await page.click('#glass-settings-open');
+ok(await isOpen('glass-settings'), 'the settings button opens a settings menu');
+ok(/presentation mode/i.test(await page.$eval('#presbtn', (el) => el.textContent)), 'settings offers presentation mode');
+await page.click('#glass-settings .presenter-notes-open');
+await page.waitForTimeout(60);
+const notesTxt = await page.$eval('#presenter-notes', (el) => el.textContent);
+ok(await isOpen('presenter-notes') && !(await isOpen('glass-settings')),
+  "presenter's notes open from settings (and replace it rather than stacking)");
+ok(/Act 1/.test(notesTxt) && /Act 2/.test(notesTxt) && /Act 3/.test(notesTxt) && /Do not train before the session/.test(notesTxt),
+  "the notes carry stage cues for all three acts");
+await page.keyboard.press('Escape');
+await page.waitForTimeout(60);
+
+await page.click('#glass-settings-open');
+await page.click('#presbtn');
+ok(await page.evaluate(() => document.body.classList.contains('presenter')), 'presentation mode engages');
+ok(/on$/.test(await page.$eval('#presbtn', (el) => el.textContent.trim())), 'and the control reports its state');
+await page.click('#presbtn');   // back to normal scale before the size audits
+await page.keyboard.press('Escape');
+await page.waitForTimeout(60);
+ok(await page.isVisible('#howto-open') && await page.isVisible('#glass-settings-open'),
+  'both controls stay visible in the sticky header');
+ok(/Bryant Harrison/.test(await page.$eval('.bh-credit', (el) => el.textContent)) &&
+   /Murray State University/.test(await page.$eval('.bh-credit', (el) => el.textContent)),
+  'the attribution byline is present and visible');
+
 ok((await page.$$('#tokout .tok')).length > 5, 'tokenizer renders character tokens');
 ok((await page.$$('#pmap .prow')).length === 8, 'parameter map lists 8 component rows');
 const corpus = await page.$eval('#corpusbox', (el) => el.textContent);
@@ -164,6 +204,7 @@ await page2.addInitScript(() => {
 });
 await page2.goto(page_url);
 await page2.waitForFunction(() => document.getElementById('livesample').textContent.includes('era 0'), null, { timeout: 30000 });
+await page2.keyboard.press('Escape');   // dismiss the how-to card
 ok(true, 'boots and initializes the model without any Worker');
 const modeNote = await page2.$eval('#modenote', (el) => el.textContent);
 ok(/single-thread/.test(modeNote), 'the page says so honestly in the footer');

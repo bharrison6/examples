@@ -18,11 +18,11 @@
   "compliance": {
     "readme": true,
     "guide": true,
-    "howto_popup": false,
-    "settings_menu": false,
-    "presentation_mode": "unverified",
-    "presenter_notes": false,
-    "msu_theme": "unverified",
+    "howto_popup": true,
+    "settings_menu": true,
+    "presentation_mode": true,
+    "presenter_notes": true,
+    "msu_theme": true,
     "attribution_visible": true,
     "mobile": true,
     "offline_no_inference": true

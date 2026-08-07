@@ -36,7 +36,8 @@
   --blue:       #002144;
   --blue-2:     #14477d;
   --blue-pale:  #dce8f5;
-  --gold:       #f1b82d;
+  --lite-blue:  #00A4E3;
+  --gold:       #ECAC00;
   --gold-dark:  #b07d00;
   --red:        #b3261e;
   --red-pale:   #f6dedc;
@@ -164,6 +165,14 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .btn.commit:disabled { background: var(--ink-3); border-color: var(--ink-3); cursor: default; }
 .btn.sm { padding: 3px 8px; font-size: .78rem; }
 .btn.ghost { border-color: var(--line); background: transparent; }
+/* a single-glyph control — kept square so it stays a 34px touch target */
+.btn.icon {
+  min-width: 34px; min-height: 34px; padding: 4px 8px; font-size: .95rem; font-weight: 700;
+  line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+/* the presenter's-notes shortcut only exists while presenting */
+#btn-notes-top { display: none; }
+body.presenting #btn-notes-top { display: inline-flex; }
 .btn[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
 
 /* ---------- main panes ---------- */
@@ -608,10 +617,12 @@ body.big .fr-tags .f.days { display: none; }
 #tip.on { opacity: 1; }
 #tip b { display: block; margin-bottom: 3px; color: #9ec5e8; }
 
-/* ---------- overlays ---------- */
+/* ---------- overlays ----------
+   Above #setup (z 70), so a modal opened from the setup sheet — the
+   how-to briefing, the self-test — is not painted over by it. */
 .overlay {
   position: fixed; inset: 0; background: rgba(20,26,36,.62);
-  display: flex; align-items: center; justify-content: center; z-index: 60; padding: 24px;
+  display: flex; align-items: center; justify-content: center; z-index: 80; padding: 24px;
 }
 .overlay[hidden] { display: none; }
 .modal {
@@ -626,6 +637,101 @@ body.big .fr-tags .f.days { display: none; }
 .modal-head .sub { font-family: var(--mono); font-size: .66rem; color: var(--ink-3); letter-spacing: .1em; }
 .modal-body { padding: 18px 20px; }
 .modal-foot { padding: 12px 20px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+.modal-foot.split { justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.modal-foot .foot-note {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .06em; color: var(--ink-3);
+}
+
+/* ---------- how-to briefing + presenter's notes ----------
+   Both are sheets off the same drawing set as everything else: navy
+   title block, gold rule under it, monospaced sub-heads. Sized for a
+   phone first — one column, everything scrolls inside the modal. */
+.modal.brief { max-width: 620px; }
+.modal.notes { max-width: 700px; }
+.modal-head.navy { background: var(--blue); border-bottom: 4px solid var(--gold); color: #fff; }
+.modal-head.navy h2 { color: #fff; letter-spacing: .05em; }
+.modal-head.navy .sub { color: var(--lite-blue); }
+.modal-head.navy .msu-line {
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .24em; color: var(--gold);
+  font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.modal-head.navy .btn.x {
+  background: transparent; border-color: rgba(255,255,255,.34); color: #fff;
+  padding: 4px 11px; font-size: .9rem; line-height: 1.1;
+}
+.modal-head.navy .btn.x:hover { background: rgba(255,255,255,.12); border-color: #fff; }
+
+.brief .lede { font-size: .93rem; line-height: 1.5; margin: 0 0 4px; }
+.brief h3, .notes h3 {
+  font-family: var(--mono); font-size: .63rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-3); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line-2);
+}
+.brief ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: brief-step; }
+.brief ol.steps li {
+  position: relative; padding-left: 32px; margin-bottom: 9px;
+  font-size: .87rem; line-height: 1.45;
+}
+.brief ol.steps li::before {
+  counter-increment: brief-step; content: counter(brief-step);
+  position: absolute; left: 0; top: 1px; width: 21px; height: 21px; border-radius: 50%;
+  background: var(--blue); color: var(--gold); font-family: var(--mono); font-size: .7rem;
+  font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.brief .row { display: flex; gap: 10px; margin-bottom: 9px; font-size: .87rem; line-height: 1.45; }
+.brief .row .k {
+  flex: 0 0 96px; font-family: var(--mono); font-size: .63rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--blue); font-weight: 700; padding-top: 3px;
+}
+.brief ul.watch { margin: 0; padding-left: 17px; font-size: .87rem; line-height: 1.48; }
+.brief ul.watch li { margin-bottom: 8px; }
+.brief ul.watch li:last-child { margin-bottom: 0; }
+.brief .rule { color: var(--blue); font-weight: 700; }
+.brief .phone {
+  border-left: 3px solid var(--lite-blue); background: var(--paper-2);
+  padding: 9px 12px; font-size: .84rem; line-height: 1.45; margin-top: 4px;
+}
+
+.notes details {
+  border: 1px solid var(--line); border-radius: 3px; background: var(--paper); margin-bottom: 8px;
+}
+.notes summary {
+  padding: 10px 12px; cursor: pointer; font-weight: 700; font-size: .9rem;
+  display: flex; align-items: center; gap: 9px; list-style: none;
+}
+.notes summary::-webkit-details-marker { display: none; }
+.notes summary::after {
+  content: '+'; margin-left: auto; font-family: var(--mono); font-weight: 700; color: var(--ink-3);
+}
+.notes details[open] > summary { background: var(--paper-2); border-bottom: 1px solid var(--line-2); }
+.notes details[open] > summary::after { content: '\2212'; }
+.notes summary .n {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; color: var(--gold);
+  background: var(--blue); border-radius: 2px; padding: 3px 7px; flex: 0 0 auto;
+}
+.notes .nb { padding: 12px 13px; font-size: .85rem; line-height: 1.5; }
+.notes .nb p { margin: 0 0 9px; }
+.notes .nb p:last-child, .notes .nb ul:last-child { margin-bottom: 0; }
+.notes .nb ul { margin: 0 0 9px; padding-left: 17px; }
+.notes .nb li { margin-bottom: 7px; }
+.notes .nb li:last-child { margin-bottom: 0; }
+.notes .cue { color: var(--blue); font-weight: 700; }
+.notes .said {
+  border-left: 3px solid var(--gold); background: var(--paper-2);
+  padding: 7px 11px; margin: 0 0 8px; font-size: .85rem; line-height: 1.45;
+}
+.notes table.ros { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.notes table.ros td {
+  padding: 6px 7px; border-bottom: 1px solid var(--line-2); vertical-align: top; line-height: 1.42;
+}
+.notes table.ros tr:last-child td { border-bottom: 0; }
+.notes table.ros td.t {
+  font-family: var(--mono); font-size: .7rem; color: var(--blue); font-weight: 700;
+  white-space: nowrap; width: 58px;
+}
+.notes .src {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .05em; color: var(--ink-3);
+  margin-top: 12px; line-height: 1.5;
+}
 
 /* ---------- setup screen ---------- */
 #setup { position: fixed; inset: 0; background: var(--paper); z-index: 70; overflow-y: auto; }
@@ -808,6 +914,16 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   #view-tabs .legend { display: none; }
   .modal { max-height: 86vh; }
   #tip { max-width: 86vw; }
+  /* overlays: no side gutters worth losing on a 390px screen */
+  .overlay { padding: 12px; }
+  .modal-head { padding: 12px 14px; }
+  .modal-body { padding: 14px 14px; }
+  .modal-foot { padding: 10px 14px; }
+  .modal-foot.split .foot-note { flex: 1 1 100%; order: 2; }
+  .brief .row { display: block; }
+  .brief .row .k { padding-top: 0; margin-bottom: 1px; }
+  .notes summary { padding: 12px; }
+  .notes table.ros td.t { width: 52px; }
 }
 
 @media (max-width: 1560px) { .hud-cell.opt { display: none; } }
@@ -817,6 +933,27 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   #brand { min-width: 110px; }
 }
 body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
+
+/* ---------- attribution ----------
+   Visible on every screen, including over a modal, and out of the way:
+   it settles to half opacity a few seconds after load. Above every
+   overlay so it is never hidden; never in front of a finger. */
+.bh-credit {
+  position: fixed; left: 8px; bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 200; pointer-events: none;
+  font: 600 10px/1.3 var(--sans); letter-spacing: .03em; white-space: nowrap;
+  color: var(--gold); background: rgba(0,33,68,.85);
+  border: 1px solid rgba(236,172,0,.4); border-radius: 999px; padding: 3px 10px;
+  animation: bh-settle 9s ease forwards;
+}
+@keyframes bh-settle { 0%, 65% { opacity: .93; } 100% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .bh-credit { animation: none; opacity: .8; } }
+/* Must sit after the rule above, not up in the mobile block — same
+   specificity, so source order decides. Lifts the credit clear of the
+   SITE / MEETING tab bar instead of sitting on top of SITE. */
+@media (max-width: 820px) {
+  .bh-credit { bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+}
 
 </style>
 </head>
@@ -830,11 +967,13 @@ body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
 <!-- ============================= APP ============================= -->
 <div id="app" hidden>
   <header id="topbar">
-    <div id="brand"><span class="msu"><svg width="13" height="13" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#f1b82d" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE</span><span class="t1">TOPPING OUT</span><span class="t2">RACER CONSTRUCTION MGMT</span></div>
+    <div id="brand"><span class="msu"><svg width="13" height="13" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE</span><span class="t1">TOPPING OUT</span><span class="t2">RACER CONSTRUCTION MGMT</span></div>
     <div id="project-block"></div>
     <div id="hud"></div>
     <div id="topbar-actions">
-      <button class="btn sm ghost" id="btn-instructor" title="Settings — projector mode, instructor guide, engine self-test">⚙ Settings</button>
+      <button class="btn icon ghost" id="btn-notes-top" title="Presenter's notes — the stage notes for this session" aria-label="Presenter's notes">🎙</button>
+      <button class="btn icon ghost" id="btn-howto" title="How to play — the weekly loop and the three views" aria-label="How to play">?</button>
+      <button class="btn sm ghost" id="btn-instructor" title="Settings — presentation mode, presenter's notes, instructor guide, engine self-test">⚙ Settings</button>
     </div>
   </header>
 
@@ -865,18 +1004,189 @@ body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
   </main>
 </div>
 
-<!-- ========================== OVERLAYS =========================== -->
+<!-- ========================== OVERLAYS ===========================
+     #howto opens on every load, over the setup sheet. Dismiss with the
+     button, a tap on the paper around it, or Esc; reopen from ? in the
+     title bar or on the setup sheet. -->
+<div class="overlay" id="howto" hidden>
+  <div class="modal brief" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+    <div class="modal-head navy">
+      <div>
+        <div class="msu-line"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div>
+        <h2 id="howto-title">HOW TO PLAY</h2>
+        <div class="sub">PRECONSTRUCTION BRIEFING · SHEET HT-01</div>
+      </div>
+      <button class="btn x" data-close="howto" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="lede">You are the general contractor on a small commercial building, and the clock is
+      the contract. Highest profit at completion wins. Everybody in the room enters the
+      <b>same seed code</b>, so the weather, the late deliveries and every roll are identical for
+      every team — the only variable is what you decide.</p>
+
+      <h3>One turn is one week — Monday, 7 a.m.</h3>
+      <ol class="steps">
+        <li><b>The news.</b> This week's cards: weather, late deliveries, slipping subs, failed
+        inspections, RFIs. Written with flavour, stated mechanically.</li>
+        <li><b>Decisions.</b> Answer the calls on the table, put crews on work fronts, order or
+        release a crew, authorise overtime, expedite a delivery, work through the rain or stand
+        down. The preview shows the projected finish and profit <i>before</i> you commit.</li>
+        <li><b>Commit.</b> One button. No undo.</li>
+        <li><b>The week runs.</b> Five working days animate on the site, costs tick, progress
+        happens or it doesn't.</li>
+      </ol>
+
+      <h3>Three ways to look at the same job</h3>
+      <div class="row"><div class="k">4D cutaway</div><div>A section through the building driven by
+        real progress. The finished job is drawn as a faint ghost and work fills it in. Crews stand
+        on the floor they are working — a stacked floor looks crowded and turns red.</div></div>
+      <div class="row"><div class="k">Gantt</div><div>Bars from early start to early finish, a thin
+        tail out to late finish for float, critical work in red, cure and inspection holds hatched,
+        today and the contract date both marked.</div></div>
+      <div class="row"><div class="k">Network</div><div>The precedence diagram: relationship type
+        and lag on every arrow, the driving path thick and red. It is computed every week, never
+        declared — so it moves, and the game says so when it does.</div></div>
+
+      <h3>Three things that cost teams the game</h3>
+      <ul class="watch">
+        <li><span class="rule">Float is shared, not spare.</span> Total float belongs to the whole
+        chain; spend it on one activity and the ones behind it no longer have it. Read the float
+        column before you decide anything.</li>
+        <li><span class="rule">Not answering a call is answering it.</span> Every call defaults to
+        its first option, which is always free and always the most exposed.</li>
+        <li><span class="rule">Cure and inspection holds cannot be compressed.</span> No crew count,
+        no overtime, no expediting fee shortens them. Ever.</li>
+      </ul>
+
+      <div class="phone">On a phone the job folds into two tabs — <b>SITE</b> for the drawings and
+      <b>MEETING</b> for the news, the decisions and the commit button. Tap any underlined term for
+      what it means.</div>
+    </div>
+    <div class="modal-foot split">
+      <span class="foot-note">ESC OR TAP OUTSIDE TO CLOSE · REOPEN WITH ? ANY TIME</span>
+      <button class="btn primary" data-close="howto">Got it — start the job</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="presenter" hidden>
+  <div class="modal notes" role="dialog" aria-modal="true" aria-labelledby="presenter-title">
+    <div class="modal-head navy">
+      <div>
+        <div class="msu-line"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div>
+        <h2 id="presenter-title">PRESENTER'S NOTES</h2>
+        <div class="sub">STAGE NOTES · 75-MINUTE SESSION</div>
+      </div>
+      <button class="btn x" data-close="presenter" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <details open>
+        <summary><span class="n">1</span>Running order — 75 minutes</summary>
+        <div class="nb">
+          <table class="ros">
+            <tr><td class="t">0–5</td><td><b>Setup.</b> Seed code and difficulty on the board. Presentation mode up front. Confirm every team reads the same project start date before anyone commits a week.</td></tr>
+            <tr><td class="t">5–11</td><td><b>CPM at the board.</b> Forward pass, backward pass, total float, on the ten-activity tutorial network. Leave free float for the debrief.</td></tr>
+            <tr><td class="t">11–22</td><td><b>Tutorial run</b> — nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
+            <tr><td class="t">22–26</td><td><b>Brief the competition.</b> Same seed, same difficulty, score is profit, no undo. Show where float and the critical path live.</td></tr>
+            <tr><td class="t">26–59</td><td><b>Competitive run.</b> Twenty-four to thirty turns. Checkpoint at minute 44 — teams should be near week 12; anyone behind commits the quiet weeks fast.</td></tr>
+            <tr><td class="t">59–63</td><td><b>Leaderboard and the do-nothing baseline.</b> Worst team against baseline is usually more interesting than first against second.</td></tr>
+            <tr><td class="t">63–75</td><td><b>Debrief.</b> Open on the calls table — fastest route into the room. Then the misconceptions and two or three questions. Finish on the week the critical path moved and ask who noticed at the time.</td></tr>
+          </table>
+          <p class="src">Do not skip the tutorial. Teams that meet the interface on the graded run spend six weeks clicking instead of thinking, and the debrief gets thin.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">2</span>Say these out loud</summary>
+        <div class="nb">
+          <p class="said">Float is not slack in your day — it is what a specific activity can slip before it moves the finish.</p>
+          <p class="said">Calls default to the free option, so not answering is answering.</p>
+          <p class="said">Crews take two weeks to arrive, so manpower is a forecast.</p>
+          <ul>
+            <li><span class="cue">Day indexing.</span> Days are numbered from 0 and finish is exclusive, so EF = ES + duration. Textbook tables numbered 1 through <i>n</i> read one higher. Say it once at the board and nobody argues later.</li>
+            <li><span class="cue">Float is never negative.</span> It is measured to computed project completion; performance against the contract is reported separately, in calendar days early or late. Students who have seen negative float in P6 need this said explicitly.</li>
+            <li><span class="cue">The roll is shared.</span> A call's roll is a hash of the seed and the call — nothing else. Every team on your seed faces the identical roll. What differs is the bar that roll has to clear.</li>
+            <li><span class="cue">Rain only stops exposed work.</span> Earthwork, concrete placement, roofing and envelope. Nothing else in the building is weather-flagged, and a cure keeps curing through a washout.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">3</span>Five misconceptions, and where each is exposed</summary>
+        <div class="nb">
+          <ul>
+            <li><span class="cue">(a) Float is free time you can spend casually.</span> The MEP branch. Level 1 rough-in carries 9 days of total float but only <b>1 day of free float</b>: slip it three days and the project has not moved, but Level 2 rough-in cannot start when it wanted to. Ask the team that spent that float what they thought it was for.</li>
+            <li><span class="cue">(b) Overtime always accelerates.</span> Arithmetic first: a trade left on 50-hour weeks is producing 0.938 of a straight-time week by week 5 while paying 1.375. Then the structural one — when a rough-in inspection fails, overtime does nothing, because holds and cures are non-compressible.</li>
+            <li><span class="cue">(c) The critical path is fixed at baseline.</span> Roofing sits off it with six days of float until two rain days and a membrane backorder put it on. The debrief question is not whether they saw the announcement — it is whether anyone changed allocation the week before, when float was down to one day and still technically positive.</li>
+            <li><span class="cue">(d) Weather delays everything equally.</span> The same card in two places: three days off excavation in week 3 moves the project; the identical card in week 18, with the building dried in, costs exactly nothing.</li>
+            <li><span class="cue">(e) A good outcome means it was a good call.</span> Put a <i>“got away with it”</i> row next to a <i>“covered — never in doubt”</i> row on the same roll, then price both on the Monday they were decided. Ask which team they would want running the next job.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">4</span>Debrief openers — pick two or three</summary>
+        <div class="nb">
+          <ul>
+            <li><span class="cue">Bearing at column line 4.</span> Price all three options before anyone admits what they picked. What is a day worth in week 1 with cushion left, and what is it worth once the foundation branch is at zero float? Same call, two right answers — what changed was the float, not the odds.</li>
+            <li><span class="cue">The roll everybody shared.</span> Ask each team what it thought it was buying, in dollars, <i>before</i> the roll goes on the screen. Then show it. Does your answer change now that you know how it came out? If it does, say so out loud — that is the habit you are trying to break.</li>
+            <li><span class="cue">The weather call.</span> Which is the better buy? Neither, until you say what is exposed. The forecast is not the decision — the float column is.</li>
+            <li><span class="cue">The elevator cab.</span> $21,000 against a three-day delay on an activity carrying 21 days of total float at baseline. Who paid? Now work it backwards: what would the float have to be for $21,000 to be right?</li>
+            <li><span class="cue">The failed rough-in inspection.</span> No crew helps, no overtime helps, no fee is offered. What is actually left is sequence — getting a work front finished early is the only defence against a card you cannot buy off.</li>
+            <li><span class="cue">The week the path moved.</span> Pull up the week the game announced it. Who was watching the float column, and who found out from the announcement?</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">5</span>If it drifts</summary>
+        <div class="nb">
+          <ul>
+            <li><span class="cue">Pace.</span> The usual failure is a team that deliberates every week. Tell the room: read the news, ask whether it touches anything with zero or one day of float, and if it does not, commit. Save deliberation for the calls, the weather weeks with critical work exposed, and the weeks manpower has to be ordered ahead of the need.</li>
+            <li><span class="cue">Short on time.</span> Call it at minute 59 wherever teams are and score <i>projected</i> profit — a legitimate score that ranks teams the same way. Do not buy time by cutting the debrief.</li>
+            <li><span class="cue">Difficulty.</span> Easy draws fewer, milder cards and takes a day off every rain forecast; Standard is the same card count at full severity; Hard draws more and scales severity to 130% with an extra rain day. Standard for a first session, Easy if this is the class's first exposure to CPM at all.</li>
+            <li><span class="cue">A disputed score.</span> No clock, no network, no unseeded randomness — same seed plus same decisions gives the same profit to the dollar. Run the engine self-test from the Settings menu, live, in front of the class. It is a surprisingly good two minutes of teaching.</li>
+            <li><span class="cue">Between sections.</span> Clear the leaderboard from the Settings menu — scores are held on this machine, so a second section starts clean.</li>
+          </ul>
+        </div>
+      </details>
+
+      <p class="src">Distilled from the printable instructor guide — the full session plan, the CPM
+      background, the overtime sources and all eleven debrief questions are in there.</p>
+    </div>
+    <div class="modal-foot split">
+      <a class="btn" href="teacher-guide.html" target="_blank" rel="noopener">📄 Full instructor guide</a>
+      <button class="btn primary" data-close="presenter">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="instructor" hidden>
   <div class="modal" style="max-width:520px">
     <div class="modal-head">
-      <div><h2>⚙ Settings</h2><div class="sub">PROJECTOR · INSTRUCTOR GUIDE · SELF-TEST</div></div>
+      <div><h2>⚙ Settings</h2><div class="sub">PRESENTATION · NOTES · GUIDE · SELF-TEST</div></div>
     </div>
     <div class="modal-body">
       <div class="field">
-        <label>Display</label>
+        <label>Presentation mode</label>
         <label style="font-size:.88rem;display:flex;align-items:center;gap:7px;cursor:pointer">
-          <input type="checkbox" id="chk-big2"> Projector mode — large UI, readable from the back of the room
+          <input type="checkbox" id="chk-big2"> Presentation mode — large UI, readable from the back of the room
         </label>
+        <button class="btn" id="btn-notes" style="margin-top:8px">🎙 Open presenter's notes</button>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          Also known as projector mode. Turn it on for THE NEWS each week so the whole room reads the
+          same card, and for the leaderboard at minute 59 — it also puts a 🎙 shortcut to the notes in
+          the title bar. The notes are the stage version of the guide: running order, the lines worth
+          saying out loud, the misconceptions and the debrief openers.
+        </div>
+      </div>
+      <div class="field">
+        <label>How to play</label>
+        <button class="btn" id="btn-howto2">? Show the how-to briefing</button>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          The weekly loop and the three views, on one sheet. It opens on every load; this puts it back
+          up on the projector when a team asks mid-session.
+        </div>
       </div>
       <div class="field">
         <label>Instructor guide</label>
@@ -4940,6 +5250,38 @@ TO.App = (function () {
     toast._t = setTimeout(function () { t.classList.remove('on'); }, ms || 2600);
   }
 
+  /* ---------- overlays -------------------------------------------- */
+  /* Every modal in the game is a .overlay that toggles [hidden]. These
+     two wrap that so Esc, the backdrop and the close buttons all go
+     through the same door. */
+  function openOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) el.hidden = false;
+  }
+  function closeOverlay(id) {
+    var el = document.getElementById(id);
+    if (el) el.hidden = true;
+  }
+  /* topmost open overlay, for Esc — later in the document wins, which
+     is the one drawn on top */
+  function topOverlay() {
+    var open = document.querySelectorAll('.overlay:not([hidden])');
+    return open.length ? open[open.length - 1] : null;
+  }
+
+  /* ---------- presentation mode -----------------------------------
+     One switch: the large-type UI the room can read from the back, and
+     the 🎙 shortcut to the presenter's notes in the title bar. Stored
+     under the old key so an instructor's machine keeps its setting. */
+  function setPresentation(on) {
+    document.body.classList.toggle('big', !!on);
+    document.body.classList.toggle('presenting', !!on);
+    store('to.big', !!on);
+    var a = document.getElementById('chk-big'), b = document.getElementById('chk-big2');
+    if (a) a.checked = !!on;
+    if (b) b.checked = !!on;
+  }
+
   /* =================================================================
      SETUP
      ================================================================= */
@@ -4962,7 +5304,7 @@ TO.App = (function () {
     host.innerHTML =
       '<div class="sheet">' +
         '<div class="sheet-title">' +
-          '<div><div class="msu-line"><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#f1b82d" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div><h1>TOPPING OUT</h1>' +
+          '<div><div class="msu-line"><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div><h1>TOPPING OUT</h1>' +
             '<div class="tagline">Competitive construction scheduling. Same building, same weather, same bad luck — the only variable is what you decide. Go Racers.</div></div>' +
           '<div class="stamp">RACER CONSTRUCTION MGMT<br>SCHEDULING SIMULATION<br>REV 3.0</div>' +
         '</div>' +
@@ -4992,8 +5334,9 @@ TO.App = (function () {
           '</div>' +
           '<div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">' +
             '<button class="btn primary" id="btn-start" style="font-size:1rem;padding:11px 24px">Start the job</button>' +
+            '<button class="btn ghost" id="btn-howto3">? How to play</button>' +
             '<label style="font-size:.85rem;display:flex;align-items:center;gap:6px;cursor:pointer">' +
-              '<input type="checkbox" id="chk-big"' + (document.body.classList.contains('big') ? ' checked' : '') + '> Projector mode</label>' +
+              '<input type="checkbox" id="chk-big"' + (document.body.classList.contains('big') ? ' checked' : '') + '> Presentation mode</label>' +
             '<a class="btn ghost" href="teacher-guide.html" target="_blank">📄 Instructor guide</a>' +
             '<button class="btn ghost" id="btn-selftest2">🧪 Engine self-test</button>' +
           '</div>' +
@@ -5015,10 +5358,8 @@ TO.App = (function () {
       setupState.seed = randomSeedCode();
       document.getElementById('in-seed').value = setupState.seed;
     };
-    document.getElementById('chk-big').onchange = function () {
-      document.body.classList.toggle('big', this.checked);
-      store('to.big', this.checked);
-    };
+    document.getElementById('chk-big').onchange = function () { setPresentation(this.checked); };
+    document.getElementById('btn-howto3').onclick = function () { openOverlay('howto'); };
     document.getElementById('btn-start').onclick = startGame;
     document.getElementById('btn-selftest2').onclick = showSelfTest;
     var reset = document.getElementById('btn-lb-reset');
@@ -6130,9 +6471,14 @@ TO.App = (function () {
      ================================================================= */
   function init() {
     initTooltips();
-    if (store('to.big')) document.body.classList.add('big');
+    if (store('to.big')) setPresentation(true);
     setupState.seed = '';
     renderSetup();
+
+    /* The briefing opens on every load, over the setup sheet. It is the
+       first thing a team sees and the last thing that should need
+       explaining, so it is not remembered-dismissed. */
+    openOverlay('howto');
 
     /* mobile tab bar: SITE shows the drawings, MEETING shows the loop.
        During the week animation we flip to the site so the player sees
@@ -6152,16 +6498,21 @@ TO.App = (function () {
       view = b.getAttribute('data-view');
       renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
     };
-    document.getElementById('btn-instructor').onclick = function () {
-      document.getElementById('instructor').hidden = false;
+    document.getElementById('btn-instructor').onclick = function () { openOverlay('instructor'); };
+    document.getElementById('btn-howto').onclick = function () { openOverlay('howto'); };
+    document.getElementById('btn-howto2').onclick = function () {
+      closeOverlay('instructor'); openOverlay('howto');
     };
+    document.getElementById('btn-notes').onclick = function () {
+      closeOverlay('instructor'); openOverlay('presenter');
+    };
+    document.getElementById('btn-notes-top').onclick = function () { openOverlay('presenter'); };
     document.getElementById('btn-selftest').onclick = function () {
-      document.getElementById('instructor').hidden = true;
+      closeOverlay('instructor');
       showSelfTest();
     };
     document.getElementById('chk-big2').onchange = function () {
-      document.body.classList.toggle('big', this.checked);
-      store('to.big', this.checked);
+      setPresentation(this.checked);
       if (g) renderAll();
     };
     document.getElementById('btn-newgame').onclick = function () {
@@ -6178,7 +6529,15 @@ TO.App = (function () {
       store('to.leaderboard', []); toast('Leaderboard cleared.');
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) {
-      b.onclick = function () { document.getElementById(b.getAttribute('data-close')).hidden = true; };
+      b.onclick = function () { closeOverlay(b.getAttribute('data-close')); };
+    });
+    /* Tap the paper around the briefing to dismiss it — the same gesture
+       on a phone as clicking away from it on a laptop. Scoped to the
+       briefing and the notes: nobody wants to lose a debrief to a
+       stray tap. */
+    ['howto', 'presenter'].forEach(function (id) {
+      var ov = document.getElementById(id);
+      ov.addEventListener('click', function (e) { if (e.target === ov) closeOverlay(id); });
     });
     document.getElementById('btn-debrief-close').onclick = function () {
       document.getElementById('debrief').hidden = true;
@@ -6187,7 +6546,14 @@ TO.App = (function () {
       if (g && !animating && view !== '4d') renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' && !document.getElementById('setup').hidden) startGame();
+      if (e.key === 'Escape') {
+        var top = topOverlay();
+        if (top) { top.hidden = true; e.preventDefault(); }
+        return;
+      }
+      /* Enter starts the job — but not while a modal is up over the
+         setup sheet, or the briefing dismisses straight into a run. */
+      if (e.key === 'Enter' && !document.getElementById('setup').hidden && !topOverlay()) startGame();
     });
   }
 
@@ -6200,6 +6566,8 @@ if (typeof document !== 'undefined') {
 }
 
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+<!-- Attribution — styled in styles.css (.bh-credit) so the mobile rule can
+     lift it clear of the SITE / MEETING tab bar. -->
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

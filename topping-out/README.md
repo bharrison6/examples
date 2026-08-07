@@ -10,13 +10,17 @@ offline on school laptops straight off a USB stick or a shared drive.
 
 | File | What it is |
 |---|---|
-| `index.html` | The whole game — one self-contained file (~215 KB). |
+| `index.html` | The whole game — one self-contained file (~332 KB). |
 | `teacher-guide.html` | Printable instructor guide — 75-minute session plan, CPM background, sources. |
 | `Topping-Out-Instructor-Guide.pdf` | The same guide, pre-rendered to Letter. |
 | `SPEC.md` | The original design brief this was built against. |
 
 Teams manage the schedule of the same small commercial building, week by week, against the
 same run of bad luck. Highest profit at completion wins.
+
+A **how-to briefing** opens on every load — the weekly loop, the three views and the three
+things that cost teams the game, on one sheet. Dismiss it with the button, a tap on the paper
+around it, or Esc; the **?** in the title bar (and on the setup sheet) puts it back up any time.
 
 ## What makes it a real scheduler and not a scripted timeline
 
@@ -213,9 +217,16 @@ against the **no-intervention baseline** — the same seed played by simply lett
 
 ## Instructor features
 
-**⚙ Settings** menu: projector mode (large UI, readable from the back of a room), new game /
-change seed, leaderboard reset, a link to the printable guide, and an engine self-test that runs
-28 assertions — including the CPM hand calculation — in front of the class.
+**⚙ Settings** menu: **presentation mode** (large UI, readable from the back of a room — the
+old projector mode), the **presenter's notes**, the how-to briefing, new game / change seed,
+leaderboard reset, a link to the printable guide, and an engine self-test that runs 36
+assertions — including the CPM hand calculation — in front of the class.
+
+**Presenter's notes** are the stage version of the instructor guide, distilled to what you need
+while you are standing up: the 75-minute running order, the lines worth saying out loud, the five
+misconceptions and the moment that exposes each, six debrief openers, and what to do when the
+session drifts. Five collapsible sections, readable on a phone, with a link out to the full
+printable guide. Turning presentation mode on also puts a 🎙 shortcut to them in the title bar.
 
 Difficulty (Easy / Standard / Hard) scales how often events fire and how hard they hit. The seed
 fixes *which* events fire and in what order.
@@ -231,8 +242,8 @@ Sources live in `src/` and are concatenated by `build.js` into the single `index
 ```
 node build.js                  # rebuild index.html from src/
 node src/engine.js --test      # 36 engine assertions (also runs in-browser from the Settings menu)
-node src/playtest.test.js      # 72 assertions — the seven required verifications, plus proof the decisions matter
-node tools/integration.mjs     # 56 checks — desktop and phone viewports — drives the built game in a real browser, end to end
+node src/playtest.test.js      # 83 assertions — the seven required verifications, plus proof the decisions matter
+node tools/integration.mjs     # 87 checks — desktop and phone viewports — drives the built game in a real browser, end to end (needs playwright)
 ```
 
 The engine is pure: no DOM, no network, no `Date.now`, no `Math.random`. Everything that varies

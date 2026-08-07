@@ -19,7 +19,6 @@
     --panel: rgba(0, 33, 68, 0.94);
     --panel-solid: #002144;
     --panel-2: rgba(0, 24, 50, 0.9);
-    --border: #0d3c६6;
     --border: #10406e;
     --border-gold: rgba(236, 172, 0, 0.45);
     --text: #eef4fb;
@@ -33,8 +32,15 @@
     --warn: var(--msu-gold);
     --bad: var(--msu-alert);
     --fs: 1;
+
+    /* bottom strip reserved for the fixed attribution chip, so the byline and
+       the flight controls never sit on top of each other */
+    --byline-h: 26px;
   }
   .projector { --fs: 1.42; }
+  /* the quick 🎤 Notes key only earns top-bar space while presenting */
+  #btnNotes { display: none; }
+  .projector #btnNotes { display: inline-block; }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
   body {
@@ -114,7 +120,7 @@
   #controls {
     position: fixed; left: 0; right: 0; bottom: 0;
     display: flex; align-items: flex-end; justify-content: space-between;
-    gap: 10px; padding: 10px 12px;
+    gap: 10px; padding: 10px 12px calc(10px + var(--byline-h));
     z-index: 10; pointer-events: none;
     flex-wrap: wrap;
   }
@@ -140,9 +146,9 @@
 
   /* ---------- burn planner ---------- */
   #planner {
-    position: fixed; right: 12px; bottom: 66px;
+    position: fixed; right: 12px; bottom: calc(66px + var(--byline-h));
     width: min(346px, calc(100vw - 24px));
-    max-height: calc(100vh - 150px); overflow-y: auto;
+    max-height: calc(100vh - 150px - var(--byline-h)); overflow-y: auto;
     background: var(--panel); border: 1px solid var(--border);
     border-top: 3px solid var(--msu-gold);
     border-radius: 14px; padding: 13px; z-index: 12;
@@ -205,7 +211,7 @@
   /* ---------- hint / mission banner ---------- */
   #hint {
     position: fixed; left: 50%; transform: translateX(-50%);
-    bottom: 76px; max-width: min(640px, 92vw);
+    bottom: calc(76px + var(--byline-h)); max-width: min(640px, 92vw);
     background: var(--panel); border: 1px solid var(--border);
     border-left: 4px solid var(--msu-gold);
     border-radius: 10px; padding: 11px 38px 11px 15px;
@@ -354,6 +360,35 @@
   .keygrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px 14px; margin-top: 6px; }
   .keygrid div { font-size: calc(12px * var(--fs)); color: var(--muted); }
 
+  /* ---------- presenter's notes ---------- */
+  .notecard {
+    background: var(--panel-2); border: 1px solid var(--border);
+    border-left: 3px solid var(--msu-gold); border-radius: 8px;
+    padding: 9px 12px; margin: 7px 0;
+    font-size: calc(12.5px * var(--fs)); line-height: 1.55; color: var(--text);
+  }
+  .notecard .cue {
+    display: inline-block; min-width: calc(62px * var(--fs)); padding-right: 9px;
+    font-weight: 800; color: var(--msu-gold);
+    font-variant-numeric: tabular-nums;
+  }
+  /* misconceptions are teaching cues, not failures — Lite Blue, never alert red */
+  .notecard.catch { border-left-color: var(--msu-lite); }
+  .notecard.catch .cue { color: var(--msu-lite); min-width: 0; margin-right: 4px; }
+  .notecard.beat { border-left-color: var(--msu-lite); }
+  .notecard b { color: var(--msu-gold); }
+  .notecard.catch b, .notecard.beat b { color: var(--text); }
+  .noteq { margin: 5px 0 5px 17px; font-size: calc(12.5px * var(--fs)); line-height: 1.5; color: var(--muted); }
+  .noteq li { margin: 3px 0; }
+  .notenums {
+    font-variant-numeric: tabular-nums; font-size: calc(12px * var(--fs));
+    color: var(--muted); line-height: 1.65;
+  }
+  .notenums b { color: var(--text); }
+  @media (max-width: 700px) {
+    .notecard .cue { display: block; min-width: 0; margin-bottom: 1px; }
+  }
+
   .msufoot {
     margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--border);
     font-size: calc(10px * var(--fs)); color: var(--muted);
@@ -376,7 +411,7 @@
     button { padding: 6px 9px; min-width: 40px; min-height: 40px; }
     #fuelbar { width: calc(64px * var(--fs)); }
     #hud {
-      top: auto !important; bottom: 108px; right: 8px; left: 8px;
+      top: auto !important; bottom: calc(108px + var(--byline-h)); right: 8px; left: 8px;
       min-width: 0; padding: 9px 11px;
       max-height: 46vh; overflow-y: auto;
     }
@@ -385,7 +420,7 @@
       bottom: auto; top: 142px; left: 8px; right: 8px; transform: none;
       max-width: none; font-size: calc(12px * var(--fs)); padding: 9px 32px 9px 12px;
     }
-    #controls { padding: 7px 8px; gap: 7px; }
+    #controls { padding: 7px 8px calc(7px + var(--byline-h)); gap: 7px; }
     .ctlgroup { padding: 6px; gap: 5px; }
     .ctlgroup .lbl { display: none; }
     #planner { max-height: 62vh; }
@@ -445,8 +480,9 @@
   <button id="btnHud" title="Physics HUD (H)">📊<span class="btxt"> Physics HUD</span></button>
   <button id="btnUndo" title="Undo last burn (Z)" disabled>↶<span class="btxt"> Undo</span></button>
   <button id="btnRestart" title="Restart level (R)">↻<span class="btxt"> Restart</span></button>
-  <button id="btnHelp" title="How to play">📖<span class="btxt"> Guide</span></button>
-  <button id="btnTeacher" title="Teacher mode">⚙</button>
+  <button id="btnNotes" title="Presenter's notes (N)">🎤<span class="btxt"> Notes</span></button>
+  <button id="btnHelp" title="How to play (?)">❓<span class="btxt"> How to play</span></button>
+  <button id="btnTeacher" title="Settings">⚙<span class="btxt"> Settings</span></button>
 </div>
 
 <div id="hud">
@@ -537,7 +573,7 @@
 </div>
 
 <!-- Mission briefing -->
-<div class="modal" id="missionModal" role="dialog" aria-modal="true" aria-labelledby="msTitle" aria-describedby="msSubtitle">
+<div class="modal" id="missionModal" data-lightdismiss role="dialog" aria-modal="true" aria-labelledby="msTitle" aria-describedby="msSubtitle">
   <div class="box">
     <div class="eyebrow">Mission briefing</div>
     <h2 id="msTitle">–</h2>
@@ -556,7 +592,7 @@
 </div>
 
 <!-- Level select -->
-<div class="modal" id="levelsModal" role="dialog" aria-modal="true" aria-labelledby="levelsTitle" aria-describedby="levelsIntro">
+<div class="modal" id="levelsModal" data-lightdismiss role="dialog" aria-modal="true" aria-labelledby="levelsTitle" aria-describedby="levelsIntro">
   <div class="box">
     <div class="eyebrow">Murray State Racers Flight Lab</div>
     <h2 id="levelsTitle">⛳ Fuel Golf — mission list</h2>
@@ -613,15 +649,22 @@
   </div>
 </div>
 
-<!-- Teacher -->
-<div class="modal" id="teacherModal" role="dialog" aria-modal="true" aria-labelledby="teacherTitle">
+<!-- Settings -->
+<div class="modal" id="teacherModal" data-lightdismiss role="dialog" aria-modal="true" aria-labelledby="teacherTitle" aria-describedby="teacherIntro">
   <div class="box">
-    <div class="eyebrow">Instructor controls</div>
-    <h2 id="teacherTitle">Teacher mode</h2>
+    <div class="eyebrow">Murray State Racers Flight Lab</div>
+    <h2 id="teacherTitle">⚙ Settings</h2>
+    <p id="teacherIntro">Instructor controls for running Fuel Golf in front of a class.</p>
+    <h3>Presentation mode</h3>
     <div class="togglerow">
-      <div><b>Projector mode</b><p>Larger UI, readable from the back row.</p></div>
-      <button id="tgProjector">Off</button>
+      <div><b>Presentation mode</b><p>Larger UI, readable from the back row, and a 🎤 Notes button in the top bar.</p></div>
+      <button id="tgProjector" aria-pressed="false">Off</button>
     </div>
+    <div class="togglerow">
+      <div><b>Presenter's notes</b><p>One screen of stage notes: the 20-minute run of show, the numbers to have ready, and the misconceptions to catch. <span class="kbd">N</span> opens them any time.</p></div>
+      <button id="tgNotes">🎤 Open notes</button>
+    </div>
+    <h3>Class data</h3>
     <div class="togglerow">
       <div><b>Reset all leaderboards</b><p>Clears every level's saved scores on this machine.</p></div>
       <button id="tgReset" class="danger">Reset…</button>
@@ -645,12 +688,69 @@
   </div>
 </div>
 
+<!-- Presenter's notes (stage notes distilled from teacher-guide.html) -->
+<div class="modal" id="notesModal" data-lightdismiss role="dialog" aria-modal="true" aria-labelledby="notesTitle" aria-describedby="notesIntro">
+  <div class="box">
+    <div class="eyebrow">Presenter's notes</div>
+    <h2 id="notesTitle">🎤 Fuel Golf — stage notes</h2>
+    <p class="big" id="notesIntro">Everything you need in front of a class, in one screen. The full write-up is the teacher guide.</p>
+
+    <h3>Run of show — 20 minutes</h3>
+    <div class="notecard"><span class="cue">0–3 min</span>Project the game (⚙ → Presentation mode). Fly <b>Level 1</b> together: time-warp, the burn planner, the dotted preview. Vocabulary: <b>periapsis</b> (low, fast), <b>apoapsis</b> (high, slow), <b>prograde</b>.</div>
+    <div class="notecard"><span class="cue">3–8 min</span>Students play <b>Levels 1–2</b> in pairs. Have them open the <b>Physics HUD</b> and watch "energy gained per 1 Δv" as the ship swings around.</div>
+    <div class="notecard"><span class="cue">8–15 min</span>The main event: <b>Level 3, "Escape Artist."</b> Par 791 m/s, tank 2,057 — escaping from apoapsis costs ≈1,835 m/s, from periapsis ≈661. Let them discover it. First to make par explains <i>where</i> they burned and what the HUD showed.</div>
+    <div class="notecard"><span class="cue">15–19 min</span>Debrief on the projector with a student's energy-vs-time plot and the <b>"show the math" panel</b> under it — it evaluates Δε = v·Δv + ½Δv² with that student's own numbers and checks it against the simulation. The burn is a vertical jump in ε, taller when v was larger, for the <i>same</i> Δv.</div>
+    <div class="notecard"><span class="cue">19–20 min</span>Post the leaderboard. Levels 4–7 (Hohmann, powered flyby, finite thrust) make good homework or a second session.</div>
+
+    <h3>The one idea</h3>
+    <div class="notecard beat"><b>ΔKE = v·Δv + ½Δv².</b> The <b>v·Δv</b> term dominates: the same Δv buys energy in proportion to how fast you already are. Speed peaks at periapsis, so a burn there buys the most orbital energy ε = ½v² − μ/r. Potential is unchanged at the instant of the burn — only the KE jump differs. The HUD's "energy per unit Δv" readout <i>is</i> v.</div>
+    <div class="notecard beat"><b>If someone asks where the extra energy comes from:</b> the fuel's energy is fixed, but energy delivered to the <i>ship</i> is force × distance. At high speed the engine acts over a longer distance per second, so more of the propellant's energy ends up in the ship and less in the exhaust left behind.</div>
+
+    <h3>Catch these three</h3>
+    <div class="notecard catch"><span class="cue">1.</span><b>"It's better at periapsis because you're closer."</b> Proximity is not the mechanism — <b>speed</b> is. The formula contains v, not r. Being deep in the well matters only because falling there is what made the ship fast.</div>
+    <div class="notecard catch"><span class="cue">2.</span><b>"Oberth is the same as a gravity assist."</b> An unpowered assist (Level 5's moon) steals energy from the <i>moon's orbital motion</i> — no fuel. An Oberth burn spends fuel, just at the most profitable moment. A powered flyby is both.</div>
+    <div class="notecard catch"><span class="cue">3.</span><b>"Δv costs the same anywhere."</b> Δv <i>spent</i> is the same anywhere; the <i>energy it buys</i> is not. That is the whole game.</div>
+
+    <h3>Numbers to have ready</h3>
+    <p class="notenums">
+      Pars (m/s): <b>L1 712 · L2 1,107 · L3 791 · L4 1,819 · L5 1,424 · L6 838 · L7 823</b>.<br>
+      Level 3 escape: <b>≈661 m/s from periapsis</b> vs <b>≈1,835 m/s from apoapsis</b>.<br>
+      Level 6 (0.055 m/s²): lit <i>at</i> Pe <b>919</b> m/s, burn <i>centered</i> on Pe <b>775</b>.<br>
+      Level 7 (0.013 m/s²): one long burn <b>1,498</b> m/s, six ~3 h perigee kicks <b>731</b> — which is why real upper stages escape via repeated perigee kicks.<br>
+      The planet is Earth at true scale: μ = 398,600 km³/s², R = 6,371 km. The moon is fictional (closer and heavier than Luna) so an assist fits one class.
+    </p>
+
+    <h3>Ask the room</h3>
+    <ol class="noteq">
+      <li>The plot shows a taller jump in ε for the same Δv at periapsis — which term of ΔKE = v·Δv + ½Δv² explains it?</li>
+      <li>The HUD says "energy per unit Δv = current speed." Differentiate ½v² to show why.</li>
+      <li>Why does a prograde burn at periapsis raise the <i>apoapsis</i>, on the far side of the orbit?</li>
+      <li>In Level 5, where does the escape energy come from when you fly close behind the moon without burning? What slows down in exchange?</li>
+      <li>Could you escape with a radial-out burn? Try it — why does pushing "straight up" waste fuel?</li>
+    </ol>
+
+    <h3>Logistics</h3>
+    <p>Leaderboards persist per level on each machine — reset them between class periods in ⚙ Settings. For Levels 6–7, point students at the HUD's <b>time-to-periapsis</b>, the planner's <b>burn duration</b>, and the <b>lead</b> box beside → Pe: those three let them compute an ignition point instead of guessing. Keys: <span class="kbd">Space</span> pause · <span class="kbd">B</span> burn · <span class="kbd">Enter</span> commit · <span class="kbd">Z</span> undo · <span class="kbd">X</span> cut engine · <span class="kbd">P</span>/<span class="kbd">A</span> warp to Pe/Ap · <span class="kbd">H</span> HUD · <span class="kbd">M</span> briefing · <span class="kbd">R</span> restart. <b>Undo</b> rewinds the last burn (also offered after a crash) — students should iterate, not restart.</p>
+
+    <div class="actions">
+      <button class="teacher-guide-open">Open full teacher guide</button>
+      <button id="closeNotes" class="primary">Back to the game</button>
+    </div>
+    <div class="msufoot">Murray State University · <b>Racers</b> · Physics Department</div>
+  </div>
+</div>
+
 <!-- Help -->
-<div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro">
+<div class="modal" id="helpModal" data-lightdismiss role="dialog" aria-modal="true" aria-labelledby="helpTitle" aria-describedby="helpIntro">
   <div class="box">
     <div class="eyebrow">Murray State Racers Flight Lab</div>
     <h2 id="helpTitle">⛳ Fuel Golf — how to play</h2>
     <p class="big" id="helpIntro">You have a spacecraft, a tank of Δv, and a mission. Lowest Δv wins.</p>
+    <h3>Your first two minutes</h3>
+    <p><b>1.</b> Read the mission — every level names a target and a <b>par Δv budget</b>, the fuel a skilled pilot needs. Your tank is bigger than par, so you can afford to experiment.
+       <b>2.</b> Time-warp to a good spot (<b>→ Pe</b> or <b>→ Ap</b>). <b>3.</b> Hit <b>🔥 Plan burn</b>, aim, drag the Δv slider, and read the dotted preview before you spend anything.
+       <b>4.</b> Commit. Wrong call? <b>↶ Undo</b> puts the fuel back. Nothing is ever wasted by trying.</p>
+    <p>Tap anywhere outside this box, press <span class="kbd">Esc</span>, or hit <b>Fly</b> to close it — <span class="kbd">❓</span> in the top bar brings it back any time.</p>
     <h3>Flying</h3>
     <p>Time-warp with ⏸ / 1× / 10× / 50× / 200×, or jump straight to <b>periapsis</b> (→ Pe, the low fast point) or <b>apoapsis</b> (→ Ap, the high slow point). Set a <b>lead</b> in minutes to stop short of the apsis — essential once your engine takes real time to burn. Drag the map to pan, scroll or pinch to zoom, <b>⊕ Follow</b> keeps the camera on your craft.</p>
     <h3>Burning</h3>
@@ -673,6 +773,7 @@
       <div><span class="kbd">F</span> follow camera</div>
       <div><span class="kbd">M</span> mission briefing</div>
       <div><span class="kbd">R</span> restart level</div>
+      <div><span class="kbd">?</span> this help</div>
     </div>
     <div class="actions"><button id="closeHelp" class="primary">Fly</button></div>
     <div class="msufoot">Murray State University · <b>Racers</b> · Physics Department</div>

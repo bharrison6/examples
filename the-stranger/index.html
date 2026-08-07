@@ -50,11 +50,18 @@
    time; there is no model behind this glass and never was.
    ------------------------------------------------------------------------ */
 *,*::before,*::after{box-sizing:border-box}
+/* Murray State palette. MSU Blue is the surface family, MSU Gold the accent and
+   lever 1, Lite Blue lever 2. Red Orange is reserved for a genuine failure state
+   — in this app there is exactly one, a wrong quiz answer — so it never shows up
+   as decoration. Lever 3 keeps its violet: it is the third leg of a colour code
+   that is also printed on the presenter sheet and the cut-out target cards. */
 :root{
-  --bg:#0a0d14; --bg2:#10141e; --panel:#151b28; --panel2:#1b2231; --line:#2a3550;
-  --ink:#e9eef8; --dim:#93a2be; --dim2:#6b7a97;
-  --c1:#f4a63f; --c1b:#4d3413; --c2:#3fddA0; --c2b:#0f3b2c; --c3:#b49bff; --c3b:#2c2455;
-  --acc:#ffd47e; --bad:#ff8080;
+  --msu:#002144; --gold:#ECAC00; --lite:#00A4E3; --alert:#FF4500;
+  --bg:#000c18; --bg2:#001428; --panel:#002144; --panel2:#002d5c; --line:#123f6b;
+  --ink:#e9f2fb; --dim:#9cbdd8; --dim2:#6e93b3;
+  --c1:#ECAC00; --c1b:#4a3600; --c2:#00A4E3; --c2b:#00344a; --c3:#b49bff; --c3b:#2c2455;
+  --acc:#ECAC00; --onacc:#002144; --bad:#FF4500;
+  --sunk:#001526;
   --fs:19px; --pad:18px; --r:14px;
   --stream:420; /* characters per second */
 }
@@ -72,8 +79,8 @@ body{
 body::before{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(58vw 42vw at 8% -12%, rgba(255,190,90,.13), transparent 62%),
-    radial-gradient(40vw 40vw at 96% 108%, rgba(120,150,255,.07), transparent 60%);
+    radial-gradient(58vw 42vw at 8% -12%, rgba(236,172,0,.13), transparent 62%),
+    radial-gradient(40vw 40vw at 96% 108%, rgba(0,164,227,.09), transparent 60%);
 }
 body::after{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.5;
@@ -86,17 +93,21 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
   border:1px solid var(--line);background:var(--panel);border-radius:10px;
   padding:.42em .8em;font-size:.8em;color:var(--dim);transition:.15s;white-space:nowrap;
 }
-.btn:hover{border-color:#3d4c72;color:var(--ink);background:var(--panel2)}
-.btn.on{background:var(--acc);color:#221803;border-color:var(--acc);font-weight:650}
-.btn.primary{background:linear-gradient(180deg,#ffdf9a,#f2b750);color:#241a04;border-color:#f2b750;font-weight:700;font-size:.92em;padding:.5em 1.2em}
+.btn:hover{border-color:#1d5c96;color:var(--ink);background:var(--panel2)}
+.btn.on{background:var(--acc);color:var(--onacc);border-color:var(--acc);font-weight:650}
+.btn.primary{background:linear-gradient(180deg,#FFD25E,#ECAC00);color:var(--onacc);border-color:#ECAC00;font-weight:700;font-size:.92em;padding:.5em 1.2em}
 .btn.primary:disabled{opacity:.4;cursor:default}
 .btn.ghost{background:transparent}
+/* icon buttons carry the two always-visible affordances the contract asks for —
+   "?" reopens the how-to sheet, the gear opens settings. Sized for a thumb. */
+.btn.icon{padding:0;width:2.15em;height:2.15em;min-width:38px;min-height:38px;
+  display:grid;place-items:center;font-size:.86em;line-height:1;font-weight:700}
 
 /* ---------------------------------------------------------------- header */
 #bar{
   display:flex;align-items:center;gap:.7em;flex:0 0 auto;flex-wrap:wrap;row-gap:.45em;
   padding:.5em var(--pad);border-bottom:1px solid var(--line);
-  background:rgba(10,13,20,.82);backdrop-filter:blur(8px);
+  background:rgba(0,12,24,.86);backdrop-filter:blur(8px);
 }
 /* the question tabs always own a full row: the tool buttons carry real labels
    now, and on one row they squeezed the tabs down to two letters */
@@ -104,7 +115,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .brand{display:flex;align-items:center;gap:.5em;font-size:.82em;letter-spacing:.13em;flex:0 0 auto;white-space:nowrap}
 .brand b{font-weight:800}
 .brand small{color:var(--dim2);letter-spacing:.05em;text-transform:none}
-.lamp{width:.62em;height:.62em;border-radius:50%;background:var(--acc);box-shadow:0 0 12px 3px rgba(255,212,126,.5)}
+.lamp{width:.62em;height:.62em;border-radius:50%;background:var(--acc);box-shadow:0 0 12px 3px rgba(236,172,0,.5)}
 #tabs{display:flex;gap:.3em;overflow:auto;scrollbar-width:none;flex:1 1 auto;min-width:0}
 #tabs::-webkit-scrollbar{display:none}
 .tab{border:1px solid transparent;border-radius:999px;padding:.35em .85em;font-size:.78em;color:var(--dim);white-space:nowrap}
@@ -118,7 +129,7 @@ main{flex:1 1 auto;display:grid;grid-template-columns:minmax(300px,30%) 1fr;min-
    lever buttons force the whole page wider than a phone. Pin them all to 0. */
 main>section,#cols,.col,#promptWrap,#promptBox,#levers,#deckRail,.bubble,.md,.gtxt{min-width:0}
 .md,.bubble,.gtxt,.quiz{overflow-wrap:break-word}
-#left{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,rgba(21,27,40,.55),rgba(10,13,20,.2))}
+#left{border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;background:linear-gradient(180deg,rgba(0,33,68,.55),rgba(0,12,24,.2))}
 /* the answer is what has to be legible from the back of the room; the control
    column does not, and at projector scale it was eating the whole screen */
 body.mode-presenter #left{font-size:.8em}
@@ -126,7 +137,7 @@ body.mode-presenter #left{font-size:.8em}
 @media (max-height:1000px){ body.mode-presenter #left{font-size:.72em} }
 @media (max-height:820px){ body.mode-presenter #left{font-size:.66em} }
 #leftScroll{flex:1 1 auto;min-height:0;overflow:auto}
-#askDock{flex:0 0 auto;border-top:1px solid var(--line);background:rgba(9,12,19,.92);box-shadow:0 -12px 16px -12px rgba(0,0,0,.9)}
+#askDock{flex:0 0 auto;border-top:1px solid var(--line);background:rgba(0,10,20,.94);box-shadow:0 -12px 16px -12px rgba(0,0,0,.9)}
 #right{display:flex;flex-direction:column;min-height:0;position:relative}
 .paneTitle{
   font-size:.68em;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2);
@@ -142,12 +153,12 @@ body.mode-presenter #left{font-size:.8em}
 }
 .leverhead{display:flex;align-items:center;gap:.7em;width:100%;text-align:left;padding:.62em .8em}
 .leverhead:hover{background:rgba(255,255,255,.03)}
-.lever:hover{border-color:#3d4c72}
+.lever:hover{border-color:#1d5c96}
 /* what leaving this lever in this position will cost you, said before you ask */
 .conseq{font-size:.7em;line-height:1.45;color:var(--dim);padding:.5em .9em .55em;border-top:1px dashed var(--line)}
 .conseq b{color:var(--ink);font-weight:650}
-.lever[data-l="0"].on .conseq{background:rgba(244,166,63,.06)}
-.lever[data-l="1"].on .conseq{background:rgba(63,221,160,.06)}
+.lever[data-l="0"].on .conseq{background:rgba(236,172,0,.07)}
+.lever[data-l="1"].on .conseq{background:rgba(0,164,227,.08)}
 .lever[data-l="2"].on .conseq{background:rgba(180,155,255,.06)}
 /* the deck is not a separate widget somewhere else on the screen. It is what
    lever 2 is about, so it sits inside lever 2 and visibly leaves when you pull it. */
@@ -160,14 +171,14 @@ body.rehearsal .rehearse{display:flex}
 .rehearse .fieldlabel{font-size:.58em}
 .lever .num{
   flex:0 0 auto;width:1.75em;height:1.75em;border-radius:8px;display:grid;place-items:center;
-  font-size:.8em;font-weight:800;background:#0e131d;color:var(--dim2);border:1px solid var(--line);
+  font-size:.8em;font-weight:800;background:var(--sunk);color:var(--dim2);border:1px solid var(--line);
 }
 .lever .txt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
 .lever .nm{display:block;font-size:.8em;font-weight:750;letter-spacing:.08em}
 .lever .tg{display:block;font-size:.68em;color:var(--dim2);margin-top:.15em;line-height:1.3}
-.sw{flex:0 0 auto;width:2.5em;height:1.35em;border-radius:999px;background:#0e131d;border:1px solid var(--line);position:relative;transition:.2s}
+.sw{flex:0 0 auto;width:2.5em;height:1.35em;border-radius:999px;background:var(--sunk);border:1px solid var(--line);position:relative;transition:.2s}
 .sw::after{content:"";position:absolute;top:50%;left:.16em;transform:translateY(-50%);width:.95em;height:.95em;border-radius:50%;background:var(--dim2);transition:.2s}
-.lever.on .sw::after{left:calc(100% - 1.11em);background:#101520}
+.lever.on .sw::after{left:calc(100% - 1.11em);background:#00182e}
 .lever.on{background:var(--panel2)}
 .lever[data-l="0"].on{border-color:var(--c1);box-shadow:inset 3px 0 0 var(--c1)} .lever[data-l="0"].on .sw{background:var(--c1);border-color:var(--c1)} .lever[data-l="0"].on .num{color:var(--c1);border-color:var(--c1)} .lever[data-l="0"].on .nm{color:var(--c1)}
 .lever[data-l="1"].on{border-color:var(--c2);box-shadow:inset 3px 0 0 var(--c2)} .lever[data-l="1"].on .sw{background:var(--c2);border-color:var(--c2)} .lever[data-l="1"].on .num{color:var(--c2);border-color:var(--c2)} .lever[data-l="1"].on .nm{color:var(--c2)}
@@ -177,13 +188,13 @@ body.rehearsal .rehearse{display:flex}
 #promptWrap{flex:0 0 auto;display:flex;flex-direction:column;padding:.25em var(--pad) 0}
 #promptBox{
   flex:0 0 auto;max-height:32vh;overflow:auto;
-  border:1px solid var(--line);border-radius:var(--r);background:#0c101a;padding:.8em;
+  border:1px solid var(--line);border-radius:var(--r);background:#000f1e;padding:.8em;
   font-size:.78em;line-height:1.5;
 }
 .pblock{border-left:3px solid var(--line);padding:.35em .6em;margin:.4em 0;border-radius:0 8px 8px 0;background:rgba(255,255,255,.02);animation:slidein .28s ease both}
 .pblock.base{border-color:var(--dim2);color:var(--ink);font-weight:600;background:transparent}
-.pblock.c1{border-color:var(--c1);background:rgba(244,166,63,.09);color:#ffe0b4}
-.pblock.c2{border-color:var(--c2);background:rgba(63,221,160,.09);color:#bdf5df}
+.pblock.c1{border-color:var(--c1);background:rgba(236,172,0,.10);color:#ffe4a8}
+.pblock.c2{border-color:var(--c2);background:rgba(0,164,227,.12);color:#bde6fb}
 .pblock.c3{border-color:var(--c3);background:rgba(180,155,255,.09);color:#ddd2ff}
 .pblock .lbl{display:block;font-size:.68em;letter-spacing:.14em;text-transform:uppercase;opacity:.65;margin-bottom:.15em}
 @keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
@@ -200,10 +211,10 @@ body.rehearsal .rehearse{display:flex}
 #deckRail .dlabel{font-size:.66em;letter-spacing:.14em;text-transform:uppercase;color:var(--dim2)}
 #deck{position:relative;width:3.4em;height:2.2em;flex:0 0 auto;transition:transform .6s cubic-bezier(.5,-0.4,.3,1.4),opacity .5s}
 #deck i{position:absolute;inset:0;border-radius:6px;border:1px solid var(--line);
-  background:linear-gradient(160deg,#293350,#161d2c);box-shadow:0 2px 6px rgba(0,0,0,.4)}
+  background:linear-gradient(160deg,#0b3a63,#001a30);box-shadow:0 2px 6px rgba(0,0,0,.4)}
 #deck i:nth-child(1){transform:translate(-4px,-3px) rotate(-6deg)}
 #deck i:nth-child(2){transform:translate(-1px,-1px) rotate(-2deg)}
-#deck i:nth-child(3){background:linear-gradient(160deg,#37436a,#1d2537)}
+#deck i:nth-child(3){background:linear-gradient(160deg,#124e80,#002144)}
 #deck.gone{transform:translateX(-14%) rotate(-15deg) scale(.9);opacity:.3;filter:grayscale(1)}
 /* the explanation gets its own full-width line so it never gets squeezed into
    a two-word-wide column by the controls beside it */
@@ -218,7 +229,7 @@ body.rehearsal .rehearse{display:flex}
 /* card-draw overlay */
 /* no backdrop-filter here: on some GPUs/projectors the filtered layer drops out
    entirely and the card never appears. A flat scrim is the safe choice. */
-#cardStage{position:absolute;inset:0;z-index:40;display:none;place-items:center;background:rgba(6,8,13,.88)}
+#cardStage{position:absolute;inset:0;z-index:40;display:none;place-items:center;background:rgba(0,8,18,.9)}
 #cardStage.show{display:grid}
 .tcard{
   width:min(78%,15em);aspect-ratio:5/7;border-radius:18px;padding:1.1em;
@@ -246,14 +257,14 @@ body.rehearsal .rehearse{display:flex}
 .col+.col{border-left:1px solid var(--line)}
 .colhead{
   position:sticky;top:calc(var(--pad) * -1);margin:calc(var(--pad) * -1) calc(var(--pad) * -1) 0;
-  padding:.5em var(--pad);background:rgba(10,13,20,.9);backdrop-filter:blur(6px);
+  padding:.5em var(--pad);background:rgba(0,12,24,.92);backdrop-filter:blur(6px);
   border-bottom:1px solid var(--line);display:flex;align-items:center;gap:.5em;flex-wrap:wrap;z-index:5;font-size:.72em;color:var(--dim2)
 }
 .bubble{max-width:min(46em,96%);border-radius:16px;padding:.75em 1em;line-height:1.55;font-size:.92em}
-.bubble.user{align-self:flex-end;background:linear-gradient(180deg,#243049,#1b2437);border:1px solid #33405f;border-bottom-right-radius:5px}
+.bubble.user{align-self:flex-end;background:linear-gradient(180deg,#003060,#002144);border:1px solid #14497c;border-bottom-right-radius:5px}
 .bubble.user .pblock{margin:.3em 0;font-size:.95em}
 .row{display:flex;gap:.6em;align-items:flex-start}
-.av{flex:0 0 auto;width:1.9em;height:1.9em;border-radius:9px;display:grid;place-items:center;border:1px solid var(--line);color:var(--acc);font-size:.8em;background:linear-gradient(160deg,#2a3450,#181f2e)}
+.av{flex:0 0 auto;width:1.9em;height:1.9em;border-radius:9px;display:grid;place-items:center;border:1px solid var(--line);color:var(--acc);font-size:.8em;background:linear-gradient(160deg,#003a70,#001c38)}
 .bubble.ai{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:5px;flex:1 1 auto;position:relative}
 .aihead{display:flex;align-items:center;gap:.55em;font-size:.7em;color:var(--dim2);margin-bottom:.35em;flex-wrap:wrap}
 .aihead .nm{color:var(--dim);font-weight:600;letter-spacing:.04em}
@@ -278,9 +289,9 @@ mark.jg.pop{animation:pop .5s ease}
 .meter .never{color:var(--c3);font-weight:600}
 .meter .never.zero{color:var(--dim2);font-weight:400}
 .scorestrip{display:flex;align-items:center;gap:.3em;flex-wrap:wrap;margin-top:.55em;font-size:.72em;color:var(--dim2)}
-.sbtn{width:1.85em;height:1.85em;border-radius:8px;border:1px solid var(--line);background:#0e131d;font-size:.9em;color:var(--dim)}
+.sbtn{width:1.85em;height:1.85em;border-radius:8px;border:1px solid var(--line);background:var(--sunk);font-size:.9em;color:var(--dim)}
 .sbtn:hover{border-color:var(--acc);color:var(--acc)}
-.sbtn.on{background:var(--acc);color:#221803;border-color:var(--acc);font-weight:700}
+.sbtn.on{background:var(--acc);color:var(--onacc);border-color:var(--acc);font-weight:700}
 .note{font-size:.68em;color:var(--dim2);font-style:italic;margin-top:.5em;border-left:2px solid var(--line);padding-left:.6em}
 
 /* quiz */
@@ -288,8 +299,9 @@ mark.jg.pop{animation:pop .5s ease}
 .quiz .q{font-size:.88em;line-height:1.5;margin-bottom:.7em}
 .quiz .opt{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:10px;padding:.55em .8em;margin:.35em 0;font-size:.85em;background:var(--panel);transition:.15s}
 .quiz .opt:hover{border-color:var(--c3)}
-.quiz .opt.right{border-color:var(--c2);background:rgba(63,221,160,.12)}
-.quiz .opt.wrong{border-color:#7a3b3b;background:rgba(255,128,128,.09)}
+.quiz .opt.right{border-color:var(--c2);background:rgba(0,164,227,.14)}
+/* the one genuine failure state in this app, and the only place Red Orange appears */
+.quiz .opt.wrong{border-color:var(--bad);background:rgba(255,69,0,.10)}
 .quiz .fb{font-size:.8em;line-height:1.5;margin-top:.55em;color:var(--dim);border-left:2px solid var(--line);padding-left:.7em}
 
 /* guide bar (student mode) */
@@ -297,14 +309,14 @@ mark.jg.pop{animation:pop .5s ease}
 #modeBanner{flex:0 0 auto;font-size:.7em;line-height:1.45;padding:.45em var(--pad);
   border-bottom:1px solid var(--line);color:var(--dim2);display:flex;gap:.55em;align-items:baseline;flex-wrap:wrap}
 #modeBanner b{letter-spacing:.11em;text-transform:uppercase;font-size:.92em;flex:0 0 auto}
-body.mode-presenter #modeBanner{background:rgba(255,212,126,.055);border-bottom-color:rgba(255,212,126,.2)}
+body.mode-presenter #modeBanner{background:rgba(236,172,0,.07);border-bottom-color:rgba(236,172,0,.28)}
 body.mode-presenter #modeBanner b{color:var(--acc)}
 body.mode-student #modeBanner{background:rgba(180,155,255,.07);border-bottom-color:rgba(180,155,255,.24)}
 body.mode-student #modeBanner b{color:var(--c3)}
 #modeBanner.flash{animation:bflash 1.2s ease}
 @keyframes bflash{0%{background:rgba(255,255,255,.16)}60%{background:rgba(255,255,255,.05)}}
 
-#guide{flex:0 0 auto;border-top:3px solid var(--c3);background:linear-gradient(180deg,rgba(180,155,255,.10),rgba(15,19,29,.97));
+#guide{flex:0 0 auto;border-top:3px solid var(--c3);background:linear-gradient(180deg,rgba(180,155,255,.10),rgba(0,14,26,.97));
   padding:.65em var(--pad) .75em;display:flex;align-items:center;gap:1em}
 .gwrap{flex:1 1 auto;min-width:0}
 .gmeta{display:flex;align-items:baseline;gap:.7em;flex-wrap:wrap}
@@ -318,7 +330,7 @@ body.mode-student #modeBanner b{color:var(--c3)}
 #guide .gnav .btn.primary{font-size:1em;padding:.55em 1.5em}
 
 /* ---------------------------------------------------------------- modals */
-.modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;background:rgba(5,7,11,.78);backdrop-filter:blur(6px);padding:4vh 4vw}
+.modal{position:fixed;inset:0;z-index:80;display:none;place-items:center;background:rgba(0,8,18,.82);backdrop-filter:blur(6px);padding:4vh 4vw}
 .modal.show{display:grid}
 .sheet{width:min(60em,100%);max-height:92vh;overflow:auto;background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:1.4em}
 .sheet h2{margin:0 0 .1em;font-size:1.05em;letter-spacing:.02em}
@@ -330,12 +342,61 @@ table.tbl th,table.tbl td{text-align:left;padding:.35em .5em;border-bottom:1px s
 table.tbl th{color:var(--dim2);font-weight:600;font-size:.9em}
 .keys{display:grid;grid-template-columns:repeat(auto-fill,minmax(13em,1fr));gap:.4em;font-size:.76em}
 .keys div{display:flex;gap:.5em;align-items:baseline;color:var(--dim)}
-kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1em .45em;font-family:ui-monospace,monospace;font-size:.85em;color:var(--ink)}
+kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;padding:.1em .45em;font-family:ui-monospace,monospace;font-size:.85em;color:var(--ink)}
 .draft p{font-size:.82em;line-height:1.6;color:var(--dim)}
 .draft p:first-of-type{color:var(--ink)}
 
+/* ------------------------------------------------------- settings menu ---
+   A menu is a modal that landed under its button instead of in the middle of
+   the screen, so it reuses .modal wholesale: the same backdrop click, the same
+   Escape handler, the same [data-close]. --barh is measured on open, because the
+   toolbar is one row on a desktop and two on a phone. */
+.modal.menu{background:rgba(0,8,18,.45);backdrop-filter:none;place-items:start end;
+  padding:calc(var(--barh,4.4em) + 6px) .55em 1em}
+.sheet.menu{width:min(21.5em,100%);max-height:78vh;padding:.45em;border-radius:14px;
+  box-shadow:0 18px 44px rgba(0,0,0,.55)}
+.mhd{font-size:.6em;letter-spacing:.17em;text-transform:uppercase;color:var(--dim2);padding:.55em .65em .3em}
+.mrow{display:flex;width:100%;text-align:left;align-items:center;gap:.7em;
+  padding:.55em .65em;border-radius:10px;border:1px solid transparent;transition:.15s;min-height:44px}
+.mrow:hover,.mrow:focus-visible{background:var(--panel);border-color:var(--line);outline:0}
+.mrow .mtxt{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:.15em}
+.mrow .mtxt b{font-size:.8em;font-weight:650;letter-spacing:.02em}
+.mrow .mtxt i{font-style:normal;font-size:.66em;line-height:1.4;color:var(--dim2)}
+.mrow.on .mtxt b{color:var(--acc)}
+.mrow .mk{flex:0 0 auto;font-size:.7em;color:var(--dim2)}
+.msep{height:1px;background:var(--line);margin:.4em .35em}
+/* the notes are a thing presentation mode contains, so they sit inside it */
+.mgroup{margin:.05em 0 .1em .8em;padding-left:.35em;border-left:2px solid var(--line)}
+.tsw{flex:0 0 auto;width:2.4em;height:1.3em;border-radius:999px;background:var(--sunk);
+  border:1px solid var(--line);position:relative;transition:.2s}
+.tsw::after{content:"";position:absolute;top:50%;left:.16em;transform:translateY(-50%);
+  width:.9em;height:.9em;border-radius:50%;background:var(--dim2);transition:.2s}
+.mrow.on .tsw{background:var(--acc);border-color:var(--acc)}
+.mrow.on .tsw::after{left:calc(100% - 1.06em);background:var(--onacc)}
+
+/* --------------------------------------------------- presenter's notes ---
+   The three acts from the printed presenter sheet, cut to what you can read at
+   a glance with a room watching. Same script, standing up. */
+.sheet.notes{width:min(46em,100%)}
+.pnsetup{font-size:.8em;line-height:1.55;color:var(--dim);font-style:italic;
+  border-left:2px solid var(--line);padding-left:.7em;margin:0 0 .9em}
+.pnact{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:.75em .9em;margin:.5em 0}
+.pnhd{display:flex;align-items:baseline;gap:.6em;flex-wrap:wrap;margin-bottom:.35em}
+.pnhd b{font-size:.86em;letter-spacing:.11em}
+.pnhd .pnt{font-size:.66em;color:var(--dim2);margin-left:auto}
+.pnsay{font-size:.8em;line-height:1.5;font-style:italic;color:var(--ink);margin:.15em 0 .45em}
+.pnact ol{margin:.2em 0 .3em;padding-left:1.25em;font-size:.8em;line-height:1.5;color:var(--dim)}
+.pnact ol li{margin:.26em 0}
+.pnact ol b,.pnsetup b{color:var(--ink);font-weight:650}
+.pnland{margin-top:.5em;padding:.42em .65em;border-left:3px solid var(--acc);
+  background:rgba(236,172,0,.09);border-radius:0 8px 8px 0;font-size:.82em;font-weight:650;color:var(--ink)}
+.sheet.notes ol.pnq,.sheet.notes ol.pnrules{font-size:.8em;line-height:1.55;color:var(--dim);padding-left:1.3em;margin:.2em 0}
+.sheet.notes ol.pnq li,.sheet.notes ol.pnrules li{margin:.3em 0}
+.sheet.notes ol.pnrules b{color:var(--ink)}
+.pnfoot{margin-top:1.2em;border-top:1px solid var(--line);padding-top:.6em;font-size:.7em;line-height:1.6;color:var(--dim2)}
+
 /* closing screen */
-#closing{position:fixed;inset:0;z-index:90;display:none;background:radial-gradient(70vw 60vh at 50% 10%,rgba(255,190,90,.16),transparent 60%),#080a10}
+#closing{position:fixed;inset:0;z-index:90;display:none;background:radial-gradient(70vw 60vh at 50% 10%,rgba(236,172,0,.16),transparent 60%),#000914}
 #closing.show{display:grid;place-items:center;padding:6vh 6vw;text-align:center}
 #closing .big{font-size:clamp(24px,3.6vw,58px);font-weight:800;line-height:1.18;max-width:20em;letter-spacing:-.01em}
 #closing .sub{margin-top:1em;color:var(--dim);font-size:clamp(14px,1.1vw,20px);max-width:34em;line-height:1.6}
@@ -370,16 +431,23 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
   #forceCard{max-width:11em}
 }
 @media (max-width:560px){
-  /* a phone is a student's device: the presenter's tools come off the bar */
+  /* a phone is a student's device: the presenter's tools come off the bar. The
+     mode switch and the closing slide are not lost, they move into the settings
+     menu, which is why the gear has to survive down here. "?" and the gear are
+     the two things that stay visible at every width. */
   body.mode-presenter{--fs:16.5px}
   #btnCompare,#btnScoreboard,#forceCard,.brand small{display:none}
+  #btnFinish,#modeSeg,.barright>.fieldlabel{display:none}
   #deckRail{padding:.4em .7em;min-height:0}
   .bubble{max-width:100%}
+  .modal.menu{padding-left:.4em;padding-right:.4em}
+  .sheet.menu{width:100%}
+  .sheet{padding:1.1em .9em}
 }
 .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:0 0 auto}
 .seg button{font-size:.78em;padding:.42em .8em;color:var(--dim);background:var(--panel);white-space:nowrap}
 .seg button:hover{color:var(--ink)}
-.seg button.on{background:var(--acc);color:#221803;font-weight:700}
+.seg button.on{background:var(--acc);color:var(--onacc);font-weight:700}
 .fieldlabel{font-size:.62em;letter-spacing:.13em;text-transform:uppercase;color:var(--dim2);white-space:nowrap}
 .deckctl{margin-left:auto;display:flex;gap:.4em;align-items:center;flex-wrap:wrap;flex:0 0 auto;justify-content:flex-end}
 .hintline{font-size:.68em;color:var(--dim2);padding:0 var(--pad) .45em;line-height:1.4}
@@ -393,11 +461,11 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
 .steps li{counter-increment:st;position:relative;padding:.45em 0 .45em 2.4em;font-size:.86em;line-height:1.55;color:var(--dim);border-bottom:1px solid var(--line)}
 .steps li:last-child{border-bottom:0}
 .steps li::before{content:counter(st);position:absolute;left:0;top:.42em;width:1.7em;height:1.7em;border-radius:8px;
-  display:grid;place-items:center;background:#0e131d;border:1px solid var(--line);color:var(--acc);font-weight:800;font-size:.82em}
+  display:grid;place-items:center;background:var(--sunk);border:1px solid var(--line);color:var(--acc);font-weight:800;font-size:.82em}
 .steps li b{color:var(--ink)}
 .swatch{display:inline-block;padding:0 .35em;border-radius:4px;font-weight:700;font-size:.92em}
-.swatch.s1{background:rgba(244,166,63,.2);color:var(--c1)}
-.swatch.s2{background:rgba(63,221,160,.2);color:var(--c2)}
+.swatch.s1{background:rgba(236,172,0,.2);color:var(--c1)}
+.swatch.s2{background:rgba(0,164,227,.22);color:var(--c2)}
 .swatch.s3{background:rgba(180,155,255,.2);color:var(--c3)}
 .hidden{display:none !important}
 /* .col sets display:flex, which outranks the UA rule for the hidden attribute */
@@ -419,7 +487,10 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
       <button class="btn" id="btnCompare" title="Keep this answer on screen beside the next one (P)">Pin to compare</button>
       <button class="btn" id="btnScoreboard" title="The class scores so far, plotted against levers pulled (S)">Scoreboard</button>
       <button class="btn" id="btnFinish" title="The takeaway slide to end on">Closing slide</button>
-      <button class="btn" id="btnHelp" title="What everything on this screen does (?)">How this works</button>
+      <button class="btn icon" id="btnHelp" aria-label="How this works"
+              title="How this works &mdash; the three levers and how to run the demo (?)">?</button>
+      <button class="btn icon" id="btnSettings" aria-label="Settings" aria-haspopup="menu" aria-expanded="false"
+              title="Settings &mdash; presentation mode and the presenter&rsquo;s notes">&#9881;&#xFE0E;</button>
     </div>
     <div class="tabrow"><span class="fieldlabel">Question</span><nav id="tabs"></nav></div>
   </header>
@@ -485,7 +556,10 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
 <div class="modal" id="mHelp"><div class="sheet">
   <button class="btn close" data-close>close</button>
   <h2>How this works</h2>
-  <div class="sub">A student asks a question. You decide how much you tell it before it answers. That is the whole demo.</div>
+  <div class="sub">A student asks a question. You decide how much you tell it before it answers. That is the whole demo.
+  This sheet opens itself every time the file loads &mdash; press <b>Esc</b>, tap outside it, or hit
+  <b>Got it</b> to get out of the way. The <b>?</b> in the top right brings it back at any point, and the
+  <b>&#9881;&#xFE0E;</b> beside it holds presentation mode and the presenter&rsquo;s notes.</div>
 
   <ol class="steps">
     <li>Pick a <b>question</b> along the top of the screen. These are things people really ask.</li>
@@ -523,6 +597,9 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
       <b>5.</b> The <b>card picker</b> in lever 2 is presenter-only; a student always gets a random draw, which is the honest version.
       Everything else &mdash; all four questions, all 64 answers, the deck, the counter &mdash; is identical in both. Hand a student a phone in student mode and they can run the whole lesson alone.</td></tr>
     <tr><td><b>Closing slide</b></td><td>The line to end on, plus what the class scored.</td></tr>
+    <tr><td><b>? (top right)</b></td><td>This sheet. It opens by itself on every load and this button brings it back &mdash; mid-demo, mid-answer, from a phone. It never goes away, at any screen width.</td></tr>
+    <tr><td><b>&#9881;&#xFE0E; Settings</b></td><td>The small menu next to it. <b>Presentation mode</b> is the projector build of the app (big type, class scoring, compare, card picker); switch it off and you are in student mode. Underneath it sit the <b>presenter&rsquo;s notes</b>. Below that, the expert-term highlighter and a way back to this sheet or straight to the closing slide. On a phone the mode switch and the closing slide live here rather than on the toolbar.</td></tr>
+    <tr><td><b>Presenter&rsquo;s notes</b></td><td>Settings &rarr; Presenter&rsquo;s notes, or press <b>N</b>. The three-act roleplay as stage notes: what to say, what to do with the printed deck of target cards, and the line each act lands on &mdash; plus the house rules, the running order and the discussion questions. The same script as the printable presenter sheet, cut down to what you can read at a glance while a room is watching.</td></tr>
   </tbody></table>
 
   <h3>Keys</h3>
@@ -536,6 +613,8 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
     <div><kbd>&larr;</kbd><kbd>&rarr;</kbd> change scenario</div>
     <div><kbd>S</kbd> scoreboard</div>
     <div><kbd>M</kbd> presenter / student</div>
+    <div><kbd>N</kbd> presenter&rsquo;s notes</div>
+    <div><kbd>?</kbd> this sheet</div>
     <div><kbd>0</kbd> all levers off</div>
     <div><kbd>9</kbd> all levers on</div>
     <div><kbd>Esc</kbd> close anything</div>
@@ -549,6 +628,125 @@ kbd{border:1px solid var(--line);background:#0e131d;border-radius:5px;padding:.1
     <tr><td>10:00</td><td>Their turn: which lever would fix this? Then the closing line.</td></tr>
   </tbody></table>
   <p style="margin-top:1.4em"><button class="btn primary" data-close>Got it &mdash; start the demo</button></p>
+</div></div>
+
+<div class="modal menu" id="mSettings"><div class="sheet menu" role="menu" aria-label="Settings">
+  <div class="mhd">Settings</div>
+  <button class="mrow on" id="setPresentation" role="menuitemcheckbox" aria-checked="true">
+    <span class="mtxt"><b>Presentation mode</b><i>The projector build: big type, the 1&ndash;10 class score strip under every answer, pin-to-compare, and the card picker inside lever 2. Turn it off for student mode &mdash; smaller type and the self-paced walkthrough.</i></span>
+    <span class="tsw"></span>
+  </button>
+  <div class="mgroup">
+    <button class="mrow" id="setNotes" role="menuitem">
+      <span class="mtxt"><b>Presenter&rsquo;s notes</b><i>The three-act roleplay in stage-note form, plus house rules, running order and discussion questions.</i></span>
+      <span class="mk"><kbd>N</kbd></span>
+    </button>
+  </div>
+  <div class="msep"></div>
+  <button class="mrow" id="setHl" role="menuitemcheckbox" aria-checked="false" data-hl>
+    <span class="mtxt"><b>Highlight expert terms</b><i>Colour the specialist words inside every answer so the room can count them.</i></span>
+    <span class="tsw"></span>
+  </button>
+  <div class="msep"></div>
+  <button class="mrow" id="setHelp" role="menuitem">
+    <span class="mtxt"><b>How this works</b><i>Reopen the sheet that explains the three levers and every control.</i></span>
+    <span class="mk"><kbd>?</kbd></span>
+  </button>
+  <button class="mrow" id="setClosing" role="menuitem">
+    <span class="mtxt"><b>Closing slide</b><i>The line to end on, plus what the class scored.</i></span>
+  </button>
+</div></div>
+
+<div class="modal" id="mNotes"><div class="sheet notes">
+  <button class="btn close" data-close>close</button>
+  <h2>Presenter&rsquo;s notes</h2>
+  <div class="sub">The stage script, standing up. Same three acts as the printed presenter sheet &mdash; about twelve minutes.</div>
+
+  <p class="pnsetup">You are the Stranger. A volunteer is the Asker. The app is on the projector behind you;
+  run the same states on it as you say them out loud.</p>
+
+  <div class="pnact">
+    <div class="pnhd"><b>ACT I</b> <span class="swatch s1">CONTEXT</span><span class="pnt">~3 min</span></div>
+    <p class="pnsay">&ldquo;I am a stranger on a street corner. I am not stupid. I know a great deal about
+    almost everything. I have never met you.&rdquo;</p>
+    <ol>
+      <li>The Asker says only <b>&ldquo;Help me get ready for my test.&rdquo;</b> Answer out loud, as blandly and
+      generally as you honestly can. Cover every case &mdash; and do not clown it.</li>
+      <li>Ask the room what you would have needed to know. Take three answers onto the board.</li>
+      <li>The Asker reads the context block. Answer again, aimed at that kid.</li>
+    </ol>
+    <div class="pnland">&ldquo;I didn&rsquo;t get smarter. You got specific.&rdquo;</div>
+  </div>
+
+  <div class="pnact">
+    <div class="pnhd"><b>ACT II</b> <span class="swatch s2">THE TARGET DECK</span><span class="pnt">~4 min</span></div>
+    <p class="pnsay">Hold the eight printed cards face down. &ldquo;Somebody has to decide what a good answer
+    looks like. If you don&rsquo;t decide, I do. And I never tell you what I picked.&rdquo;</p>
+    <ol>
+      <li>Same question, context on, no success spec. <b>Draw a card and do not show it.</b> Answer to the card
+      &mdash; if it says exhaustive, talk for forty-five seconds without stopping.</li>
+      <li>Now show the card. Wait for the room.</li>
+      <li>Draw a different card and answer again. Same asker, same words, different answer &mdash; and the
+      difference was never theirs.</li>
+      <li>The Asker reads the success spec. Put the deck down and slide it away from you. On screen, flip
+      lever 2 and the card names get struck out where they sit, inside the lever.</li>
+    </ol>
+    <div class="pnland">&ldquo;You just took the deck out of my hands.&rdquo;</div>
+  </div>
+
+  <div class="pnact">
+    <div class="pnhd"><b>ACT III</b> <span class="swatch s3">THE FOLDERS</span><span class="pnt">~4 min</span></div>
+    <p class="pnsay">Three labelled folders: <b>BIOLOGY</b>, <b>BRIDGES</b>, <b>WRITING AT WORK</b>.
+    &ldquo;I have a folder on nearly everything. The words you use decide which one I open.&rdquo;</p>
+    <ol>
+      <li>The Asker: <b>&ldquo;Why do bridges stay up?&rdquo;</b> Open nothing. Answer in plain words &mdash; the
+      bottom gets stretched, the top gets squished. All true. All unusable.</li>
+      <li>The Asker adds the keyword block. Open BRIDGES and answer in the real vocabulary: load path,
+      bending moment, neutral axis, section depth.</li>
+      <li>On screen press <b>H</b> and count aloud the expert words in the answer the Asker never typed.</li>
+    </ol>
+    <div class="pnland">&ldquo;You didn&rsquo;t know those words. You didn&rsquo;t have to. You only had to point
+    at the folder.&rdquo;</div>
+  </div>
+
+  <h3>House rules</h3>
+  <ol class="pnrules">
+    <li><b>The Stranger is never stupid.</b> The honest failure of a bare prompt is blandness, not garbage.
+    The demo dies the moment the bad answer looks rigged.</li>
+    <li><b>No trick answers.</b> If the prompt supports a good answer, give a good answer.</li>
+    <li><b>Every answer gets a number.</b> 1&ndash;10, from the room, out loud, before the next one.</li>
+    <li><b>Nobody says &ldquo;the AI is bad at this&rdquo;</b> without naming which lever is off.</li>
+    <li><b>The Asker types nothing they wouldn&rsquo;t really type.</b> No inventing a great prompt to prove a point.</li>
+  </ol>
+
+  <h3>Running order</h3>
+  <table class="tbl"><tbody>
+    <tr><td>0:00</td><td>Cold open. Act I, live, no screen.</td></tr>
+    <tr><td>3:00</td><td>App, scenario 1, all levers off. Draw the card. Score it.</td></tr>
+    <tr><td>4:30</td><td>One lever at a time. Score each. The curve argues for you.</td></tr>
+    <tr><td>7:00</td><td>Act III on the bridge scenario. Highlighter on, count the words.</td></tr>
+    <tr><td>9:30</td><td>&ldquo;Which lever would fix this?&rdquo; &mdash; two rounds, hands up.</td></tr>
+    <tr><td>11:00</td><td>Closing slide. Read the line. Stop talking.</td></tr>
+  </tbody></table>
+
+  <h3>Discussion questions</h3>
+  <ol class="pnq">
+    <li>The first answer was accurate. Why was it useless?</li>
+    <li>Who decided what a good answer looked like, and when?</li>
+    <li>The expert answer used words you never typed. Where did they come from, and how did asking in plain
+    words keep them hidden?</li>
+    <li>Which of the three levers is hardest to pull for a subject you know nothing about? What do you do then?</li>
+    <li>Name a time you blamed a tool for an answer you had underspecified.</li>
+    <li>Success spec means saying what &ldquo;done&rdquo; looks like. When is that hard to say &mdash; and what
+    does that tell you about the task itself?</li>
+  </ol>
+
+  <div class="pnfoot">The app is one file and touches no network; every answer in it was written by hand
+  before the file was saved. Keys: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> levers &middot; <kbd>Enter</kbd> ask &middot;
+  <kbd>Space</kbd> skip typing &middot; <kbd>H</kbd> highlight &middot; <kbd>R</kbd> replay card &middot;
+  <kbd>P</kbd> pin to compare &middot; <kbd>S</kbd> scoreboard &middot; <kbd>M</kbd> student mode &middot;
+  <kbd>N</kbd> these notes. The printable version, with the eight target cards to cut out, is the
+  presenter sheet that ships beside this file.</div>
 </div></div>
 
 <div class="modal" id="mDraft"><div class="sheet draft">
@@ -995,10 +1193,10 @@ function drawChart(){
   const x = v => m.l + (v/3) * (W - m.l - m.r);
   const y = v => H - m.b - ((v-1)/9) * (H - m.t - m.b);
   let g = "";
-  for(let k=1;k<=10;k+=3){ g += '<line x1="'+m.l+'" y1="'+y(k)+'" x2="'+(W-m.r)+'" y2="'+y(k)+'" stroke="#2a3550"/>'+
-    '<text x="'+(m.l-8)+'" y="'+(y(k)+4)+'" fill="#6b7a97" font-size="11" text-anchor="end">'+k+"</text>"; }
-  for(let k=0;k<=3;k++){ g += '<text x="'+x(k)+'" y="'+(H-m.b+20)+'" fill="#6b7a97" font-size="11" text-anchor="middle">'+k+"</text>"; }
-  g += '<text x="'+((W+m.l)/2)+'" y="'+(H-4)+'" fill="#93a2be" font-size="11" text-anchor="middle">levers pulled</text>';
+  for(let k=1;k<=10;k+=3){ g += '<line x1="'+m.l+'" y1="'+y(k)+'" x2="'+(W-m.r)+'" y2="'+y(k)+'" stroke="#123f6b"/>'+
+    '<text x="'+(m.l-8)+'" y="'+(y(k)+4)+'" fill="#6e93b3" font-size="11" text-anchor="end">'+k+"</text>"; }
+  for(let k=0;k<=3;k++){ g += '<text x="'+x(k)+'" y="'+(H-m.b+20)+'" fill="#6e93b3" font-size="11" text-anchor="middle">'+k+"</text>"; }
+  g += '<text x="'+((W+m.l)/2)+'" y="'+(H-4)+'" fill="#9cbdd8" font-size="11" text-anchor="middle">levers pulled</text>';
 
   const means = [];
   for(let k=0;k<=3;k++){
@@ -1006,11 +1204,11 @@ function drawChart(){
     if(set.length) means.push([k, set.reduce((a,b)=> a+b.score,0)/set.length]);
   }
   if(means.length > 1){
-    g += '<polyline fill="none" stroke="#ffd47e" stroke-width="3" stroke-linejoin="round" points="'+
+    g += '<polyline fill="none" stroke="#ECAC00" stroke-width="3" stroke-linejoin="round" points="'+
       means.map(([k,v])=> x(k)+","+y(v)).join(" ")+'"/>';
   }
-  means.forEach(([k,v])=>{ g += '<circle cx="'+x(k)+'" cy="'+y(v)+'" r="5.5" fill="#ffd47e"/>'; });
-  const cols = ["#93a2be","#f4a63f","#3fdda0","#b49bff"];
+  means.forEach(([k,v])=>{ g += '<circle cx="'+x(k)+'" cy="'+y(v)+'" r="5.5" fill="#ECAC00"/>'; });
+  const cols = ["#9cbdd8","#ECAC00","#00A4E3","#b49bff"];
   S.scores.forEach((s,i)=>{
     const jx = x(s.levers) + ((i % 5) - 2) * 7;
     g += '<circle cx="'+jx+'" cy="'+y(s.score)+'" r="3.4" fill="'+cols[s.levers]+'" opacity=".85"/>';
@@ -1103,7 +1301,7 @@ function showQuiz(q){
 
 /* --------------------------------------------------------------- modes --- */
 const MODE_TEXT = {
-  presenter: "Projector-sized type. You drive it: score every answer 1\u201310 and watch the curve build, pin two answers side by side, and choose which target card gets drawn. No walkthrough \u2014 you decide where to go next.",
+  presenter: "Projector-sized type. You drive it: score every answer 1\u201310 and watch the curve build, pin two answers side by side, and choose which target card gets drawn. No walkthrough \u2014 you decide where to go next. The stage script lives in the presenter\u2019s notes (\u2699 Settings, or press N).",
   student:   "Self-paced and smaller type. A guided walkthrough at the bottom of the screen takes you through the levers one at a time, then asks three \u201Cwhich lever would fix this?\u201D questions. No class scoring, no compare, and the target card is always drawn at random \u2014 the way it happens in real life."
 };
 function renderModeBanner(flash){
@@ -1121,6 +1319,7 @@ function setMode(m){
   ["#btnScoreboard","#btnCompare"].forEach(s=> $(s).classList.toggle("hidden", m !== "presenter"));
   document.body.classList.toggle("rehearsal", m === "presenter");
   renderModeBanner(changed);
+  renderSettings();
   if(m === "student"){ runGuide(0); }
   else { S.guideIdx = -1; }
 }
@@ -1128,7 +1327,34 @@ function setHighlight(v){
   S.highlight = v;
   document.body.classList.toggle("hl", v);
   $$("[data-hl]").forEach(b=> b.classList.toggle("on", v));
+  renderSettings();
 }
+
+/* ------------------------------------------------------------- settings --
+   The menu does not own any state. It is a second face on switches that already
+   exist — presenter/student mode and the highlighter — so it only ever has to
+   redraw itself from S. Presentation mode IS presenter mode; the notes are the
+   thing it contains. */
+function renderSettings(){
+  const p = $("#setPresentation"), h = $("#setHl");
+  if(!p) return;
+  const on = S.mode === "presenter";
+  p.classList.toggle("on", on);
+  p.setAttribute("aria-checked", String(on));
+  h.setAttribute("aria-checked", String(S.highlight));
+}
+function openSettings(){
+  // one row of toolbar on a desktop, two on a phone — measure, don't guess
+  document.documentElement.style.setProperty("--barh", $("#bar").offsetHeight + "px");
+  renderSettings();
+  $("#mSettings").classList.add("show");
+  $("#btnSettings").setAttribute("aria-expanded", "true");
+}
+function closeSettings(){
+  $("#mSettings").classList.remove("show");
+  $("#btnSettings").setAttribute("aria-expanded", "false");
+}
+function showModal(id){ closeSettings(); $(id).classList.add("show"); }
 
 /* -------------------------------------------------------------- closing -- */
 function showClosing(){
@@ -1181,7 +1407,14 @@ function init(){
   $("#btnSkip").addEventListener("click", ()=> activeTyper && activeTyper.skip());
   $("#btnCompare").addEventListener("click", ()=>{ S.pinned ? (S.pinned = null, renderPin()) : pin(); });
   $("#btnScoreboard").addEventListener("click", ()=>{ drawChart(); $("#mScore").classList.add("show"); });
-  $("#btnHelp").addEventListener("click", ()=> $("#mHelp").classList.add("show"));
+  $("#btnHelp").addEventListener("click", ()=> showModal("#mHelp"));
+  $("#btnSettings").addEventListener("click", ()=>
+    $("#mSettings").classList.contains("show") ? closeSettings() : openSettings());
+  $("#setPresentation").addEventListener("click", ()=> setMode(S.mode === "presenter" ? "student" : "presenter"));
+  $("#setNotes").addEventListener("click", ()=> showModal("#mNotes"));
+  $("#setHl").addEventListener("click", ()=> setHighlight(!S.highlight));
+  $("#setHelp").addEventListener("click", ()=> showModal("#mHelp"));
+  $("#setClosing").addEventListener("click", ()=>{ closeSettings(); showClosing(); });
   $("#modeSeg").addEventListener("click", e=>{
     const b = e.target.closest("[data-mode]"); if(!b) return;
     if(b.dataset.mode !== S.mode) setMode(b.dataset.mode);
@@ -1202,10 +1435,13 @@ function init(){
     const k = e.key;
     if(k === "Escape"){
       $$(".modal.show").forEach(m=> m.classList.remove("show"));
+      closeSettings();
       $("#closing").classList.remove("show");
       if($("#cardStage").classList.contains("show")) closeCard();  // skip the card, keep the answer
       return;
     }
+    // "?" is Shift+/ — it never collides with the single-key shortcuts below
+    if(k === "?"){ showModal("#mHelp"); return; }
     if(["1","2","3"].includes(k)){ toggle(+k - 1); e.preventDefault(); return; }
     if(k === "0"){ S.bits = [0,0,0]; renderAll(); return; }
     if(k === "9"){ S.bits = [1,1,1]; renderAll(); return; }
@@ -1216,6 +1452,7 @@ function init(){
     if(l === "r" && S.lastCard) drawCard(S.lastCard, null);
     if(l === "p") S.pinned ? (S.pinned = null, renderPin()) : pin();
     if(l === "s"){ drawChart(); $("#mScore").classList.toggle("show"); }
+    if(l === "n"){ const m = $("#mNotes"); closeSettings(); m.classList.toggle("show"); }
     if(l === "m") setMode(S.mode === "presenter" ? "student" : "presenter");
     if(k === "ArrowRight"){ S.sc = (S.sc + 1) % DATA.scenarios.length; showEmpty(); S.lastKey=null; renderAll(); }
     if(k === "ArrowLeft"){ S.sc = (S.sc - 1 + DATA.scenarios.length) % DATA.scenarios.length; showEmpty(); S.lastKey=null; renderAll(); }
@@ -1223,6 +1460,7 @@ function init(){
 
   showEmpty();
   renderModeBanner(false);
+  renderSettings();
   $("#mHelp").classList.add("show");   // first thing anyone sees is what everything does
 }
 function toggle(i){
@@ -1237,7 +1475,8 @@ function showEmpty(){
       '<li>Press <b>Ask</b>. Read what a stranger says to a stranger.</li>' +
       '<li>Turn on <b>one</b> lever, press Ask again, and see exactly what that one lever bought you.</li>' +
       '<li>Then all three.</li>' +
-    "</ol><p>Every answer in this file was written by hand before the file was saved. Nothing is generated live and nothing touches the internet.</p></div>";
+    "</ol><p>Every answer in this file was written by hand before the file was saved. Nothing is generated live and nothing touches the internet. " +
+      "Lost? <b>?</b> at the top right reopens the how-to sheet; <b>⚙︎</b> beside it has presentation mode and the presenter’s notes.</p></div>";
 }
 window.__stranger = { S, DATA, ask, toggle, setMode, showEmpty, runGuide, recordScore, pin, setHighlight,
   drawCard, guideSteps, renderAll, drawChart, showClosing, renderPin,
