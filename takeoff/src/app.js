@@ -42,12 +42,18 @@ function boot() {
   wireNav();
   wireRound();
   wireTimeline();
+  wireSheets();
   wireSettings();
   buildAct3();
   buildSources();
 
   window.addEventListener('resize', () => { fitChart(); app.chart.resize(); app.timeline.resize(); });
   window.addEventListener('orientationchange', () => setTimeout(fitChart, 120));
+
+  /* The how-to is shown on every load, not once. Remembering that it has been
+     seen would mean storing something, and this app stores nothing at all —
+     there is an integration check asserting localStorage is never touched. */
+  openSheet('howto', $('#btn-howto'));
 }
 
 /* ---- the opening screen -------------------------------------------------- */
@@ -501,13 +507,67 @@ function srcLinks(keys) {
     .join('<span class="dot">·</span>');
 }
 
+/* ---- sheets: how-to, settings, presenter's notes --------------------------
+   Three overlays, one discipline. The page behind goes inert so a stray tab
+   cannot land on a control nobody can see, focus moves into the sheet, Escape
+   closes the topmost one, tapping the dimmed area closes it — which is what a
+   phone user tries first — and focus returns to whatever opened it. Sheets
+   stack, because the presenter's notes open from inside settings.
+   -------------------------------------------------------------------------- */
+
+const sheetStack = [];
+
+function openSheet(id, opener) {
+  const el = $('#' + id);
+  if (!el || !el.hidden) return;
+  el.hidden = false;
+  sheetStack.push({ id, from: opener || null });
+  $('#brandbar').inert = true;
+  document.querySelector('main').inert = true;
+  document.body.classList.add('modal-open');
+  el.querySelector('.sheet-inner').focus();
+}
+
+function closeSheet(id) {
+  const el = $('#' + id);
+  if (!el || el.hidden) return;
+  el.hidden = true;
+  const ix = sheetStack.findIndex(s => s.id === id);
+  const rec = ix < 0 ? null : sheetStack.splice(ix, 1)[0];
+  if (!sheetStack.length) {
+    $('#brandbar').inert = false;
+    document.querySelector('main').inert = false;
+    document.body.classList.remove('modal-open');
+  }
+  /* Back where it came from — but only if that control is still on the page
+     and is not itself sitting inside something that has just gone inert. */
+  const from = rec && rec.from;
+  if (from && document.contains(from) && !from.closest('[inert]')) from.focus();
+}
+
+function wireSheets() {
+  const opens = id => ev => openSheet(id, ev.currentTarget);
+  $('#btn-howto').addEventListener('click', opens('howto'));
+  $('#btn-howto-2').addEventListener('click', opens('howto'));
+  $('#btn-settings').addEventListener('click', opens('settings'));
+  $('#btn-notes').addEventListener('click', opens('notes'));
+
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.dataset.close)));
+
+  $$('.overlay').forEach(o => o.addEventListener('click', ev => {
+    if (ev.target === o) closeSheet(o.id);
+  }));
+
+  document.addEventListener('keydown', ev => {
+    if (ev.key !== 'Escape' || !sheetStack.length) return;
+    ev.preventDefault();
+    closeSheet(sheetStack[sheetStack.length - 1].id);
+  });
+}
+
 /* ---- settings ------------------------------------------------------------ */
 
 function wireSettings() {
-  $('#btn-settings').addEventListener('click', () => $('#settings').hidden = false);
-  $$('[data-close]').forEach(b => b.addEventListener('click', () => {
-    $('#' + b.dataset.close).hidden = true;
-  }));
   $('#chk-presenter').addEventListener('change', ev => {
     app.big = ev.target.checked;
     document.body.classList.toggle('presenter', app.big);
@@ -627,7 +687,7 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
-window.__undershoot = { app, runSelfTest, goAct, loadRound,
+window.__undershoot = { app, runSelfTest, goAct, loadRound, openSheet, closeSheet,
                         begin: () => $('#btn-begin').click(),
                         tlLabels: () => Timeline.labels(), D, E };
 

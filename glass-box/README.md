@@ -116,7 +116,26 @@ all contrast ≥ 3:1), with direct labels everywhere so no reading depends on hu
 
 Phone-first: single column, every tap target ≥ 36px (asserted in the integration suite at
 375×667), the TRAIN button sticky so it is never below the fold, era chips instead of wide
-tables. Presenter mode (footer link) scales one CSS variable, exactly like Zero to Unbeatable.
+tables.
+
+## Getting around the page
+
+Three overlay cards share one style — a white panel with a navy bar and a gold rule, full-screen
+under 600px, with the title bar and the closing button pinned so only the body scrolls. Each one
+closes on Escape, on a tap outside it, on its ×, and on its footer button.
+
+- **How to use** — opens on every load and explains what to do in each of the three acts. Reopen
+  it any time from the **?** in the sticky header (or `how to use` in the footer).
+- **Settings** — the header's second control. Holds **presentation mode**, which scales one CSS
+  variable to enlarge the whole page for a projector and puts a **Notes** button in the header;
+  the **presenter's notes**; and the full teacher guide.
+- **Presenter's notes** — the stage version of `demo-guide.html`, distilled: what to do before you
+  start, the timed beats and quotable lines for each act, the numbers this seeded run produces, the
+  six misconceptions to draw out, and the four questions you will get. The complete printable plan
+  stays in the teacher guide. Reachable from Settings, from the footer, and — while presenting —
+  from the header.
+
+The byline pill (bottom-left, fixed) lifts clear of the sticky TRAIN button on narrow screens.
 
 Training normally runs in a Web Worker so the UI never blocks. Some hosts refuse blob workers
 (sandboxed preview panes, strict CSP) — synchronously, with a late error event, or by silently
@@ -134,6 +153,8 @@ node src/selftest.test.js     # 29 checks, ~60s: gradient check vs numerics, unt
                               # calculator/search/policy behavior, the 11-turn run, the
                               # tiny-window failure
 node tools/integration.mjs    # drives the built file in a phone-sized browser (~4 min):
+                              # the required-UX pass (how-to on load, Escape and the ? control,
+                              # settings, presenter's notes, presentation mode, the byline),
                               # trains era 1 live, full Act 2 (both models + voting + a
                               # self-improvement round, asserting the gaps), Act 3 autoplay to
                               # the correct answer and the context-window failure, zero network

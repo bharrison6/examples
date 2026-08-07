@@ -34,8 +34,8 @@
       <span class="b0">Murray State University</span>
       <span class="b1">ZERO TO UNBEATABLE <em>watch it learn</em></span>
     </div>
-    <button class="icon-btn guide-btn student-guide-open">Guide</button>
-    <button class="icon-btn" id="btn-settings" aria-label="Settings">&#9881;</button>
+    <button class="icon-btn" id="btn-howto" aria-label="How to play" title="How to play">?</button>
+    <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
   </header>
   <div id="rule" aria-hidden="true"></div>
   </div>
@@ -112,27 +112,51 @@
     </div><!-- /col-b -->
 
     <footer id="foot">
-      <span class="msu">Murray State University</span>
+      <span class="msu">Bryant Harrison · Murray State University</span>
       One HTML file · runs offline · nothing leaves this device
     </footer>
   </main>
 </div>
 
-<dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
-  <div class="student-guide-head"><h2 id="student-guide-title">How to play Zero to Unbeatable</h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
-  <div class="student-guide-body">
-    <p>You are playing tic-tac-toe against an AI that begins with no strategy at all.</p>
-    <ol>
-      <li>Play Era 0. It chooses randomly, so you should be able to beat it.</li>
-      <li>Press <b>Train the AI</b>. It plays thousands of games, keeps what worked, and creates a new era.</li>
-      <li>Play the new era, then train again. Use <b>Show its brain</b> to see the live value learned for each square.</li>
-      <li>Continue until the app proves there is no line of play that can beat it.</li>
-    </ol>
-    <h3>What the colors mean</h3>
-    <p>Gold squares look promising to the AI; red-orange squares look dangerous. Era 0 has all zeros because it genuinely knows nothing.</p>
+<!-- ========================= HOW TO PLAY ========================= -->
+<!-- Opens on every load and reopens from the ? in the brand bar. It is
+     one of the app's own sheets rather than a second modal mechanism,
+     so Escape, the backdrop tap, the focus trap and the inert page all
+     come from openSheet()/closeSheet() with nothing duplicated. -->
+<div class="overlay sheet" id="howto" hidden role="dialog" aria-modal="true" aria-labelledby="howto-title">
+  <div class="sheet-inner" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="howto-title">How to play</h2><div class="sub">Beat it &middot; teach it &middot; fail to beat it</div></div>
+      <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <p class="howto-lede">You are playing tic-tac-toe against an opponent that has never played a
+      game. No strategy, no rules about rows, no opening book — just a list of numbers, every one of
+      them zero.</p>
+      <ol class="howto-steps">
+        <li><b>Beat Era 0.</b> Tap a square. It replies at random, because every square looks
+        identical to it. You should win, and win fast.</li>
+        <li><b>Press TRAIN.</b> It plays 5,000 games against itself and against chance, keeps what
+        worked, and freezes the result as a new era.</li>
+        <li><b>Play the new era.</b> Same program, same code — only the numbers changed. It blocks
+        you now.</li>
+        <li><b>Train again, and again.</b> Somewhere around the third to fifth burst the app
+        searches every game that can still be played against it, finds no line where it loses, and
+        says so. That banner is a proof, not a win record.</li>
+      </ol>
+      <p class="howto-note"><b>Show its brain</b> prints the value it has learned for every empty
+      square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0 is all zeros
+      because it genuinely knows nothing. The dropdown lets you go back and play any earlier era,
+      and that comparison is the whole lesson.</p>
+      <p class="howto-note"><b>Nine at once</b>, from the toggle at the top, drops the same learner
+      into a world one step bigger &mdash; nine boards, first to win five.</p>
+      <p class="howto-note quiet">Everything happens on this device: no network, no account, nothing
+      stored. Reloading returns it to Era 0. Reopen these instructions any time with the
+      <b>?</b> button at the top.</p>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="howto">Play Era 0</button></div>
   </div>
-  <form method="dialog" class="student-guide-actions"><button>Play Era 0</button></form>
-</dialog>
+</div>
 
 <!-- ======================= TRAINING MONTAGE ====================== -->
 <div class="overlay" id="montage" hidden>
@@ -177,6 +201,40 @@
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body" id="notes-body">
+      <!-- Stage cue card: the running order at a glance, distilled from the
+           printable guide immediately below it. Screen only — printing this
+           sheet still produces the guide's own one-pager, unchanged. -->
+      <div class="stagecard" id="stage-notes">
+        <div class="sc-eyebrow">At a glance</div>
+        <h3>Before you start</h3>
+        <p>Presenter mode on if you are projecting. To reproduce a rehearsed run, type your seed
+        into <b>Rehearsal seed</b> and press <b>Reset to Era 0</b>. Leave the burst on 5,000.
+        <b class="sc-warn">Do not train before the session, and do not refresh mid-demo.</b></p>
+        <h3>The 15 minutes</h3>
+        <ul class="sc-beats">
+          <li><span>0:00</span> Hand it to a student: &ldquo;Beat it.&rdquo; Let two or three people beat Era 0. Let the room laugh at it.</li>
+          <li><span>2:00</span> <b>Show its brain</b> &mdash; every square <code>+0.00</code>, seen 0 times. That is the whole mind.</li>
+          <li><span>3:00</span> Press <b>Train</b> and say nothing for three seconds. Point at &epsilon; falling and the win rate climbing.</li>
+          <li><span>4:30</span> Play Era 1. It blocks. Still beatable about one game in six &mdash; ask what it is missing.</li>
+          <li><span>6:30</span> Train, play Era 2. Wins dry up, draws start. Let the frustration land; it <em>is</em> the lesson.</li>
+          <li><span>9:00</span> Train twice more. The banner lands between the third and fifth press. Invite the best player to try.</li>
+          <li><span>11:30</span> Go back to Era 0 and stomp it again. Same code, different numbers.</li>
+          <li><span>13:00</span> Read the banner, then bridge: tic-tac-toe can be listed, chess and language cannot.</li>
+        </ul>
+        <h3>Second act, 5 minutes</h3>
+        <p>Switch to <b>Nine at once</b> and play &mdash; beatable again, nothing taken away. Turn the
+        brain on and read the last line (most squares sit on pictures it has never seen). Train, then
+        read how often a position comes round: about ten times on one board, about once on nine. Close
+        on the missing banner &mdash; here the app prints a refusal instead of a proof.</p>
+        <h3>If it goes sideways</h3>
+        <ul class="sc-notes">
+          <li><b>Short of time?</b> Press train twice in a row and skip Era 2. It always lands by the fifth press.</li>
+          <li><b>A student beats Era 3?</b> They cannot beat a <em>verified</em> era, but they can beat one before the banner. Say so, then train again.</li>
+          <li><b>&ldquo;It was secretly programmed.&rdquo;</b> Show the brain at Era 0, then run <b>Settings &rarr; the full self-test</b> in front of them.</li>
+        </ul>
+        <p class="sc-more">The full guide &mdash; script, discussion questions, misconceptions, second
+        act &mdash; is below, and it is what the <b>Print</b> button prints.</p>
+      </div>
 <!--__GUIDE__-->
     </div>
     <div class="sheet-foot">
@@ -194,14 +252,26 @@
     </div>
     <div class="sheet-body">
       <div class="field">
+        <label class="lbl">Presentation mode</label>
         <label class="switch">
           <input type="checkbox" id="chk-presenter">
           <span>Presenter mode &mdash; oversized UI for a projector</span>
         </label>
+        <button class="btn" id="btn-notes">Open the presenter notes</button>
+        <p class="help">The complete session plan &mdash; a one-screen running order, then the timed
+        script, the discussion questions, the misconceptions to draw out and the five-minute second
+        act. Built into this file, so it works with no network and nothing else to download. There is
+        a print button inside.</p>
+      </div>
+      <div class="field">
+        <label class="lbl">Playing</label>
         <label class="switch">
           <input type="checkbox" id="chk-first">
           <span>I always move first (otherwise it alternates)</span>
         </label>
+        <button class="btn" id="btn-howto-2">How to play</button>
+        <p class="help">Reopens the instructions that appear when the page loads. The
+        <b>?</b> button at the top of the page does the same thing at any time.</p>
       </div>
       <div class="field">
         <label class="lbl" for="in-seed">Rehearsal seed</label>
@@ -223,13 +293,6 @@
         <div id="selftest-out"></div>
       </div>
       <div class="field">
-        <label class="lbl">Presenter notes</label>
-        <button class="btn" id="btn-notes">Open the presenter notes</button>
-        <p class="help">The complete session plan &mdash; the timed script, the discussion questions
-        and the misconceptions to draw out, plus the five-minute second act. Built into this file, so
-        it works with no network and nothing else to download. There is a print button inside.</p>
-      </div>
-      <div class="field">
         <label class="lbl">About</label>
         <p class="help" id="about-text"></p>
       </div>
@@ -243,15 +306,9 @@
 <script>
 /*__JS__*/
 </script>
-<script>
-(() => {
-  const dialog=document.getElementById('student-guide');let opener=null;
-  document.addEventListener('click',event=>{const button=event.target.closest?.('.student-guide-open');if(!button)return;event.preventDefault();opener=button;dialog.showModal();dialog.querySelector('.student-guide-head button').focus()});
-  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
-  dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()});
-})();
-</script>
-
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+<!-- Standing byline. Styles live in styles.css with everything else so the
+     two cannot drift; it is pointer-events:none, so it can never sit in
+     front of a control. -->
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

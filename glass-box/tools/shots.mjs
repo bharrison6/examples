@@ -15,6 +15,9 @@ const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 await page.goto(url);
 await page.waitForFunction(() => document.getElementById('livesample').textContent.includes('era 0'), null, { timeout: 30000 });
 
+await page.screenshot({ path: out('00-howto.png') });   // the how-to card, shown on every load
+await page.keyboard.press('Escape');
+await page.waitForTimeout(100);
 await page.screenshot({ path: out('01-act1-top.png') });
 await page.click('#pmap .prow'); // open weight peek
 await page.$eval('#wpeek', (el) => el.scrollIntoView({ block: 'center' }));

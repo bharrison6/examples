@@ -17,7 +17,8 @@
   --blue:       #002144;
   --blue-2:     #14477d;
   --blue-pale:  #dce8f5;
-  --gold:       #f1b82d;
+  --lite-blue:  #00A4E3;
+  --gold:       #ECAC00;
   --gold-dark:  #b07d00;
   --red:        #b3261e;
   --red-pale:   #f6dedc;
@@ -145,6 +146,14 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .btn.commit:disabled { background: var(--ink-3); border-color: var(--ink-3); cursor: default; }
 .btn.sm { padding: 3px 8px; font-size: .78rem; }
 .btn.ghost { border-color: var(--line); background: transparent; }
+/* a single-glyph control — kept square so it stays a 34px touch target */
+.btn.icon {
+  min-width: 34px; min-height: 34px; padding: 4px 8px; font-size: .95rem; font-weight: 700;
+  line-height: 1; display: inline-flex; align-items: center; justify-content: center;
+}
+/* the presenter's-notes shortcut only exists while presenting */
+#btn-notes-top { display: none; }
+body.presenting #btn-notes-top { display: inline-flex; }
 .btn[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
 
 /* ---------- main panes ---------- */
@@ -589,10 +598,12 @@ body.big .fr-tags .f.days { display: none; }
 #tip.on { opacity: 1; }
 #tip b { display: block; margin-bottom: 3px; color: #9ec5e8; }
 
-/* ---------- overlays ---------- */
+/* ---------- overlays ----------
+   Above #setup (z 70), so a modal opened from the setup sheet — the
+   how-to briefing, the self-test — is not painted over by it. */
 .overlay {
   position: fixed; inset: 0; background: rgba(20,26,36,.62);
-  display: flex; align-items: center; justify-content: center; z-index: 60; padding: 24px;
+  display: flex; align-items: center; justify-content: center; z-index: 80; padding: 24px;
 }
 .overlay[hidden] { display: none; }
 .modal {
@@ -607,6 +618,101 @@ body.big .fr-tags .f.days { display: none; }
 .modal-head .sub { font-family: var(--mono); font-size: .66rem; color: var(--ink-3); letter-spacing: .1em; }
 .modal-body { padding: 18px 20px; }
 .modal-foot { padding: 12px 20px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: flex-end; }
+.modal-foot.split { justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.modal-foot .foot-note {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .06em; color: var(--ink-3);
+}
+
+/* ---------- how-to briefing + presenter's notes ----------
+   Both are sheets off the same drawing set as everything else: navy
+   title block, gold rule under it, monospaced sub-heads. Sized for a
+   phone first — one column, everything scrolls inside the modal. */
+.modal.brief { max-width: 620px; }
+.modal.notes { max-width: 700px; }
+.modal-head.navy { background: var(--blue); border-bottom: 4px solid var(--gold); color: #fff; }
+.modal-head.navy h2 { color: #fff; letter-spacing: .05em; }
+.modal-head.navy .sub { color: var(--lite-blue); }
+.modal-head.navy .msu-line {
+  font-family: var(--mono); font-size: .6rem; letter-spacing: .24em; color: var(--gold);
+  font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+}
+.modal-head.navy .btn.x {
+  background: transparent; border-color: rgba(255,255,255,.34); color: #fff;
+  padding: 4px 11px; font-size: .9rem; line-height: 1.1;
+}
+.modal-head.navy .btn.x:hover { background: rgba(255,255,255,.12); border-color: #fff; }
+
+.brief .lede { font-size: .93rem; line-height: 1.5; margin: 0 0 4px; }
+.brief h3, .notes h3 {
+  font-family: var(--mono); font-size: .63rem; letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-3); margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line-2);
+}
+.brief ol.steps { list-style: none; margin: 0; padding: 0; counter-reset: brief-step; }
+.brief ol.steps li {
+  position: relative; padding-left: 32px; margin-bottom: 9px;
+  font-size: .87rem; line-height: 1.45;
+}
+.brief ol.steps li::before {
+  counter-increment: brief-step; content: counter(brief-step);
+  position: absolute; left: 0; top: 1px; width: 21px; height: 21px; border-radius: 50%;
+  background: var(--blue); color: var(--gold); font-family: var(--mono); font-size: .7rem;
+  font-weight: 700; display: flex; align-items: center; justify-content: center;
+}
+.brief .row { display: flex; gap: 10px; margin-bottom: 9px; font-size: .87rem; line-height: 1.45; }
+.brief .row .k {
+  flex: 0 0 96px; font-family: var(--mono); font-size: .63rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--blue); font-weight: 700; padding-top: 3px;
+}
+.brief ul.watch { margin: 0; padding-left: 17px; font-size: .87rem; line-height: 1.48; }
+.brief ul.watch li { margin-bottom: 8px; }
+.brief ul.watch li:last-child { margin-bottom: 0; }
+.brief .rule { color: var(--blue); font-weight: 700; }
+.brief .phone {
+  border-left: 3px solid var(--lite-blue); background: var(--paper-2);
+  padding: 9px 12px; font-size: .84rem; line-height: 1.45; margin-top: 4px;
+}
+
+.notes details {
+  border: 1px solid var(--line); border-radius: 3px; background: var(--paper); margin-bottom: 8px;
+}
+.notes summary {
+  padding: 10px 12px; cursor: pointer; font-weight: 700; font-size: .9rem;
+  display: flex; align-items: center; gap: 9px; list-style: none;
+}
+.notes summary::-webkit-details-marker { display: none; }
+.notes summary::after {
+  content: '+'; margin-left: auto; font-family: var(--mono); font-weight: 700; color: var(--ink-3);
+}
+.notes details[open] > summary { background: var(--paper-2); border-bottom: 1px solid var(--line-2); }
+.notes details[open] > summary::after { content: '\2212'; }
+.notes summary .n {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; color: var(--gold);
+  background: var(--blue); border-radius: 2px; padding: 3px 7px; flex: 0 0 auto;
+}
+.notes .nb { padding: 12px 13px; font-size: .85rem; line-height: 1.5; }
+.notes .nb p { margin: 0 0 9px; }
+.notes .nb p:last-child, .notes .nb ul:last-child { margin-bottom: 0; }
+.notes .nb ul { margin: 0 0 9px; padding-left: 17px; }
+.notes .nb li { margin-bottom: 7px; }
+.notes .nb li:last-child { margin-bottom: 0; }
+.notes .cue { color: var(--blue); font-weight: 700; }
+.notes .said {
+  border-left: 3px solid var(--gold); background: var(--paper-2);
+  padding: 7px 11px; margin: 0 0 8px; font-size: .85rem; line-height: 1.45;
+}
+.notes table.ros { width: 100%; border-collapse: collapse; font-size: .82rem; }
+.notes table.ros td {
+  padding: 6px 7px; border-bottom: 1px solid var(--line-2); vertical-align: top; line-height: 1.42;
+}
+.notes table.ros tr:last-child td { border-bottom: 0; }
+.notes table.ros td.t {
+  font-family: var(--mono); font-size: .7rem; color: var(--blue); font-weight: 700;
+  white-space: nowrap; width: 58px;
+}
+.notes .src {
+  font-family: var(--mono); font-size: .62rem; letter-spacing: .05em; color: var(--ink-3);
+  margin-top: 12px; line-height: 1.5;
+}
 
 /* ---------- setup screen ---------- */
 #setup { position: fixed; inset: 0; background: var(--paper); z-index: 70; overflow-y: auto; }
@@ -789,6 +895,16 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   #view-tabs .legend { display: none; }
   .modal { max-height: 86vh; }
   #tip { max-width: 86vw; }
+  /* overlays: no side gutters worth losing on a 390px screen */
+  .overlay { padding: 12px; }
+  .modal-head { padding: 12px 14px; }
+  .modal-body { padding: 14px 14px; }
+  .modal-foot { padding: 10px 14px; }
+  .modal-foot.split .foot-note { flex: 1 1 100%; order: 2; }
+  .brief .row { display: block; }
+  .brief .row .k { padding-top: 0; margin-bottom: 1px; }
+  .notes summary { padding: 12px; }
+  .notes table.ros td.t { width: 52px; }
 }
 
 @media (max-width: 1560px) { .hud-cell.opt { display: none; } }
@@ -798,3 +914,24 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   #brand { min-width: 110px; }
 }
 body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
+
+/* ---------- attribution ----------
+   Visible on every screen, including over a modal, and out of the way:
+   it settles to half opacity a few seconds after load. Above every
+   overlay so it is never hidden; never in front of a finger. */
+.bh-credit {
+  position: fixed; left: 8px; bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  z-index: 200; pointer-events: none;
+  font: 600 10px/1.3 var(--sans); letter-spacing: .03em; white-space: nowrap;
+  color: var(--gold); background: rgba(0,33,68,.85);
+  border: 1px solid rgba(236,172,0,.4); border-radius: 999px; padding: 3px 10px;
+  animation: bh-settle 9s ease forwards;
+}
+@keyframes bh-settle { 0%, 65% { opacity: .93; } 100% { opacity: .5; } }
+@media (prefers-reduced-motion: reduce) { .bh-credit { animation: none; opacity: .8; } }
+/* Must sit after the rule above, not up in the mobile block — same
+   specificity, so source order decides. Lifts the credit clear of the
+   SITE / MEETING tab bar instead of sitting on top of SITE. */
+@media (max-width: 820px) {
+  .bh-credit { bottom: calc(58px + env(safe-area-inset-bottom, 0px)); }
+}
