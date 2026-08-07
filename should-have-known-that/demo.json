@@ -1,0 +1,30 @@
+{
+  "slug": "should-have-known-that",
+  "title": "Should Have Known That",
+  "emoji": "🎯",
+  "topic": "Engineering · Estimation & Number Sense",
+  "discipline": "Engineering",
+  "tagline": "Slider-based estimation trivia — 40 numbers every engineer should carry",
+  "card_blurb": "Game-show estimation trivia: drag a slider to guess 40 numbers every engineer should carry — yield strengths, ampacities, psi per foot — scored by how close your gut gets, with log-scale sliders for the order-of-magnitude questions. Solo or pass-and-play teams.",
+  "description": "**Should Have Known That: Engineering Edition** — slider-based estimation trivia game for engineering students. 40 verified questions, 8 each across Statics & Mechanics, Materials, Electrical, Fluids & Thermo, and Everyday Engineering; linear sliders scored by percent error, logarithmic sliders (resistivity, speed of light, lethal current...) scored by order-of-magnitude error, with Bullseye/Close/Warm/Cold/Way Off bands. Animated guess-vs-truth reveal with a one-line \"you should have known that because...\" anchor for every number. Solo or 2–4 team pass-and-play with editable names and a running scoreboard; end screen calls out the sharpest and most should-have-known guesses. Single self-contained file, phone-first, works offline; the question bank is a commented array at the top of the file for instructors to edit.",
+  "entry": "index.html",
+  "guide": null,
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": [],
+  "status": "active",
+  "added": "2026-08-06",
+  "compliance": {
+    "readme": true,
+    "guide": false,
+    "howto_popup": false,
+    "settings_menu": false,
+    "presentation_mode": false,
+    "presenter_notes": false,
+    "msu_theme": false,
+    "attribution_visible": false,
+    "mobile": true,
+    "offline_no_inference": true
+  }
+}
