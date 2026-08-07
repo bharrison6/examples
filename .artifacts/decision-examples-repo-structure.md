@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Examples repo — local-only demo collection, one folder per demo, originals retired not deleted
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-03T18:04:28Z
+updated: 2026-08-07T15:17:29Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -43,6 +43,28 @@ sensitivity: normal
   swept out of `.git` after each remote-session commit — the OneDrive-mounted filesystem
   forbids unlink from the session VM, so locks are moved instead of deleted. Safe to purge.
 
+## Refresh (2026-08-07, claude-fable-5 — original position partially superseded)
+
+Three claims above no longer hold; current truth:
+
+- **Remote**: exists — `github.com/bharrison6/examples`, hosted via GitHub Pages at
+  `bharrison6.github.io/examples` (launcher QR points there). "Local folder only" was
+  superseded by the user publishing for the Zero-to-Takeoff presentation.
+- **No build step**: no longer universal — several demos build `index.html` from
+  `src/` via per-demo `build.js`; the committed `index.html` is always the runnable
+  output. "Self-contained at runtime" is the invariant that survived.
+- **Adding a demo** is no longer "new folder + row + card" by hand: per-demo
+  `demo.json` manifests + `tours/*.json` drive `tools/build-hub.js`, which generates
+  the README table and launcher card bodies. `CONTRACT.md` defines required files and
+  required UX. `engineering-demo` was renamed `bridge-works` (user-directed,
+  2026-08-07) to complete the title-slug convention; folder names are public URLs and
+  are otherwise never renamed.
+- Original demos tic-tac-toe, snake, and memory-match were retired from the working
+  tree during the 2026-08-06 presentation build (history retains them).
+
+Operating protocol now lives in [[examples-repo-protocol]] (scope_entry).
+
 ## Relations
 - relates_to [[decision-git-tracking-policy-onedrive-era]] (what earns tracking)
 - relates_to [[decision-examples-fleet-gitdb-migration]] (later move of this repo's git dir)
+- superseded_by [[examples-repo-protocol]] (operating protocol; this record stays as history)
