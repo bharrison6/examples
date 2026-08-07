@@ -1,0 +1,30 @@
+{
+  "slug": "zero-to-unbeatable",
+  "title": "Zero to Unbeatable",
+  "emoji": "🧠",
+  "topic": "Machine learning · not generative AI",
+  "discipline": "AI literacy",
+  "tagline": "Watch real reinforcement learning go from random moves to provably unbeatable",
+  "card_blurb": "Play tic-tac-toe against an AI that has played zero games — and beat it easily. Train it in three-second bursts and play again, era by era, until you cannot beat it and the app <i>proves</i> you never will. The only thing that changed is a list of numbers.",
+  "description": "**Zero to Unbeatable** — a single-file, phone-first demo of how machines learn. Tabular reinforcement learning that starts from zero knowledge and plays uniformly at random, trained in visible 5,000-game bursts between which the student plays it; frozen eras with per-era scoreboards, a brain inspector that overlays the learned value of every square, a \"what it learned\" card with before/after heatmaps of landmark positions, and an ending the app proves by searching every reachable game line rather than sampling. A second act trains it on nine boards at once — a mark per turn on any unfinished board, first to five boards — to show what breaks when the world gets bigger: on one board a position recurs 10x per training burst, on nine it recurs 1.06x, so no table could ever learn it. No network, no AI service, nothing baked in. Includes a printable demo guide.",
+  "entry": "index.html",
+  "guide": { "html": "demo-guide.html", "pdf": "Zero-to-Unbeatable-Demo-Guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": [],
+  "status": "active",
+  "added": "2026-08-06",
+  "compliance": {
+    "readme": true,
+    "guide": true,
+    "howto_popup": "unverified",
+    "settings_menu": "unverified",
+    "presentation_mode": "unverified",
+    "presenter_notes": "unverified",
+    "msu_theme": true,
+    "attribution_visible": true,
+    "mobile": true,
+    "offline_no_inference": true
+  }
+}

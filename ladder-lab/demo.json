@@ -1,0 +1,30 @@
+{
+  "slug": "ladder-lab",
+  "title": "Ladder Lab",
+  "emoji": "🚦",
+  "topic": "Applied Engineering · PLC",
+  "discipline": "Applied Engineering",
+  "tagline": "A PLC trainer on the classic stoplight program, with a real scan-cycle engine",
+  "card_blurb": "A PLC trainer on the classic stoplight program: genuine scan-cycle engine, single-scan step mode, a ladder editor with auto-graded challenges, and injectable faults to troubleshoot.",
+  "description": "**Ladder Lab** — PLC trainer for the classic stoplight program. Genuine input-scan → solve-rungs → output-scan cycle with single-scan step mode and live image tables, AB-style instruction set (XIC/XIO/OTE/OTL/OTU/ONS/TON/TOF/CTU/CTD/RES), animated 4-way intersection wired to the I/O, seven built-in programs, a constrained ladder editor with four auto-graded challenges, and eleven injectable faults for troubleshooting practice. Includes a printable teacher guide.",
+  "entry": "index.html",
+  "guide": { "html": "teacher-guide.html", "pdf": "Ladder-Lab-Teacher-Guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": [],
+  "status": "active",
+  "added": "2026-08-06",
+  "compliance": {
+    "readme": true,
+    "guide": true,
+    "howto_popup": "unverified",
+    "settings_menu": false,
+    "presentation_mode": false,
+    "presenter_notes": false,
+    "msu_theme": true,
+    "attribution_visible": true,
+    "mobile": true,
+    "offline_no_inference": true
+  }
+}
