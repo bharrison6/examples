@@ -37,6 +37,15 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  // Offline contract: nothing may leave the machine. `requestsSeen` is the
+  // positive control — without it, "no offenders" could just mean the listener
+  // never fired.
+  let requestsSeen = 0;
+  const offDevice = [];
+  page.on('request', (r) => {
+    requestsSeen++;
+    if (!/^(file|data|blob|about):/i.test(r.url())) offDevice.push(r.method() + ' ' + r.url().slice(0, 80));
+  });
 
   await page.goto('file://' + path.join(__dirname, 'index.html'));
   await page.waitForTimeout(500);
@@ -68,10 +77,30 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   await page.keyboard.press('Tab');
   check('Tab stays inside the boot help dialog',
         await page.evaluate(() => document.activeElement && document.activeElement.id === 'closeHelp'));
+  check('boot help explains the Δv budget students are scored on',
+        /par .{0,3}v budget/i.test(await page.textContent('#helpModal')));
+  check('boot help opens at the top, not scrolled to its buttons',
+        await page.evaluate(() => document.querySelector('#helpModal .box').scrollTop === 0));
+  // tap/click outside the box dismisses the how-to popup (phone-friendly)
+  await page.mouse.click(20, 400);
+  await page.waitForTimeout(80);
+  check('tapping outside dismisses the how-to popup',
+        await page.locator('#helpModal.show').count() === 0);
+  check('the how-to popup is reopenable from an always-visible control',
+        await page.locator('#btnHelp').isVisible());
+  await page.click('#btnHelp');
+  await page.waitForTimeout(80);
+  check('the ❓ control reopens the how-to popup', await page.locator('#helpModal.show').count() === 1);
   await page.keyboard.press('Escape');
   check('Escape closes boot help and restores a safe fallback focus', await page.evaluate(() => {
     return !document.getElementById('helpModal').classList.contains('show') && document.activeElement.id === 'btnHelp';
   }));
+  await page.keyboard.press('?');
+  await page.waitForTimeout(80);
+  check('? reopens the how-to popup', await page.locator('#helpModal.show').count() === 1);
+  await page.keyboard.press('Escape');
+  check('the crash dialog is NOT light-dismissable (it asks for a decision)',
+        await page.evaluate(() => !document.getElementById('crashModal').hasAttribute('data-lightdismiss')));
   await page.click('#btnMission');
   await page.waitForTimeout(50);
   check('mission dialog moves focus to its control',
@@ -302,14 +331,62 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
         /Predicted/.test(await page.textContent('#predinfo')));
   await page.click('#btnCancelBurn');
 
-  console.log('\n[9] Teacher mode');
+  console.log('\n[9] Settings menu, presentation mode, presenter\'s notes');
+  check('a settings control is always visible', await page.locator('#btnTeacher').isVisible());
+  check('the presenter notes shortcut stays out of the way until presenting',
+        await page.locator('#btnNotes').isVisible() === false);
   await page.click('#btnTeacher');
+  await page.waitForTimeout(80);
+  check('settings menu opens', await page.locator('#teacherModal.show').count() === 1);
+  check('settings menu offers presentation mode',
+        /Presentation mode/.test(await page.textContent('#teacherModal')));
   await page.click('#tgProjector');
   await page.waitForTimeout(300);
   check('projector mode enlarges UI', await page.evaluate(() => document.body.classList.contains('projector')));
+  check('presentation toggle reports its state assistively',
+        await page.evaluate(() => document.getElementById('tgProjector').getAttribute('aria-pressed') === 'true'));
   await page.screenshot({ path: '/tmp/msu-7-projector.png' });
+  await page.click('#tgNotes');
+  await page.waitForTimeout(120);
+  check('presenter notes open from the settings menu', await page.locator('#notesModal.show').count() === 1);
+  check('settings closes behind the notes', await page.locator('#teacherModal.show').count() === 0);
+  check('notes open at the run of show, not scrolled to the bottom',
+        await page.evaluate(() => document.querySelector('#notesModal .box').scrollTop === 0));
+  const notes = await page.textContent('#notesModal');
+  check('notes carry a timed run of show', /0–3 min/.test(notes) && /19–20 min/.test(notes));
+  check('notes carry the headline numbers from the teacher guide',
+        /1,835/.test(notes) && /661/.test(notes) && /L3 791/.test(notes), 'pars + escape gap');
+  check('notes carry the misconceptions to catch', /Catch these three/.test(notes));
+  check('notes point at the full teacher guide',
+        await page.locator('#notesModal .teacher-guide-open').count() === 1);
+  await page.click('#notesModal .teacher-guide-open');
+  await page.waitForTimeout(500);
+  check('the printable teacher guide opens in-app',
+        await page.evaluate(() => !document.getElementById('msu-guide').hidden));
+  check('the guide is served from the demo folder, not the network',
+        await page.evaluate(() => (document.getElementById('msu-guide-frame').getAttribute('src') || '').endsWith('teacher-guide.html')));
+  await page.click('#msu-guide-close');
+  await page.waitForTimeout(200);
+  check('closing the guide returns to the notes',
+        await page.evaluate(() => document.getElementById('msu-guide').hidden) &&
+        await page.locator('#notesModal.show').count() === 1);
+  check('notes are scrollable rather than clipped on small screens',
+        await page.evaluate(() => getComputedStyle(document.querySelector('#notesModal .box')).overflowY === 'auto'));
+  await page.click('#closeNotes');
+  await page.waitForTimeout(80);
+  check('notes close back to the game', await page.locator('#notesModal.show').count() === 0);
+  check('presentation mode surfaces the 🎤 notes control in the top bar',
+        await page.locator('#btnNotes').isVisible());
+  await page.keyboard.press('n');
+  await page.waitForTimeout(120);
+  check('N opens the presenter notes mid-demo', await page.locator('#notesModal.show').count() === 1);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(80);
+  await page.click('#btnTeacher');
   await page.click('#tgProjector');
   await page.click('#closeTeacher');
+  check('leaving presentation mode hides the notes shortcut again',
+        await page.locator('#btnNotes').isVisible() === false);
 
   console.log('\n[10] Chromebook viewport (1366×768) and mobile (390×844)');
   await page.setViewportSize({ width: 1366, height: 768 });
@@ -317,6 +394,21 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   const hudTop2 = await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('hud')).top));
   const barH2 = await page.evaluate(() => document.getElementById('topbar').offsetHeight);
   check('HUD still clears the top bar at 1366×768', hudTop2 >= barH2);
+  // the byline is required to be visible AND unobtrusive: it must not sit on
+  // top of the flight controls at any supported width
+  const bylineFits = () => page.evaluate(() => {
+    const c = document.querySelector('.bh-credit');
+    if (!c) return { ok: false, why: 'no byline' };
+    const b = c.getBoundingClientRect();
+    const vis = getComputedStyle(c).display !== 'none' && b.width > 0 && b.bottom <= window.innerHeight + 1;
+    const hit = [...document.querySelectorAll('#controls .ctlgroup')].find((g) => {
+      const r = g.getBoundingClientRect();
+      return !(b.right <= r.left || r.right <= b.left || b.bottom <= r.top || r.bottom <= b.top);
+    });
+    return { ok: vis && !hit, why: hit ? 'overlaps a control group' : (vis ? 'clear' : 'not visible') };
+  });
+  let by = await bylineFits();
+  check('byline is visible and clear of the controls at 1366×768', by.ok, by.why);
   await page.screenshot({ path: '/tmp/msu-8-chromebook.png' });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(400);
@@ -325,7 +417,25 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
     return c.getBoundingClientRect().right <= window.innerWidth + 1;
   });
   check('bottom controls fit the mobile viewport', ctlOverflow);
+  by = await bylineFits();
+  check('byline is visible and clear of the controls at 390×844', by.ok, by.why);
+  check('byline names the author and the institution',
+        /Bryant Harrison/.test(await page.textContent('.bh-credit')) &&
+        /Murray State University/.test(await page.textContent('.bh-credit')));
+  check('how-to and settings controls survive the phone layout',
+        await page.locator('#btnHelp').isVisible() && await page.locator('#btnTeacher').isVisible());
+  await page.click('#btnHelp');
+  await page.waitForTimeout(120);
+  check('how-to popup fits the phone viewport', await page.evaluate(() => {
+    const b = document.querySelector('#helpModal .box').getBoundingClientRect();
+    return b.left >= -1 && b.right <= window.innerWidth + 1 && b.height <= window.innerHeight + 1;
+  }));
+  await page.keyboard.press('Escape');
   await page.screenshot({ path: '/tmp/msu-9-mobile.png' });
+
+  console.log('\n[11] Offline contract');
+  check('request instrumentation actually observed loads (control)', requestsSeen > 0, requestsSeen + ' requests');
+  check('nothing is fetched off-device at runtime', offDevice.length === 0, offDevice.slice(0, 3).join(' | ') || 'all local');
 
   console.log('\n' + (errors.length ? 'CONSOLE ERRORS:\n' + errors.join('\n') : 'no console/page errors'));
   if (errors.length) fails++;

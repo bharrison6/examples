@@ -7,9 +7,17 @@ play it again — until you cannot beat it, and the app proves you never will.
 Open `index.html`. No install, no accounts, no network, no AI service. Everything, including
 all of the learning, happens on the device in front of you.
 
-**Presenter notes are inside the app** — Settings → Presenter notes opens the full session plan, with
-a print button. They are embedded rather than linked, so they work from the single file with nothing
-to download. The same guide also ships standalone as `demo-guide.html` /
+**It tells you how to play.** A short instructions sheet opens on every load — one line on what you
+are up against, then the four steps of the arc. Escape, a tap outside, the × or **Play Era 0** all
+dismiss it, and the **?** beside the gear in the brand bar brings it back at any point (so does
+Settings → How to play). It is shown every time rather than once per browser: this thing gets handed
+to a new person constantly, and nothing about the app is remembered between loads anyway.
+
+**Presenter notes are inside the app** — Settings → Presentation mode → **Open the presenter notes**
+opens a one-screen stage cue card, the full session plan below it, and a print button. They are
+embedded rather than linked, so they work from the single file with nothing to download. The cue card
+is distilled from the guide directly beneath it and is screen-only; Print still produces the guide's
+own one-pager, unchanged. The same guide also ships standalone as `demo-guide.html` /
 `Zero-to-Unbeatable-Demo-Guide.pdf`: a timed 15-minute script plus a 5-minute second act, discussion
 questions and misconceptions to draw out. `build.js` lifts the guide's own stylesheet and markup into
 the app, so the two cannot drift.
@@ -148,7 +156,10 @@ Phone first, and specifically: **the TRAIN button is never below the fold.** It 
 product, and a student who has to go looking for it stalls the demo. The board is the element
 that yields — its size is `min(100%, 100dvh − 26u)` — so on a short screen the board shrinks
 rather than pushing the button off the bottom, and below 660px of height the whole layout scales
-down a notch (`--u: .94rem`, which still leaves every tap target over 40px). Above 760px wide and
+down a notch (`--u: .94rem`, which still leaves every tap target over 40px). The instructions sheet
+is one of the app's own sheets rather than a second modal mechanism, so Escape, the backdrop tap, the
+focus trap and the inert page behind it all come from the same twenty lines that already served the
+settings and the notes. Above 760px wide and
 roughly landscape, the page becomes two columns: board on the left, training on the right. That
 covers a phone turned sideways as well as a laptop. The integration suite asserts all of this at
 eight viewports from 320×568 up — in both modes — plus presenter mode on 720p and 1080p projectors,

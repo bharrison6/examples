@@ -33,6 +33,23 @@ page.on('pageerror', e => consoleErrors.push(String(e)));
 
 await page.goto(URL);
 await page.waitForTimeout(1200);
+
+/* ---------- required UX: the how-to sheet greets every load ---------- */
+check('how-to sheet is shown on load', await page.evaluate(() => document.getElementById('student-guide').open));
+const howtoText = await page.textContent('#student-guide');
+check('how-to explains the scan cycle, step mode and challenges',
+  /scan cycle/i.test(howtoText) && /step mode/i.test(howtoText) && /challenges/i.test(howtoText), howtoText.slice(0, 60));
+await page.screenshot({ path: SHOTS + '/16-howto.png' });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+check('Escape dismisses the how-to sheet', await page.evaluate(() => !document.getElementById('student-guide').open));
+await page.click('#btn-howto');
+await page.waitForTimeout(200);
+check('the always-visible ? control reopens the how-to sheet', await page.evaluate(() => document.getElementById('student-guide').open));
+await page.mouse.click(6, 6);   /* backdrop tap */
+await page.waitForTimeout(200);
+check('tapping outside dismisses the how-to sheet', await page.evaluate(() => !document.getElementById('student-guide').open));
+
 await page.screenshot({ path: SHOTS + '/01-trainer.png' });
 check('loads without console errors', consoleErrors.length === 0, consoleErrors.slice(0, 3).join(' | '));
 
@@ -247,8 +264,10 @@ await openMenu();
 await page.check('#chk-bigui');
 await page.waitForTimeout(400);
 await page.screenshot({ path: SHOTS + '/10-bigui.png' });
-const biguiOn = await page.evaluate(() => document.body.classList.contains('bigui'));
-check('projector mode applies body.bigui', biguiOn);
+const biguiOn = await page.evaluate(() => document.body.classList.contains('bigui') && document.body.classList.contains('presentation'));
+check('presentation mode applies body.bigui + body.presentation', biguiOn);
+check('presentation mode surfaces the presenter-notes button in the top bar',
+  await page.evaluate(() => document.getElementById('btn-notes-quick').offsetParent !== null));
 await openMenu();
 await page.check('#chk-hideladder');
 await page.waitForTimeout(300);
@@ -261,6 +280,24 @@ await page.uncheck('#chk-bigui');
 await page.waitForTimeout(200);
 const restored = await page.evaluate(() => !document.body.classList.contains('hide-ladder') && document.getElementById('left-pane').offsetWidth > 0);
 check('ladder pane returns when the toggle is cleared', restored);
+check('presenter-notes button hides again when presentation mode is off',
+  await page.evaluate(() => document.getElementById('btn-notes-quick').offsetParent === null));
+
+/* ---------- required UX: settings menu + presenter's notes ---------- */
+await openMenu();
+check('settings menu offers presentation mode', /presentation mode/i.test(await page.textContent('#teacher-drop')));
+await page.click('#btn-notes');
+await page.waitForTimeout(250);
+check('presenter notes open from the settings menu', await page.evaluate(() => document.getElementById('presenter-notes').open));
+check('settings menu closes behind the notes sheet', await page.evaluate(() => !document.getElementById('teacher-menu').hasAttribute('open')));
+const notesText = await page.textContent('#presenter-notes');
+check('presenter notes carry stage notes distilled from the teacher guide',
+  /run of show/i.test(notesText) && /scan cycle/i.test(notesText) && /misconceptions/i.test(notesText) && /debrief/i.test(notesText),
+  notesText.slice(0, 60));
+await page.screenshot({ path: SHOTS + '/17-presenter-notes.png' });
+await page.keyboard.press('Escape');
+await page.waitForTimeout(200);
+check('Escape closes the presenter notes', await page.evaluate(() => !document.getElementById('presenter-notes').open));
 
 /* step mode UX: watch window changes visible on step */
 await page.evaluate(() => { window.LL.App.setRunning(false); window.LL.App.loadById('stoplight_basic'); });
@@ -304,6 +341,8 @@ const cbErrors = [];
 cb.on('pageerror', e => cbErrors.push(String(e)));
 await cb.goto(URL);
 await cb.waitForTimeout(1200);
+await cb.keyboard.press('Escape');   /* dismiss the load-time how-to sheet */
+await cb.waitForTimeout(200);
 await cb.screenshot({ path: SHOTS + '/14-chromebook.png' });
 const fit = await cb.evaluate(() => {
   const r = (sel) => { const e = document.querySelector(sel); return e ? e.getBoundingClientRect() : null; };
@@ -327,6 +366,63 @@ await cb.waitForTimeout(400);
 await cb.screenshot({ path: SHOTS + '/15-chromebook-bigui.png' });
 check('1366x768 + projector mode: no page errors', cbErrors.length === 0, cbErrors.join(' | '));
 await cb.close();
+
+/* ---------- phone pass (390x844): the required-UX surfaces must be usable ---------- */
+const ph = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
+const phErrors = [];
+ph.on('pageerror', e => phErrors.push(String(e)));
+await ph.goto(URL);
+await ph.waitForTimeout(1200);
+const sheetFit = await ph.evaluate(() => {
+  const d = document.getElementById('student-guide'), b = d.querySelector('.student-guide-body'), r = d.getBoundingClientRect();
+  return { open: d.open, left: Math.round(r.left), right: Math.round(r.right), bottom: Math.round(r.bottom),
+    vw: window.innerWidth, vh: window.innerHeight, bodyScrolls: b.scrollHeight > b.clientHeight + 1 };
+});
+check('phone: how-to sheet shows on load and fits the viewport',
+  sheetFit.open && sheetFit.left >= 0 && sheetFit.right <= sheetFit.vw + 1 && sheetFit.bottom <= sheetFit.vh + 1, JSON.stringify(sheetFit));
+check('phone: how-to body scrolls instead of clipping', sheetFit.bodyScrolls, JSON.stringify(sheetFit));
+await ph.screenshot({ path: SHOTS + '/18-phone-howto.png' });
+await ph.keyboard.press('Escape');
+await ph.waitForTimeout(250);
+check('phone: Escape dismisses the how-to sheet', await ph.evaluate(() => !document.getElementById('student-guide').open));
+const tap = await ph.evaluate(() => {
+  const r = document.getElementById('btn-howto').getBoundingClientRect();
+  return { w: Math.round(r.width), h: Math.round(r.height), left: Math.round(r.left), right: Math.round(r.right),
+    bottom: Math.round(r.bottom), vw: window.innerWidth, vh: window.innerHeight };
+});
+check('phone: ? control is a 40px+ touch target, fully on screen',
+  tap.w >= 40 && tap.h >= 40 && tap.left >= 0 && tap.right <= tap.vw + 1 && tap.bottom <= tap.vh + 1, JSON.stringify(tap));
+await ph.click('#teacher-menu summary');
+await ph.waitForTimeout(250);
+const dropFit = await ph.evaluate(() => {
+  const r = document.getElementById('teacher-drop').getBoundingClientRect();
+  return { left: Math.round(r.left), right: Math.round(r.right), vw: window.innerWidth };
+});
+check('phone: settings dropdown stays on screen', dropFit.left >= 0 && dropFit.right <= dropFit.vw + 1, JSON.stringify(dropFit));
+await ph.click('#btn-notes');
+await ph.waitForTimeout(300);
+const pnFit = await ph.evaluate(() => {
+  const d = document.getElementById('presenter-notes'), r = d.getBoundingClientRect();
+  return { open: d.open, left: Math.round(r.left), right: Math.round(r.right), bottom: Math.round(r.bottom),
+    vw: window.innerWidth, vh: window.innerHeight };
+});
+check('phone: presenter notes open and fit the viewport',
+  pnFit.open && pnFit.left >= 0 && pnFit.right <= pnFit.vw + 1 && pnFit.bottom <= pnFit.vh + 1, JSON.stringify(pnFit));
+await ph.screenshot({ path: SHOTS + '/19-phone-notes.png' });
+await ph.keyboard.press('Escape');
+await ph.waitForTimeout(250);
+check('phone: no horizontal page overflow',
+  await ph.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
+  await ph.evaluate(() => document.documentElement.scrollWidth + ' vs ' + window.innerWidth));
+check('phone: attribution byline is visible',
+  await ph.evaluate(() => {
+    const c = document.querySelector('.bh-credit'); if (!c) return false;
+    const r = c.getBoundingClientRect();
+    return r.width > 0 && r.left >= 0 && r.right <= window.innerWidth + 1 && r.bottom <= window.innerHeight + 1;
+  }));
+await ph.screenshot({ path: SHOTS + '/20-phone-trainer.png' });
+check('phone pass: no page errors', phErrors.length === 0, phErrors.join(' | '));
+await ph.close();
 
 await browser.close();
 console.log('\n' + (failures === 0 ? 'ALL INTEGRATION CHECKS PASSED' : failures + ' CHECK(S) FAILED'));

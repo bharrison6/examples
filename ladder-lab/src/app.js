@@ -325,11 +325,16 @@ LL.App = (function () {
       toast('Working (pristine) program restored.', 2000);
     });
 
-    /* teacher menu */
+    /* settings menu
+       Presentation mode = the projector big-UI scale PLUS the presenter's-notes
+       affordance in the top bar. The notes sheet itself stays openable from the
+       menu at any time; body.presentation only surfaces the one-tap button. */
     document.getElementById('chk-bigui').addEventListener('change', function () {
       ctx.bigUI = this.checked;
       document.body.classList.toggle('bigui', this.checked);
+      document.body.classList.toggle('presentation', this.checked);
       bus.emit('bigui:changed', { bigUI: this.checked });
+      if (this.checked) toast('Presentation mode on — presenter’s notes are in the top bar.', 3000);
     });
     document.getElementById('chk-hideladder').addEventListener('change', function () {
       hideLadderPref = this.checked;

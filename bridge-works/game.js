@@ -1430,12 +1430,17 @@ function cleanup() {
 }
 
 /* --------------------------------------------------------------- UI wire */
-function show(id) { $(id).classList.remove('hidden'); }
+/* Sheets keep their scroll position, so a reopened panel would otherwise come
+   back halfway down where the last button click left it. */
+function show(id) {
+  var m = $(id); m.classList.remove('hidden');
+  var sheet = m.querySelector('.sheet'); if (sheet) sheet.scrollTop = 0;
+}
 function hide(id) { $(id).classList.add('hidden'); }
 document.querySelectorAll('.modal').forEach(function (m) {
   m.addEventListener('pointerdown', function (e) { if (e.target === m) m.classList.add('hidden'); });
 });
-['dbClose', 'lvClose', 'glClose', 'bdClose', 'tcClose', 'hpClose'].forEach(function (id) {
+['dbClose', 'lvClose', 'glClose', 'bdClose', 'tcClose', 'hpClose', 'ntClose', 'ntDone', 'hpStart'].forEach(function (id) {
   $(id).addEventListener('click', function () { $(id).closest('.modal').classList.add('hidden'); });
 });
 
@@ -1461,8 +1466,15 @@ function bindTgl(id, key, after) {
   });
 }
 bindTgl('tglXray', 'xray'); bindTgl('tglNums', 'nums'); bindTgl('tglWeight', 'selfWeight');
+/* Presentation mode. The visual half is the large-UI scale (body.big / --ui);
+   the presenter half is the 🗒 Notes button that rides in the top bar so the
+   stage notes are one tap away without reopening Settings. */
+function applyPresentation() {
+  document.body.classList.toggle('big', S.big);
+  $('btnNotes').classList.toggle('hidden', !S.big);
+}
 $('tglBig').addEventListener('change', function () {
-  S.big = this.checked; document.body.classList.toggle('big', S.big); savePrefs();
+  S.big = this.checked; applyPresentation(); savePrefs();
   resize();
 });
 $('tglPar').addEventListener('change', function () { S.showPar = this.checked; savePrefs(); refresh(); });
@@ -1505,6 +1517,9 @@ $('btnGallery').addEventListener('click', function () { renderGallery(); show('m
 $('btnBoard').addEventListener('click', function () { renderBoard(); show('mBoard'); });
 $('btnTeacher').addEventListener('click', function () { show('mTeacher'); });
 $('btnHelp').addEventListener('click', function () { show('mHelp'); });
+function openNotes() { hide('mTeacher'); show('mNotes'); }
+$('btnNotes').addEventListener('click', openNotes);
+$('btnNotesOpen').addEventListener('click', openNotes);
 $('dbRetry').addEventListener('click', backToBuild);
 $('dbNext').addEventListener('click', function () { hide('mDebrief'); loadLevel(S.li + 1); });
 $('dbSave').addEventListener('click', saveScore);
@@ -1674,7 +1689,7 @@ function frame(t) {
   S.xray = pref.xray !== false; S.nums = !!pref.nums; S.selfWeight = !!pref.selfWeight;
   S.name = pref.name || ''; S.overload = !!pref.overload; S.keyboard = !!pref.keyboard;
   $('tglOverload').checked = S.overload;
-  document.body.classList.toggle('big', S.big);
+  applyPresentation();
   $('tglBig').checked = S.big; $('tglPar').checked = S.showPar; $('tglKeyboard').checked = S.keyboard;
   cv.tabIndex = S.keyboard ? 0 : -1;
   cv.setAttribute('role', S.keyboard ? 'application' : 'img');
@@ -1687,7 +1702,9 @@ function frame(t) {
   });
   resize();
   loadLevel(Math.min(pref.li || 0, LV.LEVELS.length - 1));
-  if (!pref.seenHelp) { show('mHelp'); pref.seenHelp = 1; ss(PREF_K, Object.assign(pref, { seenHelp: 1 })); }
+  /* The how-to opens on every load — a demo gets a cold audience every time.
+     ✕, the backdrop, Escape or "Start building" all dismiss it, and ? reopens it. */
+  show('mHelp');
   requestAnimationFrame(frame);
 })();
 

@@ -53,7 +53,7 @@
 
   <h2>20-minute session plan</h2>
   <ul>
-    <li><span class="time">0–3 min</span>Project the game (⚙ → Projector mode). Fly Level 1 together: show time-warp, the burn planner, and the dotted preview. Vocabulary: periapsis (low, fast), apoapsis (high, slow), prograde.</li>
+    <li><span class="time">0–3 min</span>Project the game (⚙ Settings → Presentation mode). Fly Level 1 together: show time-warp, the burn planner, and the dotted preview. Vocabulary: periapsis (low, fast), apoapsis (high, slow), prograde.</li>
     <li><span class="time">3–8 min</span>Students play Levels 1–2 in pairs. Ask them to open the <b>Physics HUD</b> and watch “energy gained per 1 Δv” as the ship swings around.</li>
     <li><span class="time">8–15 min</span>The main event: <b>Level 3, “Escape Artist.”</b> Par is 791 m/s, but the tank holds 2,057 — escaping Earth from apoapsis costs ≈1,835 m/s, while the same escape from periapsis costs ≈661. Let them discover this. When someone makes par, have them explain <i>where</i> they burned and what the HUD showed.</li>
     <li><span class="time">15–19 min</span>Debrief on the projector using a student’s energy-vs-time plot and the <b>“show the math” panel</b> below it, which evaluates Δε = v·Δv + ½Δv² with that student’s actual numbers and checks it against the simulation. The burn is a vertical jump in ε — taller when v was larger, for the <i>same</i> Δv.</li>
@@ -91,13 +91,14 @@
 
   <h2>Classroom logistics</h2>
   <ul>
-    <li><b>Leaderboards</b> persist per level on each machine; reset them between class periods via ⚙ Teacher mode → Reset.</li>
+    <li><b>Leaderboards</b> persist per level on each machine; reset them between class periods via ⚙ Settings → Reset.</li>
+    <li><b>Presenter's notes</b> (⚙ Settings → Presenter's notes, or press <b>N</b>) condense this page to one podium-sized screen: run of show, the numbers above, and the misconceptions to catch.</li>
     <li>Pars (m/s): L1 712 · L2 1,107 · L3 791 · L4 1,819 · L5 1,424 · L6 838 · L7 823. Verified minimums: L3 escape ≈ 661 m/s from periapsis vs ≈ 1,835 m/s from apoapsis.</li>
     <li>Keys: <b>Space</b> pause · <b>B</b> burn · <b>Enter</b> commit · <b>Z</b> undo · <b>X</b> cut engine · <b>P</b>/<b>A</b> warp to Pe/Ap · <b>H</b> HUD · <b>M</b> briefing · <b>R</b> restart. <b>Undo</b> rewinds the last burn (also offered after a crash) — students should iterate, not restart.</li>
     <li>For L6–L7, point students at the HUD <b>time-to-periapsis</b>, the planner's <b>burn duration</b>, and the <b>lead</b> box beside → Pe: those three let them compute an ignition point instead of guessing.</li>
   </ul>
 </div>
 
-<footer><b>Murray State University · Racers Flight Lab</b> · Fuel Golf is an offline single-folder web game — open index.html to play, teacher-guide.html to reprint this page. Physics: velocity-Verlet coasts with RK4 powered arcs; all level pars verified against the shipped physics by test-physics.js (33 checks) and the interface by ui-smoke.js (42 checks).</footer>
+<footer><b>Murray State University · Racers Flight Lab</b> · Fuel Golf is an offline single-folder web game — open index.html to play, teacher-guide.html to reprint this page. Physics: velocity-Verlet coasts with RK4 powered arcs; all level pars verified against the shipped physics by test-physics.js and the interface by ui-smoke.js.</footer>
 </body>
 </html>

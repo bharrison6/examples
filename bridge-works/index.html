@@ -146,6 +146,8 @@ table.data td{padding:.3em .5em;border-bottom:1px solid rgba(20,64,110,.55)}
 table.data td.num{text-align:right}
 table.data tr.weak td{background:rgba(255,69,0,.16)}
 table.data tr.zero td{color:var(--muted)}
+table.data td.t{color:var(--msu-gold);font-weight:700;white-space:nowrap;vertical-align:top}
+table.data td.lead{color:var(--text);vertical-align:top}
 .verdict{display:flex;align-items:center;gap:.6em;font-size:1.5em;font-weight:700;margin-bottom:.15em}
 .verdict.pass{color:var(--good)} .verdict.fail{color:var(--bad)}
 .sub{color:var(--muted);font-size:.9em}
@@ -170,9 +172,20 @@ select{font:inherit;font-size:.9em;background:var(--card2);color:var(--text);
   border:1px solid var(--line);border-radius:8px;height:var(--btnH);padding:0 .5em}
 .row{display:flex;align-items:center;gap:.7em;margin:.5em 0;flex-wrap:wrap}
 a{color:var(--accent)}
+/* ------------------------------------------- how-to / notes shared bits */
+.lede{color:var(--muted);line-height:1.55;margin-bottom:.2em}
+.lede b{color:var(--text)}
+ul.notes{margin-left:1.15em;line-height:1.6}
+ul.notes li{margin-bottom:.35em}
+ul.notes b{color:var(--text)}
+.dismiss{font-size:.8em;color:var(--muted);align-self:center;margin-right:auto}
+#btnHelp{font-weight:700;font-size:1.15em}
+
 @media (max-width:1000px){
   .brand small{display:none}
   #legend{display:none}
+  /* keep a clear lane at the bottom for the attribution pill */
+  #hint{bottom:32px;max-width:92vw}
   header,#toolbar{gap:6px}
   header{flex-wrap:wrap;padding:6px}
   header .brand{flex:1 1 140px;min-width:0}
@@ -183,6 +196,18 @@ a{color:var(--accent)}
   #toolbar{padding:6px;max-width:100vw;overflow-x:hidden}
   .group{flex-wrap:wrap}
   .group+.group{border-left:0;padding-left:0}
+}
+/* phone-first sheets: the how-to and the notes have to be readable one-handed */
+@media (max-width:600px){
+  /* the bottom band is left clear so the attribution pill never sits on a sheet */
+  .modal{padding:8px 8px 26px;align-items:flex-end}
+  .sheet{max-height:92dvh;border-radius:12px}
+  .sheet .body{padding:var(--pad)}
+  .sheet .foot{padding:var(--pad);flex-wrap:wrap}
+  .sheet .foot button,.sheet .foot input[type=text]{flex:1 1 10em}
+  .dismiss{flex:1 1 100%;margin-right:0;text-align:center;order:-1}
+  .grid{grid-template-columns:1fr}
+  table.data{font-size:.8em}
 }
 
 /* --------------------------------------------------- in-app teacher guide */
@@ -209,9 +234,10 @@ a{color:var(--accent)}
   <button id="btnTest" class="primary">▶ Load test</button>
   <button id="btnLevels">Levels</button>
   <button id="btnGallery">Gallery</button>
-  <button id="btnHelp">Guide</button>
-  <button id="btnBoard" class="icon" title="Leaderboard">🏆</button>
-  <button id="btnTeacher" class="icon" title="Teacher mode">⚙</button>
+  <button id="btnNotes" class="hidden" title="Presenter's notes" aria-label="Presenter's notes">🗒 Notes</button>
+  <button id="btnHelp" class="icon" title="How to play" aria-label="How to play">?</button>
+  <button id="btnBoard" class="icon" title="Leaderboard" aria-label="Leaderboard">🏆</button>
+  <button id="btnTeacher" class="icon" title="Settings" aria-label="Settings">⚙</button>
 </header>
 
 <div id="toolbar">
@@ -290,12 +316,19 @@ a{color:var(--accent)}
   <div class="body" id="bdBody"></div>
 </div></div>
 
-<!-- ------------------------------------------------------------- teacher -->
+<!-- ------------------------------------------------------ settings / teacher -->
 <div id="mTeacher" class="modal hidden"><div class="sheet" style="max-width:600px">
-  <header><h2>Teacher mode</h2><div class="spacer"></div><button id="tcClose" class="icon">✕</button></header>
+  <header><h2>Settings</h2><div class="spacer"></div><button id="tcClose" class="icon">✕</button></header>
   <div class="body">
+    <h3 class="sec">Presentation mode</h3>
+    <div class="row"><label class="tgl"><input type="checkbox" id="tglBig"> Presentation mode — large projector UI for the back of the room</label></div>
+    <p class="sub">Turning it on also puts a <b>🗒 Notes</b> button in the top bar, so the stage notes stay one tap away while you demo.</p>
+    <div class="row">
+      <button id="btnNotesOpen">🗒 Presenter's notes</button>
+      <button class="teacher-guide-open">Open teacher guide</button>
+    </div>
+    <p class="sub">The notes are the 30-minute run of show. The teacher guide is the full lesson plan and physics background — also printable as <b>teacher-guide.pdf</b>.</p>
     <h3 class="sec">Display</h3>
-    <div class="row"><label class="tgl"><input type="checkbox" id="tglBig"> Projector mode — large UI for the back of the room</label></div>
     <div class="row"><label class="tgl"><input type="checkbox" id="tglPar" checked> Show par budgets</label></div>
     <div class="row"><label class="tgl"><input type="checkbox" id="tglKeyboard"> Keyboard editing cursor — arrow keys move; B builds, E erases, I inspects</label></div>
     <h3 class="sec">Demonstrations</h3>
@@ -308,9 +341,106 @@ a{color:var(--accent)}
       <button id="btnResetLevel" class="danger">Reset this level's board</button>
       <button id="btnResetAll" class="danger">Reset every board</button>
     </div>
-    <h3 class="sec">Teacher guide</h3>
-    <p class="sub">The complete lesson plan, physics background, and discussion questions are available inside the demo and as a printable copy.</p>
-    <button class="teacher-guide-open">Open teacher guide</button>
+  </div>
+</div></div>
+
+<!-- --------------------------------------------------- presenter's notes -->
+<div id="mNotes" class="modal hidden"><div class="sheet">
+  <header><h2>Presenter's notes</h2><div class="spacer"></div><button id="ntClose" class="icon">✕</button></header>
+  <div class="body">
+    <p class="lede">Stage notes for a 30-minute session. Distilled from the teacher guide — open that for the
+      full argument, the worked physics and the discussion questions in longhand.</p>
+
+    <h3 class="sec">Before the bell</h3>
+    <ul class="notes">
+      <li>Project <b>index.html</b>. It runs offline in any browser — no install, no login, nothing to reach for.</li>
+      <li><b>⚙ → Presentation mode</b> for large UI at the back of the room.</li>
+      <li>Boards and saved designs live in <b>this machine's browser storage</b>. Reset between periods from
+        <b>⚙ → Class data</b>.</li>
+      <li>Keys worth knowing: <b>1 2 3</b> build · erase · joint, <b>Ctrl+Z</b> undo, <b>Space</b> test,
+        <b>X</b> X-ray, <b>F</b> force numbers.</li>
+    </ul>
+
+    <h3 class="sec">Run of show</h3>
+    <table class="data">
+      <tr><th>Min</th><th>On screen</th><th>The beat</th></tr>
+      <tr><td class="t">0–4</td><td class="lead">Level 1, roadway only</td>
+        <td>Build <i>only</i> the flat roadway and press <b>Load test</b>. It folds. Name what they just saw —
+          joint, member, tension, compression, support. Add a post and two struts; run it again.</td></tr>
+      <tr><td class="t">4–10</td><td class="lead">Level 1, students in pairs</td>
+        <td>X-ray on. Push them onto <b>Check a joint</b>: every force meeting a joint, and the sum. It is always
+          zero. That panel <i>is</i> the method of joints.</td></tr>
+      <tr><td class="t">10–18</td><td class="lead">Level 2 — the lesson</td>
+        <td>It opens as a rectangular frame. Test it <i>first</i>: it folds into a parallelogram and the debrief
+          reports a <b>mechanism</b>, naming the joints that ran away. Take predictions, then let them add
+          diagonals. Par forces a second pass — which members do nothing?</td></tr>
+      <tr><td class="t">18–25</td><td class="lead">Level 3 — Heavy Haul</td>
+        <td>Four times the load. Point at the debrief's <b>“buckles at”</b> column until someone says it out loud:
+          compression rating depends on <i>length</i>, tension rating does not.</td></tr>
+      <tr><td class="t">25–30</td><td class="lead">Gallery + leaderboard</td>
+        <td>Project a student's debrief. Load Pratt, Howe and Warren at equal depth and compare where each sends
+          the load. Post the board. Levels 4–6 make good homework.</td></tr>
+    </table>
+
+    <h3 class="sec">Numbers to have ready</h3>
+    <div class="kv">
+      <b>Pulled</b><span>300 kN at <i>any</i> length (σ<sub>y</sub>A)</span>
+      <b>Pushed</b><span>P<sub>cr</sub> = π²EI/L² ≈ 720 kN·m²/L², capped at 180 kN</span>
+      <b>By length</b><span>1 m 180 kN · 2 m 180 · 3 m 80 · 4 m 45 — double a strut, quarter its capacity</span>
+      <b>Section</b><span>E = 200 GPa, A = 12 cm², same steel everywhere</span>
+      <b>Bill</b><span>steel 9.4 kg/m at $4.80/kg ≈ $45/m, plus $180 per joint</span>
+      <b>Why</b><span>connections are ≈45% of a typical bill, so panel count is a real trade-off</span>
+    </div>
+
+    <h3 class="sec">Determinacy, if you want it on the board</h3>
+    <p class="sub">Members <b>m</b>, reactions <b>r</b>, joints <b>j</b>; each joint gives 2 equations.</p>
+    <ul class="notes">
+      <li><b>m + r &lt; 2j</b> — mechanism. Not enough members; strength cannot help.</li>
+      <li><b>m + r = 2j</b> — determinate. Every member is critical: lose one and the rest is a mechanism.</li>
+      <li><b>m + r &gt; 2j</b> — indeterminate. Load splits by <b>stiffness</b>, not equilibrium alone — which is
+        exactly why the game solves K·u = F instead of walking joint to joint.</li>
+    </ul>
+    <p class="sub">The count is necessary but not sufficient — the solver checks the matrix, not the count.</p>
+
+    <h3 class="sec">Three misconceptions, and the move that kills each</h3>
+    <div class="plain"><b>“More members always makes it stronger.”</b> A stiffer path attracts <i>more</i> force, so
+      an added member can overload its neighbour — and every member costs money.
+      <b>Try it:</b> add a member to a design that just made par and watch the peak move.</div>
+    <div class="plain"><b>“The verticals do nothing, they're spacers.”</b> In a Pratt they are in compression
+      carrying panel shear to the top chord; in a Howe they are in tension.
+      <b>Try it:</b> load a Pratt, X-ray on, erase one vertical — its panel becomes a rectangle and the truss
+      becomes a mechanism.</div>
+    <div class="plain"><b>“Tension and compression are just plus and minus.”</b> The <i>same</i> 4 m member holds
+      300 kN pulled and 45 kN pushed; the sign selects a different failure mode.
+      <b>Try it:</b> note a design's peak use, then rebuild it upside down under the deck.</div>
+
+    <h3 class="sec">Questions that land</h3>
+    <ol class="steps">
+      <li>The bare rectangle folded without any member changing length. Where did the load go?</li>
+      <li>Two designs, same cost and joints — one props the deck from above, one hangs it from below. Which is
+        safer, and what in P<sub>cr</sub> = π²EI/L² says so?</li>
+      <li>A Warren's diagonals alternate. Take one bottom joint and use ΣF<sub>y</sub> = 0 to show why.</li>
+      <li>Why is the bottom chord's force greatest at mid-span and near zero at the supports?</li>
+      <li>One member snapped and the whole bridge came down. What does that say about spare load paths?</li>
+      <li>Level 5's pier drops par sharply. Why does halving a span do much more than halve the forces?</li>
+      <li>Turn on <b>Self-weight</b> and retest a design that just made par. Why does it matter more as spans grow?</li>
+    </ol>
+
+    <h3 class="sec">Levels and par</h3>
+    <table class="data">
+      <tr><th>#</th><th>Level</th><th>Span / vehicle</th><th class="num">Par</th><th>Lesson</th></tr>
+      <tr><td>1</td><td class="lead">First Crossing</td><td>6 m · car 30 kN</td><td class="num">$1,050</td><td>A flat deck is a mechanism</td></tr>
+      <tr><td>2</td><td class="lead">The Long Gap</td><td>12 m · car 30 kN</td><td class="num">$2,800</td><td>Rectangles fold, triangles don't</td></tr>
+      <tr><td>3</td><td class="lead">Heavy Haul</td><td>10 m · truck 125 kN</td><td class="num">$2,800</td><td>Buckling; length matters</td></tr>
+      <tr><td>4</td><td class="lead">High Water</td><td>12 m · van 60 kN</td><td class="num">$3,100</td><td>Through truss / bowstring</td></tr>
+      <tr><td>5</td><td class="lead">Island Pier</td><td>16 m · truck 125 kN</td><td class="num">$3,600</td><td>Supports beat steel</td></tr>
+      <tr><td>6</td><td class="lead">Sandbox</td><td>18 m · your choice</td><td class="num">—</td><td>Free build</td></tr>
+    </table>
+  </div>
+  <div class="foot">
+    <span class="dismiss">Esc, or tap outside, closes this.</span>
+    <button class="teacher-guide-open">Open the full teacher guide</button>
+    <button id="ntDone" class="primary">Back to the bridge</button>
   </div>
 </div></div>
 
@@ -318,6 +448,9 @@ a{color:var(--accent)}
 <div id="mHelp" class="modal hidden"><div class="sheet" style="max-width:660px">
   <header><h2>How to play</h2><div class="spacer"></div><button id="hpClose" class="icon">✕</button></header>
   <div class="body">
+    <p class="lede">You are the fabricator. Span the gap, get the vehicle across, and do it for
+      <b>less money than anyone else</b>. The solver underneath is the real thing — if your bridge falls down,
+      it falls down for a reason you can read off the screen.</p>
     <h3 class="sec">Your first bridge in 60 seconds</h3>
     <ol class="steps">
       <li><b>Draw the roadway:</b> with Draw selected, drag between neighboring grid points from the left orange support to the right one.</li>
@@ -358,6 +491,10 @@ a{color:var(--accent)}
       <b>X</b><span>toggle X-ray</span><b>F</b><span>toggle force numbers</span>
       <b>Arrows</b><span>move cursor</span><b>B / E / I</b><span>build · erase · inspect</span></div>
   </div>
+  <div class="foot">
+    <span class="dismiss">Esc, or tap outside, closes this — reopen it any time with <b>?</b> in the top bar.</span>
+    <button id="hpStart" class="primary">Start building</button>
+  </div>
 </div></div>
 
 <div class="msu-guide-overlay" id="msu-guide" hidden>
@@ -381,6 +518,6 @@ a{color:var(--accent)}
   overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
 })();
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.62}}</style><div class="bh-credit" style="position:fixed;right:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

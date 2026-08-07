@@ -29,11 +29,13 @@
 <!-- ============================= APP ============================= -->
 <div id="app" hidden>
   <header id="topbar">
-    <div id="brand"><span class="msu"><svg width="13" height="13" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#f1b82d" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE</span><span class="t1">TOPPING OUT</span><span class="t2">RACER CONSTRUCTION MGMT</span></div>
+    <div id="brand"><span class="msu"><svg width="13" height="13" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE</span><span class="t1">TOPPING OUT</span><span class="t2">RACER CONSTRUCTION MGMT</span></div>
     <div id="project-block"></div>
     <div id="hud"></div>
     <div id="topbar-actions">
-      <button class="btn sm ghost" id="btn-instructor" title="Settings — projector mode, instructor guide, engine self-test">⚙ Settings</button>
+      <button class="btn icon ghost" id="btn-notes-top" title="Presenter's notes — the stage notes for this session" aria-label="Presenter's notes">🎙</button>
+      <button class="btn icon ghost" id="btn-howto" title="How to play — the weekly loop and the three views" aria-label="How to play">?</button>
+      <button class="btn sm ghost" id="btn-instructor" title="Settings — presentation mode, presenter's notes, instructor guide, engine self-test">⚙ Settings</button>
     </div>
   </header>
 
@@ -64,18 +66,189 @@
   </main>
 </div>
 
-<!-- ========================== OVERLAYS =========================== -->
+<!-- ========================== OVERLAYS ===========================
+     #howto opens on every load, over the setup sheet. Dismiss with the
+     button, a tap on the paper around it, or Esc; reopen from ? in the
+     title bar or on the setup sheet. -->
+<div class="overlay" id="howto" hidden>
+  <div class="modal brief" role="dialog" aria-modal="true" aria-labelledby="howto-title">
+    <div class="modal-head navy">
+      <div>
+        <div class="msu-line"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div>
+        <h2 id="howto-title">HOW TO PLAY</h2>
+        <div class="sub">PRECONSTRUCTION BRIEFING · SHEET HT-01</div>
+      </div>
+      <button class="btn x" data-close="howto" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="lede">You are the general contractor on a small commercial building, and the clock is
+      the contract. Highest profit at completion wins. Everybody in the room enters the
+      <b>same seed code</b>, so the weather, the late deliveries and every roll are identical for
+      every team — the only variable is what you decide.</p>
+
+      <h3>One turn is one week — Monday, 7 a.m.</h3>
+      <ol class="steps">
+        <li><b>The news.</b> This week's cards: weather, late deliveries, slipping subs, failed
+        inspections, RFIs. Written with flavour, stated mechanically.</li>
+        <li><b>Decisions.</b> Answer the calls on the table, put crews on work fronts, order or
+        release a crew, authorise overtime, expedite a delivery, work through the rain or stand
+        down. The preview shows the projected finish and profit <i>before</i> you commit.</li>
+        <li><b>Commit.</b> One button. No undo.</li>
+        <li><b>The week runs.</b> Five working days animate on the site, costs tick, progress
+        happens or it doesn't.</li>
+      </ol>
+
+      <h3>Three ways to look at the same job</h3>
+      <div class="row"><div class="k">4D cutaway</div><div>A section through the building driven by
+        real progress. The finished job is drawn as a faint ghost and work fills it in. Crews stand
+        on the floor they are working — a stacked floor looks crowded and turns red.</div></div>
+      <div class="row"><div class="k">Gantt</div><div>Bars from early start to early finish, a thin
+        tail out to late finish for float, critical work in red, cure and inspection holds hatched,
+        today and the contract date both marked.</div></div>
+      <div class="row"><div class="k">Network</div><div>The precedence diagram: relationship type
+        and lag on every arrow, the driving path thick and red. It is computed every week, never
+        declared — so it moves, and the game says so when it does.</div></div>
+
+      <h3>Three things that cost teams the game</h3>
+      <ul class="watch">
+        <li><span class="rule">Float is shared, not spare.</span> Total float belongs to the whole
+        chain; spend it on one activity and the ones behind it no longer have it. Read the float
+        column before you decide anything.</li>
+        <li><span class="rule">Not answering a call is answering it.</span> Every call defaults to
+        its first option, which is always free and always the most exposed.</li>
+        <li><span class="rule">Cure and inspection holds cannot be compressed.</span> No crew count,
+        no overtime, no expediting fee shortens them. Ever.</li>
+      </ul>
+
+      <div class="phone">On a phone the job folds into two tabs — <b>SITE</b> for the drawings and
+      <b>MEETING</b> for the news, the decisions and the commit button. Tap any underlined term for
+      what it means.</div>
+    </div>
+    <div class="modal-foot split">
+      <span class="foot-note">ESC OR TAP OUTSIDE TO CLOSE · REOPEN WITH ? ANY TIME</span>
+      <button class="btn primary" data-close="howto">Got it — start the job</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="presenter" hidden>
+  <div class="modal notes" role="dialog" aria-modal="true" aria-labelledby="presenter-title">
+    <div class="modal-head navy">
+      <div>
+        <div class="msu-line"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div>
+        <h2 id="presenter-title">PRESENTER'S NOTES</h2>
+        <div class="sub">STAGE NOTES · 75-MINUTE SESSION</div>
+      </div>
+      <button class="btn x" data-close="presenter" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <details open>
+        <summary><span class="n">1</span>Running order — 75 minutes</summary>
+        <div class="nb">
+          <table class="ros">
+            <tr><td class="t">0–5</td><td><b>Setup.</b> Seed code and difficulty on the board. Presentation mode up front. Confirm every team reads the same project start date before anyone commits a week.</td></tr>
+            <tr><td class="t">5–11</td><td><b>CPM at the board.</b> Forward pass, backward pass, total float, on the ten-activity tutorial network. Leave free float for the debrief.</td></tr>
+            <tr><td class="t">11–22</td><td><b>Tutorial run</b> — nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
+            <tr><td class="t">22–26</td><td><b>Brief the competition.</b> Same seed, same difficulty, score is profit, no undo. Show where float and the critical path live.</td></tr>
+            <tr><td class="t">26–59</td><td><b>Competitive run.</b> Twenty-four to thirty turns. Checkpoint at minute 44 — teams should be near week 12; anyone behind commits the quiet weeks fast.</td></tr>
+            <tr><td class="t">59–63</td><td><b>Leaderboard and the do-nothing baseline.</b> Worst team against baseline is usually more interesting than first against second.</td></tr>
+            <tr><td class="t">63–75</td><td><b>Debrief.</b> Open on the calls table — fastest route into the room. Then the misconceptions and two or three questions. Finish on the week the critical path moved and ask who noticed at the time.</td></tr>
+          </table>
+          <p class="src">Do not skip the tutorial. Teams that meet the interface on the graded run spend six weeks clicking instead of thinking, and the debrief gets thin.</p>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">2</span>Say these out loud</summary>
+        <div class="nb">
+          <p class="said">Float is not slack in your day — it is what a specific activity can slip before it moves the finish.</p>
+          <p class="said">Calls default to the free option, so not answering is answering.</p>
+          <p class="said">Crews take two weeks to arrive, so manpower is a forecast.</p>
+          <ul>
+            <li><span class="cue">Day indexing.</span> Days are numbered from 0 and finish is exclusive, so EF = ES + duration. Textbook tables numbered 1 through <i>n</i> read one higher. Say it once at the board and nobody argues later.</li>
+            <li><span class="cue">Float is never negative.</span> It is measured to computed project completion; performance against the contract is reported separately, in calendar days early or late. Students who have seen negative float in P6 need this said explicitly.</li>
+            <li><span class="cue">The roll is shared.</span> A call's roll is a hash of the seed and the call — nothing else. Every team on your seed faces the identical roll. What differs is the bar that roll has to clear.</li>
+            <li><span class="cue">Rain only stops exposed work.</span> Earthwork, concrete placement, roofing and envelope. Nothing else in the building is weather-flagged, and a cure keeps curing through a washout.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">3</span>Five misconceptions, and where each is exposed</summary>
+        <div class="nb">
+          <ul>
+            <li><span class="cue">(a) Float is free time you can spend casually.</span> The MEP branch. Level 1 rough-in carries 9 days of total float but only <b>1 day of free float</b>: slip it three days and the project has not moved, but Level 2 rough-in cannot start when it wanted to. Ask the team that spent that float what they thought it was for.</li>
+            <li><span class="cue">(b) Overtime always accelerates.</span> Arithmetic first: a trade left on 50-hour weeks is producing 0.938 of a straight-time week by week 5 while paying 1.375. Then the structural one — when a rough-in inspection fails, overtime does nothing, because holds and cures are non-compressible.</li>
+            <li><span class="cue">(c) The critical path is fixed at baseline.</span> Roofing sits off it with six days of float until two rain days and a membrane backorder put it on. The debrief question is not whether they saw the announcement — it is whether anyone changed allocation the week before, when float was down to one day and still technically positive.</li>
+            <li><span class="cue">(d) Weather delays everything equally.</span> The same card in two places: three days off excavation in week 3 moves the project; the identical card in week 18, with the building dried in, costs exactly nothing.</li>
+            <li><span class="cue">(e) A good outcome means it was a good call.</span> Put a <i>“got away with it”</i> row next to a <i>“covered — never in doubt”</i> row on the same roll, then price both on the Monday they were decided. Ask which team they would want running the next job.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">4</span>Debrief openers — pick two or three</summary>
+        <div class="nb">
+          <ul>
+            <li><span class="cue">Bearing at column line 4.</span> Price all three options before anyone admits what they picked. What is a day worth in week 1 with cushion left, and what is it worth once the foundation branch is at zero float? Same call, two right answers — what changed was the float, not the odds.</li>
+            <li><span class="cue">The roll everybody shared.</span> Ask each team what it thought it was buying, in dollars, <i>before</i> the roll goes on the screen. Then show it. Does your answer change now that you know how it came out? If it does, say so out loud — that is the habit you are trying to break.</li>
+            <li><span class="cue">The weather call.</span> Which is the better buy? Neither, until you say what is exposed. The forecast is not the decision — the float column is.</li>
+            <li><span class="cue">The elevator cab.</span> $21,000 against a three-day delay on an activity carrying 21 days of total float at baseline. Who paid? Now work it backwards: what would the float have to be for $21,000 to be right?</li>
+            <li><span class="cue">The failed rough-in inspection.</span> No crew helps, no overtime helps, no fee is offered. What is actually left is sequence — getting a work front finished early is the only defence against a card you cannot buy off.</li>
+            <li><span class="cue">The week the path moved.</span> Pull up the week the game announced it. Who was watching the float column, and who found out from the announcement?</li>
+          </ul>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="n">5</span>If it drifts</summary>
+        <div class="nb">
+          <ul>
+            <li><span class="cue">Pace.</span> The usual failure is a team that deliberates every week. Tell the room: read the news, ask whether it touches anything with zero or one day of float, and if it does not, commit. Save deliberation for the calls, the weather weeks with critical work exposed, and the weeks manpower has to be ordered ahead of the need.</li>
+            <li><span class="cue">Short on time.</span> Call it at minute 59 wherever teams are and score <i>projected</i> profit — a legitimate score that ranks teams the same way. Do not buy time by cutting the debrief.</li>
+            <li><span class="cue">Difficulty.</span> Easy draws fewer, milder cards and takes a day off every rain forecast; Standard is the same card count at full severity; Hard draws more and scales severity to 130% with an extra rain day. Standard for a first session, Easy if this is the class's first exposure to CPM at all.</li>
+            <li><span class="cue">A disputed score.</span> No clock, no network, no unseeded randomness — same seed plus same decisions gives the same profit to the dollar. Run the engine self-test from the Settings menu, live, in front of the class. It is a surprisingly good two minutes of teaching.</li>
+            <li><span class="cue">Between sections.</span> Clear the leaderboard from the Settings menu — scores are held on this machine, so a second section starts clean.</li>
+          </ul>
+        </div>
+      </details>
+
+      <p class="src">Distilled from the printable instructor guide — the full session plan, the CPM
+      background, the overtime sources and all eleven debrief questions are in there.</p>
+    </div>
+    <div class="modal-foot split">
+      <a class="btn" href="teacher-guide.html" target="_blank" rel="noopener">📄 Full instructor guide</a>
+      <button class="btn primary" data-close="presenter">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="instructor" hidden>
   <div class="modal" style="max-width:520px">
     <div class="modal-head">
-      <div><h2>⚙ Settings</h2><div class="sub">PROJECTOR · INSTRUCTOR GUIDE · SELF-TEST</div></div>
+      <div><h2>⚙ Settings</h2><div class="sub">PRESENTATION · NOTES · GUIDE · SELF-TEST</div></div>
     </div>
     <div class="modal-body">
       <div class="field">
-        <label>Display</label>
+        <label>Presentation mode</label>
         <label style="font-size:.88rem;display:flex;align-items:center;gap:7px;cursor:pointer">
-          <input type="checkbox" id="chk-big2"> Projector mode — large UI, readable from the back of the room
+          <input type="checkbox" id="chk-big2"> Presentation mode — large UI, readable from the back of the room
         </label>
+        <button class="btn" id="btn-notes" style="margin-top:8px">🎙 Open presenter's notes</button>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          Also known as projector mode. Turn it on for THE NEWS each week so the whole room reads the
+          same card, and for the leaderboard at minute 59 — it also puts a 🎙 shortcut to the notes in
+          the title bar. The notes are the stage version of the guide: running order, the lines worth
+          saying out loud, the misconceptions and the debrief openers.
+        </div>
+      </div>
+      <div class="field">
+        <label>How to play</label>
+        <button class="btn" id="btn-howto2">? Show the how-to briefing</button>
+        <div class="help" style="font-size:.76rem;color:var(--ink-3);margin-top:6px;line-height:1.45">
+          The weekly loop and the three views, on one sheet. It opens on every load; this puts it back
+          up on the projector when a team asks mid-session.
+        </div>
       </div>
       <div class="field">
         <label>Instructor guide</label>
@@ -144,6 +317,8 @@
 <script>
 /*__JS__*/
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
+<!-- Attribution — styled in styles.css (.bh-credit) so the mobile rule can
+     lift it clear of the SITE / MEETING tab bar. -->
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

@@ -10,6 +10,15 @@
   there — new categories appear on the start screen
   automatically. Scoring thresholds live in the SCORING
   object in the main script at the bottom of the file.
+
+  PRESENTING: the "?" button (top right, every screen) reopens
+  the how-to popup; the gear beside it has Presentation mode
+  and the presenter's notes. Printable version of the notes:
+  teacher-guide.html, in this folder.
+
+  Murray State theme: MSU Blue #002144, MSU Gold #ECAC00,
+  Lite Blue #00A4E3. Red Orange #FF4500 appears in exactly one
+  place — the WAY OFF band and the miss card that reports it.
   ============================================================
 -->
 <html lang="en">
@@ -18,17 +27,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Should Have Known That: Engineering Edition</title>
 <style>
+  /* ---------- Murray State palette ----------
+     MSU Blue #002144 · MSU Gold #ECAC00 · Lite Blue #00A4E3.
+     Red Orange #FF4500 is reserved for genuine failure — here that is
+     exactly one thing: the WAY OFF band (and the miss card that reports it).
+     Everything else is a tint or shade of the three brand colors.
+     Band story: GOLD tier = you had the number. BLUE tier = you didn't.
+     RED = not the right order of magnitude of wrong.                        */
   :root{
-    --bg1:#0d0b2e; --bg2:#251259;
-    --gold:#ffcf3f; --cyan:#35e0ff; --magenta:#ff3d8b; --green:#41ff97;
-    --ink:#f5f3ff; --dim:rgba(245,243,255,.55); --card:rgba(255,255,255,.07);
-    --band0:#ffd23f; --band1:#41ff97; --band2:#ffa23d; --band3:#4db8ff; --band4:#ff5d5d;
+    --navy:#002144;
+    --bg1:#000c18; --bg2:#002144;
+    --gold:#ECAC00; --gold-lt:#FFD766; --gold-pale:#FFE9A8;
+    --cyan:#00A4E3; --cyan-lt:#7FD3F5; --cyan-pale:#C7E9F8;
+    --alert:#FF4500;
+    --ink:#F2F7FB; --dim:rgba(242,247,251,.58); --card:rgba(255,255,255,.08);
+    --band0:#ECAC00; --band1:#F6D77A; --band2:#00A4E3; --band3:#8CC9E6; --band4:#FF4500;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html,body{height:100%;margin:0;}
   body{
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:radial-gradient(130% 100% at 50% 0%, var(--bg2), var(--bg1) 72%) fixed;
+    background:radial-gradient(130% 100% at 50% 0%, #003a72, var(--bg2) 45%, var(--bg1) 78%) fixed;
     color:var(--ink); overflow:hidden;
     user-select:none;-webkit-user-select:none; touch-action:manipulation;
   }
@@ -38,18 +57,26 @@
   .screen{
     position:absolute; inset:0; display:none; flex-direction:column; align-items:center;
     height:100vh; height:100dvh;
-    padding:max(12px,env(safe-area-inset-top)) 16px max(14px,env(safe-area-inset-bottom));
+    /* bottom pad reserves the attribution strip; the start screen also
+       reserves the utility rail up top, where the title would collide */
+    padding:max(12px,env(safe-area-inset-top)) 16px calc(env(safe-area-inset-bottom) + 26px);
   }
   .screen.active{display:flex;}
   .screen.scrolly{overflow-y:auto; justify-content:flex-start;}
+  #screen-start{padding-top:calc(env(safe-area-inset-top) + 54px);}
 
   /* ---------- start screen ---------- */
+  .msu-eyebrow{
+    font-weight:800; letter-spacing:.28em; text-indent:.28em; text-align:center;
+    color:var(--cyan-lt); font-size:clamp(.6rem,1.4vh,.8rem); text-transform:uppercase;
+    margin-bottom:6px;
+  }
   .game-title{
-    margin:2vh 0 0; text-align:center; line-height:.95; font-weight:900;
+    margin:0; text-align:center; line-height:.95; font-weight:900;
     font-size:clamp(2.4rem, 6vh + 2vw, 5.2rem); letter-spacing:.02em;
-    background:linear-gradient(100deg,var(--gold) 20%, #ff9d5c 45%, var(--magenta) 80%);
+    background:linear-gradient(100deg,var(--gold) 18%, var(--gold-lt) 46%, var(--cyan) 88%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
-    filter:drop-shadow(0 0 22px rgba(255,160,60,.35));
+    filter:drop-shadow(0 0 22px rgba(236,172,0,.35));
   }
   .subtitle{
     margin-top:6px; font-weight:800; letter-spacing:.45em; text-indent:.45em;
@@ -68,7 +95,7 @@
     cursor:pointer; transition:all .15s;
   }
   .opt small{display:block; font-weight:600; font-size:.68em; color:var(--dim);}
-  .opt.on{border-color:var(--gold); background:rgba(255,207,63,.16); box-shadow:0 0 14px rgba(255,207,63,.25);}
+  .opt.on{border-color:var(--gold); background:rgba(236,172,0,.18); box-shadow:0 0 14px rgba(236,172,0,.3);}
   .opt:active{transform:scale(.96);}
   .chip-row{display:flex; gap:8px; flex-wrap:wrap;}
   .chip{
@@ -76,27 +103,27 @@
     background:var(--card); color:var(--dim); font-weight:700; font-size:clamp(.82rem,1.9vh,1rem);
     cursor:pointer; transition:all .15s; min-height:48px;
   }
-  .chip.on{color:#14102e; border-color:transparent; font-weight:800;}
+  .chip.on{color:var(--navy); border-color:transparent; font-weight:800;}
   .team-names{display:flex; flex-direction:column; gap:8px; margin-top:10px;}
   .team-names input{
     width:100%; min-height:52px; border-radius:12px; border:2px solid rgba(255,255,255,.18);
     background:rgba(0,0,0,.25); color:var(--ink); font-size:1.05rem; font-weight:700;
     padding:0 14px; outline:none;
   }
-  .team-names input:focus{border-color:var(--cyan);}
+  .team-names input:focus{border-color:var(--cyan); box-shadow:0 0 0 3px rgba(0,164,227,.25);}
   .start-note{min-height:1.2em; text-align:center; color:var(--dim); font-size:clamp(.78rem,1.7vh,.95rem);}
 
   /* ---------- buttons ---------- */
   .big-btn{
     width:100%; max-width:440px; min-height:64px; border:none; border-radius:18px;
-    background:linear-gradient(180deg,#ffe07a,var(--gold) 55%,#f0a92d);
-    color:#1c1233; font-size:clamp(1.15rem,2.8vh,1.5rem); font-weight:900; letter-spacing:.1em;
-    cursor:pointer; box-shadow:0 6px 24px rgba(255,193,49,.35), inset 0 -3px 0 rgba(0,0,0,.18);
+    background:linear-gradient(180deg,var(--gold-lt),var(--gold) 55%,#C08D00);
+    color:var(--navy); font-size:clamp(1.15rem,2.8vh,1.5rem); font-weight:900; letter-spacing:.1em;
+    cursor:pointer; box-shadow:0 6px 24px rgba(236,172,0,.4), inset 0 -3px 0 rgba(0,0,0,.22);
     transition:transform .1s; margin:0 auto;
   }
   .big-btn.cyan{
-    background:linear-gradient(180deg,#9df0ff,var(--cyan) 55%,#12b7d8);
-    box-shadow:0 6px 24px rgba(53,224,255,.3), inset 0 -3px 0 rgba(0,0,0,.18);
+    background:linear-gradient(180deg,var(--cyan-lt),var(--cyan) 55%,#0079AB);
+    box-shadow:0 6px 24px rgba(0,164,227,.4), inset 0 -3px 0 rgba(0,0,0,.22);
   }
   .big-btn:active{transform:scale(.96);}
   .big-btn[disabled]{opacity:.35; pointer-events:none;}
@@ -107,12 +134,13 @@
   .topbar{
     width:100%; max-width:900px; display:flex; gap:8px; align-items:center;
     justify-content:space-between; flex-wrap:nowrap;
+    padding-right:104px;  /* reserved for the fixed ? / gear rail */
   }
   .pill{
     padding:7px 13px; border-radius:999px; background:var(--card);
     font-weight:800; font-size:clamp(.72rem,1.8vh,1rem); white-space:nowrap;
   }
-  .pill.cat{color:#14102e; overflow:hidden; text-overflow:ellipsis; max-width:46vw;}
+  .pill.cat{color:var(--navy); overflow:hidden; text-overflow:ellipsis; max-width:42vw;}
   .pill.score{color:var(--gold);}
   .team-strip{width:100%; max-width:900px; display:flex; gap:6px; margin-top:8px;}
   .tchip{
@@ -121,7 +149,7 @@
     border:2px solid transparent; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
   }
   .tchip b{color:var(--ink);}
-  .tchip.now{border-color:var(--gold); color:var(--ink); background:rgba(255,207,63,.12);}
+  .tchip.now{border-color:var(--gold); color:var(--ink); background:rgba(236,172,0,.14);}
   .stage{
     flex:1; width:100%; max-width:900px; display:flex; flex-direction:column;
     justify-content:space-evenly; min-height:0;
@@ -132,8 +160,8 @@
   }
   .value-wrap{text-align:center; line-height:1;}
   #value-display{
-    font-size:clamp(2.6rem, 9vh, 6rem); font-weight:900; color:var(--cyan);
-    text-shadow:0 0 28px rgba(53,224,255,.45); font-variant-numeric:tabular-nums;
+    font-size:clamp(2.6rem, 9vh, 6rem); font-weight:900; color:var(--cyan-lt);
+    text-shadow:0 0 28px rgba(0,164,227,.55); font-variant-numeric:tabular-nums;
   }
   #value-units{
     font-size:clamp(1rem, 3vh, 2rem); font-weight:800; color:var(--dim); margin-left:8px;
@@ -149,16 +177,16 @@
   }
   input[type=range]::-webkit-slider-thumb{
     -webkit-appearance:none; width:56px; height:56px; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #fff6d0, var(--gold) 62%);
-    border:4px solid #fff; box-shadow:0 4px 20px rgba(255,207,63,.6);
+    background:radial-gradient(circle at 35% 30%, var(--gold-pale), var(--gold) 62%);
+    border:4px solid #fff; box-shadow:0 4px 20px rgba(236,172,0,.65);
     margin-top:-20px;
   }
   input[type=range]::-moz-range-track{height:16px; border-radius:10px; background:rgba(255,255,255,.16);}
   input[type=range]::-moz-range-progress{height:16px; border-radius:10px; background:var(--cyan);}
   input[type=range]::-moz-range-thumb{
     width:56px; height:56px; border-radius:50%;
-    background:radial-gradient(circle at 35% 30%, #fff6d0, var(--gold) 62%);
-    border:4px solid #fff; box-shadow:0 4px 20px rgba(255,207,63,.6);
+    background:radial-gradient(circle at 35% 30%, var(--gold-pale), var(--gold) 62%);
+    border:4px solid #fff; box-shadow:0 4px 20px rgba(236,172,0,.65);
   }
   .range-labels{
     display:flex; justify-content:space-between; align-items:center; margin-top:2px;
@@ -167,7 +195,7 @@
   }
   .scale-tag{
     font-size:clamp(.6rem,1.4vh,.8rem); font-weight:800; letter-spacing:.2em;
-    color:var(--magenta); border:1.5px solid var(--magenta); border-radius:999px;
+    color:var(--cyan-lt); border:1.5px solid var(--cyan-lt); border-radius:999px;
     padding:3px 10px;
   }
 
@@ -181,9 +209,9 @@
     position:absolute; top:50%; width:28px; height:28px; border-radius:50%;
     transform:translate(-50%,-50%); border:3px solid #fff;
   }
-  .marker.guess{background:var(--gold); box-shadow:0 0 16px rgba(255,207,63,.7); z-index:2;}
+  .marker.guess{background:var(--gold); box-shadow:0 0 16px rgba(236,172,0,.75); z-index:2;}
   .marker.truth{
-    background:var(--cyan); box-shadow:0 0 16px rgba(53,224,255,.7); z-index:3;
+    background:var(--cyan); box-shadow:0 0 16px rgba(0,164,227,.75); z-index:3;
     transition:left 1.1s cubic-bezier(.22,1,.36,1);
   }
   .mk-label{
@@ -196,9 +224,9 @@
     display:flex; justify-content:center; gap:26px; font-weight:800;
     font-size:clamp(.95rem,2.4vh,1.4rem); font-variant-numeric:tabular-nums; flex-wrap:wrap;
   }
-  .rv.you{color:var(--gold);} .rv.truth{color:var(--cyan);}
+  .rv.you{color:var(--gold);} .rv.truth{color:var(--cyan-lt);}
   #band-badge{
-    align-self:center; padding:10px 26px; border-radius:14px; color:#14102e;
+    align-self:center; padding:10px 26px; border-radius:14px; color:var(--navy);
     font-size:clamp(1.4rem,4.2vh,2.6rem); font-weight:900; letter-spacing:.06em;
     opacity:0; transform:scale(.3);
   }
@@ -213,7 +241,7 @@
     font-size:clamp(.92rem,2.3vh,1.3rem); line-height:1.4;
   }
   .factoid.show{animation:fadeUp .5s ease forwards;}
-  .factoid .lead{color:var(--magenta); font-weight:900; letter-spacing:.04em; display:block;
+  .factoid .lead{color:var(--gold); font-weight:900; letter-spacing:.04em; display:block;
     font-size:.78em; margin-bottom:4px; text-transform:uppercase;}
   #next-btn{opacity:0; pointer-events:none; transition:opacity .35s;}
   #next-btn.show{opacity:1; pointer-events:auto;}
@@ -224,7 +252,7 @@
     font-size:clamp(.85rem,2vh,1.2rem);}
   .turn-team{
     font-size:clamp(2.4rem,8vh,5rem); font-weight:900; line-height:1; color:var(--gold);
-    text-shadow:0 0 30px rgba(255,207,63,.4); overflow-wrap:anywhere;
+    text-shadow:0 0 30px rgba(236,172,0,.45); overflow-wrap:anywhere;
   }
   .turn-progress{color:var(--dim); font-weight:700; font-size:clamp(.9rem,2.2vh,1.2rem);}
 
@@ -238,12 +266,12 @@
     background:var(--card); border-radius:16px; padding:14px 18px;
     font-weight:800; font-size:clamp(1.05rem,2.6vh,1.5rem); border:2px solid transparent;
   }
-  .score-row.win{border-color:var(--gold); background:rgba(255,207,63,.13);}
+  .score-row.win{border-color:var(--gold); background:rgba(236,172,0,.15);}
   .score-row .sc{color:var(--gold); font-variant-numeric:tabular-nums; white-space:nowrap;}
   .score-row .wintag{font-size:.62em; letter-spacing:.25em; color:var(--gold); margin-left:8px;}
   .solo-final{
     text-align:center; font-size:clamp(3.4rem,12vh,7rem); font-weight:900; color:var(--gold);
-    line-height:1; text-shadow:0 0 34px rgba(255,207,63,.45);
+    line-height:1; text-shadow:0 0 34px rgba(236,172,0,.5);
   }
   .solo-final small{display:block; font-size:.22em; color:var(--dim); letter-spacing:.3em; margin-top:6px;}
   .end-cards{display:flex; gap:10px; flex-wrap:wrap;}
@@ -252,10 +280,145 @@
     font-size:clamp(.82rem,2vh,1rem); line-height:1.45;
   }
   .end-card .ec-title{font-weight:900; letter-spacing:.14em; font-size:.82em; margin-bottom:6px;}
-  .end-card.best .ec-title{color:var(--green);}
+  .end-card.best .ec-title{color:var(--gold);}
   .end-card.worst .ec-title{color:var(--band4);}
   .end-card .ec-q{font-weight:800;}
   .end-card .ec-detail{color:var(--dim); margin-top:3px;}
+
+  /* ---------- utility rail (always visible, every screen) ----------
+     Its right edge tracks the right edge of the 900px content column
+     (50vw + 450px), falling back to a 12px gutter on a phone — so the rail
+     lands exactly in the 104px the topbar reserves on its right, at every
+     width, and the pills never run underneath it. */
+  .rail{
+    position:fixed; z-index:900; display:flex; gap:8px;
+    top:calc(env(safe-area-inset-top) + 8px);
+    right:max(12px, calc(50vw - 450px));
+  }
+  .rail button{
+    width:44px; height:44px; min-width:44px; border-radius:50%; cursor:pointer;
+    border:2px solid rgba(236,172,0,.5); background:rgba(0,33,68,.85); color:var(--gold);
+    font-size:1.2rem; font-weight:900; line-height:1; display:grid; place-items:center;
+    transition:transform .12s, background .15s, color .15s; padding:0;
+  }
+  .rail button:active{transform:scale(.9);}
+  .rail button.on{background:var(--gold); color:var(--navy); border-color:var(--gold);}
+
+  /* ---------- overlay sheets (how-to, settings, presenter notes) ---------- */
+  .ov{
+    position:fixed; inset:0; z-index:1000; display:none;
+    background:rgba(0,8,16,.78); overflow-y:auto; -webkit-overflow-scrolling:touch;
+    padding:calc(env(safe-area-inset-top) + 12px) 12px calc(env(safe-area-inset-bottom) + 20px);
+  }
+  .ov.open{display:flex; align-items:flex-start; justify-content:center;}
+  .sheet{
+    width:100%; max-width:620px; margin:auto; text-align:left; cursor:default;
+    background:linear-gradient(180deg,#03335f,#002144 55%);
+    border:2px solid rgba(236,172,0,.5); border-top:5px solid var(--gold);
+    border-radius:18px; box-shadow:0 22px 60px rgba(0,0,0,.65);
+    padding:16px 18px 20px;
+  }
+  .sheet.wide{max-width:760px;}
+  .sheet-head{display:flex; align-items:flex-start; gap:12px; justify-content:space-between;}
+  .sheet-head h2{
+    margin:0; font-size:clamp(1.15rem,3vh,1.6rem); font-weight:900; color:var(--gold);
+    letter-spacing:.02em;
+  }
+  .sheet-head .kick{
+    display:block; font-size:.62em; letter-spacing:.22em; color:var(--cyan-lt);
+    font-weight:800; text-transform:uppercase; margin-bottom:3px;
+  }
+  .x-btn{
+    width:40px; height:40px; min-width:40px; border-radius:10px; cursor:pointer; padding:0;
+    border:1.5px solid rgba(255,255,255,.25); background:rgba(0,0,0,.25); color:var(--ink);
+    font-size:1.3rem; font-weight:800; line-height:1;
+  }
+  .sheet p{margin:8px 0; font-size:clamp(.88rem,2vh,1rem); line-height:1.5; color:var(--ink);}
+  .sheet p.dimp{color:var(--dim);}
+  .sheet h3{
+    margin:15px 0 5px; font-size:clamp(.72rem,1.7vh,.85rem); font-weight:900;
+    letter-spacing:.2em; text-transform:uppercase; color:var(--cyan-lt);
+    border-left:3px solid var(--gold); padding-left:8px;
+  }
+  .sheet ul{margin:6px 0 8px; padding-left:20px;}
+  .sheet li{margin:5px 0; font-size:clamp(.86rem,1.95vh,1rem); line-height:1.45;}
+  .sheet b{color:var(--gold-lt);}
+  .sheet code, .sheet kbd{
+    font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.88em;
+    background:rgba(0,0,0,.35); border:1px solid rgba(255,255,255,.18);
+    border-radius:5px; padding:1px 6px; color:var(--cyan-lt);
+  }
+  /* band legend */
+  .bandlist{display:flex; flex-direction:column; gap:5px; margin:8px 0 4px;}
+  .bandrow{display:flex; align-items:center; gap:10px; font-size:clamp(.82rem,1.9vh,.98rem);}
+  .bandrow .sw{
+    min-width:104px; text-align:center; border-radius:8px; padding:5px 8px;
+    color:var(--navy); font-weight:900; font-size:.86em; letter-spacing:.06em;
+  }
+  .bandrow .bd{color:var(--dim);}
+  .bandrow .bd b{color:var(--ink);}
+  /* stage-note beats in the presenter notes */
+  .beat{display:flex; gap:10px; margin:7px 0;}
+  .beat .t{
+    min-width:66px; font-weight:900; color:var(--gold); font-size:clamp(.74rem,1.7vh,.86rem);
+    letter-spacing:.05em; padding-top:2px;
+  }
+  .beat .d{font-size:clamp(.86rem,1.95vh,1rem); line-height:1.45;}
+  .say{
+    margin-top:4px; padding-left:9px; border-left:2px solid var(--cyan);
+    color:var(--cyan-lt); font-style:italic;
+  }
+  .callout{
+    border:1px solid rgba(255,255,255,.16); border-left:3px solid var(--cyan);
+    background:rgba(0,0,0,.22); border-radius:8px; padding:8px 11px; margin:9px 0;
+    font-size:clamp(.84rem,1.9vh,.97rem); line-height:1.45;
+  }
+  .sheet-foot{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .sheet-foot .big-btn{margin:0; flex:1; min-height:56px; max-width:none;}
+  .switch{
+    display:flex; align-items:center; gap:12px; cursor:pointer; min-height:56px;
+    border:2px solid rgba(255,255,255,.18); border-radius:14px; padding:10px 14px;
+    background:rgba(0,0,0,.22); margin:8px 0 4px;
+  }
+  .switch input{width:26px; height:26px; accent-color:var(--gold); flex:none; cursor:pointer;}
+  .switch span{font-weight:800; font-size:clamp(.9rem,2.05vh,1.05rem);}
+  .switch.on{border-color:var(--gold); background:rgba(236,172,0,.13);}
+  .ghost-btn{
+    width:100%; min-height:56px; border-radius:14px; cursor:pointer; margin-top:8px;
+    border:2px solid var(--cyan); background:rgba(0,164,227,.14); color:var(--ink);
+    font-weight:800; font-size:clamp(.95rem,2.2vh,1.1rem); letter-spacing:.04em;
+  }
+  .ghost-btn:active{transform:scale(.98);}
+  .tap-hint{
+    text-align:center; color:var(--dim); font-size:clamp(.74rem,1.7vh,.85rem);
+    margin-top:12px; letter-spacing:.08em;
+  }
+
+  /* ---------- presentation mode ----------
+     Same layout, projector-sized type, and the dim greys lifted so the
+     back row can still read them. Toggled from Settings. */
+  body.presentation{--dim:rgba(242,247,251,.8);}
+  body.presentation .prompt{font-size:clamp(1.55rem, 4.1vh + .8vw, 3.3rem);}
+  body.presentation #value-display{font-size:clamp(3.1rem, 11vh, 7.4rem);}
+  body.presentation #value-units{font-size:clamp(1.25rem, 3.7vh, 2.4rem);}
+  body.presentation .pill{font-size:clamp(.84rem,2.1vh,1.2rem); padding:9px 16px;}
+  body.presentation .tchip{font-size:clamp(.8rem,1.9vh,1.1rem); padding:8px 5px;}
+  body.presentation .range-labels{font-size:clamp(.95rem,2.3vh,1.3rem);}
+  body.presentation .scale-tag{font-size:clamp(.72rem,1.6vh,.92rem);}
+  body.presentation .track{height:20px;}
+  body.presentation .marker{width:34px; height:34px;}
+  body.presentation .mk-label{font-size:clamp(.72rem,1.7vh,.95rem);}
+  body.presentation .rev-values{font-size:clamp(1.15rem,3vh,1.9rem);}
+  body.presentation #band-badge{font-size:clamp(1.8rem,5.2vh,3.4rem); padding:12px 34px;}
+  body.presentation .points{font-size:clamp(1.4rem,3.8vh,2.4rem);}
+  body.presentation .factoid{font-size:clamp(1.08rem,2.9vh,1.7rem); max-width:840px;}
+  body.presentation .turn-team{font-size:clamp(3rem,10vh,6.6rem);}
+  body.presentation .turn-kicker,
+  body.presentation .turn-progress{font-size:clamp(1.05rem,2.6vh,1.5rem);}
+  body.presentation .solo-final{font-size:clamp(4rem,14vh,8.5rem);}
+  body.presentation .score-row{font-size:clamp(1.2rem,3vh,1.9rem);}
+  body.presentation .end-card{font-size:clamp(.95rem,2.3vh,1.2rem);}
+  body.presentation .end-kicker{font-size:clamp(1rem,2.4vh,1.4rem);}
 
   /* ---------- animations ---------- */
   @keyframes popIn{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
@@ -492,8 +655,15 @@ const QUESTIONS = [
 </head>
 <body>
 
+  <!-- ================= ALWAYS-VISIBLE UTILITY RAIL ================= -->
+  <div class="rail">
+    <button id="btn-help" aria-label="How to play" title="How to play (?)">?</button>
+    <button id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+  </div>
+
   <!-- ================= START SCREEN ================= -->
   <section id="screen-start" class="screen scrolly active">
+    <div class="msu-eyebrow">Murray State University</div>
     <h1 class="game-title">SHOULD HAVE<br>KNOWN THAT</h1>
     <div class="subtitle">ENGINEERING EDITION</div>
     <div class="tagline">Drag the slider. Trust your gut. Own the consequences.</div>
@@ -591,6 +761,198 @@ const QUESTIONS = [
       <button id="setup-btn" class="text-btn">Change setup</button>
     </div>
   </section>
+
+  <!-- ================= HOW-TO POPUP (shown on every load) ================= -->
+  <div class="ov" id="ov-help" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="sheet" id="help-sheet">
+      <div class="sheet-head">
+        <h2 id="help-title"><span class="kick">Should Have Known That</span>How to play</h2>
+        <button class="x-btn" data-close="ov-help" aria-label="Close">&times;</button>
+      </div>
+
+      <p>You never type an answer. You <b>drag</b> — one slider, one number, one
+      commitment. Forty numbers every engineer is supposed to carry around:
+      yield strengths, ampacities, psi per foot of water. Trust your gut, then
+      find out what it cost you.</p>
+
+      <h3>Two ways to be wrong</h3>
+      <p>Most sliders are <b>linear</b> and scored on <b>percent error</b> — how close
+      your number is to the real one. A few are marked <span class="scale-tag">LOG SCALE</span>
+      (resistivity, the speed of light, the current that stops a heart). Those span
+      orders of magnitude, so they are scored on <b>how many times off</b> you are, not
+      by how many units. On a log question, the right power of ten is most of the battle.</p>
+
+      <div class="bandlist">
+        <div class="bandrow"><span class="sw" style="background:#ECAC00">BULLSEYE</span>
+          <span class="bd"><b>100 pts</b> · within 5% &nbsp;/&nbsp; 1.26&times; on a log slider</span></div>
+        <div class="bandrow"><span class="sw" style="background:#F6D77A">CLOSE</span>
+          <span class="bd"><b>75 pts</b> · within 15% &nbsp;/&nbsp; 2.1&times;</span></div>
+        <div class="bandrow"><span class="sw" style="background:#00A4E3">WARM</span>
+          <span class="bd"><b>40 pts</b> · within 35% &nbsp;/&nbsp; 5&times;</span></div>
+        <div class="bandrow"><span class="sw" style="background:#8CC9E6">COLD</span>
+          <span class="bd"><b>10 pts</b> · within 60% &nbsp;/&nbsp; 16&times;</span></div>
+        <div class="bandrow"><span class="sw" style="background:#FF4500">WAY OFF</span>
+          <span class="bd"><b>0 pts</b> · past that. Gold means you had it, blue means you
+          didn't, red means you weren't in the neighborhood.</span></div>
+      </div>
+
+      <h3>The reveal</h3>
+      <p>Lock it in and the truth marker slides out from under your guess to where the
+      number actually lives — so you see the size of the miss, not just the score. Then
+      comes the line that gives the game its name: <b>"you should have known that
+      because&hellip;"</b> — the hook that makes the number stick.</p>
+
+      <h3>Teams</h3>
+      <p>Solo, or <b>2&ndash;4 teams pass-and-play</b> on one phone. Name the teams,
+      and the game hands the device around: a turn card names who's up, the strip
+      across the top keeps the running score, and every team answers the same number
+      of questions. The end screen calls out the <b>sharpest guess</b> of the game and
+      the biggest <b>should-have-known</b> miss — that second one is the debrief.</p>
+
+      <p class="dimp"><kbd>Enter</kbd> or <kbd>Space</kbd> locks in and advances.
+      Reopen this anytime with <b>?</b> up in the corner; <b>&#9881;</b> beside it has
+      presentation mode and the presenter's notes.</p>
+
+      <div class="sheet-foot">
+        <button class="big-btn" data-close="ov-help">GOT IT</button>
+      </div>
+      <div class="tap-hint">TAP ANYWHERE TO DISMISS &middot; ESC</div>
+    </div>
+  </div>
+
+  <!-- ================= SETTINGS ================= -->
+  <div class="ov" id="ov-settings" role="dialog" aria-modal="true" aria-labelledby="set-title">
+    <div class="sheet" data-keep-open>
+      <div class="sheet-head">
+        <h2 id="set-title"><span class="kick">Should Have Known That</span>Settings</h2>
+        <button class="x-btn" data-close="ov-settings" aria-label="Close">&times;</button>
+      </div>
+
+      <h3>Presentation mode</h3>
+      <label class="switch" id="pres-switch">
+        <input type="checkbox" id="chk-presentation">
+        <span>Presentation mode &mdash; projector-sized type</span>
+      </label>
+      <p class="dimp">Scales the prompt, the running value, the band badge and the
+      "because&hellip;" line up for a room, and lifts the greyed-out text so the back
+      row can read it. The layout doesn't change, so a rehearsal on your laptop still
+      matches what the class sees.</p>
+
+      <button class="ghost-btn" id="btn-notes">Open the presenter's notes</button>
+      <p class="dimp">Stage notes for running this with a class: pacing, where to stop
+      the room before a reveal, and the discussion hooks worth chasing. Built into this
+      file &mdash; no network, nothing to download.</p>
+
+      <h3>Also</h3>
+      <button class="ghost-btn" id="btn-help-from-settings">Show "How to play" again</button>
+      <p class="dimp">Runs offline out of one file. Nothing is uploaded, nothing is
+      stored, no AI at runtime. The printable teacher guide is
+      <code>teacher-guide.html</code> next to this file.</p>
+
+      <div class="sheet-foot">
+        <button class="big-btn cyan" data-close="ov-settings">DONE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= PRESENTER'S NOTES ================= -->
+  <div class="ov" id="ov-notes" role="dialog" aria-modal="true" aria-labelledby="notes-title">
+    <div class="sheet wide" data-keep-open>
+      <div class="sheet-head">
+        <h2 id="notes-title"><span class="kick">Stage notes &middot; 10&ndash;20 minutes</span>Presenter's notes</h2>
+        <button class="x-btn" data-close="ov-notes" aria-label="Close">&times;</button>
+      </div>
+
+      <h3>Before you start</h3>
+      <p>Turn on <b>Presentation mode</b> if you're projecting. Pick the length on the
+      start screen: <b>5</b> questions is a warm-up, <b>10</b> is a class block,
+      <b>15</b> is the full set. Categories are toggles — switch off the ones you
+      haven't taught and the pool shrinks accordingly (the note under the buttons tells
+      you how many questions are actually in play, and caps the count if you've asked
+      for more than the pool holds).</p>
+      <p>For teams, the pool is split evenly: with 4 teams and every category on,
+      that's 40 &divide; 4 = 10 questions each. Ask the teams to name themselves —
+      it costs 20 seconds and buys you the whole hour.</p>
+
+      <h3>Running it</h3>
+      <div class="beat"><div class="t">0:00</div><div class="d">
+        <b>Project question one and say nothing.</b> Let someone drag the slider while
+        the room watches the number move. The dragging is the lesson — they are
+        being asked to commit to a magnitude, out loud, in front of people.
+        <div class="say">"Nobody is asking you to be right. You're being asked to be
+        in the right neighborhood."</div>
+      </div></div>
+      <div class="beat"><div class="t">before<br>each lock</div><div class="d">
+        <b>Freeze it.</b> Before anyone presses LOCK IT IN, poll the room: hands up for
+        higher, hands up for lower. Commitment before the reveal is what makes the miss
+        memorable — a guess nobody said out loud costs nothing to be wrong about.
+      </div></div>
+      <div class="beat"><div class="t">reveal</div><div class="d">
+        The truth marker slides for about a second, the band lands, then the
+        "because&hellip;" line fades in and <b>NEXT</b> appears — roughly two seconds
+        end to end. <b>Do not narrate over it.</b> Read the anchor line aloud after it
+        appears, then move.
+      </div></div>
+      <div class="beat"><div class="t">after<br>a WAY OFF</div><div class="d">
+        Distinguish the two failures out loud. Way off on a <b>linear</b> question is a
+        fact you don't have. Way off on a <b>log</b> question is a much bigger problem:
+        you don't know what size the answer is. That's the one worth stopping for.
+      </div></div>
+      <div class="beat"><div class="t">end</div><div class="d">
+        The end screen names the <b>sharpest guess</b> and the biggest
+        <b>should-have-known</b> miss. Debrief from the miss card, not the score.
+      </div></div>
+
+      <h3>Discussion hooks that are actually in the bank</h3>
+      <ul>
+        <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Both are in the
+        bank (Statics, Fluids). Run them in the same game and ask the room to derive one
+        from the other — 62.4 &divide; 144 in&sup2;/ft&sup2; = 0.433. One number they
+        already knew was two numbers they thought they didn't.</li>
+        <li><b>Voltage doesn't kill; current does.</b> The Electrical set has ~100 mA
+        across the chest causing fibrillation, and ~3,000 V as the floor for feeling a
+        static shock — a doorknob zap is 5&ndash;25 kV and harmless. Ask which of the
+        two numbers is the dangerous one, then show both.</li>
+        <li><b>Steel vs aluminum.</b> Young's modulus 200 vs 70 GPa, density 7,850 vs
+        2,700 kg/m&sup3;. Both ratios are about 2.9. Ask why we don't just build
+        everything out of aluminum — the answer is that stiffness-to-weight is nearly
+        identical, so the choice is made on cost, buckling and joining, not stiffness.</li>
+        <li><b>Steel and concrete expand at the same rate</b> (~12 &micro;m/m&middot;&deg;C).
+        Ask the room what would happen to reinforced concrete if they didn't. Every
+        summer would crack the building.</li>
+        <li><b>Steel doesn't melt in a building fire.</b> Carbon steel melts near
+        1,500 &deg;C — but it softens enough to fail long before that. Good for
+        separating "melted" from "failed" in students' vocabulary.</li>
+        <li><b>The log questions are the real diagnostic.</b> Copper resistivity
+        1.7&times;10&#8315;&#8312; &Omega;&middot;m and the speed of light are not
+        recall questions — they are "do you know how big this kind of thing is"
+        questions. Expect the class to do badly and say so in advance; it lowers the
+        cost of guessing.</li>
+        <li><b>A36's name is its answer.</b> The 36 is the yield strength in ksi
+        (&asymp;250 MPa). Worth pointing out that half the materials numbers engineers
+        "memorize" are printed on the spec sheet name.</li>
+        <li><b>One gallon of gasoline is 33.7 kWh</b> — about a full day of an average
+        US home's electricity. The best single number in the bank for an energy
+        conversation.</li>
+      </ul>
+
+      <h3>If you have five more minutes</h3>
+      <p>Replay the same category in <b>teams</b>. The second pass scores far better,
+      and that jump is the point: these are not facts anyone is born with, and one
+      exposure with a reason attached is most of what it takes to keep one.</p>
+
+      <div class="callout"><b>Editing the bank:</b> every question lives in a commented
+      array at the top of <code>index.html</code> — id, category, prompt, units, value,
+      slider min/max, <code>linear</code> or <code>log</code>, and the
+      "because&hellip;" line. Add your own and new categories appear on the start
+      screen by themselves. Band thresholds are in the <code>SCORING</code> object at
+      the bottom of the file.</div>
+
+      <div class="sheet-foot">
+        <button class="big-btn cyan" data-close="ov-notes">CLOSE NOTES</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 "use strict";
@@ -691,8 +1053,10 @@ function scoreGuess(q, guess){
   return { band, err, normErr, offBy, pts: BANDS[band].pts };
 }
 
-/* ---------- category colors (assigned automatically) ---------- */
-const CAT_PALETTE = ["#35e0ff", "#ffcf3f", "#ff3d8b", "#41ff97", "#b18cff", "#ff9d5c"];
+/* ---------- category colors (assigned automatically) ----------
+   Tints of the Murray State palette. All are light enough to carry the
+   dark navy chip text; add more if you add many categories. */
+const CAT_PALETTE = ["#00A4E3", "#ECAC00", "#7FD3F5", "#FFD766", "#C7E9F8", "#FFE9A8"];
 const CATS = [...new Set(QUESTIONS.map(q => q.category))];
 const catColor = c => CAT_PALETTE[CATS.indexOf(c) % CAT_PALETTE.length];
 
@@ -967,7 +1331,7 @@ function lockIn(){
 }
 
 function confettiBurst(){
-  const colors = ["#ffcf3f", "#35e0ff", "#ff3d8b", "#41ff97", "#b18cff", "#ffffff"];
+  const colors = ["#ECAC00", "#00A4E3", "#FFD766", "#7FD3F5", "#FFE9A8", "#ffffff"];
   for (let i = 0; i < 28; i++){
     const c = document.createElement("div");
     c.className = "confetti";
@@ -1052,9 +1416,69 @@ $("start-btn").addEventListener("click", startGame);
 $("again-btn").addEventListener("click", startGame);
 $("setup-btn").addEventListener("click", () => { buildStartScreen(); showScreen("screen-start"); });
 
+/* =====================================================================
+   OVERLAYS — how-to, settings, presenter's notes
+   One controller for all three. Any open overlay swallows the game's
+   Enter/Space keys so a dismiss never also locks in a guess.
+===================================================================== */
+const OVERLAYS = ["ov-help", "ov-settings", "ov-notes"];
+function anyOverlayOpen(){ return OVERLAYS.some(id => $(id).classList.contains("open")); }
+function closeOverlay(id){ $(id).classList.remove("open"); }
+function openOverlay(id){
+  OVERLAYS.forEach(closeOverlay);
+  const ov = $(id);
+  ov.classList.add("open");
+  ov.scrollTop = 0;
+}
+
+/* backdrop click closes; the how-to also closes on a tap anywhere inside it,
+   because it has nothing to click on and "tap to start" is the whole idea */
+OVERLAYS.forEach(id => {
+  const ov = $(id);
+  ov.addEventListener("click", e => {
+    if (e.target.closest("[data-close]")) { closeOverlay(id); return; }
+    if (e.target.closest("[data-keep-open]")) return;   // settings / notes bodies
+    closeOverlay(id);
+  });
+});
+
+$("btn-help").addEventListener("click", () => openOverlay("ov-help"));
+$("btn-settings").addEventListener("click", () => openOverlay("ov-settings"));
+$("btn-notes").addEventListener("click", () => openOverlay("ov-notes"));
+$("btn-help-from-settings").addEventListener("click", () => openOverlay("ov-help"));
+
+/* presentation mode */
+const presChk = $("chk-presentation");
+function applyPresentation(){
+  const on = presChk.checked;
+  document.body.classList.toggle("presentation", on);
+  $("pres-switch").classList.toggle("on", on);
+  $("btn-settings").classList.toggle("on", on);
+}
+presChk.addEventListener("change", applyPresentation);
+
+/* Esc closes the topmost overlay */
+document.addEventListener("keydown", e => {
+  if (e.key !== "Escape" && e.key !== "Esc") return;
+  if (!anyOverlayOpen()) return;
+  e.preventDefault();
+  /* notes sit on top of settings conceptually — close notes back to settings */
+  if ($("ov-notes").classList.contains("open")) { openOverlay("ov-settings"); return; }
+  OVERLAYS.forEach(closeOverlay);
+});
+
+/* shown on every load */
+openOverlay("ov-help");
+
 document.addEventListener("keydown", e => {
   if (e.key !== "Enter" && e.key !== " ") return;
   if (e.target.tagName === "INPUT" && e.target.type === "text") return;
+  if (anyOverlayOpen()){
+    /* let Enter/Space work the overlay's own buttons, never the game */
+    if (e.target.closest(".ov")) return;
+    e.preventDefault();
+    return;
+  }
   const active = document.querySelector(".screen.active");
   if (!active) return;
   if (active.id === "screen-question"){
@@ -1068,5 +1492,6 @@ document.addEventListener("keydown", e => {
 
 buildStartScreen();
 </script>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>

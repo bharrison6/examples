@@ -41,12 +41,23 @@ function check(name, cond, detail) {
   const errors = [];
   page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
   page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+  /* the demo is offline by contract: nothing may leave the folder */
+  const offSite = [];
+  page.on('request', (r) => {
+    const u = r.url();
+    if (!u.startsWith('file://') && !u.startsWith('data:') && !u.startsWith('about:')) offSite.push(u);
+  });
 
   await page.goto('file://' + path.join(__dirname, 'index.html'));
   await page.waitForTimeout(600);
+
+  console.log('[0] The how-to popup opens on load');
+  const openHelp = async () => (await page.locator('#mHelp:not(.hidden)').count()) === 1;
+  check('the how-to is showing on load', await openHelp());
   await page.screenshot({ path: '/tmp/bw-0-help.png' });
   await page.click('#hpClose');
   await page.waitForTimeout(200);
+  check('  and the ✕ dismisses it', !(await openHelp()));
 
   /* world -> screen, so we can drag in metres */
   let box = await page.locator('#cv').boundingBox();
@@ -583,6 +594,103 @@ function check(name, cond, detail) {
   check('a randomised edit session keeps every editor invariant',
         !broke, broke || done + ' random draw/erase operations');
   await page.screenshot({ path: '/tmp/bw-17-fuzz.png' });
+
+  /* --------------------------- 13. contract UX: how-to, settings, presenter notes */
+  console.log('\n[13] Contract UX — reopenable how-to, settings, presenter notes');
+  await page.click('#btnHelp');
+  await page.waitForTimeout(150);
+  check('the ? control reopens the how-to', await openHelp());
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('  Escape dismisses it', !(await openHelp()));
+  await page.click('#btnHelp');
+  await page.waitForTimeout(150);
+  await page.mouse.click(8, 450);                 // backdrop, well clear of the sheet
+  await page.waitForTimeout(150);
+  check('  a tap outside dismisses it', !(await openHelp()));
+  await page.click('#btnHelp');
+  await page.waitForTimeout(150);
+  await page.click('#hpStart');
+  await page.waitForTimeout(150);
+  check('  "Start building" dismisses it', !(await openHelp()));
+
+  const openNotes = async () => (await page.locator('#mNotes:not(.hidden)').count()) === 1;
+  await page.click('#btnTeacher');
+  await page.waitForTimeout(200);
+  check('the ⚙ button opens a settings menu', (await txt('#mTeacher h2')) === 'Settings');
+  check('  which offers presentation mode', (await txt('#mTeacher')).includes('Presentation mode'));
+  await page.click('#btnNotesOpen');
+  await page.waitForTimeout(200);
+  check("  and opens the presenter's notes", await openNotes());
+  const notes = await txt('#mNotes');
+  check('    carrying the run of show', notes.includes('Run of show') && notes.includes('method of joints'));
+  check('    and the numbers a presenter needs',
+        notes.includes('300 kN') && notes.includes('$180 per joint') && notes.includes('720 kN'));
+  await page.screenshot({ path: '/tmp/bw-18-notes.png' });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  check('    Escape closes the notes', !(await openNotes()));
+
+  check('the notes shortcut is hidden until presentation mode is on', await page.locator('#btnNotes').isHidden());
+  await page.click('#btnTeacher');
+  await page.waitForTimeout(200);
+  await page.click('#tglBig');
+  await page.click('#tcClose');
+  await page.waitForTimeout(300);
+  check('presentation mode puts a notes button in the top bar', await page.locator('#btnNotes').isVisible());
+  await page.click('#btnNotes');
+  await page.waitForTimeout(200);
+  check('  and it opens the notes', await openNotes());
+  await page.keyboard.press('Escape');
+  await page.click('#btnTeacher');
+  await page.waitForTimeout(200);
+  await page.click('#tglBig');                 // back to normal scale
+  await page.click('#tcClose');
+  await page.waitForTimeout(300);
+
+  check('the attribution is visible', await page.locator('.bh-credit').isVisible());
+  check('  naming author and institution',
+        (await txt('.bh-credit')).includes('Bryant Harrison') &&
+        (await txt('.bh-credit')).includes('Murray State University'));
+
+  /* ------------------------------------------------- 14. the new UI on a phone */
+  console.log('\n[14] Phone viewport');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(400);
+  await page.click('#btnHelp');
+  await page.waitForTimeout(250);
+  const hb = await page.locator('#mHelp .sheet').boundingBox();
+  check('the how-to fits a phone screen', hb.width <= 390 && hb.height <= 844,
+        Math.round(hb.width) + 'x' + Math.round(hb.height));
+  await page.screenshot({ path: '/tmp/bw-19-phone-help.png' });
+  await page.click('#hpStart');
+  await page.waitForTimeout(200);
+  await page.click('#btnTeacher');
+  await page.waitForTimeout(200);
+  await page.click('#btnNotesOpen');
+  await page.waitForTimeout(250);
+  const nb = await page.locator('#mNotes .sheet').boundingBox();
+  check('  so do the presenter notes', nb.width <= 390, Math.round(nb.width) + ' wide');
+  await page.screenshot({ path: '/tmp/bw-20-phone-notes.png' });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  check('  the ? control stays reachable', await page.locator('#btnHelp').isVisible());
+  check('  the ⚙ control stays reachable', await page.locator('#btnTeacher').isVisible());
+  check('  the attribution stays visible', await page.locator('.bh-credit').isVisible());
+  await gotoLevel(0);
+  await page.click('#btnClear');
+  await page.waitForTimeout(250);
+  await refreshView();
+  const beforePhone = await page.evaluate(() => BWGAME.members.length);
+  await drag(5, 0, 8, 0);
+  await page.waitForTimeout(200);
+  check('  and drawing on the canvas still works at phone size',
+        (await page.evaluate(() => BWGAME.members.length)) === beforePhone + 1);
+  await page.screenshot({ path: '/tmp/bw-21-phone-game.png' });
+  await page.setViewportSize({ width: 1400, height: 900 });
+  await page.waitForTimeout(300);
+
+  check('nothing off-device was requested', offSite.length === 0, offSite.join(', '));
 
   console.log('\nJS errors: ' + (errors.length ? errors.join(' | ') : 'none'));
   if (errors.length) failures += errors.length;

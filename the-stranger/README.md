@@ -69,14 +69,41 @@ student never typed** — handed over for free because the prompt signalled a re
 
 ## Classroom features
 
+- **How to use it, on screen.** A how-to sheet opens on every load: the three levers, what
+  every control does, and the shape of the twelve minutes. Dismiss it with `Esc`, a tap
+  outside it, or *Got it*. The **?** at the top right brings it back at any point, at any
+  screen width — it is the one control that never goes away.
+- **Settings (⚙).** The menu beside the **?**. **Presentation mode** is the projector build of
+  the app — big type, the 1–10 class score strip, pin-to-compare, and the card picker inside
+  lever 2; switch it off and you are in student mode. The **presenter's notes** sit inside it:
+  the three acts as stage notes — what to say, what to do with the printed deck, the line each
+  act lands on — plus the house rules, the running order and the discussion questions. It is
+  the presenter sheet's script cut down to what you can read at a glance with a room watching.
+  Below that, the expert-term highlighter and a way back to the how-to sheet or the closing
+  slide. On a phone the mode switch and the closing slide move into this menu, so the toolbar
+  stays a thumb wide.
 - **Scoreboard.** Score each answer 1–10 from the room; the chart plots score against levers
   pulled and the curve climbs across the session on its own.
 - **Compare.** Pin any answer beside the next one for A/B.
 - **Presenter mode** — projector-sized type, class scoring, compare, and a card picker for
   rehearsal. **Student mode** — self-paced, smaller type, an eight-step guided walkthrough
   through the levers ending in three *"which lever would fix this?"* questions with written
-  feedback on every option, right and wrong. Both modes announce what they change in a banner.
+  feedback on every option, right and wrong. Both modes announce what they change in a banner,
+  and either can be reached from the mode switch on the toolbar, from Settings, or with `M`.
 - **Closing slide:** *When AI gives you a bad answer, ask which lever you left unpulled.*
+
+Keys: `1` `2` `3` levers · `Enter` ask · `Space` skip typing · `H` highlight · `R` replay card ·
+`P` pin · `S` scoreboard · `M` mode · `N` presenter's notes · `?` the how-to sheet · `Esc` close
+anything.
+
+## Theme
+
+Murray State. MSU Blue `#002144` is the surface family, MSU Gold `#ECAC00` the accent and
+lever 1, Lite Blue `#00A4E3` lever 2. Red Orange `#FF4500` is reserved for a genuine failure
+state — this app has exactly one, a wrong answer on a walkthrough quiz — so it never shows up
+as decoration. Lever 3 keeps its violet: it is the third leg of a colour code that is also
+printed on the presenter sheet and on the cut-out target cards, and the paper has no fourth
+ink to give it.
 
 ## Build
 
@@ -116,7 +143,7 @@ projector.
 ## Source layout
 
 ```
-index.html                     built, self-contained, 265 KB
+index.html                     built, self-contained, 281 KB
 build.js                       src/ -> index.html, with the offline guard
 presenter-sheet.html           the printable companion
 The-Stranger-Presenter-Sheet.pdf

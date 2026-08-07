@@ -126,22 +126,32 @@ open index.html                 # that is the whole thing
 
 node build.js                   # rebuild index.html from src/
 node build.js --check           # verify generated index.html without writing
-node src/playtest.test.js       # 120 dataset and engine checks
+node src/playtest.test.js       # 112 dataset and engine checks
 node src/playtest.test.js -v    # ...listing every one
-node tools/integration.mjs      # 163 browser checks, headless
+node tools/integration.mjs      # 192 browser checks, headless
 node tools/integration.mjs --headed   # watch it play itself
 node tools/pdf.mjs              # re-render the presenter guide PDF
 node tools/pdf.mjs --check      # verify the canonical guide/PDF without writing
 ```
 
 The integration suite drives the built file in Chromium (or an installed Chrome or
-Edge when managed Chromium is unavailable): it dismisses the intro,
-drags a forecast, reveals it, plays all five tests, opens every worked example,
-solves the grid puzzle, triggers the twist, exercises both timeline filters
-across all four regions, walks the three acts, and asserts no horizontal
-overflow, 40px tap targets, and the Reveal button above the fold at eight
-viewports from 320×568 up — plus presenter mode at 720p and 1080p. It also
-asserts the page makes zero network requests.
+Edge when managed Chromium is unavailable): it dismisses the how-to panel and the
+intro, drags a forecast, reveals it, plays all five tests, opens every worked
+example, solves the grid puzzle, triggers the twist, exercises both timeline
+filters across all four regions, walks the three acts, opens and closes all three
+sheets by button, backdrop and <kbd>Esc</kbd>, checks the presenter's notes still
+carry the guide's figures, and asserts no horizontal overflow, 40px tap targets,
+a how-to sheet whose dismiss button is on screen, and the Reveal button above the
+fold at eight viewports from 320×568 up — plus presenter mode at 720p and 1080p.
+It also asserts the page makes zero network requests and never touches
+`localStorage`.
+
+**Five of those 192 currently fail, and have since the suite was committed.** They
+assert an accessibility revision that was never built: a keyboard-and-screenreader
+forecast control (`#forecast-end`), roving-focus act tabs (`#act-tab-1`), a
+release list beside the timeline canvas (`#tl-list`), and `aria-pressed` on the
+timeline filters. The suite records them as failures rather than crashing on them,
+so the other 187 still report. They are a real gap, left visible on purpose.
 
 The node suite checks the data rather than the pixels: that every plotted point
 resolves to a source, that no plain-language explanation leans on jargon, that
@@ -182,7 +192,16 @@ tools/
 each round, where to pause, the questions you will get and how to answer them,
 the misconceptions to head off, and a twelve-minute cut if that is all you have.
 
-Settings → **Presenter mode** scales the interface for a projector.
+Settings (⚙, top right) → **Presenter mode** scales the interface for a
+projector, and **Presenter's notes** opens that same session plan on screen —
+distilled from the printable guide, laid out for reading standing up, with the
+beats flat and the reference material folded. It is the guide's content, not a
+second version of it: change the guide, re-distil the panel.
+
+Every load opens a **How this works** panel explaining the drawing exercise and
+the controls. It is dismissed by tapping outside it, by <kbd>Esc</kbd>, or by
+its own button, and the **?** beside the settings cog reopens it at any point.
+Nothing is remembered between loads, because the app stores nothing at all.
 
 The single most important instruction in the guide: **let people actually draw.**
 The demo dies if the presenter drives it and narrates. Hand the laptop round, or
