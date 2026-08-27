@@ -12,3 +12,6 @@ desktop.ini
 # Logs / temp
 *.log
 *.tmp
+
+# OneDrive-synced, Git-ignored raw research and migration evidence
+.research/
