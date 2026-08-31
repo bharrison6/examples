@@ -21,13 +21,14 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 ---
+<!-- era-note 2026-08-31 (A5): absolute paths naming C:\GitHub, D:\OneDrive\GitHub, C:\Users\dover\..., or C:\Users\Champion\OneDrive\GitHub are pre-2026-08-30 era locations, kept verbatim as record; the entrance is now the AIA scope and current locations resolve via the scope registry. -->
 
 # Fleet gitdb migration for examples (user-chosen, 2026-08-03)
 
 ## Position
 - `.acc-gitdb` lives at `C:\Users\Champion\.acc-gitdb` — outside OneDrive, so git
   internals are never OneDrive-synced, and outside the working tree, so the parent
-  PersonalContext repo never sees a nested `.git` directory.
+  AIA repo never sees a nested `.git` directory.
 - Pointer depth from `OneDrive\GitHub\examples`: three levels up ⇒
   `gitdir: ../../../.acc-gitdb/examples` (same depth Tic_Tac_Toe used).
 - `core.worktree` in the relocated config anchors the working tree back to
