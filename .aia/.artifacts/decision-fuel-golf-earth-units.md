@@ -11,7 +11,7 @@ model_basis: confirmed
 status: chosen
 question: Should Fuel Golf show real units, and can its numbers be made realistic for Earth without changing the simulation?
 position: Yes to both — the sim is scale-free, so declaring the planet to be Earth (μ = 398,600 km³/s², R = 6,371 km) pins a pure display mapping (1 world unit = 159.275 km, 1 sim-second = 1,006.8 s) with zero physics changes; all UI shows km/s, m/s, km, km²/s², m/s², real durations and a mission clock. The moon remains fictional (closer/heavier than Luna) for class-period pacing, disclosed in help/README/guide.
-scope: workspace
+scope: AIA
 load_profile: on_demand
 session: session_01MtHFEZCTJS2eNpUuqH7dgc
 entities: [fuel-golf]

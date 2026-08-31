@@ -11,7 +11,7 @@ model_basis: confirmed
 status: chosen
 question: Should the examples repo keep its embedded .git directory or adopt the workspace fleet convention of a gitdir pointer into .acc-gitdb?
 position: Adopt the fleet convention (user choice): the git database moves to C:\Users\Champion\.acc-gitdb\examples and examples\.git becomes a pointer file "gitdir: ../../../.acc-gitdb/examples", matching PersonalContext and the retired Tic_Tac_Toe. History (all commits since init) is preserved intact through the move.
-scope: workspace
+scope: AIA
 load_profile: on_demand
 session: session_01MtHFEZCTJS2eNpUuqH7dgc
 entities: [examples-repo, agent-context-system]

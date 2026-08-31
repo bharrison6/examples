@@ -11,7 +11,7 @@ model_basis: confirmed
 status: chosen
 question: How is Fuel Golf's orbital mechanics simulated so that the Oberth effect is discovered rather than scripted, and how is that claim verified?
 position: Velocity Verlet at fixed substep (DT = 1/60 sim-s) for all coasting (symplectic, energy drift ~1e-13 over 50 periods); RK4 for finite-thrust arcs (thrust makes acceleration velocity-dependent, breaking Verlet's assumptions); burns otherwise impulsive Δv; moon levels are restricted three-body with the indirect term; every level's par is verified by a Node harness (test-physics.js) that imports the SHIPPED game code.
-scope: workspace
+scope: AIA
 load_profile: on_demand
 session: session_01MtHFEZCTJS2eNpUuqH7dgc
 entities: [fuel-golf]

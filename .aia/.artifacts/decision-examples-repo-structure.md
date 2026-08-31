@@ -11,7 +11,7 @@ model_basis: confirmed
 status: chosen
 question: How should the new examples/demos collection be structured, and what happens to the pre-existing standalone Tic_Tac_Toe folder?
 position: One git repo at GitHub\examples with a subfolder per self-contained demo (no build step, open index.html), a root launcher page + README table, tic-tac-toe COPIED in and the original folder moved to _to_delete (session tooling cannot delete on-device files), local-only until the user opts into a remote.
-scope: workspace
+scope: AIA
 load_profile: on_demand
 session: session_01MtHFEZCTJS2eNpUuqH7dgc
 entities: [examples-repo]

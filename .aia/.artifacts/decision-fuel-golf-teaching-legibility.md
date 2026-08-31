@@ -11,7 +11,7 @@ model_basis: confirmed
 status: chosen
 question: How should the game communicate goal criteria (especially escape vs tall-ellipse) and justify results so students trust and learn from them?
 position: Encode goal semantics in the visuals (amber Ap-band ring matching the Ap marker vs green circularize rings, each labeled in-band; system-edge circle recolors by live ε with an ORBIT BOUND/ESCAPING chip and a one-shot fall-back toast), predict outcomes in the burn planner before commit, and close every level with a "show the math" debrief panel that re-derives the outcome from recorded inputs and checks it against the integrator.
-scope: workspace
+scope: AIA
 load_profile: on_demand
 session: session_01MtHFEZCTJS2eNpUuqH7dgc
 entities: [fuel-golf]

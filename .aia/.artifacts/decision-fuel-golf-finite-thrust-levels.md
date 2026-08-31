@@ -11,7 +11,7 @@ model_basis: confirmed
 status: chosen
 question: How to make the game harder and richer once students realize impulsive burns make "prograde at periapsis" trivially optimal?
 position: Keep levels 1–5 impulsive as the intro ramp; add level 6 (engine 0.35 ≈ 0.055 m/s²) where par is only achievable by CENTERING a single burn on periapsis, and level 7 (engine 0.08 ≈ 0.013 m/s²) where par requires splitting into repeated perigee kicks; sandbox gets a swappable engine. Steering losses ignored; a mid-burn cut control refunds unspent Δv.
-scope: workspace
+scope: AIA
 load_profile: on_demand
 session: session_01MtHFEZCTJS2eNpUuqH7dgc
 entities: [fuel-golf]
