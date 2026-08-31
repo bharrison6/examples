@@ -1,3 +1,29 @@
+---
+id: radiant-mixing-lemon
+artifact_kind: memory
+memory_class: prospective
+prospective_kind: plan
+schema_version: 2
+title: "Plan: Negotiation-Coach Framework for the Car Conversation Tracker"
+created: 2026-08-31T04:59:48Z
+updated: 2026-08-31T04:59:48Z
+author: claude
+model: claude-fable-5
+model_basis: confirmed
+status: active
+source: ".plans\\radiant-mixing-lemon.md"
+scope: examples
+load_profile: on_demand
+tags: [plan, plans-migration]
+aliases: []
+session: 93cc96da-1c46-4ada-a613-f93b3849fd6f
+source_basis: conversation
+confidence: 90
+human_edited: false
+sensitivity: normal
+---
+
+<!-- converted 2026-08-31 (.plans migration, session 93cc96da, producing-model claude-fable-5): verbatim body of `[[radiant-mixing-lemon]]` below this marker; the .plans surface is retired (plans are prospective-memory artifacts now). Paths inside are era artifacts of their writing date. -->
 # Plan: Negotiation-Coach Framework for the Car Conversation Tracker
 
 ## Context — why we're building this
