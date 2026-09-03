@@ -20,6 +20,7 @@ aliases: [fuel golf integrator choice, why verlet and rk4, how pars are verified
 source_basis: transcript
 human_edited: false
 sensitivity: normal
+decided_by: human
 ---
 
 # Fuel Golf physics core (2026-08-03)

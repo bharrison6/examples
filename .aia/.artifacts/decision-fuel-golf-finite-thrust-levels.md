@@ -20,6 +20,7 @@ aliases: [fuel golf finite thrust design, why levels 6 and 7, perigee kick level
 source_basis: transcript
 human_edited: false
 sensitivity: normal
+decided_by: human
 ---
 
 # Finite-thrust levels (user-directed, 2026-08-03)

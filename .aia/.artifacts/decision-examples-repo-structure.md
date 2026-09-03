@@ -20,6 +20,7 @@ aliases: [examples folder layout, demo repo structure, where did Tic_Tac_Toe go]
 source_basis: transcript
 human_edited: false
 sensitivity: normal
+decided_by: human
 ---
 
 # Examples repo structure (user-chosen, 2026-08-03)

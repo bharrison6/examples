@@ -20,6 +20,7 @@ aliases: [fuel golf ux fixes, show the math panel, escape boundary confusion fix
 source_basis: transcript
 human_edited: false
 sensitivity: normal
+decided_by: human
 ---
 
 # Teaching-legibility decisions (user-feedback-driven, 2026-08-03)

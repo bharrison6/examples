@@ -20,6 +20,7 @@ aliases: [fuel golf real units, earth scale mapping, why the moon is fake, unit 
 source_basis: transcript
 human_edited: false
 sensitivity: normal
+decided_by: human
 ---
 
 # Fuel Golf Earth-unit mapping (user-prompted, 2026-08-03)

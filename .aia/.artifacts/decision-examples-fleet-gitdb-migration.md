@@ -20,6 +20,7 @@ aliases: [examples gitdb move, why examples .git is a file, fleet git layout for
 source_basis: transcript
 human_edited: false
 sensitivity: normal
+decided_by: human
 ---
 <!-- era-note 2026-08-31 (A5): absolute paths naming C:\GitHub, D:\OneDrive\GitHub, C:\Users\dover\..., or C:\Users\Champion\OneDrive\GitHub are pre-2026-08-30 era locations, kept verbatim as record; the entrance is now the AIA scope and current locations resolve via the scope registry. -->
 
