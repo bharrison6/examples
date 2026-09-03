@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Fuel Golf physics — symplectic Verlet coasts, RK4 powered arcs, lessons must emerge from the integrator
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-03T18:04:28Z
+updated: 2026-09-03T02:39:03Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -21,6 +21,9 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 decided_by: human
+decided_via: prose
+load_bearing: true
+applied_in: [ba301d4, fuel-golf-finite-thrust-levels, fuel-golf-earth-units]
 ---
 
 # Fuel Golf physics core (2026-08-03)
@@ -55,3 +58,11 @@ decided_by: human
 ## Relations
 - relates_to [[decision-fuel-golf-earth-units]] (display mapping over this scale-free core)
 - relates_to [[decision-fuel-golf-finite-thrust-levels]] (levels built on the RK4 arc)
+
+## Backfill note (lane D, 2026-09-03)
+
+- Provenance is `human/prose`: the body records the user call on steering-loss behavior and the settled physics contract; no console answer or harness prompt was found.
+- Load-bearing is `true`: commit `ba301d4` ships the integrator and later finite-thrust/Earth-unit decisions depend on it (positive control: `test-physics.js` is named as the shipped harness).
+- No plan or additional scope edge was evidenced; operator-pending probe found no event for this id.
+
+<!-- producing-model: gpt-5.6-luna 2026-09-03T02:39Z, lane D classification backfill -->

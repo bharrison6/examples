@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Examples repo joins the fleet gitdir convention — git database relocated to .acc-gitdb
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-03T18:04:28Z
+updated: 2026-09-03T02:39:03Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -21,6 +21,9 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 decided_by: human
+decided_via: prose
+load_bearing: true
+applied_in: [reference-examples-repo-protocol, examples-repo-structure]
 ---
 <!-- era-note 2026-08-31 (A5): absolute paths naming C:\GitHub, D:\OneDrive\GitHub, C:\Users\dover\..., or C:\Users\Champion\OneDrive\GitHub are pre-2026-08-30 era locations, kept verbatim as record; the entrance is now the AIA scope and current locations resolve via the scope registry. -->
 
@@ -47,3 +50,11 @@ decided_by: human
 ## Relations
 - relates_to [[decision-git-tracking-policy-onedrive-era]] (tracking rubric)
 - relates_to [[decision-examples-repo-structure]] (the repo this migrates)
+
+## Backfill note (lane D, 2026-09-03)
+
+- Provenance is `human/prose`: the frontmatter/body explicitly call this a user choice; no console answer or harness-prompt evidence was found.
+- Load-bearing is `true`: `reference-examples-repo-protocol` and the repo-structure decision carry the fleet pointer convention; id/history probes found those consumers (positive control: `.git` is the relocated pointer state).
+- No plan or additional scope edge was evidenced; operator-pending probe found no event for this id.
+
+<!-- producing-model: gpt-5.6-luna 2026-09-03T02:39Z, lane D classification backfill -->

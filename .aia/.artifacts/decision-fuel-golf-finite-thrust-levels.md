@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Fuel Golf levels 6–7 — finite thrust as the difficulty ramp; centered burns then perigee kicks
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-03T18:04:28Z
+updated: 2026-09-03T02:39:03Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -21,6 +21,9 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 decided_by: human
+decided_via: prose
+load_bearing: true
+applied_in: [96d62d4, fuel-golf-physics-core]
 ---
 
 # Finite-thrust levels (user-directed, 2026-08-03)
@@ -48,3 +51,11 @@ decided_by: human
 ## Relations
 - relates_to [[decision-fuel-golf-physics-core]] (RK4 powered arcs; harness rubric)
 - relates_to [[decision-fuel-golf-earth-units]] (real-unit statements of these numbers)
+
+## Backfill note (lane D, 2026-09-03)
+
+- Provenance is `human/prose`: the body records the user's insight and explicit rejection of steering losses; no console answer or harness prompt was found.
+- Load-bearing is `true`: commit `96d62d4` implements levels 6–7 and the physics-core decision carries the RK4 engine dependency (positive control: the `fuel-golf-physics-core` relation resolves).
+- No plan or additional scope edge was evidenced; operator-pending probe found no event for this id.
+
+<!-- producing-model: gpt-5.6-luna 2026-09-03T02:39Z, lane D classification backfill -->

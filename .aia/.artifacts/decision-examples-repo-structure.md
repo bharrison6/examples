@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Examples repo — local-only demo collection, one folder per demo, originals retired not deleted
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-07T15:17:29Z
+updated: 2026-09-03T02:39:03Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -21,6 +21,9 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 decided_by: human
+decided_via: prose
+load_bearing: true
+applied_in: [reference-examples-repo-protocol, 8e3f9bc, 443c403]
 ---
 
 # Examples repo structure (user-chosen, 2026-08-03)
@@ -64,6 +67,14 @@ Three claims above no longer hold; current truth:
   tree during the 2026-08-06 presentation build (history retains them).
 
 Operating protocol now lives in [[examples-repo-protocol]] (scope_entry).
+
+## Backfill note (lane D, 2026-09-03)
+
+- Provenance is `human/prose`: the body labels the structure user-chosen and records later user-directed publication/rename changes; no console answer or harness prompt was found.
+- Load-bearing is `true`: commits `8e3f9bc` and `443c403` implement manifests/hub/required UX, with `reference-examples-repo-protocol` as the operating consumer (positive control: the protocol link resolves).
+- No plan or additional scope edge was evidenced; operator-pending probe found no event for this id.
+
+<!-- producing-model: gpt-5.6-luna 2026-09-03T02:39Z, lane D classification backfill -->
 
 ## Relations
 - relates_to [[decision-git-tracking-policy-onedrive-era]] (what earns tracking)

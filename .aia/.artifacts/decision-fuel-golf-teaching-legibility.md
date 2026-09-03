@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Fuel Golf legibility — goals must be visually self-explanatory and outcomes must be provable from recorded inputs
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-03T18:04:28Z
+updated: 2026-09-03T02:39:03Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -21,6 +21,9 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 decided_by: human
+decided_via: prose
+load_bearing: true
+applied_in: [ecffcf5, ab1df82, 2e503e8]
 ---
 
 # Teaching-legibility decisions (user-feedback-driven, 2026-08-03)
@@ -51,3 +54,11 @@ Three playtest findings from the user, each fixed structurally rather than with 
 
 ## Relations
 - relates_to [[decision-fuel-golf-physics-core]] (the integrator the proofs check against)
+
+## Backfill note (lane D, 2026-09-03)
+
+- Provenance is `human/prose`: the body preserves the user's feedback and direct request to show burns and math; no console answer or harness prompt was found.
+- Load-bearing is `true`: commits `2e503e8`, `ecffcf5`, and `ab1df82` implement the goal visuals, escape criterion, and proof panel (positive control: `ui-smoke.js` is named).
+- No plan or additional scope edge was evidenced; operator-pending probe found no event for this id.
+
+<!-- producing-model: gpt-5.6-luna 2026-09-03T02:39Z, lane D classification backfill -->

@@ -4,7 +4,7 @@ artifact_kind: decision
 schema_version: 2
 title: Fuel Golf units — the planet IS Earth; display-only mapping onto the scale-free sim; moon stays fictional
 created: 2026-08-03T18:04:28Z
-updated: 2026-08-03T18:04:28Z
+updated: 2026-09-03T02:39:03Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -21,6 +21,9 @@ source_basis: transcript
 human_edited: false
 sensitivity: normal
 decided_by: human
+decided_via: prose
+load_bearing: true
+applied_in: [70d6458, fuel-golf-physics-core]
 ---
 
 # Fuel Golf Earth-unit mapping (user-prompted, 2026-08-03)
@@ -45,3 +48,11 @@ decided_by: human
 
 ## Relations
 - relates_to [[decision-fuel-golf-physics-core]] (the scale-free core this maps onto)
+
+## Backfill note (lane D, 2026-09-03)
+
+- Provenance is `human/prose`: the body is explicitly user-prompted and records the selected Earth display mapping; no console answer or harness prompt was found.
+- Load-bearing is `true`: commit `70d6458` implements the UI conversion and the physics-core decision consumes the mapping (positive control: `game.js` constants are named in the body).
+- No plan or additional scope edge was evidenced; operator-pending probe found no event for this id.
+
+<!-- producing-model: gpt-5.6-luna 2026-09-03T02:39Z, lane D classification backfill -->
