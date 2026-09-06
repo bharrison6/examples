@@ -1,0 +1,258 @@
+{
+  "schema": "hb:focus-registry/1",
+  "scope": "examples",
+  "updated": "2026-09-06T06:04:56.7677390Z",
+  "focus": [
+    {
+      "slug": "fuel-golf",
+      "meaning": "mined from examples's artifact vocabulary (entity+tag 'fuel-golf'): 4 artifact(s) as entity, 4 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "entities:fuel-golf (4 artifact(s))",
+        "tags:fuel-golf (4 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "examples-repo",
+      "meaning": "mined from examples's artifact vocabulary (entity 'examples-repo'): 4 artifact(s) as entity, 0 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "entities:examples-repo (4 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "examples",
+      "meaning": "mined from examples's artifact vocabulary (tag 'examples'): 0 artifact(s) as entity, 4 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:examples (4 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "github-pages",
+      "meaning": "mined from examples's artifact vocabulary (entity+tag 'GitHub-Pages'): 1 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "entities:GitHub-Pages (1 artifact(s))",
+        "tags:GitHub-Pages (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "agent-context-system",
+      "meaning": "mined from examples's artifact vocabulary (entity 'agent-context-system'): 1 artifact(s) as entity, 0 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "entities:agent-context-system (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "murray-state-university",
+      "meaning": "mined from examples's artifact vocabulary (entity 'Murray-State-University'): 1 artifact(s) as entity, 0 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "entities:Murray-State-University (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "bharrison6",
+      "meaning": "mined from examples's artifact vocabulary (entity 'bharrison6'): 1 artifact(s) as entity, 0 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "entities:bharrison6 (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "demos",
+      "meaning": "mined from examples's artifact vocabulary (tag 'demos'): 0 artifact(s) as entity, 2 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:demos (2 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "verlet",
+      "meaning": "mined from examples's artifact vocabulary (tag 'verlet'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:verlet (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "units",
+      "meaning": "mined from examples's artifact vocabulary (tag 'units'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:units (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "escape-criterion",
+      "meaning": "mined from examples's artifact vocabulary (tag 'escape-criterion'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:escape-criterion (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "cross-harness-memory",
+      "meaning": "mined from examples's artifact vocabulary (tag 'cross-harness-memory'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:cross-harness-memory (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "integrator",
+      "meaning": "mined from examples's artifact vocabulary (tag 'integrator'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:integrator (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "gravity-loss",
+      "meaning": "mined from examples's artifact vocabulary (tag 'gravity-loss'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:gravity-loss (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "murray-state",
+      "meaning": "mined from examples's artifact vocabulary (tag 'Murray-State'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:Murray-State (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "handoff",
+      "meaning": "mined from examples's artifact vocabulary (tag 'handoff'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:handoff (1 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "oberth",
+      "meaning": "mined from examples's artifact vocabulary (tag 'oberth'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:oberth (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "math-proof",
+      "meaning": "mined from examples's artifact vocabulary (tag 'math-proof'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:math-proof (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "rk4",
+      "meaning": "mined from examples's artifact vocabulary (tag 'rk4'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:rk4 (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "demo-contract",
+      "meaning": "mined from examples's artifact vocabulary (tag 'demo-contract'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:demo-contract (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "level-design",
+      "meaning": "mined from examples's artifact vocabulary (tag 'level-design'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:level-design (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "finite-thrust",
+      "meaning": "mined from examples's artifact vocabulary (tag 'finite-thrust'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:finite-thrust (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "naming",
+      "meaning": "mined from examples's artifact vocabulary (tag 'naming'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:naming (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "accessibility",
+      "meaning": "mined from examples's artifact vocabulary (tag 'accessibility'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:accessibility (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "repo-structure",
+      "meaning": "mined from examples's artifact vocabulary (tag 'repo-structure'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:repo-structure (1 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "manifests",
+      "meaning": "mined from examples's artifact vocabulary (tag 'manifests'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:manifests (1 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "repo-protocol",
+      "meaning": "mined from examples's artifact vocabulary (tag 'repo-protocol'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:repo-protocol (1 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "fleet-convention",
+      "meaning": "mined from examples's artifact vocabulary (tag 'fleet-convention'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:fleet-convention (1 artifact(s))"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "git",
+      "meaning": "mined from examples's artifact vocabulary (tag 'git'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:git (1 artifact(s))",
+        "trunk:mentioned in examples's trunk.jsonl"
+      ],
+      "status": "proposed"
+    },
+    {
+      "slug": "physics",
+      "meaning": "mined from examples's artifact vocabulary (tag 'physics'): 0 artifact(s) as entity, 1 as tag — meaning not yet human-reviewed",
+      "seeded_from": [
+        "tags:physics (1 artifact(s))"
+      ],
+      "status": "proposed"
+    }
+  ]
+}
