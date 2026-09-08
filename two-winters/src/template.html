@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#00142B">
+<title>Two Winters — has this happened before?</title>
+<!--
+  Two Winters — a single-file, offline demonstration of the two AI funding
+  collapses of the twentieth century, the mechanism they shared, and an
+  even-handed comparison with the present.
+
+  Four acts: guess the year on ten real predictions with the date hidden;
+  scrub a 1950-2026 timeline whose lanes are the five stages of the
+  mechanism; read the two winters side by side on those same five stages;
+  then weigh what rhymes against what is genuinely different.
+
+  Every claim on screen resolves to a source in the dataset, and
+  Settings -> Run the self-test proves it live. Nothing is fetched at
+  runtime and nothing is stored on the device.
+
+  Companion: presenter-guide.html. Sources live in src/ and are
+  concatenated by build.js.
+-->
+<style>
+/*__CSS__*/
+/* ==== presenter guide (scoped to .guide-scope) ==== */
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<div id="brandbar">
+  <header id="topbar">
+    <div id="brand">
+      <span class="b0">Murray State University</span>
+      <span class="b1">TWO WINTERS <em>has this happened before?</em></span>
+    </div>
+    <div id="topbar-tools">
+      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+    </div>
+  </header>
+  <nav id="actnav" role="tablist" aria-label="Acts">
+    <button data-act="1" class="on" role="tab" aria-selected="true">Guess the year<span>Act I</span></button>
+    <button data-act="2" role="tab" aria-selected="false">The two winters<span>Act II</span></button>
+    <button data-act="3" role="tab" aria-selected="false">Anatomy<span>Act III</span></button>
+    <button data-act="4" role="tab" aria-selected="false">Now<span>Act IV</span></button>
+  </nav>
+</div>
+
+<main>
+
+<!-- =========================== ACT I ================================== -->
+<section class="act" data-act="1">
+
+  <div id="intro">
+    <h1 id="intro-title"></h1>
+    <div id="intro-body"></div>
+    <p id="intro-note"></p>
+    <button class="btn primary big" id="btn-begin"></button>
+  </div>
+
+  <div id="card-body" hidden>
+    <div id="card-head">
+      <span id="card-count">1 / 10</span>
+      <span id="card-progress-track"><i id="card-progress"></i></span>
+    </div>
+
+    <div class="quote-card">
+      <p id="card-quote"></p>
+      <p id="card-note" hidden></p>
+    </div>
+
+    <div id="guess-wrap">
+      <div class="field">
+        <label class="lbl" for="year-slider">What year was this said?</label>
+        <span id="year-read" aria-hidden="true">1985</span>
+        <input type="range" id="year-slider" min="1950" max="2026" step="1" value="1985"
+               aria-label="Guess the year this prediction was made">
+        <div id="year-ticks"><span>1950</span><span>1988</span><span>2026</span></div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">And did it come true?</span>
+        <div id="verdict-btns" role="group" aria-label="Your verdict"></div>
+      </div>
+    </div>
+
+    <div id="reveal-wrap" hidden></div>
+
+    <div class="row">
+      <button class="btn primary big" id="btn-lock">Lock it in</button>
+      <button class="btn primary big" id="btn-next-card" hidden>Next prediction</button>
+    </div>
+  </div>
+
+  <div id="scorecard" class="panel" hidden></div>
+</section>
+
+<!-- =========================== ACT II ================================= -->
+<section class="act" data-act="2" hidden>
+  <h1>Seventy-six years, five stages, twice.</h1>
+  <p>
+    Each row below is one stage of the same mechanism. Drag the slider forward and watch
+    the rows light up in order &mdash; a promise, then money against it, then a hard limit,
+    then somebody naming the gap, then the money leaving. It happens once between 1955 and
+    1980, again between 1982 and 1992, and a third run is under way now that has not
+    reached the bottom rows.
+  </p>
+  <p class="help">
+    The two pale bands are the winters. They are drawn with a soft right-hand edge because
+    the end dates are conventional rather than agreed &mdash; the notes under the chart say
+    exactly where historians disagree.
+  </p>
+
+  <div id="tl-wrap">
+    <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results, then the five stages of an AI winter. Two shaded bands mark the winters."></canvas>
+    <div id="tl-winter" hidden></div>
+  </div>
+
+  <div id="tl-controls">
+    <button class="icon-btn" id="tl-back" aria-label="Previous event" title="Previous event">&#8249;</button>
+    <input type="range" id="tl-slider" min="0" max="1000" value="1000" aria-label="Scrub through time">
+    <button class="icon-btn" id="tl-fwd" aria-label="Next event" title="Next event">&#8250;</button>
+  </div>
+
+  <div id="tl-stats">
+    <div class="stat"><b id="tl-year">2026</b><span>showing up to</span></div>
+    <div class="stat"><b id="tl-total">0</b><span>events so far</span></div>
+    <div class="stat"><b id="tl-with">0</b><span>times the money left</span></div>
+  </div>
+
+  <div id="tl-detail" class="empty"></div>
+
+  <div class="panel">
+    <h3>The rows</h3>
+    <div id="tl-legend"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Where the winter dates are soft</h3>
+    <div id="tl-winters"></div>
+  </div>
+
+  <div class="panel">
+    <h3>The money, as four points rather than a curve</h3>
+    <p class="help">
+      There is no continuous, sourceable series of AI funding across these seventy-six
+      years &mdash; particularly not for US spending before 1980 &mdash; so this demo does
+      not draw one. These are the four commitments it could actually source, in their
+      original currencies, not adjusted for inflation, and not converted to a common unit.
+      Read them as four data points with sources attached, not as a trend.
+    </p>
+    <div id="money-list"></div>
+  </div>
+
+  <div class="row">
+    <button class="btn primary" id="btn-to-anatomy">Put the two winters side by side</button>
+  </div>
+</section>
+
+<!-- =========================== ACT III ================================ -->
+<section class="act" data-act="3" hidden>
+  <h1>The same five stages, twice &mdash; and once more, halfway.</h1>
+  <p>
+    Reading across a row shows how one stage played out in each era. Reading down a column
+    shows one era&rsquo;s whole cycle. Two cells in the third column are marked
+    <b>open</b> rather than filled in &mdash; the binding technical limit, which nobody has
+    identified, and the withdrawal, which has not happened. In both previous cycles those
+    same two cells were open right up until they were obvious.
+  </p>
+
+  <div id="anatomy"></div>
+
+  <div class="row">
+    <button class="btn primary" id="btn-to-now">So &mdash; is this one different?</button>
+  </div>
+</section>
+
+<!-- =========================== ACT IV ================================= -->
+<section class="act" data-act="4" hidden>
+  <h1>What rhymes, and what does not.</h1>
+  <p>
+    Two columns, argued as honestly as the sources allow. Neither column wins. The point of
+    having both is that you leave able to judge a specific claim on its specific evidence,
+    rather than reaching for a mood.
+  </p>
+  <div id="close"></div>
+</section>
+
+</main>
+
+<footer id="foot">
+  <span class="msu">Murray State University</span>
+  <span class="who">Bryant Harrison</span>
+  <span>One HTML file &middot; runs offline &middot; nothing leaves this device</span>
+</footer>
+
+<!-- ========================== HOW TO USE ============================ -->
+<div class="overlay" id="howto" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="howto-title">How this works</h2><div class="sub">Four acts &middot; about 15 minutes</div></div>
+      <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <ol class="ht-steps">
+        <li>
+          <b>Read the prediction.</b> Ten of them, all real, all sourced. The speaker and the
+          date are hidden.
+        </li>
+        <li>
+          <b>Guess two things.</b> Drag the slider to the year you think it was said, then
+          say whether it came true. Then press <em>Lock it in</em> and find out.
+        </li>
+        <li>
+          <b>Watch the split.</b> Some of these are people promising AI was nearly here.
+          Some are people saying it would never work. At the end you get scored on both
+          separately, and that comparison is the whole point.
+        </li>
+      </ol>
+
+      <p class="ht-tip">
+        There is nothing to beat. Most rooms do well on one kind of prediction and badly on
+        the other, and which one is which is usually a surprise.
+      </p>
+
+      <div class="field">
+        <span class="lbl">The four acts</span>
+        <ul class="ht-acts">
+          <li><b>Guess the year</b> &mdash; ten predictions, 1950 to 2024.</li>
+          <li><b>The two winters</b> &mdash; a timeline you can scrub, laid out so the repeated pattern is visible rather than asserted.</li>
+          <li><b>Anatomy</b> &mdash; the first winter, the second winter, and now, on the same five stages.</li>
+          <li><b>Now</b> &mdash; what rhymes with the two winters, what is genuinely different, what was cut for lack of a source, and every source.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <span class="lbl">The two buttons, top right</span>
+        <ul class="ht-acts">
+          <li><b>?</b> &mdash; reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; presenter mode, the presenter&rsquo;s notes, and a self-test that checks
+            every claim against its declared source, live, in front of whoever is asking.</li>
+        </ul>
+      </div>
+
+      <p class="help">
+        Nothing here is generated by an AI. It is a set of dated quotations, a timeline and a
+        link to the original source of each one. The whole app is one file that runs offline
+        and stores nothing.
+      </p>
+    </div>
+    <div class="sheet-foot ht-foot">
+      <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
+      <button class="btn primary" data-close="howto">Got it &mdash; first prediction</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================== SETTINGS ============================== -->
+<div class="overlay" id="settings" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <span class="lbl">Presentation</span>
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presenter mode &mdash; oversized UI for a projector</span>
+        </label>
+        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <p class="help">
+          The session plan: what to say at each act, which predictions to keep if you are
+          short of time, the questions you will get, and a six-minute cut. Distilled from the
+          printable guide that ships beside this file.
+        </p>
+      </div>
+      <div class="field">
+        <span class="lbl">Help</span>
+        <button class="btn" id="btn-howto-2">How this works</button>
+        <p class="help">Reopens the panel that explains the exercise.</p>
+      </div>
+      <div class="field">
+        <span class="lbl">Proof</span>
+        <button class="btn" id="btn-selftest">Run the self-test</button>
+        <p class="help">
+          Checks that every claim on screen resolves to a declared source, that no source is
+          cited and never used, that every source URL points at a specific page rather than a
+          bare host, that the timeline runs forward in time, that each winter contains at
+          least one funding withdrawal, that the counts quoted on the scorecard match the
+          cards actually in the deck, and that the scoring refuses to mark an unresolved
+          prediction. Results appear here and in the browser console.
+        </p>
+        <div id="selftest-out"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">About</span>
+        <p class="help">
+          Built for Murray State University by Bryant Harrison. All data is embedded; the app
+          makes no network requests and stores nothing. Reloading resets it. Sources were
+          checked in September 2026.
+        </p>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="settings">Done</button></div>
+  </div>
+</div>
+
+<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- Lifted verbatim from presenter-guide.html, which stays canonical and
+     printable. One source of truth: the guide's own stylesheet and its own
+     markup, both scoped to .guide-scope, are injected by build.js. -->
+<div class="overlay" id="notes" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+<!--__GUIDE__-->
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="notes">Close</button></div>
+  </div>
+</div>
+
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>
