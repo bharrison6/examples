@@ -80,6 +80,12 @@
   .part.b .sec-take { color: var(--blue); }
   .sec-take::before { content: "\2192"; opacity: .8; }
   .sec-note { color: var(--muted); font-size: .82rem; font-style: italic; margin: -4px 0 10px; }
+  .eg { font-size: .83rem; line-height: 1.5; color: var(--muted); margin: -2px 0 12px;
+        padding: 9px 12px; border-radius: 8px; background: rgba(255,255,255,.035);
+        border: 1px solid var(--edge); }
+  .eg b { color: var(--text); font-weight: 650; }
+  .eg .lbl { color: var(--blue); font-weight: 800; font-size: .7rem; letter-spacing: .12em;
+             text-transform: uppercase; display: block; margin-bottom: 3px; }
   .rung { border-top: 1px dashed var(--edge); padding-top: 14px; margin-top: 14px; }
 
   a.card { display: block; background: var(--card); border: 1px solid var(--edge);
@@ -136,26 +142,36 @@
       Most arguments about AI are two people using the word for two different things.
       This picture is the shape of the whole session.
     </p>
-    <svg viewBox="0 0 440 322" role="img" aria-label="Nested rings. Artificial intelligence contains machine learning, which contains neural networks, which contains generative AI, which contains chatbots.">
-      <rect x="8"   y="8"   width="424" height="306" rx="16" fill="#06305a" stroke="#2c5c92" stroke-width="1.5"/>
-      <rect x="40"  y="46"  width="360" height="230" rx="14" fill="#0a3b6b" stroke="#356ba6" stroke-width="1.5"/>
-      <rect x="72"  y="84"  width="296" height="154" rx="12" fill="#0e477e" stroke="#3f7cbb" stroke-width="1.5"/>
-      <rect x="104" y="122" width="232" height="78"  rx="10" fill="#12538f" stroke="#4a8ccc" stroke-width="1.5"/>
-      <rect x="150" y="150" width="140" height="30"  rx="15" fill="#ECAC00"/>
+    <svg viewBox="0 0 440 360" role="img" aria-label="Nested rings. Artificial intelligence contains machine learning, which contains neural networks, which contains generative AI, which contains large language models, then reasoning models, then agents.">
+      <rect x="8"   y="8"   width="424" height="332" rx="16" fill="#06305a" stroke="#2c5c92" stroke-width="1.5"/>
+      <rect x="40"  y="46"  width="360" height="256" rx="14" fill="#0a3b6b" stroke="#356ba6" stroke-width="1.5"/>
+      <rect x="72"  y="84"  width="296" height="180" rx="12" fill="#0e477e" stroke="#3f7cbb" stroke-width="1.5"/>
+      <rect x="104" y="122" width="232" height="120" rx="10" fill="#12538f" stroke="#4a8ccc" stroke-width="1.5"/>
+
+      <rect x="116" y="148" width="208" height="24" rx="12" fill="#ECAC00"/>
+      <rect x="116" y="176" width="208" height="24" rx="12" fill="#ECAC00"/>
+      <rect x="116" y="204" width="208" height="24" rx="12" fill="#ECAC00"/>
+      <text x="220" y="165" fill="#002144" font-size="12" font-weight="800" text-anchor="middle">LLM</text>
+      <text x="220" y="193" fill="#002144" font-size="12" font-weight="800" text-anchor="middle">REASONING MODELS</text>
+      <text x="220" y="221" fill="#002144" font-size="12" font-weight="800" text-anchor="middle">AGENTS</text>
+      <text x="330" y="167" fill="#0e477e" font-size="13" font-weight="800" text-anchor="middle">&#8595;</text>
+      <text x="330" y="195" fill="#0e477e" font-size="13" font-weight="800" text-anchor="middle">&#8595;</text>
+
       <text x="22"  y="31"  fill="#eef3fa" font-size="13" font-weight="700" letter-spacing="1.4">ARTIFICIAL INTELLIGENCE</text>
       <text x="54"  y="69"  fill="#cfe0f2" font-size="12" font-weight="700" letter-spacing="1.2">MACHINE LEARNING</text>
       <text x="86"  y="107" fill="#cfe0f2" font-size="12" font-weight="700" letter-spacing="1.2">NEURAL NETWORKS</text>
-      <text x="118" y="143" fill="#e6f1fb" font-size="12" font-weight="700" letter-spacing="1.2">GENERATIVE AI</text>
-      <text x="220" y="170" fill="#002144" font-size="12" font-weight="800" text-anchor="middle" letter-spacing="1">CHATBOTS</text>
-      <text x="118" y="193" fill="#ECAC00" font-size="10" font-weight="700">Demo 3 opens this box</text>
-      <text x="86"  y="226" fill="#ECAC00" font-size="10" font-weight="700">Demo 2 &mdash; it learns</text>
-      <text x="54"  y="262" fill="#ECAC00" font-size="11" font-weight="700">Demo 1 &mdash; rules a person wrote</text>
-      <text x="22"  y="301" fill="#9fb2ca" font-size="10.5">Rings, not synonyms. Everything inside a ring is also the ring around it.</text>
+      <text x="118" y="139" fill="#e6f1fb" font-size="12" font-weight="700" letter-spacing="1.2">GENERATIVE AI</text>
+      <text x="322" y="139" fill="#ECAC00" font-size="13" font-weight="700" text-anchor="end">Demo 4 builds all three</text>
+
+      <text x="86"  y="258" fill="#ECAC00" font-size="13" font-weight="700">Demo 3 &mdash; nine boards at once</text>
+      <text x="54"  y="288" fill="#ECAC00" font-size="13" font-weight="700">Demo 2 &mdash; one board, and it learns</text>
+      <text x="22"  y="326" fill="#ECAC00" font-size="13" font-weight="700">Demo 1 &mdash; rules a person wrote by hand</text>
     </svg>
     <p class="caption">
-      <b>When something is labelled &ldquo;AI&rdquo;, ask which ring.</b> The tic-tac-toe player in
-      Demo&nbsp;1 is genuinely artificial intelligence and has no language ability at all. Most of
-      the AI already running in industry is nowhere near the gold pill in the middle.
+      <b>When something is labelled &ldquo;AI&rdquo;, ask which ring.</b> Demos 1, 2 and 3 are the
+      same game played by three different machines, one per ring. Most of the AI already running in
+      industry is nowhere near the gold chips in the middle &mdash; and the outer rings did not stop
+      working when the inner ones arrived.
     </p>
   </section>
 
@@ -163,12 +179,13 @@
     <div class="part-head">
       <span class="part-num">Part one</span>
       <h2>What AI is</h2>
-      <p class="part-q">Working outside-in through those rings. The first two rungs are the same
-      game against two completely different kinds of opponent, then the machine inside the chatbot,
-      then how to actually talk to it.</p>
+      <p class="part-q">Four rungs, working outside-in through those rings. The first three are the
+      same game &mdash; tic-tac-toe &mdash; played by three completely different kinds of machine, so
+      the only thing changing is the machinery. Then the one inside the chatbot.</p>
     </div>
-    <div class="take"><b>Leave with:</b> AI is a family of methods; generative AI is one branch;
-    and that branch is a predictor you can watch being built &mdash; not a mind, not a magic trick.</div>
+    <div class="take"><b>Leave with:</b> AI is a family of methods. Each ring solves the problem the
+    ring outside it could not, and each one is still in production somewhere today &mdash; the outer
+    rings did not go away when the inner ones arrived.</div>
 
     <div class="sec">
       <div class="sec-head"><span class="sec-num">DEMO 1</span><span class="sec-title">Rules &mdash; the outermost ring</span></div>
@@ -176,27 +193,53 @@
       the fork. The rule that fired is highlighted on every move, so you can read the whole mind of
       it. Most people would call this AI.</p>
       <p class="sec-take">A person wrote every line of that. The machine worked nothing out.</p>
-
-      <div class="rung">
-        <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Machine learning &mdash; one ring in</span></div>
-        <p class="sec-sub">Same board. An opponent that has played zero games and holds no rules at
-        all. Train it in three-second bursts until you cannot win &mdash; and the app proves you never will.</p>
-        <p class="sec-take">Same result as the rules. Nobody wrote a single one of them.</p>
-        <p class="sec-note">Both rungs are the same app &mdash; switch between them at the top of it.</p>
-      </div>
+      <div class="eg"><span class="lbl">the same idea, in the wild</span>
+      <b>Deep Blue</b> beat Garry Kasparov 3&frac12;&ndash;2&frac12; in 1997 on hand-tuned rules and
+      search. <b>R1/XCON</b> configured VAX orders at Digital from 1980 and kicked off the
+      expert-systems boom. And the <b>traffic signals</b> outside &mdash; and the PLC in part three
+      &mdash; still run exactly this way.</div>
       <a class="card" href="zero-to-unbeatable/index.html">
         <div class="topic">Machine learning · not generative AI</div>
         <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
-        <p>Play tic-tac-toe against an AI that has played zero games — and beat it easily. Train it in three-second bursts and play again, era by era, until you cannot beat it and the app <i>proves</i> you never will. The only thing that changed is a list of numbers.</p>
+        <p>Three opponents on one tic-tac-toe board. First, eight if/else rules a person wrote out — it has played zero games, it tells you which rule it just used, and you cannot beat it. Then a learner that starts from nothing and reaches the same unbeatable play after ~20,000 games. Then nine boards at once, where neither approach scales. Same exhaustive search proves both of the first two.</p>
         <div class="go">Open demo →</div>
       </a>
     </div>
 
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Neural networks, and the machine inside the chatbot</span></div>
+    <div class="sec rung">
+      <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Machine learning &mdash; one ring in</span></div>
+      <p class="sec-sub">Same board, same app. An opponent that has played zero games and holds no
+      rules at all, learning only from won, lost or drew. Train it in three-second bursts until you
+      cannot win &mdash; and the app proves you never will, by checking all 255,168 games.</p>
+      <p class="sec-take">Same result as the rules. Nobody wrote a single one of them.</p>
+      <div class="eg"><span class="lbl">the same idea, in the wild</span>
+      Your <b>spam filter</b>, <b>card-fraud detection</b>, and the recommendation engines behind
+      most of what gets shown to you. None of it is a neural network, and none of it writes.</div>
+    </div>
+
+    <div class="sec rung">
+      <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Neural networks &mdash; and the wall that made them necessary</span></div>
+      <p class="sec-sub">Nine boards at once, in the same app. Same learner, same method &mdash; and
+      it comes apart, because on one board a position comes round about ten times while it trains
+      and on nine boards it comes round 1.06 times. A lookup table has nothing left to look up.</p>
+      <p class="sec-take">A table can only learn what repeats. This is the exact wall neural
+      networks were invented to get over: generalising to a position you have never seen.</p>
+      <div class="eg"><span class="lbl">the same idea, in the wild</span>
+      <b>AlexNet</b> won ImageNet in 2012 and restarted the whole field. <b>AlphaGo</b> beat Lee
+      Sedol four games to one in 2016. <b>AlphaFold</b> predicts protein structures &mdash; see part
+      two. Also: your phone finding photos of your dog, and every voice-to-text you have used.</div>
+    </div>
+
+    <div class="sec rung">
+      <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">Generative AI &mdash; the innermost ring</span></div>
       <p class="sec-sub">A real transformer trains from scratch in front of the room &mdash; gibberish
-      to words to sentences. Then a reasoning model is built out of it, and an agent out of that.</p>
+      to words to sentences. Then a reasoning model is built out of it, and an agent out of that:
+      the three gold chips in the picture above, in that order.</p>
       <p class="sec-take">A base model predicts. Reasoning and agents are layers bolted on top.</p>
+      <div class="eg"><span class="lbl">the same idea, in the wild</span>
+      <b>ChatGPT, Claude and Gemini</b> are the LLM chip. The &ldquo;thinking&rdquo; modes are the
+      reasoning chip. Coding assistants that run commands and read files are the agent chip &mdash;
+      and the three demos you are reading about were built with them.</div>
       <a class="card" href="glass-box/index.html">
         <div class="topic">Base model → reasoning model → agent</div>
         <h2><span class="emoji">🔍</span>Glass Box</h2>
@@ -206,7 +249,7 @@
     </div>
 
     <div class="sec">
-      <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">Getting a good answer out</span></div>
+      <div class="sec-head"><span class="sec-num">DEMO 5</span><span class="sec-title">Getting a good answer out</span></div>
       <p class="sec-sub">One question, three toggleable levers &mdash; context, a spec for what
       &ldquo;finished&rdquo; means, and the domain&rsquo;s vocabulary. Each fixes a different kind of bad answer.</p>
       <p class="sec-take">A bad answer is usually a lever you left unpulled.</p>
@@ -227,17 +270,17 @@
       and this field has collapsed twice before after saying exactly that.</p>
     </div>
     <div class="motif">
-      <svg viewBox="-18 0 458 132" role="img" aria-label="A rising line of AI capability against time, with two shaded troughs marking the AI winters of the mid-1970s and the late 1980s.">
-        <text x="-8" y="62" fill="#9fb2ca" font-size="9.5" text-anchor="middle" transform="rotate(-90 -8 62)">what it can do</text>
+      <svg viewBox="-28 0 468 132" role="img" aria-label="A rising line of AI capability against time, with two shaded troughs marking the AI winters of the mid-1970s and the late 1980s.">
+        <text x="-15" y="62" fill="#9fb2ca" font-size="11.5" text-anchor="middle" transform="rotate(-90 -15 62)">what it can do</text>
         <rect x="96"  y="14" width="52" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
         <rect x="196" y="14" width="46" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
         <line x1="18" y1="110" x2="424" y2="110" stroke="#2c5c92" stroke-width="1"/>
         <polyline points="18,102 60,88 96,74 122,96 148,98 176,80 200,72 222,94 242,96 276,84 308,66 340,44 372,28 408,16"
                   fill="none" stroke="#ECAC00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-        <text x="122" y="126" fill="#9fb2ca" font-size="9.5" text-anchor="middle">winter</text>
-        <text x="219" y="126" fill="#9fb2ca" font-size="9.5" text-anchor="middle">winter</text>
-        <text x="18"  y="126" fill="#9fb2ca" font-size="9.5">1950</text>
-        <text x="424" y="126" fill="#9fb2ca" font-size="9.5" text-anchor="end">today</text>
+        <text x="122" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="middle">winter</text>
+        <text x="219" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="middle">winter</text>
+        <text x="18"  y="126" fill="#9fb2ca" font-size="11.5">1950</text>
+        <text x="424" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="end">today</text>
       </svg>
       <p class="cap">Both demos in this part live on this one line.</p>
     </div>
@@ -245,7 +288,7 @@
     shape of a bust well enough to tell a real capability jump from a press release.</div>
 
     <div class="sec">
-      <div class="sec-head"><span class="sec-num">DEMO 5</span><span class="sec-title">Almost nobody draws the curve steeply enough</span></div>
+      <div class="sec-head"><span class="sec-num">DEMO 6</span><span class="sec-title">Almost nobody draws the curve steeply enough</span></div>
       <p class="sec-sub">Draw your own forecast on five benchmarks, then watch the real numbers
       animate over your line. Then the evidence &mdash; with the failures and overclaims kept in frame.</p>
       <p class="sec-take">Where you would have guessed, against where it actually went.</p>
@@ -258,7 +301,7 @@
     </div>
 
     <div class="sec">
-      <div class="sec-head"><span class="sec-num">DEMO 6</span><span class="sec-title">This has happened before &mdash; twice</span></div>
+      <div class="sec-head"><span class="sec-num">DEMO 7</span><span class="sec-title">This has happened before &mdash; twice</span></div>
       <p class="sec-sub">Seventy years of promises, money and collapse. Guess the year a famous
       prediction was made and whether it came true &mdash; then watch the funding go over a cliff, twice.</p>
       <p class="sec-take">Confident predictions have a bad record in both directions.</p>
