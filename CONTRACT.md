@@ -36,8 +36,14 @@ be reproducible from the committed sources.
 - **Attribution** — Bryant Harrison visible on every demo; plus Murray State
   University when built for Murray State.
 - **Mobile capable** — phone-first or fully responsive; touch works.
-- **Offline / no runtime inference** — no network calls, no AI service at runtime
-  (policy for now; revisit deliberately, never by accident).
+- **Offline / no runtime inference** — the page must load and run with **zero network
+  requests**: no external scripts, stylesheets, fonts, images or data, and no AI service
+  at runtime. Embed everything; `data:` URIs only. The demo must work with the network off.
+  - **Outbound hyperlinks are allowed.** An `<a href>` the reader may choose to follow is
+    not a network call by the page. This was revisited deliberately on 2026-09-08 when a
+    reading-and-watching demo needed real links to books and videos; it replaces an earlier
+    blanket "no external href" reading. The test is still *loads and runs offline*, not
+    *contains no URLs* — a demo that fetches, embeds or phones home still fails.
 
 ## Manifest (`demo.json`)
 

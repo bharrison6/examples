@@ -199,22 +199,67 @@ function epsilonAt(matches) {
 const USIZE = NCODE * 2;
 const ui = (code, t) => code * 2 + t - 1;
 
+/* THE MEMORY IS BEHIND THREE CALLS, and this is the reason.
+ *
+ * Step 3 ships two memories: this table, and the neural network in
+ * net.js. The whole claim the step makes is that they differ in ONE
+ * respect -- where the value is kept -- so the claim has to be true of
+ * the code and not just of the caption. Everything below this point in
+ * the file reaches its memory through
+ *
+ *     at(code, turn)          what is this board picture worth to X
+ *     hits(code, turn)        how many times have we updated it
+ *     nudge(code, turn, z)    move it a fraction of the way to z
+ *
+ * and nothing else. The discount, the exploration, the tie-break, the
+ * move arithmetic, the match loop and the alpha schedule are one piece
+ * of code serving both. If a reader can find a second difference, the
+ * step is not making the comparison it says it is.
+ *
+ * Visit counts stay a plain array in both. They are not the memory
+ * under comparison -- they are the experience log, and the count-based
+ * exploration and the "never seen this picture" measure both read them.
+ * Sharing them means the two explore identically. */
 function newBrain() {
   return {
+    kind: 'table',
     U: new Float32Array(USIZE),   /* board value to X, given whose turn it is */
     N: new Uint32Array(USIZE),
     matches: 0,
     seen: 0,
     seeded: 0,                    /* entries handed over from Act I */
     blindLookups: 0,              /* squares weighed up on a picture never seen */
-    lookups: 0
+    lookups: 0,
+    hold: null,                   /* (code,turn) => true means never train on it */
+    heldSkipped: 0,
+    absorbPasses: 1,              /* one assignment is the whole handover */
+    absorb(code, t, value, n) {
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      const k = code * 2 + t - 1;
+      if (this.N[k] === 0) this.seen++;
+      this.U[k] = value;
+      this.N[k] = n;
+    },
+    at(code, t) { return this.U[code * 2 + t - 1]; },
+    hits(code, t) { return this.N[code * 2 + t - 1]; },
+    nudge(code, t, target) {
+      const k = code * 2 + t - 1;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      if (this.N[k] === 0) this.seen++;
+      const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + this.N[k]));
+      this.N[k]++;
+      this.U[k] += a * (target - this.U[k]);
+    }
   };
 }
 
 function cloneBrain(b) {
-  return { U: new Float32Array(b.U), N: new Uint32Array(b.N),
-           matches: b.matches, seen: b.seen, seeded: b.seeded,
-           blindLookups: b.blindLookups, lookups: b.lookups };
+  const c = newBrain();
+  c.U.set(b.U); c.N.set(b.N);
+  c.matches = b.matches; c.seen = b.seen; c.seeded = b.seeded;
+  c.blindLookups = b.blindLookups; c.lookups = b.lookups;
+  c.hold = b.hold; c.heldSkipped = b.heldSkipped;
+  return c;
 }
 
 /* Hand over everything Act I learned that still means something here.
@@ -223,28 +268,36 @@ function cloneBrain(b) {
    exactly into "value to X with the OTHER player to move". The entries
    that only exist with nine boards open, and the second turn value of
    every position, start at zero: unknown, and visibly so. */
+/* The handover itself — which entries convert and what they convert to —
+   is one piece of code. Only ABSORBING them differs, and it has to:
+   you can assign into a table, and a network can only be shown a value
+   and fitted towards it, which is why it takes more than one pass and
+   still will not land exactly. */
 function seedFromAgent(brain, agent) {
-  let n = 0;
+  const list = [];
   for (let code = 1; code < NCODE; code++) {
     const t = TOMOVE[code];
     if (t === 0 || WINNER[code] === 3) continue;      /* cannot occur */
     if (agent.N[code] === 0) continue;                /* never learned */
-    const x = moverOf(code) === 1 ? agent.V[code] : -agent.V[code];
-    const k = ui(code, t);
-    brain.U[k] = x;
-    brain.N[k] = agent.N[code];
-    n++;
+    list.push(code);
   }
-  brain.seen = n;
-  brain.seeded = n;
-  return n;
+  const passes = brain.absorbPasses || 1;
+  for (let p = 0; p < passes; p++) {
+    for (const code of list) {
+      const t = TOMOVE[code];
+      const x = moverOf(code) === 1 ? agent.V[code] : -agent.V[code];
+      brain.absorb(code, t, x, agent.N[code]);
+    }
+  }
+  brain.seeded = list.length;
+  return list.length;
 }
 
 /* Value of a candidate move to the player making it. Both terms are read
    with the OPPONENT to move — see the derivation at the top of the file. */
 function moveValue(brain, code, cell, mark) {
   const opp = mark === 1 ? 2 : 1;
-  const d = brain.U[ui(code + mark * POW3[cell], opp)] - brain.U[ui(code, opp)];
+  const d = brain.at(code + mark * POW3[cell], opp) - brain.at(code, opp);
   return mark === 1 ? d : -d;
 }
 
@@ -262,7 +315,7 @@ function policyMoves(brain, m) {
   });
   const tied = moves.filter((mv, i) => vals[i] >= best - 1e-9);
   const tried = tied.filter(mv =>
-    brain.N[ui(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp)] > 0);
+    brain.hits(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp) > 0);
   return tried.length ? tried : tied;
 }
 
@@ -290,7 +343,7 @@ function exploreMove(brain, m, rnd) {
   const moves = legalMoves(m), mark = m.turn, opp = mark === 1 ? 2 : 1;
   let fewest = Infinity;
   const counts = moves.map(mv => {
-    const n = brain.N[ui(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp)];
+    const n = brain.hits(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp);
     if (n < fewest) fewest = n;
     return n;
   });
@@ -319,7 +372,7 @@ function blindFraction(brain, m) {
   let blind = 0;
   for (const mv of moves) {
     const after = m.b[(mv / 9) | 0] + mark * POW3[mv % 9];
-    if (brain.N[ui(after, opp)] === 0) blind++;
+    if (brain.hits(after, opp) === 0) blind++;
   }
   return blind / moves.length;
 }
@@ -342,34 +395,23 @@ function isImpossibleAlone(code) { return TOMOVE[code] === 0; }
  * ------------------------------------------------------------------ */
 
 function backup(brain, code, t) {
-  const U = brain.U, N = brain.N;
   const off = code * 9;
   let best = t === 1 ? -Infinity : Infinity;
   const opp = t === 1 ? 2 : 1;
   for (let c = 0; c < 9; c++) {
     if (CELLS[off + c] !== 0) continue;
-    const v = U[ui(code + t * POW3[c], opp)];
+    const v = brain.at(code + t * POW3[c], opp);
     if (t === 1) { if (v > best) best = v; } else { if (v < best) best = v; }
   }
   if (best === Infinity || best === -Infinity) return;      /* no legal move */
-  const k = ui(code, t);
-  if (N[k] === 0) brain.seen++;
-  const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + N[k]));
-  N[k]++;
-  U[k] += a * (HP9.gamma * best - U[k]);
+  brain.nudge(code, t, HP9.gamma * best);
 }
 
 /* a board just finished: its result is the reward, and it is worth that
    whoever is to move */
 function reward(brain, code, z) {
-  const U = brain.U, N = brain.N;
-  for (const t of [1, 2]) {
-    const k = ui(code, t);
-    if (N[k] === 0) brain.seen++;
-    const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + N[k]));
-    N[k]++;
-    U[k] += a * (z - U[k]);
-  }
+  brain.nudge(code, 1, z);
+  brain.nudge(code, 2, z);
 }
 
 function playMatch(brain, rnd, mode, eps, learn, wildPlies) {
