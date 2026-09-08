@@ -47,6 +47,22 @@
   .explainer .caption { color: var(--muted); font-size: .82rem; line-height: 1.5; text-align: center;
                         margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--edge); }
   .explainer .caption b { color: var(--text); }
+  .explainer .hint { color: var(--blue); font-size: .76rem; text-align: center; margin-top: 10px;
+                     font-weight: 700; letter-spacing: .04em; }
+  .ring { cursor: pointer; }
+  .ring rect.band { transition: filter .12s ease; }
+  .ring:hover rect.band { filter: brightness(1.35); }
+  .ring:focus { outline: none; }
+  .ring:focus-visible rect.band, .ring.on rect.band { stroke: var(--gold); stroke-width: 3; }
+  .explainer.picked .ring:not(.on) { opacity: .45; }
+  #ring-note { margin-top: 12px; padding: 12px 14px; border-radius: 10px;
+               background: rgba(236,172,0,.10); border-left: 3px solid var(--gold);
+               font-size: .88rem; line-height: 1.5; }
+  #ring-note[hidden] { display: none; }
+  #ring-note b { color: var(--gold); }
+  #ring-note a { color: var(--blue); font-weight: 700; text-decoration: none; white-space: nowrap; }
+  .sec-lead { color: var(--muted); font-size: .86rem; font-style: italic; margin-bottom: 16px;
+              padding-left: 12px; border-left: 2px solid var(--edge); }
 
   .part { margin-top: 46px; }
   .part-head { border-left: 3px solid var(--gold); padding-left: 16px; margin-bottom: 6px; }
@@ -142,31 +158,45 @@
       Most arguments about AI are two people using the word for two different things.
       This picture is the shape of the whole session.
     </p>
-    <svg viewBox="0 0 440 360" role="img" aria-label="Nested rings. Artificial intelligence contains machine learning, which contains neural networks, which contains generative AI, which contains large language models, then reasoning models, then agents.">
-      <rect x="8"   y="8"   width="424" height="332" rx="16" fill="#06305a" stroke="#2c5c92" stroke-width="1.5"/>
-      <rect x="40"  y="46"  width="360" height="256" rx="14" fill="#0a3b6b" stroke="#356ba6" stroke-width="1.5"/>
-      <rect x="72"  y="84"  width="296" height="180" rx="12" fill="#0e477e" stroke="#3f7cbb" stroke-width="1.5"/>
-      <rect x="104" y="122" width="232" height="120" rx="10" fill="#12538f" stroke="#4a8ccc" stroke-width="1.5"/>
+    <svg viewBox="0 0 440 378" role="img" aria-label="Nested rings. Artificial intelligence contains machine learning, which contains neural networks, which contains generative AI. Inside that, large language models lead to reasoning models, which lead to agents.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M 0 1 L 8 5 L 0 9 z" fill="#ECAC00"/>
+        </marker>
+      </defs>
 
-      <rect x="116" y="148" width="208" height="24" rx="12" fill="#ECAC00"/>
-      <rect x="116" y="176" width="208" height="24" rx="12" fill="#ECAC00"/>
-      <rect x="116" y="204" width="208" height="24" rx="12" fill="#ECAC00"/>
-      <text x="220" y="165" fill="#002144" font-size="12" font-weight="800" text-anchor="middle">LLM</text>
-      <text x="220" y="193" fill="#002144" font-size="12" font-weight="800" text-anchor="middle">REASONING MODELS</text>
-      <text x="220" y="221" fill="#002144" font-size="12" font-weight="800" text-anchor="middle">AGENTS</text>
-      <text x="330" y="167" fill="#0e477e" font-size="13" font-weight="800" text-anchor="middle">&#8595;</text>
-      <text x="330" y="195" fill="#0e477e" font-size="13" font-weight="800" text-anchor="middle">&#8595;</text>
+      <g class="ring" data-ring="ai" role="button" tabindex="0" aria-label="ARTIFICIAL INTELLIGENCE"><rect class="band" x="8"   y="8"   width="424" height="354" rx="18" fill="#062d54" stroke="#2c5c92" stroke-width="1.5"/></g>
+      <g class="ring" data-ring="ml" role="button" tabindex="0" aria-label="MACHINE LEARNING"><rect class="band" x="40"  y="46"  width="360" height="288" rx="16" fill="#0a3a69" stroke="#3a72ad" stroke-width="1.5"/></g>
+      <g class="ring" data-ring="nn" role="button" tabindex="0" aria-label="NEURAL NETWORKS"><rect class="band" x="72"  y="84"  width="296" height="222" rx="14" fill="#0f4a83" stroke="#4785c4" stroke-width="1.5"/></g>
+      <g class="ring" data-ring="gen" role="button" tabindex="0" aria-label="GENERATIVE AI"><rect class="band" x="104" y="122" width="232" height="156" rx="12" fill="#155a9c" stroke="#5b9bd8" stroke-width="1.5"/></g>
 
-      <text x="22"  y="31"  fill="#eef3fa" font-size="13" font-weight="700" letter-spacing="1.4">ARTIFICIAL INTELLIGENCE</text>
-      <text x="54"  y="69"  fill="#cfe0f2" font-size="12" font-weight="700" letter-spacing="1.2">MACHINE LEARNING</text>
-      <text x="86"  y="107" fill="#cfe0f2" font-size="12" font-weight="700" letter-spacing="1.2">NEURAL NETWORKS</text>
-      <text x="118" y="139" fill="#e6f1fb" font-size="12" font-weight="700" letter-spacing="1.2">GENERATIVE AI</text>
-      <text x="322" y="139" fill="#ECAC00" font-size="13" font-weight="700" text-anchor="end">Demo 4 builds all three</text>
+      <rect x="20"  y="20"  width="7" height="7" rx="1.5" fill="#7ea8d6"/>
+      <rect x="52"  y="58"  width="7" height="7" rx="1.5" fill="#8fbbe4"/>
+      <rect x="84"  y="96"  width="7" height="7" rx="1.5" fill="#a3cbee"/>
+      <rect x="116" y="134" width="7" height="7" rx="1.5" fill="#c3e0f7"/>
+      <text x="34"  y="27"  fill="#eef3fa" font-size="13.5" font-weight="700" letter-spacing="1.5">ARTIFICIAL INTELLIGENCE</text>
+      <text x="66"  y="65"  fill="#d6e6f6" font-size="12.5" font-weight="700" letter-spacing="1.3">MACHINE LEARNING</text>
+      <text x="98"  y="103" fill="#d6e6f6" font-size="12.5" font-weight="700" letter-spacing="1.3">NEURAL NETWORKS</text>
+      <text x="130" y="141" fill="#eaf4fd" font-size="12.5" font-weight="700" letter-spacing="1.3">GENERATIVE AI</text>
 
-      <text x="86"  y="258" fill="#ECAC00" font-size="13" font-weight="700">Demo 3 &mdash; nine boards at once</text>
-      <text x="54"  y="288" fill="#ECAC00" font-size="13" font-weight="700">Demo 2 &mdash; one board, and it learns</text>
-      <text x="22"  y="326" fill="#ECAC00" font-size="13" font-weight="700">Demo 1 &mdash; rules a person wrote by hand</text>
+      <rect x="118" y="150" width="204" height="26" rx="13" fill="#ECAC00"/>
+      <text x="220" y="167" fill="#002144" font-size="12.5" font-weight="800" text-anchor="middle">LLM</text>
+      <line x1="220" y1="180" x2="220" y2="190" stroke="#ECAC00" stroke-width="2.4" marker-end="url(#ar)"/>
+
+      <rect x="118" y="194" width="204" height="26" rx="13" fill="#ECAC00"/>
+      <text x="220" y="211" fill="#002144" font-size="12.5" font-weight="800" text-anchor="middle">REASONING MODELS</text>
+      <line x1="220" y1="224" x2="220" y2="234" stroke="#ECAC00" stroke-width="2.4" marker-end="url(#ar)"/>
+
+      <rect x="118" y="238" width="204" height="26" rx="13" fill="#ECAC00"/>
+      <text x="220" y="255" fill="#002144" font-size="12.5" font-weight="800" text-anchor="middle">AGENTS</text>
+
+      <text x="220" y="272" fill="#ECAC00" font-size="11.5" font-weight="700" text-anchor="middle">Demo 4 builds all three, in this order</text>
+      <text x="98"  y="298" fill="#ECAC00" font-size="13" font-weight="700">Demo 3 &mdash; ultimate tic-tac-toe</text>
+      <text x="66"  y="326" fill="#ECAC00" font-size="13" font-weight="700">Demo 2 &mdash; one board, and it learns</text>
+      <text x="34"  y="354" fill="#ECAC00" font-size="13" font-weight="700">Demo 1 &mdash; rules a person wrote by hand</text>
     </svg>
+    <p class="hint">Tap a ring &mdash; or Tab to it and press Enter &mdash; to see what lives in it</p>
+    <div id="ring-note" hidden></div>
     <p class="caption">
       <b>When something is labelled &ldquo;AI&rdquo;, ask which ring.</b> Demos 1, 2 and 3 are the
       same game played by three different machines, one per ring. Most of the AI already running in
@@ -187,7 +217,10 @@
     ring outside it could not, and each one is still in production somewhere today &mdash; the outer
     rings did not go away when the inner ones arrived.</div>
 
-    <div class="sec">
+    <div class="sec" id="rung-ttt">
+      <p class="sec-lead">Demos 1, 2 and 3 are one demo &mdash; the same game against three different
+      kinds of machine, switched at the top of it. Demo 4 works the same way, walking its three layers.</p>
+
       <div class="sec-head"><span class="sec-num">DEMO 1</span><span class="sec-title">Rules &mdash; the outermost ring</span></div>
       <p class="sec-sub">A hand-written ladder of if-statements: take the win, block the row, take
       the fork. The rule that fired is highlighted on every move, so you can read the whole mind of
@@ -198,6 +231,33 @@
       search. <b>R1/XCON</b> configured VAX orders at Digital from 1980 and kicked off the
       expert-systems boom. And the <b>traffic signals</b> outside &mdash; and the PLC in part three
       &mdash; still run exactly this way.</div>
+
+      <div class="rung">
+        <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Machine learning &mdash; one ring in</span></div>
+        <p class="sec-sub">Same board. An opponent that has played zero games and holds no rules at
+        all, learning only from won, lost or drew. Train it in three-second bursts until you cannot
+        win &mdash; then the app proves it, playing out all <b>15,776</b> games still reachable
+        against it. Tic-tac-toe has <b>255,168</b> games in total across <b>5,478</b> positions, so a
+        laptop really can check every one. That is why this is a proof and not a win record.</p>
+        <p class="sec-take">Same result as the rules. Nobody wrote a single one of them.</p>
+        <div class="eg"><span class="lbl">the same idea, in the wild</span>
+        Your <b>spam filter</b>, <b>card-fraud detection</b>, and the recommendation engines behind
+        most of what gets shown to you. None of it is a neural network, and none of it writes.</div>
+      </div>
+
+      <div class="rung">
+        <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Neural networks &mdash; and the wall that made them necessary</span></div>
+        <p class="sec-sub">Ultimate tic-tac-toe, in the same app: nine boards, and the square you
+        play decides which board your opponent must play in next. The same learner comes apart here,
+        because the shortcut it relied on &mdash; score each board on its own and add up &mdash; is
+        simply wrong once the boards are coupled.</p>
+        <p class="sec-take">A table can only look up what it has already stored. This is the wall
+        neural networks exist to get over: computing a value for a position you have never seen.</p>
+        <div class="eg"><span class="lbl">the same idea, in the wild</span>
+        <b>AlexNet</b> won ImageNet in 2012 and restarted the whole field. <b>AlphaGo</b> beat Lee
+        Sedol four games to one in 2016. <b>AlphaFold</b> predicts protein structures &mdash; see part
+        two. Also: your phone finding photos of your dog, and every voice-to-text you have used.</div>
+      </div>
       <a class="card" href="zero-to-unbeatable/index.html">
         <div class="topic">Machine learning · not generative AI</div>
         <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
@@ -206,40 +266,7 @@
       </a>
     </div>
 
-    <div class="sec rung">
-      <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Machine learning &mdash; one ring in</span></div>
-      <p class="sec-sub">Same board, same app. An opponent that has played zero games and holds no
-      rules at all, learning only from won, lost or drew. Train it in three-second bursts until you
-      cannot win &mdash; then the app proves it, playing out all <b>15,776</b> games still reachable
-      against it. Tic-tac-toe has <b>255,168</b> games in total and <b>5,478</b> board positions, so
-      a laptop really can check every one. That is why this is a proof and not a win record.</p>
-      <p class="sec-take">Same result as the rules. Nobody wrote a single one of them.</p>
-      <div class="eg"><span class="lbl">the same idea, in the wild</span>
-      Your <b>spam filter</b>, <b>card-fraud detection</b>, and the recommendation engines behind
-      most of what gets shown to you. None of it is a neural network, and none of it writes.</div>
-    </div>
-
-    <div class="sec rung">
-      <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Neural networks &mdash; and the wall that made them necessary</span></div>
-      <p class="sec-sub">Nine boards at once, in the same app. Same learner, same method &mdash; and
-      it comes apart, because on one board a position comes round about ten times while it trains
-      and on nine boards it comes round 1.06 times. A lookup table has nothing left to look up.</p>
-      <p class="sec-take">A table can only learn what repeats. This is the exact wall neural
-      networks were invented to get over: generalising to a position you have never seen.</p>
-      <p class="sec-sub">And the proof goes with it. Nine boards have 3<sup>81</sup> raw
-      arrangements &mdash; about 4&times;10<sup>38</sup> &mdash; but most of that is bookkeeping.
-      The nine boards are interchangeable, and each one can be rotated and mirrored on its own,
-      which collapses the space about <b>21 trillion-fold</b>, to roughly 2&times;10<sup>25</sup>.
-      Still hopeless: <b>660 million years</b> at a billion positions a second, needing about a
-      hundred times more storage than exists on Earth. So there is no banner here, and the app says
-      so where the banner would be.</p>
-      <div class="eg"><span class="lbl">the same idea, in the wild</span>
-      <b>AlexNet</b> won ImageNet in 2012 and restarted the whole field. <b>AlphaGo</b> beat Lee
-      Sedol four games to one in 2016. <b>AlphaFold</b> predicts protein structures &mdash; see part
-      two. Also: your phone finding photos of your dog, and every voice-to-text you have used.</div>
-    </div>
-
-    <div class="sec rung">
+    <div class="sec" id="rung-glass">
       <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">Generative AI &mdash; the innermost ring</span></div>
       <p class="sec-sub">A real transformer trains from scratch in front of the room &mdash; gibberish
       to words to sentences. Then a reasoning model is built out of it, and an agent out of that:
@@ -248,7 +275,7 @@
       <div class="eg"><span class="lbl">the same idea, in the wild</span>
       <b>ChatGPT, Claude and Gemini</b> are the LLM chip. The &ldquo;thinking&rdquo; modes are the
       reasoning chip. Coding assistants that run commands and read files are the agent chip &mdash;
-      and the three demos you are reading about were built with them.</div>
+      and the demos you are reading about were built with them.</div>
       <a class="card" href="glass-box/index.html">
         <div class="topic">Base model → reasoning model → agent</div>
         <h2><span class="emoji">🔍</span>Glass Box</h2>
@@ -279,8 +306,8 @@
       and this field has collapsed twice before after saying exactly that.</p>
     </div>
     <div class="motif">
-      <svg viewBox="-28 0 468 132" role="img" aria-label="A rising line of AI capability against time, with two shaded troughs marking the AI winters of the mid-1970s and the late 1980s.">
-        <text x="-15" y="62" fill="#9fb2ca" font-size="11.5" text-anchor="middle" transform="rotate(-90 -15 62)">what it can do</text>
+      <svg viewBox="-28 0 468 132" role="img" aria-label="A schematic line of funding and interest in AI against time, with two shaded troughs marking the AI winters of the mid-1970s and the late 1980s.">
+        <text x="-15" y="62" fill="#9fb2ca" font-size="11.5" text-anchor="middle" transform="rotate(-90 -15 62)">funding &amp; interest</text>
         <rect x="96"  y="14" width="52" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
         <rect x="196" y="14" width="46" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
         <line x1="18" y1="110" x2="424" y2="110" stroke="#2c5c92" stroke-width="1"/>
@@ -291,7 +318,7 @@
         <text x="18"  y="126" fill="#9fb2ca" font-size="11.5">1950</text>
         <text x="424" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="end">today</text>
       </svg>
-      <p class="cap">Both demos in this part live on this one line.</p>
+      <p class="cap"><b>Shape, not data</b> &mdash; no continuous funding series exists, and Demo 7 refuses to invent one.<br>An &ldquo;AI winter&rdquo; is defined as a drop in funding and interest, not in capability: the research never stopped.</p>
     </div>
     <div class="take"><b>Leave with:</b> plan for the trend, not the snapshot &mdash; and know the
     shape of a bust well enough to tell a real capability jump from a press release.</div>
@@ -438,5 +465,40 @@
     Every demo is plain HTML/CSS/JS, runs entirely in your browser, and makes no network requests once loaded.
   </footer>
 </div>
+<script>
+(function () {
+  var NOTE = {
+    ai:  ['Artificial intelligence',
+          'Anything that makes a machine act smart &mdash; including a great deal that is nothing like ChatGPT. Every inner ring is also this ring. <b>Demo 1</b> lives out here: a ladder of if-statements a person wrote by hand.', '#rung-ttt'],
+    ml:  ['Machine learning',
+          'Programs that improve from data or experience instead of being told what to do. No language, no writing, no neural network required. <b>Demo 2</b>: an opponent that starts knowing nothing and learns only from won, lost or drew.', '#rung-ttt'],
+    nn:  ['Neural networks',
+          'Learners that compute an answer for a situation they have never seen, instead of looking one up. <b>Demo 3</b>: ultimate tic-tac-toe, where looking things up stops working.', '#rung-ttt'],
+    gen: ['Generative AI',
+          'Neural networks that produce new text, images or audio. The three gold chips are layers, each built on the one above: a predictor, then one trained to work things out, then one given tools and a loop. <b>Demo 4</b> builds all three.', '#rung-glass']
+  };
+  var wrap = document.querySelector('.explainer');
+  var note = document.getElementById('ring-note');
+  if (!wrap || !note) return;
+  var rings = [].slice.call(wrap.querySelectorAll('.ring'));
+  function pick(g) {
+    var d = NOTE[g.getAttribute('data-ring')];
+    var already = g.classList.contains('on');
+    rings.forEach(function (r) { r.classList.remove('on'); r.setAttribute('aria-pressed', 'false'); });
+    if (already || !d) { wrap.classList.remove('picked'); note.hidden = true; return; }
+    g.classList.add('on'); g.setAttribute('aria-pressed', 'true');
+    wrap.classList.add('picked');
+    note.innerHTML = '<b>' + d[0] + '.</b> ' + d[1] + ' <a href="' + d[2] + '">Go to it &rarr;</a>';
+    note.hidden = false;
+  }
+  rings.forEach(function (g) {
+    g.setAttribute('aria-pressed', 'false');
+    g.addEventListener('click', function (e) { e.stopPropagation(); pick(g); });
+    g.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(g); }
+    });
+  });
+})();
+</script>
 </body>
 </html>
