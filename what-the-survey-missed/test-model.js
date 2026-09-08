@@ -1,0 +1,48 @@
+'use strict';
+const assert = require('node:assert/strict');
+const M = require('./model.js');
+const near = (actual, expected, tolerance = 1e-12) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} should equal ${expected}`);
+
+assert.equal(M.expectedDetectedFraction(.8, .25, 1), .2);
+assert.equal(M.expectedDetectedFraction(.5, .8, 1), .4);
+assert.equal(M.expectedDetectedFraction(.8, .25, 3), .4625);
+assert.equal(M.expectedDetectedFraction(.5, .8, 3), .496);
+const scenario = M.createScenario(20260908);
+assert.deepEqual(M.createScenario(20260908), scenario, 'same seed reproduces a complete scenario');
+assert.equal(scenario.sites.length, 48);
+assert.ok(scenario.sites.every(site => !site.occupied ? site.detections.every(value => value === 0) : true), 'unoccupied sites never generate detections');
+assert.ok(scenario.sites.every(site => site.detections.length === 3), 'every site has fixed closure across all visits');
+assert.equal(M.observedSummary(scenario, 3, 'A').siteVisits, 72);
+assert.equal(M.observedSummary(scenario, 1, 'A').siteVisits + M.observedSummary(scenario, 1, 'B').siteVisits, 48);
+for (let bits = 0; bits < 8; bits += 1) {
+  const history = [bits >> 2 & 1, bits >> 1 & 1, bits & 1];
+  assert.ok(M.historyProbability(history, .8, .25) >= 0);
+}
+const allProbability = Array.from({ length: 8 }, (_, bits) => M.historyProbability([bits >> 2 & 1, bits >> 1 & 1, bits & 1], .8, .25)).reduce((sum, value) => sum + value, 0);
+assert.ok(Math.abs(allProbability - 1) < 1e-12, 'all 3-visit histories sum to one');
+near(M.historyProbability([0, 0, 0], .8, .25), .5375);
+near(M.historyProbability([1, 0, 0], .8, .25), .1125);
+near(M.historyProbability([1, 1, 0], .8, .25), .0375);
+near(M.historyProbability([1, 1, 1], .8, .25), .0125);
+near(M.historyProbability([0, 0, 0], .5, .8), .504);
+near(M.historyProbability([1, 0, 0], .5, .8), .016);
+near(M.historyProbability([1, 1, 0], .5, .8), .064);
+near(M.historyProbability([1, 1, 1], .5, .8), .256);
+assert.equal(M.historyProbability([0], .5, .8), .6);
+assert.equal(M.historyProbability([1], .5, .8), .4);
+const oneVisitGrid = M.likelihoodGrid({ '0': 12, '1': 12 }, 10);
+assert.ok(M.relativeSupport(oneVisitGrid).length > 3, 'one-visit data preserves a psi/p ridge rather than a unique estimate');
+const fiveHistories = { '000': 1, '100': 1, '010': 1, '110': 1, '111': 1 };
+assert.ok(Math.abs(Math.exp(M.logLikelihood(fiveHistories, .6, .5)) - .000015029296875) < 1e-16, 'exact histories are multiplied without a binomial coefficient');
+assert.ok(Math.abs(M.logLikelihood(fiveHistories, .6, .5) - (-11.105509136730802)) < 1e-12);
+const fineGrid = M.likelihoodGrid(fiveHistories, 100);
+const maxCell = fineGrid.reduce((best, cell) => cell.logLikelihood > best.logLikelihood ? cell : best);
+assert.deepEqual([maxCell.psi, maxCell.p], [.9, .52]);
+assert.ok(Math.abs(maxCell.logLikelihood - (-10.280549855017615)) < 1e-12);
+assert.ok(Math.abs(M.logLikelihood({ '0': 16, '1': 8 }, .5, 2 / 3) - (-15.27634003907551)) < 1e-12, 'one visit identifies a product, not separate psi and p');
+assert.equal(M.logLikelihood({ '000': 24, '111': 0 }, 0, .5), 0, 'zero-count impossible histories do not create NaN');
+assert.throws(() => M.logLikelihood({ '0': -1 }, .5, .5), /nonnegative integers/);
+assert.throws(() => M.logLikelihood({ '0': 1.5 }, .5, .5), /nonnegative integers/);
+assert.equal(M.logLikelihood({ '000': 24 }, 0, 0), 0, 'all-zero boundary histories are handled');
+assert.equal(M.logLikelihood({ '1': 1 }, 0, .5), -Infinity, 'impossible positive history has zero likelihood');
+console.log('PASS  occupancy expectations, closure, no-false-positive, histories, likelihood, boundaries, and seeded replay');
