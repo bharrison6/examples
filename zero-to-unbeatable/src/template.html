@@ -13,10 +13,12 @@
   Step 1: eight hand-written if/else rules that have played zero games and
   cannot be beaten. Step 2: an agent that starts knowing nothing, is trained
   in bursts, and arrives at exactly the same play with no rule in it. Step 3:
-  that learner on nine boards at once, where the approach comes apart. Steps
-  1 and 2 are both proved unbeatable by the same exhaustive search. All
-  learning happens on this device. No network, no accounts, no install, no
-  AI service is called at any point.
+  that learner in ULTIMATE tic-tac-toe, where the shortcut a person chose for
+  it stops describing the game and the space stops being searchable. Steps
+  1 and 2 are both proved unbeatable by the same exhaustive search; step 3
+  cannot be, and quotes somebody else's proof instead. All learning happens
+  on this device. No network, no accounts, no install, no AI service is
+  called at any point.
 
   Companion: demo-guide.html (printable session plan, three steps, 20 min).
   Sources live in src/ and are concatenated by build.js.
@@ -61,13 +63,11 @@
       <div class="seg" id="mode-seg" role="group" aria-label="Which step">
         <button data-mode="rules" class="on" aria-pressed="true">1 &middot; Rules</button>
         <button data-mode="one" aria-pressed="false">2 &middot; Learning</button>
-        <button data-mode="nine" aria-pressed="false">3 &middot; Nine boards</button>
+        <button data-mode="ult" aria-pressed="false">3 &middot; Ultimate</button>
       </div>
       <div id="opp-row">
         <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
         <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules are switched on" hidden></div>
-        <!-- Step 3 only: which memory is behind the same learning rule. -->
-        <div class="seg" id="mem-seg" role="group" aria-label="Which memory the learner uses" hidden></div>
       </div>
       <div id="score-row"></div>
       <div id="era-strip" hidden></div>
@@ -78,13 +78,24 @@
       <div id="board" role="grid" aria-label="Tic tac toe board"></div>
     </section>
 
-    <!-- ====================== NINE BOARDS AT ONCE ================= -->
-    <section id="nine-wrap" hidden>
-      <div id="nine-panes">
-        <div id="nine-grid" role="group" aria-label="All nine boards"></div>
-        <div id="nine-focus" role="grid" aria-label="The board you are playing in"></div>
+    <!-- ==================== ULTIMATE TIC-TAC-TOE ================== -->
+    <!-- Two square panes. Left: the meta-grid, which is both the score
+         and the board you win on. Right: the small board you were SENT
+         to, full size. Eighty-one live cells on a phone would be 36px
+         each and the forced board would be a hairline somewhere inside
+         them; this way the squares you tap stay as big as they are in
+         the one-board game and the board in play is the only thing on
+         that side of the screen. #ult-where states the send rule in
+         words on every single turn, because it is the rule the whole
+         act turns on, and carries the board count on its second line —
+         one row rather than two, which is what keeps TRAIN above the
+         fold on a 320x568 screen. -->
+    <section id="ult-wrap" hidden>
+      <div id="ult-panes">
+        <div id="ult-meta" role="group" aria-label="The nine small boards, and the three-in-a-row you win the match on"></div>
+        <div id="ult-focus" role="grid" aria-label="The board you must play in"></div>
       </div>
-      <div id="nine-tally"></div>
+      <div id="ult-where" aria-live="polite"></div>
     </section>
 
     <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
@@ -176,9 +187,13 @@
         5,000 games against itself and against chance and freezes the result as a new era. Play the
         new era. Train again. Somewhere around the third to fifth burst the same exhaustive search
         stops finding a line where it loses.</li>
-        <li><b>3 &middot; Nine boards.</b> The same learner in a world one step bigger: nine boards
-        at once, first to win five. This is where the approach starts to break, and the app says so
-        instead of hiding it.</li>
+        <li><b>3 &middot; Ultimate.</b> The same learner in a world one rule bigger. Nine small
+        boards in a grid, and <b>the square you play in decides which board your opponent plays in
+        next</b> &mdash; middle square, middle board. Sent to a board that is already finished? Play
+        anywhere. Win a small board by three in a row inside it; win the <b>match</b> by winning
+        three small boards in a row. A small board that fills with no winner counts for neither
+        side. One sentence of extra rule, and the approach behind step 2 falls apart in two places
+        the app goes and measures.</li>
       </ol>
       <p class="howto-note">Steps 1 and 2 end up in the same place by opposite routes. One got all
       of its skill from a person and none from experience; the other got all of it from experience
@@ -233,7 +248,7 @@
 <div class="overlay sheet" id="notes" hidden role="dialog" aria-modal="true" aria-labelledby="notes-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">Three steps &middot; 20 minutes &middot; rules, learning, nine boards</div></div>
+      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">Three steps &middot; 20 minutes &middot; rules, learning, ultimate</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body" id="notes-body">
@@ -264,15 +279,19 @@
           <li><span>13:00</span> Train twice more. The banner lands between the third and fifth press. Invite the best player to try.</li>
           <li><span>14:30</span> Go back to Era 0 and stomp it again. Same code, different numbers. <b>&ldquo;Nobody wrote a rule. It played twenty thousand games.&rdquo;</b></li>
         </ul>
-        <h3>Step 3 &mdash; Nine boards, 5 minutes</h3>
-        <p>Switch to <b>3 &middot; Nine boards</b> and play &mdash; beatable again, nothing taken away. Turn the
-        brain on and read the last line (most squares sit on pictures it has never seen). Train, then
-        read how often a position comes round: about ten times on one board, about once on nine. Close
-        on the missing banner &mdash; here the app prints a refusal instead of a proof.</p>
+        <h3>Step 3 &mdash; Ultimate, 5 minutes</h3>
+        <ul class="sc-beats">
+          <li><span>15:00</span> Switch to <b>3 &middot; Ultimate</b>. Read the one new rule off the caption between the panes: <b>&ldquo;the square you play decides which board it plays in next.&rdquo;</b> Play three or four moves and let them feel the line under the panes change every turn.</li>
+          <li><span>16:30</span> Train once. Open the card and read the <b>control row first</b>: it takes a free win inside a board about four times in five. Then the row under it &mdash; a move that wins the whole <b>match</b> scores exactly the same to it. <b>&ldquo;It cannot see the game it is playing.&rdquo;</b></li>
+          <li><span>18:00</span> Second card: it hands you a free win at about the rate you would get by not looking, because it is not looking. Then the two hand-written opponents &mdash; it improves against the one that shares its blind spot and flatlines against the one that does not.</li>
+          <li><span>19:00</span> Close on the banner: this game <b>is</b> solved &mdash; forced first-player win, at most 43 moves, proved in 2020 &mdash; and the app still cannot prove one thing about the opponent on the screen. <b>A proof does not require checking every case.</b></li>
+        </ul>
         <h3>The close</h3>
         <p>Steps 1 and 2 arrived at the same unbeatable play from opposite ends, and the same search
-        proved both. Rules won on effort here. They stop being writable the moment the game gets
-        bigger &mdash; which is step 3, and which is why chess and language use the other one.</p>
+        proved both, because 255,168 games is a number you can walk. Step 3 is 10<sup>38</sup> and
+        cannot be walked &mdash; and it is solved anyway, by somebody who wrote down a strategy and
+        proved it. What we have no proof about is the <em>program</em>. That is the ordinary
+        situation for chess engines, self-driving cars and language models alike.</p>
         <h3>If it goes sideways</h3>
         <ul class="sc-notes">
           <li><b>Somebody beats the eight-rule bot?</b> They did not &mdash; check the mode; it will be on First 2 or First 4. The proof line under the board says which.</li>
@@ -335,9 +354,9 @@
         <button class="btn" id="btn-selftest">Run the full self-test</button>
         <p class="help">Checks a newborn is statistically random, searches every game
         line against the current agent as both first and second player, and plays
-        5,000 games in each role against a random opponent. In nine-board mode it runs
-        sampled benchmarks only, never a proof. Results appear here and in the
-        browser console.</p>
+        5,000 games in each role against a random opponent. In ultimate mode it runs
+        sampled benchmarks and recomputes the state-space count, never a proof &mdash;
+        that space cannot be searched. Results appear here and in the browser console.</p>
         <div id="selftest-out"></div>
       </div>
       <div class="field">

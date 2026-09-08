@@ -7,12 +7,15 @@ const SRC = path.join(__dirname, 'src');
 const OUT = __dirname;
 
 const CSS_FILES = ['styles.css'];
-/* engine.js first: rules.js, net.js and nine.js all close over the OG
-   global it defines, and app.js needs all four. net.js sits before
-   nine.js because it reads better in that order; nine.js does not
-   reference it, on purpose — the network is a memory nine.js can be
-   handed, not a thing it knows about. */
-const JS_FILES  = ['engine.js', 'rules.js', 'net.js', 'nine.js', 'app.js'];
+/* engine.js first: rules.js and ultimate.js both close over the OG
+   global it defines, and app.js needs all three.
+
+   src/net.js is deliberately NOT in this list. It is a working MLP and
+   TD trainer, built against the retired nine-independent-boards ruleset
+   and kept on disk as machinery for a later rung of this demo. It is no
+   part of step 3, nothing in the app references it, and the build and
+   the test suite both run without it. */
+const JS_FILES  = ['engine.js', 'rules.js', 'ultimate.js', 'app.js'];
 
 const read = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 

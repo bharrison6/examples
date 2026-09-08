@@ -253,6 +253,13 @@
         simply wrong once the boards are coupled.</p>
         <p class="sec-take">A table can only look up what it has already stored. This is the wall
         neural networks exist to get over: computing a value for a position you have never seen.</p>
+        <p class="sec-sub">The proof goes with it. If the nine boards were independent you could
+        shrink this space enormously &mdash; they would be interchangeable, and each could be rotated
+        on its own. Coupling them kills both shortcuts, so the honest bound is
+        <b>3.6&times;10<sup>38</sup></b>: <b>0.81&times;</b> the naive 3<sup>81</sup>, meaning every
+        reduction available buys essentially nothing. That is <b>820 billion times</b> more than you
+        could count at a billion a second since the Big Bang &mdash; and yet the game <i>was</i>
+        solved, in 2020, by cleverness rather than by counting.</p>
         <div class="eg"><span class="lbl">the same idea, in the wild</span>
         <b>AlexNet</b> won ImageNet in 2012 and restarted the whole field. <b>AlphaGo</b> beat Lee
         Sedol four games to one in 2016. <b>AlphaFold</b> predicts protein structures &mdash; see part
@@ -261,7 +268,7 @@
       <a class="card" href="zero-to-unbeatable/index.html">
         <div class="topic">Machine learning · not generative AI</div>
         <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
-        <p>Three opponents on one tic-tac-toe board. First, eight if/else rules a person wrote out — it has played zero games, it tells you which rule it just used, and you cannot beat it. Then a learner that starts from nothing and reaches the same unbeatable play after ~20,000 games. Then nine boards at once, where neither approach scales. Same exhaustive search proves both of the first two.</p>
+        <p>Three opponents on one tic-tac-toe board. First, eight if/else rules a person wrote out — it has played zero games, it tells you which rule it just used, and you cannot beat it. Then a learner that starts from nothing and reaches the same unbeatable play after ~20,000 games. Then ultimate tic-tac-toe, where the square you play decides which board your opponent plays in next, and the shortcut behind the learner stops describing the game — measured, not asserted. Same exhaustive search proves both of the first two.</p>
         <div class="go">Open demo →</div>
       </a>
     </div>

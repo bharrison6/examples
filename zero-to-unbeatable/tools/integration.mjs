@@ -85,7 +85,7 @@ check('it is a labelled modal that takes focus and makes the page inert',
 const howtoText = await page.locator('#howto').innerText();
 check('it says how to play in the demo\'s own terms',
   /1 . Rules/.test(howtoText) && /2 . Learning/.test(howtoText) &&
-  /3 . Nine boards/.test(howtoText) && /press <b>TRAIN|press .TRAIN/i.test(howtoText) &&
+  /3 . Ultimate/.test(howtoText) && /press <b>TRAIN|press .TRAIN/i.test(howtoText) &&
   /show its brain/i.test(howtoText) && /opposite routes/i.test(howtoText),
   howtoText.slice(0, 200));
 if (SHOTS) await page.screenshot({ path: '/tmp/og-0-howto.png' });
@@ -382,89 +382,133 @@ check('the in-app self-test passes for the final era', /all checks passed/.test(
 check('the self-test proves uniformity, unbeatability and the blind-spot check',
   /chi-squared/.test(st) && /no losing line/.test(st) && /random opponent/.test(st));
 
-/* ---------- nine boards at once -------------------------------------- */
+/* ---------- ultimate tic-tac-toe -------------------------------------- */
 await page.click('#settings [data-close]');
 await page.waitForTimeout(150);
-await page.click('#mode-seg button[data-mode="nine"]');
+await page.click('#mode-seg button[data-mode="ult"]');
 await page.waitForTimeout(400);
-check('switching to nine boards shows nine of them', await page.locator('#nine-grid .nb').count() === 9);
-check('and one full-size board to actually play in', await page.locator('#nine-focus .cell').count() === 9);
+check('switching to ultimate shows the meta-grid of nine boards', await page.locator('#ult-meta .mb').count() === 9);
+check('and one full-size board to actually play in', await page.locator('#ult-focus .cell').count() === 9);
 check('the one-board view steps aside', await page.locator('#board-wrap').isHidden());
-check('the match is a race to five boards',
-  /first to 5/i.test(await page.locator('#nine-tally').innerText()));
+check('step 1 commentary does not follow you into step 3', await page.locator('#rule-fired').isHidden());
+check('the match is won by three boards in a row, not by a count',
+  /three in a row/i.test(await page.locator('#ult-where').innerText()));
 
-const nineBanner = await page.locator('#banner').innerText();
-check('nine boards is honest that no proof is possible',
-  /no banner for this one/i.test(nineBanner) && /impossible/i.test(nineBanner), nineBanner.slice(0, 120));
-check('it says what could not be carried over from one board',
-  /handed over from the one-board table/i.test(nineBanner));
-const handedOver = (nineBanner.replace(/\s+/g, ' ').match(/([\d,]+) of the 39,366 entries/) || [])[1];
-check('only a slice of the table came across',
-  handedOver && Number(handedOver.replace(/,/g, '')) < 0.2 * 39366,
-  'handed over: ' + handedOver);
+/* THE rule. Exactly one of the two "where may I play" signals is ever up,
+   and after a move the forced board is the one the played cell names. */
+async function sendState() {
+  return page.evaluate(() => {
+    const mbs = Array.from(document.querySelectorAll('#ult-meta .mb'));
+    return {
+      sent: mbs.findIndex(b => b.classList.contains('sent')),
+      open: mbs.filter(b => b.classList.contains('open')).length,
+      where: document.querySelector('#ult-where').innerText,
+      enabled: document.querySelectorAll('#ult-focus .cell:not([disabled])').length
+    };
+  });
+}
+let signalViolations = 0, sendMismatches = 0, turns = 0;
+for (let i = 0; i < 12; i++) {
+  const before = await sendState();
+  if ((before.sent >= 0 ? 1 : 0) + (before.open > 0 ? 1 : 0) !== 1) signalViolations++;
+  const cell = page.locator('#ult-focus .cell:not([disabled])').first();
+  if (!(await cell.count())) break;
+  const idx = Number(await cell.getAttribute('data-c'));
+  await cell.click();
+  await page.waitForTimeout(120);
+  /* our own move must have sent IT to the board our cell names, unless
+     that board is already finished */
+  const after = await page.evaluate(i => {
+    const mbs = Array.from(document.querySelectorAll('#ult-meta .mb'));
+    return { done: mbs[i].classList.contains('done'), where: document.querySelector('#ult-where').innerText };
+  }, idx);
+  if (!after.done && !new RegExp('play in the ', 'i').test(after.where)) sendMismatches++;
+  turns++;
+  await page.waitForTimeout(600);
+  if (/you-win|you-lose|drawn/.test(await page.locator('#status').getAttribute('class') || '')) break;
+}
+check('every turn offers exactly one of "you were sent here" / "play anywhere"',
+  signalViolations === 0, signalViolations + ' turns showed both or neither');
+check('the caption names the forced board on every turn it is forced',
+  sendMismatches === 0 && turns > 4, `${sendMismatches} mismatches over ${turns} turns`);
+check('only the forced board accepts a mark',
+  await page.evaluate(() => {
+    const sent = Array.from(document.querySelectorAll('#ult-meta .mb')).findIndex(b => b.classList.contains('sent'));
+    if (sent < 0) return true;                    /* free choice: nothing to check */
+    const mini = Array.from(document.querySelectorAll('#ult-meta .mb')[sent].querySelectorAll('i'))
+      .map(i => i.className || '.').join(',');
+    const full = Array.from(document.querySelectorAll('#ult-focus .cell'))
+      .map(c => c.classList.contains('mk1') ? 'm1' : c.classList.contains('mk2') ? 'm2' : '.').join(',');
+    return mini === full;                         /* the pane shows the board we were sent to */
+  }), 'the full-size pane is not showing the forced board');
 
-/* play a move, then look inside */
-await page.locator('#nine-focus .cell.open:not([disabled])').first().click();
-await page.waitForTimeout(700);
-check('playing in one board leaves the other eight alone',
-  (await page.locator('#nine-grid .nb i.m1, #nine-grid .nb i.m2').count()) <= 4);
+const ultBanner = await page.locator('#banner').innerText();
+check('step 3 refuses a proof and says why', /cannot prove anything about it/i.test(ultBanner), ultBanner.slice(0, 140));
+check('and reaches for the published one instead',
+  /at most 43 moves/i.test(ultBanner) && /arXiv:2006\.02353/.test(ultBanner) &&
+  /at least 29/i.test(ultBanner));
+check('the citation carries the variant caveat rather than overclaiming',
+  /near neighbours, not the same game/i.test(ultBanner));
+check('it puts the countable scale beside the uncountable one',
+  /255,168/.test(ultBanner) && /10³⁸/.test(ultBanner));
+check('and states the point of the whole act',
+  /a proof does not require checking every case/i.test(ultBanner));
+
+/* look inside */
 await page.click('#btn-brain');
 await page.waitForTimeout(400);
-const nineRead = await page.locator('#brain-readout').innerText();
-check('the inspector scores one board at a time', /Scores for board \d+ only/.test(nineRead));
-check('and admits how much of it is unfamiliar ground',
-  /never seen/.test(nineRead), nineRead.slice(0, 120));
+const ultRead = await page.locator('#brain-readout').innerText();
+check('the inspector scores one board at a time', /Scores for the .+ board only/.test(ultRead));
+check('and names the two things that calculation cannot see',
+  /nothing about where this board sits/i.test(ultRead) && /where the square you pick would send/i.test(ultRead),
+  ultRead.slice(0, 160));
 check('the focused board gets a heat value on every empty square',
-  (await page.locator('#nine-focus .cell.heat').count()) >= 6);
-if (SHOTS) await page.screenshot({ path: '/tmp/og-7-nine.png' });
+  (await page.locator('#ult-focus .cell.heat').count()) >= 5);
+if (SHOTS) await page.screenshot({ path: '/tmp/og-7-ultimate.png' });
 await page.click('#btn-brain');
 
-/* tapping another board switches which one you are playing in */
-const freeBoard = await page.evaluate(() => {
-  const nbs = Array.from(document.querySelectorAll('#nine-grid .nb'));
-  const i = nbs.findIndex((n, k) => !n.disabled && !n.classList.contains('focus'));
-  return i;
-});
-await page.locator(`#nine-grid .nb[data-b="${freeBoard}"]`).click();
-await page.waitForTimeout(200);
-check('tapping a board in the overview moves you into it',
-  new RegExp('playing board ' + (freeBoard + 1) + '\\b', 'i').test(await page.locator('#status').innerText()),
-  await page.locator('#status').innerText());
-
-/* train on nine boards */
-const tNine = Date.now();
+/* train */
+const tUlt = Date.now();
 await page.click('#btn-train');
 await page.waitForSelector('#montage:not([hidden])');
 await page.waitForTimeout(700);
 check('the montage flickers through whole matches, not single boards',
-  (await page.locator('#montage .mini9').count()) === 3);
-check('the montage tracks it against the hand-written player',
-  /hand-written player/i.test(await page.locator('#montage').innerText()));
+  (await page.locator('#montage .miniu').count()) === 3);
+check('the montage tracks it against the board-local player',
+  /board-local player/i.test(await page.locator('#montage').innerText()));
 await page.waitForSelector('#learned:not([hidden])', { timeout: 40000 });
-check('a nine-board burst also lands inside five seconds', Date.now() - tNine < 6000,
-  (Date.now() - tNine) + 'ms');
-const nineCard = await page.locator('#learned-body').innerText();
+check('an ultimate burst also lands inside five seconds', Date.now() - tUlt < 6000,
+  (Date.now() - tUlt) + 'ms');
+const ultCard = await page.locator('#learned-body').innerText();
+check('the card leads with the control, then the finding',
+  /the control/i.test(ultCard) && /a free win in a board/i.test(ultCard) &&
+  /a move that wins the match/i.test(ultCard));
+check('the card measures the send blindness against a chance rate',
+  /blind choosing would/i.test(ultCard) && /free to avoid/i.test(ultCard));
+check('the card races the two hand-written opponents against each other',
+  /board-local rules/i.test(ultCard) && /plus the three clauses/i.test(ultCard));
 check('the card counts how often anything comes round twice',
-  /come round twice/i.test(nineCard) && /times each came round/i.test(nineCard));
-check('and puts one board beside nine so the gap is visible',
-  /one board/i.test(nineCard) && /nine at once/i.test(nineCard));
-check('the card races it against rules a person wrote by hand',
-  /rules a person wrote by hand/i.test(nineCard));
+  /come round twice/i.test(ultCard) && /times each came round/i.test(ultCard));
+check('and puts one board beside ultimate so the gap is visible',
+  /one board/i.test(ultCard) && /ultimate/i.test(ultCard));
 check('the card names what could not transfer',
-  /could not carry over/i.test(nineCard));
-if (SHOTS) await page.screenshot({ path: '/tmp/og-8-nine-card.png', fullPage: true });
+  /could not carry over/i.test(ultCard));
+if (SHOTS) await page.screenshot({ path: '/tmp/og-8-ultimate-card.png', fullPage: true });
 await page.click('#learned [data-close]');
 
-/* Nine-board results are intentionally sampled measurements, never a proof. */
+/* Ultimate results are intentionally sampled measurements, never a proof. */
 await page.click('#btn-settings');
 await page.click('#btn-selftest');
 await page.waitForFunction(() => !/working/.test(document.querySelector('#selftest-out').textContent), null, { timeout: 30000 });
-const nineSelftest = await page.locator('#selftest-out').innerText();
-check('nine-board self-test reports sampled benchmarks, not an exhaustive proof',
-  /sampled benchmark/i.test(nineSelftest) && /not a proof/i.test(nineSelftest) && !/all checks passed/i.test(nineSelftest), nineSelftest);
+const ultSelftest = await page.locator('#selftest-out').innerText();
+check('the ultimate self-test reports sampled benchmarks, not an exhaustive proof',
+  /sampled benchmark/i.test(ultSelftest) && /measured, not proved/i.test(ultSelftest) &&
+  !/all checks passed/i.test(ultSelftest), ultSelftest);
+check('and recomputes the state-space count in front of the room',
+  /18,753/.test(ultSelftest) && /2,694/.test(ultSelftest), ultSelftest);
 await page.click('#settings [data-close]');
 
-const perRound = (nineCard.match(/([\d.]+)×/g) || []);
+const perRound = (ultCard.match(/([\d.]+)×/g) || []);
 check('the two recurrence figures are both reported', perRound.length >= 2, perRound.join(' '));
 
 /* the era ledger keeps the two games apart */
@@ -478,7 +522,7 @@ const backBanner = await page.evaluate(() => {
 check('and the one-board banner comes back',
   !backBanner.hidden && /You can no longer beat this/i.test(backBanner.text),
   JSON.stringify(backBanner));
-await page.click('#mode-seg button[data-mode="nine"]');
+await page.click('#mode-seg button[data-mode="ult"]');
 await page.waitForTimeout(300);
 
 /* ---------- presenter notes, embedded in the single file -------------- */
@@ -514,7 +558,7 @@ check('the notes carry the timed script for all three steps',
   /14:30/.test(notes));
 check('the notes carry the discussion questions', /DISCUSSION QUESTIONS/i.test(notes));
 check('the notes carry the misconceptions', /MISCONCEPTIONS TO DRAW OUT/i.test(notes));
-check('the notes carry the third step', /STEP 3: NINE BOARDS AT ONCE/i.test(notes));
+check('the notes carry the third step', /STEP 3: ULTIMATE TIC-TAC-TOE/i.test(notes));
 check('the notes are the whole guide, not an excerpt',
   (await page.locator('#notes .guide .beat').count()) >= 16,
   'timed beats found: ' + (await page.locator('#notes .guide .beat').count()));
@@ -602,13 +646,13 @@ await page.click('#learned [data-close]');
 await page.click('#btn-train');
 await page.waitForSelector('#learned:not([hidden])', { timeout: 30000 });
 const twoBurstAfterReopen = await page.locator('#learned-body').innerText();
-check('reopening a nine-board report cannot alter the next seeded burst', twoBurstNoReopen === twoBurstAfterReopen,
+check('reopening an ultimate report cannot alter the next seeded burst', twoBurstNoReopen === twoBurstAfterReopen,
   twoBurstNoReopen.slice(0, 90) + '\n        vs\n        ' + twoBurstAfterReopen.slice(0, 90));
 await page.click('#learned [data-close]');
 
 /* Per-mode live streams: consuming one-board tie-breaking must not affect
-   the very first nine-board reply in the same rehearsed session. */
-async function firstNineReply(withOneBoardPlay) {
+   the very first ultimate reply in the same rehearsed session. */
+async function firstUltReply(withOneBoardPlay) {
   await page.click('#btn-settings');
   await page.fill('#in-seed', 'live-stream-isolation');
   if (!(await page.locator('#chk-first').isChecked())) await page.check('#chk-first');
@@ -619,17 +663,17 @@ async function firstNineReply(withOneBoardPlay) {
     await page.locator('#board .cell.open:not([disabled])').first().click();
     await page.waitForTimeout(520);
   }
-  await page.click('#mode-seg button[data-mode="nine"]');
+  await page.click('#mode-seg button[data-mode="ult"]');
   await page.waitForTimeout(150);
-  await page.locator('#nine-focus .cell.open:not([disabled])').first().click();
+  await page.locator('#ult-focus .cell.open:not([disabled])').first().click();
   await page.waitForTimeout(560);
-  return page.evaluate(() => Array.from(document.querySelectorAll('#nine-grid .nb')).map(b =>
+  return page.evaluate(() => Array.from(document.querySelectorAll('#ult-meta .mb')).map(b =>
     Array.from(b.querySelectorAll('i')).map(i => i.className).join(',')).join('|'));
 }
-const nineReplyClean = await firstNineReply(false);
-const nineReplyAfterOne = await firstNineReply(true);
-check('one-board live play cannot change the first seeded nine-board AI reply',
-  nineReplyClean === nineReplyAfterOne, nineReplyClean + '\n        vs\n        ' + nineReplyAfterOne);
+const ultReplyClean = await firstUltReply(false);
+const ultReplyAfterOne = await firstUltReply(true);
+check('one-board live play cannot change the first seeded ultimate AI reply',
+  ultReplyClean === ultReplyAfterOne, ultReplyClean + '\n        vs\n        ' + ultReplyAfterOne);
 
 /* ---------- explainer ------------------------------------------------ */
 await page.click('#how-head');
@@ -668,7 +712,7 @@ const SIZES = [
   ['tablet portrait', 820, 1180], ['laptop', 1440, 900]
 ];
 for (const [label, w, h] of SIZES) {
-  for (const mode of ['one', 'nine']) {
+  for (const mode of ['one', 'ult']) {
   const vp = await ctx.newPage();
   const vErrors = [];
   vp.on('pageerror', e => vErrors.push(e.message));
@@ -676,10 +720,10 @@ for (const [label, w, h] of SIZES) {
   await vp.goto(FILE);
   await vp.waitForSelector('#board .cell');
   await dismissHowto(vp);
-  if (mode === 'nine') { await vp.click('#mode-seg button[data-mode="nine"]'); await vp.waitForTimeout(150); }
+  if (mode === 'ult') { await vp.click('#mode-seg button[data-mode="ult"]'); await vp.waitForTimeout(150); }
   const m = await vp.evaluate((mode) => {
     const r = el => document.querySelector(el).getBoundingClientRect();
-    const board = r(mode === 'nine' ? '#nine-focus' : '#board'), train = r('#btn-train');
+    const board = r(mode === 'ult' ? '#ult-focus' : '#board'), train = r('#btn-train');
     return {
       trainBottom: Math.round(train.bottom), vh: window.innerHeight,
       board: Math.round(board.width),
@@ -692,7 +736,7 @@ for (const [label, w, h] of SIZES) {
       }).map(el => (el.id || el.className) + ':' + Math.round(el.getBoundingClientRect().height))
     };
   }, mode);
-  const tag = `${label} (${w}x${h}, ${mode === 'nine' ? 'nine boards' : 'one board'})`;
+  const tag = `${label} (${w}x${h}, ${mode === 'ult' ? 'ultimate' : 'one board'})`;
   check(`${tag}: TRAIN button is reachable without scrolling`,
     m.trainBottom <= m.vh, `train bottom ${m.trainBottom} of ${m.vh}`);
   check(`${tag}: no horizontal scrolling`, m.overflow <= 0, m.overflow + 'px');

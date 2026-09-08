@@ -20,6 +20,11 @@
      4. The pacing arc holds: era 1 is still beatable by a naive player,
         and verified unbeatability lands between bursts 3 and 5 with the
         default settings, across many seeds.
+     5. Step 3's world -- ULTIMATE tic-tac-toe -- really is the wall the
+        page says it is: the rules as implemented, the counts, the two
+        things the inherited decomposition cannot see (each with a
+        control that has to come out the OTHER way), and the flat line
+        that follows from them.
 
    Plus the structural checks that keep the above honest.
    ===================================================================== */
@@ -28,8 +33,7 @@ const fs = require('fs');
 const path = require('path');
 const OG = require('./engine.js');
 const RULES = require('./rules.js');
-const NINE = require('./nine.js');
-const NET = require('./net.js');
+const ULT = require('./ultimate.js');
 
 let failures = 0, checks = 0;
 function check(name, cond, detail) {
@@ -320,394 +324,455 @@ head('5. Structure');
 }
 
 /* =====================================================================
-   6. NINE BOARDS AT ONCE
+   6. ULTIMATE TIC-TAC-TOE
+
+   Step 3's world. Everything here is a MEASUREMENT of a claim the page
+   makes, and the claims are unusual for this repo in that most of them
+   are claims of FAILURE: that the decomposition step 3 inherited --
+   score one board at a time and add up -- has stopped working. A claim
+   of failure is the easiest kind to fake, so each one is checked with a
+   control beside it that has to come out the other way.
    ===================================================================== */
-head('6. Nine at once — the same method, a bigger world');
+head('6. Ultimate tic-tac-toe — the same method, a world that breaks it');
+
+/* Figures quoted in README.md, the guide and the app. Filled in as they
+   are measured and checked against the prose at the end of the file, so
+   a number cannot drift out of the docs without a check going red. */
+const QUOTED = [];
+const quote = (text, what) => { QUOTED.push([String(text), what]); return text; };
 
 {
-  /* the rules: a mark per turn on any unfinished board, finished boards
-     lock, first to five boards takes the match */
+  /* ---- the rules, as implemented ---- */
   {
-    const m = NINE.newMatch();
-    check('a match opens with all 81 squares available', NINE.legalMoves(m).length === 81);
-    /* hand X five boards */
-    const rnd = OG.makeRng('rules');
-    let guard = 0, decided = 0;
-    while (!m.over && guard++ < 200) NINE.applyMove(m, NINE.randomMove(m, rnd));
-    const t = NINE.tally(m);
-    decided = t.x + t.o + t.d;
-    check('a match ends at five boards or when nothing is left',
-      t.x >= NINE.TO_WIN || t.o >= NINE.TO_WIN || NINE.legalMoves(m).length === 0,
-      JSON.stringify(t));
-    check('finished boards lock and stop accepting moves',
-      NINE.legalMoves(m).every(mv => m.r[(mv / 9) | 0] === 0));
-    check('boards get decided', decided >= 1, 'decided ' + decided);
+    const m = ULT.newMatch();
+    check('a match opens with all 81 squares available and no board forced',
+      ULT.legalMoves(m).length === 81 && m.send === ULT.ANYWHERE);
+
+    /* THE rule: the cell you play names the board your opponent plays in */
+    const m2 = ULT.newMatch();
+    ULT.applyMove(m2, 4 * 9 + 4);                 /* centre cell of the centre board */
+    check('the cell you play decides the board your opponent must play in',
+      m2.send === 4 && ULT.legalMoves(m2).every(mv => ((mv / 9) | 0) === 4),
+      'sent to ' + m2.send);
+    const m3 = ULT.newMatch();
+    ULT.applyMove(m3, 4 * 9 + 0);                 /* top-left cell of the centre board */
+    check('and a different cell sends them somewhere else',
+      m3.send === 0, 'sent to ' + m3.send);
+
+    /* sent to a finished board: play anywhere */
+    const m4 = ULT.newMatch();
+    m4.b[0] = OG.encode([1, 1, 1, 0, 0, 0, 0, 0, 0]);
+    m4.r[0] = 1;                                  /* board 0 already won by X */
+    m4.send = 4;
+    ULT.applyMove(m4, 4 * 9 + 0);                 /* would send them to board 0 */
+    check('being sent to a finished board frees the choice',
+      m4.send === ULT.ANYWHERE &&
+      new Set(ULT.legalMoves(m4).map(mv => (mv / 9) | 0)).size > 1);
+    check('and a finished board never accepts another mark',
+      ULT.legalMoves(m4).every(mv => ((mv / 9) | 0) !== 0));
+
+    /* the match is won by three boards in a row, not by five boards */
+    const m5 = ULT.newMatch();
+    m5.r[0] = 1; m5.r[1] = 1; m5.r[2] = 2; m5.r[5] = 2; m5.r[8] = 2;
+    check('three boards in a COLUMN wins the match — five boards to two loses it',
+      OG.WINNER[ULT.metaCode(m5)] === 2 && ULT.tally(m5).x === 2 && ULT.tally(m5).o === 3,
+      'meta winner ' + OG.WINNER[ULT.metaCode(m5)]);
+    const m6 = ULT.newMatch();
+    m6.r[0] = 1; m6.r[1] = 1; m6.r[2] = 3; m6.r[5] = 1; m6.r[8] = 1;
+    check('a drawn board counts for neither side on the meta-grid',
+      OG.WINNER[ULT.metaCode(m6)] === 0,
+      'four X boards including a broken row must not be a win: ' +
+      OG.WINNER[ULT.metaCode(m6)]);
+    check('but three in a row elsewhere still wins it',
+      OG.WINNER[ULT.metaCode(Object.assign(ULT.cloneMatch(m6), {
+        r: Uint8Array.from([1, 1, 3, 0, 0, 1, 0, 0, 1]) }))] === 0 &&
+      (function () { const z = ULT.cloneMatch(m6); z.r[2] = 1; return OG.WINNER[ULT.metaCode(z)] === 1; })());
   }
 
-  /* a newborn is a coin flip over all 81 squares */
+  /* ---- a whole match obeys them, played out ---- */
   {
-    const fresh = NINE.newBrain(), rnd = OG.makeRng('nine-chi');
+    const rnd = OG.makeRng('ult-rules');
+    let ok = true, drawn = 0, xw = 0, ow = 0, plies = 0, worst = 0, why = '';
+    for (let g = 0; g < 300 && ok; g++) {
+      const m = ULT.newMatch();
+      let prev = null;
+      while (!m.over) {
+        const moves = ULT.legalMoves(m);
+        if (prev !== null) {
+          /* every legal move obeys the send rule, every time */
+          const want = m.send;
+          if (want >= 0 && !moves.every(mv => ((mv / 9) | 0) === want)) { ok = false; why = 'send ignored'; break; }
+          if (!moves.every(mv => m.r[(mv / 9) | 0] === 0)) { ok = false; why = 'finished board offered'; break; }
+        }
+        const mv = ULT.randomMove(m, rnd);
+        prev = mv;
+        ULT.applyMove(m, mv);
+      }
+      if (!ok) break;
+      plies += m.plies; worst = Math.max(worst, m.plies);
+      if (m.winner === 3) drawn++; else if (m.winner === 1) xw++; else ow++;
+      /* a decided match really has three boards in a row */
+      if (m.winner !== 3) {
+        const line = m.metaLine;
+        if (!line || !line.every(b => m.r[b] === m.winner)) { ok = false; why = 'winner without a meta-line'; }
+      }
+    }
+    check('300 matches played out obey the send rule on every single ply', ok, why);
+    check('matches end in a meta-line or a full grid, both roles seen',
+      xw > 0 && ow > 0 && drawn > 0, `X ${xw}, O ${ow}, drawn ${drawn}`);
+    check('a match never runs past the 81 squares', worst <= 81, 'longest ' + worst);
+    console.log(`        300 random matches: ${(plies / 300).toFixed(1)} moves each on average, ` +
+                `longest ${worst}; X won ${xw}, O won ${ow}, ${drawn} drawn`);
+  }
+
+  /* ---- a newborn is a coin flip, exactly as on one board ---- */
+  {
+    const fresh = ULT.newBrain(), rnd = OG.makeRng('ult-chi');
     const counts = new Array(81).fill(0);
-    for (let i = 0; i < 8100; i++) counts[NINE.greedyMove(fresh, NINE.newMatch(), rnd)]++;
+    for (let i = 0; i < 8100; i++) counts[ULT.greedyMove(fresh, ULT.newMatch(), rnd)]++;
     const c = OG.chiSquareUniform(counts);
-    check('a newborn nine-board brain is uniform over all 81 squares (chi2 < 101.9, df 80)',
+    check('a newborn brain is uniform over all 81 opening squares (chi2 < 101.9, df 80)',
       c.chi2 < 101.879, 'chi2=' + c.chi2.toFixed(2));
     console.log(`        chi2 = ${c.chi2.toFixed(2)} on ${fmt(c.n)} opening moves, df ${c.df}`);
   }
 
-  /* the thing that breaks Act I's table really does happen */
+  /* =====================================================================
+     THE SEARCH SPACE
+
+     Beat two: the reductions that made the old act's arithmetic tolerable
+     are gone, and what is left cannot be counted. Every figure the page
+     prints is recomputed here from ULT.SPACE, which is the same code the
+     page reads -- and then checked independently, because a module
+     grading its own homework proves nothing.
+     ===================================================================== */
   {
-    const rnd = OG.makeRng('unbalanced');
-    let boards = 0, impossible = 0;
-    for (let g = 0; g < 200; g++) {
-      const m = NINE.newMatch();
-      while (!m.over) {
-        NINE.applyMove(m, NINE.randomMove(m, rnd));
-        for (let b = 0; b < 9; b++) { boards++; if (NINE.isImpossibleAlone(m.b[b])) impossible++; }
-      }
+    const S = ULT.SPACE;
+
+    /* An independent re-derivation of "reachable": walk real matches and
+       confirm that every picture that actually turns up is one the rule
+       admits, and that the rule admits nothing with both players
+       aligned. Different route, same answer, or the count is wrong. */
+    const rnd = OG.makeRng('reach');
+    const met = new Set();
+    for (let g = 0; g < 400; g++) {
+      const m = ULT.newMatch();
+      while (!m.over) { ULT.applyMove(m, ULT.randomMove(m, rnd)); for (let b = 0; b < 9; b++) met.add(m.b[b]); }
     }
-    const pct = 100 * impossible / boards;
-    check('boards routinely reach shapes that cannot occur in one-board tic-tac-toe',
-      pct > 20, pct.toFixed(1) + '%');
-    console.log(`        ${pct.toFixed(0)}% of the board pictures met in a match are ones ` +
-                `ordinary tic-tac-toe can never produce`);
+    const strays = Array.from(met).filter(c => !ULT.SPACE.isReachable(c));
+    check('every board picture a real match produces is one the count admits',
+      strays.length === 0, strays.slice(0, 5).join(','));
+    console.log(`        ${fmt(met.size)} distinct pictures seen in 400 matches, all inside the count`);
+
+    let both = 0;
+    for (let c = 0; c < OG.NCODE; c++) if (OG.WINNER[c] === 3 && ULT.SPACE.isReachable(c)) both++;
+    check('no picture with both players aligned is counted as reachable', both === 0);
+
+    check('the small-board pictures this game can produce', S.pictures === 18753,
+      'got ' + S.pictures);
+    check('and how many survive the eight symmetries of a square',
+      S.classes === 2694, 'got ' + S.classes);
+    quote(fmt(S.pictures), 'reachable small-board pictures');
+    quote(fmt(S.classes), 'pictures up to symmetry');
+    quote(fmt(S.picturesTotal), 'base-3 codes in all');
+    quote(fmt(S.slots), 'table entries this game can use');
+
+    /* the eight symmetries really are eight distinct permutations */
+    check('the symmetry group is the eight of a square, no more and no fewer',
+      ULT.SYMMETRIES.length === 8 &&
+      new Set(ULT.SYMMETRIES.map(p => p.join(''))).size === 8);
+
+    /* the bound, re-derived here in BigInt without touching the module */
+    const want = (BigInt(S.pictures) ** BigInt(9)) * BigInt(10) / BigInt(8);
+    check('the upper bound is the product the page prints, not a remembered number',
+      Math.abs(S.bound - Number(want)) / Number(want) < 1e-12,
+      S.bound.toExponential(4) + ' vs ' + Number(want).toExponential(4));
+    check('the reductions buy essentially nothing against a naive 3^81',
+      S.boundOverRaw > 0.8 && S.boundOverRaw < 0.82, S.boundOverRaw.toFixed(3));
+    check('it cannot be counted at a billion a second since the big bang',
+      S.timesCountable > 8e11 && S.timesCountable < 8.5e11,
+      S.timesCountable.toExponential(3));
+    const e38 = v => (v / 1e38).toFixed(1) + ' × 10³⁸';
+    quote(e38(S.bound), 'the upper bound on positions');
+    quote(e38(S.raw81), 'a naive 3^81');
+    quote(S.boundOverRaw.toFixed(2), 'the bound as a fraction of 3^81');
+    quote(Math.round(S.timesCountable / 1e10) * 10 + ' billion',
+      'times more than could be counted since the big bang');
+
+    /* and the scale the demo can exhaust, for the row above it */
+    check('ordinary tic-tac-toe really does have 255,168 complete games',
+      ULT.SMALLGAMES === 255168, 'got ' + ULT.SMALLGAMES);
+    quote(fmt(ULT.SMALLGAMES), 'complete games of ordinary tic-tac-toe');
+    console.log(`        ${fmt(S.pictures)} pictures (${fmt(S.classes)} up to symmetry) -> ` +
+                `${S.bound.toExponential(2)} positions, ${S.boundOverRaw.toFixed(2)}x of 3^81, ` +
+                `${(S.timesCountable / 1e9).toFixed(0)} billion times what could be counted`);
   }
 
-  /* the handover from Act I is exact where it applies, silent where it does not */
+  /* ---- the handover from step 2, and what it does not cover ---- */
   {
     const agent = trainTo('handover', 4);
-    const brain = NINE.newBrain();
-    const handed = NINE.seedFromAgent(brain, agent);
+    const brain = ULT.newBrain();
+    const handed = ULT.seedFromAgent(brain, agent);
     let exact = true;
     for (let code = 1; code < OG.NCODE && exact; code++) {
       if (OG.TOMOVE[code] === 0 || OG.WINNER[code] === 3 || agent.N[code] === 0) continue;
       const want = OG.moverOf(code) === 1 ? agent.V[code] : -agent.V[code];
-      if (Math.abs(brain.U[NINE.ui(code, OG.TOMOVE[code])] - want) > 1e-6) exact = false;
+      if (Math.abs(brain.U[ULT.ui(code, OG.TOMOVE[code])] - want) > 1e-6) exact = false;
     }
-    check('every entry Act I hands over converts exactly', exact);
+    check('every entry step 2 hands over converts exactly', exact);
+    const share = handed / ULT.SPACE.slots;
     check('the handover covers only a small slice of what this game needs',
-      handed / (OG.NCODE * 2) < 0.2,
-      `${fmt(handed)} of ${fmt(OG.NCODE * 2)} = ${(100 * handed / (OG.NCODE * 2)).toFixed(0)}%`);
-    console.log(`        handed over ${fmt(handed)} of ${fmt(OG.NCODE * 2)} entries ` +
-                `(${(100 * handed / (OG.NCODE * 2)).toFixed(0)}%)`);
+      share > 0.14 && share < 0.16,
+      `${fmt(handed)} of ${fmt(ULT.SPACE.slots)} = ${(100 * share).toFixed(0)}%`);
+    check('the numbers the page prints for the handover', handed === 5477, 'got ' + handed);
+    quote(`${fmt(handed)} of ${fmt(ULT.SPACE.slots)}`, 'entries handed over from step 2');
+    quote(Math.round(100 * share) + '%', 'share of the usable table handed over');
+    console.log(`        handed over ${fmt(handed)} of ${fmt(ULT.SPACE.slots)} usable entries ` +
+                `(${(100 * share).toFixed(0)}%)`);
   }
 
-  /* train it, then hold it to the same standards Act I met */
-  const A1 = trainTo('nine-actone', 4);
-  const B9 = NINE.newBrain();
-  NINE.seedFromAgent(B9, A1);
-  const t0 = Date.now();
-  const nrnd = OG.makeRng('nine-train');
-  for (let i = 0; i < 5; i++) NINE.trainMatches(B9, NINE.HP9.burst, nrnd);
-  const trainMs = Date.now() - t0;
-  check('five bursts of nine-board training run in under three seconds', trainMs < 3000, trainMs + 'ms');
-  console.log(`        ${fmt(5 * NINE.HP9.burst)} matches in ${trainMs}ms`);
-
+  /* ---- pictures ordinary tic-tac-toe can never produce ---- */
   {
-    /* behaviour, judged against a sane opponent rather than a random one:
-       against random play, boards fill with several threats at once and
-       "did it block" stops being a fair question */
-    const rnd = OG.makeRng('behaviour9');
-    let winChance = 0, winTaken = 0, blockChance = 0, blockMade = 0;
-    const lines = (m, who) => {
-      const out = new Set();
-      for (let b = 0; b < 9; b++) {
-        if (m.r[b] !== 0) continue;
-        const off = m.b[b] * 9;
-        for (const L of OG.LINES) {
-          let mine = 0, other = 0, empty = -1;
-          for (const i of L) {
-            const v = OG.CELLS[off + i];
-            if (v === who) mine++; else if (v === 0) empty = i; else other++;
-          }
-          if (mine === 2 && other === 0 && empty >= 0) out.add(b * 9 + empty);
-        }
-      }
-      return Array.from(out);
-    };
-    for (let g = 0; g < 300; g++) {
-      const m = NINE.newMatch(), seat = 1 + (g % 2);
+    const rnd = OG.makeRng('unbalanced');
+    let boards = 0, impossible = 0;
+    for (let g = 0; g < 200; g++) {
+      const m = ULT.newMatch();
       while (!m.over) {
-        if (m.turn === seat) {
-          const w = lines(m, seat), bl = lines(m, seat === 1 ? 2 : 1);
-          const mv = NINE.greedyMove(B9, m, rnd);
-          if (w.length && !bl.length) { winChance++; if (w.includes(mv)) winTaken++; }
-          if (!w.length && bl.length === 1) { blockChance++; if (bl.includes(mv)) blockMade++; }
-          NINE.applyMove(m, mv);
-        } else NINE.applyMove(m, NINE.heuristicMove(m, m.turn, rnd));
+        ULT.applyMove(m, ULT.randomMove(m, rnd));
+        for (let b = 0; b < 9; b++) { boards++; if (ULT.isImpossibleAlone(m.b[b])) impossible++; }
       }
     }
-    check('it takes a free win when nothing is more urgent',
-      winChance === 0 || winTaken / winChance > 0.9,
-      `${winTaken} of ${winChance}`);
-    check('it blocks a single threat every time',
-      blockMade / blockChance > 0.98, `${blockMade} of ${blockChance}`);
-    console.log(`        free wins taken ${winTaken}/${winChance}, ` +
-                `single threats blocked ${blockMade}/${blockChance}`);
+    const pct = 100 * impossible / boards;
+    check('boards routinely reach shapes that cannot occur in one-board tic-tac-toe',
+      pct > 45 && pct < 60, pct.toFixed(1) + '%');
+    check('the share the page prints', Math.round(pct) === 51, pct.toFixed(1) + '%');
+    quote(Math.round(pct) + '% of the board pictures',
+      'board pictures met that ordinary tic-tac-toe cannot produce');
+    console.log(`        ${pct.toFixed(0)}% of the board pictures met in a match are ones ` +
+                `ordinary tic-tac-toe can never produce`);
   }
 
-  {
-    const rnd = OG.makeRng('nine-eval');
-    const cpu = NINE.vsHeuristic(B9, 400, rnd);
-    const rand = NINE.vsRandom(B9, 200, rnd);
-    check('it stops losing to the hand-written rule-based opponent',
-      cpu.losses === 0, JSON.stringify(cpu));
-    check('it beats a random player almost every time', rand.winRate > 0.9, JSON.stringify(rand));
-    console.log(`        vs hand-written rules: ${cpu.wins} won, ${cpu.draws} drawn, ${cpu.losses} lost of 400`);
-    console.log(`        vs random play:          ${rand.wins} won, ${rand.draws} drawn, ${rand.losses} lost of 200`);
+  /* =====================================================================
+     TRAIN IT, THEN MEASURE THE WALL
+
+     One seeded recipe, reused by every check below and quoted verbatim
+     in README.md. If any of it moves, the numbers in the prose are wrong
+     and these checks say so.
+     ===================================================================== */
+  const A1 = trainTo('ultimate-actone', 4);
+  const B = ULT.newBrain();
+  ULT.seedFromAgent(B, A1);
+  const nrnd = OG.makeRng('ultimate-train');
+  const t0 = Date.now();
+  const lostLocal = [], lostAware = [];
+  for (let burst = 0; burst <= 5; burst++) {
+    if (burst) ULT.trainMatches(B, ULT.HPU.burst, nrnd);
+    lostLocal.push(ULT.vsHeuristic(B, 200, OG.makeRng('vs-local-' + burst)).losses);
+    lostAware.push(ULT.vsSendAware(B, 200, OG.makeRng('vs-aware-' + burst)).losses);
   }
+  const arcMs = Date.now() - t0;
+  console.log(`        burst        ` + lostLocal.map((_, i) => String(i).padStart(5)).join(''));
+  console.log(`        board-local  ` + lostLocal.map(n => String(n).padStart(5)).join('') + '   lost of 200');
+  console.log(`        send-aware   ` + lostAware.map(n => String(n).padStart(5)).join('') + '   lost of 200');
+  console.log(`        the whole arc, trained and measured, in ${arcMs}ms`);
 
   {
-    /* the headline: a table only works if the same page comes round again */
-    const r9 = NINE.measureRecurrence(B9, NINE.HP9.burst, OG.makeRng('rec9'));
-    const r1 = NINE.measureRecurrenceSingle(A1, OG.HP.burst, OG.makeRng('rec1'));
+    check('five bursts of ultimate training and the whole measured arc run in under ten seconds',
+      arcMs < 10000, arcMs + 'ms');
+
+    /* THE CONTROL. Against a hand-written player that shares its blind
+       spot -- board-local reasoning and nothing else -- the decomposition
+       learns, and learns a lot. Without this the flat line below would
+       just be a broken learner. */
+    check('against a board-local opponent it learns: losses more than halve',
+      lostLocal[5] < lostLocal[0] / 2,
+      lostLocal[0] + ' -> ' + lostLocal[5] + ' of 200');
+
+    /* THE FINDING. Against the same player plus three clauses about the
+       things ultimate rules added, the line goes flat. */
+    const tail = lostAware.slice(1);
+    check('against a send-aware opponent it improves once and then stops',
+      lostAware[1] < lostAware[0] &&
+      Math.max(...tail) - Math.min(...tail) < 0.2 * lostAware[0],
+      lostAware.join(' -> '));
+    check('and it is still losing most of them after five bursts',
+      lostAware[5] > 120, lostAware[5] + ' of 200');
+    check('the exact arc the README prints',
+      lostLocal.join(',') === '122,96,81,62,59,54' &&
+      lostAware.join(',') === '167,139,145,138,124,137',
+      'board-local ' + lostLocal.join(',') + ' / send-aware ' + lostAware.join(','));
+    const arcRow = a => a.map(n => String(n).padStart(3)).join('  ');
+    quote(arcRow(lostLocal), 'the board-local arc, row as printed');
+    quote(arcRow(lostAware), 'the send-aware arc, row as printed');
+
+    /* it is a real player, not a broken one */
+    const rand = ULT.vsRandom(B, 200, OG.makeRng('ult-random'));
+    check('it beats a random player nine times in ten', rand.winRate > 0.85,
+      JSON.stringify(rand));
+    console.log(`        vs random play: ${rand.wins} won, ${rand.draws} drawn, ${rand.losses} lost of 200`);
+  }
+
+  /* ---- the two hand-written players, priced against each other ----
+     The three send-aware clauses are the whole difference between them,
+     so this is what those clauses are worth on their own, with no
+     learner involved. */
+  {
+    const h2h = ULT.scoreHeadToHead(ULT.sendAwareMove, ULT.heuristicMove, 200, OG.makeRng('h2h'));
+    check('the three extra clauses beat the board-local player outright',
+      h2h.a === 200 && h2h.b === 0, JSON.stringify(h2h));
+    quote('200 matches to nothing', 'send-aware against board-local');
+    console.log(`        send-aware rules vs board-local rules: ${h2h.a}-${h2h.b}-${h2h.draws}`);
+  }
+
+  /* =====================================================================
+     WHY IT STOPS: THE TWO THINGS THE DECOMPOSITION CANNOT SEE
+
+     Beat one. Each of the two blind spots is measured against a control
+     that must come out the OTHER way, so a probe that simply could not
+     see anything would fail rather than confirm.
+     ===================================================================== */
+  {
+    const b = ULT.measureBlindness(B, 1000, OG.makeRng('blindness'), ULT.heuristicMove);
+
+    /* CONTROL: board wins are visible one board at a time, so it takes
+       nearly all of them. A probe that missed this would prove nothing
+       about the two below. */
+    check('CONTROL — it takes a free board win most of the time, so the probe can see',
+      b.boardWinRate > 0.75, `${b.boardWinTaken} of ${b.boardWinChances}`);
+
+    /* FINDING 1: the meta-grid is invisible. A move that wins the MATCH
+       scores exactly as a move that wins any other board, because the
+       picture inside the board is all the table looks at. */
+    check('a match-winning move is taken no more often than any other board win',
+      Math.abs(b.matchWinRate - b.boardWinRate) < 0.06,
+      `match ${(100 * b.matchWinRate).toFixed(0)}%, any board ${(100 * b.boardWinRate).toFixed(0)}%`);
+    check('when the match-winning move is the only board win, it takes it at the control rate',
+      Math.abs(b.aloneRate - b.boardWinRate) < 0.06,
+      `${(100 * b.aloneRate).toFixed(0)}% vs ${(100 * b.boardWinRate).toFixed(0)}%`);
+    check('when another board win ties with it, it flips a coin between winning and not',
+      b.rivalChances >= 40 && b.rivalRate < 0.7 && b.rivalRate < b.aloneRate - 0.2,
+      `${b.rivalTaken} of ${b.rivalChances} = ${(100 * b.rivalRate).toFixed(0)}%`);
+
+    /* FINDING 2: where the move sends the opponent is invisible. */
+    check('it hands over an immediate win at about the rate blind choosing would',
+      Math.abs(b.giftRate - b.giftChanceRate) < 0.08,
+      `${(100 * b.giftRate).toFixed(1)}% against a chance rate of ${(100 * b.giftChanceRate).toFixed(1)}%`);
+    check('and the small edge it does have is under chance, not over it — blocking, ' +
+      'which it CAN see, happens to close the gift too',
+      b.giftRate < b.giftChanceRate,
+      `${(100 * b.giftRate).toFixed(1)}% vs ${(100 * b.giftChanceRate).toFixed(1)}%`);
+    check('nearly half of those giveaways had an equally top-scoring move that would not have',
+      b.avoidableRate > 0.35 && b.avoidableRate < 0.6,
+      `${fmt(b.giftAvoidable)} of ${fmt(b.giftsGiven)} = ${(100 * b.avoidableRate).toFixed(0)}%`);
+
+    check('the exact blindness figures the README prints',
+      Math.round(100 * b.boardWinRate) === 81 &&
+      Math.round(100 * b.matchWinRate) === 79 &&
+      Math.round(100 * b.aloneRate) === 82 &&
+      Math.round(100 * b.rivalRate) === 53 &&
+      Math.round(100 * b.giftRate) === 36 &&
+      Math.round(100 * b.giftChanceRate) === 41 &&
+      Math.round(100 * b.avoidableRate) === 45,
+      JSON.stringify({
+        boardWin: b.boardWinRate, matchWin: b.matchWinRate, alone: b.aloneRate,
+        rival: b.rivalRate, gift: b.giftRate, chance: b.giftChanceRate,
+        avoidable: b.avoidableRate }));
+    const pc = v => Math.round(100 * v) + '%';
+    quote(`${fmt(b.boardWinTaken)} of ${fmt(b.boardWinChances)}`, 'free board wins taken');
+    quote(`${fmt(b.matchWinTaken)} of ${fmt(b.matchWinChances)}`, 'match-winning moves taken');
+    quote(`${b.aloneTaken} of ${b.aloneChances}`, 'match wins taken when alone');
+    quote(`${b.rivalTaken} of ${b.rivalChances}`, 'match wins taken when tied with another');
+    quote(`${fmt(b.giftsGiven)} of ${fmt(b.giftTurns)}`, 'giveaways');
+    quote(`${fmt(b.giftAvoidable)}`, 'giveaways that were free to avoid');
+    [pc(b.boardWinRate), pc(b.matchWinRate), pc(b.aloneRate), pc(b.rivalRate),
+     pc(b.giftRate), pc(b.giftChanceRate), pc(b.avoidableRate)]
+      .forEach(p => quote(p, 'a blindness rate'));
+
+    console.log(`        free board win taken (control) ${fmt(b.boardWinTaken)}/${fmt(b.boardWinChances)} = ` +
+                `${(100 * b.boardWinRate).toFixed(0)}%`);
+    console.log(`        match-WINNING move taken       ${fmt(b.matchWinTaken)}/${fmt(b.matchWinChances)} = ` +
+                `${(100 * b.matchWinRate).toFixed(0)}%  ` +
+                `[alone ${(100 * b.aloneRate).toFixed(0)}%, tied with another board win ` +
+                `${(100 * b.rivalRate).toFixed(0)}%]`);
+    console.log(`        hands over an immediate win    ${fmt(b.giftsGiven)}/${fmt(b.giftTurns)} = ` +
+                `${(100 * b.giftRate).toFixed(1)}%, chance ${(100 * b.giftChanceRate).toFixed(1)}%, ` +
+                `${(100 * b.avoidableRate).toFixed(0)}% of them avoidable at no cost`);
+  }
+
+  /* ---- and the old headline, re-measured under the new rules ---- */
+  {
+    const r9 = ULT.measureRecurrence(B, ULT.HPU.burst, OG.makeRng('rec-ult'));
+    const r1 = ULT.measureRecurrenceSingle(A1, OG.HP.burst, OG.makeRng('rec-one'));
     const per9 = r9.positions / r9.distinct, per1 = r1.positions / r1.distinct;
-    check('on one board, positions come round again and again', per1 > 5, per1.toFixed(2) + '×');
-    check('on nine boards, essentially nothing comes round twice', per9 < 1.3, per9.toFixed(2) + '×');
-    check('the gap between the two is the whole lesson', per1 / per9 > 4,
-      `${per1.toFixed(1)}x vs ${per9.toFixed(2)}x`);
-    console.log(`        one board : ${fmt(r1.positions)} positions met, ${fmt(r1.distinct)} different, ` +
-                `each seen ${per1.toFixed(1)}× on average`);
-    console.log(`        nine boards: ${fmt(r9.positions)} positions met, ${fmt(r9.distinct)} different, ` +
-                `each seen ${per9.toFixed(2)}× on average`);
+    check('on one board, positions come round again and again', per1 > 5, per1.toFixed(2) + 'x');
+    check('in ultimate, essentially nothing comes round twice', per9 < 1.3, per9.toFixed(2) + 'x');
+    check('the gap between the two is the whole reason a table cannot hold this',
+      per1 / per9 > 4, `${per1.toFixed(1)}x vs ${per9.toFixed(2)}x`);
+    check('the recurrence figures the README prints',
+      per1.toFixed(1) === '10.6' && per9.toFixed(2) === '1.08' && Math.round(r9.plies) === 41,
+      `${per1.toFixed(1)}x / ${per9.toFixed(2)}x / ${r9.plies.toFixed(1)} plies`);
+    quote(per1.toFixed(1) + '×', 'times a one-board position comes round');
+    quote(per9.toFixed(2) + '×', 'times an ultimate position comes round');
+    quote(Math.round(r9.plies) + '-move', 'the length of an ultimate match');
+    console.log(`        one board: ${fmt(r1.positions)} positions met, ${fmt(r1.distinct)} different, ` +
+                `each seen ${per1.toFixed(1)}x on average`);
+    console.log(`        ultimate : ${fmt(r9.positions)} positions met, ${fmt(r9.distinct)} different, ` +
+                `each seen ${per9.toFixed(2)}x on average, over ${r9.plies.toFixed(0)}-move matches`);
   }
 
+  /* ---- the position is no longer just the picture ---- */
   {
-    const a = NINE.newBrain(), b = NINE.newBrain();
-    NINE.trainMatches(a, 300, OG.makeRng('same'));
-    NINE.trainMatches(b, 300, OG.makeRng('same'));
+    const m = ULT.newMatch();
+    ULT.applyMove(m, 0 * 9 + 4);        /* X centre of board 0, sends them to board 4 */
+    const a = ULT.matchKey(m);
+    const z = ULT.cloneMatch(m);
+    z.send = 0;
+    check('two identical grids with different forced boards are different positions',
+      ULT.matchKey(z) !== a, 'the active board has to be part of the key or the count is wrong');
+  }
+
+  /* ---- housekeeping the demo rests on ---- */
+  {
+    const a = ULT.newBrain(), b = ULT.newBrain();
+    ULT.trainMatches(a, 200, OG.makeRng('same'));
+    ULT.trainMatches(b, 200, OG.makeRng('same'));
     let same = a.seen === b.seen;
     for (let i = 0; i < a.U.length && same; i++) if (a.U[i] !== b.U[i]) same = false;
-    check('a seeded nine-board run reproduces bit for bit', same);
+    check('a seeded ultimate run reproduces bit for bit', same);
   }
 
-  check('there is no unbeatability proof on offer for nine boards',
-    typeof NINE.verifyUnbeatable === 'undefined',
-    'a proof would be a lie here — the space cannot be searched');
-}
+  check('there is no unbeatability proof on offer for ultimate tic-tac-toe',
+    typeof ULT.verifyUnbeatable === 'undefined' && typeof ULT.verifyPolicy === 'undefined',
+    'a proof would be a lie here — this app cannot search the space');
 
-/* =====================================================================
-   6b. THE SAME RULE, A DIFFERENT MEMORY
-
-   Step 3 ships two memories: a table of 39,366 numbers and a neural
-   network of 1,777 weights. The demo's whole claim is that they differ
-   in exactly one respect -- where the value is kept -- and that the
-   network can answer about board pictures nobody ever showed it.
-
-   Both halves of that are checked here, and so is the uncomfortable
-   half: at the budget the demo actually runs, the network is the WORSE
-   PLAYER. If that ever stops being true this check fails and the prose
-   has to be rewritten, which is exactly why it is pinned.
-   ===================================================================== */
-head('6b. The same rule, a different memory');
-
-{
-  /* ---- the seam is real, not a caption ---- */
-  /* Comments are stripped before any of these are read: the claim is
-     about the CODE, and a file that only discussed the seam in its
-     header would pass a check made against its own prose. */
-  const decomment = f => fs.readFileSync(path.join(__dirname, f), 'utf8')
-    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
+  /* ---- and the published result the page quotes instead ---- */
   {
-    const src = decomment('nine.js');
-    check('nine.js never names the network -- it is handed a memory, not a kind',
-      !/\bNET\b|net\.js/.test(src));
-    const body = src.slice(src.indexOf('function moveValue'));
-    check('nothing below the store reaches past at() / hits() / nudge() into a raw array',
-      !/brain\.(U|N)\[/.test(body), 'a direct array access would be a second difference');
-    const table = NINE.newBrain(), net = NET.newBrain();
-    const api = ['at', 'hits', 'nudge', 'absorb'];
-    check('both memories implement the same four calls',
-      api.every(k => typeof table[k] === 'function' && typeof net[k] === 'function'));
+    const S = ULT.SOLVED;
+    check('the solved-game claim carries its source, its numbers and its caveat',
+      S.ref === 'arXiv:2006.02353' && S.atMost === 43 && S.atLeast === 29 &&
+      /Bertholon/.test(S.authors) && /\bfull\b/i.test(S.variant) && /\bwon\b/i.test(S.variant),
+      JSON.stringify(S));
+    check('and 43 moves is inside the 81 the game allows at all',
+      S.atMost < 81 && S.atLeast < S.atMost);
+    quote('at most ' + S.atMost + ' moves', 'the published upper bound');
+    quote('at least ' + S.atLeast, 'the published lower bound');
+    quote(S.ref, 'the citation');
+    quote('Bertholon', 'the first author');
   }
 
-  /* ---- the update really is the table's update, in output space ---- */
+  /* ---- the learner is a learner: nothing about ultimate rules is
+         written into it ---- */
   {
-    const net = NET.newNet({ seed: 'gradcheck' });
-    let worst = 0;
-    const rnd = OG.makeRng('gradcheck');
-    for (let i = 0; i < 500; i++) {
-      const code = (rnd() * OG.NCODE) | 0, t = 1 + (i % 2);
-      const target = (i % 3) - 1, alpha = 0.1;
-      const before = NET.forward(net, code, t);
-      NET.update(net, code, t, target, alpha);
-      const after = NET.forward(net, code, t);
-      worst = Math.max(worst, Math.abs(after - (before + alpha * (target - before))));
-    }
-    check('one update moves the network answer alpha of the way to the target, exactly as ' +
-      'the table update does', worst < 0.05, 'worst deviation ' + worst.toExponential(2));
-    console.log(`        worst deviation from  y += alpha*(target-y):  ${worst.toExponential(2)}`);
+    const decomment = f => fs.readFileSync(path.join(__dirname, f), 'utf8')
+      .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
+    const src = decomment('ultimate.js');
+    const learner = src.slice(src.indexOf('function moveValue'), src.indexOf('function measureBlindness'));
+    check('nothing between the store and the move choice reaches into a raw array',
+      !/brain\.(U|N)\[/.test(learner),
+      'a direct array access would be a second difference from a swapped-in memory');
+    check('the learner never consults the meta-grid or where a move sends the opponent',
+      !/metaCode|winsMatch|isGift|BOARDW/.test(learner),
+      'the whole act is that it cannot see these; it must not be quietly using them');
   }
-
-  /* ---- a newborn network ---- */
-  {
-    const net = NET.newBrain();
-    let worst = 0;
-    for (let c = 0; c < OG.NCODE; c += 7) worst = Math.max(worst, Math.abs(net.at(c, 1)));
-    check('a newborn network answers about 0.00 everywhere, as a newborn table does',
-      worst < 0.05, 'largest newborn value ' + worst.toFixed(3));
-    check('but not IDENTICALLY zero -- a network is born with preferences it did not earn',
-      net.at(0, 1) !== net.at(1, 1),
-      'if these matched, the honest note in the guide would be wrong');
-  }
-
-  /* ---- determinism ---- */
-  {
-    const a = NET.newBrain({ seed: 'same' }), b = NET.newBrain({ seed: 'same' });
-    NINE.trainMatches(a, 60, OG.makeRng('rep'));
-    NINE.trainMatches(b, 60, OG.makeRng('rep'));
-    let same = true;
-    for (let i = 0; i < a.net.W1.length && same; i++) if (a.net.W1[i] !== b.net.W1[i]) same = false;
-    for (let i = 0; i < a.net.W3.length && same; i++) if (a.net.W3[i] !== b.net.W3[i]) same = false;
-    check('a seeded network run reproduces bit for bit', same);
-    check('the network uses none of the maths browsers round differently',
-      !/Math\.(exp|log|tanh|pow|sin|cos|atan|asin|acos|cbrt|hypot)\b/.test(decomment('net.js')),
-      'Math.exp/log/tanh are implementation-defined in their last bits; ' +
-      'the four operations and sqrt are not');
-  }
-
-  /* ---- the answer key is independent of both memories ---- */
-  {
-    let agree = 0, tested = 0, bad = 0;
-    for (let code = 0; code < OG.NCODE; code += 3) {
-      const t = OG.TOMOVE[code];
-      if (t === 0 || OG.WINNER[code] !== 0 || OG.NEMPTY[code] === 0) continue;
-      /* where both are defined -- a balanced board -- the answer key must
-         agree with this file's own minimax, which knows nothing of net.js */
-      const want = t === 1 ? minimax(code) : -minimax(code);   // to X
-      tested++;
-      if (NET.truth(code, t) === want) agree++; else bad++;
-    }
-    check('the held-out answer key agrees with an independent minimax wherever both are defined',
-      bad === 0, `${agree} of ${tested}`);
-    console.log(`        answer key checked against this file's own minimax on ${fmt(tested)} positions`);
-  }
-
-  /* ---- the held-out set is genuinely never written ---- */
-  const A1 = trainTo('net-actone', 4);
-  const exp = NET.experiment(NINE, A1, { seed: 'demo', matches: NET.HPN.burst });
-  {
-    const hold = NET.makeHoldout('demo');
-    let leaked = 0, held = 0;
-    for (let code = 0; code < OG.NCODE; code++) {
-      for (let t = 1; t <= 2; t++) {
-        if (!hold(code, t)) continue;
-        held++;
-        if (exp.table.U[NET.ui(code, t)] !== 0) leaked++;
-      }
-    }
-    check('every held-out picture is still exactly as the table was born -- nothing leaked in',
-      leaked === 0, leaked + ' of ' + held + ' had been written');
-    check('and both memories refused the same writes, in quantity',
-      exp.refusals.table > 1000 && exp.refusals.net > 1000, JSON.stringify(exp.refusals));
-    console.log(`        ${fmt(held)} held-out entries; ${fmt(exp.refusals.table)} table writes ` +
-                `and ${fmt(exp.refusals.net)} network writes refused`);
-  }
-
-  /* ---- THE RESULT ---- */
-  {
-    const g = exp.all, w = exp.wins;
-    check('the network is right about held-out pictures far more often than the table',
-      g.netRate > 0.6 && g.netRate > g.tableRate + 0.4,
-      `network ${(100 * g.netRate).toFixed(1)}%, table ${(100 * g.tableRate).toFixed(1)}%`);
-    /* the table's score is not a number it earned: it answers 0.00 to
-       every held-out picture, so it is right exactly on the drawn ones */
-    const drawn = (g.n - g.decisive) / g.n;
-    check('the table score is exactly the share of held-out pictures that are drawn -- it ' +
-      'answered 0.00 to all of them', Math.abs(g.tableRate - drawn) < 1e-9,
-      `${g.tableRate.toFixed(6)} vs ${drawn.toFixed(6)}`);
-    check('on held-out pictures with a win waiting, the table scores nothing at all',
-      w.tableRate === 0 && w.netRate > 0.6,
-      `network ${(100 * w.netRate).toFixed(1)}%, table ${(100 * w.tableRate).toFixed(1)}%`);
-    console.log(`        ${fmt(g.n)} held-out pictures (${(100 * g.decisive / g.n).toFixed(0)}% decisive): ` +
-                `network ${(100 * g.netRate).toFixed(1)}% right, table ${(100 * g.tableRate).toFixed(1)}%`);
-    console.log(`        ${fmt(w.n)} of them have a win waiting: ` +
-                `network ${(100 * w.netRate).toFixed(1)}%, table ${(100 * w.tableRate).toFixed(1)}%`);
-  }
-
-  /* ---- and the part the demo must not dress up ---- */
-  {
-    const T = NINE.newBrain(); NINE.seedFromAgent(T, A1);
-    const N9 = NET.newBrain({ seed: 'strength' }); NINE.seedFromAgent(N9, A1);
-    NINE.trainMatches(T, NINE.HP9.burst * 3, OG.makeRng('str'));
-    const t0 = Date.now();
-    NINE.trainMatches(N9, NET.HPN.burst, OG.makeRng('str'));
-    const netMs = Date.now() - t0;
-    const ct = NINE.vsHeuristic(T, 200, OG.makeRng('sc'));
-    const cn = NINE.vsHeuristic(N9, 200, OG.makeRng('sc'));
-    check('the network is the WORSE PLAYER at the budget the demo runs, and the page says so',
-      cn.losses > ct.losses,
-      `table lost ${ct.losses}, network lost ${cn.losses} -- if this flips, rewrite the prose`);
-    check('a network burst still fits the demo idiom of a few seconds',
-      netMs < 6000, netMs + 'ms for ' + NET.HPN.burst + ' matches');
-    check('the network still beats a random player',
-      NINE.vsRandom(N9, 100, OG.makeRng('sr')).winRate > 0.85);
-    console.log(`        vs the hand-written rules, of 200: table lost ${ct.losses}, ` +
-                `network lost ${cn.losses}`);
-    console.log(`        ${fmt(NET.HPN.burst)} network matches in ${netMs}ms ` +
-                `(${fmt(N9.params)} weights against ${fmt(OG.NCODE * 2)} table slots)`);
-  }
-
-  /* ---- WHERE the network falls down, pinned so the explanation cannot
-         quietly become wrong.
-
-     The demo's account of why the network plays worse is specific: it is
-     not that the network is too small to hold the answer, and not that
-     the update is the wrong one. It is that self-play cannot DRIVE this
-     memory to the precision the move rule needs, because a move is
-     chosen by subtracting two values and the errors do not cancel.
-
-     That account only stands if the same network, shown the answers
-     outright, does markedly better than the same network left to work
-     them out. So: fit it to the answer key with the SAME update, and
-     measure the gap. ---- */
-  {
-    const items = [];
-    for (let code = 0; code < OG.NCODE; code++) {
-      if (OG.WINNER[code] === 3) continue;
-      for (let t = 1; t <= 2; t++) items.push([code, t, NET.truth(code, t)]);
-    }
-    const rms = (b) => {
-      let e = 0;
-      for (const [c, t, z] of items) { const d = b.at(c, t) - z; e += d * d; }
-      return Math.sqrt(e / items.length);
-    };
-
-    /* self-play, the way the demo trains it */
-    const played = NET.newBrain({ seed: 'gap' });
-    NINE.seedFromAgent(played, A1);
-    NINE.trainMatches(played, NET.HPN.burst * 4, OG.makeRng('gap'));
-
-    /* the same network, same update, same alpha — just shown the answers */
-    const shown = NET.newBrain({ seed: 'gap' });
-    for (let i = 0; i < shown.N.length; i++) shown.N[i] = 1;
-    const rnd = OG.makeRng('gap-fit');
-    const idx = items.map((_, i) => i);
-    for (let e = 0; e < 25; e++) {
-      for (let i = idx.length - 1; i > 0; i--) {
-        const j = (rnd() * (i + 1)) | 0; const q = idx[i]; idx[i] = idx[j]; idx[j] = q;
-      }
-      for (const i of idx) {
-        const [c, t, z] = items[i];
-        NET.update(shown.net, c, t, z, NET.HPN.alphaFloor);
-      }
-    }
-
-    const rPlayed = rms(played), rShown = rms(shown);
-    check('the network is not too small to hold the answer — shown it outright, the same ' +
-      'weights fit it far better than self-play ever gets them to',
-      rShown < rPlayed * 0.75,
-      `self-play ${rPlayed.toFixed(3)}, shown the answers ${rShown.toFixed(3)}`);
-    check('so the gap the demo explains is a LEARNING gap, not a capacity one',
-      rShown < 0.25 && rPlayed > 0.3,
-      `shown ${rShown.toFixed(3)}, self-play ${rPlayed.toFixed(3)}`);
-    console.log(`        error against the answer key — self-play ${rPlayed.toFixed(3)}, ` +
-                `same network shown the answers ${rShown.toFixed(3)}`);
-  }
-
-  check('there is no unbeatability proof on offer for the network either',
-    typeof NET.verifyUnbeatable === 'undefined' && typeof NET.verify === 'undefined',
-    'nine boards cannot be searched, whichever memory is behind the values');
 }
 
 /* =====================================================================
@@ -913,17 +978,24 @@ head('7. Step 1 — the hand-written rules');
   check('seven rules and eight rules are the same opponent — rule 8 is the list being tidy',
     sameAt7 && RULES.report(7).safe);
 
-  /* ---- the numbers quoted in the prose are the numbers in the code ---- */
-  const docs = ['README.md', 'src/demo-guide.html']
+  /* ---- the numbers quoted in the prose are the numbers in the code ----
+
+     Step 3 fills QUOTED as it measures, so every figure the ultimate act
+     prints is checked here too, against the same three documents the
+     reader actually sees. A number cannot be edited into the prose
+     without the code that produces it, and it cannot be changed in the
+     code without the prose going red. */
+  const docs = ['README.md', 'src/demo-guide.html', 'demo.json']
     .map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
   const quoted = [
     [fmt(r8.lines), 'complete game lines against the full ladder'],
     [fmt(r2.lines), 'complete game lines against the two-rule ladder'],
     [(r2.beatsSecond * 100).toFixed(0) + '%', 'how often best play beats two rules']
-  ];
+  ].concat(QUOTED);
   const missing = quoted.filter(([n]) => !docs.includes(n)).map(([n, what]) => `${n} (${what})`);
-  check('the counts written in README.md and the guide match the code',
+  check('every number quoted in README.md, the guide and the manifest matches the code',
     missing.length === 0, 'not found in the prose: ' + missing.join(', '));
+  console.log(`        ${quoted.length} figures cross-checked against the three documents`);
 }
 
 /* ===================================================================== */
