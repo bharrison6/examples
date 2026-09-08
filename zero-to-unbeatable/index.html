@@ -4425,6 +4425,28 @@ draw, <b>−1</b> if it lost. That number is written against the last position, 
 back down the game — a position is worth whatever the best thing your opponent can do from it
 is worth to them, with the sign flipped. Repeat a few thousand times and the numbers stop moving.</p>
 
+<h4>How a move with no outcome gets a score</h4>
+<p>Most moves neither win nor lose, so there is nothing to grade them on. The trick is that such a
+move is not graded on its own merit at all &mdash; it <b>borrows</b> its score from wherever it
+leads. Three cases, and that is the whole rule:<br>
+&bull; the move just won &rarr; <b>+1</b><br>
+&bull; the board is now full &rarr; <b>0</b><br>
+&bull; anything else &rarr; look at every reply your opponent could make, take the one <i>they</i>
+would like best, and <b>flip the sign</b>. What is good for them is bad for you.</p>
+
+<p>So at the beginning nothing means anything. Every number is 0.00, so every move scores
+&ldquo;zero, because the best my opponent can reach from here is also zero&rdquo;. What breaks the
+deadlock is a game actually <i>ending</i>: that position gets a real <b>+1</b>, and the next time a
+move leads there, it finally has something real to borrow. Scores seep backwards out of the ends of
+games, one link per update &mdash; which is why each game is walked <i>back to front</i> rather than
+front to back.</p>
+
+<p>Two details that matter. It takes the best reply your opponent <i>could</i> make rather than the
+one they actually made, so its own deliberate random exploring does not poison what it settles on.
+And this borrowing is exactly what fails in <b>nine at once</b>: asking &ldquo;what can my opponent
+reach from here?&rdquo; is useless when every one of those positions still reads 0.00 because it has
+never seen them.</p>
+
 <h4>Why it plays stupid moves early</h4>
 <p>A player that always picks its current best move only ever finds out about the moves it already
 likes. So a fraction of the time — shown in training as <b>&epsilon;</b> — it deliberately
