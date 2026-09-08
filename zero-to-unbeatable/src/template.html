@@ -7,13 +7,18 @@
 <meta name="theme-color" content="#00142B">
 <title>Zero to Unbeatable — watch an AI learn</title>
 <!--
-  Zero to Unbeatable — a single-file, offline demonstration of reinforcement learning.
+  Zero to Unbeatable — a single-file, offline demonstration of the three
+  things people call AI, on one tic-tac-toe board.
 
-  Play tic-tac-toe against an agent that starts knowing nothing, train it
-  in bursts, and play it again. All learning happens on this device. No
-  network, no accounts, no install, no AI service is called at any point.
+  Step 1: eight hand-written if/else rules that have played zero games and
+  cannot be beaten. Step 2: an agent that starts knowing nothing, is trained
+  in bursts, and arrives at exactly the same play with no rule in it. Step 3:
+  that learner on nine boards at once, where the approach comes apart. Steps
+  1 and 2 are both proved unbeatable by the same exhaustive search. All
+  learning happens on this device. No network, no accounts, no install, no
+  AI service is called at any point.
 
-  Companion: demo-guide.html (printable 15-minute session plan).
+  Companion: demo-guide.html (printable session plan, three steps, 20 min).
   Sources live in src/ and are concatenated by build.js.
 -->
 <style>
@@ -51,12 +56,16 @@
 
     <!-- ===================== OPPONENT / SCORE ===================== -->
     <section class="panel" id="opponent-panel">
-      <div class="seg" id="mode-seg" role="group" aria-label="Which game">
-        <button data-mode="one" class="on" aria-pressed="true">One board</button>
-        <button data-mode="nine" aria-pressed="false">Nine at once</button>
+      <!-- The three things people call AI, in the order the demo walks
+           them. data-mode values for the existing two are unchanged. -->
+      <div class="seg" id="mode-seg" role="group" aria-label="Which step">
+        <button data-mode="rules" class="on" aria-pressed="true">1 &middot; Rules</button>
+        <button data-mode="one" aria-pressed="false">2 &middot; Learning</button>
+        <button data-mode="nine" aria-pressed="false">3 &middot; Nine boards</button>
       </div>
       <div id="opp-row">
         <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
+        <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules are switched on" hidden></div>
       </div>
       <div id="score-row"></div>
       <div id="era-strip" hidden></div>
@@ -78,6 +87,12 @@
 
     <div id="status" role="status" aria-live="polite" aria-atomic="true"></div>
 
+    <!-- Step 1's running commentary: which rule decided the move that just
+         happened, and why. It sits in column A, above the fold on a phone,
+         because it is the thing you read while you play. The full ladder
+         lives in column B for when you stop and look. -->
+    <div id="rule-fired" hidden></div>
+
     <section class="panel" id="play-controls">
       <button class="btn" id="btn-newgame">New game</button>
       <button class="btn" id="btn-brain" aria-pressed="false">Show its brain</button>
@@ -87,6 +102,20 @@
     </div><!-- /col-a -->
 
     <div class="col" id="col-b">
+
+    <!-- ======================== THE RULE LADDER =================== -->
+    <!-- Step 1's whole point: the logic is on the screen. Eight rows,
+         built once by app.js from RULES.LADDER so the list and the code
+         cannot disagree — the panel is a rendering of the ladder, not a
+         second copy of it. -->
+    <section class="panel" id="rules-panel" hidden>
+      <div class="rp-head">
+        <span class="lbl">The rules, in order</span>
+        <span class="rp-sub" id="rp-sub"></span>
+      </div>
+      <ol id="rule-list"></ol>
+      <p class="rp-foot" id="rp-foot"></p>
+    </section>
 
     <!-- ============================ TRAIN ========================= -->
     <section class="panel" id="train-panel">
@@ -126,35 +155,40 @@
 <div class="overlay sheet" id="howto" hidden role="dialog" aria-modal="true" aria-labelledby="howto-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How to play</h2><div class="sub">Beat it &middot; teach it &middot; fail to beat it</div></div>
+      <div><h2 id="howto-title">How to play</h2><div class="sub">Three things people call AI</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
-      <p class="howto-lede">You are playing tic-tac-toe against an opponent that has never played a
-      game. No strategy, no rules about rows, no opening book — just a list of numbers, every one of
-      them zero.</p>
+      <p class="howto-lede">Tic-tac-toe against three different opponents. They are numbered along
+      the top, and they are not three difficulty levels &mdash; they are three completely different
+      ideas about where a machine's skill comes from.</p>
       <ol class="howto-steps">
-        <li><b>Beat Era 0.</b> Tap a square. It replies at random, because every square looks
-        identical to it. You should win, and win fast.</li>
-        <li><b>Press TRAIN.</b> It plays 5,000 games against itself and against chance, keeps what
-        worked, and freezes the result as a new era.</li>
-        <li><b>Play the new era.</b> Same program, same code — only the numbers changed. It blocks
-        you now.</li>
-        <li><b>Train again, and again.</b> Somewhere around the third to fifth burst the app
-        searches every game that can still be played against it, finds no line where it loses, and
-        says so. That banner is a proof, not a win record.</li>
+        <li><b>1 &middot; Rules.</b> Eight if/else rules a person wrote down. It has played zero
+        games and it cannot be beaten &mdash; the app searches every game that could still be
+        played against it and finds no line where it loses. Every rule it uses is listed on the
+        screen, and it tells you which one it just used and why. Turn rules off with
+        <b>First 2 / First 4 / All 8</b>: two rules is what most people write first, and the app
+        will show you the game where that loses.</li>
+        <li><b>2 &middot; Learning.</b> No rules at all. A list of numbers, every one of them zero,
+        that has never played a game. Beat it easily, then press <b>TRAIN</b> &mdash; it plays
+        5,000 games against itself and against chance and freezes the result as a new era. Play the
+        new era. Train again. Somewhere around the third to fifth burst the same exhaustive search
+        stops finding a line where it loses.</li>
+        <li><b>3 &middot; Nine boards.</b> The same learner in a world one step bigger: nine boards
+        at once, first to win five. This is where the approach starts to break, and the app says so
+        instead of hiding it.</li>
       </ol>
-      <p class="howto-note"><b>Show its brain</b> prints the value it has learned for every empty
-      square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0 is all zeros
-      because it genuinely knows nothing. The dropdown lets you go back and play any earlier era,
-      and that comparison is the whole lesson.</p>
-      <p class="howto-note"><b>Nine at once</b>, from the toggle at the top, drops the same learner
-      into a world one step bigger &mdash; nine boards, first to win five.</p>
+      <p class="howto-note">Steps 1 and 2 end up in the same place by opposite routes. One got all
+      of its skill from a person and none from experience; the other got all of it from experience
+      and none from a person. Both are proven unbeatable by the same search.</p>
+      <p class="howto-note"><b>Show its brain</b> (step 2) prints the value it has learned for every
+      empty square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0 is all zeros
+      because it genuinely knows nothing. The dropdown lets you go back and play any earlier era.</p>
       <p class="howto-note quiet">Everything happens on this device: no network, no account, nothing
-      stored. Reloading returns it to Era 0. Reopen these instructions any time with the
+      stored. Reloading starts over. Reopen these instructions any time with the
       <b>?</b> button at the top.</p>
     </div>
-    <div class="sheet-foot"><button class="btn primary" data-close="howto">Play Era 0</button></div>
+    <div class="sheet-foot"><button class="btn primary" data-close="howto">Play the rules</button></div>
   </div>
 </div>
 
@@ -197,43 +231,55 @@
 <div class="overlay sheet" id="notes" hidden role="dialog" aria-modal="true" aria-labelledby="notes-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">15-minute demo &middot; 5-minute second act</div></div>
+      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">Three steps &middot; 20 minutes &middot; rules, learning, nine boards</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body" id="notes-body">
       <!-- Stage cue card: the running order at a glance, distilled from the
            printable guide immediately below it. Screen only — printing this
-           sheet still produces the guide's own one-pager, unchanged. -->
+           sheet still produces the printable guide itself, unchanged. -->
       <div class="stagecard" id="stage-notes">
         <div class="sc-eyebrow">At a glance</div>
         <h3>Before you start</h3>
-        <p>Presenter mode on if you are projecting. To reproduce a rehearsed run, type your seed
-        into <b>Rehearsal seed</b> and press <b>Reset to Era 0</b>. Leave the burst on 5,000.
+        <p>Presenter mode on if you are projecting. The app opens on <b>1 &middot; Rules</b> with all
+        eight rules on, which is where you want it. To reproduce a rehearsed run, type your seed into
+        <b>Rehearsal seed</b> and press <b>Reset to Era 0</b>. Leave the burst on 5,000.
         <b class="sc-warn">Do not train before the session, and do not refresh mid-demo.</b></p>
-        <h3>The 15 minutes</h3>
+        <h3>Step 1 &mdash; Rules, 5 minutes</h3>
         <ul class="sc-beats">
-          <li><span>0:00</span> Hand it to a student: &ldquo;Beat it.&rdquo; Let two or three people beat Era 0. Let the room laugh at it.</li>
-          <li><span>2:00</span> <b>Show its brain</b> &mdash; every square <code>+0.00</code>, seen 0 times. That is the whole mind.</li>
-          <li><span>3:00</span> Press <b>Train</b> and say nothing for three seconds. Point at &epsilon; falling and the win rate climbing.</li>
-          <li><span>4:30</span> Play Era 1. It blocks. Still beatable about one game in six &mdash; ask what it is missing.</li>
-          <li><span>6:30</span> Train, play Era 2. Wins dry up, draws start. Let the frustration land; it <em>is</em> the lesson.</li>
-          <li><span>9:00</span> Train twice more. The banner lands between the third and fifth press. Invite the best player to try.</li>
-          <li><span>11:30</span> Go back to Era 0 and stomp it again. Same code, different numbers.</li>
-          <li><span>13:00</span> Read the banner, then bridge: tic-tac-toe can be listed, chess and language cannot.</li>
+          <li><span>0:00</span> Hand it over: &ldquo;Beat it.&rdquo; They cannot. Let two or three people try and fail.</li>
+          <li><span>1:30</span> Read the rule that fired under the board, then the eight-rule list beside it. <b>&ldquo;A person wrote every line of that. It has played zero games.&rdquo;</b></li>
+          <li><span>3:00</span> Switch to <b>First 2</b>. Now they win. Read the panel: rules 3 to 8 are greyed out, and the app shows the exact game it loses &mdash; the killing move is a fork, which is rule 3.</li>
+          <li><span>4:00</span> Back to <b>All 8</b> and read the proof line. Then the honest bit: for a board this small, the rules are the <em>better</em> engineering.</li>
         </ul>
-        <h3>Second act, 5 minutes</h3>
-        <p>Switch to <b>Nine at once</b> and play &mdash; beatable again, nothing taken away. Turn the
+        <h3>Step 2 &mdash; Learning, 10 minutes</h3>
+        <ul class="sc-beats">
+          <li><span>5:00</span> Switch to <b>2 &middot; Learning</b>. &ldquo;This one has no rules in it at all.&rdquo; Let the room beat Era 0. Let them laugh at it.</li>
+          <li><span>6:30</span> <b>Show its brain</b> &mdash; every square <code>+0.00</code>, seen 0 times. That is the whole mind.</li>
+          <li><span>7:30</span> Press <b>Train</b> and say nothing for three seconds. Point at &epsilon; falling and the win rate climbing.</li>
+          <li><span>9:00</span> Play Era 1. It blocks. Still beatable about one game in six &mdash; ask what it is missing.</li>
+          <li><span>11:00</span> Train, play Era 2. Wins dry up, draws start. Let the frustration land; it <em>is</em> the lesson.</li>
+          <li><span>13:00</span> Train twice more. The banner lands between the third and fifth press. Invite the best player to try.</li>
+          <li><span>14:30</span> Go back to Era 0 and stomp it again. Same code, different numbers. <b>&ldquo;Nobody wrote a rule. It played twenty thousand games.&rdquo;</b></li>
+        </ul>
+        <h3>Step 3 &mdash; Nine boards, 5 minutes</h3>
+        <p>Switch to <b>3 &middot; Nine boards</b> and play &mdash; beatable again, nothing taken away. Turn the
         brain on and read the last line (most squares sit on pictures it has never seen). Train, then
         read how often a position comes round: about ten times on one board, about once on nine. Close
         on the missing banner &mdash; here the app prints a refusal instead of a proof.</p>
+        <h3>The close</h3>
+        <p>Steps 1 and 2 arrived at the same unbeatable play from opposite ends, and the same search
+        proved both. Rules won on effort here. They stop being writable the moment the game gets
+        bigger &mdash; which is step 3, and which is why chess and language use the other one.</p>
         <h3>If it goes sideways</h3>
         <ul class="sc-notes">
-          <li><b>Short of time?</b> Press train twice in a row and skip Era 2. It always lands by the fifth press.</li>
+          <li><b>Somebody beats the eight-rule bot?</b> They did not &mdash; check the mode; it will be on First 2 or First 4. The proof line under the board says which.</li>
+          <li><b>Short of time?</b> Do step 1 and step 2 only. Or in step 2, press train twice in a row and skip Era 2.</li>
           <li><b>A student beats Era 3?</b> They cannot beat a <em>verified</em> era, but they can beat one before the banner. Say so, then train again.</li>
-          <li><b>&ldquo;It was secretly programmed.&rdquo;</b> Show the brain at Era 0, then run <b>Settings &rarr; the full self-test</b> in front of them.</li>
+          <li><b>&ldquo;It was secretly programmed.&rdquo;</b> Step 1 <em>was</em> &mdash; that is the point of showing it first. Then show the brain at Era 0 and run <b>Settings &rarr; the full self-test</b> in front of them.</li>
         </ul>
-        <p class="sc-more">The full guide &mdash; script, discussion questions, misconceptions, second
-        act &mdash; is below, and it is what the <b>Print</b> button prints.</p>
+        <p class="sc-more">The full guide &mdash; script, discussion questions, misconceptions, all three
+        steps &mdash; is below, and it is what the <b>Print</b> button prints.</p>
       </div>
 <!--__GUIDE__-->
     </div>

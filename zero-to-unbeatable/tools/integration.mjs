@@ -84,9 +84,10 @@ check('it is a labelled modal that takes focus and makes the page inert',
   await page.evaluate(() => document.querySelector('#app').inert === true));
 const howtoText = await page.locator('#howto').innerText();
 check('it says how to play in the demo\'s own terms',
-  /beat era 0/i.test(howtoText) && /press train/i.test(howtoText) &&
-  /show its brain/i.test(howtoText) && /proof, not a win record/i.test(howtoText),
-  howtoText.slice(0, 120));
+  /1 . Rules/.test(howtoText) && /2 . Learning/.test(howtoText) &&
+  /3 . Nine boards/.test(howtoText) && /press <b>TRAIN|press .TRAIN/i.test(howtoText) &&
+  /show its brain/i.test(howtoText) && /opposite routes/i.test(howtoText),
+  howtoText.slice(0, 200));
 if (SHOTS) await page.screenshot({ path: '/tmp/og-0-howto.png' });
 await page.keyboard.press('Escape');
 check('Escape dismisses it', await page.locator('#howto').isHidden());
@@ -118,7 +119,65 @@ const bytes = fs.statSync(path.join(__dirname, '..', 'index.html')).size;
 check('the single file is small enough to mail to someone', bytes < 400 * 1024,
   (bytes / 1024).toFixed(0) + ' KB');
 
-/* ---------- era 0 is there and is a pushover ------------------------ */
+/* ---------- step 1: the hand-written rules -------------------------- */
+/* The app opens here, so this runs before anything touches the learner. */
+check('opens on step 1, the hand-written rules',
+  await page.locator('#mode-seg button[data-mode="rules"]').evaluate(e => e.classList.contains('on')));
+check('step 1 shows the ladder and hides the training panel',
+  await page.locator('#rules-panel').isVisible() &&
+  await page.locator('#train-panel').isHidden() &&
+  await page.locator('#era-select').isHidden());
+check('all eight rules are on screen, none struck off at All 8',
+  (await page.locator('#rule-list li.rule').count()) === 8 &&
+  (await page.locator('#rule-list li.rule.off').count()) === 0);
+
+/* the ladder must NARRATE, which is the whole point of step 1 */
+await page.click('#chk-first');            /* deterministic: we always move first */
+await page.click('#btn-newgame');
+await page.click('.cell[data-i="0"]');
+await page.waitForTimeout(520);
+const firedText = await page.locator('#rule-fired').innerText();
+check('it names the rule it just used and why',
+  /Rule 5 . Centre/.test(firedText) && /four lines/.test(firedText), firedText);
+check('the rule that fired is the one highlighted in the list',
+  /Centre/.test(await page.locator('#rule-list li.rule.fired').innerText()));
+await page.click('.cell[data-i="1"]');
+await page.waitForTimeout(520);
+const blockText = await page.locator('#rule-fired').innerText();
+check('a threat makes rule 2 fire, and it names the line',
+  /Rule 2 . Block/.test(blockText) && /top row/.test(blockText), blockText);
+check('the squares that triggered the rule are marked on the board',
+  (await page.locator('.cell.trig').count()) === 3);
+const rulesBanner = await page.locator('#banner').innerText();
+check('step 1 claims its proof in the same words step 2 does',
+  /cannot beat this one either/i.test(rulesBanner) && /0 losses/.test(rulesBanner) &&
+  /both roles/.test(rulesBanner), rulesBanner.slice(0, 140));
+check('step 1 says plainly that the rules are the better engineering here',
+  /better piece\s+of engineering/i.test(rulesBanner.replace(/\s+/g, ' ')), rulesBanner.slice(-260));
+if (SHOTS) await page.screenshot({ path: '/tmp/og-0b-rules.png' });
+
+/* shorten the ladder: it must now admit it loses, and show the game */
+await page.click('#depth-seg button[data-d="2"]');
+await page.waitForTimeout(150);
+check('switching to two rules greys out the six that are off',
+  (await page.locator('#rule-list li.rule.off').count()) === 6);
+const beatable = await page.locator('#banner').innerText();
+check('the two-rule ladder admits it loses and quotes the exact rate',
+  /2 rules is not enough/i.test(beatable) && /% of the time/.test(beatable),
+  beatable.slice(0, 140));
+check('and draws the actual game, with the fork marked',
+  (await page.locator('#banner .lg-step').count()) >= 6 &&
+  (await page.locator('#banner .lg-step.fork').count()) === 1);
+await page.click('#depth-seg button[data-d="8"]');
+await page.click('#chk-first');            /* back to alternating, as step 2 expects */
+
+/* ---------- step 2: era 0 is there and is a pushover ---------------- */
+await page.click('#mode-seg button[data-mode="one"]');
+await page.waitForTimeout(150);
+check('step 2 brings back the era dropdown and the training panel',
+  await page.locator('#era-select').isVisible() &&
+  await page.locator('#train-panel').isVisible() &&
+  await page.locator('#rules-panel').isHidden());
 check('starts at Era 0', (await page.locator('#era-select').inputValue()) === '0');
 check('Era 0 is labelled a newborn',
   /newborn/i.test(await page.locator('#era-select option').first().innerText()));
@@ -450,12 +509,14 @@ check('the notes open on a stage cue card before the full guide',
   }));
 check('the cue card is distilled from the guide, not invented',
   /Do not train before the session/i.test(await page.locator('#stage-notes').innerText()));
-check('the notes carry the timed script', /THE SCRIPT/i.test(notes) && /11:30/.test(notes));
+check('the notes carry the timed script for all three steps',
+  /STEP 1 . RULES \(5 MINUTES\)/i.test(notes) && /STEP 2 . LEARNING \(10 MINUTES\)/i.test(notes) &&
+  /14:30/.test(notes));
 check('the notes carry the discussion questions', /DISCUSSION QUESTIONS/i.test(notes));
 check('the notes carry the misconceptions', /MISCONCEPTIONS TO DRAW OUT/i.test(notes));
-check('the notes carry the second act', /SECOND ACT: NINE BOARDS AT ONCE/i.test(notes));
+check('the notes carry the third step', /STEP 3: NINE BOARDS AT ONCE/i.test(notes));
 check('the notes are the whole guide, not an excerpt',
-  (await page.locator('#notes .guide .beat').count()) >= 12,
+  (await page.locator('#notes .guide .beat').count()) >= 16,
   'timed beats found: ' + (await page.locator('#notes .guide .beat').count()));
 check('the notes are readable rather than page-sized',
   await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#notes .guide')).fontSize)) > 11,

@@ -1,26 +1,39 @@
-/* Render the printable demo guide to PDF.  node tools/pdf.mjs */
-import { createRequire } from 'module';
-import path from 'path'; import fs from 'fs';
-import { fileURLToPath } from 'url';
-const require = createRequire(import.meta.url);
-const { chromium } = require('playwright');
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const LOCAL = [
-  'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-  'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-  'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  '/opt/pw-browsers/chromium-1194/chrome-linux/chrome',
-  '/opt/pw-browsers/chromium/chrome-linux/chrome'
-]
-  .find(p => { try { return fs.existsSync(p); } catch { return false; } });
-const browser = await chromium.launch({ headless: true, ...(LOCAL ? { executablePath: LOCAL } : {}),
-  args: ['--no-sandbox', '--disable-dev-shm-usage'] });
-const page = await browser.newPage();
-await page.goto('file://' + path.join(__dirname, '..', 'demo-guide.html'));
-await page.emulateMedia({ media: 'print' });
-const out = path.join(__dirname, '..', 'Zero-to-Unbeatable-Demo-Guide.pdf');
-await page.pdf({ path: out, format: 'A4', printBackground: true,
-  margin: { top: '0mm', right: '0mm', bottom: '0mm', left: '0mm' } });
-await browser.close();
+/* Render the printable demo guide to PDF.  node tools/pdf.mjs
+ *
+ * Dependency-free: drives an installed Chrome/Edge headless rather than
+ * requiring playwright, so the guide can be re-rendered on a bare checkout.
+ * (Same approach as fuel-golf/tools/pdf.mjs.)  Set CHROME_PATH to override.
+ */
+import { fileURLToPath, pathToFileURL } from 'url';
+import { execFileSync } from 'child_process';
+import path from 'path';
+import fs from 'fs';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const src = path.join(here, '..', 'demo-guide.html');
+const out = path.join(here, '..', 'Zero-to-Unbeatable-Demo-Guide.pdf');
+
+const browser = [
+  process.env.CHROME_PATH,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
+  'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+].find(p => { try { return p && fs.existsSync(p); } catch { return false; } });
+
+if (!browser) {
+  console.error('No Chrome/Edge found. Set CHROME_PATH to a Chromium-based browser.');
+  process.exit(1);
+}
+
+execFileSync(browser, [
+  '--headless=new',
+  '--disable-gpu',
+  '--no-pdf-header-footer',
+  `--print-to-pdf=${out}`,
+  pathToFileURL(src).href,
+], { stdio: 'ignore' });
+
+if (!fs.existsSync(out)) { console.error('render produced no file'); process.exit(1); }
 console.log('wrote', out, (fs.statSync(out).size / 1024).toFixed(0) + ' KB');

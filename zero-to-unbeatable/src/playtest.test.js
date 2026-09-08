@@ -3,8 +3,13 @@
 
        node src/playtest.test.js
 
-   Proves the four claims the demo rests on:
+   Proves the claims the demo rests on:
 
+     0. Step 1's hand-written eight-rule ladder is UNBEATABLE by the same
+        exhaustive search that judges the learner, every square it picks
+        satisfies the rule that picked it, and the shortened two-rule
+        ladder genuinely loses -- with the line. Section 7, run last
+        because the interesting checks compare it against the learner.
      1. A newborn agent is statistically indistinguishable from a coin
         flip — there is no strategy baked in anywhere.
      2. A trained agent is UNBEATABLE, established by exhaustive search
@@ -19,7 +24,10 @@
    Plus the structural checks that keep the above honest.
    ===================================================================== */
 
+const fs = require('fs');
+const path = require('path');
 const OG = require('./engine.js');
+const RULES = require('./rules.js');
 const NINE = require('./nine.js');
 
 let failures = 0, checks = 0;
@@ -475,6 +483,222 @@ head('6. Nine at once — the same method, a bigger world');
   check('there is no unbeatability proof on offer for nine boards',
     typeof NINE.verifyUnbeatable === 'undefined',
     'a proof would be a lie here — the space cannot be searched');
+}
+
+/* =====================================================================
+   7. STEP 1 — THE HAND-WRITTEN RULE LADDER
+
+   The demo's first step, tested last because the interesting claims are
+   comparisons against the learned agent above.
+
+   The claim being made on screen is symmetric and it has to be earned
+   on both sides: a ladder a person wrote and a table that taught itself
+   arrive at the same unbeatable play, and the SAME exhaustive search
+   says so about both. So the first thing checked here is that
+   generalising the search did not change what it says about the learned
+   agent, and the rest is the ladder held to that same standard.
+   ===================================================================== */
+head('7. Step 1 — the hand-written rules');
+
+{
+  /* ---- the search was generalised; the learned side must not move ---- */
+  const viaAgent  = OG.verifyUnbeatable(TRAINED);
+  const viaPolicy = OG.verifyPolicy(code => OG.argmaxMoves(TRAINED, code));
+  check('generalising the verifier left the learned agent\'s proof identical',
+    viaAgent.safe === viaPolicy.safe && viaAgent.lines === viaPolicy.lines &&
+    viaAgent.positions === viaPolicy.positions,
+    JSON.stringify({ agent: viaAgent.lines, policy: viaPolicy.lines }));
+
+  /* ---- every rule fires somewhere, and only where it should ---- */
+  const seen = new Array(9).fill(0);
+  const wrong = [];
+  for (const code of OG.OPEN_POSITIONS) {
+    const d = RULES.decide(code, 8);
+    const mine = OG.TOMOVE[code], theirs = mine === 1 ? 2 : 1;
+    const cells = OG.cellsOf(code);
+    seen[d.ruleId]++;
+    for (const o of d.options) {
+      const c = o.cell;
+      let ok;
+      switch (d.ruleId) {
+        /* the rule's own definition, restated independently of the
+           implementation that chose the square */
+        case 1: ok = OG.WINNER[OG.child(code, c, mine)] === mine; break;
+        case 2: ok = OG.WINNER[OG.child(code, c, theirs)] === theirs; break;
+        case 3: ok = RULES.threatSquares(OG.child(code, c, mine), mine).length >= 2; break;
+        case 4: ok = RULES.forkCells(code, theirs).some(f => f.cell === c) ||
+                     RULES.threatSquares(OG.child(code, c, mine), mine).length === 1; break;
+        case 5: ok = c === 4 && cells[4] === 0; break;
+        case 6: ok = RULES.CORNERS.includes(c) && cells[c] === 0 &&
+                     cells[RULES.OPPOSITE[c]] === theirs; break;
+        case 7: ok = RULES.CORNERS.includes(c) && cells[c] === 0; break;
+        case 8: ok = RULES.SIDES.includes(c) && cells[c] === 0; break;
+        default: ok = false;                       // rule 0 must never fire at full depth
+      }
+      /* and the ladder is a ladder: nothing below fires while
+         something above still applies */
+      if (d.ruleId > 1 && RULES.winningCells(code, mine).length) ok = false;
+      if (d.ruleId > 2 && RULES.winningCells(code, theirs).length) ok = false;
+      if (!ok) wrong.push(`rule ${d.ruleId} chose ${c} in ${code}`);
+    }
+  }
+  check('every square the ladder picks satisfies the rule that picked it',
+    wrong.length === 0, wrong.slice(0, 5).join('; '));
+  check('all eight rules actually fire somewhere on a reachable board',
+    seen.slice(1).every(n => n > 0), 'firings per rule: ' + seen.slice(1).join(','));
+  check('at full depth the ladder never runs out of rules',
+    seen[0] === 0, seen[0] + ' positions fell off the end');
+  console.log('        positions decided by each rule 1-8: ' + seen.slice(1).join(', '));
+
+  /* The hardest rule, checked against a fact this repo already knew.
+     LANDMARKS says the double-corner opening is only survivable on an
+     edge; the ladder gets there by a completely different route, so the
+     two agreeing is a real cross-check rather than a restatement. */
+  const fork = OG.LANDMARKS.find(x => x.id === 'fork');
+  const edges = [fork.key].concat(fork.keyAlso).sort((a, b) => a - b);
+  check('rule 4 answers the double-corner opening on exactly the four edges',
+    RULES.moves(fork.code, 8).slice().sort((a, b) => a - b).join(',') === edges.join(','),
+    'ladder picks ' + RULES.moves(fork.code, 8).join(',') + ', landmark says ' + edges.join(','));
+
+  /* ---- the eight-rule ladder is unbeatable, by the same search ---- */
+  const r8 = RULES.report(8);
+  console.log(`        eight rules moving first : ${fmt(r8.asFirst.lines)} complete game lines -> ` +
+              (r8.asFirst.safe ? 'NO LOSING LINE EXISTS' : 'LOSING LINE FOUND'));
+  console.log(`        eight rules moving second: ${fmt(r8.asSecond.lines)} complete game lines -> ` +
+              (r8.asSecond.safe ? 'NO LOSING LINE EXISTS' : 'LOSING LINE FOUND'));
+  check('eight rules moving first: zero losses over every reachable line', r8.asFirst.safe);
+  check('eight rules moving second: zero losses over every reachable line', r8.asSecond.safe);
+  check('nobody can win against the full ladder, worked out exactly',
+    r8.beatsFirst === 0 && r8.beatsSecond === 0,
+    `${r8.beatsFirst} / ${r8.beatsSecond}`);
+
+  /* Graded against minimax, exactly as the learned agent is above -- and
+     this is where the two genuinely differ, so it is worth being exact
+     about what each one earns.
+
+     Every position the ladder can actually arrive at in a game: it is
+     right in all of them, which is the same thing verifyPolicy said,
+     arrived at from ground truth instead. */
+  const reachable = new Set();
+  for (const botMark of [1, 2]) {
+    const stack = [0], seen = new Set();
+    while (stack.length) {
+      const c = stack.pop();
+      if (seen.has(c)) continue;
+      seen.add(c);
+      if (OG.isTerminal(c)) continue;
+      const mv = OG.TOMOVE[c];
+      if (mv === botMark) reachable.add(c);
+      for (const m of (mv === botMark ? RULES.moves(c, 8) : OG.legalList(c))) {
+        stack.push(OG.child(c, m, mv));
+      }
+    }
+  }
+  const gradeBlunders = movesFor => {
+    const out = [];
+    for (const code of OG.OPEN_POSITIONS) {
+      const mv = OG.TOMOVE[code];
+      const best = Math.max.apply(null, OG.legalList(code).map(m => -minimax(OG.child(code, m, mv))));
+      if (best < 0) continue;                    // already lost, not its fault
+      for (const m of movesFor(code)) {
+        if (-minimax(OG.child(code, m, mv)) < 0) { out.push(code); break; }
+      }
+    }
+    return out;
+  };
+  const ladderBad = gradeBlunders(c => RULES.moves(c, 8));
+  check('graded against minimax: the ladder never picks a losing square in a game it is playing',
+    ladderBad.every(c => !reachable.has(c)),
+    ladderBad.filter(c => reachable.has(c)).length + ' reachable positions where a rule loses');
+
+  /* And the honest asymmetry, which the README states and which this
+     pins down so it cannot rot: hand the ladder a position it would
+     never have played itself into and it CAN blunder, because nobody
+     wrote a rule for a board that cannot happen. The learned agent
+     practises from positions dealt at random, so it is right in all
+     4,520. Neither fact changes who wins a game from the start. */
+  const learnedBad = gradeBlunders(c => OG.argmaxMoves(TRAINED, c));
+  check('the ladder is unbeatable in a game but not correct in every position',
+    ladderBad.length === 12 && ladderBad.every(c => !reachable.has(c)),
+    ladderBad.length + ' positions, none of them reachable');
+  check('the learned agent is correct in every position, reachable or not',
+    learnedBad.length === 0, learnedBad.length + ' positions');
+  console.log(`        minimax grading over all ${fmt(OG.OPEN_POSITIONS.length)} legal positions: ` +
+              `ladder wrong in ${ladderBad.length} (none reachable in play), ` +
+              `learned agent wrong in ${learnedBad.length}`);
+
+  /* ---- and the two-rule ladder genuinely loses ---- */
+  const r2 = RULES.report(2);
+  check('two rules is beatable — the same search finds losing lines in both roles',
+    !r2.asFirst.safe && !r2.asSecond.safe);
+  check('two rules loses often enough for a room to notice',
+    r2.beatsSecond > 0.9 && r2.beatsFirst > 0.4,
+    `beaten ${(r2.beatsSecond * 100).toFixed(1)}% moving second, ` +
+    `${(r2.beatsFirst * 100).toFixed(1)}% moving first`);
+
+  /* Replay the line the app puts on screen and confirm it does what the
+     screen says: the bot loses, and the move that kills it is a fork,
+     which is rule 3/4 territory and switched off. */
+  const g = r2.gameSecond;
+  let code = 0, forks = 0;
+  for (const p of g.plies) {
+    if (p.bot) {
+      const opts = RULES.moves(code, 2);
+      if (!opts.includes(p.cell)) { code = -1; break; }
+    }
+    code = OG.child(code, p.cell, p.mark);
+    if (p.forks) forks++;
+  }
+  check('the losing line the app shows is one the two-rule ladder can really play',
+    code >= 0 && OG.WINNER[code] === 1, 'winner ' + (code >= 0 ? OG.WINNER[code] : 'illegal line'));
+  check('and the move that beats it is a fork — the rule that is switched off',
+    forks === 1, forks + ' forking moves in the line');
+  console.log('        the line: ' + g.plies.map(p => (p.bot ? 'it' : 'you') + ' ' + p.cell).join(', ') +
+              ` (this exact game about 1 in ${Math.round(1 / g.prob)})`);
+
+  /* ---- seeded, like everything else in this demo ---- */
+  const play = seed => {
+    const rnd = OG.makeRng(seed), out = [];
+    let c = 0;
+    while (!OG.isTerminal(c)) {
+      const mv = OG.TOMOVE[c];
+      const cell = RULES.ruleMove(c, rnd, 7);   // depth 7 leaves real tie sets
+      out.push(cell);
+      c = OG.child(c, cell, mv);
+    }
+    return out.join(',');
+  };
+  check('a seeded rule game reproduces exactly', play('same') === play('same'));
+  check('a different seed breaks a different tie', play('same') !== play('other'),
+    'both seeds played ' + play('same'));
+
+  /* ---- the shape of the ladder the UI renders ---- */
+  check('the ladder is eight rules and the app renders that list, not a copy',
+    RULES.LADDER.length === 8 && RULES.LADDER.every((r, i) => r.id === i + 1));
+  check('every depth preset offered in the app is one the search has an answer for',
+    RULES.DEPTHS.every(d => typeof RULES.report(d.n).safe === 'boolean'));
+
+  /* The README says rule 8 is the list being tidy: by the time "empty
+     side" could fire, a side is the only thing left to play, so seven
+     rules and eight rules are the same opponent. Pin it. */
+  let sameAt7 = true;
+  for (const code of OG.OPEN_POSITIONS) {
+    if (RULES.moves(code, 7).join(',') !== RULES.moves(code, 8).join(',')) { sameAt7 = false; break; }
+  }
+  check('seven rules and eight rules are the same opponent — rule 8 is the list being tidy',
+    sameAt7 && RULES.report(7).safe);
+
+  /* ---- the numbers quoted in the prose are the numbers in the code ---- */
+  const docs = ['README.md', 'src/demo-guide.html']
+    .map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
+  const quoted = [
+    [fmt(r8.lines), 'complete game lines against the full ladder'],
+    [fmt(r2.lines), 'complete game lines against the two-rule ladder'],
+    [(r2.beatsSecond * 100).toFixed(0) + '%', 'how often best play beats two rules']
+  ];
+  const missing = quoted.filter(([n]) => !docs.includes(n)).map(([n, what]) => `${n} (${what})`);
+  check('the counts written in README.md and the guide match the code',
+    missing.length === 0, 'not found in the prose: ' + missing.join(', '));
 }
 
 /* ===================================================================== */
