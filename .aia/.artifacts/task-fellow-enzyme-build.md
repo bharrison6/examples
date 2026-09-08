@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Build the Inhibitor Investigation for AI Fellows
 created: 2026-09-08T20:01:00Z
-updated: 2026-09-08T20:01:00Z
+updated: 2026-09-08T20:20:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -19,6 +19,13 @@ tags: [ai-fellows, demos, biochemistry]
 ---
 
 # Inhibitor Investigation builder brief
+
+## Standalone completion — 2026-09-08
+
+Model/bundle checks, independent Astra review, Chrome investigation/mobile checks,
+and one-page PDF rendering/inspection are complete. Evidence and limitations live
+in [[fellow-build-verification]]. Remaining scope is Opus-owned shared-hub integration.
+Original brief and reviewed boundaries follow for reconstructability.
 
 User authorized the next best demo after at least one of the first two completes.
 Wavelet Lab has completed standalone model, build, browser and PDF checks; shared
@@ -84,3 +91,12 @@ visible attribution, responsive canvas/SVG/controls, printable one-page guide wi
 specific sources and scope limits. No runtime requests, inference or external assets.
 Mark browser-only compliance unverified until parent checks. Record tool provenance
 honestly after runtime verification. Aim for one bounded implementation and repair pass.
+
+## Astra brief review — 2026-09-08
+
+Viable with three scoring guardrails: any positive substrate other than Km
+distinguishes all three exact fixed candidates, so equally discriminating choices
+must earn equal credit; the crossing at Km is specific to the matched synthetic
+inhibition factors; visible rate precision must support the conclusion the scorer
+accepts. Use discrete substrate options to avoid hidden numerical distinctions.
+The builder received and adopted these constraints before finishing implementation.

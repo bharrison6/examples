@@ -1,0 +1,30 @@
+{
+  "slug": "inhibitor-investigation",
+  "title": "Inhibitor Investigation",
+  "emoji": "🧪",
+  "topic": "Biochemistry · Enzyme Kinetics",
+  "discipline": "Biochemistry",
+  "tagline": "Run a bounded virtual assay bench and let the evidence set the conclusion",
+  "card_blurb": "Run up to four exact initial-rate assays, compare a mystery sample with three finite inhibition patterns, and learn when the evidence still leaves candidates tied.",
+  "description": "**Inhibitor Investigation** — an offline initial-rate enzyme-kinetics investigation. Students choose a limited set of substrate concentrations, record exact synthetic assay rates, compare them directly with competitive, uncompetitive, and pure noncompetitive candidate curves, and explain whether the visible evidence discriminates the finite candidates. It makes the S=Km ambiguity explicit and keeps conclusions within the limits of its idealized model.",
+  "entry": "index.html",
+  "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": ["codex", "gpt-5.6-terra", "gpt-6-astra"],
+  "status": "active",
+  "added": "2026-09-08",
+  "compliance": {
+    "readme": true,
+    "guide": true,
+    "howto_popup": true,
+    "settings_menu": true,
+    "presentation_mode": true,
+    "presenter_notes": true,
+    "msu_theme": true,
+    "attribution_visible": true,
+    "mobile": true,
+    "offline_no_inference": "unverified"
+  }
+}
