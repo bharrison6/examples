@@ -4,7 +4,7 @@ artifact_kind: reference
 schema_version: 2
 title: AI Fellow demo build evidence and shared-repo handoff
 created: 2026-09-08T20:04:00Z
-updated: 2026-09-08T20:23:00Z
+updated: 2026-09-08T20:31:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -17,6 +17,18 @@ tags: [ai-fellows, verification, coordination]
 ---
 
 # First two standalone demos
+
+## Ion Flight teaching readiness reopened — 2026-09-08
+
+The user's walkthrough found unclear units, an opaque learning purpose, disconnected
+questions and insufficiently considered presentation. The mechanical and scientific
+checks below remain evidence of those limited properties; they do not establish a
+cohesive teaching experience. A fresh Astra review confirmed source-level defects:
+complete evidence before Run, normalized animation timing, auto-scaled comparisons
+and quiz progression disconnected from observation. Ion Flight is being revised
+under [[fellow-tof-build]], and its ready-to-present handoff was withdrawn through
+HarnessBroker. Wavelet and enzyme were not evaluated by this user feedback; do not
+infer their pedagogical acceptance from mathematical tests.
 
 Delivered in local commit `dfe614a`; shared hub handoff sent through HarnessBroker.
 
