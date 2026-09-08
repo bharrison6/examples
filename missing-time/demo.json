@@ -1,0 +1,19 @@
+{
+  "slug": "missing-time",
+  "title": "Missing Time",
+  "emoji": "🪨",
+  "topic": "Geology · Paleontology",
+  "discipline": "Geology",
+  "tagline": "Inspect what rock records, what preservation removes, and what evidence can support",
+  "card_blurb": "Sample authored rock columns, expose anchor-supported missing intervals, and separate a local disappearance from a claim of extinction.",
+  "description": "**Missing Time** — an offline rock-record investigation. Students inspect surviving layers, reveal synthetic chronology anchors for missing intervals, sample fossils, compare a second local section, and practice conclusions limited to visible evidence.",
+  "entry": "index.html",
+  "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": ["codex", "gpt-6-astra"],
+  "status": "active",
+  "added": "2026-09-08",
+  "compliance": { "readme": true, "guide": true, "howto_popup": true, "settings_menu": true, "presentation_mode": true, "presenter_notes": true, "msu_theme": true, "attribution_visible": true, "mobile": true, "offline_no_inference": "unverified" }
+}

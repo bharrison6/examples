@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict'); const fs = require('node:fs'); const vm = require('node:vm'); const { spawnSync } = require('node:child_process');
+const root = __dirname, html = fs.readFileSync(root + '/index.html', 'utf8'), model = fs.readFileSync(root + '/model.js', 'utf8').replace(/\r\n/g,'\n');
+assert.ok(html.includes('/* OCCUPANCY_MODEL: BEGIN */\n'+model+'\n/* OCCUPANCY_MODEL: END */'), 'built page embeds tested production model verbatim');
+assert.ok(html.includes('48 site-visits') && html.includes('ψ=0.8, p=0.25'), 'fixed effort and guarded model explanation must remain visible');
+assert.ok(html.includes('relative likelihood') && html.includes('not a posterior probability'), 'inference scope must be explicit');
+assert.ok(html.includes('id="interpretPanel" hidden') && html.includes('id="afterInterpretation" hidden'), 'future reasoning panels must be stage-gated');
+assert.ok(html.includes('Replay as practice') && html.includes('Explore mode: truth is revealed'), 'replay and post-reveal exploration must not imply a blind new trial');
+assert.ok(html.includes('occupied-missed') && html.includes('truthLegend'), 'truth reveal must visibly distinguish missed occupancy on the same site arrays');
+assert.ok(html.includes('ψ 1') && html.includes('p .5'), 'likelihood grid must have visible psi and p axes');
+assert.ok(!/<(?:script|link|img|iframe)\b[^>]+(?:https?:)?\/\//i.test(html), 'no external runtime assets');
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);assert.equal(scripts.length,2);scripts.forEach((source,index)=>new vm.Script(source,{filename:'inline '+index}));
+const check=spawnSync(process.execPath,['build.js','--check'],{cwd:root,encoding:'utf8'});assert.equal(check.status,0,check.stderr||check.stdout);
+console.log('PASS  verbatim production model, inline syntax, fixed-effort/reveal guardrails, no external runtime assets, reproducible bundle');

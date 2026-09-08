@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Build Missing Time for AI Fellows
 created: 2026-09-08T21:10:00Z
-updated: 2026-09-08T21:22:00Z
+updated: 2026-09-08T21:30:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -18,6 +18,32 @@ sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T21:08:00Z
 tags: [ai-fellows, demos, geology, preservation]
 ---
 # Missing Time
+
+## Paused checkpoint — 2026-09-08
+
+Operator requested a stopping point before final delivery. Builder completed and
+stopped; runnable source, bundle, tests, manifest, README and canonical HTML guide
+are saved in `missing-time/`. Builder observed model tests, build tests and bundle
+reproducibility pass. This is not final acceptance.
+
+Latest checkpoint replaces equal-height tiles with linked proportional SVG rock
+height (m above base) and elapsed model time (Myr since start), using the same
+ledger and sampled fossil positions. Gap contacts, chronology for both paired
+sections, chronology-gated conclusions and reset feedback were repaired according
+to the builder. Parent has not visually inspected this revision; Astra's last
+review preceded these final repairs. Next: targeted review plus Chrome walkthrough
+of all three cases, geometry/axes/gap locations, evidence gating, reset and mobile;
+then confirm guide matches the revised flow. Replace any unverified stratpal.org
+source with the reviewed primary tutorial at
+https://mindthegap-erc.github.io/StratPal/articles/event_data.html . Render the guide
+with ReportLab and visually inspect all pages before manifest/hub completion.
+No PDF exists yet. Shared-root coordination and policy boundaries are recorded
+in sibling [[fellow-occupancy-build]]; coordinate with Opus before integration.
+
+On final delivery, retain these stable task IDs while converting completed records
+to episodic memory and preserving their briefs/history; update Fellow plan,
+reassessment, verification reference and owning changelogs. Do not claim these
+last two demos complete merely because their initial model tests pass.
 
 User authorized the final two reviewed demos on 2026-09-08. Expected outcome:
 a polished, scientifically bounded rock-record/preservation investigation for
