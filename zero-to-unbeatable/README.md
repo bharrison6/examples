@@ -1,15 +1,21 @@
 # Zero to Unbeatable
 
-A single-file, phone-first demo of how a machine actually learns. You play tic-tac-toe
-against an opponent that has never played a game, beat it easily, then train it in bursts and
-play it again — until you cannot beat it, and the app proves you never will.
+A single-file, phone-first demo of the three different things people call AI, played out on one
+tic-tac-toe board. First an opponent whose whole skill is eight if/else rules a person wrote down.
+Then one that starts knowing nothing and gets to the same place on its own — you beat it easily,
+train it in bursts, play it again, until you cannot beat it. Then that same learner in a world one
+step bigger, where the approach starts to come apart.
+
+Steps 1 and 2 arrive at identical unbeatable play from opposite directions, and the app proves both
+with the same exhaustive search. That contrast is the demo.
 
 Open `index.html`. No install, no accounts, no network, no AI service. Everything, including
 all of the learning, happens on the device in front of you.
 
 **It tells you how to play.** A short instructions sheet opens on every load — one line on what you
-are up against, then the four steps of the arc. Escape, a tap outside, the × or **Play Era 0** all
-dismiss it, and the **?** beside the gear in the brand bar brings it back at any point (so does
+are up against, then the three steps and what each one is for. Escape, a tap outside, the × or
+**Play the rules** all dismiss it, and the **?** beside the gear in the brand bar brings it back at
+any point (so does
 Settings → How to play). It is shown every time rather than once per browser: this thing gets handed
 to a new person constantly, and nothing about the app is remembered between loads anyway.
 
@@ -17,14 +23,95 @@ to a new person constantly, and nothing about the app is remembered between load
 opens a one-screen stage cue card, the full session plan below it, and a print button. They are
 embedded rather than linked, so they work from the single file with nothing to download. The cue card
 is distilled from the guide directly beneath it and is screen-only; Print still produces the guide's
-own one-pager, unchanged. The same guide also ships standalone as `demo-guide.html` /
-`Zero-to-Unbeatable-Demo-Guide.pdf`: a timed 15-minute script plus a 5-minute second act, discussion
+own printable guide, unchanged. The same guide also ships standalone as `demo-guide.html` /
+`Zero-to-Unbeatable-Demo-Guide.pdf`: a timed twenty-minute script across the three steps, discussion
 questions and misconceptions to draw out. `build.js` lifts the guide's own stylesheet and markup into
 the app, so the two cannot drift.
 
 ---
 
-## The arc
+## Step 1 — Rules
+
+A hand-written opponent: an if/else ladder, checked top to bottom, first match wins. It is Newell
+and Simon's classic list from their 1972 tic-tac-toe program, and versions of it have been retyped
+into introductory programming courses ever since. Most people would call this AI, and for decades
+that is what the word meant.
+
+| | rule | fires when |
+|---|---|---|
+| 1 | Win | a line holds two of mine and an empty third |
+| 2 | Block | a line holds two of yours and an empty third |
+| 3 | Fork | a square that leaves two winning threats at once |
+| 4 | Block the fork | take your forking square, or if you have two of them, make a threat you must answer first |
+| 5 | Centre | the only square on four lines |
+| 6 | Opposite corner | you are in a corner; take the one diagonally across |
+| 7 | Empty corner | three lines each, against two for a side |
+| 8 | Empty side | whatever is left |
+
+Every move it makes comes back with **the rule that fired and the squares that set it off**, and the
+app prints both — "Rule 2 · Block — you had two in the top row" — with those squares outlined on the
+board. The eight rules are listed beside it, and the one that just fired is highlighted. That is the
+whole request this step answers: the logic is on the screen.
+
+**A depth dial** switches the lower rules off. `First 2` is win-and-block, which is what most people
+write first; `First 4` adds the forks; `All 8` is the ladder. When rules are switched off the panel
+greys them out and the app plays a free square instead, which is what a program with no rule for the
+situation actually does.
+
+### It is proven too, by the same search
+
+`engine.js` searches every game that can still be played against the learned agent. That search
+takes a **policy**, not an agent — `OG.verifyPolicy(movesFor)` — precisely so the rule ladder can be
+held to the same standard and reported in the same words. A demo that proves one side and asserts
+the other is not making the comparison it claims to.
+
+| rules on | complete game lines | verdict | best play beats it, you moving first / it moving first |
+|---|---|---|---|
+| 2 | 86,624 | losing lines exist, both roles | 93% / 47% |
+| 4 | 26,240 | losing lines exist, both roles | 88% / 38% |
+| 8 | 1,384 | **no losing line exists, both roles** | 0% / 0% |
+
+Those percentages are exact, not sampled: a single pass over the position graph in which the ladder
+averages over its own coin flips and the challenger takes its best square everywhere. "A losing line
+exists" is true of a bot that loses once in a thousand games, so the figure is what separates
+*beatable in principle* from *the room will beat it*.
+
+For the beatable ladders the app draws **the game it loses**, move by move, picked as the
+representative way it goes wrong rather than whichever losing leaf the search reached first. In
+every case the killing move is a fork — which is rule 3, the first rule that got switched off.
+
+Two things worth knowing about the ladder as built:
+
+- **Rules 7 and 8 do the same work.** Once the centre and every corner are taken, "empty side" is the
+  only thing left to play, so a seven-rule ladder and an eight-rule ladder are the same opponent.
+  Rule 8 is the list being tidy.
+- **It is unbeatable in a game, but not correct in every position.** Graded against minimax across
+  all 4,520 legal positions, the ladder picks a losing square in **12** of them — and none of the 12
+  can be reached in a game against it, because they all have the centre unclaimed and rule 5 takes
+  the centre. The learned agent of step 2 practises from positions dealt at random and is right in
+  all 4,520. That costs neither of them a game; it is just the shape of the difference. Written
+  knowledge covers what the author thought of, experience covers what was met.
+
+Both of those are pinned by checks in `src/playtest.test.js`, so the prose cannot quietly rot.
+
+### Which one is actually better here
+
+The rules. It would be easy to run this demo as "learning beat the hand-written rules" and it would
+be wrong. For a board with 5,478 positions the ladder wins on nearly every engineering measure that
+matters: a couple of hundred lines against a table of 19,683 numbers, an instant answer with no
+training run, and a program a person can read and check. It was finished before the learner had
+played its first game.
+
+What rules cannot do is exist for a problem nobody can write down. Change the board to 4×4 and the
+eight rules are worthless until somebody works out the new ones. Chess has more positions than there
+are atoms on Earth and language has no fixed number at all; nobody has written the ladder for either,
+and not for want of trying. Learning is what you reach for when the rules *cannot* be written — which
+is the point of steps 2 and 3, and the reason this page says so in its own explainer rather than
+letting the demo imply that learning is simply superior.
+
+---
+
+## Step 2 — Learning
 
 | | |
 |---|---|
@@ -91,12 +178,13 @@ era  games   seen   eps    wins-vs-random  casual player beats it  verified
 
 Over 12 seeds: unbeatable at burst **3 to 5**, mean **4.08**, never earlier than 3.
 
-## Act II — nine boards at once
+## Step 3 — nine boards at once
 
-A second mode, reached from the toggle at the top: nine independent boards, a turn is one mark on
+The third segment at the top: nine independent boards, a turn is one mark on
 any unfinished board, finished boards lock, and the first to win five boards takes the match. It
 exists to show what happens to this whole approach when the world gets one step bigger, and three
-things break in instructive ways.
+things break in instructive ways. It is also where step 1 stops being an option at all — nobody has
+an eight-rule ladder for this, and writing one is the work.
 
 **Nothing repeats.** A table can only learn if the same situation comes round again. Measured live
 after each burst, at the same budget each act actually trains on:
@@ -111,14 +199,14 @@ A table over whole nine-board positions could never learn anything at all. This 
 because it looks at **one board at a time** and adds up what it finds — a decomposition a person
 chose. Finding such a shortcut by itself is what a neural network is for.
 
-**Most of Act I does not transfer.** You can play twice in the same board while your opponent works
+**Most of step 2 does not transfer.** You can play twice in the same board while your opponent works
 elsewhere, so a board can hold three of yours and one of theirs — a picture ordinary tic-tac-toe can
-never produce. 54% of the board pictures met in a match are of that kind. Act I's table hands over
+never produce. 54% of the board pictures met in a match are of that kind. Step 2's table hands over
 exactly 5,477 entries of the 39,366 this game needs — **14%, free and exact** — and the rest has to
 be learned. Turn the inspector on and it tells you what fraction of the squares it is weighing right
 now sit on a picture it has never seen.
 
-**The method survives; the state had to grow.** Same rule as Act I — a position is worth the best
+**The method survives; the state had to grow.** Same rule as step 2 — a position is worth the best
 thing the player to move can reach from it — but the turn is carried explicitly instead of read off
 the mark counts, so unbalanced boards are representable at all. Without that one bit the agent takes
 100% of its free wins and blocks **0%** of the threats, which is measured in `src/nine.js`'s notes.
@@ -131,7 +219,7 @@ picture reads 0.00, so the agent walked past free wins. It now explores toward w
 least. That contains no tic-tac-toe knowledge — it cannot tell a winning square from any other, only
 a familiar one from a strange one.
 
-**And there is no banner.** Act I's ending is a proof; this one cannot have one, and the app says so
+**And there is no banner.** Steps 1 and 2 both end in a proof; this one cannot have one, and the app says so
 where the banner would be. Measured instead against a rule-based opponent written out by hand — take
 any win, block any loss, else prefer the middle — which the learner is never shown:
 
@@ -181,14 +269,21 @@ can be re-run in front of an audience from **Settings → Run the full self-test
 ## Tests
 
 ```
-node src/playtest.test.js     # 45 checks: uniformity, unbeatability, blind spots, pacing, nine boards
+node src/playtest.test.js     # 66 checks: the rule ladder, uniformity, unbeatability,
+                              #            blind spots, pacing, nine boards
 node tools/integration.mjs    # browser, including modal/RNG/self-test honesty checks
 node tools/tune.mjs           # characterise the arc;  --sweep  to grid search
 ```
 
-`src/playtest.test.js` covers verifications 1–4 from the brief plus the nine-board act, including a behavioural proof
+`src/playtest.test.js` covers verifications 1–4 from the brief plus the rule ladder and the
+nine-board step, including a behavioural proof
 that no strategy is baked in: a newborn takes a free win 42.9% of the time against a chance
-rate of 43.3%, and blocks a threat 42.4% against 42.9%. `tools/integration.mjs` covers 5 and 6
+rate of 43.3%, and blocks a threat 42.4% against 42.9%. For step 1 it re-derives each of the eight
+rules' own definition and checks that every square the ladder picks satisfies the rule that picked
+it, that all eight fire somewhere on a reachable board, that rule 4 answers the double-corner
+opening on exactly the four edges the learned agent's landmark independently says are the only
+survivors, and that generalising the verifier to take a policy left the learned agent's proof
+byte-identical. `tools/integration.mjs` covers 5 and 6
 — it runs the 5,000-game burst with the CPU throttled 4× (93 ms), asserts the page makes no
 network request of any kind, and plays ten proper games against the final era to confirm no
 human win is available.
@@ -208,12 +303,13 @@ promise cannot rot.
 
 ```
 src/engine.js          one board: learning, opponents, verification — no DOM, no UI
+src/rules.js           step 1: the eight hand-written rules, why each fired, the depth dial
 src/nine.js            nine at once: rules, the bigger table, the ported CPU benchmark
 src/app.js             game, montage, eras, inspector, explainers
 src/styles.css         phone-first; presenter mode scales one CSS variable
 src/template.html      shell with /*__CSS__*/ and /*__JS__*/ placeholders
-src/demo-guide.html    the printable one-pager
-src/playtest.test.js   verifications 1-4
+src/demo-guide.html    the printable session guide
+src/playtest.test.js   verifications 1-4, plus the rule ladder and nine boards
 tools/integration.mjs  verifications 5-6, in a real browser
 tools/tune.mjs         hyperparameter sweep scored on the arc
 tools/pdf.mjs          guide -> PDF

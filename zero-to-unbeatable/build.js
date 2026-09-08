@@ -7,7 +7,9 @@ const SRC = path.join(__dirname, 'src');
 const OUT = __dirname;
 
 const CSS_FILES = ['styles.css'];
-const JS_FILES  = ['engine.js', 'nine.js', 'app.js'];
+/* engine.js first: rules.js and nine.js both close over the OG global it
+   defines, and app.js needs all three. */
+const JS_FILES  = ['engine.js', 'rules.js', 'nine.js', 'app.js'];
 
 const read = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 
