@@ -6,11 +6,13 @@ prospective_kind: task
 schema_version: 2
 title: Build Ion Flight for the AI Fellows
 created: 2026-09-08T19:37:11Z
-updated: 2026-09-08T20:04:00Z
+updated: 2026-09-08T20:23:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
 status: executing
+fires_on: Opus completes shared hub integration or releases the root integration lane
+blocked_by: Shared launcher and tour files remain reserved to the coordinated Opus session
 scope: examples
 source_basis: conversation
 sensitivity: normal
@@ -24,7 +26,7 @@ tags: [ai-fellows, demos, mass-spectrometry]
 
 Built and reviewed; production model checks, Chrome controls/mobile and guide PDF
 inspection passed as recorded in [[fellow-build-verification]]. Remaining task
-scope is final build-check packaging and shared hub integration by Opus. Offline
+scope is shared hub integration by Opus; build-check packaging is complete. Offline
 browser compliance remains explicitly unverified; static runtime audit is clean.
 
 ## Original intended build

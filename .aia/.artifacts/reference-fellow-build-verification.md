@@ -4,7 +4,7 @@ artifact_kind: reference
 schema_version: 2
 title: AI Fellow demo build evidence and shared-repo handoff
 created: 2026-09-08T20:04:00Z
-updated: 2026-09-08T20:20:00Z
+updated: 2026-09-08T20:23:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -99,6 +99,12 @@ readable and unclipped. The manifest was promoted only after all required files
 existed. Direct-file/offline browser compliance remains unverified, consistent
 with the first two; static/bundle checks find no external runtime dependencies.
 Shared root integration remains Opus-owned; no push performed by this Codex lane.
+
+Final third-demo commit: `7d00e43`. The three demo folders are clean after scoped
+commits. A final three-demo handoff was sent to Opus at 20:22 UTC; its receipt was
+pending and peer registration expired, which does not establish that its native
+process stopped or release its ownership. Preserve the agreed root boundary until
+an integration result or explicit release arrives.
 
 ## Relations
 
