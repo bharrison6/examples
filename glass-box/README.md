@@ -59,9 +59,11 @@ Model S (400 steps, 49% alone):
 
 ### The phase-transition finding (why training is seeded)
 
-The most instructive engineering result in this act: **direct-answer 3-digit addition sits on
-a learning phase transition at this model scale.** Identical recipe, different data-stream
-seeds, measured on this exact code:
+The most instructive engineering result in this act: **across eight data-stream seeds,
+direct-answer 3-digit addition either clicks or it does not — there is very little in
+between.** Two of the eight found the carry structure; six never did. Identical recipe,
+different data-stream seeds, measured on this exact code (n=8, so read it as a strong hint
+about this model scale, not a settled result):
 
 ```
 direct @2200 steps, by data seed:   53%  61%  61%  62%  63%  48%  93%  95%   (and 1.5–25% under

@@ -2,12 +2,34 @@
   "slug": "zero-to-takeoff",
   "title": "AI: From Zero to Takeoff",
   "page": "index.html",
-  "note": "Section ordering for the master launcher. Section headings and narrative prose are hand-authored in the page itself; this file defines which demos appear and in what order, and drives README table ordering.",
+  "note": "Part/section ordering for the master launcher. Section headings and narrative prose are hand-authored in the page itself; this file defines which demos appear and in what order, and drives README table ordering. Parts one/two/three mirror the launcher: what AI is, where it is going, what it can do.",
   "sections": [
-    { "num": "DEMO 1", "title": "What AI is — and what it isn't", "demos": ["zero-to-unbeatable"] },
-    { "num": "DEMO 2", "title": "How generative AI works", "demos": ["glass-box"] },
-    { "num": "DEMO 3", "title": "Getting good answers out", "demos": ["the-stranger"] },
-    { "num": "DEMO 4", "title": "How fast this is moving", "demos": ["takeoff"] },
-    { "num": "DEMO SET 5", "title": "AI in the disciplines", "demos": ["fuel-golf", "bridge-works", "ladder-lab", "topping-out", "should-have-known-that"] }
+    {
+      "num": "PART ONE",
+      "title": "What AI is",
+      "demos": [
+        "zero-to-unbeatable",
+        "glass-box",
+        "the-stranger"
+      ]
+    },
+    {
+      "num": "PART TWO",
+      "title": "Where it is going",
+      "demos": [
+        "takeoff"
+      ]
+    },
+    {
+      "num": "PART THREE",
+      "title": "What AI can do",
+      "demos": [
+        "fuel-golf",
+        "bridge-works",
+        "ladder-lab",
+        "topping-out",
+        "should-have-known-that"
+      ]
+    }
   ]
 }

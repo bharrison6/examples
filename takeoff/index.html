@@ -1411,13 +1411,15 @@ const ROUNDS = [
     { date: '2025-02-24', label: 'Claude 3.7 Sonnet', value: 63.7, note: 'no scaffold; 70.3% with parallel-compute scaffold', status: 'primary', src: 'anthropic-37' },
     { date: '2025-05-22', label: 'Claude Opus 4', value: 72.5, status: 'primary', src: 'anthropic-4' },
     { date: '2025-08-07', label: 'GPT-5', value: 74.9, status: 'primary', src: 'openai-gpt5' },
-    { date: '2025-09-29', label: 'Claude Sonnet 4.5', value: 82.0, note: 'parallel test-time compute; 77.2% base', status: 'primary', src: 'anthropic-45' }
+    { date: '2025-09-29', label: 'Claude Sonnet 4.5', value: 77.2, note: 'single attempt; 82.0% with parallel test-time compute', status: 'primary', src: 'anthropic-45' },
+    { date: '2025-11-24', label: 'Claude Opus 4.5', value: 80.9, status: 'primary', src: 'anthropic-opus45' },
+    { date: '2026-02-05', label: 'Claude Opus 4.6', value: 80.84, note: 'averaged over 25 trials — and the last figure published before the exam was retired', status: 'primary', src: 'anthropic-opus46' }
   ],
-  endNote: 'the exam was retired in February 2026',
+  endNote: 'then it flattened, and the exam was retired',
   reveal: {
-    headline: 'A third of them, to four in five, in fifteen months.',
+    headline: 'A third of them, to four in five — and then it stopped moving.',
     body: 'Then something more telling than another number: in February 2026 the labs retired this test. OpenAI published why — the models had been trained on the answers, and when it audited the hard problems they still failed, 59% of those turned out to have broken tests. Anthropic’s Opus 4.7 page mentions it only to say it screens for memorisation of it. The Opus 4.8 page does not mention it at all. Opus 5 reports a different test entirely.',
-    caveat: 'These scores are reported by the companies that make the models, and how you run the test matters: the same model scores several points apart depending on how many attempts it is allowed. The 82% figure allows several; the single-attempt score was 77%.'
+    caveat: 'These scores are reported by the companies that make the models, and how you run the test matters: the same model scores several points apart depending on how many attempts it is allowed. Every point on this line is a single-attempt figure so the curve compares like with like — Sonnet 4.5 reads 77.2% that way and 82.0% when it is allowed several attempts. Notice the last three points: eighteen months of furious progress, then fifteen months that went nowhere. That flattening is part of why the exam was retired.'
   }
 },
 
@@ -2061,6 +2063,8 @@ const SOURCES = {
   'anthropic-37':  { t:'Anthropic — Claude 3.7 Sonnet', u:'https://www.anthropic.com/news/claude-3-7-sonnet' },
   'anthropic-4':   { t:'Anthropic — Claude 4', u:'https://www.anthropic.com/news/claude-4' },
   'anthropic-45':  { t:'Anthropic — Claude Sonnet 4.5', u:'https://www.anthropic.com/news/claude-sonnet-4-5' },
+  'anthropic-opus45': { t:'Anthropic — Claude Opus 4.5', u:'https://www.anthropic.com/news/claude-opus-4-5' },
+  'anthropic-opus46': { t:'Anthropic — Claude Opus 4.6 system card (Feb 2026)', u:'https://www.anthropic.com/news/claude-opus-4-6' },
   'openai-gpt5':   { t:'OpenAI — Introducing GPT-5', u:'https://openai.com/index/introducing-gpt-5/' },
   'openai-o1':     { t:'OpenAI — Learning to reason with LLMs', u:'https://openai.com/index/learning-to-reason-with-llms/' },
   'gpt4v':         { t:'OpenAI — GPT-4V system card', u:'https://openai.com/index/gpt-4v-system-card/' },

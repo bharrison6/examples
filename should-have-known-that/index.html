@@ -995,6 +995,19 @@ function posToValue(q, pos){
   }
   return q.min + (q.max - q.min) * t;
 }
+/* Where the handle starts. It used to open dead centre, which on 15 of the 40
+   questions is close enough to the answer to score without touching the slider.
+   Start somewhere random instead, and never inside the scoring bands, so a point
+   always has to be earned by an actual guess. */
+function startPos(q){
+  const truth = valueToPos(q, q.value);
+  const minGap = STEPS * 0.28;
+  for (let tries = 0; tries < 40; tries++) {
+    const pos = Math.round(STEPS * (0.08 + Math.random() * 0.84));
+    if (Math.abs(pos - truth) >= minGap) return pos;
+  }
+  return truth > STEPS / 2 ? Math.round(STEPS * 0.08) : Math.round(STEPS * 0.92);
+}
 function valueToPos(q, v){
   let t;
   if (q.scale === "log") {
@@ -1236,7 +1249,7 @@ function showQuestion(){
   $("range-max").textContent = fmt(q.max);
   $("scale-tag").classList.toggle("hidden", q.scale !== "log");
   const slider = $("slider");
-  slider.value = 500;
+  slider.value = startPos(q);
   updateSliderReadout();
   $("guess-panel").classList.remove("hidden");
   $("guess-panel").style.display = "flex";

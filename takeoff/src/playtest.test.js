@@ -405,13 +405,15 @@ ok('Every cut entry gives a reason', D.CUT.every(c => c.why && c.why.length > 20
 }
 
 {
-  /* The SWE-bench reveal prose says "33% to 82%". Assert the data says so too,
-     because prose and data drifting apart is exactly how a demo starts lying. */
+  /* The SWE-bench reveal prose says "a third to four in five, then it stopped
+     moving". Assert the data says so too, because prose and data drifting apart
+     is exactly how a demo starts lying. The line is single-attempt figures end to
+     end so the comparison is like with like. */
   const r = D.ROUNDS.find(x => x.id === 'swebench');
   const first = E.allPoints(r)[0].value;
   const last = E.finalValue(r);
   ok('The bug-fixing prose matches the plotted endpoints',
-     Math.round(first) === 33 && Math.round(last) === 82, `${first} -> ${last}`);
+     Math.round(first) === 33 && Math.round(last) === 81, `${first} -> ${last}`);
 }
 
 {
