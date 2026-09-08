@@ -190,6 +190,81 @@ column with an enormous board. `tools/integration.mjs` now asserts the fold, hor
 board squareness and 40px tap targets at eight viewports from 320×568 up, plus presenter mode on
 720p and 1080p projectors.
 
+**Step 3 was rebuilt as ULTIMATE tic-tac-toe.** The notes for the retired version are kept
+below, marked, because the findings in them are real history and two of them still hold. What
+changed and why:
+
+The old step 3 was nine INDEPENDENT boards, a mark per turn on any unfinished board, first to five.
+It broke enough of step 2 to make the point, but it left the decomposition a person had chosen —
+score one board at a time and add up — actually *working*, because the boards really were
+independent and five of anything is five. So the act's headline claim ("a person chose this
+shortcut, and finding such shortcuts is what the next kind of learner is for") was true of the
+code but never demonstrated: nothing on screen showed the shortcut failing.
+
+Ultimate rules make it fail, and make it fail measurably. The cell you play in names the board your
+opponent must play in next, and you win by taking three small boards *in a row*. Both of those are
+outside what a table indexed by "the picture inside one board" can represent — the first because the
+move's consequence is elsewhere, the second because a board's worth now depends on where it sits.
+The act is built on measuring exactly those two, each against a control that has to come out the
+other way, so a broken probe fails instead of confirming. It also removes both reductions that kept
+the old arithmetic tolerable: boards are no longer interchangeable, and no board can be rotated
+alone without breaking the cell-to-board mapping.
+
+And the payoff the old act could not offer: ultimate tic-tac-toe **is solved** — a forced
+first-player win, published in 2020 — while remaining far too large to search. That is the honest
+three-layer lesson the act now ends on, and it is a better ending than "no proof is possible here",
+which is still true and still said, but is no longer the last word.
+
+Design decisions worth recording, none of which are figures — **every number this act quotes lives
+in `src/ultimate.js`, is recomputed by `src/playtest.test.js`, and is cross-checked against
+README.md, the guide and demo.json by a test, so this file deliberately restates none of them**:
+
+1. *The failure is not repaired, on purpose.* The learner keeps the inherited per-board table
+   unchanged, including having no slot for the match result at all. Fixing it means finding a
+   representation that couples the boards and sees the send, which is the next rung and a separate
+   build. This act is the honest failure, measured.
+2. *Two hand-written opponents, not one.* The board-local player is the old benchmark, restricted to
+   legal moves. The send-aware player is the same code plus three clauses about what ultimate rules
+   added. The learner improves against the first and flatlines against the second, which localises
+   the failure to the two blind spots rather than to "learning is hard here".
+3. *Controls beside every finding.* Board wins are what the decomposition CAN see, so the free-win
+   rate is measured alongside the match-win rate; if the control were low, nothing else would mean
+   anything. The giveaway rate is measured against the rate blind choosing would produce, the same
+   test the newborn one-board agent is held to.
+4. *The state-space counts are computed, not quoted.* Which small-board pictures the game can
+   actually produce is derived from the rule that a board closes the instant a line completes, then
+   cross-checked against the pictures real matches produce. The turn needs no factor of its own in
+   the count — marks alternate across the whole grid — which is a correction to the obvious formula
+   and is stated where the arithmetic lives.
+5. *The published result is quoted with its caveat.* The paper frees your choice only when the board
+   you are sent to is full; this demo uses the commoner convention where a won board frees you too,
+   and the published strategy relies on the difference. Near neighbours, not the same game, and the
+   page says so rather than overclaiming a theorem.
+
+**Ultimate on a phone.** The 9x9 is the hard case and the answer is the old one, which ultimate
+rules make more honest rather than less: two square panes, the meta-grid on the left and the board
+you were SENT to at full size on the right. You do not choose which board to play in, so the
+right-hand pane is not a viewport onto something you might rather be looking at — it is the only
+board you may touch. Three exclusive signals carry the rule (sent / free choice / the destination of
+the square under your finger), and a line of prose under the panes says which and why on every turn,
+because a ring says where and only words say why. The board count moved onto that line's second row
+rather than keeping a panel of its own, which is what keeps TRAIN above the fold at 320x568; the
+panes are the element that yields on a short screen, the same device the one-board board already
+used.
+
+**`src/net.js` is on disk and out of the build.** It is a working MLP and TD trainer written
+against the retired ruleset. It is machinery for a later rung, it is referenced by nothing, and the
+build and the test suite both run without it.
+
+---
+
+### Retired: Act II as originally built (nine independent boards, first to five)
+
+Kept as a record. **The demo no longer works this way** and the figures below describe the retired
+game, not the shipped one. Findings 2 and 3 still hold in the current build; 1 and 4 were specific
+to independent boards.
+
+
 **Act II: nine boards at once, added on request.** Nine independent boards, a mark per turn on any
 unfinished board, finished boards lock, first to five boards wins. It became a second act rather than
 a second game, because it is the smallest thing that breaks everything Act I relies on, and because
