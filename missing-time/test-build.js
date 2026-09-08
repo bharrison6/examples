@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const here = __dirname;
+const template = fs.readFileSync(path.join(here, 'app.template.html'), 'utf8');
+const model = fs.readFileSync(path.join(here, 'model.js'), 'utf8');
+const index = fs.readFileSync(path.join(here, 'index.html'), 'utf8');
+assert.equal(index, template.replace('/*__MISSING_TIME_MODEL__*/', model));
+assert.ok(index.includes(model));
+index.split('<script>').slice(1).map(part => part.split('</script>')[0]).forEach(script => new Function(script));
+assert.match(index, /Myr since start/); assert.match(index, /Show missing interval/); assert.match(index, /Offline classroom activity/);
+assert.match(index, /surviving rock height above base in metres/);
+assert.match(index, /model time in Myr since start/);
+assert.match(index, /kind==='rock'\?\{lo:layer\.baseM,hi:layer\.baseM\+layer\.survivingThicknessM\}/);
+assert.match(index, /chronology:\$\{section\.id\}/);
+console.log('Missing Time build: verbatim production model and inline scripts checked.');

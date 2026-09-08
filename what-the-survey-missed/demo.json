@@ -1,0 +1,30 @@
+{
+  "slug": "what-the-survey-missed",
+  "title": "What the Survey Missed",
+  "emoji": "🦉",
+  "topic": "Ecology · Wildlife Survey Design",
+  "discipline": "Ecology",
+  "tagline": "Survey fixed synthetic sites and separate detection from occupancy",
+  "card_blurb": "Run a reproducible wildlife-survey scenario, inspect detection histories, and learn why fewer sightings do not by themselves prove lower occupancy.",
+  "description": "**What the Survey Missed** — an offline synthetic occupancy investigation. Students survey two fixed groups of 24 sites across up to three rounds, distinguish observations from occupancy, inspect a transparent likelihood view, and reveal the generating model only after explaining the evidence.",
+  "entry": "index.html",
+  "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": ["codex", "gpt-6-astra"],
+  "status": "active",
+  "added": "2026-09-08",
+  "compliance": {
+    "readme": true,
+    "guide": false,
+    "howto_popup": true,
+    "settings_menu": true,
+    "presentation_mode": true,
+    "presenter_notes": true,
+    "msu_theme": true,
+    "attribution_visible": true,
+    "mobile": "unverified",
+    "offline_no_inference": "unverified"
+  }
+}
