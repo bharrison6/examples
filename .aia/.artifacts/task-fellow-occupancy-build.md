@@ -6,11 +6,13 @@ prospective_kind: task
 schema_version: 2
 title: Build What the Survey Missed for AI Fellows
 created: 2026-09-08T21:10:00Z
-updated: 2026-09-08T21:30:00Z
+updated: 2026-09-08T22:39:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
 status: executing
+fires_on: Opus integrates the verified demos or explicitly releases the shared launcher and tour files
+blocked_by: Shared root integration remains reserved to the coordinated Opus session; standalone delivery is complete
 scope: examples
 source_basis: conversation
 sensitivity: normal
@@ -18,6 +20,20 @@ sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T21:08:00Z
 tags: [ai-fellows, demos, ecology, occupancy]
 ---
 # What the Survey Missed
+
+## Standalone delivery — 2026-09-08, 22:39 UTC
+
+Implementation, canonical HTML/two-page PDF guide, targeted Astra review, parent
+Chrome desktop/mobile walkthrough and production model/build checks are complete.
+Evidence and limits: [[fellow-build-verification]]. The PDF was rendered from HTML
+using the demo-local ReportLab tool and all pages were visually inspected.
+
+The remaining task is the coordinated shared-hub integration: append this slug to
+Part Three in `tours/zero-to-takeoff.json`, add its section/card stub in root
+`index.html`, then run `tools/build-hub.js` and its check. Preserve Opus's narrative.
+The peer handoff is pending; the expired peer registration is not a release.
+No push was performed. Keep this prospective carrier until that final task is done;
+then retype/rename with its stable ID and preserved original brief/history.
 
 ## Paused checkpoint — 2026-09-08
 

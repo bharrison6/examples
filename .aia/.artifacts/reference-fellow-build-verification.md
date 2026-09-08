@@ -4,7 +4,7 @@ artifact_kind: reference
 schema_version: 2
 title: AI Fellow demo build evidence and shared-repo handoff
 created: 2026-09-08T20:04:00Z
-updated: 2026-09-08T21:06:00Z
+updated: 2026-09-08T22:39:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -17,6 +17,56 @@ tags: [ai-fellows, verification, coordination]
 ---
 
 # AI Fellow demo verification
+
+## Final two standalone deliveries — 2026-09-08, 22:39 UTC
+
+What the Survey Missed and Missing Time have completed implementation and guide
+packaging in their own title-slug folders. Native builders were runtime-confirmed
+gpt-5.6-terra/high, with independent gpt-6-astra/high review. Parent ran both final
+production model suites, build tests and reproducibility checks successfully.
+These demos await coordinated root launcher/tour integration, not further builds.
+
+Occupancy evidence: independent exact-history likelihood fixtures, one-visit
+ambiguity, zero-count and endpoint ridges, closure/no-false-positive checks and
+1,000 seeded scenarios were reviewed. Chrome reproduced the default first-round
+5/24 versus 15/24 detections, repeats, cautious interpretation, parameter-free
+pre-reveal feedback and the same-map detected/missed/unoccupied reveal. Revealed
+truth remains distinct from generating probabilities and observed fractions.
+Keyboard/touch selectors expose individual relative-likelihood values; changing
+the seed clears the former value. Presentation retains the survey controls;
+help, openable notes and reset operated. A 390px viewport had no document overflow
+and the maps/controls were visually inspected. No console errors observed.
+
+Missing Time evidence: independent ledger/erosion fixtures, preserved-only fossils,
+valid/relevant evidence actions, both-section chronology and reset passed review.
+The final reviewer checked all 12 surviving specimen times against independent
+linear interpolation. Every surviving layer has supplied synthetic base/top ages,
+including the partial erosion top at 2 2/3 Myr; constant-rate within-layer mapping,
+omitted dating uncertainty and omitted internal hiatuses are explicit assumptions.
+Time geometry and specimen-time marks appear only after that evidence action.
+Chrome exercised continuous, cut-bank and paired-section claims, sample/chronology
+gates, authored reveal, reset, help and notes. Proportional diagrams display m and
+Myr; the rock contact has zero thickness while the time view spans the gap. The
+390px figures stack at readable size without horizontal overflow. Presentation
+retains evidence and conclusions. No console errors observed.
+
+Both two-page letter guides were generated from semantic canonical HTML with
+demo-local ReportLab renderers; parent inspected all four final PNG pages and
+observed correct metadata/page counts. The guides cite the reviewed USGS occupancy
+publication/workshop and primary StratPal event-data tutorial. PDF binary attributes
+are demo-local. Provenance names both implementation and review models.
+
+Static runtime audit found no external assets or fetch/socket/beacon calls, with
+a positive external-script/fetch control and a negative outbound-link control.
+This is not a disconnected-network browser test. Direct-file/offline browser
+operation remains unverified after the earlier policy rejection; no workaround
+was attempted. No student learning gains, faculty endorsement or general field
+inference accuracy is claimed from these bounded synthetic checks.
+
+Remaining integration: [[fellow-occupancy-build]] and [[fellow-missing-time-build]].
+Opus session `53af9ff3-b420-4ade-9e04-50c2bc8fae47` still reserves root files; a new
+handoff was requested at 22:23 UTC with no response yet. All earlier delivery and
+ownership descriptions below are history. This Codex lane performed no push.
 
 ## Current local delivery — 2026-09-08, 21:06 UTC
 

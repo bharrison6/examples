@@ -2,13 +2,14 @@
 
 An offline, self-contained occupancy investigation for the AI Fellows collection. Students first run a fixed survey of 24 sites per habitat, interpret what a detection difference can and cannot mean, then decide whether to add up to two more fixed rounds before comparing their evidence with hidden synthetic truth.
 
-Open [index.html](index.html) in a modern browser. Help opens on load and `?` reopens it. `⚙` includes presentation mode and presenter notes. The printable guide is [teacher-guide.html](teacher-guide.html); its PDF is produced by the parent delivery lane from that canonical HTML.
+Open [index.html](index.html) in a modern browser. Help opens on load and `?` reopens it. `⚙` includes presentation mode, openable presenter notes, reset responses, practice replay of the current seed, and a new seeded scenario. The printable guide is [HTML](teacher-guide.html) or [PDF](teacher-guide.pdf).
 
 ## What it teaches
 
 - Occupancy means whether a site is used in the synthetic model. It is distinct from abundance, the number of animals.
 - Every round visits every one of the same 48 sites: 24 in Habitat A and 24 in Habitat B. Site clicks inspect a fixed record; they do not create adaptive sampling.
-- The synthetic generating values are held until the evidence explanation: Habitat A has ψ = 0.8 and p = 0.25; Habitat B has ψ = 0.5 and p = 0.8.
+- The first action is a fixed survey round. After students interpret the observed detection difference, they can add later fixed rounds, open transfer and likelihood tools, or reveal the synthetic model.
+- The synthetic generating values are held until the evidence explanation: Habitat A has ψ = 0.8 and p = 0.25; Habitat B has ψ = 0.5 and p = 0.8. Reveal recolors the same arrays as detected, occupied-but-missed, or unoccupied; later rounds are labelled exploration.
 - For (K) visits, the expected fraction ever detected is `ψ × (1 − (1 − p)^K)`. At one visit, A/B are 0.20/0.40; at three, 0.4625/0.496. A finite realization can differ from both expectations.
 - The optional likelihood grid uses only observed histories. It labels relative likelihood as a bounded comparison, never as a posterior probability or calibrated confidence interval. One visit cannot identify ψ and p separately.
 
@@ -33,9 +34,15 @@ The model tests cover the specified one- and three-visit expected fractions, eve
 
 The page has no external scripts, fonts, images, stylesheets, data calls, or runtime AI inference. Browser-only direct-file/disconnected-network compliance is still unverified in the manifest.
 
+Rebuild the printable PDF from canonical HTML with the local renderer:
+
+```text
+python tools/render_guide.py
+```
+
 ## Sources
 
-- D. I. MacKenzie et al., “Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One,” *Ecology* 83(8), 2002, pp. 2248–2255, [DOI](https://doi.org/10.1890/0012-9658(2002)083%5B2248:EOSORW%5D2.0.CO;2). This is the source context for separating occupancy probability and detection probability and for the history likelihood structure.
-- U.S. Geological Survey, [RPresence workshop materials](https://www.mbr-pwrc.usgs.gov/workshops/), for occupancy/detection teaching context and detection-history workflows.
+- D. I. MacKenzie et al., “Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One,” *Ecology* 83(8), 2002, pp. 2248–2255, [USGS publication record](https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one). This is the source context for separating occupancy probability and detection probability and for the history likelihood structure.
+- U.S. Geological Survey, [RPresence occupancy workshop, 2023 online](https://www.mbr-pwrc.usgs.gov/workshops/occupancy2023online.html), for occupancy/detection teaching context and detection-history workflows.
 
 Neither source establishes a current Murray State assignment or endorsement.

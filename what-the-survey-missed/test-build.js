@@ -8,6 +8,11 @@ assert.ok(html.includes('id="interpretPanel" hidden') && html.includes('id="afte
 assert.ok(html.includes('Replay as practice') && html.includes('Explore mode: truth is revealed'), 'replay and post-reveal exploration must not imply a blind new trial');
 assert.ok(html.includes('occupied-missed') && html.includes('truthLegend'), 'truth reveal must visibly distinguish missed occupancy on the same site arrays');
 assert.ok(html.includes('ψ 1') && html.includes('p .5'), 'likelihood grid must have visible psi and p axes');
+assert.ok(html.includes('id="psiSelect"') && html.includes('id="pSelect"') && html.includes('id="likelihoodSelection"'), 'likelihood inspection must be keyboard and touch accessible without 121 tab stops');
+assert.ok(html.includes('id="revealBadge"') && html.includes('AFTER REVEAL') && html.includes('id="unknownLegend"'), 'reveal state must update the case copy and non-detection legend');
+assert.ok(html.includes('id="notesOverlay" hidden') && html.includes('id="notesButton"'), 'presenter notes must be openable and hidden by default');
+assert.ok(!html.includes('.presentation .case,.presentation .controls'), 'presentation mode must retain survey actions');
+assert.ok(html.includes("likelihoodSelection').textContent='Choose ψ and p to inspect one grid cell.';return"), 'resetting before a round must clear stale likelihood-selection text');
 assert.ok(!/<(?:script|link|img|iframe)\b[^>]+(?:https?:)?\/\//i.test(html), 'no external runtime assets');
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(m=>m[1]);assert.equal(scripts.length,2);scripts.forEach((source,index)=>new vm.Script(source,{filename:'inline '+index}));
 const check=spawnSync(process.execPath,['build.js','--check'],{cwd:root,encoding:'utf8'});assert.equal(check.status,0,check.stderr||check.stdout);

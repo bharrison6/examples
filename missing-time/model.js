@@ -16,7 +16,9 @@ const MissingTimeModel = (() => {
       prompt: 'Asteria is observed in lower rock and a different fossil is observed above. Does a local disappearance establish extinction?',
       sections: Object.freeze([
         Object.freeze({ id: 'a', label: 'Section A', chronology: Object.freeze([
-          { layerId: 'a-base', position: 'base', modelMyr: 0 }, { layerId: 'a-top', position: 'top', modelMyr: 6 }
+          { layerId: 'a-base', position: 'base', modelMyr: 0 }, { layerId: 'a-base', position: 'top', modelMyr: 2 },
+          { layerId: 'a-middle', position: 'base', modelMyr: 2 }, { layerId: 'a-middle', position: 'top', modelMyr: 4 },
+          { layerId: 'a-top', position: 'base', modelMyr: 4 }, { layerId: 'a-top', position: 'top', modelMyr: 6 }
         ]), events: Object.freeze([
           { type: 'deposit', id: 'a-base', label: 'Blue mudstone', durationMyr: 2, rateMPerMyr: 10, fossils: [{ species: 'asters', atMyr: 0.8 }] },
           { type: 'deposit', id: 'a-middle', label: 'Green mudstone', durationMyr: 2, rateMPerMyr: 7, fossils: [{ species: 'asters', atMyr: 0.9 }] },
@@ -31,7 +33,9 @@ const MissingTimeModel = (() => {
       prompt: 'A missing interval is exposed beneath younger rock. Is the blank necessarily an organism’s last moment?',
       sections: Object.freeze([
         Object.freeze({ id: 'b', label: 'Section B', chronology: Object.freeze([
-          { layerId: 'b-middle', position: 'top', modelMyr: 2 + 8 / 12 }, { layerId: 'b-top', position: 'base', modelMyr: 5.4 }
+          { layerId: 'b-base', position: 'base', modelMyr: 0 }, { layerId: 'b-base', position: 'top', modelMyr: 2 },
+          { layerId: 'b-middle', position: 'base', modelMyr: 2 }, { layerId: 'b-middle', position: 'top', modelMyr: 2 + 8 / 12 },
+          { layerId: 'b-top', position: 'base', modelMyr: 5.4 }, { layerId: 'b-top', position: 'top', modelMyr: 7.2 }
         ]), events: Object.freeze([
           { type: 'deposit', id: 'b-base', label: 'Gray shale', durationMyr: 2, rateMPerMyr: 10, fossils: [{ species: 'asters', atMyr: 1.0 }] },
           { type: 'deposit', id: 'b-middle', label: 'Red siltstone', durationMyr: 1.5, rateMPerMyr: 12, fossils: [{ species: 'asters', atMyr: 0.4 }, { species: 'shells', atMyr: 1.2 }] },
@@ -48,14 +52,17 @@ const MissingTimeModel = (() => {
       prompt: 'Section C has a blank interval. Sample the matching interval in Section D before deciding what the blank means.',
       sections: Object.freeze([
         Object.freeze({ id: 'c', label: 'Section C', chronology: Object.freeze([
-          { layerId: 'c-base', position: 'top', modelMyr: 2 }, { layerId: 'c-top', position: 'base', modelMyr: 4 }
+          { layerId: 'c-base', position: 'base', modelMyr: 0 }, { layerId: 'c-base', position: 'top', modelMyr: 2 },
+          { layerId: 'c-top', position: 'base', modelMyr: 4 }, { layerId: 'c-top', position: 'top', modelMyr: 6 }
         ]), events: Object.freeze([
           { type: 'deposit', id: 'c-base', label: 'Dark shale', durationMyr: 2, rateMPerMyr: 10, fossils: [{ species: 'asters', atMyr: 0.9 }] },
           { type: 'pause', id: 'c-pause', label: 'No deposition at C', durationMyr: 2 },
           { type: 'deposit', id: 'c-top', label: 'Tan sandstone', durationMyr: 2, rateMPerMyr: 9, fossils: [{ species: 'shells', atMyr: 0.8 }] }
         ]) }),
         Object.freeze({ id: 'd', label: 'Section D', chronology: Object.freeze([
-          { layerId: 'd-middle', position: 'base', modelMyr: 2 }, { layerId: 'd-middle', position: 'top', modelMyr: 4 }
+          { layerId: 'd-base', position: 'base', modelMyr: 0 }, { layerId: 'd-base', position: 'top', modelMyr: 2 },
+          { layerId: 'd-middle', position: 'base', modelMyr: 2 }, { layerId: 'd-middle', position: 'top', modelMyr: 4 },
+          { layerId: 'd-top', position: 'base', modelMyr: 4 }, { layerId: 'd-top', position: 'top', modelMyr: 6 }
         ]), events: Object.freeze([
           { type: 'deposit', id: 'd-base', label: 'Dark shale', durationMyr: 2, rateMPerMyr: 10, fossils: [{ species: 'asters', atMyr: 0.9 }] },
           { type: 'deposit', id: 'd-middle', label: 'Green mudstone', durationMyr: 2, rateMPerMyr: 7, fossils: [{ species: 'asters', atMyr: 0.8 }, { species: 'shells', atMyr: 1.2 }] },

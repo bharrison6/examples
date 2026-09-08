@@ -6,11 +6,13 @@ prospective_kind: task
 schema_version: 2
 title: Build Missing Time for AI Fellows
 created: 2026-09-08T21:10:00Z
-updated: 2026-09-08T21:30:00Z
+updated: 2026-09-08T22:39:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
 status: executing
+fires_on: Opus integrates the verified demos or explicitly releases the shared launcher and tour files
+blocked_by: Shared root integration remains reserved to the coordinated Opus session; standalone delivery is complete
 scope: examples
 source_basis: conversation
 sensitivity: normal
@@ -18,6 +20,23 @@ sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T21:08:00Z
 tags: [ai-fellows, demos, geology, preservation]
 ---
 # Missing Time
+
+## Standalone delivery — 2026-09-08, 22:39 UTC
+
+Implementation, canonical HTML/two-page PDF guide, targeted Astra review, parent
+Chrome desktop/mobile walkthrough and production model/build checks are complete.
+Evidence and limits: [[fellow-build-verification]]. Full layer-edge chronology and
+the explicit within-layer constant-rate assumption now support the gated time
+mapping; outer anchors alone were insufficient. Mobile stacks the two figures,
+and presentation retains sampling, chronology, evidence and decision controls.
+
+The remaining task is the coordinated shared-hub integration: append this slug
+after `what-the-survey-missed` in Part Three of `tours/zero-to-takeoff.json`, add
+the section/card stub in root `index.html`, regenerate the owned card/table regions
+with `tools/build-hub.js`, and verify. Opus's root reservation remains in force;
+its pending handoff and expired registration do not establish release. No push.
+Keep this prospective carrier until integration is complete, then preserve its ID
+and full history when converting it to an episode.
 
 ## Paused checkpoint — 2026-09-08
 
