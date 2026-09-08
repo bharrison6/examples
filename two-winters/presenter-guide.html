@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Two Winters — presenter guide</title>
+<!--
+  Canonical, printable presenter guide for the Two Winters demo.
+
+  This file is the single source of truth for the presenter's notes. build.js
+  lifts the first <style> block and the .guide-scope div out of here verbatim
+  and injects them into index.html, so Settings -> Presenter's notes shows
+  exactly this text with no sibling file to go looking for. Edit here; never
+  edit the copy inside index.html.
+
+  Everything in the first <style> block MUST be scoped to .guide-scope, because
+  it is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the second <style> block, which is not
+  extracted.
+-->
+<style>
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say {
+  border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px;
+  margin: 0 0 .9em; font-style: italic; opacity: .95;
+}
+.guide-scope .warn { border-left-color: #FF4500; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .tag {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.guide-scope .tag.p { background: rgba(236,172,0,.18); color: #ECAC00; }
+.guide-scope .tag.d { background: rgba(0,164,227,.18); color: #00A4E3; }
+.guide-scope .tag.w { background: rgba(185,140,255,.18); color: #B98CFF; }
+.guide-scope .tag.o { background: rgba(126,217,87,.18); color: #7ED957; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+</style>
+<style>
+/* Standalone printable page only — not extracted into the app. */
+body {
+  margin: 0; background: #fff; color: #14181f;
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.page { max-width: 46rem; margin: 0 auto; padding: 32px 22px 56px; }
+@media print {
+  body { font-size: 11.5pt; }
+  .page { max-width: none; padding: 0; }
+  .guide-scope h2 { break-after: avoid; }
+  .guide-scope table { break-inside: auto; }
+  .guide-scope tr { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="guide-scope">
+
+  <div class="g-head">
+    <div class="g-kicker">Murray State University &middot; Bryant Harrison</div>
+    <h1>Two Winters &mdash; presenter guide</h1>
+    <div class="g-sub">
+      Demo 5 of &ldquo;AI: From Zero to Takeoff&rdquo;. Runs 12&ndash;18 minutes full, 6 minutes cut.
+      One HTML file, offline, no AI at runtime.
+    </div>
+  </div>
+
+  <h2>Why this demo exists</h2>
+  <p>
+    It follows <b>Takeoff</b>, which ends with the room having watched capability curves go
+    almost vertical. The honest next question &mdash; and you will get it, usually from
+    someone who has been in a technical field a long time &mdash; is <i>&ldquo;is this
+    another bubble?&rdquo;</i>
+  </p>
+  <p>
+    This demo answers that with evidence instead of reassurance. AI has collapsed twice.
+    Both times the same five things happened in the same order. Knowing that sequence is
+    how you judge a claim without either swallowing it or dismissing it.
+  </p>
+  <p class="say">
+    The one sentence to land: <b>confident predictions that AI was nearly here have a bad
+    record &mdash; and so do confident predictions that it would never work.</b> Most rooms
+    only believe the first half until they are scored on the second.
+  </p>
+
+  <h2>The shape of the session</h2>
+  <table>
+    <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
+    <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced predictions with the speaker and date hidden. The room guesses the year and the outcome. Scorecard splits promises from dismissals.</td><td>7&ndash;9 min</td></tr>
+    <tr><td><b>II &mdash; The two winters</b></td><td>Scrub the timeline. The five lanes light up in order, twice.</td><td>3&ndash;4 min</td></tr>
+    <tr><td><b>III &mdash; Anatomy</b></td><td>The two winters and the present, on the same five stages. Two cells in the third column are empty.</td><td>2&ndash;3 min</td></tr>
+    <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
+  </table>
+
+  <h2>Act I &mdash; running the prediction round</h2>
+  <p>
+    Do the first two cards yourself, out loud, so the room sees the mechanic. Then hand it
+    over &mdash; ask for a show of hands on the year before you drag the slider, and ask for
+    a verbal verdict before you press <b>Lock it in</b>. The room being wrong together is
+    the experience; a silent room reading a screen is not.
+  </p>
+
+  <h3>The deck, and what each card is for</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>Year</th><th>Card</th><th>Type</th><th>What it is for</th></tr>
+    <tr><td>1950</td><td>Turing &mdash; fifty years to the imitation game</td><td><span class="tag p">promise</span></td><td>Opens gently. Nobody guesses this early. Sets up that the field has always had deadlines.</td></tr>
+    <tr><td>1958</td><td>&ldquo;walk, talk, see, write, reproduce itself&rdquo;</td><td><span class="tag p">promise</span></td><td>The press-release failure mode. The underlying idea was real and important; the sentence was not.</td></tr>
+    <tr><td>1957</td><td>Simon &amp; Newell &mdash; chess champion in ten years</td><td><span class="tag p">promise</span></td><td><b>The most useful card in the deck.</b> Right destination, wrong by a factor of four. Pause here.</td></tr>
+    <tr><td>1960</td><td>Simon &mdash; any work a man can do, in twenty years</td><td><span class="tag p">promise</span></td><td>Twenty years lands in 1980, the bottom of the first winter. Also: it is usually misdated to 1965.</td></tr>
+    <tr><td>1966</td><td>ALPAC &mdash; machine translation is not near</td><td><span class="tag d">dismissal</span></td><td>The first dismissal. Fair about 1966, catastrophic as a forecast. Funding stopped.</td></tr>
+    <tr><td>1967</td><td>Minsky &mdash; substantially solved within a generation</td><td><span class="tag p">promise</span></td><td>From his own textbook, not a magazine. Use this if someone challenges the sourcing.</td></tr>
+    <tr><td>1969</td><td><i>Perceptrons</i> &mdash; neural nets read as a dead end</td><td><span class="tag d">dismissal</span></td><td>The proofs were right; the conclusion the field drew was not. And the authors disputed the tidy story.</td></tr>
+    <tr><td>1973</td><td>Lighthill &mdash; no major impact anywhere in the field</td><td><span class="tag d">dismissal</span></td><td>The report that ended UK funding. True about 1973; read as permanent.</td></tr>
+    <tr><td>1984</td><td>Schank &amp; Minsky &mdash; a winter is coming</td><td><span class="tag w">warning</span></td><td>The card that saves the demo from being anti-hype. They were <b>right</b>, three years early.</td></tr>
+    <tr><td>2024</td><td>Amodei &mdash; &ldquo;could come as early as 2026&rdquo;</td><td><span class="tag o">open</span></td><td>Deliberately unscored. The year named is the year you are standing in.</td></tr>
+  </table>
+  </div>
+
+  <h3>Short of time?</h3>
+  <p>
+    Keep four: <b>Simon &amp; Newell 1957</b> (over-promise, right destination),
+    <b>ALPAC 1966</b> (dismissal that aged badly), <b>Schank &amp; Minsky 1984</b>
+    (a prediction that was right), and <b>Amodei 2024</b> (still open). Those four carry
+    the whole argument. Skip to Act III and close.
+  </p>
+
+  <h3>What the scorecard is for</h3>
+  <p>
+    It shows two bars: how the room did on promises, and how it did on dismissals. Most
+    rooms are much better at spotting hype than at spotting a dismissal about to age badly.
+    If the two bars come out very different heights, say so out loud &mdash; that asymmetry
+    is the finding, not the total.
+  </p>
+  <p class="say">
+    &ldquo;You are all good at not being fooled by someone selling you the future. You are
+    much worse at not being fooled by someone telling you it will not work. Both of those
+    are in the historical record about equally often.&rdquo;
+  </p>
+
+  <h2>Act II &mdash; the timeline</h2>
+  <p>
+    Do not narrate the events. Drag the slider slowly from 1950 and let the room watch the
+    rows fire top to bottom. Say the stage names as each lane lights: promise, money, limit,
+    naming, withdrawal. Then keep dragging and let them notice it happen again.
+  </p>
+  <ul>
+    <li>The <b>&lsquo;</b> and <b>&rsquo;</b> buttons step one event at a time if you want to stop and read one.</li>
+    <li>Tap any dot for the full text and its source.</li>
+    <li>Point at the <b>third run</b>, from 2020 on: the top rows have fired and the bottom two have not.</li>
+  </ul>
+  <p class="say warn">
+    Do not let the lanes turn into a prophecy. The correct line is: &ldquo;the first three
+    stages have happened. Whether the last two do is the open question, and nothing on this
+    screen settles it.&rdquo;
+  </p>
+  <h3>The money panel &mdash; read the caveat aloud</h3>
+  <p>
+    Four funding commitments, in four different currencies, not inflation-adjusted. That is
+    on purpose: no continuous, sourceable series of AI funding exists across these years, so
+    the demo shows four points with sources rather than drawing a line it cannot defend.
+    Saying that out loud buys you more credibility than a prettier chart would.
+  </p>
+
+  <h2>Act III &mdash; anatomy</h2>
+  <p>
+    Read down the first column, then the second, then stop at the third. Two cells in the
+    &ldquo;Now&rdquo; column are empty &mdash; the binding technical limit, and the
+    withdrawal. Make the room sit with that.
+  </p>
+  <p class="say">
+    &ldquo;In both previous cycles, the limit was completely obvious afterwards and
+    invisible at the time to the people doing the work. There is no reason to think we are
+    better placed. If someone tells you they know what today&rsquo;s binding constraint is,
+    they are making the same kind of claim that failed twice.&rdquo;
+  </p>
+
+  <h2>Act IV &mdash; closing</h2>
+  <p>
+    Give both columns roughly equal time. The strongest item on each side:
+  </p>
+  <ul>
+    <li><b>Rhymes:</b> in February 2026 OpenAI stopped reporting SWE-bench Verified because
+      models had been trained on it and most of the hard problems they still failed had
+      broken tests. Scores kept rising; what they measured stopped being capability. Both
+      previous winters started with a gap between claim and measurement.</li>
+    <li><b>Different:</b> scaling behaviour that has held across more than seven orders of
+      magnitude, and 900 million people a week actually using the thing. Neither previous
+      boom had a measured extrapolable relationship, and neither had users.</li>
+  </ul>
+  <p>
+    Close on the checklist, not on a verdict: given any AI claim, ask which of the five
+    stages it belongs to and what evidence would move it.
+  </p>
+
+  <h2>Questions you will get</h2>
+  <h3>&ldquo;So is it a bubble or not?&rdquo;</h3>
+  <p>
+    Refuse the binary, in one sentence, then give the useful answer: some of the money is
+    ahead of the returns, which is stage two of the pattern; and the technology is in
+    hundreds of millions of hands, which neither previous boom managed. Both are true.
+    Financial correction and technological dead end are different claims and they are being
+    argued as if they were one.
+  </p>
+  <h3>&ldquo;Aren&rsquo;t the winter dates made up?&rdquo;</h3>
+  <p>
+    Partly, and the demo says so. The starts are well attested &mdash; ALPAC 1966, the
+    hardware collapse in 1987. The ends are conventional and historians disagree; the second
+    winter is dated to 1993 here and to 2000 by other accounts. That is why the bands have a
+    soft right edge and a note under them.
+  </p>
+  <h3>&ldquo;Where did you get this?&rdquo;</h3>
+  <p>
+    Open <b>Settings &rarr; Run the self-test</b> in front of them. It re-derives, live, that
+    every claim resolves to a declared source, that no source is cited and never used, and
+    that the counts quoted on screen match the data. Then scroll to Act IV, which lists every
+    source and, separately, everything researched and <b>cut</b> for lack of one.
+  </p>
+  <h3>&ldquo;Why is that quote from a quotation-checking website?&rdquo;</h3>
+  <p>
+    Because the Simon and Minsky lines are in printed books from 1960 and 1967 that are not
+    online, and that site verified both against page scans and gives the page numbers. It is
+    a stronger source than a paraphrase from a blog, and the demo marks the difference:
+    every claim carries <b>primary</b> or <b>reported</b>.
+  </p>
+
+  <h2>Before you present</h2>
+  <ul>
+    <li>Open <b>Settings &rarr; Presenter mode</b> for projector-sized type.</li>
+    <li>Run the self-test once so you know it is green before anyone asks.</li>
+    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>No network is needed at any point. If the room&rsquo;s wifi is down, nothing changes.</li>
+  </ul>
+
+  <div class="g-foot">
+    Two Winters &mdash; Bryant Harrison, Murray State University.
+    Sources checked September 2026. Every figure on screen links to its origin;
+    everything that could not be sourced is listed in Act IV under &ldquo;What was cut, and why&rdquo;.
+  </div>
+
+</div><!-- /guide -->
+</div>
+</body>
+</html>

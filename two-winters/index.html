@@ -1,0 +1,2808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#00142B">
+<title>Two Winters — has this happened before?</title>
+<!--
+  Two Winters — a single-file, offline demonstration of the two AI funding
+  collapses of the twentieth century, the mechanism they shared, and an
+  even-handed comparison with the present.
+
+  Four acts: guess the year on ten real predictions with the date hidden;
+  scrub a 1950-2026 timeline whose lanes are the five stages of the
+  mechanism; read the two winters side by side on those same five stages;
+  then weigh what rhymes against what is genuinely different.
+
+  Every claim on screen resolves to a source in the dataset, and
+  Settings -> Run the self-test proves it live. Nothing is fetched at
+  runtime and nothing is stored on the device.
+
+  Companion: presenter-guide.html. Sources live in src/ and are
+  concatenated by build.js.
+-->
+<style>
+/* ==== styles.css ==== */
+/* ==========================================================================
+   Two Winters — styles.
+
+   Phone first. Every interactive control is at least 44px on its short edge,
+   which is above the 36px floor this repository asserts. Nothing is allowed
+   to overflow horizontally at 320px: long strings wrap, wide blocks scroll
+   inside their own container, and the body never does.
+
+   Murray State palette. Red-orange (#FF4500) appears in exactly three
+   places, all of them genuine failure states: the withdrawal lane on the
+   timeline, a wrong verdict on a prediction card, and the "money leaves"
+   row of the anatomy table.
+   ========================================================================== */
+
+:root {
+  --navy:       #002144;
+  --navy-deep:  #00142B;
+  --navy-soft:  #062E56;
+  --gold:       #ECAC00;
+  --sky:        #00A4E3;
+  --red:        #FF4500;
+  --ink:        #E8EDF5;
+  --dim:        #8FA3C0;
+  --faint:      rgba(143,163,192,0.20);
+  --line:       rgba(143,163,192,0.16);
+  --panel:      rgba(255,255,255,0.035);
+  --panel-2:    rgba(255,255,255,0.055);
+  --frost:      rgba(148,190,225,0.13);
+  --green:      #7ED957;
+  --violet:     #B98CFF;
+  --r:          14px;
+  --fs:         16px;
+  --maxw:       1180px;
+}
+
+* { box-sizing: border-box; }
+
+/* The app hides things with the `hidden` attribute rather than a class, and
+   several of those elements carry a `display` of their own further down this
+   file. A plain `display:flex` beats the user-agent `[hidden]{display:none}`,
+   which is how all three overlays once rendered stacked on load. This is the
+   one !important in the stylesheet and it is earning its keep. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 620px at 78% -12%, rgba(0,164,227,0.13), transparent 62%),
+    radial-gradient(900px 520px at 8% 108%, rgba(236,172,0,0.09), transparent 60%),
+    var(--navy-deep);
+  color: var(--ink);
+  font: var(--fs)/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* `clip`, not `hidden`. `overflow-x: hidden` on the body makes it a scroll
+     container, and the sticky header then sticks to the top of *that* and
+     scrolls away with the page — which is exactly what it did. `clip` guards
+     against stray horizontal overflow without creating a scroll port. */
+  overflow-x: clip;
+}
+
+h1, h2, h3 { line-height: 1.22; margin: 0 0 .5em; letter-spacing: -0.011em; }
+h1 { font-size: clamp(1.35rem, 4.6vw, 2.15rem); font-weight: 800; }
+h2 { font-size: clamp(1.15rem, 3.6vw, 1.6rem); font-weight: 800; }
+h3 { font-size: clamp(1.02rem, 3vw, 1.22rem); font-weight: 800; }
+p  { margin: 0 0 1em; }
+a  { color: var(--sky); }
+
+/* --------------------------------------------------------------- chrome */
+
+#brandbar {
+  position: sticky; top: 0; z-index: 40;
+  background: linear-gradient(180deg, rgba(0,20,43,0.98), rgba(0,20,43,0.94));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+#topbar {
+  display: flex; align-items: center; gap: 10px;
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+}
+
+#brand { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+#brand .b0 {
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700;
+}
+#brand .b1 {
+  font-size: .96rem; font-weight: 800; letter-spacing: .02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#brand .b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: .8em; }
+
+#topbar-tools { display: flex; gap: 8px; flex: none; }
+
+.icon-btn {
+  width: 44px; height: 44px; flex: none;
+  border-radius: 11px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink);
+  font-size: 1.12rem; line-height: 1; cursor: pointer;
+  display: grid; place-items: center;
+}
+.icon-btn:hover { background: var(--panel-2); border-color: var(--faint); }
+
+#actnav {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  max-width: var(--maxw); margin: 0 auto; padding: 0 8px 8px;
+}
+#actnav::-webkit-scrollbar { display: none; }
+#actnav button {
+  flex: none; min-height: 44px; padding: 6px 13px;
+  border-radius: 10px; border: 1px solid transparent;
+  background: transparent; color: var(--dim);
+  font: 700 .82rem/1.15 inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+}
+#actnav button span { font-weight: 500; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; opacity: .72; }
+#actnav button.on { color: var(--navy-deep); background: var(--gold); border-color: var(--gold); }
+#actnav button:not(.on):hover { color: var(--ink); background: var(--panel); }
+
+main { max-width: var(--maxw); margin: 0 auto; padding: 18px 14px 64px; }
+
+/* --------------------------------------------------------------- pieces */
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 16px; margin: 0 0 18px;
+}
+.help { color: var(--dim); font-size: .88rem; }
+.lead { font-size: 1.05rem; color: var(--ink); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+
+.btn {
+  min-height: 44px; padding: 10px 17px;
+  border-radius: 11px; border: 1px solid var(--faint);
+  background: var(--panel-2); color: var(--ink);
+  font: 700 .94rem/1.2 inherit; cursor: pointer;
+}
+.btn:hover { border-color: var(--sky); }
+.btn.primary { background: var(--gold); border-color: var(--gold); color: var(--navy-deep); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.ghost { background: transparent; }
+.btn.big { font-size: 1.03rem; padding: 13px 22px; }
+.btn:disabled { opacity: .42; cursor: not-allowed; }
+
+.src {
+  /* 36px is this repository's tap-target floor and a source chip is a real
+     target — on a phone these are the control the sceptic in the room reaches
+     for first. */
+  display: inline-block; min-height: 36px; line-height: 34px;
+  padding: 0 12px; border-radius: 8px;
+  border: 1px solid rgba(0,164,227,0.4);
+  color: var(--sky); background: rgba(0,164,227,0.08);
+  font-size: .72rem; font-weight: 700; text-decoration: none;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.src:hover { background: rgba(0,164,227,0.18); }
+.src.bad { color: var(--red); border-color: var(--red); background: rgba(255,69,0,0.1); }
+.src-title { color: var(--dim); font-size: .76rem; line-height: 1.35; flex: 1 1 220px; min-width: 0; }
+.src-id { color: var(--dim); font-size: .7rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
+
+.status {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: .66rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+}
+.status.primary  { background: rgba(126,217,87,0.14); color: var(--green); }
+.status.reported { background: rgba(236,172,0,0.14); color: var(--gold); }
+
+/* ------------------------------------------------------------- act I */
+
+#intro h1 { max-width: 22ch; }
+#intro-note {
+  border-left: 3px solid var(--sky); padding-left: 12px;
+  color: var(--dim); font-size: .9rem;
+}
+
+#card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+#card-count { font: 800 .78rem/1 inherit; letter-spacing: .12em; color: var(--gold); }
+#card-progress-track {
+  flex: 1; height: 5px; border-radius: 99px;
+  background: rgba(143,163,192,0.16); overflow: hidden;
+}
+#card-progress { display: block; height: 100%; background: var(--gold); width: 0; transition: width .3s ease; }
+
+.quote-card {
+  background: linear-gradient(160deg, rgba(255,255,255,0.075), rgba(255,255,255,0.03));
+  border: 1px solid var(--faint); border-left: 4px solid var(--gold);
+  border-radius: var(--r); padding: 20px 18px; margin-bottom: 16px;
+}
+#card-quote {
+  font-size: clamp(1.06rem, 3.9vw, 1.42rem);
+  line-height: 1.48; font-weight: 500; margin: 0;
+  text-wrap: pretty;
+}
+#card-note { color: var(--dim); font-size: .82rem; margin: 12px 0 0; font-style: italic; }
+
+.field { margin: 0 0 18px; }
+.lbl {
+  display: block; font: 800 .72rem/1 inherit; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim); margin-bottom: 9px;
+}
+
+#year-read {
+  display: block; font-size: clamp(2.4rem, 12vw, 3.6rem); font-weight: 800;
+  line-height: 1; color: var(--sky); font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+#year-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; height: 44px; background: transparent; cursor: pointer; margin: 0;
+}
+#year-slider::-webkit-slider-runnable-track {
+  height: 8px; border-radius: 99px;
+  background: linear-gradient(90deg, var(--navy-soft), rgba(0,164,227,0.4));
+}
+#year-slider::-moz-range-track {
+  height: 8px; border-radius: 99px;
+  background: linear-gradient(90deg, var(--navy-soft), rgba(0,164,227,0.4));
+}
+#year-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 30px; height: 30px; margin-top: -11px; border-radius: 50%;
+  background: var(--sky); border: 3px solid var(--navy-deep);
+  box-shadow: 0 0 0 1px var(--sky);
+}
+#year-slider::-moz-range-thumb {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--sky); border: 3px solid var(--navy-deep);
+}
+#year-ticks {
+  display: flex; justify-content: space-between;
+  color: var(--dim); font-size: .72rem; font-variant-numeric: tabular-nums;
+}
+
+#verdict-btns { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 460px) { #verdict-btns { grid-template-columns: repeat(3, 1fr); } }
+.vbtn {
+  min-height: 48px; padding: 10px 12px;
+  border-radius: 11px; border: 1px solid var(--faint);
+  background: var(--panel); color: var(--ink);
+  font: 700 .92rem/1.2 inherit; cursor: pointer;
+}
+.vbtn:hover { border-color: var(--sky); }
+.vbtn.on { background: var(--sky); border-color: var(--sky); color: var(--navy-deep); }
+
+/* reveal */
+#reveal-wrap { animation: rise .28s ease both; }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.rv-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.rv-year {
+  font-size: clamp(2.2rem, 10vw, 3.1rem); font-weight: 800; line-height: 1;
+  color: var(--gold); font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+}
+.rv-who { display: flex; flex-direction: column; min-width: 0; flex: 1 1 220px; }
+.rv-who b { font-size: 1.02rem; }
+.rv-who span { color: var(--dim); font-size: .86rem; }
+.rv-who em { color: var(--dim); font-size: .8rem; font-style: normal; opacity: .82; }
+
+.rv-marks { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 14px; }
+@media (min-width: 520px) { .rv-marks { grid-template-columns: 1fr 1fr; } }
+.mark {
+  border-radius: 11px; padding: 11px 13px;
+  border: 1px solid var(--line); background: var(--panel);
+}
+.mark b { display: block; font-size: 1rem; }
+.mark span { color: var(--dim); font-size: .84rem; }
+.mark.good  { border-color: rgba(126,217,87,0.4);  background: rgba(126,217,87,0.07); }
+.mark.good b  { color: var(--green); }
+.mark.mixed { border-color: rgba(236,172,0,0.4);   background: rgba(236,172,0,0.07); }
+.mark.mixed b { color: var(--gold); }
+.mark.bad   { border-color: rgba(255,69,0,0.42);   background: rgba(255,69,0,0.07); }
+.mark.bad b   { color: var(--red); }
+/* A year guess that is merely a long way out is not a failure state, so it does
+   not get the alert colour. Red-orange in this app means exactly four things:
+   a wrong verdict, the "money leaves" stage, a failed self-test check, and a
+   source that does not resolve. */
+.mark.dist  { border-color: rgba(0,164,227,0.34);  background: rgba(0,164,227,0.06); }
+.mark.dist b  { color: var(--sky); }
+.mark.openv { border-color: rgba(185,140,255,0.4); background: rgba(185,140,255,0.07); }
+.mark.openv b { color: var(--violet); }
+
+.rv-verdict {
+  border-radius: 11px; padding: 13px 15px; margin-bottom: 14px;
+  border-left: 4px solid var(--dim); background: var(--panel-2);
+}
+.rv-verdict b { display: block; font-size: 1.06rem; line-height: 1.35; }
+.rv-kind { color: var(--dim); font-size: .84rem; }
+.rv-verdict.good  { border-left-color: var(--green); }
+.rv-verdict.bad   { border-left-color: var(--red); }
+.rv-verdict.mixed { border-left-color: var(--gold); }
+.rv-verdict.openv { border-left-color: var(--violet); }
+
+.rv-what { color: var(--ink); opacity: .93; }
+.rv-foot { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--line); }
+
+/* scorecard */
+.sc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 16px 0; }
+.sc { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 13px; }
+.sc-n { display: flex; align-items: baseline; gap: 6px; }
+.sc-n .num { font-size: 1.9rem; font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; line-height: 1; }
+.sc-n .unit { color: var(--dim); font-size: .8rem; }
+.sc .cap { display: block; color: var(--dim); font-size: .8rem; margin-top: 5px; }
+
+.sc-split { display: grid; gap: 12px; margin: 18px 0; }
+.sc-row { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 13px; }
+.sc-row b { font-size: 1rem; }
+.sc-score { float: right; color: var(--gold); font-weight: 800; font-variant-numeric: tabular-nums; }
+.sc-bar { height: 9px; border-radius: 99px; background: rgba(143,163,192,0.16); overflow: hidden; margin: 9px 0 7px; }
+.sc-bar i { display: block; height: 100%; border-radius: 99px; transition: width .5s ease; }
+.sc-bar i.p  { background: var(--gold); }
+.sc-bar i.d  { background: var(--sky); }
+.sc-bar i.wn { background: var(--violet); }
+.sc-blurb { color: var(--dim); font-size: .84rem; }
+.sc-tail { color: var(--dim); font-size: .9rem; }
+
+/* ------------------------------------------------------------ act II */
+
+#tl-wrap {
+  position: relative; margin-bottom: 12px;
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.14));
+  overflow: hidden;
+}
+#tl { display: block; width: 100%; height: 340px; touch-action: pan-y; }
+#tl-winter {
+  position: absolute; top: 8px; right: 10px;
+  background: var(--frost); border: 1px solid rgba(148,190,225,0.34);
+  color: var(--ink); border-radius: 999px; padding: 4px 11px;
+  font-size: .72rem; font-weight: 800; letter-spacing: .04em;
+}
+
+#tl-controls { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+#tl-controls .icon-btn { font-size: 1.3rem; }
+#tl-slider {
+  -webkit-appearance: none; appearance: none;
+  flex: 1; height: 44px; background: transparent; cursor: pointer; margin: 0; min-width: 0;
+}
+#tl-slider::-webkit-slider-runnable-track { height: 8px; border-radius: 99px; background: var(--navy-soft); }
+#tl-slider::-moz-range-track { height: 8px; border-radius: 99px; background: var(--navy-soft); }
+#tl-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 30px; height: 30px; margin-top: -11px; border-radius: 50%;
+  background: var(--sky); border: 3px solid var(--navy-deep); box-shadow: 0 0 0 1px var(--sky);
+}
+#tl-slider::-moz-range-thumb {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--sky); border: 3px solid var(--navy-deep);
+}
+
+#tl-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px; }
+#tl-stats .stat { background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 10px 12px; }
+#tl-stats b { display: block; font-size: 1.5rem; font-weight: 800; color: var(--gold); line-height: 1.1; font-variant-numeric: tabular-nums; }
+#tl-stats span { color: var(--dim); font-size: .74rem; }
+
+#tl-detail {
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel); padding: 14px; margin-bottom: 16px; min-height: 128px;
+}
+#tl-detail.empty { display: grid; place-items: center; }
+#tl-detail .hint { color: var(--dim); text-align: center; margin: 0; }
+.ev-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 9px; }
+.lane-chip {
+  border-radius: 999px; padding: 3px 10px;
+  font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+}
+.ev-head b { font-variant-numeric: tabular-nums; color: var(--dim); font-size: .84rem; }
+.ev-label { font-weight: 800; font-size: 1.04rem; flex: 1 1 100%; }
+.ev-text { margin: 0 0 11px; }
+.ev-foot { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding-top: 10px; border-top: 1px solid var(--line); }
+
+#tl-legend { display: grid; grid-template-columns: 1fr; gap: 8px; margin-bottom: 16px; }
+@media (min-width: 620px) { #tl-legend { grid-template-columns: 1fr 1fr; } }
+.lg { display: grid; grid-template-columns: 14px 1fr; gap: 4px 10px; align-items: center; }
+.lg i { width: 12px; height: 12px; border-radius: 50%; display: block; }
+.lg b { font-size: .92rem; }
+.lg span { grid-column: 2; color: var(--dim); font-size: .82rem; }
+
+.wnote { border-left: 3px solid rgba(148,190,225,0.5); padding-left: 12px; margin-bottom: 12px; }
+.wnote b { display: block; }
+.wnote span { color: var(--dim); font-size: .87rem; }
+
+#money-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 620px) { #money-list { grid-template-columns: 1fr 1fr; } }
+.money {
+  display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; align-items: baseline;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 12px;
+}
+.money b { font-size: 1.15rem; font-weight: 800; color: var(--green); font-variant-numeric: tabular-nums; }
+.m-amt { font-weight: 700; }
+.m-lab { grid-column: 2; color: var(--dim); font-size: .84rem; }
+.money .src { grid-column: 2; justify-self: start; margin-top: 5px; }
+
+/* ----------------------------------------------------------- act III */
+
+.an-row { margin-bottom: 22px; }
+.an-stage { margin-bottom: 10px; padding-left: 12px; border-left: 4px solid var(--gold); }
+.an-stage b { display: block; font-size: 1.1rem; font-weight: 800; }
+.an-stage span { color: var(--dim); font-size: .86rem; }
+.an-cols { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 760px) { .an-cols { grid-template-columns: repeat(3, 1fr); } }
+.an-cell {
+  background: var(--panel); border: 1px solid var(--line);
+  border-top: 3px solid var(--faint); border-radius: 11px; padding: 13px;
+}
+.an-cell.w1  { border-top-color: rgba(148,190,225,0.6); }
+.an-cell.w2  { border-top-color: rgba(148,190,225,0.6); }
+.an-cell.now { border-top-color: var(--gold); }
+.an-cell.nosrc { background: rgba(255,255,255,0.018); }
+.an-era { display: block; font: 800 .68rem/1 inherit; letter-spacing: .12em; text-transform: uppercase; color: var(--dim); margin-bottom: 6px; }
+.an-cell b { display: block; margin-bottom: 6px; font-size: .99rem; }
+.an-cell p { margin: 0 0 9px; font-size: .9rem; color: var(--ink); opacity: .9; }
+.an-src { display: flex; gap: 6px; flex-wrap: wrap; }
+.an-nosrc { color: var(--dim); font-size: .74rem; font-style: italic; }
+.an-cell.pending {
+  border-top-color: var(--violet);
+  background: repeating-linear-gradient(135deg,
+    rgba(185,140,255,0.05) 0 8px, rgba(255,255,255,0.02) 8px 16px);
+}
+.an-pending {
+  display: inline-block; margin-bottom: 8px; padding: 3px 9px; border-radius: 999px;
+  background: rgba(185,140,255,0.16); color: var(--violet);
+  font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+
+/* the withdrawal row is the one that gets the alert colour */
+.an-row:last-child .an-stage { border-left-color: var(--red); }
+
+/* ------------------------------------------------------------ act IV */
+
+.cols2 { display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 18px; }
+@media (min-width: 820px) { .cols2 { grid-template-columns: 1fr 1fr; } }
+.col { border: 1px solid var(--line); border-radius: var(--r); padding: 15px; background: var(--panel); }
+.col.rhymes    { border-top: 3px solid var(--gold); }
+.col.different { border-top: 3px solid var(--sky); }
+.col h3 { margin-bottom: 12px; }
+.col .item { padding: 12px 0; border-top: 1px solid var(--line); }
+.col .item:first-of-type { border-top: 0; padding-top: 0; }
+.col .item b { display: block; margin-bottom: 5px; }
+.col .item p { font-size: .91rem; opacity: .92; margin-bottom: 9px; }
+
+.closer { border-left: 4px solid var(--gold); }
+.cut ul { list-style: none; margin: 0; padding: 0; }
+.cut li { padding: 10px 0; border-top: 1px solid var(--line); }
+.cut li b { display: block; }
+.cut li span { color: var(--dim); font-size: .88rem; }
+.src-list { list-style: none; margin: 0; padding: 0; }
+.src-list li { padding: 8px 0; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.src-list a { word-break: break-word; }
+
+/* ---------------------------------------------------------- overlays */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,10,22,0.78); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0; overscroll-behavior: contain;
+}
+@media (min-width: 700px) { .overlay { align-items: center; padding: 24px; } }
+.sheet-inner {
+  width: 100%; max-width: 680px; max-height: 92vh;
+  display: flex; flex-direction: column;
+  background: var(--navy); border: 1px solid var(--faint);
+  border-radius: var(--r) var(--r) 0 0;
+  animation: sheet .24s ease both;
+}
+@media (min-width: 700px) { .sheet-inner { border-radius: var(--r); } }
+@keyframes sheet { from { transform: translateY(22px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet-inner:focus { outline: none; }
+.sheet-head {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 15px 15px 11px; border-bottom: 1px solid var(--line);
+}
+.sheet-head h2 { margin: 0; }
+.sheet-head .sub { color: var(--dim); font-size: .82rem; }
+.sheet-head .icon-btn { margin-left: auto; }
+.sheet-body { padding: 15px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sheet-foot {
+  padding: 12px 15px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ht-foot { justify-content: space-between; }
+.ht-dismiss { color: var(--dim); font-size: .8rem; }
+kbd {
+  background: var(--panel-2); border: 1px solid var(--faint);
+  border-radius: 5px; padding: 1px 5px; font-size: .78em; font-family: inherit;
+}
+.ht-steps { margin: 0 0 16px; padding-left: 20px; }
+.ht-steps li { margin-bottom: 11px; }
+.ht-acts { margin: 0; padding-left: 20px; }
+.ht-acts li { margin-bottom: 6px; font-size: .92rem; }
+.ht-tip {
+  border-left: 3px solid var(--gold); padding-left: 12px;
+  color: var(--ink); opacity: .9; font-size: .92rem;
+}
+.switch { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.switch input { width: 22px; height: 22px; accent-color: var(--gold); flex: none; }
+.field .btn { margin-bottom: 6px; }
+
+#selftest-out:empty { display: none; }
+.st-head {
+  margin-top: 10px; padding: 8px 11px; border-radius: 9px;
+  font-weight: 800; font-size: .88rem;
+}
+.st-head.good { background: rgba(126,217,87,0.13); color: var(--green); }
+.st-head.bad  { background: rgba(255,69,0,0.13);  color: var(--red); }
+.st-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 220px; overflow-y: auto; }
+.st-list li { display: flex; gap: 8px; padding: 4px 0; font-size: .8rem; border-top: 1px solid var(--line); }
+.st-list li b { flex: none; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .74rem; }
+.st-list li.ok b { color: var(--green); }
+.st-list li.no b { color: var(--red); }
+.st-list li span { color: var(--dim); }
+
+/* presenter's notes */
+.guide-scope { font-size: .95rem; }
+.guide-scope h2 { font-size: 1.1rem; margin-top: 18px; }
+.guide-scope h3 { font-size: .98rem; margin-top: 14px; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.guide-scope .say {
+  border-left: 3px solid var(--gold); padding-left: 12px;
+  color: var(--ink); opacity: .92; font-style: italic;
+}
+.guide-scope .scroll { overflow-x: auto; }
+
+/* ----------------------------------------------------------- footer */
+
+#foot {
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 22px 14px calc(28px + env(safe-area-inset-bottom, 0px));
+  color: var(--dim); font-size: .82rem;
+  border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
+}
+#foot .msu { color: var(--gold); font-weight: 800; }
+#foot .who { color: var(--ink); font-weight: 700; }
+
+/* ------------------------------------------------- presentation mode */
+
+body.presenting { --fs: 19px; }
+body.presenting #tl { height: 460px; }
+body.presenting .quote-card { padding: 28px 24px; }
+body.presenting #card-quote { font-size: clamp(1.3rem, 3.2vw, 1.85rem); }
+body.presenting .btn { min-height: 52px; font-size: 1.02rem; }
+body.presenting .vbtn { min-height: 56px; font-size: 1.02rem; }
+body.presenting .icon-btn { width: 52px; height: 52px; }
+body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+@media print {
+  #brandbar, #actnav, .overlay, #tl-controls, .btn, .icon-btn { display: none !important; }
+  body { background: #fff; color: #000; }
+}
+
+/* ==== presenter guide (scoped to .guide-scope) ==== */
+ block and the .guide-scope div out of here verbatim
+  and injects them into index.html, so Settings -> Presenter's notes shows
+  exactly this text with no sibling file to go looking for. Edit here; never
+  edit the copy inside index.html.
+
+  Everything in the first <style> block MUST be scoped to .guide-scope, because
+  it is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the second <style> block, which is not
+  extracted.
+-->
+<style>
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say {
+  border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px;
+  margin: 0 0 .9em; font-style: italic; opacity: .95;
+}
+.guide-scope .warn { border-left-color: #FF4500; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .tag {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.guide-scope .tag.p { background: rgba(236,172,0,.18); color: #ECAC00; }
+.guide-scope .tag.d { background: rgba(0,164,227,.18); color: #00A4E3; }
+.guide-scope .tag.w { background: rgba(185,140,255,.18); color: #B98CFF; }
+.guide-scope .tag.o { background: rgba(126,217,87,.18); color: #7ED957; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+
+</style>
+</head>
+<body>
+
+<div id="brandbar">
+  <header id="topbar">
+    <div id="brand">
+      <span class="b0">Murray State University</span>
+      <span class="b1">TWO WINTERS <em>has this happened before?</em></span>
+    </div>
+    <div id="topbar-tools">
+      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+    </div>
+  </header>
+  <nav id="actnav" role="tablist" aria-label="Acts">
+    <button data-act="1" class="on" role="tab" aria-selected="true">Guess the year<span>Act I</span></button>
+    <button data-act="2" role="tab" aria-selected="false">The two winters<span>Act II</span></button>
+    <button data-act="3" role="tab" aria-selected="false">Anatomy<span>Act III</span></button>
+    <button data-act="4" role="tab" aria-selected="false">Now<span>Act IV</span></button>
+  </nav>
+</div>
+
+<main>
+
+<!-- =========================== ACT I ================================== -->
+<section class="act" data-act="1">
+
+  <div id="intro">
+    <h1 id="intro-title"></h1>
+    <div id="intro-body"></div>
+    <p id="intro-note"></p>
+    <button class="btn primary big" id="btn-begin"></button>
+  </div>
+
+  <div id="card-body" hidden>
+    <div id="card-head">
+      <span id="card-count">1 / 10</span>
+      <span id="card-progress-track"><i id="card-progress"></i></span>
+    </div>
+
+    <div class="quote-card">
+      <p id="card-quote"></p>
+      <p id="card-note" hidden></p>
+    </div>
+
+    <div id="guess-wrap">
+      <div class="field">
+        <label class="lbl" for="year-slider">What year was this said?</label>
+        <span id="year-read" aria-hidden="true">1985</span>
+        <input type="range" id="year-slider" min="1950" max="2026" step="1" value="1985"
+               aria-label="Guess the year this prediction was made">
+        <div id="year-ticks"><span>1950</span><span>1988</span><span>2026</span></div>
+      </div>
+
+      <div class="field">
+        <span class="lbl">And did it come true?</span>
+        <div id="verdict-btns" role="group" aria-label="Your verdict"></div>
+      </div>
+    </div>
+
+    <div id="reveal-wrap" hidden></div>
+
+    <div class="row">
+      <button class="btn primary big" id="btn-lock">Lock it in</button>
+      <button class="btn primary big" id="btn-next-card" hidden>Next prediction</button>
+    </div>
+  </div>
+
+  <div id="scorecard" class="panel" hidden></div>
+</section>
+
+<!-- =========================== ACT II ================================= -->
+<section class="act" data-act="2" hidden>
+  <h1>Seventy-six years, five stages, twice.</h1>
+  <p>
+    Each row below is one stage of the same mechanism. Drag the slider forward and watch
+    the rows light up in order &mdash; a promise, then money against it, then a hard limit,
+    then somebody naming the gap, then the money leaving. It happens once between 1955 and
+    1980, again between 1982 and 1992, and a third run is under way now that has not
+    reached the bottom rows.
+  </p>
+  <p class="help">
+    The two pale bands are the winters. They are drawn with a soft right-hand edge because
+    the end dates are conventional rather than agreed &mdash; the notes under the chart say
+    exactly where historians disagree.
+  </p>
+
+  <div id="tl-wrap">
+    <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results, then the five stages of an AI winter. Two shaded bands mark the winters."></canvas>
+    <div id="tl-winter" hidden></div>
+  </div>
+
+  <div id="tl-controls">
+    <button class="icon-btn" id="tl-back" aria-label="Previous event" title="Previous event">&#8249;</button>
+    <input type="range" id="tl-slider" min="0" max="1000" value="1000" aria-label="Scrub through time">
+    <button class="icon-btn" id="tl-fwd" aria-label="Next event" title="Next event">&#8250;</button>
+  </div>
+
+  <div id="tl-stats">
+    <div class="stat"><b id="tl-year">2026</b><span>showing up to</span></div>
+    <div class="stat"><b id="tl-total">0</b><span>events so far</span></div>
+    <div class="stat"><b id="tl-with">0</b><span>times the money left</span></div>
+  </div>
+
+  <div id="tl-detail" class="empty"></div>
+
+  <div class="panel">
+    <h3>The rows</h3>
+    <div id="tl-legend"></div>
+  </div>
+
+  <div class="panel">
+    <h3>Where the winter dates are soft</h3>
+    <div id="tl-winters"></div>
+  </div>
+
+  <div class="panel">
+    <h3>The money, as four points rather than a curve</h3>
+    <p class="help">
+      There is no continuous, sourceable series of AI funding across these seventy-six
+      years &mdash; particularly not for US spending before 1980 &mdash; so this demo does
+      not draw one. These are the four commitments it could actually source, in their
+      original currencies, not adjusted for inflation, and not converted to a common unit.
+      Read them as four data points with sources attached, not as a trend.
+    </p>
+    <div id="money-list"></div>
+  </div>
+
+  <div class="row">
+    <button class="btn primary" id="btn-to-anatomy">Put the two winters side by side</button>
+  </div>
+</section>
+
+<!-- =========================== ACT III ================================ -->
+<section class="act" data-act="3" hidden>
+  <h1>The same five stages, twice &mdash; and once more, halfway.</h1>
+  <p>
+    Reading across a row shows how one stage played out in each era. Reading down a column
+    shows one era&rsquo;s whole cycle. Two cells in the third column are marked
+    <b>open</b> rather than filled in &mdash; the binding technical limit, which nobody has
+    identified, and the withdrawal, which has not happened. In both previous cycles those
+    same two cells were open right up until they were obvious.
+  </p>
+
+  <div id="anatomy"></div>
+
+  <div class="row">
+    <button class="btn primary" id="btn-to-now">So &mdash; is this one different?</button>
+  </div>
+</section>
+
+<!-- =========================== ACT IV ================================= -->
+<section class="act" data-act="4" hidden>
+  <h1>What rhymes, and what does not.</h1>
+  <p>
+    Two columns, argued as honestly as the sources allow. Neither column wins. The point of
+    having both is that you leave able to judge a specific claim on its specific evidence,
+    rather than reaching for a mood.
+  </p>
+  <div id="close"></div>
+</section>
+
+</main>
+
+<footer id="foot">
+  <span class="msu">Murray State University</span>
+  <span class="who">Bryant Harrison</span>
+  <span>One HTML file &middot; runs offline &middot; nothing leaves this device</span>
+</footer>
+
+<!-- ========================== HOW TO USE ============================ -->
+<div class="overlay" id="howto" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="howto-title">How this works</h2><div class="sub">Four acts &middot; about 15 minutes</div></div>
+      <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <ol class="ht-steps">
+        <li>
+          <b>Read the prediction.</b> Ten of them, all real, all sourced. The speaker and the
+          date are hidden.
+        </li>
+        <li>
+          <b>Guess two things.</b> Drag the slider to the year you think it was said, then
+          say whether it came true. Then press <em>Lock it in</em> and find out.
+        </li>
+        <li>
+          <b>Watch the split.</b> Some of these are people promising AI was nearly here.
+          Some are people saying it would never work. At the end you get scored on both
+          separately, and that comparison is the whole point.
+        </li>
+      </ol>
+
+      <p class="ht-tip">
+        There is nothing to beat. Most rooms do well on one kind of prediction and badly on
+        the other, and which one is which is usually a surprise.
+      </p>
+
+      <div class="field">
+        <span class="lbl">The four acts</span>
+        <ul class="ht-acts">
+          <li><b>Guess the year</b> &mdash; ten predictions, 1950 to 2024.</li>
+          <li><b>The two winters</b> &mdash; a timeline you can scrub, laid out so the repeated pattern is visible rather than asserted.</li>
+          <li><b>Anatomy</b> &mdash; the first winter, the second winter, and now, on the same five stages.</li>
+          <li><b>Now</b> &mdash; what rhymes with the two winters, what is genuinely different, what was cut for lack of a source, and every source.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <span class="lbl">The two buttons, top right</span>
+        <ul class="ht-acts">
+          <li><b>?</b> &mdash; reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; presenter mode, the presenter&rsquo;s notes, and a self-test that checks
+            every claim against its declared source, live, in front of whoever is asking.</li>
+        </ul>
+      </div>
+
+      <p class="help">
+        Nothing here is generated by an AI. It is a set of dated quotations, a timeline and a
+        link to the original source of each one. The whole app is one file that runs offline
+        and stores nothing.
+      </p>
+    </div>
+    <div class="sheet-foot ht-foot">
+      <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
+      <button class="btn primary" data-close="howto">Got it &mdash; first prediction</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================== SETTINGS ============================== -->
+<div class="overlay" id="settings" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <span class="lbl">Presentation</span>
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presenter mode &mdash; oversized UI for a projector</span>
+        </label>
+        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <p class="help">
+          The session plan: what to say at each act, which predictions to keep if you are
+          short of time, the questions you will get, and a six-minute cut. Distilled from the
+          printable guide that ships beside this file.
+        </p>
+      </div>
+      <div class="field">
+        <span class="lbl">Help</span>
+        <button class="btn" id="btn-howto-2">How this works</button>
+        <p class="help">Reopens the panel that explains the exercise.</p>
+      </div>
+      <div class="field">
+        <span class="lbl">Proof</span>
+        <button class="btn" id="btn-selftest">Run the self-test</button>
+        <p class="help">
+          Checks that every claim on screen resolves to a declared source, that no source is
+          cited and never used, that every source URL points at a specific page rather than a
+          bare host, that the timeline runs forward in time, that each winter contains at
+          least one funding withdrawal, that the counts quoted on the scorecard match the
+          cards actually in the deck, and that the scoring refuses to mark an unresolved
+          prediction. Results appear here and in the browser console.
+        </p>
+        <div id="selftest-out"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">About</span>
+        <p class="help">
+          Built for Murray State University by Bryant Harrison. All data is embedded; the app
+          makes no network requests and stores nothing. Reloading resets it. Sources were
+          checked in September 2026.
+        </p>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="settings">Done</button></div>
+  </div>
+</div>
+
+<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- Lifted verbatim from presenter-guide.html, which stays canonical and
+     printable. One source of truth: the guide's own stylesheet and its own
+     markup, both scoped to .guide-scope, are injected by build.js. -->
+<div class="overlay" id="notes" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+<div class="guide-scope">
+
+  <div class="g-head">
+    <div class="g-kicker">Murray State University &middot; Bryant Harrison</div>
+    <h1>Two Winters &mdash; presenter guide</h1>
+    <div class="g-sub">
+      Demo 5 of &ldquo;AI: From Zero to Takeoff&rdquo;. Runs 12&ndash;18 minutes full, 6 minutes cut.
+      One HTML file, offline, no AI at runtime.
+    </div>
+  </div>
+
+  <h2>Why this demo exists</h2>
+  <p>
+    It follows <b>Takeoff</b>, which ends with the room having watched capability curves go
+    almost vertical. The honest next question &mdash; and you will get it, usually from
+    someone who has been in a technical field a long time &mdash; is <i>&ldquo;is this
+    another bubble?&rdquo;</i>
+  </p>
+  <p>
+    This demo answers that with evidence instead of reassurance. AI has collapsed twice.
+    Both times the same five things happened in the same order. Knowing that sequence is
+    how you judge a claim without either swallowing it or dismissing it.
+  </p>
+  <p class="say">
+    The one sentence to land: <b>confident predictions that AI was nearly here have a bad
+    record &mdash; and so do confident predictions that it would never work.</b> Most rooms
+    only believe the first half until they are scored on the second.
+  </p>
+
+  <h2>The shape of the session</h2>
+  <table>
+    <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
+    <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced predictions with the speaker and date hidden. The room guesses the year and the outcome. Scorecard splits promises from dismissals.</td><td>7&ndash;9 min</td></tr>
+    <tr><td><b>II &mdash; The two winters</b></td><td>Scrub the timeline. The five lanes light up in order, twice.</td><td>3&ndash;4 min</td></tr>
+    <tr><td><b>III &mdash; Anatomy</b></td><td>The two winters and the present, on the same five stages. Two cells in the third column are empty.</td><td>2&ndash;3 min</td></tr>
+    <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
+  </table>
+
+  <h2>Act I &mdash; running the prediction round</h2>
+  <p>
+    Do the first two cards yourself, out loud, so the room sees the mechanic. Then hand it
+    over &mdash; ask for a show of hands on the year before you drag the slider, and ask for
+    a verbal verdict before you press <b>Lock it in</b>. The room being wrong together is
+    the experience; a silent room reading a screen is not.
+  </p>
+
+  <h3>The deck, and what each card is for</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>Year</th><th>Card</th><th>Type</th><th>What it is for</th></tr>
+    <tr><td>1950</td><td>Turing &mdash; fifty years to the imitation game</td><td><span class="tag p">promise</span></td><td>Opens gently. Nobody guesses this early. Sets up that the field has always had deadlines.</td></tr>
+    <tr><td>1958</td><td>&ldquo;walk, talk, see, write, reproduce itself&rdquo;</td><td><span class="tag p">promise</span></td><td>The press-release failure mode. The underlying idea was real and important; the sentence was not.</td></tr>
+    <tr><td>1957</td><td>Simon &amp; Newell &mdash; chess champion in ten years</td><td><span class="tag p">promise</span></td><td><b>The most useful card in the deck.</b> Right destination, wrong by a factor of four. Pause here.</td></tr>
+    <tr><td>1960</td><td>Simon &mdash; any work a man can do, in twenty years</td><td><span class="tag p">promise</span></td><td>Twenty years lands in 1980, the bottom of the first winter. Also: it is usually misdated to 1965.</td></tr>
+    <tr><td>1966</td><td>ALPAC &mdash; machine translation is not near</td><td><span class="tag d">dismissal</span></td><td>The first dismissal. Fair about 1966, catastrophic as a forecast. Funding stopped.</td></tr>
+    <tr><td>1967</td><td>Minsky &mdash; substantially solved within a generation</td><td><span class="tag p">promise</span></td><td>From his own textbook, not a magazine. Use this if someone challenges the sourcing.</td></tr>
+    <tr><td>1969</td><td><i>Perceptrons</i> &mdash; neural nets read as a dead end</td><td><span class="tag d">dismissal</span></td><td>The proofs were right; the conclusion the field drew was not. And the authors disputed the tidy story.</td></tr>
+    <tr><td>1973</td><td>Lighthill &mdash; no major impact anywhere in the field</td><td><span class="tag d">dismissal</span></td><td>The report that ended UK funding. True about 1973; read as permanent.</td></tr>
+    <tr><td>1984</td><td>Schank &amp; Minsky &mdash; a winter is coming</td><td><span class="tag w">warning</span></td><td>The card that saves the demo from being anti-hype. They were <b>right</b>, three years early.</td></tr>
+    <tr><td>2024</td><td>Amodei &mdash; &ldquo;could come as early as 2026&rdquo;</td><td><span class="tag o">open</span></td><td>Deliberately unscored. The year named is the year you are standing in.</td></tr>
+  </table>
+  </div>
+
+  <h3>Short of time?</h3>
+  <p>
+    Keep four: <b>Simon &amp; Newell 1957</b> (over-promise, right destination),
+    <b>ALPAC 1966</b> (dismissal that aged badly), <b>Schank &amp; Minsky 1984</b>
+    (a prediction that was right), and <b>Amodei 2024</b> (still open). Those four carry
+    the whole argument. Skip to Act III and close.
+  </p>
+
+  <h3>What the scorecard is for</h3>
+  <p>
+    It shows two bars: how the room did on promises, and how it did on dismissals. Most
+    rooms are much better at spotting hype than at spotting a dismissal about to age badly.
+    If the two bars come out very different heights, say so out loud &mdash; that asymmetry
+    is the finding, not the total.
+  </p>
+  <p class="say">
+    &ldquo;You are all good at not being fooled by someone selling you the future. You are
+    much worse at not being fooled by someone telling you it will not work. Both of those
+    are in the historical record about equally often.&rdquo;
+  </p>
+
+  <h2>Act II &mdash; the timeline</h2>
+  <p>
+    Do not narrate the events. Drag the slider slowly from 1950 and let the room watch the
+    rows fire top to bottom. Say the stage names as each lane lights: promise, money, limit,
+    naming, withdrawal. Then keep dragging and let them notice it happen again.
+  </p>
+  <ul>
+    <li>The <b>&lsquo;</b> and <b>&rsquo;</b> buttons step one event at a time if you want to stop and read one.</li>
+    <li>Tap any dot for the full text and its source.</li>
+    <li>Point at the <b>third run</b>, from 2020 on: the top rows have fired and the bottom two have not.</li>
+  </ul>
+  <p class="say warn">
+    Do not let the lanes turn into a prophecy. The correct line is: &ldquo;the first three
+    stages have happened. Whether the last two do is the open question, and nothing on this
+    screen settles it.&rdquo;
+  </p>
+  <h3>The money panel &mdash; read the caveat aloud</h3>
+  <p>
+    Four funding commitments, in four different currencies, not inflation-adjusted. That is
+    on purpose: no continuous, sourceable series of AI funding exists across these years, so
+    the demo shows four points with sources rather than drawing a line it cannot defend.
+    Saying that out loud buys you more credibility than a prettier chart would.
+  </p>
+
+  <h2>Act III &mdash; anatomy</h2>
+  <p>
+    Read down the first column, then the second, then stop at the third. Two cells in the
+    &ldquo;Now&rdquo; column are empty &mdash; the binding technical limit, and the
+    withdrawal. Make the room sit with that.
+  </p>
+  <p class="say">
+    &ldquo;In both previous cycles, the limit was completely obvious afterwards and
+    invisible at the time to the people doing the work. There is no reason to think we are
+    better placed. If someone tells you they know what today&rsquo;s binding constraint is,
+    they are making the same kind of claim that failed twice.&rdquo;
+  </p>
+
+  <h2>Act IV &mdash; closing</h2>
+  <p>
+    Give both columns roughly equal time. The strongest item on each side:
+  </p>
+  <ul>
+    <li><b>Rhymes:</b> in February 2026 OpenAI stopped reporting SWE-bench Verified because
+      models had been trained on it and most of the hard problems they still failed had
+      broken tests. Scores kept rising; what they measured stopped being capability. Both
+      previous winters started with a gap between claim and measurement.</li>
+    <li><b>Different:</b> scaling behaviour that has held across more than seven orders of
+      magnitude, and 900 million people a week actually using the thing. Neither previous
+      boom had a measured extrapolable relationship, and neither had users.</li>
+  </ul>
+  <p>
+    Close on the checklist, not on a verdict: given any AI claim, ask which of the five
+    stages it belongs to and what evidence would move it.
+  </p>
+
+  <h2>Questions you will get</h2>
+  <h3>&ldquo;So is it a bubble or not?&rdquo;</h3>
+  <p>
+    Refuse the binary, in one sentence, then give the useful answer: some of the money is
+    ahead of the returns, which is stage two of the pattern; and the technology is in
+    hundreds of millions of hands, which neither previous boom managed. Both are true.
+    Financial correction and technological dead end are different claims and they are being
+    argued as if they were one.
+  </p>
+  <h3>&ldquo;Aren&rsquo;t the winter dates made up?&rdquo;</h3>
+  <p>
+    Partly, and the demo says so. The starts are well attested &mdash; ALPAC 1966, the
+    hardware collapse in 1987. The ends are conventional and historians disagree; the second
+    winter is dated to 1993 here and to 2000 by other accounts. That is why the bands have a
+    soft right edge and a note under them.
+  </p>
+  <h3>&ldquo;Where did you get this?&rdquo;</h3>
+  <p>
+    Open <b>Settings &rarr; Run the self-test</b> in front of them. It re-derives, live, that
+    every claim resolves to a declared source, that no source is cited and never used, and
+    that the counts quoted on screen match the data. Then scroll to Act IV, which lists every
+    source and, separately, everything researched and <b>cut</b> for lack of one.
+  </p>
+  <h3>&ldquo;Why is that quote from a quotation-checking website?&rdquo;</h3>
+  <p>
+    Because the Simon and Minsky lines are in printed books from 1960 and 1967 that are not
+    online, and that site verified both against page scans and gives the page numbers. It is
+    a stronger source than a paraphrase from a blog, and the demo marks the difference:
+    every claim carries <b>primary</b> or <b>reported</b>.
+  </p>
+
+  <h2>Before you present</h2>
+  <ul>
+    <li>Open <b>Settings &rarr; Presenter mode</b> for projector-sized type.</li>
+    <li>Run the self-test once so you know it is green before anyone asks.</li>
+    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>No network is needed at any point. If the room&rsquo;s wifi is down, nothing changes.</li>
+  </ul>
+
+  <div class="g-foot">
+    Two Winters &mdash; Bryant Harrison, Murray State University.
+    Sources checked September 2026. Every figure on screen links to its origin;
+    everything that could not be sourced is listed in Act IV under &ldquo;What was cut, and why&rdquo;.
+  </div>
+
+</div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="notes">Close</button></div>
+  </div>
+</div>
+
+<script>
+/* ==== data.js ==== */
+/* ==========================================================================
+   Two Winters — the dataset.
+
+   Every claim on screen comes from this file and every claim in this file
+   carries a `src` that resolves to an entry in SOURCES. Nothing is here
+   because it sounded right, and nothing is here because another demo in this
+   repository already said it.
+
+   `status` on any claim is one of:
+     'primary'  — checked this build against the document itself: the paper,
+                  the report's own text, the lab's own page, the official
+                  results table.
+     'reported' — a specific, retrievable secondary source that names its own
+                  underlying scholarship. Used where the primary is a printed
+                  book, a paywall, or a scanned page that could not be read.
+
+   Nothing below 'reported' ships. What failed that bar is in CUT, at the
+   bottom, because what a dataset refuses to include is part of its argument.
+
+   Two standing cautions, both surfaced in the app rather than buried here:
+
+     1. Winter date ranges are conventional, not crisp. Historians disagree,
+        most sharply about when the second one ended. The bands are drawn
+        soft-edged for that reason and the app says so out loud.
+
+     2. There is no continuous, sourceable series of AI funding across
+        seventy-six years. This demo therefore does not draw one. It shows
+        four funding commitments it can actually source, in their original
+        currencies, un-adjusted for inflation, and labels them as four points
+        rather than a curve.
+   ========================================================================== */
+
+const DATA = (() => {
+
+/* --------------------------------------------------------------------------
+   The opening screen.
+   -------------------------------------------------------------------------- */
+
+const INTRO = {
+  title: 'AI has boomed and collapsed twice before. Both times, the same five things happened in the same order.',
+  body: [
+    'You have just watched capability curves go almost straight up. The fair question from anyone who has been in a technical field for thirty years is: is this another bubble?',
+    'That question has an evidence base. Artificial intelligence has had two funding collapses severe enough that the people inside them named the weather — the AI winters. The first ran roughly from the mid-1970s to about 1980. The second began in 1987. In both, the sequence was the same: a confident promise, real money committed against it, a hard technical limit nobody had measured, an authoritative voice that named the gap, and then the money leaving.',
+    'This is not a demo about hype being bad. It is about a track record. Confident predictions that AI was nearly here have a poor record — and so do confident predictions that it would never work. You are about to be scored on both.'
+  ],
+  note: 'No AI is used anywhere in this app. It is a set of dated quotations, a timeline, and a link to the original source of each one. Everything runs from this single file with no network.',
+  cta: 'Start — guess the year'
+};
+
+/* --------------------------------------------------------------------------
+   ACT I — Guess the year.
+
+   Ten real, sourced predictions, shown with the speaker and the date hidden.
+   The viewer guesses the year on a slider and picks a verdict. Deliberately
+   mixed: four confident over-promises that failed, three confident dismissals
+   that failed, one that was right, one that was right about its own moment
+   and wrong as a forecast, and one still open.
+
+   `kind` is what the prediction claimed, not whether it was correct:
+     'promise'  — AI is nearly here / this will work
+     'dismiss'  — this will not work / is not worth funding
+     'warning'  — trouble is coming
+
+   `verdict` is what happened:
+     'no'    — it did not come true
+     'yes'   — it came true
+     'late'  — it came true, far outside the stated window
+     'open'  — genuinely unresolved as of this build
+   -------------------------------------------------------------------------- */
+
+const CARDS = [
+
+{
+  id: 'turing-1950',
+  quote: 'I believe that in about fifty years’ time it will be possible to programme computers … to make them play the imitation game so well that an average interrogator will not have more than 70 per cent. chance of making the right identification after five minutes of questioning.',
+  who: 'Alan Turing',
+  role: 'mathematician, University of Manchester',
+  where: '“Computing Machinery and Intelligence”, Mind LIX(236)',
+  year: 1950,
+  kind: 'promise',
+  verdict: 'late',
+  verdictLine: 'Later than fifty years, and still argued about.',
+  what: 'Turing set a deadline of about 2000 and a specific bar: five minutes, and an interrogator no better than 70% at telling machine from human. Nothing convincingly cleared that bar by 2000. Whether it has been cleared since is a live argument, partly because the test as Turing stated it is narrower than the way people quote it.',
+  status: 'primary', src: 'turing1950'
+},
+
+{
+  id: 'nyt-1958',
+  quote: 'The Navy revealed the embryo of an electronic computer today that it expects will be able to walk, talk, see, write, reproduce itself and be conscious of its existence.',
+  who: 'The New York Times, reporting a US Navy press conference',
+  role: 'on Frank Rosenblatt’s perceptron',
+  where: '“New Navy Device Learns By Doing”, 8 July 1958',
+  year: 1958,
+  kind: 'promise',
+  verdict: 'no',
+  verdictLine: 'No. Not one of the six things on that list.',
+  what: 'The machine being described had learned to tell a card marked on the left from one marked on the right, after fifty tries. The perceptron was a real and important idea — it is the direct ancestor of every neural network running today — and the press release around it was not. Both things are true, and the gap between them is the shape of the whole problem.',
+  status: 'primary', src: 'cornell-perceptron'
+},
+
+{
+  id: 'simon-newell-chess',
+  quote: 'Within ten years a digital computer will be the world’s chess champion, unless the rules bar it from competition.',
+  who: 'Herbert Simon and Allen Newell',
+  role: 'Carnegie Institute of Technology; later a Nobel laureate and a Turing Award winner',
+  where: 'lecture given 1957, published in Operations Research 6(1)',
+  year: 1957,
+  kind: 'promise',
+  verdict: 'late',
+  verdictLine: 'Right idea. Wrong by thirty years.',
+  what: 'Deep Blue beat Garry Kasparov 3½–2½ in May 1997 — forty years after the lecture rather than ten, so thirty years past the deadline. This is the single most useful card in the deck: the prediction was not stupid, and it was not wrong about the destination. It was wrong about the distance, by a factor of four. That is the characteristic failure mode, and it is the one to hold in mind about any date you hear this year.',
+  status: 'primary', src: 'simon-newell-1958'
+},
+
+{
+  id: 'simon-1960',
+  quote: 'Machines will be capable, within twenty years, of doing any work that a man can do.',
+  who: 'Herbert Simon',
+  role: 'Carnegie Institute of Technology',
+  where: 'The New Science of Management Decision, p. 38',
+  year: 1960,
+  kind: 'promise',
+  verdict: 'no',
+  verdictLine: 'No. By 1980 the field was in its first winter.',
+  what: 'Twenty years from 1960 lands in 1980, which is roughly the bottom of the first AI winter. This sentence is very widely quoted with the date 1965, from its reprint in The Shape of Automation; it was first published in 1960. If a demo is going to score you on dates, it had better get its own right.',
+  status: 'primary', src: 'qi-simon'
+},
+
+{
+  id: 'alpac-1966',
+  quote: 'A US government committee reviews a decade of machine-translation funding and reports that there is no shortage of human translators, that machine output still has to be rewritten by a person, and that useful machine translation is not in near prospect.',
+  who: 'The Automatic Language Processing Advisory Committee (ALPAC)',
+  role: 'chaired by John R. Pierce, for the National Academy of Sciences',
+  where: 'Language and Machines: Computers in Translation and Linguistics',
+  year: 1966,
+  kind: 'dismiss',
+  verdict: 'no',
+  verdictLine: 'Fair about 1966. Badly wrong as a forecast.',
+  what: 'US federal support for machine translation fell away after this report, and the field lost most of a generation. Machine translation is now used billions of times a day. ALPAC is the cleanest example of the second failure mode: a committee that read its own moment accurately, and then let that reading stand in for the future.',
+  note: 'Paraphrased, not quoted. The National Academies’ online copy is page images, so no wording from the report itself is quoted anywhere in this demo.',
+  status: 'primary', src: 'alpac'
+},
+
+{
+  id: 'minsky-1967',
+  quote: 'Within a generation, I am convinced, few compartments of intellect will remain outside the machine’s realm — the problems of creating “artificial intelligence” will be substantially solved.',
+  who: 'Marvin Minsky',
+  role: 'co-founder of the MIT AI Laboratory',
+  where: 'Computation: Finite and Infinite Machines, Prentice-Hall, p. 2',
+  year: 1967,
+  kind: 'promise',
+  verdict: 'no',
+  verdictLine: 'No — and a generation later the field was in its second winter.',
+  what: 'Minsky wrote this in his own textbook, which is why it is used here rather than the more famous “three to eight years” line attributed to him by Life magazine in 1970. That article contains errors, and Minsky denied at least one quotation in it. A book he wrote himself is the stronger evidence, and it says something just as strong.',
+  status: 'primary', src: 'qi-minsky'
+},
+
+{
+  id: 'perceptrons-1969',
+  quote: 'A book of mathematical proofs shows what a single-layer perceptron cannot compute. The field reads it as a verdict on neural networks in general, and moves on.',
+  who: 'Marvin Minsky and Seymour Papert',
+  role: 'MIT — and, more to the point, everyone who read them',
+  where: 'Perceptrons: An Introduction to Computational Geometry, MIT Press',
+  year: 1969,
+  kind: 'dismiss',
+  verdict: 'no',
+  verdictLine: 'The proofs held. The conclusion the field drew from them did not.',
+  what: 'Neural networks came back and now run essentially everything. But the tidy story — “this book killed neural networks for a decade” — is itself disputed, and the authors disputed it: they argued the work waned for its own reasons, not because of them. Both halves matter. A dismissal took hold, and the popular account of why is too neat.',
+  note: 'Paraphrased. The claim shown is about how the book was received, which is exactly the part historians argue over.',
+  status: 'reported', src: 'perceptrons-wiki'
+},
+
+{
+  id: 'lighthill-1973',
+  quote: 'In no part of the field have the discoveries made so far produced the major impact that was then promised.',
+  who: 'Sir James Lighthill',
+  role: 'Lucasian Professor of Applied Mathematics, Cambridge, writing for the UK Science Research Council',
+  where: 'Artificial Intelligence: A General Survey — written July 1972, published 1973',
+  year: 1973,
+  kind: 'dismiss',
+  verdict: 'no',
+  verdictLine: 'True in 1973. Then read as permanent, which it was not.',
+  what: 'Lighthill named a real obstacle — combinatorial explosion, the way search spaces blow up once a problem leaves the laboratory. UK government support for AI ended at most British universities. Jim Howe, who was in the Edinburgh department it hit, wrote that the report “provoked a massive loss of confidence in AI by the academic establishment in the UK” and that it “persisted for a decade”.',
+  status: 'primary', src: 'lighthill'
+},
+
+{
+  id: 'aaai-1984',
+  quote: 'Two senior researchers tell a room full of the AI industry that enthusiasm has spiralled out of control, and that pessimism, then press pessimism, then a funding cut, then the end of serious work, will follow in that order.',
+  who: 'Roger Schank and Marvin Minsky',
+  role: 'both of whom had lived through the first winter',
+  where: 'a public debate at the annual meeting of AAAI — where the phrase “AI winter” first appears',
+  year: 1984,
+  kind: 'warning',
+  verdict: 'yes',
+  verdictLine: 'Right. It arrived three years later.',
+  what: 'This is the card that stops the demo from being a story about hype. The two people who called it were insiders, they described the mechanism rather than a mood, and they were correct about both the shape and roughly the timing. Confident predictions are not all worthless. Predictions about mechanism have done better than predictions about dates.',
+  note: 'Paraphrased. The underlying account is Daniel Crevier’s 1993 history, AI: The Tumultuous Search for Artificial Intelligence.',
+  status: 'reported', src: 'aiwinter-wiki'
+},
+
+{
+  id: 'amodei-2024',
+  quote: 'I think it could come as early as 2026, though there are also ways it could take much longer.',
+  who: 'Dario Amodei',
+  role: 'CEO, Anthropic — on the arrival of what he calls powerful AI',
+  where: '“Machines of Loving Grace”',
+  year: 2024,
+  kind: 'promise',
+  verdict: 'open',
+  verdictLine: 'Open. The year named is the year you are standing in.',
+  what: 'This one is left unscored on purpose. Note the hedge — “could”, and “ways it could take much longer” — which is more careful than Simon in 1960 or Minsky in 1967, and note also that the hedge is the first thing dropped when a sentence like this is repeated. Whatever you conclude, you are now judging it with a track record in hand instead of a feeling.',
+  status: 'primary', src: 'mlg'
+}
+
+];
+
+/* --------------------------------------------------------------------------
+   ACT II — the timeline.
+
+   Five lanes, one per stage of the mechanism. The point of the lanes is that
+   the reader can watch the sequence fire in order, twice, without being told
+   that it does.
+
+   stage:
+     'promise'    — a confident public claim
+     'money'      — funding actually committed
+     'limit'      — a hard technical obstacle becoming visible
+     'naming'     — an authoritative voice naming the gap
+     'withdrawal' — money leaving
+   Landmark scientific results carry stage 'result' and sit above the lanes,
+   because they are the ground truth the promises were measured against.
+   -------------------------------------------------------------------------- */
+
+const STAGES = [
+  { id: 'promise',    label: 'A promise',        blurb: 'Someone with standing says the thing is close.' },
+  { id: 'money',      label: 'Money against it',  blurb: 'A government or an industry commits real budget.' },
+  { id: 'limit',      label: 'A hard limit',      blurb: 'An obstacle nobody had measured turns out to be load-bearing.' },
+  { id: 'naming',     label: 'Someone names it',  blurb: 'A report, or a market, states the gap out loud.' },
+  { id: 'withdrawal', label: 'The money leaves',  blurb: 'Funding stops. The field calls it a winter.' }
+];
+
+const EVENTS = [
+
+/* ---- build-up to the first winter ---- */
+{ d: '1950-10-01', p: 'y', stage: 'result', era: 1, label: 'Turing asks the question',
+  text: 'Computing Machinery and Intelligence sets out the imitation game and a fifty-year deadline.',
+  status: 'primary', src: 'turing1950' },
+
+{ d: '1955-08-31', p: 'd', stage: 'promise', era: 1, label: 'The Dartmouth proposal',
+  text: 'McCarthy, Minsky, Rochester and Shannon propose “a 2 month, 10 man study of artificial intelligence” for the summer of 1956, “on the basis of the conjecture that every aspect of learning or any other feature of intelligence can in principle be so precisely described that a machine can be made to simulate it.” The field gets its name here.',
+  status: 'primary', src: 'dartmouth' },
+
+{ d: '1957-01-01', p: 'y', stage: 'promise', era: 1, label: 'Ten years to a chess champion',
+  text: 'Simon and Newell predict a computer world chess champion within ten years, a computer-discovered mathematical theorem within ten years, and computer music of accepted aesthetic value within ten years.',
+  status: 'primary', src: 'simon-newell-1958' },
+
+{ d: '1958-07-08', p: 'd', stage: 'promise', era: 1, label: 'The perceptron, in the press',
+  text: 'A Navy press conference and a New York Times story promise a machine that will “walk, talk, see, write, reproduce itself and be conscious of its existence.” The demonstration was an IBM 704 learning left from right in fifty trials.',
+  status: 'primary', src: 'cornell-perceptron' },
+
+{ d: '1960-01-01', p: 'y', stage: 'promise', era: 1, label: 'Twenty years to any work a man can do',
+  text: 'Simon, in The New Science of Management Decision. Reprinted in 1965, which is the date it is usually given.',
+  status: 'primary', src: 'qi-simon' },
+
+{ d: '1966-11-01', p: 'm', stage: 'naming', era: 1, label: 'The ALPAC report',
+  text: 'A National Academy of Sciences committee reviews a decade of machine-translation funding and finds no translator shortage, no output usable without a human rewriting it, and no near prospect of useful machine translation.',
+  status: 'primary', src: 'alpac' },
+
+{ d: '1966-12-01', p: 'y', stage: 'withdrawal', era: 1, label: 'Machine translation funding falls away',
+  text: 'US federal support for machine translation drops sharply after ALPAC. This is the first of the withdrawals and it happens eight years before the winter proper.',
+  status: 'reported', src: 'aiwinter-wiki' },
+
+{ d: '1967-01-01', p: 'y', stage: 'promise', era: 1, label: 'Substantially solved within a generation',
+  text: 'Minsky, in his own textbook: “few compartments of intellect will remain outside the machine’s realm”.',
+  status: 'primary', src: 'qi-minsky' },
+
+{ d: '1969-01-01', p: 'y', stage: 'limit', era: 1, label: 'Perceptrons',
+  text: 'Minsky and Papert prove what a single-layer perceptron cannot compute. The proofs are correct. The field generalises them into a verdict on neural networks as a whole — a step the authors later said was not theirs.',
+  status: 'reported', src: 'perceptrons-wiki' },
+
+{ d: '1972-07-01', p: 'm', stage: 'limit', era: 1, label: 'Combinatorial explosion, named',
+  text: 'Lighthill identifies the obstacle: methods that work on toy problems blow up exponentially when the problem is real. This is the load-bearing technical fact of the first winter.',
+  status: 'primary', src: 'lighthill' },
+
+{ d: '1973-04-01', p: 'y', stage: 'naming', era: 1, label: 'The Lighthill report',
+  text: '“In no part of the field have the discoveries made so far produced the major impact that was then promised.” Written July 1972 for the UK Science Research Council; published 1973.',
+  status: 'primary', src: 'lighthill' },
+
+{ d: '1974-01-01', p: 'y', stage: 'withdrawal', era: 1, label: 'UK support ends at most universities',
+  text: 'Jim Howe, from inside the Edinburgh department: the report “provoked a massive loss of confidence in AI by the academic establishment in the UK (and to a lesser extent in the US). It persisted for a decade — the so-called ‘AI Winter’.”',
+  status: 'primary', src: 'howe' },
+
+/* ---- the thaw and the second build-up ---- */
+{ d: '1980-01-01', p: 'y', stage: 'result', era: 2, label: 'R1/XCON goes into production',
+  text: 'A rule-based expert system starts configuring VAX orders at Digital Equipment Corporation. Expert systems work — narrowly, expensively, and only where a human expert has written the rules down. That success is what ends the first winter and starts the second cycle.',
+  status: 'primary', src: 'r1' },
+
+{ d: '1982-04-01', p: 'y', stage: 'money', era: 2, label: 'Japan’s Fifth Generation project',
+  text: 'MITI launches a ten-year national programme and creates ICOT to run it, aiming at massively parallel machines built on logic programming. Budget: under ¥57 billion, about US$320 million.',
+  money: { amount: 57, unit: '¥bn', note: 'under ¥57bn over ten years (≈US$320m)' },
+  status: 'reported', src: 'fgcs-wiki' },
+
+{ d: '1983-01-01', p: 'y', stage: 'money', era: 2, label: 'DARPA’s Strategic Computing Initiative',
+  text: 'The US answer: about $1 billion, aimed at machines that would “see, hear, speak, and think like a human”.',
+  money: { amount: 1000, unit: '$m', note: '≈$1bn over the programme' },
+  status: 'reported', src: 'sci-wiki' },
+
+{ d: '1983-06-01', p: 'y', stage: 'money', era: 2, label: 'The UK’s Alvey Programme',
+  text: 'Britain’s answer to the Fifth Generation: £350 million over five years — £200m from government and £150m from industry — across VLSI, software engineering, knowledge-based systems and human–computer interaction.',
+  money: { amount: 350, unit: '£m', note: '£350m over five years (£200m government + £150m industry)' },
+  status: 'primary', src: 'alvey' },
+
+{ d: '1984-08-01', p: 'y', stage: 'naming', era: 2, label: 'The phrase “AI winter” is coined',
+  text: 'Schank and Minsky, in a public debate at the AAAI annual meeting, warn that enthusiasm has spiralled out of control and describe the chain reaction that will follow. They are right, three years early.',
+  status: 'reported', src: 'aiwinter-wiki' },
+
+{ d: '1986-01-01', p: 'y', stage: 'limit', era: 2, label: 'The limit: rules do not scale',
+  text: 'Expert systems only know what somebody typed in. They are brittle at the edges of their rule base, expensive to keep current, and they do not learn. Meanwhile general-purpose workstations are getting fast enough to run the same software without special hardware.',
+  status: 'reported', src: 'aiwinter-wiki' },
+
+{ d: '1987-01-01', p: 'y', stage: 'naming', era: 2, label: 'The market names it instead of a report',
+  text: 'There is no Lighthill for the second winter. The naming is done by the collapse of the specialised LISP hardware business — an industry that Crevier’s history describes as worth half a billion dollars being replaced within a single year.',
+  status: 'reported', src: 'aiwinter-wiki' },
+
+{ d: '1987-06-01', p: 'y', stage: 'withdrawal', era: 2, label: 'DARPA cuts AI',
+  text: 'Jack Schwarz takes over DARPA’s Information Processing Techniques Office and, in Pamela McCorduck’s account, cuts AI funding “deeply and brutally” — he did not believe it was the next wave.',
+  status: 'reported', src: 'sci-wiki' },
+
+{ d: '1992-06-01', p: 'y', stage: 'withdrawal', era: 2, label: 'The Fifth Generation project runs out',
+  text: 'The ten-year plan reaches its end with no commercial success; its parallel logic machines are overtaken by ordinary Sun and Intel hardware. Accounts differ on the exact finish — the ten-year programme ends in 1992 and the same source elsewhere runs it to 1994 — so read this dot as “about here”. The concurrent logic programming work outlives the programme; the programme does not.',
+  status: 'reported', src: 'fgcs-wiki' },
+
+/* ---- what happened afterwards ---- */
+{ d: '1997-05-01', p: 'm', stage: 'result', era: 3, label: 'Deep Blue beats Kasparov',
+  text: 'Deep Blue wins the New York rematch 3½–2½. Simon and Newell’s ten-year prediction lands, forty years late.',
+  status: 'primary', src: 'deepblue' },
+
+{ d: '2012-10-01', p: 'y', stage: 'result', era: 3, label: 'AlexNet wins ImageNet',
+  text: 'A deep convolutional network takes the ILSVRC-2012 classification task with a 15.3% top-5 error rate. The best entry from any other team is 26.2%. The approach buried in 1969 is now the state of the art.',
+  status: 'primary', src: 'ilsvrc2012' },
+
+{ d: '2016-03-01', p: 'm', stage: 'result', era: 3, label: 'AlphaGo beats Lee Sedol',
+  text: 'Four games to one, in Seoul, five months after beating Fan Hui 5–0.',
+  status: 'primary', src: 'alphago' },
+
+{ d: '2017-06-12', p: 'd', stage: 'result', era: 3, label: 'Attention Is All You Need',
+  text: 'The transformer. Every large language model in use today is a descendant of this paper.',
+  status: 'primary', src: 'attention' },
+
+{ d: '2020-01-23', p: 'd', stage: 'result', era: 3, label: 'Scaling laws',
+  text: 'Kaplan and colleagues report that loss falls as a power law in model size, data and compute, “with some trends spanning more than seven orders of magnitude”. This is the single biggest structural difference from either previous boom: a measured, extrapolable relationship rather than a promise.',
+  status: 'primary', src: 'kaplan' },
+
+{ d: '2020-05-28', p: 'd', stage: 'result', era: 3, label: 'GPT-3',
+  text: '175 billion parameters, and few-shot behaviour nobody put in by hand.',
+  status: 'primary', src: 'gpt3' },
+
+{ d: '2022-11-30', p: 'd', stage: 'result', era: 3, label: 'ChatGPT',
+  text: 'Released as a research preview. This is where the room’s own experience of AI starts.',
+  status: 'reported', src: 'chatgpt-tc' },
+
+{ d: '2026-02-01', p: 'm', stage: 'limit', era: 3, label: 'A benchmark stops measuring',
+  text: 'OpenAI publishes that it will no longer report SWE-bench Verified: frontier models had been exposed to the benchmark during training, and when it audited the problems its models still failed, most of those problems turned out to have broken tests. The scores kept going up. What they measured stopped being capability.',
+  status: 'reported', src: 'swebench' },
+
+{ d: '2026-02-27', p: 'd', stage: 'money', era: 3, label: '900 million users, $110 billion raised',
+  text: 'OpenAI reports 900 million weekly users and more than 50 million paying subscribers, alongside a $110 billion private round at a $730 billion pre-money valuation. Both halves are the point: usage at a scale neither previous boom had, and capital commitment at a scale neither previous boom came close to.',
+  money: { amount: 110000, unit: '$m', note: '$110bn private round at a $730bn pre-money valuation' },
+  status: 'reported', src: 'openai-900m' }
+
+];
+
+/* Winter bands. Deliberately carrying their own uncertainty. */
+const WINTERS = [
+  { id: 'w1', from: '1974-01-01', to: '1980-06-30', soft: 1.5,
+    label: 'First winter', range: 'roughly 1974 – 1980',
+    note: 'Conventional dates. The withdrawal that started it (machine translation, 1966) predates the band by eight years, and nobody agrees on a month.' },
+  { id: 'w2', from: '1987-01-01', to: '1993-12-31', soft: 3.5,
+    label: 'Second winter', range: 'roughly 1987 – 1993',
+    note: 'The start is firm — the hardware market went in 1987. The end is not: this demo draws 1993, and Wikipedia’s account runs it to 2000. The right-hand edge is drawn soft because the disagreement is real.' }
+];
+
+/* --------------------------------------------------------------------------
+   ACT III — the anatomy.
+
+   The same five stages, three columns. Column three is the present, and it
+   is deliberately incomplete: two of the five cells are empty, and saying
+   so is the honest position.
+   -------------------------------------------------------------------------- */
+
+const ANATOMY = [
+  { stage: 'promise',
+    w1: { head: 'Human-level work in twenty years',
+          body: 'Simon in 1960, Minsky in 1967, and a Navy press conference in 1958 promising a machine conscious of its own existence.',
+          src: ['qi-simon', 'qi-minsky', 'cornell-perceptron'] },
+    w2: { head: 'A fifth generation of computers',
+          body: 'Japan announces machines built on logic programming that will reason at supercomputer speed. Britain and the US answer within a year.',
+          src: ['fgcs-wiki'] },
+    now: { head: '“Could come as early as 2026”',
+          body: 'The hedges are real and are usually dropped in the retelling. The claims are also being made by people who have shipped the previous four things they promised.',
+          src: ['mlg'] } },
+
+  { stage: 'money',
+    w1: { head: 'US federal funding, largely uncounted',
+          body: 'No sourceable total exists for 1950s–60s US AI spending, so this demo does not invent one. What is sourceable is what happened when it stopped.',
+          src: [] },
+    w2: { head: '£350m + ~$1bn + ¥57bn',
+          body: 'Alvey, DARPA’s Strategic Computing Initiative and Japan’s Fifth Generation, committed within about eighteen months of each other. Three governments, one bet.',
+          src: ['alvey', 'sci-wiki', 'fgcs-wiki'] },
+    now: { head: '$110bn in a single round',
+          body: 'OpenAI’s February 2026 raise, at a $730bn pre-money valuation — two orders of magnitude past the three national programmes of the 1980s combined, and private rather than governmental.',
+          src: ['openai-900m'] } },
+
+  { stage: 'limit',
+    w1: { head: 'Combinatorial explosion',
+          body: 'Search-based methods that solved toy problems blew up exponentially on real ones. Lighthill named it in 1972 and nobody had a good answer.',
+          src: ['lighthill'] },
+    w2: { head: 'Rules do not scale',
+          body: 'Expert systems knew only what was typed into them, broke at the edge of their rule base, cost a fortune to maintain, and did not learn.',
+          src: ['aiwinter-wiki'] },
+    now: { head: 'Not yet identified',
+          pending: 'nobody knows what it is yet',
+          body: 'This cell is empty, and that is the honest answer. In both previous cycles the binding limit was obvious afterwards and invisible at the time to the people doing the work. The nearest visible candidate is that measurement is falling behind capability claims — see the next row.',
+          src: [] } },
+
+  { stage: 'naming',
+    w1: { head: 'Two reports, seven years apart',
+          body: 'ALPAC in 1966 for machine translation; Lighthill in 1973 for the field. Both were commissioned by the funders, and both were read as more final than they were.',
+          src: ['alpac', 'lighthill'] },
+    w2: { head: 'The market, not a report',
+          body: 'There is no Lighthill for the second winter. Schank and Minsky called it in 1984; the LISP hardware business made it official in 1987.',
+          src: ['aiwinter-wiki'] },
+    now: { head: 'Nobody authoritative has',
+          body: 'The nearest thing is a benchmark maintainer retiring its own benchmark: in February 2026 OpenAI stopped reporting SWE-bench Verified because contamination and broken tests had made the scores stop meaning anything. That is a measurement problem being named, not the field being named.',
+          src: ['swebench'] } },
+
+  { stage: 'withdrawal',
+    w1: { head: 'MT funding 1966; UK universities 1974',
+          body: 'Support ended at most British universities. The loss of confidence, in Jim Howe’s account, persisted for a decade.',
+          src: ['howe'] },
+    w2: { head: 'DARPA 1987; Fifth Generation 1992',
+          body: 'Schwarz cut AI at DARPA “deeply and brutally”. Japan’s programme ran its full ten years and ended without a commercial product.',
+          src: ['sci-wiki', 'fgcs-wiki'] },
+    now: { head: 'Has not happened',
+          pending: 'this stage has not occurred',
+          body: 'Money is still going in, at increasing scale, and usage is still going up. If the pattern holds, this is the cell to watch — and it is the last one to move, not the first. Nothing on this page is evidence that it will move at all.',
+          src: ['openai-900m'] } }
+];
+
+/* --------------------------------------------------------------------------
+   ACT IV — rhymes and differences. Two honest columns.
+   -------------------------------------------------------------------------- */
+
+const RHYMES = [
+  { head: 'Benchmark claims are outrunning evaluation',
+    body: 'In February 2026 OpenAI stopped reporting SWE-bench Verified — the coding benchmark it had itself released — saying frontier models had been exposed to it during training, and that when it audited the hard problems its models still failed, most of those problems had broken tests. Scores were still rising. What they measured had stopped being capability. Both previous winters began with a gap between the claim and the measurement.',
+    src: 'swebench' },
+  { head: 'Very large money committed against a promise',
+    body: '$110 billion in one round at a $730 billion pre-money valuation, February 2026. In 1982–83 three governments committed roughly £350m, $1bn and ¥57bn within eighteen months of each other, and the second winter followed. Scale is not by itself evidence of a bubble — but money moving ahead of demonstrated returns is exactly the second stage of the pattern.',
+    src: 'openai-900m' },
+  { head: 'Confident dates from people with real standing',
+    body: 'Simon had a Nobel Prize coming and Minsky had founded the MIT AI Lab. Standing has never been much protection: their public timelines missed by decades. The current timelines come from people who have actually shipped, which is a real difference — and it was also true of Simon, who had shipped the Logic Theorist.',
+    src: 'qi-simon' },
+  { head: 'The limit is invisible from inside',
+    body: 'Combinatorial explosion and the brittleness of rule bases are obvious in hindsight and were not obvious at the time to the people doing the work. There is no reason to think we are better placed now. Anyone who tells you they know what today’s binding constraint is, is making the same category of claim that failed twice.',
+    src: 'lighthill' }
+];
+
+const DIFFERENT = [
+  { head: 'Hundreds of millions of people actually use it',
+    body: '900 million weekly users and more than 50 million paying subscribers, reported February 2026, for one product. Neither previous boom had users; it had customers for specialist hardware and government programme deliverables. A withdrawal of research funding does not remove a product people are already paying for.',
+    src: 'openai-900m' },
+  { head: 'The scaling behaviour is measured, not asserted',
+    body: 'Kaplan and colleagues showed in 2020 that loss falls as a power law in model size, data and compute, “with some trends spanning more than seven orders of magnitude”. Neither previous boom had anything like this: a quantitative relationship that has kept holding as inputs grew by factors of millions. It is not a guarantee that it continues. It is a different kind of evidence from a prediction.',
+    src: 'kaplan' },
+  { head: 'The systems are general, not hand-built',
+    body: 'The 1980s bet on rule bases a human expert had to write out by hand — which is why they were brittle and why they did not transfer. Today’s systems are trained rather than authored, and the same model that writes code also reads radiographs badly and drafts a memo well. Generality is the specific thing the second winter’s technology lacked.',
+    src: 'attention' },
+  { head: 'The idea that was buried came back and won',
+    body: 'Neural networks were written off after 1969 and were the losing side for two decades. In 2012 the same family of methods won ImageNet outright — 15.3% top-5 error against 26.2% for the best of everyone else. This cuts both ways: it is the strongest evidence that dismissals age badly, and a reminder that the gap between “dead end” and “state of the art” was forty-three years.',
+    src: 'ilsvrc2012' }
+];
+
+const CLOSER = {
+  head: 'What to do with this',
+  body: [
+    'The pattern is not a prediction. It is a checklist. When you hear a claim about AI this year, you can ask which of the five stages it belongs to, and what evidence would move it.',
+    'The historical record says two specific things. Confident dates have been wrong by factors of three and four, in the direction of too soon. And confident dismissals have been wrong by decades, in the direction of too final. Those are not the same error and you cannot avoid both by picking a side.',
+    'The most reliable predictions in this deck were about mechanism, not timing: Schank and Minsky in 1984 described how a collapse would work, and it worked that way three years later. That is the kind of claim worth making, and the kind worth listening for.'
+  ]
+};
+
+/* --------------------------------------------------------------------------
+   Researched and deliberately excluded. Shown in the app.
+   -------------------------------------------------------------------------- */
+
+const CUT = [
+  { claim: 'A dollar figure for XCON’s annual savings at Digital',
+    why: 'The commonly repeated figures are $25 million and $40 million a year and the sources disagree. Digital’s own account is in Communications of the ACM in 1989, behind a paywall this build could not read. The system’s existence and production use are shown; the number is not.' },
+  { claim: 'Any verbatim quotation from the ALPAC report',
+    why: 'The National Academies’ online copy of Language and Machines is page images, not text, and an exact-phrase search for the most widely quoted sentence returned no page carrying it. The report is described, and nothing is put in quotation marks.' },
+  { claim: '“Half a billion dollars of AI hardware industry vanished in a year”, as a figure',
+    why: 'It traces to Daniel Crevier’s 1993 history through tertiary sources and no primary was found. It is shown once, attributed to Crevier by name, and never used as a number on a chart.' },
+  { claim: 'Hubert Dreyfus predicting no computer could beat a child at chess, then losing to Mac Hack VI in 1967',
+    why: 'A famous story and probably true, but the 1965 wording could not be retrieved and the chess-match detail traces to one book through tertiary sources. It would have been the neatest card in the deck, which is a reason to be more suspicious of it, not less.' },
+  { claim: 'Minsky’s “three to eight years” prediction from Life magazine, 1970',
+    why: 'The article contains errors and Minsky denied at least one quotation attributed to him in it. His 1967 textbook says something equally strong and he wrote it himself, so that is used instead.' },
+  { claim: 'A continuous series of AI funding from 1950 to 2026',
+    why: 'It does not exist in any sourceable form, particularly for US spending before 1980. Four discrete commitments are shown instead, in their original currencies and un-adjusted for inflation, and the app says that is what they are.' },
+  { claim: 'A dollar figure for DARPA’s Speech Understanding Research programme',
+    why: 'The programme ran 1971–1976 and did not meet its goals, which is well attested; the funding number repeated alongside it was not verifiable, so the event is left off the timeline entirely rather than shown with a soft number.' }
+];
+
+/* --------------------------------------------------------------------------
+   Sources. Every `src` in this file resolves here; the self-test enforces it
+   in both directions.
+   -------------------------------------------------------------------------- */
+
+const SOURCES = {
+  'turing1950':         { t: 'Turing — Computing Machinery and Intelligence, Mind LIX(236):433–460 (1950)', u: 'https://doi.org/10.1093/mind/LIX.236.433' },
+  'dartmouth':          { t: 'McCarthy, Minsky, Rochester & Shannon — A Proposal for the Dartmouth Summer Research Project on Artificial Intelligence (31 August 1955)', u: 'http://www-formal.stanford.edu/jmc/history/dartmouth/dartmouth.html' },
+  'simon-newell-1958':  { t: 'Simon & Newell — Heuristic Problem Solving: The Next Advance in Operations Research, Operations Research 6(1):1–10', u: 'https://pubsonline.informs.org/doi/10.1287/opre.6.1.1' },
+  'cornell-perceptron': { t: 'Cornell Chronicle — Professor’s perceptron paved the way for AI, 60 years too soon (quoting the New York Times, 8 July 1958)', u: 'https://news.cornell.edu/stories/2019/09/professors-perceptron-paved-way-ai-60-years-too-soon' },
+  'qi-simon':           { t: 'Quote Investigator — “Machines will be capable, within twenty years, of doing any work that a man can do” (verified against scans; The New Science of Management Decision, 1960, p. 38)', u: 'https://quoteinvestigator.com/2020/11/11/ai-can-do/' },
+  'qi-minsky':          { t: 'Quote Investigator — “Within a generation … the problems of creating artificial intelligence will be substantially solved” (verified against scans; Computation: Finite and Infinite Machines, 1967, p. 2)', u: 'https://quoteinvestigator.com/2021/03/04/ai-solved/' },
+  'alpac':              { t: 'ALPAC — Language and Machines: Computers in Translation and Linguistics, National Academy of Sciences (1966)', u: 'https://doi.org/10.17226/9547' },
+  'perceptrons-wiki':   { t: 'Perceptrons (Minsky & Papert, MIT Press 1969; expanded edition 1988) — including the dispute over its effect on the field', u: 'https://en.wikipedia.org/wiki/Perceptrons_(book)' },
+  'lighthill':          { t: 'Lighthill — Artificial Intelligence: A General Survey (July 1972, published 1973), full text', u: 'http://www.chilton-computing.org.uk/inf/literature/reports/lighthill_report/p001.htm' },
+  'howe':               { t: 'Jim Howe — Artificial Intelligence at Edinburgh University: a Perspective', u: 'https://www.inf.ed.ac.uk/about/AIhistory.html' },
+  'r1':                 { t: 'McDermott — R1: An Expert in the Computer Systems Domain, AAAI-80', u: 'https://cdn.aaai.org/AAAI/1980/AAAI80-076.pdf' },
+  'fgcs-wiki':          { t: 'Fifth Generation Computer Systems — budget figure sourced to Odagiri, Nakamura & Shibuya, Research Policy 26(2):191–207 (1997)', u: 'https://en.wikipedia.org/wiki/Fifth_Generation_Computer_Systems' },
+  'sci-wiki':           { t: 'DARPA Strategic Computing Initiative — the 1987 cuts sourced to McCorduck, Machines Who Think (2004), pp. 430–431', u: 'https://en.wikipedia.org/wiki/Strategic_Computing_Initiative' },
+  'alvey':              { t: 'Chilton Computing archive — The Alvey Programme (£350m: £200m government, £150m industry)', u: 'http://www.chilton-computing.org.uk/inf/alvey/p007.htm' },
+  'aiwinter-wiki':      { t: 'AI winter — the 1984 AAAI debate and the 1987 hardware collapse, sourced to Crevier, AI: The Tumultuous Search for Artificial Intelligence (1993)', u: 'https://en.wikipedia.org/wiki/AI_winter' },
+  'deepblue':           { t: 'IBM — Deep Blue', u: 'https://www.ibm.com/history/deep-blue' },
+  'ilsvrc2012':         { t: 'ImageNet — ILSVRC-2012 official results table', u: 'https://www.image-net.org/challenges/LSVRC/2012/results.html' },
+  'alphago':            { t: 'Google DeepMind — AlphaGo', u: 'https://deepmind.google/research/alphago/' },
+  'attention':          { t: 'Vaswani et al. — Attention Is All You Need (arXiv:1706.03762)', u: 'https://arxiv.org/abs/1706.03762' },
+  'kaplan':             { t: 'Kaplan et al. — Scaling Laws for Neural Language Models (arXiv:2001.08361)', u: 'https://arxiv.org/abs/2001.08361' },
+  'gpt3':               { t: 'Brown et al. — Language Models are Few-Shot Learners (arXiv:2005.14165)', u: 'https://arxiv.org/abs/2005.14165' },
+  'chatgpt-tc':         { t: 'TechCrunch — ChatGPT launched three years ago today (30 November 2025)', u: 'https://techcrunch.com/2025/11/30/chatgpt-launched-three-years-ago-today/' },
+  'swebench':           { t: 'OpenAI — Why SWE-bench Verified no longer measures frontier coding capabilities (February 2026)', u: 'https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/' },
+  'openai-900m':        { t: 'TechCrunch — ChatGPT reaches 900M weekly active users (27 February 2026)', u: 'https://techcrunch.com/2026/02/27/chatgpt-reaches-900m-weekly-active-users' },
+  'mlg':                { t: 'Dario Amodei — Machines of Loving Grace (October 2024)', u: 'https://www.darioamodei.com/essay/machines-of-loving-grace' }
+};
+
+/* A note the app shows next to the source list, because two of these need it. */
+const SOURCE_NOTE = 'Two sources here are openai.com pages, which refuse automated retrieval. Their titles and substance were confirmed against contemporaneous reporting during the build; they open normally in a browser. Where a claim rests on a printed history rather than a document — Crevier 1993, McCorduck 2004 — the historian is named on the claim itself and the claim is marked “reported” rather than “primary”.';
+
+return { INTRO, CARDS, STAGES, EVENTS, WINTERS, ANATOMY, RHYMES, DIFFERENT, CLOSER, CUT, SOURCES, SOURCE_NOTE };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = DATA;
+
+
+/* ==== engine.js ==== */
+/* ==========================================================================
+   Two Winters — the engine.
+
+   Pure functions only: date handling, scale maths, and the scoring for the
+   prediction round. Nothing here touches the DOM, so node can require it and
+   the test suite can hold it to account.
+   ========================================================================== */
+
+const ENGINE = (() => {
+
+const DAY = 86400000;
+
+/** ISO date -> epoch ms, parsed as UTC so the app behaves the same in every
+ *  timezone. `new Date('1958-07-08')` is already UTC, but the explicit split
+ *  survives someone later passing '1958-7-8'. */
+function t(iso) {
+  const m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(iso).trim());
+  if (!m) return NaN;
+  return Date.UTC(+m[1], +m[2] - 1, +m[3]);
+}
+
+function isoOf(ms) {
+  const d = new Date(ms);
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getUTCFullYear()}-${p(d.getUTCMonth() + 1)}-${p(d.getUTCDate())}`;
+}
+
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+/** 'Jul 1958' / '1958' — never locale-dependent, so a screenshot from one
+ *  machine matches the test expectations on another. */
+function fmtDate(ms, style) {
+  const d = new Date(ms);
+  if (style === 'year') return String(d.getUTCFullYear());
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+function yearOf(ms) { return new Date(ms).getUTCFullYear(); }
+
+/** Show only as much of a date as was actually verified. An event whose day is
+ *  unknown is stored on the 1st so it can be sorted and plotted, and `p` says
+ *  how much of it to print: 'y' year only, 'm' month and year, 'd' full date.
+ *  Printing "Jan 1969" for a book whose publication month nobody checked is a
+ *  small fabrication, and this demo does not get to make small ones. */
+function fmtEventDate(ms, p) {
+  if (p === 'y') return fmtDate(ms, 'year');
+  if (p === 'm' || p === undefined) return fmtDate(ms);
+  const d = new Date(ms);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
+const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
+const lerp = (a, b, u) => a + (b - a) * u;
+
+/** Year <-> 0..1 across the app's fixed window. */
+function makeYearScale(y0, y1) {
+  return {
+    y0, y1,
+    to: y => clamp((y - y0) / (y1 - y0), 0, 1),
+    from: u => y0 + clamp(u, 0, 1) * (y1 - y0),
+    toMs: ms => clamp((ms - Date.UTC(y0, 0, 1)) / (Date.UTC(y1, 0, 1) - Date.UTC(y0, 0, 1)), 0, 1)
+  };
+}
+
+/** Decade ticks inside a year window, always including the ends. */
+function decadeTicks(y0, y1, step) {
+  const s = step || 10;
+  const out = [];
+  for (let y = Math.ceil(y0 / s) * s; y <= y1; y += s) out.push(y);
+  if (out[0] !== y0) out.unshift(y0);
+  if (out[out.length - 1] !== y1) out.push(y1);
+  return out;
+}
+
+/* --------------------------- stepping the timeline ----------------------
+   Lives here rather than in the canvas so the test suite can hold it to
+   account. It has already been wrong twice: once because the cursor round
+   trip through a 0..1 fraction lost a few hours and left an event
+   unreachable, and once because parking the cursor just PAST an event made
+   the back button re-select that same event forever.
+
+   The contract: `at` is where the cursor is; a caller that parks the cursor
+   on an event parks it at `event.at + STEP_EPS / 2`. Forward looks strictly
+   more than STEP_EPS ahead, backward strictly more than STEP_EPS behind, so
+   the event currently under the cursor is excluded in both directions.
+   ---------------------------------------------------------------------- */
+
+const STEP_EPS = 86400000;   /* one day; every gap in the dataset is far wider */
+
+/** The next (dir > 0) or previous (dir < 0) event from `at`, or null at an end.
+ *  `events` must be sorted ascending by `.at`. */
+function stepTarget(events, at, dir) {
+  if (dir > 0) {
+    for (let i = 0; i < events.length; i++) if (events[i].at > at + STEP_EPS) return events[i];
+  } else {
+    for (let i = events.length - 1; i >= 0; i--) if (events[i].at < at - STEP_EPS) return events[i];
+  }
+  return null;
+}
+
+/** Where to park the cursor so an event is unambiguously "reached". */
+function parkAt(event) { return event.at + STEP_EPS / 2; }
+
+/* ------------------------------ scoring --------------------------------
+   Two independent judgements per card: how close the year guess was, and
+   whether the verdict was right. They are kept separate on purpose — the
+   demo's argument is about the verdict half, and mixing them into one
+   number would hide it.
+   ---------------------------------------------------------------------- */
+
+/** Years off, as a non-negative integer. */
+function yearMiss(guess, actual) { return Math.abs(Math.round(guess) - actual); }
+
+/** A band label for a year guess, so the reveal can say something in words.
+ *  Boundaries are inclusive-below: 0-3 close, 4-10 near, 11-25 out, else far. */
+function missBand(miss) {
+  if (miss <= 3) return 'close';
+  if (miss <= 10) return 'near';
+  if (miss <= 25) return 'out';
+  return 'far';
+}
+
+const BAND_TEXT = {
+  close: 'Within three years.',
+  near:  'Within a decade.',
+  out:   'Off by a couple of decades.',
+  far:   'Off by more than a generation.'
+};
+
+/** A verdict guess is correct when it matches. 'open' cards are never scored
+ *  either way — they are shown, not marked, because marking an unresolved
+ *  claim would be exactly the error this demo is about. */
+function verdictCorrect(guess, actual) {
+  if (actual === 'open') return null;
+  if (actual === 'late') return guess === 'no';   /* "did it come true in the window it named?" -> no */
+  return guess === actual;
+}
+
+/** Roll up a run. Split by `kind` so the scorecard can show the thing that
+ *  matters: whether the room is worse at judging promises or dismissals. */
+function tally(cards, answers) {
+  const acc = {
+    answered: 0, scored: 0, verdictRight: 0,
+    missTotal: 0, missCount: 0,
+    byKind: {},
+    open: 0
+  };
+  for (const c of cards) {
+    const a = answers[c.id];
+    if (!a) continue;
+    acc.answered++;
+    if (typeof a.year === 'number') { acc.missTotal += yearMiss(a.year, c.year); acc.missCount++; }
+    const ok = verdictCorrect(a.verdict, c.verdict);
+    if (ok === null) { acc.open++; continue; }
+    acc.scored++;
+    if (ok) acc.verdictRight++;
+    const k = acc.byKind[c.kind] || (acc.byKind[c.kind] = { n: 0, right: 0 });
+    k.n++; if (ok) k.right++;
+  }
+  acc.medianMiss = acc.missCount ? acc.missTotal / acc.missCount : null;
+  return acc;
+}
+
+/** The sentence the scorecard leads with. Deliberately refuses to congratulate
+ *  a small sample: under four scored cards it says so instead of scoring. */
+function verdictSentence(acc) {
+  if (acc.scored < 4) return 'Not enough answered to say anything useful — go back and do a few more.';
+  const p = acc.verdictRight / acc.scored;
+  if (p >= 0.8) return 'You read this record well. Most rooms do not.';
+  if (p >= 0.5) return 'About the same as chance-plus-a-bit, which is where most rooms land.';
+  return 'You did worse than guessing — which usually means one confident rule was applied to every card.';
+}
+
+return {
+  DAY, t, isoOf, fmtDate, fmtEventDate, yearOf, clamp, lerp,
+  makeYearScale, decadeTicks, STEP_EPS, stepTarget, parkAt,
+  yearMiss, missBand, BAND_TEXT, verdictCorrect, tally, verdictSentence
+};
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = ENGINE;
+
+
+/* ==== timeline.js ==== */
+/* ==========================================================================
+   Two Winters — the timeline canvas.
+
+   Seventy-six years across the x axis. Six rows down the y axis: one for
+   landmark results, then one for each of the five stages of the mechanism.
+
+   The whole point of the lane layout is that nobody has to be told the
+   pattern repeats. Scrub forward and the lanes light up top-to-bottom —
+   promise, money, limit, naming, withdrawal — and then they do it again,
+   and then a third run starts and stops partway down.
+
+   Hand-rolled on a 2d context, like the rest of this repository. Everything
+   is laid out in CSS pixels and scaled by devicePixelRatio at draw time so
+   the same code is crisp on a phone and on a projector.
+   ========================================================================== */
+
+const Timeline = (() => {
+
+const E = ENGINE;
+
+/* Murray State palette. Red-orange is reserved for genuine failure states —
+   here, and only here, the withdrawal lane and the winter labels, because a
+   funding collapse is exactly what that colour is for. */
+const C = {
+  ink:    '#E8EDF5',
+  dim:    '#8FA3C0',
+  navy:   '#002144',
+  gold:   '#ECAC00',
+  sky:    '#00A4E3',
+  red:    '#FF4500',
+  frost:  'rgba(148,190,225,0.13)',
+  grid:   'rgba(143,163,192,0.11)'
+};
+
+/* One colour per lane, warm at the top of the cycle and cold at the bottom. */
+const LANE_COLOR = {
+  result:     C.ink,
+  promise:    C.gold,
+  money:      '#7ED957',
+  limit:      C.sky,
+  naming:     '#B98CFF',
+  withdrawal: C.red
+};
+
+const Y0 = 1950, Y1 = 2027;
+
+function create(canvas, data) {
+  const st = {
+    canvas, ctx: canvas.getContext('2d'),
+    lanes: ['result'].concat(data.STAGES.map(s => s.id)),
+    laneLabel: Object.assign({ result: 'What actually worked' },
+      data.STAGES.reduce((o, s) => (o[s.id] = s.label, o), {})),
+    events: data.EVENTS.map(e => ({ ...e, at: E.t(e.d), year: E.yearOf(E.t(e.d)) }))
+                       .sort((a, b) => a.at - b.at),
+    winters: data.WINTERS.map(w => ({ ...w, a: E.t(w.from), b: E.t(w.to) })),
+    cursor: 1,
+    hover: null,
+    big: false,
+    w: 0, h: 0, dpr: 1,
+    pad: { l: 10, r: 12, t: 30, b: 30 }
+  };
+  st.t0 = Date.UTC(Y0, 0, 1);
+  st.t1 = Date.UTC(Y1, 0, 1);
+  bind(st);
+  return {
+    resize: () => resize(st),
+    render: () => render(st),
+    setCursor: v => { st.cursor = E.clamp(v, 0, 1); clearHidden(st); render(st); },
+    setBig: b => { st.big = b; resize(st); },
+    cursorAt: () => at(st),
+    cursorYear: () => E.yearOf(at(st)),
+    visible: () => visible(st),
+    stats: () => stats(st),
+    winterNow: () => winterAt(st, at(st)),
+    onHover: cb => { st.onHover = cb; },
+    select: ev => setHover(st, ev && visible(st).includes(ev) ? ev : null),
+    selected: () => st.hover,
+    step: dir => stepTo(st, dir)
+  };
+}
+
+const at = st => st.t0 + st.cursor * (st.t1 - st.t0);
+const pw = st => Math.max(1, st.w - st.pad.l - st.pad.r);
+const ph = st => Math.max(1, st.h - st.pad.t - st.pad.b);
+const px = (st, ms) => st.pad.l + (ms - st.t0) / (st.t1 - st.t0) * pw(st);
+const rowH = st => ph(st) / st.lanes.length;
+const py = (st, lane) => st.pad.t + rowH(st) * (st.lanes.indexOf(lane) + 0.62);
+
+/* The cursor is stored as a 0..1 fraction of a 77-year span, so a round trip
+   through `at()` loses up to a few hours. Without a tolerance, stepping onto an
+   event could land the cursor a hair BEFORE it, which dropped it out of
+   `visible` and left the detail panel blank — reproduced on the 1980 event,
+   which reported year 1979. ENGINE owns the tolerance and the step arithmetic,
+   where the test suite can reach them. */
+const EPS = E.STEP_EPS;
+function visible(st) { const a = at(st); return st.events.filter(e => e.at <= a + EPS); }
+function clearHidden(st) { if (st.hover && !visible(st).includes(st.hover)) setHover(st, null); }
+
+function setHover(st, ev) {
+  if (st.hover === ev) return;
+  st.hover = ev; render(st);
+  if (st.onHover) st.onHover(ev);
+}
+
+/** Counters that describe what is actually on screen. A stat that disagrees
+ *  with the dots above it is worse than no stat. */
+function stats(st) {
+  const shown = visible(st);
+  const by = {};
+  for (const e of shown) by[e.stage] = (by[e.stage] || 0) + 1;
+  return { total: shown.length, by, withdrawals: by.withdrawal || 0 };
+}
+
+function winterAt(st, ms) {
+  for (const w of st.winters) if (ms >= w.a && ms <= w.b) return w;
+  return null;
+}
+
+/** Keyboard/next-button stepping: move the cursor to the next event date. */
+function stepTo(st, dir) {
+  const target = E.stepTarget(st.events, at(st), dir);
+  if (!target) return null;
+  /* Park just past the event, never a hair before it: the rounding is absorbed,
+     the year readout agrees with the event that was stepped to, and stepTarget
+     excludes the parked-on event in both directions so back actually goes back. */
+  st.cursor = E.clamp((E.parkAt(target) - st.t0) / (st.t1 - st.t0), 0, 1);
+  clearHidden(st);
+  render(st);
+  return target;
+}
+
+function resize(st) {
+  const r = st.canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  st.w = Math.max(1, r.width); st.h = Math.max(1, r.height); st.dpr = dpr;
+  st.canvas.width = Math.round(st.w * dpr);
+  st.canvas.height = Math.round(st.h * dpr);
+  st.fs = st.big ? 13 : (st.w < 380 ? 9.5 : 11);
+  /* The right pad has to clear the glow around a 2026 dot AND the cursor
+     label sitting at the end of the axis; 12px put both half off the canvas. */
+  st.pad = { l: st.big ? 14 : 10, r: st.big ? 34 : 26,
+             t: st.big ? 36 : 30, b: st.big ? 36 : 30 };
+  render(st);
+}
+
+function bind(st) {
+  const pick = (ev, slack) => {
+    const r = st.canvas.getBoundingClientRect();
+    const x = ev.clientX - r.left, y = ev.clientY - r.top;
+    let best = null, bd = Infinity;
+    for (const e of visible(st)) {
+      const d = Math.hypot(px(st, e.at) - x, py(st, e.stage) - y);
+      if (d < bd) { bd = d; best = e; }
+    }
+    return bd < slack ? best : null;
+  };
+  st.canvas.addEventListener('pointermove', ev => {
+    if (ev.pointerType === 'touch') return;
+    setHover(st, pick(ev, st.big ? 26 : 20));
+  });
+  st.canvas.addEventListener('pointerleave', () => { if (st.hover) setHover(st, null); });
+  /* Touch gets a generous radius: a fingertip is about 44px and the lanes
+     are the only thing it can land on. */
+  st.canvas.addEventListener('pointerdown', ev => setHover(st, pick(ev, st.big ? 34 : 28)));
+}
+
+/* ------------------------------ drawing -------------------------------- */
+
+function winterBands(st) {
+  const { ctx } = st;
+  const top = st.pad.t - 12, bot = st.pad.t + ph(st) + 6;
+  const now = at(st);
+  for (const w of st.winters) {
+    if (w.a > now) continue;                       /* not reached yet */
+    const xa = px(st, w.a);
+    const xb = px(st, Math.min(w.b, now));
+    const soft = Math.max(6, (px(st, w.b) - xa) * (w.soft / 20));
+    const g = ctx.createLinearGradient(xa, 0, Math.max(xb, xa + 1), 0);
+    g.addColorStop(0, 'rgba(148,190,225,0.03)');
+    g.addColorStop(Math.min(0.35, soft / Math.max(1, xb - xa)), C.frost);
+    g.addColorStop(0.72, C.frost);
+    g.addColorStop(1, 'rgba(148,190,225,0.03)');
+    ctx.fillStyle = g;
+    ctx.fillRect(xa, top, Math.max(1, xb - xa), bot - top);
+
+    /* Hard-ish left edge, feathered right edge: the start dates are much
+       better attested than the end dates and the drawing should say so. */
+    ctx.strokeStyle = 'rgba(148,190,225,0.34)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(xa, top); ctx.lineTo(xa, bot); ctx.stroke();
+
+    if (xb - xa > 34) {
+      ctx.font = `700 ${st.fs - 0.5}px system-ui, -apple-system, sans-serif`;
+      ctx.fillStyle = 'rgba(232,237,245,0.72)';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText(w.label, xa + 5, top + 2);
+    }
+  }
+}
+
+function laneRows(st) {
+  const { ctx } = st;
+  const h = rowH(st);
+  st.lanes.forEach((lane, i) => {
+    const y = st.pad.t + h * (i + 0.62);
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(st.pad.l, y); ctx.lineTo(st.w - st.pad.r, y); ctx.stroke();
+
+    ctx.font = `700 ${st.fs - 0.5}px system-ui, -apple-system, sans-serif`;
+    ctx.fillStyle = lane === 'result' ? 'rgba(232,237,245,0.55)'
+                                      : hexA(LANE_COLOR[lane], 0.78);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    ctx.fillText(st.laneLabel[lane], st.pad.l + 2, y - (st.big ? 8 : 6));
+  });
+}
+
+function decades(st) {
+  const { ctx } = st;
+  const yb = st.pad.t + ph(st);
+  ctx.font = `500 ${st.fs}px system-ui, -apple-system, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  const step = st.w < 420 ? 20 : 10;
+  for (let y = 1950; y <= 2020; y += step) {
+    const x = px(st, Date.UTC(y, 0, 1));
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, st.pad.t - 12); ctx.lineTo(x, yb); ctx.stroke();
+    ctx.fillStyle = 'rgba(143,163,192,0.75)';
+    ctx.fillText(String(y), x, yb + 6);
+  }
+}
+
+function dots(st) {
+  const { ctx } = st;
+  const now = at(st);
+  for (const e of st.events) {
+    if (e.at > now + EPS) continue;   /* same one-day tolerance as `visible` */
+    const x = px(st, e.at), y = py(st, e.stage);
+    const col = LANE_COLOR[e.stage] || C.ink;
+    /* Fresh events glow, then settle. The glow is what makes the sequence
+       readable while scrubbing. */
+    const fresh = 1 - E.clamp((now - e.at) / (7 * 365 * E.DAY), 0, 1);
+    const r = (st.big ? 6 : 4.6) * (1 + 0.45 * fresh);
+
+    if (fresh > 0.04) {
+      ctx.beginPath();
+      ctx.fillStyle = hexA(col, 0.20 * fresh);
+      ctx.arc(x, y, r * 3.4, 0, 7); ctx.fill();
+    }
+    ctx.beginPath(); ctx.arc(x, y, r, 0, 7);
+    if (e.stage === 'result') {
+      ctx.strokeStyle = hexA(col, 0.55 + 0.4 * fresh);
+      ctx.lineWidth = st.big ? 2.6 : 2;
+      ctx.stroke();
+    } else {
+      ctx.fillStyle = hexA(col, 0.62 + 0.38 * fresh);
+      ctx.fill();
+    }
+    if (st.hover === e) {
+      ctx.strokeStyle = C.ink; ctx.lineWidth = 1.75;
+      ctx.beginPath(); ctx.arc(x, y, r + 5, 0, 7); ctx.stroke();
+    }
+  }
+}
+
+function cursorLine(st) {
+  const { ctx } = st;
+  const x = px(st, at(st));
+  ctx.strokeStyle = 'rgba(0,164,227,0.8)'; ctx.lineWidth = st.big ? 2.5 : 2;
+  ctx.beginPath(); ctx.moveTo(x, st.pad.t - 16); ctx.lineTo(x, st.pad.t + ph(st) + 3); ctx.stroke();
+  ctx.fillStyle = 'rgba(0,164,227,0.98)';
+  ctx.font = `800 ${st.fs + 2}px system-ui, sans-serif`;
+  const right = x > st.w - 56;
+  ctx.textAlign = right ? 'right' : 'left'; ctx.textBaseline = 'bottom';
+  ctx.fillText(String(E.yearOf(at(st))), x + (right ? -6 : 6), st.pad.t - 14);
+}
+
+function render(st) {
+  const { ctx } = st;
+  ctx.save();
+  ctx.scale(st.dpr, st.dpr);
+  ctx.clearRect(0, 0, st.w, st.h);
+  winterBands(st);
+  decades(st);
+  laneRows(st);
+  dots(st);
+  cursorLine(st);
+  ctx.restore();
+}
+
+/** '#RRGGBB' + alpha -> rgba(). Kept here rather than in a palette module
+ *  because it is three lines and one caller. */
+function hexA(hex, a) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
+}
+
+return { create, C, LANE_COLOR, Y0, Y1, hexA };
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = Timeline;
+
+
+/* ==== app.js ==== */
+/* ==========================================================================
+   Two Winters — the application.
+
+   Four acts:
+     I   Guess the year — ten sourced predictions, date and speaker hidden.
+     II  The two winters — a scrubbable timeline with the mechanism in lanes.
+     III Anatomy — the same five stages, three eras, side by side.
+     IV  Rhymes and differences, the cut list, and every source.
+
+   No framework, no build-time templating beyond concatenation, no network.
+   ========================================================================== */
+
+(() => {
+
+const D = DATA, E = ENGINE;
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+
+/* Session state. Nothing is persisted anywhere — reloading resets the app,
+   and the app stores nothing on the device. */
+const S = {
+  act: 1,
+  i: 0,                       /* index into D.CARDS */
+  answers: {},                /* id -> { year, verdict } */
+  pending: { year: 1985, verdict: null },
+  revealed: false,
+  presenter: false,
+  tl: null
+};
+
+/* ---------------------------------------------------------------- helpers */
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+/** A source chip. Every claim on screen gets one; the self-test proves the
+ *  id resolves. Links carry rel=noopener because they leave the app. */
+function srcChip(id) {
+  const s = D.SOURCES[id];
+  const a = el('a', 'src');
+  if (!s) { a.textContent = 'source missing: ' + id; a.classList.add('bad'); return a; }
+  a.href = s.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.textContent = 'source';
+  a.title = s.t;
+  return a;
+}
+
+function statusChip(status) {
+  const b = el('span', 'status ' + status);
+  b.textContent = status;
+  b.title = status === 'primary'
+    ? 'Checked against the document itself during the build.'
+    : 'A specific retrievable secondary source that names its own underlying scholarship.';
+  return b;
+}
+
+function paras(parent, list) {
+  for (const p of list) parent.appendChild(el('p', null, p));
+}
+
+/* ================================ ACT I ================================= */
+
+function renderIntro() {
+  $('#intro-title').textContent = D.INTRO.title;
+  const b = $('#intro-body'); b.innerHTML = '';
+  paras(b, D.INTRO.body);
+  $('#intro-note').textContent = D.INTRO.note;
+  $('#btn-begin').textContent = D.INTRO.cta;
+}
+
+const VERDICTS = [
+  { id: 'yes',  label: 'It came true' },
+  { id: 'no',   label: 'It didn’t' },
+  { id: 'open', label: 'Still open' }
+];
+
+function renderCard() {
+  const c = D.CARDS[S.i];
+  S.revealed = false;
+  const prior = S.answers[c.id];
+  S.pending = prior ? { year: prior.year, verdict: prior.verdict } : { year: 1985, verdict: null };
+
+  $('#card-count').textContent = `${S.i + 1} / ${D.CARDS.length}`;
+  $('#card-quote').textContent = c.quote;
+  $('#card-note').textContent = c.note || '';
+  $('#card-note').hidden = !c.note;
+
+  $('#guess-wrap').hidden = false;
+  $('#reveal-wrap').hidden = true;
+  $('#btn-lock').hidden = false;
+  /* Locked until a verdict is chosen: the year slider always has a value, so
+     without this the button would happily accept a half-answer. */
+  $('#btn-lock').disabled = !S.pending.verdict;
+  $('#btn-next-card').hidden = true;
+
+  const sl = $('#year-slider');
+  sl.value = String(S.pending.year);
+  $('#year-read').textContent = String(S.pending.year);
+
+  const vb = $('#verdict-btns'); vb.innerHTML = '';
+  for (const v of VERDICTS) {
+    const b = el('button', 'vbtn', v.label);
+    b.type = 'button';
+    b.dataset.v = v.id;
+    b.setAttribute('aria-pressed', String(S.pending.verdict === v.id));
+    if (S.pending.verdict === v.id) b.classList.add('on');
+    b.addEventListener('click', () => {
+      S.pending.verdict = v.id;
+      $$('#verdict-btns .vbtn').forEach(x => {
+        const on = x.dataset.v === v.id;
+        x.classList.toggle('on', on);
+        x.setAttribute('aria-pressed', String(on));
+      });
+      $('#btn-lock').disabled = false;
+    });
+    vb.appendChild(b);
+  }
+
+  $('#card-progress').style.width = ((S.i) / D.CARDS.length * 100) + '%';
+  $('#scorecard').hidden = true;
+  $('#card-body').hidden = false;
+}
+
+function lockIn() {
+  const c = D.CARDS[S.i];
+  if (!S.pending.verdict) return;
+  S.answers[c.id] = { year: +S.pending.year, verdict: S.pending.verdict };
+  S.revealed = true;
+  renderReveal();
+}
+
+const VERDICT_CLASS = { yes: 'good', no: 'bad', late: 'mixed', open: 'openv' };
+const VERDICT_WORD  = { yes: 'It came true', no: 'It did not', late: 'True, but far too late', open: 'Still open' };
+const KIND_WORD = {
+  promise: 'a confident promise',
+  dismiss: 'a confident dismissal',
+  warning: 'a warning'
+};
+
+function renderReveal() {
+  const c = D.CARDS[S.i], a = S.answers[c.id];
+  const miss = E.yearMiss(a.year, c.year);
+  const band = E.missBand(miss);
+  const right = E.verdictCorrect(a.verdict, c.verdict);
+
+  $('#guess-wrap').hidden = true;
+  $('#btn-lock').hidden = true;
+  $('#btn-next-card').hidden = false;
+  $('#btn-next-card').textContent = S.i === D.CARDS.length - 1 ? 'See how you did' : 'Next prediction';
+
+  const w = $('#reveal-wrap'); w.innerHTML = ''; w.hidden = false;
+
+  const head = el('div', 'rv-head');
+  head.appendChild(el('div', 'rv-year', String(c.year)));
+  const who = el('div', 'rv-who');
+  who.appendChild(el('b', null, c.who));
+  who.appendChild(el('span', null, c.role));
+  who.appendChild(el('em', null, c.where));
+  head.appendChild(who);
+  w.appendChild(head);
+
+  const marks = el('div', 'rv-marks');
+
+  const m1 = el('div', 'mark ' + (band === 'close' ? 'good' : band === 'near' ? 'mixed' : 'dist'));
+  m1.appendChild(el('b', null, miss === 0 ? 'Exact' : miss + (miss === 1 ? ' year out' : ' years out')));
+  m1.appendChild(el('span', null, E.BAND_TEXT[band]));
+  marks.appendChild(m1);
+
+  const m2 = el('div', 'mark ' + (right === null ? 'openv' : right ? 'good' : 'bad'));
+  m2.appendChild(el('b', null, right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
+  m2.appendChild(el('span', null, right === null
+    ? 'This one has not resolved. Nobody is marked on it.'
+    : 'You said ' + VERDICT_WORD[a.verdict].toLowerCase() + '.'));
+  marks.appendChild(m2);
+  w.appendChild(marks);
+
+  const verdict = el('div', 'rv-verdict ' + VERDICT_CLASS[c.verdict]);
+  verdict.appendChild(el('b', null, c.verdictLine));
+  verdict.appendChild(el('span', 'rv-kind', 'This was ' + KIND_WORD[c.kind] + '.'));
+  w.appendChild(verdict);
+
+  w.appendChild(el('p', 'rv-what', c.what));
+
+  const foot = el('div', 'rv-foot');
+  foot.appendChild(statusChip(c.status));
+  foot.appendChild(srcChip(c.src));
+  const st = D.SOURCES[c.src];
+  if (st) foot.appendChild(el('span', 'src-title', st.t));
+  w.appendChild(foot);
+
+  $('#card-progress').style.width = ((S.i + 1) / D.CARDS.length * 100) + '%';
+}
+
+function nextCard() {
+  if (S.i < D.CARDS.length - 1) { S.i++; renderCard(); scrollActTop(); }
+  else renderScorecard();
+}
+
+function renderScorecard() {
+  const acc = E.tally(D.CARDS, S.answers);
+  const box = $('#scorecard'); box.innerHTML = ''; box.hidden = false;
+  $('#card-body').hidden = true;
+
+  box.appendChild(el('h2', null, 'How you did'));
+  box.appendChild(el('p', 'lead', E.verdictSentence(acc)));
+
+  const grid = el('div', 'sc-grid');
+  const stat = (n, unit, cap) => {
+    const d = el('div', 'sc');
+    const v = el('div', 'sc-n'); v.appendChild(el('span', 'num', n));
+    if (unit) v.appendChild(el('span', 'unit', unit));
+    d.appendChild(v); d.appendChild(el('span', 'cap', cap));
+    return d;
+  };
+  grid.appendChild(stat(String(acc.verdictRight) + '/' + String(acc.scored), '', 'verdicts called right'));
+  grid.appendChild(stat(acc.medianMiss == null ? '—' : acc.medianMiss.toFixed(1), 'years', 'average miss on the date'));
+  grid.appendChild(stat(String(acc.open), '', 'left unscored, because unresolved'));
+  box.appendChild(grid);
+
+  /* The split that carries the argument. */
+  const split = el('div', 'sc-split');
+  const row = (kind, title, blurb) => {
+    const k = acc.byKind[kind];
+    const r = el('div', 'sc-row');
+    r.appendChild(el('b', null, title));
+    r.appendChild(el('span', 'sc-score', k ? `${k.right} of ${k.n}` : 'none answered'));
+    const bar = el('div', 'sc-bar');
+    const fill = el('i');
+    fill.style.width = k && k.n ? (k.right / k.n * 100) + '%' : '0%';
+    fill.className = kind === 'promise' ? 'p' : kind === 'dismiss' ? 'd' : 'wn';
+    bar.appendChild(fill);
+    r.appendChild(bar);
+    r.appendChild(el('span', 'sc-blurb', blurb));
+    return r;
+  };
+  split.appendChild(row('promise', 'Confident promises', 'Somebody with standing said AI was nearly here. Six of these; five have resolved, and not one of them arrived inside the window it named.'));
+  split.appendChild(row('dismiss', 'Confident dismissals', 'Somebody with standing said it would not work, or was not worth funding. Three of these; all three were overturned.'));
+  split.appendChild(row('warning', 'A warning about the field itself', 'One of these. It was right, three years early — which is the best forecasting record on this page.'));
+  box.appendChild(split);
+
+  box.appendChild(el('p', 'sc-tail',
+    'If your two bars are very different heights, that is the useful finding: most people are much better at spotting hype than at spotting a dismissal that is about to age badly. Both errors are in the historical record, in roughly equal measure.'));
+
+  const acts = el('div', 'row');
+  const again = el('button', 'btn ghost', 'Play again');
+  again.addEventListener('click', () => { S.i = 0; S.answers = {}; renderCard(); scrollActTop(); });
+  const on = el('button', 'btn primary', 'Now show me the two winters');
+  on.addEventListener('click', () => setAct(2));
+  acts.appendChild(again); acts.appendChild(on);
+  box.appendChild(acts);
+}
+
+/* ================================ ACT II ================================ */
+
+function buildTimeline() {
+  if (S.tl) return;
+  S.tl = Timeline.create($('#tl'), D);
+  S.tl.onHover(showEvent);
+  S.tl.setBig(S.presenter);
+
+  const slider = $('#tl-slider');
+  slider.addEventListener('input', () => {
+    S.tl.setCursor(+slider.value / 1000);
+    syncTimelineChrome();
+  });
+  $('#tl-back').addEventListener('click', () => {
+    const ev = S.tl.step(-1);
+    slider.value = String(Math.round(sliderFromCursor() * 1000));
+    if (ev) S.tl.select(ev);
+    syncTimelineChrome();
+  });
+  $('#tl-fwd').addEventListener('click', () => {
+    const ev = S.tl.step(1);
+    slider.value = String(Math.round(sliderFromCursor() * 1000));
+    if (ev) S.tl.select(ev);
+    syncTimelineChrome();
+  });
+
+  const legend = $('#tl-legend'); legend.innerHTML = '';
+  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'The results the promises were measured against.' }].concat(D.STAGES);
+  for (const s of lanes) {
+    const d = el('div', 'lg');
+    const sw = el('i'); sw.style.background = Timeline.LANE_COLOR[s.id];
+    d.appendChild(sw);
+    d.appendChild(el('b', null, s.label));
+    d.appendChild(el('span', null, s.blurb));
+    legend.appendChild(d);
+  }
+
+  const wn = $('#tl-winters'); wn.innerHTML = '';
+  for (const w of D.WINTERS) {
+    const d = el('div', 'wnote');
+    d.appendChild(el('b', null, w.label + ' — ' + w.range));
+    d.appendChild(el('span', null, w.note));
+    wn.appendChild(d);
+  }
+
+  const mv = $('#money-list'); mv.innerHTML = '';
+  for (const ev of D.EVENTS.filter(e => e.money)) {
+    const d = el('div', 'money');
+    d.appendChild(el('b', null, E.fmtDate(E.t(ev.d), 'year')));
+    d.appendChild(el('span', 'm-amt', ev.money.note));
+    d.appendChild(el('span', 'm-lab', ev.label));
+    d.appendChild(srcChip(ev.src));
+    mv.appendChild(d);
+  }
+
+  window.addEventListener('resize', () => { if (S.act === 2) S.tl.resize(); });
+  requestAnimationFrame(() => { S.tl.resize(); syncTimelineChrome(); });
+}
+
+function sliderFromCursor() {
+  const y0 = Date.UTC(Timeline.Y0, 0, 1), y1 = Date.UTC(Timeline.Y1, 0, 1);
+  return (S.tl.cursorAt() - y0) / (y1 - y0);
+}
+
+function syncTimelineChrome() {
+  const st = S.tl.stats();
+  $('#tl-year').textContent = String(S.tl.cursorYear());
+  $('#tl-total').textContent = String(st.total);
+  $('#tl-with').textContent = String(st.withdrawals);
+  const w = S.tl.winterNow();
+  const badge = $('#tl-winter');
+  badge.hidden = !w;
+  if (w) badge.textContent = w.label + ' — ' + w.range;
+}
+
+function showEvent(ev) {
+  const box = $('#tl-detail');
+  box.innerHTML = '';
+  if (!ev) {
+    box.classList.add('empty');
+    box.appendChild(el('p', 'hint', 'Tap a dot — or use ‹ and › to walk through the events one at a time.'));
+    return;
+  }
+  box.classList.remove('empty');
+  const head = el('div', 'ev-head');
+  const chip = el('span', 'lane-chip');
+  chip.style.background = Timeline.hexA(Timeline.LANE_COLOR[ev.stage], 0.22);
+  chip.style.color = Timeline.LANE_COLOR[ev.stage];
+  chip.textContent = ev.stage === 'result' ? 'result' : ev.stage;
+  head.appendChild(chip);
+  head.appendChild(el('b', null, E.fmtEventDate(ev.at, ev.p)));
+  head.appendChild(el('span', 'ev-label', ev.label));
+  box.appendChild(head);
+  box.appendChild(el('p', 'ev-text', ev.text));
+  const foot = el('div', 'ev-foot');
+  foot.appendChild(statusChip(ev.status));
+  foot.appendChild(srcChip(ev.src));
+  const s = D.SOURCES[ev.src];
+  if (s) foot.appendChild(el('span', 'src-title', s.t));
+  box.appendChild(foot);
+}
+
+/* =============================== ACT III ================================ */
+
+function renderAnatomy() {
+  const box = $('#anatomy');
+  if (box.dataset.built) return;
+  box.dataset.built = '1';
+  const stageBlurb = D.STAGES.reduce((o, s) => (o[s.id] = s, o), {});
+
+  for (const row of D.ANATOMY) {
+    const st = stageBlurb[row.stage];
+    const r = el('div', 'an-row');
+
+    const head = el('div', 'an-stage');
+    head.appendChild(el('b', null, st.label));
+    head.appendChild(el('span', null, st.blurb));
+    r.appendChild(head);
+
+    const cols = el('div', 'an-cols');
+    const col = (key, title, cls) => {
+      const cell = row[key];
+      const c = el('div', 'an-cell ' + cls);
+      c.appendChild(el('span', 'an-era', title));
+      c.appendChild(el('b', null, cell.head));
+      c.appendChild(el('p', null, cell.body));
+      if (cell.pending) {
+        c.classList.add('pending');
+        c.appendChild(el('span', 'an-pending', 'open — ' + cell.pending));
+      }
+      if (cell.src.length) {
+        const f = el('div', 'an-src');
+        cell.src.forEach(id => f.appendChild(srcChip(id)));
+        c.appendChild(f);
+      } else {
+        c.classList.add('nosrc');
+        c.appendChild(el('span', 'an-nosrc', 'no figure shown — nothing sourceable'));
+      }
+      return c;
+    };
+    cols.appendChild(col('w1', 'First winter', 'w1'));
+    cols.appendChild(col('w2', 'Second winter', 'w2'));
+    cols.appendChild(col('now', 'Now', 'now'));
+    r.appendChild(cols);
+    box.appendChild(r);
+  }
+}
+
+/* =============================== ACT IV ================================= */
+
+function renderClose() {
+  const box = $('#close');
+  if (box.dataset.built) return;
+  box.dataset.built = '1';
+
+  const two = el('div', 'cols2');
+
+  const a = el('div', 'col rhymes');
+  a.appendChild(el('h3', null, 'What rhymes'));
+  for (const it of D.RHYMES) {
+    const d = el('div', 'item');
+    d.appendChild(el('b', null, it.head));
+    d.appendChild(el('p', null, it.body));
+    d.appendChild(srcChip(it.src));
+    a.appendChild(d);
+  }
+  two.appendChild(a);
+
+  const b = el('div', 'col different');
+  b.appendChild(el('h3', null, 'What is genuinely different'));
+  for (const it of D.DIFFERENT) {
+    const d = el('div', 'item');
+    d.appendChild(el('b', null, it.head));
+    d.appendChild(el('p', null, it.body));
+    d.appendChild(srcChip(it.src));
+    b.appendChild(d);
+  }
+  two.appendChild(b);
+  box.appendChild(two);
+
+  const cl = el('div', 'panel closer');
+  cl.appendChild(el('h3', null, D.CLOSER.head));
+  paras(cl, D.CLOSER.body);
+  box.appendChild(cl);
+
+  const cut = el('div', 'panel cut');
+  cut.appendChild(el('h3', null, 'What was cut, and why'));
+  cut.appendChild(el('p', 'help', 'Researched for this demo and left out because it could not be sourced well enough. A demo that only shows what it kept is an advertisement.'));
+  const ul = el('ul');
+  for (const c of D.CUT) {
+    const li = el('li');
+    li.appendChild(el('b', null, c.claim));
+    li.appendChild(el('span', null, c.why));
+    ul.appendChild(li);
+  }
+  cut.appendChild(ul);
+  box.appendChild(cut);
+
+  const src = el('div', 'panel sources');
+  src.appendChild(el('h3', null, 'Every source'));
+  src.appendChild(el('p', 'help', D.SOURCE_NOTE));
+  const sl = el('ul', 'src-list');
+  Object.keys(D.SOURCES).sort().forEach(id => {
+    const s = D.SOURCES[id];
+    const li = el('li');
+    const a2 = el('a', null, s.t);
+    a2.href = s.u; a2.target = '_blank'; a2.rel = 'noopener noreferrer';
+    li.appendChild(a2);
+    li.appendChild(el('span', 'src-id', id));
+    sl.appendChild(li);
+  });
+  src.appendChild(sl);
+  box.appendChild(src);
+}
+
+/* ============================== navigation ============================== */
+
+function setAct(n) {
+  S.act = n;
+  $$('.act').forEach(a => { a.hidden = +a.dataset.act !== n; });
+  $$('#actnav button').forEach(b => {
+    const on = +b.dataset.act === n;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+  if (n === 2) { buildTimeline(); requestAnimationFrame(() => { S.tl.resize(); syncTimelineChrome(); }); }
+  if (n === 3) renderAnatomy();
+  if (n === 4) renderClose();
+  scrollActTop();
+}
+
+function scrollActTop() {
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+/* =============================== overlays =============================== */
+
+/** The page behind a sheet must not scroll with it — on a phone, dragging the
+ *  sheet body otherwise drags the whole article underneath. */
+function lockScroll() {
+  document.body.style.overflowY = $$('.overlay').some(o => !o.hidden) ? 'hidden' : '';
+}
+function open(id) {
+  const o = document.getElementById(id);
+  o.hidden = false;
+  lockScroll();
+  const inner = o.querySelector('.sheet-inner');
+  if (inner) inner.focus();
+}
+function close(id) { document.getElementById(id).hidden = true; lockScroll(); }
+
+function wireOverlays() {
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => close(b.dataset.close)));
+  $$('.overlay').forEach(o => o.addEventListener('click', ev => {
+    if (ev.target === o) { o.hidden = true; lockScroll(); }
+  }));
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
+  });
+  $('#btn-howto').addEventListener('click', () => open('howto'));
+  $('#btn-howto-2').addEventListener('click', () => { close('settings'); open('howto'); });
+  $('#btn-settings').addEventListener('click', () => open('settings'));
+  $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
+  $('#chk-presenter').addEventListener('change', ev => {
+    S.presenter = ev.target.checked;
+    document.body.classList.toggle('presenting', S.presenter);
+    if (S.tl) { S.tl.setBig(S.presenter); }
+  });
+  $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ============================== self-test ===============================
+   The proof button. It re-derives, in front of whoever is asking, the
+   properties the shipped test file asserts at build time.
+   ---------------------------------------------------------------------- */
+
+function runSelfTest() {
+  const out = [];
+  const ok = (name, cond, detail) => out.push([!!cond, name, detail || '']);
+
+  const ids = Object.keys(D.SOURCES);
+  const used = new Set();
+  const collect = id => { used.add(id); return !!D.SOURCES[id]; };
+
+  let allResolve = true;
+  D.CARDS.forEach(c => { if (!collect(c.src)) allResolve = false; });
+  D.EVENTS.forEach(e => { if (!collect(e.src)) allResolve = false; });
+  D.RHYMES.concat(D.DIFFERENT).forEach(r => { if (!collect(r.src)) allResolve = false; });
+  D.ANATOMY.forEach(r => ['w1','w2','now'].forEach(k =>
+    r[k].src.forEach(id => { if (!collect(id)) allResolve = false; })));
+
+  ok('Every claim resolves to a declared source', allResolve);
+  const unused = ids.filter(i => !used.has(i));
+  ok('No source is declared and never used', unused.length === 0, unused.join(', '));
+  ok('Every source URL is a specific page, not a bare host',
+     ids.every(i => (D.SOURCES[i].u.split('://')[1] || '').indexOf('/') > 0));
+
+  const evs = D.EVENTS.map(e => E.t(e.d));
+  ok('Every event date parses', evs.every(v => !isNaN(v)));
+  ok('The timeline is in chronological order once sorted',
+     evs.slice().sort((a, b) => a - b).every((v, i, arr) => i === 0 || arr[i - 1] <= v));
+  ok('Every event sits in a declared lane',
+     D.EVENTS.every(e => e.stage === 'result' || D.STAGES.some(s => s.id === e.stage)));
+  ok('Every event shows only as much of its date as was verified',
+     D.EVENTS.every(e => ['y','m','d'].indexOf(e.p) > -1) &&
+     D.EVENTS.filter(e => e.p === 'd').every(e => !/-01-01$/.test(e.d)));
+
+  ok('Card counts match the prose on the scorecard',
+     D.CARDS.filter(c => c.kind === 'promise').length === 6 &&
+     D.CARDS.filter(c => c.kind === 'dismiss').length === 3 &&
+     D.CARDS.filter(c => c.kind === 'warning').length === 1,
+     'promise/dismiss/warning = ' + ['promise','dismiss','warning']
+       .map(k => D.CARDS.filter(c => c.kind === k).length).join('/'));
+  ok('No promise in the deck arrived inside the window it named',
+     D.CARDS.filter(c => c.kind === 'promise').every(c => c.verdict !== 'yes'));
+  ok('The present column of the anatomy leaves exactly two stages pending',
+     D.ANATOMY.filter(r => r.now.pending).length === 2);
+
+  ok('Every card year falls inside the timeline window',
+     D.CARDS.every(c => c.year >= Timeline.Y0 && c.year <= Timeline.Y1));
+  ok('Exactly one card is left unresolved',
+     D.CARDS.filter(c => c.verdict === 'open').length === 1);
+
+  ok('Both winters start after their own first promise',
+     D.WINTERS.every(w => D.EVENTS.some(e => e.stage === 'promise' && E.t(e.d) < E.t(w.from))));
+  ok('Each winter contains at least one withdrawal',
+     D.WINTERS.every(w => D.EVENTS.some(e =>
+       e.stage === 'withdrawal' && E.t(e.d) >= E.t(w.from) && E.t(e.d) <= E.t(w.to))));
+
+  ok('A perfect year guess scores zero miss', E.yearMiss(1973, 1973) === 0);
+  ok('Scoring never marks an unresolved claim', E.verdictCorrect('yes', 'open') === null);
+  ok('A "came true late" card is only right if you said it did not come true in its window',
+     E.verdictCorrect('no', 'late') === true && E.verdictCorrect('yes', 'late') === false);
+
+  const box = $('#selftest-out');
+  box.innerHTML = '';
+  const fails = out.filter(r => !r[0]).length;
+  const head = el('div', 'st-head ' + (fails ? 'bad' : 'good'));
+  head.textContent = fails ? `${fails} of ${out.length} checks FAILED` : `all ${out.length} checks pass`;
+  box.appendChild(head);
+  const ul = el('ul', 'st-list');
+  for (const [pass, name, detail] of out) {
+    const li = el('li', pass ? 'ok' : 'no');
+    li.appendChild(el('b', null, pass ? 'PASS' : 'FAIL'));
+    li.appendChild(el('span', null, name + (detail ? ' — ' + detail : '')));
+    ul.appendChild(li);
+  }
+  box.appendChild(ul);
+  /* eslint-disable no-console */
+  console.log('Two Winters self-test:', fails ? fails + ' FAILED' : 'all pass');
+  out.forEach(r => console.log(r[0] ? 'PASS' : 'FAIL', r[1], r[2]));
+}
+
+/* ================================ boot ================================== */
+
+function boot() {
+  renderIntro();
+  wireOverlays();
+
+  $('#btn-begin').addEventListener('click', () => {
+    $('#intro').hidden = true;
+    renderCard();
+    scrollActTop();
+  });
+
+  const sl = $('#year-slider');
+  sl.min = String(Timeline.Y0); sl.max = '2026';
+  sl.addEventListener('input', () => {
+    S.pending.year = +sl.value;
+    $('#year-read').textContent = sl.value;
+  });
+
+  $('#btn-lock').addEventListener('click', lockIn);
+  $('#btn-next-card').addEventListener('click', nextCard);
+
+  $$('#actnav button').forEach(b => b.addEventListener('click', () => setAct(+b.dataset.act)));
+  $('#btn-to-anatomy').addEventListener('click', () => setAct(3));
+  $('#btn-to-now').addEventListener('click', () => setAct(4));
+
+  showEvent(null);
+  open('howto');
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+
+</script>
+</body>
+</html>
