@@ -1,6 +1,42 @@
 ---
 id: fellow-wavelet-build
 artifact_kind: memory
+memory_class: episodic
+lifecycle: complete
+schema_version: 2
+title: Completed Wavelet Lab build and hub integration
+created: 2026-09-08T19:37:11Z
+updated: 2026-09-08T21:06:00Z
+author: codex
+model: gpt-6-astra
+model_basis: confirmed
+status: active
+scope: examples
+source_basis: conversation
+sensitivity: normal
+tags: [ai-fellows, demos, wavelets]
+source: .aia/.artifacts/task-fellow-wavelet-build.md
+---
+
+# Completion — 2026-09-08
+
+Wavelet Lab is built in `wavelet-lab/` with reproducible source, numerical tests,
+Chrome desktop/mobile verification, and its inspected printable guide. The shared
+hub now links the activity, following Opus's explicit root-file release and the
+parent's integration. Earlier standalone commit: `dfe614a`.
+
+Evidence and limits: [[fellow-build-verification]]. Local implementation, guide and
+hub integration are complete. Direct-file/disconnected-network browser operation
+remains explicitly unverified; mathematical and browser checks do not establish
+student learning gains or faculty endorsement. No push was performed by this lane.
+
+## Original prospective record
+
+The following frontmatter and brief preserve the prior intention and execution history.
+
+```yaml
+id: fellow-wavelet-build
+artifact_kind: memory
 memory_class: prospective
 prospective_kind: task
 schema_version: 2
@@ -18,7 +54,8 @@ source_basis: conversation
 sensitivity: normal
 sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T19:37:11Z
 tags: [ai-fellows, demos, wavelets]
----
+```
+
 
 # Wavelet Lab builder brief
 

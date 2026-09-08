@@ -4,7 +4,7 @@ artifact_kind: reference
 schema_version: 2
 title: AI Fellow demo build evidence and shared-repo handoff
 created: 2026-09-08T20:04:00Z
-updated: 2026-09-08T20:31:00Z
+updated: 2026-09-08T21:06:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -16,7 +16,51 @@ sensitivity: normal
 tags: [ai-fellows, verification, coordination]
 ---
 
-# First two standalone demos
+# AI Fellow demo verification
+
+## Current local delivery — 2026-09-08, 21:06 UTC
+
+The three demos are integrated into Part Three of the examples hub. Opus explicitly
+released root index/README/tours at 20:29 UTC; Codex claimed that integration at
+20:32 UTC. `node tools/build-hub.js` regenerated cards and the README table;
+`--check` passed and the local Chrome hub exposed all three working entry paths.
+Generation also refreshed the README from Opus's committed ultimate tic-tac-toe
+manifest. Opus reported pushing earlier standalone commits through `b1d731a`;
+this Codex lane performed no push. The revision recorded here is a local delivery.
+
+Ion Flight's replacement lesson progresses from mass to charge to equal m/z, with
+defined units, fixed instrument conditions, committed predictions and run-produced
+evidence. The implementation agent was runtime-confirmed gpt-5.6-sol/high; the
+fresh independent teaching reviewer was gpt-6-astra/high. Review corrections:
+summed area-normalized detector curves; signal revealed only through elapsed time;
+runs through the final +5-sigma tail; predictions locked during flight; consistent
+completed-stage clocks; instant Run focus before animation; readable 390px labels.
+The advanced comparison likewise labels total signal and known component overlays
+separately and shares both scales between tube rows. No mastery score is claimed.
+
+Parent observed production model/build checks pass, including the original SI
+fixtures and scaling/area invariants, lesson progression, time mapping and width
+comparison. Independent review calculated equal-m/z signal height about 664.90
+counts per microsecond and total area about 300 counts. Chrome through the extension
+exercised pre-run gating, correct/incorrect feedback, all three experiments, transfer,
+completed-stage return, reset during replay, presentation/notes, and both advanced
+width assumptions. Fresh tab had no console errors. Mobile and desktop inspection
+confirmed the instrument is visible on Run and corrected labels fit.
+
+The revised two-page letter PDF was rendered from canonical teacher-guide HTML by
+a separate gpt-5.6-terra/high worker using ReportLab. Parent observed pdfinfo's two
+pages and inspected both final raster previews: readable and unclipped. The renderer
+retains source hyperlinks and is documented beside the demo. PDF bytes are marked
+binary for Git. Scope tasks were renamed/retyped to completion episodes, preserving
+their stable IDs and original frontmatter/briefs.
+
+Limits remain explicit: direct-file and disconnected-network browser behavior was
+not tested after browser policy rejected the file URL; manifests retain unverified
+offline status. These checks support the declared models and implemented lesson
+flow, not proven learning gains or faculty acceptance. The earlier observations
+below are history, including the retired quiz and earlier ownership boundaries.
+
+## Earlier standalone delivery history
 
 ## Ion Flight teaching readiness reopened — 2026-09-08
 

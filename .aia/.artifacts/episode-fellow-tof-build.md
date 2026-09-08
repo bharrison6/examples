@@ -1,6 +1,45 @@
 ---
 id: fellow-tof-build
 artifact_kind: memory
+memory_class: episodic
+lifecycle: complete
+schema_version: 2
+title: Completed Ion Flight teaching revision and hub integration
+created: 2026-09-08T19:37:11Z
+updated: 2026-09-08T21:06:00Z
+author: codex
+model: gpt-6-astra
+model_basis: confirmed
+status: active
+scope: examples
+source_basis: conversation
+sensitivity: normal
+tags: [ai-fellows, demos, mass-spectrometry]
+source: .aia/.artifacts/task-fellow-tof-build.md
+---
+
+# Completion — 2026-09-08
+
+Ion Flight is rebuilt as three connected mass, charge and equal-ratio experiments.
+Units and instrument purpose are explained before predictions; Run reveals the
+summed detector signal on fixed timing/axes. Fresh Astra review and parent Chrome
+walkthroughs drove fixes to prediction locking, restored clocks, signal accumulation,
+Run visibility and mobile clipping. The optional comparison also distinguishes total
+signal from known components. A readable two-page PDF comes from canonical HTML.
+Production model/build checks pass. The shared hub links the revised activity.
+
+Evidence and limits: [[fellow-build-verification]]. Local implementation, guide and
+hub integration are complete. Direct-file/disconnected-network browser operation
+remains explicitly unverified; mathematical and browser checks do not establish
+student learning gains or faculty endorsement. No push was performed by this lane.
+
+## Original prospective record
+
+The following frontmatter and brief preserve the prior intention and execution history.
+
+```yaml
+id: fellow-tof-build
+artifact_kind: memory
 memory_class: prospective
 prospective_kind: task
 schema_version: 2
@@ -16,7 +55,8 @@ source_basis: conversation
 sensitivity: normal
 sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T19:37:11Z
 tags: [ai-fellows, demos, mass-spectrometry]
----
+```
+
 
 # Ion Flight builder brief
 
@@ -26,7 +66,8 @@ The user could not see meaningful units or understand what the activity teaches;
 the detached questions felt incoherent and the overall experience felt cheap.
 Prior scientific and mechanical test evidence stands, but it did not establish
 instructional readiness. The earlier ready-to-present handoff is withdrawn for
-Ion Flight. Opus was notified; shared root/tour ownership remains with Opus.
+Ion Flight. Opus was notified. At 20:29 UTC Opus released root integration;
+at 20:32 UTC the parent claimed root index/README/tours for the three demos.
 
 An independent fresh-context review found: complete trace and arrival answers
 visible before Run; every animation normalized to 2.3 seconds; auto-scaled axes
@@ -43,6 +84,21 @@ No root index/README/tours, other demos, branches, commits, pushes, dependency
 installation or children. Parent owns commits, browser review and PDF packaging.
 Write incremental progress and return exact files/checks/limitations. Return early
 if a requirement cannot support an honest lesson instead of forcing it.
+
+### PDF packaging subtask
+
+After the HTML guide is stable, the separate PDF worker owns only
+`ion-flight/tools/`, `ion-flight/teacher-guide.pdf`, and `ion-flight/.gitattributes`.
+Read this brief and the PDF skill first. Reuse the existing enzyme guide renderer's
+parsing approach where suitable; the Ion HTML is canonical, so extract its prose
+rather than maintaining a second copy. Use ReportLab with readable approximately
+10-point body text, up to two pages, correct Ion metadata, and no clipped content.
+Parent observes a prior automatic approval rejection of headless browser printing;
+do not retry browser printing or direct file-browser navigation. Render all pages
+with pdftoppm and inspect the resulting PNGs. Scratch belongs under
+`.aia/.data/fellow-builds/`. No edits to the HTML, other demos, root files, memory,
+branches, commits, pushes, or child agents. Return files and observed checks;
+return early with the specific blocker if the guide cannot be parsed honestly.
 
 ### Teaching design
 

@@ -1,6 +1,42 @@
 ---
 id: fellow-enzyme-build
 artifact_kind: memory
+memory_class: episodic
+lifecycle: complete
+schema_version: 2
+title: Completed Inhibitor Investigation build and hub integration
+created: 2026-09-08T20:01:00Z
+updated: 2026-09-08T21:06:00Z
+author: codex
+model: gpt-6-astra
+model_basis: confirmed
+status: active
+scope: examples
+source_basis: conversation
+sensitivity: normal
+tags: [ai-fellows, demos, biochemistry]
+source: .aia/.artifacts/task-fellow-enzyme-build.md
+---
+
+# Completion — 2026-09-08
+
+Inhibitor Investigation is built in `inhibitor-investigation/` with exact synthetic
+rate/evidence checks, independent Astra review, parent Chrome desktop/mobile checks,
+and an inspected printable guide. The shared hub now links the activity following
+Opus's release of the root files. Earlier standalone commit: `7d00e43`.
+
+Evidence and limits: [[fellow-build-verification]]. Local implementation, guide and
+hub integration are complete. Direct-file/disconnected-network browser operation
+remains explicitly unverified; mathematical and browser checks do not establish
+student learning gains or faculty endorsement. No push was performed by this lane.
+
+## Original prospective record
+
+The following frontmatter and brief preserve the prior intention and execution history.
+
+```yaml
+id: fellow-enzyme-build
+artifact_kind: memory
 memory_class: prospective
 prospective_kind: task
 schema_version: 2
@@ -18,7 +54,8 @@ source_basis: conversation
 sensitivity: normal
 sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T19:37:11Z
 tags: [ai-fellows, demos, biochemistry]
----
+```
+
 
 # Inhibitor Investigation builder brief
 
