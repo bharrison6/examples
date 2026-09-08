@@ -43,7 +43,7 @@ const ZONES = {
 };
 
 /* ---------------------------------------------------------------
-   MAIN PROJECT — "Calloway Commons", 3-story commercial building
+   MAIN PROJECT — "Racer Commons — Chestnut Street", 3-story commercial building
    38 activities.
    --------------------------------------------------------------- */
 const MAIN_NETWORK = {

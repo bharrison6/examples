@@ -485,7 +485,7 @@
           t = this.timers[el.tag];
           c = this.counters[el.tag];
           if (t) {
-            t.ACC = 0; t.DN = 0; t.TT = 0;    // EN is left unchanged
+            t.ACC = 0; t.DN = 0; t.TT = 0; t.EN = 0;  // RES clears EN too; a true rung re-asserts it next scan
           } else if (c) {
             c.ACC = 0;
             c.DN = (c.ACC >= c.PRE) ? 1 : 0;  // DN recomputed from the new ACC
@@ -1259,7 +1259,7 @@
       plc.scan(); // TON adds 20 first (rung 1), then RES (rung 2) zeroes it
       assertEq(plc.timers.T1.ACC, 0, 'RES zeroed the accumulator after the TON ran');
       assertEq(plc.timers.T1.DN, 0, 'DN cleared');
-      assertEq(plc.timers.T1.EN, 1, 'EN untouched by RES');
+      assertEq(plc.timers.T1.EN, 0, 'RES clears EN too');
     } },
 
     /* 19 ----------------------------------------------------------------- */

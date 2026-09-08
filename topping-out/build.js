@@ -26,11 +26,27 @@ if (!tpl.includes('/*__CSS__*/') || !tpl.includes('/*__JS__*/')) {
 }
 const html = tpl.replace('/*__CSS__*/', () => css).replace('/*__JS__*/', () => js);
 
-fs.writeFileSync(path.join(OUT, 'index.html'), html);
-console.log('index.html written:', (html.length / 1024).toFixed(0) + ' KB');
-
+const CHECK = process.argv.includes('--check');
+const outFile = path.join(OUT, 'index.html');
 const tg = path.join(SRC, 'teacher-guide.html');
-if (fs.existsSync(tg)) {
-  fs.copyFileSync(tg, path.join(OUT, 'teacher-guide.html'));
-  console.log('teacher-guide.html copied');
+
+if (CHECK) {
+  let stale = [];
+  if (!fs.existsSync(outFile) || fs.readFileSync(outFile, 'utf8') !== html) stale.push('index.html');
+  if (fs.existsSync(tg) && (!fs.existsSync(path.join(OUT, 'teacher-guide.html')) ||
+      fs.readFileSync(path.join(OUT, 'teacher-guide.html'), 'utf8') !== fs.readFileSync(tg, 'utf8'))) {
+    stale.push('teacher-guide.html');
+  }
+  if (stale.length) {
+    console.error('PARITY FAIL: stale generated file(s): ' + stale.join(', '));
+    process.exit(1);
+  }
+  console.log('build parity OK — no files written');
+} else {
+  fs.writeFileSync(outFile, html);
+  console.log('index.html written:', (html.length / 1024).toFixed(0) + ' KB');
+  if (fs.existsSync(tg)) {
+    fs.copyFileSync(tg, path.join(OUT, 'teacher-guide.html'));
+    console.log('teacher-guide.html copied');
+  }
 }

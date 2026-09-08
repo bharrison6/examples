@@ -88,10 +88,10 @@ const ROUNDS = [
     { date: '2025-08-07', label: 'GPT-5', value: 74.9, status: 'primary', src: 'openai-gpt5' },
     { date: '2025-09-29', label: 'Claude Sonnet 4.5', value: 82.0, note: 'parallel test-time compute; 77.2% base', status: 'primary', src: 'anthropic-45' }
   ],
-  endNote: 'no lab has published this score since',
+  endNote: 'the exam was retired in February 2026',
   reveal: {
     headline: 'A third of them, to four in five, in fifteen months.',
-    body: 'Then something more telling than another number: the labs stopped reporting this test. Anthropic’s Opus 4.7 page mentions it only to say it screens for memorisation of it. The Opus 4.8 page does not mention it at all. Opus 5 reports a different test entirely. An exam gets retired when passing it stops telling anyone apart — and this one was retired about two years after it was built to be hard.',
+    body: 'Then something more telling than another number: in February 2026 the labs retired this test. OpenAI published why — the models had been trained on the answers, and when it audited the hard problems they still failed, 59% of those turned out to have broken tests. Anthropic’s Opus 4.7 page mentions it only to say it screens for memorisation of it. The Opus 4.8 page does not mention it at all. Opus 5 reports a different test entirely.',
     caveat: 'These scores are reported by the companies that make the models, and how you run the test matters: the same model scores several points apart depending on how many attempts it is allowed. The 82% figure allows several; the single-attempt score was 77%.'
   }
 },
@@ -184,7 +184,7 @@ const ROUNDS = [
   reveal: {
     headline: 'Three minutes, to eleven hours.',
     body: 'METR’s own fit: across the whole period the number doubles every 196 days. Restrict it to models released since 2024 and it doubles every 89 days. The line is not just going up. It is bending upwards.',
-    caveat: 'The shaded band is the uncertainty, and it is enormous — the eleven-hour figure has a range from five hours to forty. The tasks are almost all software and research engineering, models do measurably worse on messy jobs where success is not clearly defined, and METR says measurements above sixteen hours are unreliable with its current task set. Its own lead author, on how this chart travels: “the hype machine will basically, whatever we do, just strip out all the caveats.”'
+    caveat: 'The shaded band is the uncertainty, and it is enormous — the eleven-hour figure has a range from five hours to forty, and METR does not consider any of the Sol numbers a robust measurement: that run had the highest detected cheating rate of any public model it has evaluated. The tasks are almost all software and research engineering, models do measurably worse on messy jobs where success is not clearly defined, and METR notes its intervals at the long end are still very wide while it adds more long tasks. Its own lead author, on how this chart travels: “the hype machine will basically, whatever we do, just strip out all the caveats.”'
   }
 },
 
@@ -278,12 +278,12 @@ const ROUNDS = [
     metric: 'ARC-AGI-2, then ARC-AGI-3',
     question: 'Three months later the same author published a second version — same idea, harder puzzles, built specifically to resist what o3 had done. Watch what the very same model scores.',
     series: [
-      { date: '2025-03-24', label: 'o3 on version 2', value: 4, note: 'the same model that scored 87.5%', status: 'reported', src: 'arc-agi2' },
+      { date: '2025-03-24', label: 'o3 on version 2', value: 4, note: 'the same model that scored 87.5% — at a fraction of the compute', status: 'reported', src: 'arc-agi2' },
       { date: '2025-07-09', label: 'Grok 4', value: 15.9, status: 'primary', src: 'grok4' },
       { date: '2025-11-18', label: 'Gemini 3 Pro', value: 31.1, status: 'primary', src: 'arc-2025' },
       { date: '2025-12-05', label: 'Best system of 2025', value: 54, note: 'a scaffold around Gemini 3 Pro, ~$31/puzzle — not a model on its own', status: 'primary', src: 'arc-2025' }
     ],
-    humanBaseline: 100,
+    humanBaseline: 60,   // average individual; ARC Prize's headline 100% is a panel-of-10 result
     finale: {
       headline: 'And then version three, March 2026.',
       what: 'ARC-AGI-3 is 135 small interactive games. The agent sees a grid of coloured squares, can press a few keys, and gets a new picture back. It is told nothing: not the rules, not the goal, not how it will be scored. It has to poke at the thing, work out what winning even means, and carry that into the next level. A person just plays it. 486 people were tested in person to set the baseline.',
@@ -397,8 +397,8 @@ const MODELS = [
   { d:'2024-10-02', lab:'nvidia',   name:'Llama-3.1-Nemotron-70B', open:true, lic:'NVIDIA Open Model', tier:3, approx:true },
   { d:'2024-10-21', lab:'ibm',      name:'Granite 3.0',    open:true,  lic:'Apache 2.0', tier:2, note:'IBM commits to fully permissive enterprise models.' },
   { d:'2024-10-22', lab:'anthropic',name:'Claude 3.5 Sonnet (new)', open:false, tier:4, note:'Computer use: it looks at a screen and moves the cursor. 49% on the bug test.' },
-  { d:'2024-11-20', lab:'alibaba',  name:'QwQ-32B-Preview', open:true, lic:'Apache 2.0', tier:3, note:'An open thinking model, two months after o1.' },
   { d:'2024-11-22', lab:'ai2',      name:'Tülu 3',         open:true,  lic:'Llama Community', tier:3, note:'The whole post-training recipe published, not just the result.' },
+  { d:'2024-11-27', lab:'alibaba',  name:'QwQ-32B-Preview', open:true, lic:'Apache 2.0', tier:3, note:'An open thinking model, two months after o1.' },
   { d:'2024-12-02', lab:'euother',  name:'EuroLLM-9B',     open:true,  lic:'Open', tier:2, note:'EU-funded, every official EU language.' },
   { d:'2024-12-12', lab:'microsoft',name:'Phi-4',          open:true,  lic:'MIT', tier:3, note:'Strong reasoning from synthetic data, fully permissive.' },
   { d:'2024-12-17', lab:'tii',      name:'Falcon 3',       open:true,  lic:'Falcon licence', tier:2, approx:true },
@@ -718,9 +718,9 @@ const CUT = [
   { claim:'Perfect scores by several AI systems at the 2026 Mathematical Olympiad',
     why:'There was only one secondary source, and no corroboration in the places that would certainly have covered a result like this, so it was cut.' },
   { claim:'“Claude Fable 5 scores 95% on the bug-fixing test” and “Claude Opus 5 scores 64.7% on the hardest exam”',
-    why:'Neither number appears on the benchmarks’ own leaderboards — the real leader on the hardest exam is Gemini 3.1 Pro at 46.44%. Aggregator sites that publish unsourced numbers tend to rank well in search results, which is how figures like these spread.' },
+    why:'Neither number appears on the benchmarks’ own leaderboards — as of August 2026 the leader on the hardest exam was Gemini 3.1 Pro at 46.44%. Aggregator sites that publish unsourced numbers tend to rank well in search results, which is how figures like these spread.' },
   { claim:'A 2026 point on the cost curve',
-    why:'Epoch AI has not published one since March 2025, so the line stops where the data stops rather than being extended by guesswork.' },
+    why:'Epoch AI has not published one since February 2025, so the line stops where the data stops rather than being extended by guesswork.' },
   { claim:'A widely-cited critique that a robotic lab’s 41 “new” materials were already known',
     why:'It could not be located or verified during the build, despite being repeated in several places. It was replaced with two claims that could be verified: a peer-reviewed critique in Chemistry of Materials, and the fact that the original paper’s own abstract and main text disagree with each other.' },
   { claim:'Gemma 4, and MiniMax M3',
@@ -770,7 +770,7 @@ const SOURCES = {
   'flywire':       { t:'FlyWire — whole-brain connectome of the fruit fly, Nature 634:124', u:'https://www.nature.com/articles/s41586-024-07558-y' },
   'rentosertib':   { t:'Rentosertib Phase 2a — Nature Medicine', u:'https://www.nature.com/articles/s41591-025-03743-2' },
   'mammo':         { t:'International evaluation of an AI system for breast cancer screening — Nature 577', u:'https://www.nature.com/articles/s41586-019-1799-6' },
-  'mimic-cdm':     { t:'Clinical decision making on real records — Nature Medicine, July 2024', u:'https://www.nature.com/nm/' },
+  'mimic-cdm':     { t:'Clinical decision making on real records — Nature Medicine, July 2024', u:'https://www.nature.com/articles/s41591-024-03097-1' },
   'gencast':       { t:'GenCast — Nature, December 2024', u:'https://www.nature.com/articles/s41586-024-08252-9' },
   'gnome':         { t:'GNoME — Nature 624:80', u:'https://www.nature.com/articles/s41586-023-06735-9' },
   'mattergen-critique': { t:'MatterGen predicts compounds from the training dataset — Materials Horizons', u:'https://doi.org/10.1039/d6mh00268d' },

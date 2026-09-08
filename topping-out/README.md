@@ -231,9 +231,9 @@ printable guide. Turning presentation mode on also puts a 🎙 shortcut to them 
 Difficulty (Easy / Standard / Hard) scales how often events fire and how hard they hit. The seed
 fixes *which* events fire and in what order.
 
-There is a 10-activity tutorial project (*Ellis Street Annex*, eight to ten turns) that teaches the
-loop and the views before the competitive run on *Calloway Commons* (38 activities, 3 storeys,
-21–30 turns).
+There is a 10-activity tutorial project (*Shoe Tree Annex*, eight to ten turns) that teaches the
+loop and the views before the competitive run on *Racer Commons — Chestnut Street* (38 activities,
+3 storeys, 21–30 turns).
 
 ## Developing
 

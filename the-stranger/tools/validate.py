@@ -14,7 +14,7 @@ import json, re, sys, itertools, os
 from collections import defaultdict
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SPEC = json.load(open(f"{ROOT}/spec/scenarios.json"))
+SPEC = json.load(open(f"{ROOT}/src/scenarios.json", encoding="utf-8"))
 SCEN = {s["id"]: s for s in SPEC["scenarios"]}
 
 fails, warns = [], []
@@ -55,8 +55,8 @@ for sc in SPEC["scenarios"]:
     sid = sc["id"]
     merged = {}
     for part in ("on", "off"):
-        p = f"{ROOT}/content/{sid}_{part}.json"
-        d = json.load(open(p))
+        p = f"{ROOT}/src/content/{sid}_{part}.json"
+        d = json.load(open(p, encoding="utf-8"))
         merged.update(d["responses"])
 
     expect = {"010", "110", "011", "111"} | {
@@ -141,5 +141,5 @@ if fails:
         print("  ✗", f)
     sys.exit(1)
 
-json.dump(bundle, open(f"{ROOT}/build/content.json", "w"), ensure_ascii=False, indent=1)
-print("\nall gates pass -> build/content.json")
+json.dump(bundle, open(f"{ROOT}/src/content.json", "w", encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
+print("\nall gates pass -> src/content.json")

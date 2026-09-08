@@ -38,7 +38,20 @@ function a1Init() {
   A1.data = TEXT.encode(TEXT.CORPUS);
   A1.step = 0;
   A1.lossWin = [];
-  post({ type: 'a1.ready', step: 0, params: GB.paramCount(A1.model), weights: a1Weights() }, []);
+  // The untrained loss is MEASURED, not assumed: ln(vocab) is only where a
+  // perfectly uniform model would sit, and a randomly initialised one is not
+  // uniform. Own RNG so training stays bit-reproducible.
+  const r0 = GB.makeRng(999), ctx0 = TEXT.CFG.ctx;
+  let l0 = 0;
+  for (let b = 0; b < 8; b++) {
+    const seqs = [];
+    for (let i = 0; i < TEXT.BATCH; i++) {
+      const start = Math.floor(r0() * (A1.data.length - ctx0 - 1));
+      seqs.push(A1.data.subarray(start, start + ctx0 + 1));
+    }
+    l0 += GB.batchForwardBackward(A1.model, seqs, { backward: false }).loss;
+  }
+  post({ type: 'a1.ready', step: 0, params: GB.paramCount(A1.model), loss0: l0 / 8, weights: a1Weights() }, []);
 }
 function a1Weights() {
   return GB.serialize(A1.model).data.slice().buffer;

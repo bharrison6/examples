@@ -4,7 +4,7 @@
    Three acts. Act I explains what a benchmark is to people who have never
    seen one, then asks the viewer to draw five of them and reveals the truth
    over each guess. Act II shows the models those curves came out of. Act III
-   shows what these systems have actually done across six domains, with the
+   shows what these systems have actually done across six domains and a short Elsewhere round-up, with the
    overclaims and the failures kept beside the results.
    ========================================================================== */
 

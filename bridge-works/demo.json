@@ -6,7 +6,7 @@
   "discipline": "Engineering",
   "tagline": "Truss bridge builder on a real direct-stiffness solver — cheapest surviving bridge wins",
   "card_blurb": "Truss bridge builder on a real direct-stiffness solver: live tension and compression, Euler buckling, progressive collapse. Cheapest bridge that survives wins.",
-  "description": "**Bridge Works** — truss bridge builder for physics class. Real direct-stiffness truss solver, live tension/compression colouring, Euler buckling, progressive collapse, six levels with golf-style par budgets. Includes a printable teacher guide.",
+  "description": "**Bridge Works** — truss bridge builder for physics class. Real direct-stiffness truss solver, live tension/compression colouring, Euler buckling, progressive collapse, five levels with golf-style par budgets plus a sandbox. Includes a printable teacher guide.",
   "entry": "index.html",
   "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
   "theme": "murray-state",

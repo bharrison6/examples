@@ -203,7 +203,7 @@ timeline is downloadable, and that every open model declares a licence.
 
 **“Act 3 is all mathematics and that is just one story.”** The sharpest note of
 the three. Act III is now six domains — proteins, medicine, weather, materials,
-mathematics, software — and mathematics is four entries out of nineteen, kept
+mathematics, software — plus an Elsewhere round-up, and mathematics is four entries out of nineteen, kept
 because it is where the potential appeared earliest and where verification is
 most rigorous: a proof is either right or it is not.
 
@@ -342,7 +342,7 @@ them looks like the most recent thing that ever happened was eighteen months ago
 
 Two of those series genuinely have no 2026 data, and I could not manufacture any
 honestly: Epoch has not published a point on the cost curve since February 2025,
-and no lab has published a SWE-bench Verified figure since September 2025. So the
+and SWE-bench Verified was retired as contaminated in February 2026. So the
 axis extends and the *line* stops, with a dashed marker and a label saying which
 of those two things happened. An empty stretch of plot with no explanation reads
 as an oversight; labelled, it is the most honest thing on the chart. The
