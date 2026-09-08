@@ -92,7 +92,7 @@ var LEVELS = [
   {
     id: 'pier', n: 5, name: 'Island Pier',
     blurb: 'A wide canyon, but there is rock at the middle. A third anchor sits on the pier.',
-    lesson: 'Halving the span quarters the bending demand — supports are cheaper than steel.',
+    lesson: 'Halving the span halves the bending demand — supports are cheaper than steel.',
     deckY: 0, gap: { x0: 1, x1: 17 },
     anchors: [{ x: 1, y: 0, type: 'pin' }, { x: 9, y: 0, type: 'roller' }, { x: 17, y: 0, type: 'roller' }],
     pier: { x: 9, top: 0, bottom: -6.5, w: 1.6 },

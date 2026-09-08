@@ -444,8 +444,8 @@ console.log('\n[9] Optional self weight');
     const a = m.nodes[e.a], b = m.nodes[e.b];
     W += P.MAT.selfWeightPerMetre * Math.hypot(b.x - a.x, b.y - a.y);
   }
-  check('reactions carry exactly the structure\'s own weight', near(R, W, 5),
-        kN(R) + ' kN vs ' + kN(W) + ' kN of steel');
+  check('reactions carry exactly the applied dead load', near(R, W, 5),
+        kN(R) + ' kN vs ' + kN(W) + ' kN of dead load');
   const hanging = P.analyse({
     nodes: [{ x: 0, y: 0, fixX: 1, fixY: 1 }, { x: 0, y: -1, fixX: 0, fixY: 0 }],
     members: [{ a: 0, b: 1 }], selfWeight: true, loads: new Float64Array(4)

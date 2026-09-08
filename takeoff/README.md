@@ -33,7 +33,7 @@ reads 1 min · 5 min · 30 min · 2 hr · 8 hr · 2 days rather than 1.7 hr and
 
 | Test | What it measures | Shown | Revealed |
 |---|---|---|---|
-| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **82.0%** — then the labs stopped reporting it |
+| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **82.0%** — then the exam was retired as contaminated |
 | 2 | Science questions PhDs get wrong | GPT-4 at 39% | **94.1%**, past the 69.7% PhD line since Sept 2024 |
 | 3 | How long a job it finishes alone | 3.5 min → 60 min | **11.3 hours**, doubling every 89 days lately |
 | 4 | What a fixed ability costs | $37.50 → $7.50 per million | **$0.18** — 208× cheaper in 23 months |
@@ -54,7 +54,7 @@ lesson, and why a startling share of any headline number is decided by how
 somebody wired the system up.
 
 Every chart's time axis runs to August 2026. Where a series genuinely stops
-earlier — no lab has published a SWE-bench figure since September 2025, and Epoch
+earlier — SWE-bench Verified was retired in February 2026, and Epoch
 stopped publishing the cost curve in February 2025 — the line ends there and the
 chart says which of those happened.
 
@@ -70,7 +70,7 @@ Qwen, Kimi, GLM, Hunyuan, MiniMax, Ernie, Yi, InternLM, Seed, LongCat, MiMo and
 more. Capability-unlock cards fire at their dates, including the ones later
 walked back.
 
-**Act III — What it can actually do.** Six domains, not one:
+**Act III — What it can actually do.** Six domains, not one, plus a short *Elsewhere* round-up:
 
 - **Proteins** — AlphaFold and the 2024 Nobel Prize; a fluorescent protein evolution never made; a whole fruit-fly brain wired, after 33 person-years of human proofreading.
 - **Medicine** — an AI-discovered drug through a randomised Phase 2a trial; an AI reading mammograms with fewer false negatives than six radiologists; and, on real patient records rather than exam questions, models scoring 16–25 points *worse* than clinicians.

@@ -194,8 +194,8 @@ TO.App = (function () {
             '<div>' +
               '<div class="field"><label>Project</label>' +
                 '<div class="choice" id="ch-project">' +
-                  '<button data-v="tutorial"><b>Tutorial</b><span class="d">Ellis Street Annex · 10 activities · ~8 turns. Learn the loop and the views.</span></button>' +
-                  '<button data-v="main"><b>Full game</b><span class="d">Calloway Commons · 38 activities · 3 storeys. The competitive run.</span></button>' +
+                  '<button data-v="tutorial"><b>Tutorial</b><span class="d">Shoe Tree Annex · 10 activities · ~8 turns. Learn the loop and the views.</span></button>' +
+                  '<button data-v="main"><b>Full game</b><span class="d">Racer Commons — Chestnut Street · 38 activities · 3 storeys. The competitive run.</span></button>' +
                 '</div></div>' +
               '<div class="field"><label>Difficulty (instructor)</label>' +
                 '<div class="choice" id="ch-diff">' +

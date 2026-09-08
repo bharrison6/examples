@@ -132,7 +132,7 @@ Element semantics:
 - CTU: on rising edge of in (per-instruction stored edge bit): ACC += 1.
   DN := ACC >= PRE. out = in. (ACC may exceed PRE.)
 - CTD: on rising edge: ACC -= 1. DN := ACC >= PRE. out = in.
-- RES: if in: target timer → ACC=0, DN=0, TT=0, EN unchanged; counter → ACC=0, DN recomputed. out = in.
+- RES: if in: target timer → ACC=0, DN=0, TT=0, EN=0; counter → ACC=0, DN recomputed. out = in.
 - BR: out = OR over paths of path-out; every path is fully executed (side
   effects run even if an earlier path already made the OR true).
 - Timer/counter accumulation uses SIMULATED time (scanMs per scan). Never wall clock.

@@ -2891,7 +2891,7 @@ body[data-mode="editor"] #editor-host { min-height: 240px; }
           t = this.timers[el.tag];
           c = this.counters[el.tag];
           if (t) {
-            t.ACC = 0; t.DN = 0; t.TT = 0;    // EN is left unchanged
+            t.ACC = 0; t.DN = 0; t.TT = 0; t.EN = 0;  // RES clears EN too; a true rung re-asserts it next scan
           } else if (c) {
             c.ACC = 0;
             c.DN = (c.ACC >= c.PRE) ? 1 : 0;  // DN recomputed from the new ACC
@@ -3665,7 +3665,7 @@ body[data-mode="editor"] #editor-host { min-height: 240px; }
       plc.scan(); // TON adds 20 first (rung 1), then RES (rung 2) zeroes it
       assertEq(plc.timers.T1.ACC, 0, 'RES zeroed the accumulator after the TON ran');
       assertEq(plc.timers.T1.DN, 0, 'DN cleared');
-      assertEq(plc.timers.T1.EN, 1, 'EN untouched by RES');
+      assertEq(plc.timers.T1.EN, 0, 'RES clears EN too');
     } },
 
     /* 19 ----------------------------------------------------------------- */
@@ -4415,7 +4415,7 @@ body[data-mode="editor"] #editor-host { min-height: 240px; }
       symptom: 'The N/S yellow barely flickers — the light jumps from N/S green almost straight to E/W green.',
       explanation: 'T_NSY\'s preset was keyed in as 300 ms instead of 3000 ms — a dropped zero, the single most common data-entry fault on real timers. ' +
         'The yellow step still runs, but its timer finishes in a third of a second, so the sequencer advances before the lamp has meaningfully shown. ' +
-        'Set the preset back to 3000 ms; drivers need the full 3 s of clearance time.',
+        'Set the preset back to 3000 ms; drivers need the full 3 s yellow change interval.',
       apply: function (prog) {
         var r = must0(findRung(prog, isType('TON', 'T_NSY')), 'TON T_NSY not found');
         var items = prog.rungs[r].items;

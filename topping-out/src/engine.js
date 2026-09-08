@@ -286,7 +286,10 @@ TO.Model = (function () {
        Quantitative Analysis", ASCE JCEM 123(2), 1997: 5- and 6-day
        extended weeks lose roughly 10-15% efficiency; crews often run
        3-4 weeks before measurable loss appears.
-       MCAA overtime factors (BLS-derived): 50 hr = 92%, 60 hr = 82%.
+       The widely-quoted flat factors (50 hr = 92%, 60 hr = 82%) trace to a
+   BLS study of repetitive manufacturing work, not to construction.
+   MCAA Bulletin OT1 (2011) is a week-by-week curve instead, reaching
+   72% (50 hr) and 61% (60 hr) by week 10.
 
      Model: no loss during a grace period, then a compounding weekly
      decay toward a documented floor.

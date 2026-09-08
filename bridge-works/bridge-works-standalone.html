@@ -253,7 +253,7 @@ ul.notes b{color:var(--text)}
   <div class="group">
     <label class="tgl on"><input type="checkbox" id="tglXray" checked> X-ray</label>
     <label class="tgl"><input type="checkbox" id="tglNums"> Numbers</label>
-    <label class="tgl"><input type="checkbox" id="tglWeight"> Self-weight</label>
+    <label class="tgl"><input type="checkbox" id="tglWeight"> Dead load</label>
   </div>
   <div class="group hidden" id="vehGroup">
     <label class="tgl on">Vehicle <select id="vehSel"></select></label>
@@ -423,7 +423,7 @@ ul.notes b{color:var(--text)}
       <li>Why is the bottom chord's force greatest at mid-span and near zero at the supports?</li>
       <li>One member snapped and the whole bridge came down. What does that say about spare load paths?</li>
       <li>Level 5's pier drops par sharply. Why does halving a span do much more than halve the forces?</li>
-      <li>Turn on <b>Self-weight</b> and retest a design that just made par. Why does it matter more as spans grow?</li>
+      <li>Turn on <b>Dead load</b> and retest a design that just made par. Why does it matter more as spans grow?</li>
     </ol>
 
     <h3 class="sec">Levels and par</h3>
@@ -555,7 +555,7 @@ MAT.capT = MAT.sigmaT * MAT.A;                    // 300 kN in tension
 MAT.capCyield = MAT.compYieldFactor * MAT.capT;   // 180 kN ceiling in compression
 MAT.eulerK = Math.PI * Math.PI * MAT.E * MAT.I;   // ~720 kN.m^2
 
-/* Compression capacity: Euler buckling, capped by the squash load.
+/* Compression capacity: Euler buckling, capped by the derated yield (0.6 x squash load).
    P_cr = pi^2 E I / L^2 — so a 4 m strut carries a quarter of what a 2 m
    strut carries. This is the whole reason tension design is cheaper. */
 function capC(L) {
@@ -1321,7 +1321,7 @@ var LEVELS = [
   {
     id: 'pier', n: 5, name: 'Island Pier',
     blurb: 'A wide canyon, but there is rock at the middle. A third anchor sits on the pier.',
-    lesson: 'Halving the span quarters the bending demand — supports are cheaper than steel.',
+    lesson: 'Halving the span halves the bending demand — supports are cheaper than steel.',
     deckY: 0, gap: { x0: 1, x1: 17 },
     anchors: [{ x: 1, y: 0, type: 'pin' }, { x: 9, y: 0, type: 'roller' }, { x: 17, y: 0, type: 'roller' }],
     pier: { x: 9, top: 0, bottom: -6.5, w: 1.6 },

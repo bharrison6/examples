@@ -137,7 +137,7 @@
       symptom: 'The N/S yellow barely flickers — the light jumps from N/S green almost straight to E/W green.',
       explanation: 'T_NSY\'s preset was keyed in as 300 ms instead of 3000 ms — a dropped zero, the single most common data-entry fault on real timers. ' +
         'The yellow step still runs, but its timer finishes in a third of a second, so the sequencer advances before the lamp has meaningfully shown. ' +
-        'Set the preset back to 3000 ms; drivers need the full 3 s of clearance time.',
+        'Set the preset back to 3000 ms; drivers need the full 3 s yellow change interval.',
       apply: function (prog) {
         var r = must0(findRung(prog, isType('TON', 'T_NSY')), 'TON T_NSY not found');
         var items = prog.rungs[r].items;

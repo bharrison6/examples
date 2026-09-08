@@ -4,7 +4,7 @@ import json, os, asyncio, html
 from playwright.async_api import async_playwright
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SPEC = json.load(open(f"{ROOT}/spec/scenarios.json"))
+SPEC = json.load(open(f"{ROOT}/src/scenarios.json", encoding="utf-8"))
 CARDS = SPEC["cards"]
 
 # which scenario each card can turn up in, for the presenter's reference
@@ -169,7 +169,7 @@ before the file was saved: there is no model behind the glass. Keys: <b>1 2 3</b
 
 </body></html>"""
 
-open(f"{ROOT}/build/companion.html", "w").write(DOC)
+open(f"{ROOT}/build/companion.html", "w", encoding="utf-8").write(DOC)
 
 
 async def render():

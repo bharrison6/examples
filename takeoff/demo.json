@@ -5,7 +5,7 @@
   "topic": "The pace of AI progress",
   "discipline": "AI literacy",
   "tagline": "Draw your forecast of machine capability — then watch the real curves land",
-  "card_blurb": "Five benchmarks: draw where you think machine capability went, then see the truth animate over your line. A timeline of 123 model releases, six domains of real-world evidence — with the failures and overclaims kept in frame — and every number backed by a source.",
+  "card_blurb": "Five benchmarks: draw where you think machine capability went, then see the truth animate over your line. A timeline of 123 model releases, six domains of real-world evidence plus an Elsewhere round-up — with the failures and overclaims kept in frame — and every number backed by a source.",
   "description": "**Takeoff** (formerly Undershoot; internal module names keep the old word) — a phone-first, single-file presentation about machine capability since ChatGPT. The audience draws five benchmark forecasts before the real curves are revealed, explores a timeline of 123 model releases, and examines evidence across biology, medicine, weather, materials, mathematics, and software — with failures and overclaims kept beside the results. Every number resolves to a local source, and the demo includes a how-to panel on every load, a playable grid puzzle, live dataset self-test, presenter mode with on-screen presenter's notes, and a printable presenter guide.",
   "entry": "index.html",
   "guide": { "html": "presenter-guide.html", "pdf": "Takeoff-Presenter-Guide.pdf" },

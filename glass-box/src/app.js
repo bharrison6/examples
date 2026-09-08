@@ -291,7 +291,7 @@
     $('a1params2').textContent = fmt(m.params);
     const w = new Float32Array(m.weights);
     mirror = GB.deserialize({ ...CFG }, w);
-    const e0 = { ...TEXT.ERAS[0], loss: Math.log(CFG.vocab), weights: w, samples: [] };
+    const e0 = { ...TEXT.ERAS[0], loss: m.loss0, weights: w, samples: [] };
     e0.samples = [
       { temp: 0.8, text: sampleMain(mirror, 140, 0.8, 1) },
       { temp: 0.8, text: sampleMain(mirror, 140, 0.8, 2) },

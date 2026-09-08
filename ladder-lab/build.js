@@ -22,13 +22,38 @@ if (!tpl.includes('/*__CSS__*/') || !tpl.includes('/*__JS__*/')) {
 }
 const html = tpl.replace('/*__CSS__*/', () => css).replace('/*__JS__*/', () => js);
 
-fs.mkdirSync(OUT, { recursive: true });
-fs.writeFileSync(path.join(OUT, 'index.html'), html);
-console.log('dist/index.html written:', (html.length / 1024).toFixed(0) + ' KB');
-
-// copy teacher guide if present
+const CHECK = process.argv.includes('--check');
 const tg = path.join(SRC, 'teacher-guide.html');
-if (fs.existsSync(tg)) {
-  fs.copyFileSync(tg, path.join(OUT, 'teacher-guide.html'));
-  console.log('dist/teacher-guide.html copied');
+const guideHtml = fs.existsSync(tg) ? fs.readFileSync(tg, 'utf8') : null;
+
+/* dist/ is the build output; the demo root is what the launcher links and what
+   ships. Write both, so the shipped file cannot drift from src/ the way it
+   silently could when the copy up was a manual step. */
+const targets = [OUT, __dirname];
+
+function sameAs(file, text) {
+  return fs.existsSync(file) && fs.readFileSync(file, 'utf8') === text;
+}
+
+if (CHECK) {
+  const stale = [];
+  for (const dir of targets) {
+    const rel = dir === OUT ? 'dist/' : '';
+    if (!sameAs(path.join(dir, 'index.html'), html)) stale.push(rel + 'index.html');
+    if (guideHtml !== null && !sameAs(path.join(dir, 'teacher-guide.html'), guideHtml)) {
+      stale.push(rel + 'teacher-guide.html');
+    }
+  }
+  if (stale.length) {
+    console.error('PARITY FAIL: stale generated file(s): ' + stale.join(', '));
+    process.exit(1);
+  }
+  console.log('build parity OK — no files written');
+} else {
+  fs.mkdirSync(OUT, { recursive: true });
+  for (const dir of targets) {
+    fs.writeFileSync(path.join(dir, 'index.html'), html);
+    if (guideHtml !== null) fs.writeFileSync(path.join(dir, 'teacher-guide.html'), guideHtml);
+  }
+  console.log('index.html written to dist/ and demo root:', (html.length / 1024).toFixed(0) + ' KB');
 }
