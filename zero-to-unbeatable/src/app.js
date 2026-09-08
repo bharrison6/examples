@@ -18,7 +18,15 @@ const CELLNAME = ['top left', 'top middle', 'top right',
                   'bottom left', 'bottom middle', 'bottom right'];
 
 const S = {
-  mode: 'one',         // 'one' board, or 'nine' at once
+  /* Step 1 'rules', step 2 'one' board, step 3 'nine' at once. The app
+     opens on the rules so the arc reads left to right: a thing a person
+     wrote, then a thing that wrote itself, then the world getting too
+     big for either to be checked. */
+  mode: 'rules',
+  depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
+  ruleRec: {},         // depth -> your record against that ladder
+  ruleCounts: {},      // depth -> how many moves each rule decided
+  lastRule: null,      // the decision behind the move it just made
   live: null,          // the one-board agent that keeps training
   live9: null,         // the nine-board brain
   eras: [],            // frozen snapshots, index === era number
@@ -33,14 +41,15 @@ const S = {
   // These streams deliberately never share state.  A reader (the report) or
   // a player must not be able to alter the next training example.
   rng: Math.random,              // training only
-  liveRng: { one: Math.random, nine: Math.random }, // independent playable-game streams
+  liveRng: { rules: Math.random, one: Math.random, nine: Math.random }, // independent playable-game streams
   measureSalt: '',               // immutable for one reset/session
   humanFirstNext: true,
   alwaysFirst: false,
   training: false,
   lastLearned: null
 };
-const isNine = () => S.mode === 'nine';
+const isNine  = () => S.mode === 'nine';
+const isRules = () => S.mode === 'rules';
 
 const fmt = n => n.toLocaleString('en-US');
 /* compact so an era label still fits a projector-sized dropdown */
@@ -128,7 +137,11 @@ function resetAll() {
   const liveSeed = mode => S.seed
     ? 'live-play:' + S.seed + ':' + mode
     : 'live-play:' + Math.random().toString(36).slice(2) + ':' + mode;
-  S.liveRng = { one: OG.makeRng(liveSeed('one')), nine: OG.makeRng(liveSeed('nine')) };
+  S.liveRng = {
+    rules: OG.makeRng(liveSeed('rules')),
+    one:   OG.makeRng(liveSeed('one')),
+    nine:  OG.makeRng(liveSeed('nine'))
+  };
   S.measureSalt = S.seed ? 'measure:' + S.seed : 'measure:' + Math.random().toString(36).slice(2);
   S.live = OG.newAgent();
   S.live9 = NINE.newBrain();
@@ -136,11 +149,14 @@ function resetAll() {
   S.era = 0;
   S.humanFirstNext = true;
   S.lastLearned = null;
+  S.lastRule = null;
+  S.ruleRec = {};
+  S.ruleCounts = {};
+  RULES.DEPTHS.forEach(d => resetRuleTally(d.n));
   $('#btn-learned').hidden = true;
-  renderEraSelect();
-  newGame();
-  renderTrain();
-  renderBanner();
+  /* applyMode paints every panel the current step needs and starts the
+     game, so a reset and a step change go through the same door. */
+  applyMode();
 }
 
 /* Measurement is a pure reader.  Its seed is derived from a frozen era, not
@@ -165,7 +181,21 @@ function maybeSeed() {
   return n;
 }
 
-function currentRec() { return isNine() ? currentEra().rec9 : currentEra().rec; }
+/* Step 1 keeps its own record and its own tally per ladder depth: a
+   two-rule bot and an eight-rule bot are different opponents, and
+   pooling their scores would hide exactly the thing the step is for. */
+function resetRuleTally(depth) {
+  S.ruleRec[depth] = { w: 0, l: 0, d: 0 };
+  S.ruleCounts[depth] = new Array(9).fill(0);   // index 0 is "off the ladder"
+}
+
+function currentRec() {
+  if (isRules()) return S.ruleRec[S.depth] || (resetRuleTally(S.depth), S.ruleRec[S.depth]);
+  return isNine() ? currentEra().rec9 : currentEra().rec;
+}
+
+/* What to call the thing you are playing, wherever the copy needs it. */
+function oppLabel() { return isRules() ? 'The rules' : 'Era ' + S.era; }
 
 /* ------------------------------------------------------------------ *
  * The game
@@ -182,8 +212,10 @@ function newGame() {
     over: false, result: null, lastCell: -1, winLine: null,
     thinking: false
   };
+  S.lastRule = null;
   renderBoard();
   renderStatus();
+  renderRuleFired();
   if (!humanFirst) aiTurn(420);
 }
 
@@ -210,7 +242,7 @@ function applyMove(cell) {
     g.result = 'draw';
   }
   if (g.over) {
-    const rec = currentEra().rec;
+    const rec = currentRec();
     if (g.result === 'win') rec.w++; else if (g.result === 'loss') rec.l++; else rec.d++;
     renderScore();
   }
@@ -284,8 +316,11 @@ function onCell(cell) {
   if (!g || g.over || g.thinking || S.training) return;
   if (OG.TOMOVE[g.code] !== g.humanMark) return;
   if (OG.cellsOf(g.code)[cell] !== 0) return;
+  /* The rule it last used stays on screen while you think about your
+     reply -- that sentence is the thing a presenter points at, and
+     blanking it the instant you tap is how you lose the room. */
   applyMove(cell);
-  renderBoard(); renderStatus();
+  renderBoard(); renderStatus(); renderRuleFired();
   if (!g.over) aiTurn(340);
 }
 
@@ -298,10 +333,21 @@ function aiTurn(delay) {
   renderBoard(); renderStatus();
   setTimeout(() => {
     if (!S.game || S.game !== g || g.over) return;
-    const cell = OG.greedyMove(currentEra().agent, g.code, S.liveRng.one);
+    let cell;
+    if (isRules()) {
+      /* The ladder returns the square AND the rule that chose it, which
+         is the only reason step 1 can narrate itself. */
+      const d = RULES.move(g.code, S.depth, S.liveRng.rules);
+      S.lastRule = d;
+      S.ruleCounts[S.depth][d.ruleId]++;
+      cell = d.move;
+    } else {
+      cell = OG.greedyMove(currentEra().agent, g.code, S.liveRng.one);
+    }
     applyMove(cell);
     g.thinking = false;
-    renderBoard(); renderStatus();
+    renderBoard(); renderStatus(); renderRuleFired();
+    if (isRules()) renderRulesPanel();
   }, S.brain ? Math.max(delay, 1250) : delay);
 }
 
@@ -320,16 +366,25 @@ for (let i = 0; i < 9; i++) {
 function renderBoard() {
   const g = S.game, cells = OG.cellsOf(g.code);
   const agent = currentEra().agent;
-  const showHeat = S.brain && !g.over;
+  const showHeat = S.brain && !isRules() && !g.over;
   const vals = showHeat ? OG.moveValues(agent, g.code) : [];
   const picks = showHeat ? OG.argmaxMoves(agent, g.code) : [];
   const byCell = {}; vals.forEach(v => byCell[v.cell] = v);
+  /* The squares that set the rule off — the two you already had in a row,
+     the corner it answered. Marking them on the board is what turns
+     "it played there" into "it played there because of this". They come
+     off the board once you have replied, since they described the board
+     as it was when the rule looked at it; the sentence underneath stays. */
+  const freshRule = isRules() && S.lastRule && !g.over &&
+                    g.lastCell >= 0 && cells[g.lastCell] === g.aiMark;
+  const trig = freshRule ? S.lastRule.cells : [];
 
   $$('.cell', boardEl).forEach((el, i) => {
     const m = cells[i];
     el.className = 'cell' + (m ? ' mk' + m : ' open') +
       (g.lastCell === i && m ? ' last' : '') +
       (g.winLine && g.winLine.includes(i) ? ' win' : '') +
+      (trig.includes(i) ? ' trig' : '') +
       (showHeat && !m ? ' heat' : '') +
       (showHeat && picks.includes(i) ? ' pick' : '');
     el.disabled = !!m || g.over || g.thinking || OG.TOMOVE[g.code] !== g.humanMark;
@@ -439,14 +494,18 @@ function renderStatus() {
   const g = S.game, el = $('#status');
   el.className = '';
   if (g.over) {
-    const t = g.result === 'win' ? ['You win.', 'Era ' + S.era + ' let you through.']
-            : g.result === 'loss' ? ['It beat you.', 'Era ' + S.era + ' found a line you missed.']
-            : ['Drawn.', 'Neither of you got through.'];
+    const rules = isRules();
+    const t = g.result === 'win'
+        ? ['You win.', rules ? `${S.depth} rules were not enough.` : 'Era ' + S.era + ' let you through.']
+      : g.result === 'loss'
+        ? ['It beat you.', rules ? 'The ladder had a rule for every square.'
+                                 : 'Era ' + S.era + ' found a line you missed.']
+        : ['Drawn.', 'Neither of you got through.'];
     el.classList.add(g.result === 'win' ? 'you-win' : g.result === 'loss' ? 'you-lose' : 'drawn');
     el.innerHTML = `<div><span class="big">${t[0]}</span><br><span class="sub">${t[1]}</span></div>`;
     return;
   }
-  if (g.thinking) { el.innerHTML = `<div><span class="sub">Era ${S.era} is choosing…</span></div>`; return; }
+  if (g.thinking) { el.innerHTML = `<div><span class="sub">${isRules() ? 'Checking the rules in order' : 'Era ' + S.era + ' is choosing'}…</span></div>`; return; }
   const yours = OG.TOMOVE[g.code] === g.humanMark;
   el.innerHTML = `<div><span class="big">${yours ? 'Your move' : 'Its move'}</span><br>` +
     `<span class="sub">you are ${MARK[g.humanMark]} ${g.humanMark === 1 ? '(you go first)' : '(it goes first)'}</span></div>`;
@@ -470,6 +529,73 @@ function renderNineStatus() {
   el.innerHTML = `<div><span class="big">${yours ? 'Your move' : 'Its move'}</span><br>` +
     `<span class="sub">you are ${MARK[m.humanMark]} · playing board ${S.focus + 1}` +
     ` · tap another board to switch</span></div>`;
+}
+
+/* ------------------------------------------------------------------ *
+ * Step 1 — the logic, visible
+ * ------------------------------------------------------------------ */
+
+/* The one-line commentary under the board. It names the rule by number
+   so the eye can find it in the list beside, and says what on the board
+   set it off. */
+function renderRuleFired() {
+  const el = $('#rule-fired');
+  el.hidden = !isRules();
+  if (!isRules()) return;
+  const d = S.lastRule;
+  if (!d) {
+    el.className = 'waiting';
+    el.innerHTML = `<div class="rf-line">Every move it makes is decided by the list beside the board, ` +
+      `checked from the top. Play a square and it will tell you which rule answered you.</div>`;
+    return;
+  }
+  el.className = d.ruleId === 0 ? 'nofire' : '';
+  const head = d.ruleId === 0
+    ? `<b>No rule</b> <span class="rf-off">rules ${S.depth + 1}–8 are switched off</span>`
+    : `<b>Rule ${d.ruleId} · ${d.rule.name}</b>`;
+  el.innerHTML = `<div class="rf-line"><span class="rf-head">${head}</span> ${d.why}</div>`;
+}
+
+/* The ladder itself. Built from RULES.LADDER rather than retyped, so the
+   list on screen cannot drift from the code that runs. */
+function renderRulesPanel() {
+  const panel = $('#rules-panel');
+  panel.hidden = !isRules();
+  if (!isRules()) return;
+  const counts = S.ruleCounts[S.depth] || [];
+  const total = counts.reduce((a, b) => a + b, 0);
+  const fired = S.lastRule ? S.lastRule.ruleId : -1;
+
+  $('#rp-sub').textContent = S.depth === 8
+    ? 'all eight in play'
+    : `${S.depth} of 8 in play`;
+
+  $('#rule-list').innerHTML = RULES.LADDER.map(r => {
+    const off = r.id > S.depth;
+    const n = counts[r.id] || 0;
+    return `<li class="rule${off ? ' off' : ''}${r.id === fired ? ' fired' : ''}">` +
+      `<span class="rn">${r.id}</span>` +
+      `<span class="rt"><b>${r.name}</b><span class="rg">${r.gist}</span></span>` +
+      `<span class="rc">${off ? 'off' : (n ? '×' + n : '')}</span></li>`;
+  }).join('') +
+    (S.depth < 8
+      ? `<li class="rule fallback${fired === 0 ? ' fired' : ''}"><span class="rn">—</span>` +
+        `<span class="rt"><b>Nothing left to check</b>` +
+        `<span class="rg">the author stopped writing rules — it plays a free square</span></span>` +
+        `<span class="rc">${counts[0] ? '×' + counts[0] : ''}</span></li>`
+      : '');
+
+  const r = RULES.report(S.depth);
+  $('#rp-foot').innerHTML = total
+    ? `${fmt(total)} move${total === 1 ? '' : 's'} decided so far. ` +
+      (S.depth === 8
+        ? `None of them came from experience: this opponent has played zero games.`
+        : `Rules ${S.depth + 1}–8 are switched off, and the panel below shows the game that costs it.`)
+    : (S.depth === 8
+        ? `Eight rules, written out in advance by a person. It has played zero games and it cannot learn one. ` +
+          `The panel below searches all ${fmt(r.lines)} games playable against it.`
+        : `A shortened ladder. Rules ${S.depth + 1}–8 are switched off, which opens up ` +
+          `${fmt(r.lines)} playable games instead of ${fmt(RULES.report(8).lines)}.`);
 }
 
 function renderBrainReadout() {
@@ -515,6 +641,24 @@ function renderScore() {
   renderEraStrip();
 }
 
+/* Step 1's stand-in for the era dropdown: how much of the ladder is
+   switched on. Same segmented control as the burst sizes, same
+   mechanism, no second widget invented. */
+function renderDepthSeg() {
+  const seg = $('#depth-seg');
+  seg.innerHTML = RULES.DEPTHS.map(d =>
+    `<button data-d="${d.n}" class="${d.n === S.depth ? 'on' : ''}" ` +
+    `aria-pressed="${d.n === S.depth}" title="${d.title}">${d.label}</button>`).join('');
+  $$('#depth-seg button').forEach(b => b.addEventListener('click', () => {
+    const n = +b.dataset.d;
+    if (n === S.depth) return;
+    S.depth = n;
+    if (!S.ruleRec[n]) resetRuleTally(n);
+    renderDepthSeg(); renderScore(); renderRulesPanel(); renderBanner();
+    newGame();
+  }));
+}
+
 function renderEraSelect() {
   const sel = $('#era-select');
   sel.innerHTML = S.eras.map(e =>
@@ -527,11 +671,27 @@ function renderEraSelect() {
   renderEraStrip();
 }
 
-/* "You vs Era 0: 3-0-0. You vs Era 4: 0-1-4." — the whole arc in one line. */
+/* "You vs Era 0: 3-0-0. You vs Era 4: 0-1-4." — the whole arc in one line.
+   In step 1 the same strip carries your record against each length of
+   ladder, which is the beat the step is built around: 2 rules 3-0-0,
+   8 rules 0-2-1. */
 function renderEraStrip() {
+  const el = $('#era-strip');
+  if (isRules()) {
+    const played = RULES.DEPTHS.filter(d => {
+      const r = S.ruleRec[d.n]; return r && r.w + r.l + r.d > 0;
+    });
+    el.hidden = played.length === 0;
+    if (!played.length) return;
+    el.innerHTML = '<span class="k">your record</span>' + played.map(d => {
+      const r = S.ruleRec[d.n];
+      return `<span class="chip${d.n === S.depth ? ' on' : ''}">${d.n} rules ` +
+        `<b class="w">${r.w}</b>–<b class="d">${r.d}</b>–<b class="l">${r.l}</b></span>`;
+    }).join('');
+    return;
+  }
   const key = isNine() ? 'rec9' : 'rec';
   const played = S.eras.filter(e => e[key].w + e[key].l + e[key].d > 0);
-  const el = $('#era-strip');
   el.hidden = played.length === 0;
   if (!played.length) return;
   el.innerHTML = '<span class="k">your record</span>' + played.map(e =>
@@ -540,6 +700,9 @@ function renderEraStrip() {
 }
 
 function renderTrain() {
+  /* Step 1 has nothing to train: the skill is already in the file. */
+  $('#train-panel').hidden = isRules();
+  if (isRules()) return;
   const e = S.eras[S.eras.length - 1];
   const nine = isNine();
   $('.t-main', $('#btn-train')).textContent = nine ? 'Train on nine boards' : 'Train the AI';
@@ -561,9 +724,72 @@ function renderTrain() {
       `<div class="st"><span class="n">${fmt(e.seen)}</span><span class="k">positions seen</span></div>`;
 }
 
+/* A game the shortened ladder loses, drawn as boards rather than
+   described. `losingGame` picks the representative one, so this is how
+   it typically goes wrong rather than a freak sequence. */
+function losingGameHTML(g) {
+  let code = 0;
+  const frames = [];
+  g.plies.forEach(p => {
+    code = OG.child(code, p.cell, p.mark);
+    frames.push(
+      `<div class="lg-step${p.forks ? ' fork' : ''}">${miniHTML(code)}` +
+      `<span class="lg-who">${p.bot ? 'it' : 'you'}</span></div>`);
+  });
+  const forkAt = g.plies.findIndex(p => p.forks);
+  return `<div class="lg">${frames.join('')}</div>` +
+    (forkAt >= 0
+      ? `<p class="lg-note">The marked move leaves <b>two</b> ways to win at once. Stopping that is ` +
+        `<b>rule 4</b>, and rule 4 is switched off — so it blocks one and loses to the other.</p>`
+      : '');
+}
+
 function renderBanner() {
   const el = $('#banner');
   const top = S.eras[S.eras.length - 1];
+
+  /* ---- Step 1: the same search, run on the hand-written ladder ---- */
+  if (isRules()) {
+    const r = RULES.report(S.depth);
+    el.hidden = false;
+    el.classList.toggle('quiet', !r.safe);
+    if (r.safe) {
+      el.innerHTML =
+        `<h3>You cannot beat this one either — and it has never played a game.</h3>` +
+        `<p>Every game that can still be played against these eight rules was searched, with the ` +
+        `rules moving first and moving second, and in none of them do they lose. That is the same ` +
+        `exhaustive search that ends step 2, run on a completely different kind of opponent.</p>` +
+        `<p>Where the skill came from is the whole difference. Every bit of this one came out of a ` +
+        `person's head and none of it out of experience. It played zero games, it cannot improve, ` +
+        `and on a 4×4 board it is worthless. For a game this small that is the <b>better</b> piece ` +
+        `of engineering — shorter, faster, and checkable by reading it. Step 2 does the same job ` +
+        `the other way round, and step 3 is where writing the rules stops being possible.</p>` +
+        `<div class="proof">Proof: ${fmt(r.lines)} complete game lines searched · ` +
+        `${fmt(r.positions)} positions examined · 0 losses · both roles · ` +
+        `re-run any time from Settings &rarr; Run the full self-test.</div>`;
+      return;
+    }
+    const game = r.gameSecond || r.gameFirst;
+    const pct = v => (v * 100).toFixed(0) + '%';
+    el.innerHTML =
+      `<h3>${S.depth} rules is not enough, and here is the game that shows it.</h3>` +
+      `<p>The same search that proves the full ladder safe finds losing lines in this one. Playing ` +
+      `your best you beat it <b>${pct(r.beatsSecond)}</b> of the time when you move first and ` +
+      `<b>${pct(r.beatsFirst)}</b> when it does — worked out exactly over every line, not sampled.</p>` +
+      (game ? losingGameHTML(game) : '') +
+      `<p>It still flips a coin whenever no rule applies, so this exact game comes up about ` +
+      `${game ? '1 in ' + Math.round(1 / game.prob) : 'some'} times; something like it comes up ` +
+      `most games. Switch to <b>All 8</b> and none of it works any more.</p>` +
+      /* Deliberately NOT "n positions examined" here. The safety search
+         stops at the first losing line it finds, so its position count
+         is a few dozen and quoting it would read as a thorough search
+         that came up clean, which is the opposite of what happened. */
+      `<div class="proof">${fmt(r.lines)} complete game lines are playable against this ladder · ` +
+      `the search finds losing ones in both roles and stops there · ` +
+      `the percentages come from a separate pass over every line.</div>`;
+    return;
+  }
+
   if (isNine()) {
     el.hidden = false;
     el.classList.add('quiet');
@@ -979,6 +1205,36 @@ function selfTest() {
   const check = (ok, txt) => { if (!ok) fails++; line(ok, txt); };
 
   const e = currentEra();
+
+  /* Step 1 gets the same treatment as step 2, because the claim being
+     checked is the same claim. */
+  if (isRules()) {
+    const r = RULES.report(S.depth);
+    check(r.asFirst.safe === (S.depth >= 7),
+      `${S.depth} rules moving first: ` +
+      (r.asFirst.safe ? `no losing line among ${fmt(r.asFirst.lines)} searched`
+                      : `a losing line exists among ${fmt(r.asFirst.lines)} searched (expected below 7 rules)`));
+    check(r.asSecond.safe === (S.depth >= 7),
+      `${S.depth} rules moving second: ` +
+      (r.asSecond.safe ? `no losing line among ${fmt(r.asSecond.lines)} searched`
+                       : `a losing line exists among ${fmt(r.asSecond.lines)} searched (expected below 7 rules)`));
+    const two = RULES.report(2), eight = RULES.report(8);
+    check(!two.safe && eight.safe,
+      'the two-rule ladder is beatable and the eight-rule ladder is not — both by exhaustive search');
+    check(RULES.moves(0, 8).length > 0 && RULES.LADDER.length === 8,
+      'the ladder on screen is the ladder that runs: 8 rules, all reachable');
+    out.push('');
+    out.push(`        best play beats ${S.depth} rules ` +
+      `${(r.beatsSecond * 100).toFixed(1)}% of the time when you move first, ` +
+      `${(r.beatsFirst * 100).toFixed(1)}% when it does (exact, over every line)`);
+    out.push(fails ? `<span class="no">${fails} check(s) failed for the ${S.depth}-rule ladder</span>`
+                   : `<span class="ok">all checks passed for the ${S.depth}-rule ladder</span>`);
+    $('#selftest-out').innerHTML = out.join('\n');
+    console.log('[Zero to Unbeatable] self-test for the ' + S.depth + '-rule ladder\n' +
+      out.join('\n').replace(/<[^>]+>/g, ''));
+    return;
+  }
+
   if (isNine()) {
     const r = measureRng(e, 'selftest-nine');
     const cpu = NINE.vsHeuristic(e.brain, 200, r), random = NINE.vsRandom(e.brain, 200, r);
@@ -1024,6 +1280,40 @@ function selfTest() {
  * ------------------------------------------------------------------ */
 
 $('#how-body').innerHTML = `
+<h4>Three different things, all called AI</h4>
+<p><b>Step 1 is rules.</b> Eight if/else tests, checked in order, written out by a person before it
+ever ran. It has played zero games. Ask it why it moved and it can tell you exactly, because the
+reason is a line someone typed. Most people would call that AI, and for decades that is what the
+word meant.</p>
+<p><b>Step 2 is learning.</b> No rules at all — a list of numbers, one per board position, all of
+them starting at zero. Nothing in it knows what a row is. It plays twenty thousand games, is told
+only won, lost or drew, and ends up playing the same unbeatable game as the rule ladder. Ask it why
+it moved and the honest answer is "that square scored +0.87", which is not a reason in the way rule
+2 is a reason.</p>
+<p><b>Both are proven, the same way.</b> The app searches every game that can still be played
+against each of them and reports that no losing line exists. Same search, same words, two opposite
+kinds of opponent.</p>
+
+<h4>Be honest: here, the rules win</h4>
+<p>It would be easy to run this demo as "learning beat the hand-written rules", and it would be
+wrong. For a board with 5,478 positions the rules are the better piece of engineering by almost
+every measure that matters: they are a couple of hundred lines instead of a table of 19,683 numbers,
+they answer instantly with no training run, they can be read and checked by a person, and they were
+finished before the learner had played its first game. Nothing about step 2 is an improvement on
+step 1 <i>at tic-tac-toe</i>.</p>
+<p>What the rules cannot do is exist for a problem nobody can write down. Change the board to 4×4
+and the eight rules are worthless — somebody has to sit down and work out the new ones. Chess has
+more positions than there are atoms on Earth and language has no fixed number at all; no one has
+ever written the ladder for either, and it is not for want of trying. Learning is what you reach for
+when the rules cannot be written, not when they can. Step 3 is what the edge of that looks like.</p>
+<p>There is one measurable crack in the ladder, and it is fair to say so. It is unbeatable in a
+<i>game</i>, but it is not right in every <i>position</i>: hand it one of the 4,520 legal boards it
+would never have played itself into and there are 12 where a rule picks a losing square, because
+nobody writes rules for boards that cannot happen. The learner practises from positions dealt at
+random, so it is right in all 4,520. That difference costs neither of them a game — you cannot beat
+either from the start — but it is the shape of the thing: written knowledge covers what the author
+thought of, and experience covers what was met.</p>
+
 <h4>What it actually is</h4>
 <p>The opponent you are playing is a list. On one side of the list is a board position; on the
 other is a single number saying how good that position turned out to be for whoever just moved.
@@ -1101,6 +1391,8 @@ $('#about-text').innerHTML =
   `Zero to Unbeatable was built by Bryant Harrison, Murray State University. ` +
   `It runs entirely on this device: no network request is made, no account exists, ` +
   `nothing is stored, and no AI service is involved. Reloading the page returns it to Era 0. ` +
+  `Step 1 is a hand-written ${RULES.LADDER.length}-rule ladder with nothing learned in it; ` +
+  `steps 2 and 3 learn and have no rules in them. Step 2's settings: ` +
   `Learning rate ${OG.HP.alphaFloor}, discount ${OG.HP.gamma}, &epsilon; ${OG.HP.epsStart.toFixed(2)}→` +
   `${OG.HP.epsEnd.toFixed(2)} over ${fmt(OG.HP.epsTau)} games, ` +
   `${Math.round(OG.HP.mixSelfPlay * 100)}% self-play, ` +
@@ -1110,16 +1402,41 @@ $('#about-text').innerHTML =
  * Wiring
  * ------------------------------------------------------------------ */
 
+/* One place decides what each step shows. Everything it hides is
+   [hidden], so a step never pays for the panels of another step -- which
+   is what keeps the TRAIN button above the fold in step 2 with a
+   full-height rule ladder living in the same column. */
+function applyMode() {
+  const nine = isNine(), rules = isRules();
+  $$('#mode-seg button').forEach(x => {
+    const on = x.dataset.mode === S.mode;
+    x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on));
+  });
+  document.body.classList.toggle('step-rules', rules);
+  $('#how-head span').textContent = rules ? 'Rules, learning, and which is better'
+                                          : 'How is it learning?';
+  $('#board-wrap').hidden = nine;
+  $('#nine-wrap').hidden = !nine;
+  $('#era-select').hidden = rules;
+  $('#depth-seg').hidden = !rules;
+  $('#btn-brain').hidden = rules;
+  $('#btn-learned').hidden = rules || S.lastLearned === null;
+  if (rules && S.brain) {          // the inspector reads a value table; there is not one here
+    S.brain = false;
+    $('#btn-brain').setAttribute('aria-pressed', 'false');
+    $('#btn-brain').textContent = 'Show its brain';
+    $('#brain-readout').hidden = true;
+  }
+  if (nine) maybeSeed();
+  if (rules) renderDepthSeg();
+  renderEraSelect(); renderTrain(); renderRulesPanel(); renderBanner(); renderScore();
+  newGame();
+}
+
 $$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
   if (S.training || S.mode === btn.dataset.mode) return;
   S.mode = btn.dataset.mode;
-  $$('#mode-seg button').forEach(x => { x.classList.toggle('on', x === btn); x.setAttribute('aria-pressed', String(x === btn)); });
-  const nine = isNine();
-  $('#board-wrap').hidden = nine;
-  $('#nine-wrap').hidden = !nine;
-  if (nine) maybeSeed();
-  renderEraSelect(); renderTrain(); renderBanner(); renderScore();
-  newGame();
+  applyMode();
 }));
 
 $('#btn-train').addEventListener('click', train);

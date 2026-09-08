@@ -451,6 +451,112 @@ input[type=text]::placeholder { color: var(--ink-3); }
   overflow-x: auto; }
 #selftest-out .ok { color: var(--gold); } #selftest-out .no { color: var(--warm); }
 
+/* ================================================================== *
+ * Step 1 — the hand-written rules
+ *
+ * Everything here is [hidden] outside step 1, so it costs no height in
+ * steps 2 and 3: the TRAIN button's fold budget is untouched by the
+ * rule ladder existing. Step 1 has no TRAIN button of its own, and what
+ * has to stay above the fold there — the depth control and the board —
+ * sits above everything added below.
+ * ================================================================== */
+
+/* Three steps where there were two modes. The labels must not wrap: the
+   board is already at its 11u floor on a 320x568 screen, so an extra
+   line here would come straight off the bottom of the page and push
+   step 2's TRAIN button below the fold. Content-width buttons instead
+   of three equal thirds — "1 · Rules" does not need the room that
+   "3 · Nine boards" does — which fits all three on one line at 320px
+   with room to spare. */
+#mode-seg button {
+  flex: 1 1 auto; white-space: nowrap;
+  font-size: calc(.72 * var(--u)); padding-inline: calc(.25 * var(--u));
+}
+
+#depth-seg { margin-top: 0; flex: 1 1 auto; }
+#depth-seg button { font-size: calc(.72 * var(--u)); }
+
+/* Step 1 carries one panel step 2 does not — the commentary line under
+   the board — so the board yields a little further here, exactly as it
+   does for the TRAIN button in step 2. Same principle, same place. */
+body.step-rules #board {
+  max-width: min(100%, max(calc(9 * var(--u)), calc(100dvh - 33 * var(--u))));
+}
+
+/* The commentary line under the board: which rule answered you. */
+#rule-fired {
+  background: var(--panel); border: 1px solid var(--lite); border-left-width: 3px;
+  border-radius: var(--r); padding: calc(.55 * var(--u)) calc(.65 * var(--u));
+  margin-bottom: calc(.55 * var(--u));
+  font-size: calc(.74 * var(--u)); color: var(--ink-2); line-height: 1.5;
+}
+#rule-fired.waiting { border-color: var(--line-2); color: var(--ink-3); }
+#rule-fired.nofire  { border-color: var(--warm); }
+#rule-fired .rf-head b { color: var(--gold); }
+#rule-fired.nofire .rf-head b { color: var(--warm); }
+#rule-fired .rf-off { color: var(--ink-3); }
+
+/* The squares that set the rule off — deliberately not the same
+   treatment as .pick, which means "it is about to play here". */
+.cell.trig { border-color: var(--lite); box-shadow: 0 0 0 2px var(--lite) inset; }
+
+/* The ladder itself. */
+#rules-panel { padding: calc(.6 * var(--u)); }
+.rp-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5em; }
+.rp-sub { font-size: calc(.6 * var(--u)); color: var(--ink-3); text-transform: uppercase;
+  letter-spacing: .1em; font-weight: 700; white-space: nowrap; }
+#rule-list { list-style: none; margin: calc(.5 * var(--u)) 0 0; padding: 0; }
+.rule {
+  display: flex; align-items: flex-start; gap: calc(.45 * var(--u));
+  padding: calc(.3 * var(--u)) calc(.35 * var(--u));
+  border-radius: 8px; border: 1px solid transparent;
+}
+.rule + .rule { margin-top: 2px; }
+.rule .rn {
+  flex: 0 0 auto; min-width: calc(1.35 * var(--u)); text-align: center;
+  font-size: calc(.68 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums;
+  color: var(--ink-3); background: var(--bg-2); border-radius: 5px;
+  padding: 1px 0; line-height: 1.5;
+}
+.rule .rt { flex: 1 1 auto; min-width: 0; }
+.rule .rt b { display: block; font-size: calc(.76 * var(--u)); color: var(--ink); font-weight: 700; }
+.rule .rg { display: block; font-size: calc(.62 * var(--u)); color: var(--ink-3); line-height: 1.35; }
+.rule .rc {
+  flex: 0 0 auto; font-size: calc(.6 * var(--u)); color: var(--ink-3);
+  font-variant-numeric: tabular-nums; padding-top: 2px;
+}
+.rule.fired { background: var(--panel-2); border-color: var(--gold); }
+.rule.fired .rn { background: var(--gold); color: var(--navy); }
+.rule.fired .rt b { color: var(--gold); }
+/* A switched-off rule is a genuine gap in the opponent, so it reads as
+   absent rather than merely dim. */
+.rule.off { opacity: .42; }
+.rule.off .rt b { text-decoration: line-through; text-decoration-thickness: 1px; }
+.rule.fallback .rn { background: transparent; }
+.rule.fallback .rt b { color: var(--ink-2); font-weight: 600; }
+.rule.fallback.fired { border-color: var(--warm); background: var(--panel-2); }
+.rule.fallback.fired .rt b { color: var(--warm); }
+.rp-foot {
+  margin-top: calc(.5 * var(--u)); font-size: calc(.66 * var(--u));
+  color: var(--ink-3); line-height: 1.5;
+  border-top: 1px solid var(--line); padding-top: calc(.4 * var(--u));
+}
+
+/* The game a shortened ladder loses, drawn out move by move. */
+.lg {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(2.3 * var(--u)), 1fr));
+  gap: calc(.35 * var(--u)); margin: calc(.6 * var(--u)) 0;
+}
+.lg-step .mini { border-radius: 5px; }
+.lg-who {
+  display: block; text-align: center; font-size: calc(.52 * var(--u));
+  letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); margin-top: 2px;
+}
+.lg-step.fork .mini { outline: 2px solid var(--warm); outline-offset: 1px; }
+.lg-step.fork .lg-who { color: var(--warm); font-weight: 800; }
+.lg-note { font-size: calc(.72 * var(--u)); color: var(--ink-2); line-height: 1.5; }
+.lg-note b { color: var(--warm); }
+
 /* ---------------------------------------------------- two-column wide */
 /* Wide AND not much taller than it is wide: catches laptops, tablets in
    landscape and a phone turned sideways, but leaves a portrait tablet as
@@ -619,7 +725,7 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 }
 /* The stage cue card above the guide: same navy-and-gold, on the same
    paper, but it is a screen aid — the print rules below drop it so the
-   Print button still produces the guide's own one-pager unchanged. */
+   Print button still produces the printable guide unchanged. */
 .stagecard {
   background: #fff; color: #172231; border-bottom: 2px solid #c2cede;
   padding: calc(1.1 * var(--u)) calc(1.1 * var(--u)) calc(1.2 * var(--u));

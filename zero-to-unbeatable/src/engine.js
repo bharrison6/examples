@@ -424,16 +424,25 @@ const vsNaive  = (agent, games, rnd, mark) => scoreVs(agent, naiveMove,  games, 
  *
  * The adversary is not a minimax player, it is EVERY player: at each of
  * its turns it branches on every legal move, so the search covers every
- * game line reachable against this agent, minimax lines included.
+ * game line reachable against the player under test, minimax lines
+ * included.
  *
- * On the agent's turn we branch over its entire argmax set, not one
+ * On that player's turn we branch over its entire candidate set, not one
  * pick, because ties are broken by coin flip at play time. So "safe"
- * means: no sequence of legal opponent moves and no tie-break the agent
- * could flip leads to the agent losing. That is a proof for the policy
- * as it is actually played, not for one lucky tie-break ordering.
+ * means: no sequence of legal opponent moves and no tie-break it could
+ * flip leads to it losing. That is a proof for the policy as it is
+ * actually played, not for one lucky tie-break ordering.
+ *
+ * The search takes a POLICY, not an agent: movesFor(code) returns every
+ * square the player under test might actually choose there, and that is
+ * deliberately the only thing the search knows about it. Which is why
+ * the same machinery proves the hand-written rule ladder of Step 1 and
+ * the learned agent of Step 2 -- two opposite ways of arriving at a
+ * policy, held to one standard and reported in the same words.
+ * verifyRole / verifyUnbeatable are the learned-agent spelling of it.
  * ------------------------------------------------------------------ */
 
-function verifyRole(agent, mark) {
+function verifyPolicyRole(movesFor, mark) {
   const opp = mark === 1 ? 2 : 1;
   const memo = new Int8Array(NCODE);       // 0 unknown, 1 safe, 2 losable
   let positions = 0;
@@ -447,7 +456,7 @@ function verifyRole(agent, mark) {
     else if (WINNER[code] === mark || NEMPTY[code] === 0) ok = true;
     else {
       const mover = TOMOVE[code];
-      const moves = (mover === mark) ? argmaxMoves(agent, code) : legalList(code);
+      const moves = (mover === mark) ? movesFor(code) : legalList(code);
       ok = true;
       for (const m of moves) {
         path.push(m);
@@ -472,7 +481,7 @@ function verifyRole(agent, mark) {
     if (isTerminal(code)) n = 1;
     else {
       const mover = TOMOVE[code];
-      const moves = (mover === mark) ? argmaxMoves(agent, code) : legalList(code);
+      const moves = (mover === mark) ? movesFor(code) : legalList(code);
       n = 0;
       for (const m of moves) n += lines(code + mover * POW3[m]);
     }
@@ -483,9 +492,9 @@ function verifyRole(agent, mark) {
   return { safe: ok, positions, lines: lines(0), worstLine };
 }
 
-function verifyUnbeatable(agent) {
-  const first  = verifyRole(agent, 1);
-  const second = verifyRole(agent, 2);
+function verifyPolicy(movesFor) {
+  const first  = verifyPolicyRole(movesFor, 1);
+  const second = verifyPolicyRole(movesFor, 2);
   return {
     safe: first.safe && second.safe,
     asFirst: first,
@@ -494,6 +503,50 @@ function verifyUnbeatable(agent) {
     positions: first.positions + second.positions
   };
 }
+
+const verifyRole       = (agent, mark) => verifyPolicyRole(code => argmaxMoves(agent, code), mark);
+const verifyUnbeatable = (agent)       => verifyPolicy(code => argmaxMoves(agent, code));
+
+/* How often can a challenger playing its very best actually win? Exact,
+   not sampled: the player under test breaks its own ties by coin flip,
+   so its node is the average over its candidates, and the challenger's
+   node is the maximum over its legal moves. One pass over the position
+   DAG.
+
+   This is the number that turns "beatable" into something a room can
+   feel. "A losing line exists" is true of a player who loses once in a
+   thousand games and of one who loses two games in three, and those are
+   not the same demo. */
+function winChance(movesFor, mark) {
+  const opp = mark === 1 ? 2 : 1;               // the challenger
+  const memo = new Float64Array(NCODE);
+  const seen = new Uint8Array(NCODE);
+
+  function p(code) {
+    if (seen[code]) return memo[code];
+    seen[code] = 1;
+    let v;
+    if (WINNER[code] === opp) v = 1;
+    else if (WINNER[code] === mark || NEMPTY[code] === 0) v = 0;
+    else if (TOMOVE[code] === opp) {
+      v = 0;
+      for (const m of legalList(code)) v = Math.max(v, p(code + opp * POW3[m]));
+    } else {
+      const moves = movesFor(code);
+      let s = 0;
+      for (const m of moves) s += p(code + mark * POW3[m]);
+      v = moves.length ? s / moves.length : 0;
+    }
+    memo[code] = v;
+    return v;
+  }
+  /* `at` is exposed so a caller can walk the same table to read a
+     representative game off it, rather than quoting whichever losing
+     leaf a depth-first search happened to reach first. */
+  return { root: p(0), at: p };
+}
+
+function bestWinChance(movesFor, mark) { return winChance(movesFor, mark).root; }
 
 /* ------------------------------------------------------------------ *
  * 8. Landmark positions for the "what it learned" card
@@ -577,7 +630,7 @@ return {
   naiveMove, moveValues, bestChildValue,
   trainGames, learnFrom, playTrainingGame,
   playAgainst, scoreVs, vsRandom, vsNaive,
-  verifyUnbeatable, verifyRole,
+  verifyUnbeatable, verifyRole, verifyPolicy, verifyPolicyRole, bestWinChance, winChance,
   chiSquareUniform, sampleMoveCounts
 };
 })();
