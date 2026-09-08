@@ -43,7 +43,7 @@ This is a **direct stiffness** finite element solver, not spring physics.
 - **The moving load is quasi-static.** The vehicle is re-solved from scratch at every position as
   it crosses; each wheel load is distributed to the two ends of the deck member it stands on by
   lever arm, the standard tributary distribution to panel points.
-- **Optional self-weight**, lumped half to each end of every member.
+- **Optional dead load** (member steel plus its share of the deck it carries, 900 N/m), lumped half to each end of every member.
 
 Two details worth knowing, because students hit both: a joint dropped in the middle of a straight
 strut would make **K** singular in a pure pin-jointed idealisation, so collinear chains are
@@ -108,7 +108,7 @@ rectangle is rank-deficient while the same rectangle plus one diagonal is not, t
 truss's diagonals alternate tension/compression with a fully-tensile bottom chord and
 fully-compressive top chord, that Pratt and Howe diagonals carry opposite signs, that compression
 capacity is below tension capacity at every length and falls as 1/L², that overloading produces a
-multi-member progressive collapse, that reactions carry exactly the structure's self-weight, and
+multi-member progressive collapse, that reactions carry exactly the applied dead load, and
 that **every level's par is beatable while no un-triangulated ladder survives any level at any
 depth or panel count**.
 
@@ -124,8 +124,8 @@ notes open from settings and from the top-bar shortcut presentation mode adds; t
 author and institution; the how-to and the notes fit a 390 × 844 phone and the canvas still draws
 there; and **not one request leaves the folder** — the offline claim is asserted, not assumed.
 
-With self-weight enabled, every live member contributes its lumped load before the solver's
-zero-force-stub cleanup. A loose vertical hanger therefore retains its own 900 N/m load; if its
+With dead load enabled, every live member contributes its lumped load before the solver's
+zero-force-stub cleanup. A loose vertical hanger therefore retains its 900 N/m dead-load share; if its
 geometry cannot route that load through axial members, the solver reports the resulting mechanism
 instead of silently deleting the member.
 

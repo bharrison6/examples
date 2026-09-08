@@ -47,7 +47,7 @@ MAT.capT = MAT.sigmaT * MAT.A;                    // 300 kN in tension
 MAT.capCyield = MAT.compYieldFactor * MAT.capT;   // 180 kN ceiling in compression
 MAT.eulerK = Math.PI * Math.PI * MAT.E * MAT.I;   // ~720 kN.m^2
 
-/* Compression capacity: Euler buckling, capped by the squash load.
+/* Compression capacity: Euler buckling, capped by the derated yield (0.6 x squash load).
    P_cr = pi^2 E I / L^2 — so a 4 m strut carries a quarter of what a 2 m
    strut carries. This is the whole reason tension design is cheaper. */
 function capC(L) {

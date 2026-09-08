@@ -71,13 +71,14 @@
     around a hundred times — and that is the whole architecture.</p>
     <div class="scale" id="scalebars"></div>
     <p class="note">Parameter counts of well-known models, on a <b>logarithmic</b> scale — each full bar
-    is 1,000× the one above. Frontier models are the same recipe, scaled up and trained on trillions of
+    grows by digits, not by size — GPT-2 holds 2,900× this page&rsquo;s parameters and a frontier model
+    40 million×. Frontier models are the same recipe, scaled up and trained on trillions of
     tokens instead of one children's story.</p>
   </div>
 
   <div class="card">
     <h2><span class="no">1.3</span> Training: watch it learn to write</h2>
-    <p class="exp">Training shows the model millions of tiny quizzes — <i>here are 40 characters of a
+    <p class="exp">Training shows the model hundreds of thousands of tiny quizzes — <i>here are 40 characters of a
     story; guess character 41</i> — and after each guess, nudges all <span id="a1params2">42,458</span>
     parameters a hair in the direction that would have made the right answer more likely. That nudge rule
     (gradient descent) is the entire teacher. Its textbook is one small original story about a robot in a
@@ -160,7 +161,7 @@
     <p class="exp">Act 1's model has a ceiling: it answers in one reflex guess. Ask a hard question and
     there is nowhere for intermediate work to happen. <b>Reasoning models</b> are ordinary language
     models given two extra things: they are trained to <b>write out their working before answering</b>,
-    and that working is graded and reinforced. That is the recipe behind the current wave of "thinking"
+    and the attempts that check out are the ones reinforced. That is the recipe behind the current wave of "thinking"
     models.</p>
     <p class="exp">To see it without hand-waving, we shrink the problem to something a phone can train:
     <b>3-digit addition</b>. Hard enough that a one-reflex guess fails; simple enough that everything is
@@ -450,7 +451,7 @@
 
     <h3>Numbers this run produces</h3>
     <p class="nums">Training is live but <b>seeded and deterministic</b>, so you can rehearse to the digit: Model D
-    ~54%, Model S ~96%; §2.3 climbs 60 → 78%; §2.4 rounds 49 → 77 → 83 → 85%. Timing: Act 1 is ~2–3 minutes of
+    ~54%, Model S ~96%; §2.3 climbs 60 → 78%; §2.4 rounds 49 → 77 → 83 → 84 → 85%. Timing: Act 1 is ~2–3 minutes of
     compute across four presses, Act 2's experiment ~2–3 minutes, §2.3 ≈ 40s, each §2.4 round ≈ 20–30s.</p>
 
     <h3>Misconceptions to draw out</h3>

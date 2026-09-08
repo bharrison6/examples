@@ -366,7 +366,7 @@ ok('Median of an empty set is null', E.medianRatio([]) === null);
 
 {
   const items = D.DOMAINS.reduce((a, d) => a.concat(d.items), []);
-  ok('Act III covers at least five domains', D.DOMAINS.length >= 5, D.DOMAINS.length + ' domains');
+  ok('Act III covers all seven domains', D.DOMAINS.length === 7, D.DOMAINS.length + ' domains');
   ok('Mathematics is one domain among several, not the whole act',
      items.filter(m => true).length > 0 &&
      D.DOMAINS.find(d => d.id === 'math').items.length < items.length / 2,

@@ -89,7 +89,7 @@ era  games   seen   eps    wins-vs-random  casual player beats it  verified
  4   20000   5476   0.43           87%               0 of 1000  UNBEATABLE
 ```
 
-Over 12 seeds: unbeatable at burst **3 to 5**, mean **3.8**, never earlier than 3.
+Over 12 seeds: unbeatable at burst **3 to 5**, mean **4.08**, never earlier than 3.
 
 ## Act II — nine boards at once
 
@@ -224,10 +224,12 @@ inert and it is just a global.
 
 ## Historical note
 
-Donald Michie built **MENACE** — the Matchbox Educable Noughts And Crosses Engine — in 1961
-from 304 matchboxes, one per board position, each holding coloured beads, one colour per
+Donald Michie and Roger Chambers built **MENACE** — the Matchbox Educable Noughts And
+Crosses Engine — in 1961 from 304 matchboxes, one per board position it can face once
+rotations and mirrors are folded together, each holding coloured beads, one colour per
 square. To move you shook the box for the current position and drew a bead; if MENACE won you
-added beads of the colours it had played, and if it lost you took them away. That is a
+added three beads of each colour it had played, if it drew you added one, and if it lost
+you took one away. That is a
 physical implementation of exactly what this page runs, and it took a couple of hundred games
 by hand to make it unbeatable, with no computer at all. The app tells the story in its
 "How is it learning?" panel.

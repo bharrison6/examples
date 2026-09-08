@@ -24,7 +24,7 @@ Worker on one small original story (~4,700 characters, deliberately tiny vocabul
 
 | era | steps | loss | it writes |
 |---|---|---|---|
-| Newborn | 0 | 3.26 | `mwwcmqkyjibgccm.hqfc.joshcnmtfrmtyeqcefc…` |
+| Newborn | 0 | 3.48 | `mwwcmqkyjibgccm.hqfc.joshcnmtfrmtyeqcefc…` |
 | Babble | 200 | ~1.75 | `ngat dand witcat ond bof okeded ang jot afors the the sang…` |
 | Words | 400 | ~1.28 | `mone the gorder under oneven the wirl on the wouserst…` |
 | Phrases | 800 | ~0.77 | `the bird lik the to sing the best sat stong the cat garden…` |
@@ -54,7 +54,7 @@ Model S (400 steps, 49% alone):
   4 **68%**, 8 **78%** — accuracy bought with compute, not training.
 - **§2.4 Reinforcement (STaR-style).** The model poses itself 120 fresh problems per round,
   keeps attempts its verifier certifies as correct, and fine-tunes on its own kept work.
-  Shipped rounds: **49% → 77% → 83% → 84% → 85%**, keeping 82 → 93 → 101 chains of 120 —
+  Shipped rounds: **49% → 77% → 83% → 84% → 85%**, keeping 82 → 93 → 101 → 98 chains of 120 —
   better at the task, so better at generating its own curriculum.
 
 ### The phase-transition finding (why training is seeded)
@@ -111,8 +111,8 @@ Murray State's palette, same policy as Zero to Unbeatable: **navy `#002144`** an
 sky `#00A4E3` as the second accent, and red-orange `#FF4500` only where something is wrong (a
 wrong answer, a rejected chain, a tool error, lost context). Chart series colors are
 lightness-band-validated steps of the brand hues — gold-step `#B8860B` and sky-step `#0087BD`
-— checked with a CVD-separation validator on the dark surface (worst adjacent-pair ΔE 21.9,
-all contrast ≥ 3:1), with direct labels everywhere so no reading depends on hue alone.
+— separated for colour-vision deficiency on the dark surface, with direct labels everywhere
+so no reading depends on hue alone.
 
 Phone-first: single column, every tap target ≥ 36px (asserted in the integration suite at
 375×667), the TRAIN button sticky so it is never below the fold, era chips instead of wide
