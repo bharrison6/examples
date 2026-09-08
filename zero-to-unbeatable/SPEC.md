@@ -102,7 +102,7 @@ DELIVERABLE:
 ## Implementation notes and departures
 
 **Where the six verifications live.** 1–4 are in `src/playtest.test.js` (`node
-src/playtest.test.js`, 45 checks). 5 and 6 need a real browser and are in
+src/playtest.test.js`). 5 and 6 need a real browser and are in
 `tools/integration.mjs`, which drives the built `index.html` under Playwright with
 `Emulation.setCPUThrottlingRate` at 4×. A subset — the chi-squared test, the exhaustive
 search and the 10,000-game blind-spot check — also runs **inside the app**, on demand,
@@ -147,7 +147,8 @@ failure first:
 the default produce a 3–5 burst arc; 5,000 is the size that does, and it is also the size
 the brief's own performance budget is written against. 500 and 2,000 remain selectable and
 are useful for showing the early wobble in slow motion, but they need many more presses.
-Measured over 12 seeds: unbeatable at burst 3–5, mean 3.8, never earlier than 3.
+Measured over 24 seeds: unbeatable at burst 3–5, mean 3.9, never earlier than 3, never
+later than 5. Canonical copy: the `HP` comment in `src/engine.js`.
 
 **A fourth landmark position.** The brief asks for 2–3 and names three. All three are there.
 A fourth was added — "finish it", where the agent can win immediately — because it is the

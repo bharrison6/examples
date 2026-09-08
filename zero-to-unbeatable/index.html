@@ -1151,8 +1151,9 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
     </div>
     <div class="sheet-body">
       <p class="howto-lede">Tic-tac-toe against three different opponents. They are numbered along
-      the top, and they are not three difficulty levels &mdash; they are three completely different
-      ideas about where a machine's skill comes from.</p>
+      the top, and they are not three difficulty levels &mdash; the first two are completely
+      different ideas about where a machine's skill comes from, and the third is where the second
+      one runs out.</p>
       <ol class="howto-steps">
         <li><b>1 &middot; Rules.</b> Eight if/else rules a person wrote down. It has played zero
         games and it cannot be beaten &mdash; the app searches every game that could still be
@@ -4544,7 +4545,7 @@ function renderBanner() {
     `against Era ${top.n} was searched, with Era ${top.n} moving first and moving second, and in ` +
     `none of them does it lose.</p>` +
     `<p>Tic-tac-toe ends here because it is small: about five and a half thousand positions, so a ` +
-    `table can hold all of them. Chess has more positions than there are atoms on Earth, and language ` +
+    `table can hold all of them. Chess has more possible games than there are atoms in the observable universe, and language ` +
     `has no fixed number at all — no table can hold either. So the big systems throw the table away ` +
     `and use a neural network, which stores a compressed guess instead of an exact entry. Different ` +
     `brain, same idea: play, get feedback, adjust, repeat.</p>` +
@@ -5124,9 +5125,9 @@ they answer instantly with no training run, they can be read and checked by a pe
 finished before the learner had played its first game. Nothing about step 2 is an improvement on
 step 1 <i>at tic-tac-toe</i>.</p>
 <p>What the rules cannot do is exist for a problem nobody can write down. Change the board to 4×4
-and the eight rules are worthless — somebody has to sit down and work out the new ones. Chess has
-more positions than there are atoms on Earth and language has no fixed number at all; no one has
-ever written the ladder for either, and it is not for want of trying. Learning is what you reach for
+and the eight rules are worthless — somebody has to sit down and work out the new ones. Chess has more
+possible games than there are atoms in the observable universe and language has no fixed number at
+all; no one has ever written the ladder for either, and it is not for want of trying. Learning is what you reach for
 when the rules cannot be written, not when they can. Step 3 is what the edge of that looks like.</p>
 <p>There is one measurable crack in the ladder, and it is fair to say so. It is unbeatable in a
 <i>game</i>, but it is not right in every <i>position</i>: hand it one of the 4,520 legal boards it
@@ -5227,8 +5228,9 @@ move, you shook the box for the current position and drew a bead. If MENACE won 
 three beads of each colour it had played; if it drew, you added one; if it lost, you took one
 away. That is a physical
 implementation of exactly what is running on this page: a table of positions, a number per move,
-adjusted by whether the game was won or lost. It took Michie a couple of hundred games to make it
-unbeatable, by hand, with no computer at all.</p>
+adjusted by whether the game was won or lost. Michie and the machine began to draw
+consistently after about twenty games &mdash; by hand, with no computer at all. It was never shown
+to be unbeatable, which is the honest version of the story and still a remarkable one.</p>
 
 <h4>Where the presenter notes are</h4>
 <p>Settings &rarr; <b>Presenter notes</b> opens the whole session plan — the timed script, the
