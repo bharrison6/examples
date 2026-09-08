@@ -3,104 +3,113 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI: From Zero to Takeoff — live demos · Bryant Harrison · Murray State University</title>
-<meta name="description" content="A hands-on tour of what AI is, how generative AI works, how to prompt it, how fast it is moving, and what it looks like in the disciplines. Bryant Harrison, Murray State University.">
+<title>AI: From Zero to Takeoff &mdash; live demos &middot; Bryant Harrison &middot; Murray State University</title>
 <style>
   :root {
-    --navy: #002144;
-    --navy-2: #04304f;
-    --card: #0a2c50;
-    --card-hover: #0f3a66;
-    --edge: #1d4570;
-    --text: #eef3fa;
-    --muted: #9fb2ca;
-    --gold: #ECAC00;
-    --blue: #00A4E3;
-    --alert: #FF4500;
+    --navy: #002144; --navy-2: #04304f; --card: #0a2c50; --card-hover: #0f3a66;
+    --edge: #1d4570; --text: #eef3fa; --muted: #9fb2ca;
+    --gold: #ECAC00; --blue: #00A4E3; --alert: #FF4500;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
+  /* Solid colour on the root so the canvas is always painted; a fixed-attachment
+     background here leaves everything below the first viewport black on some
+     mobile browsers and in headless capture. */
+  html { scroll-behavior: smooth; background: #001730; }
   body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(180deg, #001730 0%, var(--navy) 40%, #00294f 100%);
-    color: var(--text);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    background:
+      radial-gradient(1100px 560px at 50% -8%, #07395f 0%, rgba(7,57,95,0) 62%),
+      linear-gradient(180deg, #001730 0%, var(--navy) 42%, #00294f 100%);
+    background-repeat: no-repeat, no-repeat;
+    color: var(--text); min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center;
     padding: 40px 18px 60px;
   }
-  .wrap { width: 100%; max-width: 880px; }
+  .wrap { width: 100%; max-width: 900px; }
 
-  header { text-align: center; margin-bottom: 14px; }
-  .eyebrow {
-    color: var(--gold); font-weight: 700; letter-spacing: .18em;
-    font-size: .72rem; text-transform: uppercase; margin-bottom: 10px;
-  }
-  h1 { font-size: clamp(1.7rem, 6vw, 2.6rem); line-height: 1.12; }
+  header { text-align: center; margin-bottom: 10px; }
+  .eyebrow { color: var(--gold); font-weight: 700; letter-spacing: .18em;
+             font-size: .72rem; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { font-size: clamp(1.8rem, 6.6vw, 2.8rem); line-height: 1.1; letter-spacing: -.01em; }
   h1 .lift { color: var(--gold); }
-  .presenter {
-    margin-top: 12px; color: var(--text); font-size: .98rem; font-weight: 600;
-  }
+  .presenter { margin-top: 12px; font-size: .98rem; font-weight: 600; }
   .presenter span { color: var(--muted); font-weight: 400; }
-  p.sub { color: var(--muted); margin: 14px auto 0; max-width: 620px; font-size: .95rem; line-height: 1.5; }
+  p.sub { color: var(--muted); margin: 14px auto 0; max-width: 640px; font-size: .95rem; line-height: 1.55; }
+  p.sub b { color: var(--text); font-weight: 650; }
 
-  .section { margin-top: 38px; }
-  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; }
-  .sec-num {
-    color: var(--gold); font-weight: 800; font-size: 1.05rem; letter-spacing: .06em;
-    white-space: nowrap;
-  }
-  .sec-title { font-size: 1.22rem; font-weight: 750; }
-  .sec-sub { color: var(--muted); font-size: .9rem; line-height: 1.5; margin-bottom: 14px; }
+  .explainer { margin-top: 30px; background: var(--navy-2); border: 1px solid var(--edge);
+               border-radius: 16px; padding: 22px 20px 18px; }
+  .explainer h2 { font-size: 1.15rem; text-align: center; margin-bottom: 4px; }
+  .explainer h2 b { color: var(--gold); }
+  .explainer .lede { color: var(--muted); font-size: .88rem; text-align: center; line-height: 1.5;
+                     max-width: 560px; margin: 0 auto 14px; }
+  .explainer svg { display: block; width: 100%; height: auto; }
+  .explainer .caption { color: var(--muted); font-size: .82rem; line-height: 1.5; text-align: center;
+                        margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--edge); }
+  .explainer .caption b { color: var(--text); }
 
-  a.card {
-    display: block; background: var(--card); border: 1px solid var(--edge);
-    border-radius: 14px; padding: 20px 22px; text-decoration: none; color: var(--text);
-    transition: transform .12s ease, background .12s ease, border-color .12s ease;
-    margin-bottom: 12px;
-  }
-  a.card:hover, a.card:focus-visible { background: var(--card-hover); border-color: #2c5c92; transform: translateY(-2px); }
-  .card .topic {
-    color: var(--blue); font-size: .72rem; font-weight: 800; letter-spacing: .14em;
-    text-transform: uppercase; margin-bottom: 6px;
-  }
-  .card h2 { font-size: 1.18rem; margin-bottom: 6px; color: var(--gold); }
+  .part { margin-top: 46px; }
+  .part-head { border-left: 3px solid var(--gold); padding-left: 16px; margin-bottom: 6px; }
+  .part.b .part-head { border-left-color: var(--blue); }
+  .part-num { display: block; color: var(--gold); font-weight: 800; font-size: .72rem;
+              letter-spacing: .2em; text-transform: uppercase; margin-bottom: 4px; }
+  .part.b .part-num { color: var(--blue); }
+  .part-head h2 { font-size: clamp(1.35rem, 4.4vw, 1.75rem); line-height: 1.15; }
+  .part-q { color: var(--muted); font-size: .95rem; margin-top: 6px; line-height: 1.5; }
+
+  .take { margin: 14px 0 20px; padding: 12px 16px; border-radius: 10px;
+          background: linear-gradient(90deg, rgba(236,172,0,.14), rgba(236,172,0,.03));
+          border-left: 3px solid var(--gold); font-size: .92rem; line-height: 1.5; }
+  .part.b .take { background: linear-gradient(90deg, rgba(0,164,227,.14), rgba(0,164,227,.03));
+                  border-left-color: var(--blue); }
+  .take b { color: var(--gold); }
+  .part.b .take b { color: var(--blue); }
+
+  .motif { margin: 4px 0 18px; }
+  .motif svg { display: block; width: 100%; height: auto; }
+  .motif .cap { color: var(--muted); font-size: .78rem; text-align: center; margin-top: 6px; }
+
+  .sec { margin-top: 26px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
+  .sec-num { color: var(--gold); font-weight: 800; font-size: .95rem; letter-spacing: .06em; white-space: nowrap; }
+  .part.b .sec-num { color: var(--blue); }
+  .sec-title { font-size: 1.16rem; font-weight: 750; }
+  .sec-sub { color: var(--muted); font-size: .9rem; line-height: 1.55; margin-bottom: 12px; }
+  .sec-take { font-size: .84rem; color: var(--gold); font-weight: 650;
+              margin: -6px 0 12px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.45; }
+  .part.b .sec-take { color: var(--blue); }
+  .sec-take::before { content: "\2192"; opacity: .8; }
+
+  a.card { display: block; background: var(--card); border: 1px solid var(--edge);
+           border-left: 3px solid var(--gold); border-radius: 14px; padding: 18px 20px;
+           text-decoration: none; color: var(--text); margin-bottom: 12px;
+           transition: transform .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease; }
+  .part.b a.card { border-left-color: var(--blue); }
+  a.card:hover, a.card:focus-visible { background: var(--card-hover); border-color: #2c5c92;
+           transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.32); }
+  .card .topic { color: var(--blue); font-size: .7rem; font-weight: 800; letter-spacing: .14em;
+                 text-transform: uppercase; margin-bottom: 6px; }
+  .card h2 { font-size: 1.16rem; margin-bottom: 6px; color: var(--gold); }
   .card h2 .emoji { margin-right: 8px; }
-  .card p { color: var(--muted); font-size: .9rem; line-height: 1.5; }
-  .card .go { margin-top: 10px; font-size: .82rem; color: var(--blue); font-weight: 700; }
+  .card p { color: var(--muted); font-size: .89rem; line-height: 1.55; }
+  .card .go { margin-top: 10px; font-size: .8rem; color: var(--blue); font-weight: 700; }
 
-  .grid2 { display: grid; grid-template-columns: 1fr; gap: 12px; }
-  @media (min-width: 640px) { .grid2 { grid-template-columns: 1fr 1fr; } .grid2 a.card { margin-bottom: 0; } }
-
-  .takeaways {
-    background: var(--navy-2); border: 1px solid var(--edge); border-radius: 14px;
-    padding: 24px 24px 18px; margin-top: 14px;
-  }
+  .takeaways { background: var(--navy-2); border: 1px solid var(--edge); border-radius: 16px;
+               padding: 24px 24px 18px; margin-top: 14px; }
   .takeaways ol { list-style: none; counter-reset: t; }
-  .takeaways li {
-    counter-increment: t; position: relative; padding: 0 0 16px 44px;
-    color: var(--text); font-size: .95rem; line-height: 1.55;
-  }
-  .takeaways li::before {
-    content: counter(t); position: absolute; left: 0; top: 1px;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--gold); color: var(--navy); font-weight: 800; font-size: .95rem;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .takeaways li { counter-increment: t; position: relative; padding: 0 0 16px 44px;
+                  font-size: .95rem; line-height: 1.55; }
+  .takeaways li::before { content: counter(t); position: absolute; left: 0; top: 1px;
+    width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--navy);
+    font-weight: 800; font-size: .95rem; display: flex; align-items: center; justify-content: center; }
   .takeaways li b { color: var(--gold); }
-  .takeaways li .muted { color: var(--muted); }
-
-  .contact {
-    margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--edge);
-    display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between;
-  }
+  .contact { margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--edge);
+             display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between; }
   .contact .who { font-size: 1rem; font-weight: 750; }
   .contact .who small { display: block; color: var(--muted); font-weight: 400; margin-top: 3px; }
   .qr { text-align: center; }
   .qr img { width: 132px; height: 132px; border-radius: 10px; background: #fff; padding: 4px; display: block; }
   .qr .cap { color: var(--muted); font-size: .72rem; margin-top: 6px; letter-spacing: .04em; }
-
   footer { margin-top: 40px; color: var(--muted); font-size: .8rem; text-align: center; line-height: 1.6; }
   footer b { color: var(--gold); }
 </style>
@@ -112,88 +121,197 @@
     <div class="eyebrow">Live demos &middot; scan &amp; play along on your phone</div>
     <h1>AI: From Zero to <span class="lift">Takeoff</span></h1>
     <div class="presenter">Bryant Harrison <span>&middot; Murray State University</span></div>
-    <p class="sub">A hands-on tour: what AI actually is, how generative AI works, how to talk to it,
-    how fast it is moving — and what it looks like inside real coursework. Every demo below runs
-    right in your browser. Follow along in order, or jump to whatever is on screen.</p>
+    <p class="sub">
+      Three questions, in order: <b>what AI actually is</b>, <b>where it is heading</b>, and
+      <b>what it can do in your discipline</b>. Every demo below runs right here in your
+      browser &mdash; no install, no account, nothing sent anywhere.
+    </p>
   </header>
 
-  <div class="section">
-    <div class="sec-head"><span class="sec-num">DEMO 1</span><span class="sec-title">What AI is — and what it isn&rsquo;t</span></div>
-    <p class="sec-sub">Real artificial intelligence with zero language ability. It learns purely by playing —
-    and it is <b>not</b> generative AI. &ldquo;AI&rdquo; on a label does not mean ChatGPT is inside.</p>
-    <a class="card" href="zero-to-unbeatable/index.html">
-      <div class="topic">Machine learning · not generative AI</div>
-      <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
-      <p>Play tic-tac-toe against an AI that has played zero games — and beat it easily. Train it in three-second bursts and play again, era by era, until you cannot beat it and the app <i>proves</i> you never will. The only thing that changed is a list of numbers.</p>
-      <div class="go">Open demo →</div>
-    </a>
-  </div>
+  <section class="explainer">
+    <h2>Start here: <b>&ldquo;AI&rdquo; is not one thing</b></h2>
+    <p class="lede">
+      Most arguments about AI are two people using the word for two different things.
+      This picture is the shape of the whole session.
+    </p>
+    <svg viewBox="0 0 440 322" role="img" aria-label="Nested rings. Artificial intelligence contains machine learning, which contains neural networks, which contains generative AI, which contains chatbots.">
+      <rect x="8"   y="8"   width="424" height="306" rx="16" fill="#06305a" stroke="#2c5c92" stroke-width="1.5"/>
+      <rect x="40"  y="46"  width="360" height="230" rx="14" fill="#0a3b6b" stroke="#356ba6" stroke-width="1.5"/>
+      <rect x="72"  y="84"  width="296" height="154" rx="12" fill="#0e477e" stroke="#3f7cbb" stroke-width="1.5"/>
+      <rect x="104" y="122" width="232" height="78"  rx="10" fill="#12538f" stroke="#4a8ccc" stroke-width="1.5"/>
+      <rect x="150" y="150" width="140" height="30"  rx="15" fill="#ECAC00"/>
+      <text x="22"  y="31"  fill="#eef3fa" font-size="13" font-weight="700" letter-spacing="1.4">ARTIFICIAL INTELLIGENCE</text>
+      <text x="54"  y="69"  fill="#cfe0f2" font-size="12" font-weight="700" letter-spacing="1.2">MACHINE LEARNING</text>
+      <text x="86"  y="107" fill="#cfe0f2" font-size="12" font-weight="700" letter-spacing="1.2">NEURAL NETWORKS</text>
+      <text x="118" y="143" fill="#e6f1fb" font-size="12" font-weight="700" letter-spacing="1.2">GENERATIVE AI</text>
+      <text x="220" y="170" fill="#002144" font-size="12" font-weight="800" text-anchor="middle" letter-spacing="1">CHATBOTS</text>
+      <text x="118" y="193" fill="#ECAC00" font-size="10" font-weight="700">Demo 2 opens this box</text>
+      <text x="54"  y="262" fill="#ECAC00" font-size="11" font-weight="700">Demo 1 lives out here &mdash; real AI, no language in it</text>
+      <text x="22"  y="301" fill="#9fb2ca" font-size="10.5">Rings, not synonyms. Everything inside a ring is also the ring around it.</text>
+    </svg>
+    <p class="caption">
+      <b>When something is labelled &ldquo;AI&rdquo;, ask which ring.</b> The tic-tac-toe player in
+      Demo&nbsp;1 is genuinely artificial intelligence and has no language ability at all. Most of
+      the AI already running in industry is nowhere near the gold pill in the middle.
+    </p>
+  </section>
 
-  <div class="section">
-    <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">How generative AI works</span></div>
-    <p class="sec-sub">Inside the black box: what a base language model is, how a <i>reasoning</i> model is made
-    from one, and how a reasoning model plus tools becomes an <i>agent</i>.</p>
-    <a class="card" href="glass-box/index.html">
-      <div class="topic">Base model → reasoning model → agent</div>
-      <h2><span class="emoji">🔍</span>Glass Box</h2>
-      <p>Watch a real transformer train from scratch in your browser — gibberish to words to sentences — and tap its attention maps. Then see chain-of-thought beat direct answers in a fair fight, buy accuracy with thinking time, and drive a tool-using agent yourself — then break it by shrinking its memory.</p>
-      <div class="go">Open demo →</div>
-    </a>
-  </div>
+  <section class="part" id="part-one">
+    <div class="part-head">
+      <span class="part-num">Part one</span>
+      <h2>What AI is</h2>
+      <p class="part-q">Three demos working outside-in through those rings: something that learns
+      with no language at all, then the machine inside the chatbot, then how to actually talk to it.</p>
+    </div>
+    <div class="take"><b>Leave with:</b> AI is a family of methods; generative AI is one branch;
+    and that branch is a predictor you can watch being built &mdash; not a mind, not a magic trick.</div>
 
-  <div class="section">
-    <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Getting good answers out</span></div>
-    <p class="sec-sub">The single highest-leverage skill: what you put in the prompt. Three levers —
-    context, a success spec, and the domain&rsquo;s vocabulary — each fixes a different kind of bad answer.</p>
-    <a class="card" href="the-stranger/index.html">
-      <div class="topic">Prompting techniques</div>
-      <h2><span class="emoji">💬</span>The Stranger</h2>
-      <p>A question sits beside three toggleable levers, and the answer changes in exactly one dimension per lever. Sixty-four hand-written answers, a deck that decides your answer&rsquo;s shape whenever you don&rsquo;t, and a meter counting the expert vocabulary you got for free.</p>
-      <div class="go">Open demo →</div>
-    </a>
-  </div>
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">DEMO 1</span><span class="sec-title">Something that learns, with no language in it</span></div>
+      <p class="sec-sub">An opponent that has played zero games. Beat it easily, train it in
+      three-second bursts, play again &mdash; until you cannot win, and the app proves you never will.</p>
+      <p class="sec-take">&ldquo;AI&rdquo; on a label does not mean ChatGPT is inside.</p>
+      <a class="card" href="zero-to-unbeatable/index.html">
+        <div class="topic">Machine learning · not generative AI</div>
+        <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
+        <p>Play tic-tac-toe against an AI that has played zero games — and beat it easily. Train it in three-second bursts and play again, era by era, until you cannot beat it and the app <i>proves</i> you never will. The only thing that changed is a list of numbers.</p>
+        <div class="go">Open demo →</div>
+      </a>
+    </div>
 
-  <div class="section">
-    <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">How fast this is moving</span></div>
-    <p class="sec-sub">Almost nobody draws the curve steeply enough. Draw your own forecast first —
-    then watch the real numbers land.</p>
-    <a class="card" href="takeoff/index.html">
-      <div class="topic">The pace of AI progress</div>
-      <h2><span class="emoji">📈</span>Takeoff</h2>
-      <p>Five benchmarks: draw where you think machine capability went, then see the truth animate over your line. A timeline of 123 model releases, six domains of real-world evidence plus an Elsewhere round-up — with the failures and overclaims kept in frame — and every number backed by a source.</p>
-      <div class="go">Open demo →</div>
-    </a>
-  </div>
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Inside the black box</span></div>
+      <p class="sec-sub">A real transformer trains from scratch in front of the room &mdash; gibberish
+      to words to sentences. Then a reasoning model is built out of it, and an agent out of that.</p>
+      <p class="sec-take">A base model predicts. Reasoning and agents are layers bolted on top.</p>
+      <a class="card" href="glass-box/index.html">
+        <div class="topic">Base model → reasoning model → agent</div>
+        <h2><span class="emoji">🔍</span>Glass Box</h2>
+        <p>Watch a real transformer train from scratch in your browser — gibberish to words to sentences — and tap its attention maps. Then see chain-of-thought beat direct answers in a fair fight, buy accuracy with thinking time, and drive a tool-using agent yourself — then break it by shrinking its memory.</p>
+        <div class="go">Open demo →</div>
+      </a>
+    </div>
 
-  <div class="section">
-    <div class="sec-head"><span class="sec-num">DEMO SET 5</span><span class="sec-title">AI in the disciplines</span></div>
-    <p class="sec-sub">The same ideas put to work: five classroom simulations for real course content.
-    Pick your field.</p>
-    <div class="grid2">
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Getting a good answer out</span></div>
+      <p class="sec-sub">One question, three toggleable levers &mdash; context, a spec for what
+      &ldquo;finished&rdquo; means, and the domain&rsquo;s vocabulary. Each fixes a different kind of bad answer.</p>
+      <p class="sec-take">A bad answer is usually a lever you left unpulled.</p>
+      <a class="card" href="the-stranger/index.html">
+        <div class="topic">Prompting techniques</div>
+        <h2><span class="emoji">💬</span>The Stranger</h2>
+        <p>A question sits beside three toggleable levers, and the answer changes in exactly one dimension per lever. Sixty-four hand-written answers, a deck that decides your answer&rsquo;s shape whenever you don&rsquo;t, and a meter counting the expert vocabulary you got for free.</p>
+        <div class="go">Open demo →</div>
+      </a>
+    </div>
+  </section>
+
+  <section class="part b" id="part-two">
+    <div class="part-head">
+      <span class="part-num">Part two</span>
+      <h2>Where it is going</h2>
+      <p class="part-q">Two demos that argue with each other on purpose: the curve really is steep,
+      and this field has collapsed twice before after saying exactly that.</p>
+    </div>
+    <div class="motif">
+      <svg viewBox="0 0 440 132" role="img" aria-label="A rising line of AI capability with two shaded troughs marking the AI winters of the mid-1970s and the late 1980s.">
+        <rect x="96"  y="14" width="52" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
+        <rect x="196" y="14" width="46" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
+        <line x1="18" y1="110" x2="424" y2="110" stroke="#2c5c92" stroke-width="1"/>
+        <polyline points="18,102 60,88 96,74 122,96 148,98 176,80 200,72 222,94 242,96 276,84 308,66 340,44 372,28 408,16"
+                  fill="none" stroke="#ECAC00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <text x="122" y="126" fill="#9fb2ca" font-size="9.5" text-anchor="middle">winter</text>
+        <text x="219" y="126" fill="#9fb2ca" font-size="9.5" text-anchor="middle">winter</text>
+        <text x="18"  y="126" fill="#9fb2ca" font-size="9.5">1950</text>
+        <text x="424" y="126" fill="#9fb2ca" font-size="9.5" text-anchor="end">today</text>
+      </svg>
+      <p class="cap">Both demos in this part live on this one line.</p>
+    </div>
+    <div class="take"><b>Leave with:</b> plan for the trend, not the snapshot &mdash; and know the
+    shape of a bust well enough to tell a real capability jump from a press release.</div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">Almost nobody draws the curve steeply enough</span></div>
+      <p class="sec-sub">Draw your own forecast on five benchmarks, then watch the real numbers
+      animate over your line. Then the evidence &mdash; with the failures and overclaims kept in frame.</p>
+      <p class="sec-take">Where you would have guessed, against where it actually went.</p>
+      <a class="card" href="takeoff/index.html">
+        <div class="topic">The pace of AI progress</div>
+        <h2><span class="emoji">📈</span>Takeoff</h2>
+        <p>Five benchmarks: draw where you think machine capability went, then see the truth animate over your line. A timeline of 123 model releases, six domains of real-world evidence plus an Elsewhere round-up — with the failures and overclaims kept in frame — and every number backed by a source.</p>
+        <div class="go">Open demo →</div>
+      </a>
+    </div>
+
+  </section>
+
+  <section class="part" id="part-three">
+    <div class="part-head">
+      <span class="part-num">Part three</span>
+      <h2>What AI can do</h2>
+      <p class="part-q">The point of the whole session. Every demo below is real course content
+      &mdash; a working simulation for a specific class, built with the tools from parts one and two.</p>
+    </div>
+    <div class="take"><b>Leave with:</b> the leverage is your subject expertise plus these tools.
+    Nobody else can specify the software your course needs &mdash; and specifying it is now most of the work.</div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">PHYSICS</span><span class="sec-title">Orbital mechanics you can feel</span></div>
+      <p class="sec-sub">Real integrated gravity, impulsive and finite-thrust burns, and missions
+      that teach why burning deep in a gravity well buys more energy than burning far from it.</p>
+      <p class="sec-take">Students argue with the physics instead of memorising it.</p>
       <a class="card" href="fuel-golf/index.html">
         <div class="topic">Physics · Oberth Effect</div>
         <h2><span class="emoji">⛳</span>Fuel Golf</h2>
         <p>Orbital-mechanics golf with real Newtonian gravity. Seven missions and a sandbox teach why burning fuel deep in a gravity well buys more energy — lowest &Delta;v wins.</p>
         <div class="go">Open demo →</div>
       </a>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">STATICS</span><span class="sec-title">A truss that actually solves</span></div>
+      <p class="sec-sub">A genuine direct-stiffness solver underneath: live tension and compression,
+      Euler buckling, progressive collapse. Cheapest bridge that survives wins.</p>
+      <p class="sec-take">Failure is visible, and the failure is the lesson.</p>
       <a class="card" href="bridge-works/index.html">
         <div class="topic">Engineering · Statics</div>
         <h2><span class="emoji">🌉</span>Bridge Works</h2>
         <p>Truss bridge builder on a real direct-stiffness solver: live tension and compression, Euler buckling, progressive collapse. Cheapest bridge that survives wins.</p>
         <div class="go">Open demo →</div>
       </a>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">APPLIED &middot; PLC</span><span class="sec-title">A controller that scans like the real thing</span></div>
+      <p class="sec-sub">Genuine input-scan, solve-rungs, output-scan &mdash; single-scan step mode,
+      live image tables, an AB-style instruction set, and eleven faults to troubleshoot.</p>
+      <p class="sec-take">Lab-bench intuition without the lab bench.</p>
       <a class="card" href="ladder-lab/index.html">
         <div class="topic">Applied Engineering · PLC</div>
         <h2><span class="emoji">🚦</span>Ladder Lab</h2>
         <p>A PLC trainer on the classic stoplight program: genuine scan-cycle engine, single-scan step mode, a ladder editor with auto-graded challenges, and injectable faults to troubleshoot.</p>
         <div class="go">Open demo →</div>
       </a>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">CONSTRUCTION</span><span class="sec-title">A schedule that fights back</span></div>
+      <p class="sec-sub">Real CPM recomputed every turn, a critical path that shifts under you, cure
+      times nothing can shorten, and a seeded event deck so every team meets the same bad luck.</p>
+      <p class="sec-take">Float stops being an abstraction the first time it runs out.</p>
       <a class="card" href="topping-out/index.html">
         <div class="topic">Construction Management · Scheduling</div>
         <h2><span class="emoji">🏗️</span>Topping Out</h2>
         <p>Competitive construction scheduling on a real CPM engine: a critical path that moves under you, cure times nothing can shorten, and a seeded event deck — same bad luck for every team.</p>
         <div class="go">Open demo →</div>
       </a>
+    </div>
+
+    <div class="sec">
+      <div class="sec-head"><span class="sec-num">NUMBER SENSE</span><span class="sec-title">Forty numbers every engineer should carry</span></div>
+      <p class="sec-sub">Slider-based estimation scored by percent error &mdash; and by orders of
+      magnitude where that is the honest scale. Solo, or pass-and-play in teams.</p>
+      <p class="sec-take">Gut-feel calibration, made competitive.</p>
       <a class="card" href="should-have-known-that/index.html">
         <div class="topic">Engineering · Estimation & Number Sense</div>
         <h2><span class="emoji">🎯</span>Should Have Known That</h2>
@@ -201,28 +319,30 @@
         <div class="go">Open demo →</div>
       </a>
     </div>
-  </div>
+  </section>
 
-  <div class="section" id="takeaways">
-    <div class="sec-head"><span class="sec-num">FINALE</span><span class="sec-title">Takeaways</span></div>
+  <section class="part" id="finale">
+    <div class="part-head">
+      <span class="part-num">Finale</span>
+      <h2>Five things to take back</h2>
+    </div>
     <div class="takeaways">
       <ol>
-        <li><b>&ldquo;AI&rdquo; is bigger than chatbots.</b> The tic-tac-toe learner is real AI with no language
-        in it at all. <span class="muted">When something is labeled AI, ask what kind — it is often not generative AI.</span></li>
-        <li><b>Generative AI is not magic.</b> It is a predictor trained on data; reasoning models and agents
-        are layers built on top. <span class="muted">You watched every layer get built in Glass Box.</span></li>
-        <li><b>The answer is only as good as the ask.</b> Context, a success spec, and the domain&rsquo;s own
-        vocabulary are free performance. <span class="muted">When you get a bad answer, ask which lever you left unpulled.</span></li>
-        <li><b>The curve is steeper than you drew it.</b> Capability has been compounding for years and the
-        gaps between releases keep shrinking. <span class="muted">Plan for the trend, not the snapshot.</span></li>
-        <li><b>The opportunity is in your discipline.</b> Pair AI with your subject expertise and you get
-        tools like the five above — tailored, classroom-ready, and fast to build.
-        <span class="muted">The tools are ready for your field.</span></li>
+        <li><b>&ldquo;AI&rdquo; is a set of rings, not a synonym for ChatGPT.</b> The tic-tac-toe
+        learner is real AI with no language in it at all. When something is labelled AI, ask which ring.</li>
+        <li><b>Generative AI is not magic.</b> It is a predictor trained on data; reasoning models
+        and agents are layers built on top. You watched every layer get built in Glass Box.</li>
+        <li><b>The answer is only as good as the ask.</b> Context, a success spec and the
+        domain&rsquo;s own vocabulary are free performance. Bad answer? Ask which lever you left unpulled.</li>
+        <li><b>The curve is steeper than you drew it &mdash; and this field has crashed before.</b>
+        Both are true at once, and holding both is what separates a judgement from a guess.</li>
+        <li><b>The opportunity is in your discipline.</b> Pair AI with your subject expertise and you
+        get tools like the five in part three &mdash; tailored, classroom-ready, and fast to build.</li>
       </ol>
       <div class="contact">
-        <div class="who">Want these for your class — or want to build your own?<br>
-          Talk to <span style="color:var(--gold)">Bryant Harrison</span>
-          <small>Murray State University</small>
+        <div class="who">
+          Want these for your class &mdash; or want to build your own?
+          <small>Talk to Bryant Harrison &middot; Murray State University</small>
         </div>
         <div class="qr">
           <img alt="QR code linking to this page" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAE+ElEQVR4nO3dQWpkNxRA0Tj0SrKXrDp7yVYqgx4FrhoEEpLa5wwbu/zd5Yvgv9LX1+fz+QP4vz9PXwDcSBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAHhx+w3fP31947rWO7z7z/576Prn/363T93ld0/9/W/hxErBgRhQBAGBGFAEAYEYUAQBoTpOcbI7vvxI6vuo6+ab6x6nd3zkFXzmVVfv8qqvwcrBgRhQBAGBGFAEAYEYUAQBoRlc4yRVfeVT90XH9k9Nzi1f2O3V/4erBgQhAFBGBCEAUEYEIQBQRgQts8xbrPq+VG7n6e0+zlX/JoVA4IwIAgDgjAgCAOCMCAIA8K3m2Pcdj7GKb/rfo9VrBgQhAFBGBCEAUEYEIQBQRgQts8xbrsvbp/DT6fOI3/l/82KAUEYEIQBQRgQhAFBGBCEAWHZHOO2/QYju/dj7H79kVNziZFX/h5GrBgQhAFBGBCEAUEYEIQBQRgQvj6fz+lruMKq+cPuecLu1xl5ZR/FKlYMCMKAIAwIwoAgDAjCgCAMCNP7MU7dR7/Nbff1Z9+X2+Ynp/arjFgxIAgDgjAgCAOCMCAIA4IwIGw/H+PUvoXZ65n9+lPX88q+i1NzqlXXb8WAIAwIwoAgDAjCgCAMCMKAMD3HmL1PvPu5TKvM/txV843bft/dXjkv3IoBQRgQhAFBGBCEAUEYEIQB4dhzpVZZtT/hld9r1XzjlX0ap55/ZcWAIAwIwoAgDAjCgCAMCMKAsH0/xqnnMu2eP7zye+3e13Hb/GcVKwYEYUAQBgRhQBAGBGFAEAaEr8/nM/cNm89dXvV5/dueQ3Wb18/BmGU/BiwgDAjCgCAMCMKAIAwIwoCw/ZzvVXafs/HKPOT1rx+57f2yYkAQBgRhQBAGBGFAEAYEYUBY9lyp3fs0Tn39rFPnWJ+aw9w2F1rFigFBGBCEAUEYEIQBQRgQhAFh+3OlVn3OfvZ6Xjmf4bbzPUZ2vy+3vY9WDAjCgCAMCMKAIAwIwoAgDAjHzscYOXVuw6n79LN2n/N929xp9/s4YsWAIAwIwoAgDAjCgCAMCMKAcGw/xqrXn3Xqem673/+KU/tzrBgQhAFBGBCEAUEYEIQBQRgQntmP8d3Opb7tuVi3za92//9YMSAIA4IwIAgDgjAgCAOCMCBcdz7GbrufW/XK72v/xq9ZMSAIA4IwIAgDgjAgCAOCMCBMzzFed2pfx6l9IKu8cm7JKlYMCMKAIAwIwoAgDAjCgCAMCD9mv+GVz/Hvfq7Rbc+DOnXux23/D6tYMSAIA4IwIAgDgjAgCAOCMCBMzzFGTt23vu28jtt+7uh1dr/+rNvmHlYMCMKAIAwIwoAgDAjCgCAMCMvmGCOr7vffNie5bb4xsnvfxSqr9nWseh0rBgRhQBAGBGFAEAYEYUAQBoTtc4xX7N5XcNs8ZGTV9b/OigFBGBCEAUEYEIQBQRgQhAHh280xdn++/7bnTb2yf+O2eY4VA4IwIAgDgjAgCAOCMCAIA8L2OcYrn9dfNa84de7Eqf0ks68zctvcw4oBQRgQhAFBGBCEAUEYEIQB4evz+cx9w6HPx8/afZ/7lfnGyG1zg9vmXVYMCMKAIAwIwoAgDAjCgCAMCNNzDPgOrBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAFBGBD+A2jRLxsHDAPFAAAAAElFTkSuQmCC">
@@ -230,13 +350,12 @@
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <footer>
     <b>Bryant Harrison</b> &middot; Murray State University<br>
     Every demo is plain HTML/CSS/JS, runs entirely in your browser, and makes no network requests once loaded.
   </footer>
-
 </div>
 </body>
 </html>

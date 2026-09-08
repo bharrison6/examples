@@ -33,7 +33,7 @@ reads 1 min · 5 min · 30 min · 2 hr · 8 hr · 2 days rather than 1.7 hr and
 
 | Test | What it measures | Shown | Revealed |
 |---|---|---|---|
-| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **82.0%** — then the exam was retired as contaminated |
+| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **80.8%** — a plateau, then the exam was retired as contaminated |
 | 2 | Science questions PhDs get wrong | GPT-4 at 39% | **94.1%**, past the 69.7% PhD line since Sept 2024 |
 | 3 | How long a job it finishes alone | 3.5 min → 60 min | **11.3 hours**, doubling every 89 days lately |
 | 4 | What a fixed ability costs | $37.50 → $7.50 per million | **$0.18** — 208× cheaper in 23 months |
