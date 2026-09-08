@@ -485,8 +485,8 @@ input[type=text]::placeholder { color: var(--ink-3); }
    tap target. Steps 1 and 2 are untouched. */
 #mem-seg { margin-top: 0; flex: 0 0 auto; }
 #mem-seg button { font-size: calc(.72 * var(--u)); padding-inline: calc(.5 * var(--u)); }
-body.step-nine #opp-row { flex-direction: row; align-items: center; gap: calc(.35 * var(--u)); }
-body.step-nine #opp-row select { flex: 1 1 auto; width: auto; min-width: 0; }
+body.step-ult #opp-row { flex-direction: row; align-items: center; gap: calc(.35 * var(--u)); }
+body.step-ult #opp-row select { flex: 1 1 auto; width: auto; min-width: 0; }
 
 /* Step 1 carries one panel step 2 does not — the commentary line under
    the board — so the board yields a little further here, exactly as it
@@ -610,78 +610,158 @@ body.step-rules #board {
 }
 
 /* ================================================================== *
- * Nine boards at once
+ * Ultimate tic-tac-toe
  *
- * Two square panes side by side: the whole match on the left, and the
- * one board you are actually playing in on the right, at full size.
- * Eighty-one live cells on a phone would be 36px each; this way the
- * squares you tap stay as big as they are in the one-board game, and
- * the overview stays readable rather than becoming a wall of glyphs.
+ * Two square panes side by side: the meta-grid on the left — which is
+ * the score AND the board the match is won on — and the small board you
+ * were SENT to on the right, at full size.
+ *
+ * The 9x9 is the hard case on a phone and this is the answer to it.
+ * Eighty-one live cells at 320px would be 36px each, and the forced
+ * board would be one hairline outline somewhere inside a wall of
+ * glyphs. Split in two and each pane is ~148px at 320px wide, so the
+ * squares you tap are ~46px — the same size they are in the one-board
+ * game — and the meta boards are ~49px. Nothing is below 36px and
+ * nothing about the layout's height changed, so TRAIN stays above the
+ * fold exactly as it did.
+ *
+ * Ultimate rules make the split MORE honest than it was for nine
+ * independent boards. You do not choose which board to play in, so the
+ * right-hand pane is not a viewport onto a bigger thing you might
+ * rather be looking at — it is the only board you are allowed to touch.
+ *
+ * Three signals carry the send rule, and they are exclusive, so there
+ * is never a question about where the next mark can go:
+ *   .sent   the board the rules point at        solid gold, breathing
+ *   .open   any board, because the send freed you   dashed gold
+ *   .dest   where the square under your finger would send them  lite blue
  * ================================================================== */
 
-#nine-wrap { margin-bottom: calc(.55 * var(--u)); }
-#nine-panes { display: flex; gap: calc(.55 * var(--u)); align-items: flex-start; }
-#nine-grid, #nine-focus { flex: 1 1 0; min-width: 0; aspect-ratio: 1; display: grid; }
-#nine-grid { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: calc(.22 * var(--u)); }
-#nine-focus { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: calc(.28 * var(--u)); }
+#ult-wrap { margin-bottom: calc(.55 * var(--u)); }
+#ult-panes { display: flex; gap: calc(.55 * var(--u)); align-items: flex-start; justify-content: center; }
+/* Same trick as the one-board board: the panes are the element that
+   yields on a short screen, so they shrink rather than pushing TRAIN
+   off the bottom. Half the row normally; less than that when the screen
+   is short; and never past the 7.6u floor, which is what keeps a tap
+   target above 36px. Measured: 41px at 320x568 portrait, 37px at
+   812x375 landscape, 54px at 375x667. */
+#ult-meta, #ult-focus {
+  flex: 0 1 auto; min-width: 0; aspect-ratio: 1; display: grid;
+  width: min(calc(50% - .28 * var(--u)), max(calc(7.6 * var(--u)), calc(100dvh - 29 * var(--u))));
+}
+#ult-meta { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: calc(.22 * var(--u)); }
+#ult-focus { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); gap: calc(.28 * var(--u)); }
 
-.nb {
+.mb {
   position: relative; padding: calc(.14 * var(--u)); border-radius: 7px;
   background: var(--panel); border: 1px solid var(--line);
   display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
-  gap: 1px; cursor: pointer; font-family: inherit; overflow: hidden;
+  gap: 1px; cursor: default; font-family: inherit; overflow: hidden;
+  transition: box-shadow .12s ease, border-color .12s ease;
 }
-.nb i { border-radius: 2px; background: rgba(255, 255, 255, .05); }
-.nb i.m1 { background: var(--you); }
-.nb i.m2 { background: var(--ai); }
-.nb.focus { border-color: var(--gold); box-shadow: 0 0 0 2px var(--gold) inset; }
-.nb.last  { border-color: var(--lite); }
-.nb.done  { cursor: default; }
-.nb.done i { opacity: .28; }
-.nb .tag {
+.mb i { border-radius: 2px; background: rgba(255, 255, 255, .05); }
+.mb i.m1 { background: var(--you); }
+.mb i.m2 { background: var(--ai); }
+.mb.last  { border-color: var(--lite); }
+.mb.done i { opacity: .28; }
+
+/* THE FORCED BOARD. It has to be unmistakable at arm's length on a
+   phone, so it gets all four channels at once: a thick gold ring, a
+   gold border, a lift out of the panel colour, and a slow pulse that
+   nothing else on the page does. */
+.mb.sent {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold) inset, 0 0 0 2px rgba(236, 172, 0, .35);
+  background: #16233a;
+  animation: sentpulse 2.2s ease-in-out infinite;
+}
+@keyframes sentpulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--gold) inset, 0 0 0 2px rgba(236, 172, 0, .30); }
+  50%      { box-shadow: 0 0 0 3px var(--gold) inset, 0 0 0 6px rgba(236, 172, 0, .12); }
+}
+/* free choice: every live board is yours to pick, so they are all
+   ringed, dashed to say "choose" rather than "you are here" */
+.mb.open {
+  cursor: pointer; border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(236, 172, 0, .55) inset;
+}
+.mb.open.focus { box-shadow: 0 0 0 3px var(--gold) inset; background: #16233a; }
+/* where the square you are touching would send them */
+.mb.dest {
+  border-color: var(--lite);
+  box-shadow: 0 0 0 3px var(--lite) inset, 0 0 0 5px rgba(0, 164, 227, .18);
+}
+/* the three boards that won the match */
+.mb.metawin { box-shadow: 0 0 0 3px var(--gold) inset, 0 0 14px rgba(236, 172, 0, .5); }
+
+.mb .tag {
   position: absolute; inset: 0; display: grid; place-items: center;
   font-weight: 800; font-size: calc(1.05 * var(--u)); line-height: 1; pointer-events: none;
 }
-.nb.r1 { background: #123a5e; } .nb.r1 .tag { color: var(--you); }
-.nb.r2 { background: #3d2f06; } .nb.r2 .tag { color: var(--ai); }
-.nb.r3 .tag { color: var(--ink-3); }
+.mb.r1 { background: #123a5e; } .mb.r1 .tag { color: var(--you); }
+.mb.r2 { background: #3d2f06; } .mb.r2 .tag { color: var(--ai); }
+.mb.r3 .tag { color: var(--ink-3); }
 
-#nine-focus .cell { font-size: calc(1.9 * var(--u)); border-radius: 9px; }
-#nine-focus .cell.heat { font-size: calc(1.2 * var(--u)); }
-#nine-focus .cell .v { font-size: calc(.6 * var(--u)); top: calc(.14 * var(--u)); }
-#nine-focus .cell .n { font-size: calc(.44 * var(--u)); bottom: calc(.12 * var(--u)); }
-
-#nine-tally {
-  display: flex; gap: calc(.35 * var(--u)); margin-top: calc(.5 * var(--u));
-  font-size: calc(.62 * var(--u)); letter-spacing: .1em; text-transform: uppercase;
-  color: var(--ink-3);
+#ult-focus .cell { font-size: calc(1.9 * var(--u)); border-radius: 9px; }
+#ult-focus .cell.heat { font-size: calc(1.2 * var(--u)); }
+#ult-focus .cell .v { font-size: calc(.6 * var(--u)); top: calc(.14 * var(--u)); }
+#ult-focus .cell .n { font-size: calc(.44 * var(--u)); bottom: calc(.12 * var(--u)); }
+/* The destination badge: which board this square would send them to.
+   Quiet by default — it is a reference, not an instruction — and the
+   pane opposite lights up when you actually touch the square. */
+#ult-focus .cell .s {
+  position: absolute; top: calc(.1 * var(--u)); right: calc(.22 * var(--u));
+  font-size: calc(.5 * var(--u)); font-weight: 700; line-height: 1;
+  color: var(--ink-3); opacity: .5; pointer-events: none;
 }
-#nine-tally .nt {
-  flex: 1; text-align: center; background: var(--panel-2); border: 1px solid var(--line);
-  border-radius: 8px; padding: calc(.3 * var(--u)) 2px; min-height: calc(2.1 * var(--u));
-  display: flex; align-items: center; justify-content: center; gap: .45em;
-}
-#nine-tally b { font-size: calc(1.05 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: 0; }
-#nine-tally .you b { color: var(--you); }
-#nine-tally .ai b  { color: var(--ai); }
-#nine-tally .dr b  { color: var(--ink-2); }
-#nine-tally .mid   { flex: 1.1; color: var(--gold); }
+#ult-focus .cell.heat .s { color: inherit; opacity: .55; }
+/* A square whose board is already finished hands the opponent the WHOLE
+   grid, and nothing about the picture inside this board says so. Gold,
+   because it is the loaded one. */
+#ult-focus .cell.sends-free .s { color: var(--gold); opacity: 1; font-size: calc(.62 * var(--u)); }
+#ult-focus .cell.sends-free { border-color: rgba(236, 172, 0, .4); }
+#ult-focus.free-dest { box-shadow: 0 0 0 2px rgba(236, 172, 0, .3); border-radius: 12px; }
 
-/* nine-board thumbnails in the montage */
-.m-boards.nine { grid-template-columns: repeat(3, 1fr); }
-.mini9 {
+/* The send rule, restated in words on every turn, with the board count
+   on its second line. One row rather than two: a ring around a board
+   says WHERE, and only this says WHY, and on a 320x568 screen there is
+   not room for a separate scoreboard as well as the sentence that
+   carries the whole act. */
+#ult-where {
+  margin-top: calc(.45 * var(--u)); padding: calc(.32 * var(--u)) calc(.5 * var(--u));
+  border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2);
+  font-size: calc(.66 * var(--u)); line-height: 1.3; color: var(--ink-2);
+}
+#ult-where .uw-say { display: block; }
+#ult-where b { color: var(--ink); }
+#ult-where .uw-score {
+  display: block; margin-top: .15em;
+  font-size: calc(.56 * var(--u)); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ink-3); font-variant-numeric: tabular-nums;
+}
+#ult-where .uw-score b { font-weight: 800; letter-spacing: 0; }
+#ult-where .uw-score b.you { color: var(--you); }
+#ult-where .uw-score b.ai  { color: var(--ai); }
+#ult-where.sent { border-color: rgba(236, 172, 0, .55); }
+#ult-where.sent .uw-say b { color: var(--gold); }
+#ult-where.free { border-color: rgba(236, 172, 0, .55); background: #16233a; }
+#ult-where.free .uw-say b { color: var(--gold); }
+
+/* ultimate-match thumbnails in the montage */
+.m-boards.ult { grid-template-columns: repeat(3, 1fr); }
+.miniu {
   aspect-ratio: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
   gap: 2px; background: var(--line); border-radius: 7px; padding: 2px;
 }
-.m9b {
+.mub {
   display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
   gap: 1px; background: var(--panel); border-radius: 3px; padding: 1px;
 }
-.m9b i { border-radius: 1px; background: rgba(255, 255, 255, .06); }
-.m9b i.m1 { background: var(--you); } .m9b i.m2 { background: var(--ai); }
-.m9b.r1 { background: #123a5e; } .m9b.r2 { background: #3d2f06; } .m9b.r3 { opacity: .5; }
+.mub i { border-radius: 1px; background: rgba(255, 255, 255, .06); }
+.mub i.m1 { background: var(--you); } .mub i.m2 { background: var(--ai); }
+.mub.r1 { background: #123a5e; } .mub.r2 { background: #3d2f06; } .mub.r3 { opacity: .5; }
 
-/* comparison table and match score on the nine-board card */
+/* comparison table and match score on the ultimate card */
 table.cmp { width: 100%; border-collapse: collapse; font-size: calc(.72 * var(--u)); margin-top: calc(.2 * var(--u)); }
 table.cmp th, table.cmp td { padding: calc(.28 * var(--u)) calc(.3 * var(--u)); text-align: right; border-bottom: 1px solid var(--line); }
 table.cmp th:first-child, table.cmp td:first-child { text-align: left; color: var(--ink-3); }
@@ -726,7 +806,15 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
   .sc { min-height: calc(1.55 * var(--u)); }
   .sc .n { font-size: calc(.95 * var(--u)); }
   #status { min-height: calc(1.8 * var(--u)); margin-top: calc(.35 * var(--u)); }
-  #board-wrap, #nine-wrap { margin-bottom: calc(.4 * var(--u)); }
+  #board-wrap, #ult-wrap { margin-bottom: calc(.4 * var(--u)); }
+  /* Step 3 carries one panel the other steps do not, so it gets the
+     tightest version of it here. TRAIN stays above the fold at
+     320x568; that is the constraint the whole layout is built around. */
+  #ult-where {
+    margin-top: calc(.32 * var(--u)); padding: calc(.26 * var(--u)) calc(.42 * var(--u));
+    font-size: calc(.62 * var(--u)); line-height: 1.28;
+  }
+  #ult-where .uw-score { font-size: calc(.52 * var(--u)); }
   .seg { margin-top: calc(.4 * var(--u)); }
 }
 

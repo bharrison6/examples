@@ -101,7 +101,7 @@
   <p class="kv"><b>The shape of it.</b> Three opponents on one board, and they are not three difficulty
   levels. Step 1 got all of its skill from a person and none from experience. Step 2 got all of it from
   experience and none from a person. They end up playing identically, and the app proves both with the
-  same search. Step 3 is where writing it down stops being possible.</p>
+  same search. Step 3 is where the shortcut behind step 2 stops describing the game, and where the space stops being searchable at all.</p>
 </section>
 
 <section>
@@ -293,54 +293,69 @@
 </div><!-- /cols -->
 
 <section class="act2">
-  <h2>Step 3: nine boards at once (5 minutes)</h2>
-  <p>The third segment at the top switches to the nine-board game: a mark per turn on <em>any</em> unfinished
-  board, finished boards lock, first to five boards takes the match. Run this after the banner, when
-  the room has just watched something become perfect. The point is what happens to that method when
-  the world gets one step bigger — and note in passing that step 1 is not on the menu here at all:
-  nobody has an eight-rule ladder for this game, and working one out is the job.</p>
+  <h2>Step 3: ultimate tic-tac-toe (5 minutes)</h2>
+  <p>The third segment switches to <b>ultimate tic-tac-toe</b>: nine small boards in a 3&times;3 grid,
+  and one extra rule &mdash; <b>the square you play in decides which board your opponent must play in
+  next</b>. Sent to a board that is already finished, won or full? Play anywhere. Win a small board by
+  three in a row inside it; win the <b>match</b> by winning three small boards in a row. A small board
+  that fills with no winner counts for neither side. Run this after the banner, when the room has just
+  watched something become perfect. One sentence of extra rule, and the method that got them there
+  stops describing the game.</p>
 
   <div class="beat"><div class="t">0:00</div><div>
-    <b>Switch to "3 &middot; Nine boards" and play it.</b>
-    It is beatable again — sometimes badly. Nothing was taken away from it. Ask the room why.
-    <div class="say">"Same opponent. Same table. It just got moved somewhere slightly bigger."</div>
+    <b>Switch to "3 &middot; Ultimate" and play four or five moves.</b>
+    Do not explain the rule &mdash; the line under the two panes explains it on every single turn, and
+    the gold ring shows the board you are stuck in. Let them notice that it moves because of the
+    square they just played.
+    <div class="say">"Same opponent. Same table. One extra sentence in the rules."</div>
   </div></div>
 
   <div class="beat"><div class="t">1:30</div><div>
-    <b>Turn on "Show its brain" and read the last line.</b>
-    It reports what fraction of the squares it is weighing up sit on a board picture it has never
-    seen — often most of them. On one board the marks tell you whose turn it is; here you can play
-    twice in the same board while your opponent is busy elsewhere, so about half the pictures you meet
-    <em>cannot happen</em> in ordinary tic-tac-toe. Only 14% of what this game needs came across.
+    <b>Train once, then read the first card &mdash; the control row first.</b>
+    It takes a free win inside a board about four times in five: <b>81%</b> over a thousand measured
+    matches. That row is there so the next one means something. The next one is a move that wins the
+    whole <b>match</b>, and it is taken at <b>79%</b> &mdash; no more often.
+    <div class="say">"It cannot see the game it is playing. Winning three boards <em>in a row</em> is
+    about where boards sit. It only ever looks inside one board."</div>
+    When the match-winning move is the only board win going, it takes it at the control rate. When
+    another board win ties with it, it flips a coin.
   </div></div>
 
-  <div class="beat"><div class="t">2:30</div><div>
-    <b>Train it, then read the first card.</b>
-    It counts, by playing, how often any position comes round twice. On one board about ten times. On
-    nine boards about once.
-    <div class="say">"Learning from experience needs the experience to repeat. Here it never does. So
-    why does this work at all?"</div>
-    Because it looks at <b>one board at a time</b> and adds up what it finds — and a person chose that
-    shortcut. Finding the shortcut yourself is what a neural network is for.
+  <div class="beat"><div class="t">3:00</div><div>
+    <b>Second card: where it sends you.</b>
+    It hands over an immediate win on <b>36%</b> of the turns where that was a choice, against
+    <b>41%</b> for choosing blind &mdash; and <b>45%</b> of those giveaways had an equally
+    top-scoring square right beside them.
+    <div class="say">"It is giving the game away at the rate you get by not looking, because it is not
+    looking."</div>
+    Then the third card: two hand-written opponents, the same player apart from three clauses about
+    the new rule. It learns against the one that shares its blind spot &mdash; <b>122</b> losses down
+    to <b>54</b> of 200 &mdash; and flatlines against the other, <b>167</b> down to <b>137</b> and no
+    further.
   </div></div>
 
   <div class="beat"><div class="t">4:00</div><div>
-    <b>Point at the missing banner.</b>
-    Where steps 1 and 2 both printed a proof, this one prints a refusal: nobody can check every game here, so
-    nobody can promise. Then show the score against the hand-written opponent — take any win, block
-    any loss, else prefer the middle, the way a person would explain the game. It stops losing to
-    those rules within a few bursts, having never been shown them.
-    <div class="say">"Good, but not proven. That is where every real AI system lives."</div>
+    <b>Close on the banner, which is the best thing in the act.</b>
+    Ordinary tic-tac-toe: <b>255,168</b> complete games, so steps 1 and 2 could walk every one and
+    print a proof. Ultimate: about <b>3.6 &times; 10<sup>38</sup></b> positions &mdash; counting a
+    billion a second since the big bang leaves you <b>820 billion</b> times short. <b>And it is
+    solved anyway.</b> Bertholon and colleagues proved in 2020 that the first player has a forced win
+    in <b>at most 43 moves</b>, second player holding out <b>at least 29</b> (arXiv:2006.02353).
+    <div class="say">"Nobody visited those positions. They wrote down a strategy and proved it. A
+    proof does not require checking every case."</div>
+    And still nobody has proved anything about the opponent on the screen: it is not running that
+    strategy and this app cannot search its tree. Good, measured, never proven &mdash; which is where
+    chess engines, self-driving cars and language models all live.
   </div></div>
 
   <p class="kv"><b>Two more questions for this act.</b> (1) The agent scores a move by how much it
-  improves the one board it is played in, and ignores the other eight. When would that be exactly
-  right, and when would it be wrong? (2) It explores by trying whatever it has seen least, rather than
-  at random. Why does rolling a die stop working when the space gets big?</p>
+  improves the one board it is played in, and ignores the other eight and where the move sends its
+  opponent. What would a memory need to be able to represent for those to matter to it? (2) The game
+  is solved and the space cannot be searched. How can both be true at once?</p>
 </section>
 
 <footer>
-  <span>Murray State University &middot; Zero to Unbeatable &middot; rules, learning, nine boards &middot; single-file offline demo &middot; no network, no accounts, no AI service</span>
+  <span>Murray State University &middot; Zero to Unbeatable &middot; rules, learning, ultimate &middot; single-file offline demo &middot; no network, no accounts, no AI service</span>
   <span>Donald Michie's MENACE (1961) did this with 304 matchboxes and coloured beads.</span>
 </footer>
 

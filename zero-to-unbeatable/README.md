@@ -3,8 +3,8 @@
 A single-file, phone-first demo of the three different things people call AI, played out on one
 tic-tac-toe board. First an opponent whose whole skill is eight if/else rules a person wrote down.
 Then one that starts knowing nothing and gets to the same place on its own — you beat it easily,
-train it in bursts, play it again, until you cannot beat it. Then that same learner in a world one
-step bigger, where the approach starts to come apart.
+train it in bursts, play it again, until you cannot beat it. Then that same learner in ULTIMATE tic-tac-toe, one
+extra rule bigger, where the shortcut a person chose for it stops describing the game.
 
 Steps 1 and 2 arrive at identical unbeatable play from opposite directions, and the app proves both
 with the same exhaustive search. That contrast is the demo.
@@ -178,57 +178,164 @@ era  games   seen   eps    wins-vs-random  casual player beats it  verified
 
 Over 12 seeds: unbeatable at burst **3 to 5**, mean **4.08**, never earlier than 3.
 
-## Step 3 — nine boards at once
+## Step 3 — Ultimate tic-tac-toe
 
-The third segment at the top: nine independent boards, a turn is one mark on
-any unfinished board, finished boards lock, and the first to win five boards takes the match. It
-exists to show what happens to this whole approach when the world gets one step bigger, and three
-things break in instructive ways. It is also where step 1 stops being an option at all — nobody has
-an eight-rule ladder for this, and writing one is the work.
+The third segment at the top. Nine small boards in a 3×3 meta-grid, and **one extra rule**:
 
-**Nothing repeats.** A table can only learn if the same situation comes round again. Measured live
-after each burst, at the same budget each act actually trains on:
+> **The cell you play in decides which board your opponent must play in next.**
+> Play the centre cell of a board and your opponent is sent to the centre board. If they are sent to
+> a board that is already finished — won or full — they may play anywhere. Win a small board by
+> three in a row inside it. Win the **match** by winning three small boards in a row on the
+> meta-grid.
+
+A small board that fills up with nobody winning it is **a draw, and counts for neither side** on the
+meta-grid — the usual convention, and the one the literature uses. If all 81 squares fill with no
+meta-line, the match is drawn. The page states all of this on screen; nobody has to arrive knowing
+it.
+
+One sentence of extra rule, and everything that made this act comfortable stops being true.
+
+### 1. The shortcut a person chose stops describing the game
+
+Step 3 inherits step 2's method plus one addition a *person* made: score **one board at a time** and
+add up. That was defensible when nine boards were genuinely independent. Under ultimate rules it is
+the wrong description of the game, in two specific places — and the app measures both after every
+burst rather than asserting them, each against a control that has to come out the other way.
+
+**The meta-grid is invisible.** A board's worth depends on where it sits: the centre board is on
+four lines of three, an edge board on two. The agent scores a board by the picture inside it, and
+those pictures are identical. Over 1,000 measured matches against a hand-written opponent:
+
+| | taken | rate |
+|---|---|---|
+| a free win inside a board — **the control** | 3,021 of 3,737 | 81% |
+| **a move that wins the match** | 489 of 622 | 79% |
+| …when it is the only board win on offer | 449 of 547 | 82% |
+| …when another board win ties with it | 40 of 75 | 53% |
+
+The control is the point of the first row: board wins are exactly what a per-board table *can* see,
+so 81% is the probe proving it has eyes. Against that, a move that ends the **match** is taken no
+more often — 79%. When the match-winning move is the only board win going it is taken at the control
+rate, because it is just taking a board win and this one happens to end the game. When another board
+win ties with it, it flips a coin. There is nowhere in a table indexed by the picture inside a board
+to keep "and this board completes a line".
+
+**Where the move sends the opponent is invisible.** Two moves can leave a board looking identical
+and send the opponent somewhere they win instantly, or somewhere they have nothing. Counted over the
+turns where some legal moves handed over an immediate win and some did not:
 
 ```
-             positions met   different   times each came round
-one board           37,141       3,622                   10.3×
-nine at once        60,883      57,239                    1.06×
+it handed over an immediate win                     3,110 of 8,627 turns    36%
+blind choosing would have                                                   41%
+of those, an equally top-scoring move that
+would not have was sitting right beside it          1,389                   45%
 ```
 
-A table over whole nine-board positions could never learn anything at all. This one works only
-because it looks at **one board at a time** and adds up what it finds — a decomposition a person
-chose. Finding such a shortcut by itself is what a neural network is for.
+It gives the game away at about the rate you get by not looking, because it is not looking. The
+small margin *under* chance is not foresight, and the page says so: taking the square an opponent
+needs is a **block**, which is visible one board at a time, and a blocked board is no longer a gift.
+It gets that much free and nothing else.
 
-**Most of step 2 does not transfer.** You can play twice in the same board while your opponent works
-elsewhere, so a board can hold three of yours and one of theirs — a picture ordinary tic-tac-toe can
-never produce. 54% of the board pictures met in a match are of that kind. Step 2's table hands over
-exactly 5,477 entries of the 39,366 this game needs — **14%, free and exact** — and the rest has to
-be learned. Turn the inspector on and it tells you what fraction of the squares it is weighing right
-now sit on a picture it has never seen.
-
-**The method survives; the state had to grow.** Same rule as step 2 — a position is worth the best
-thing the player to move can reach from it — but the turn is carried explicitly instead of read off
-the mark counts, so unbalanced boards are representable at all. Without that one bit the agent takes
-100% of its free wins and blocks **0%** of the threats, which is measured in `src/nine.js`'s notes.
-Which board to play in is arithmetic, not a rule: the match is the sum of its nine boards, so
-everything except the board you touch cancels.
-
-**Exploration had to change too.** Rolling a die to explore works on 5,478 positions and fails here:
-26% of the *winning* board pictures were still unvisited after 10,000 matches, and an unvisited
-picture reads 0.00, so the agent walked past free wins. It now explores toward whatever it has seen
-least. That contains no tic-tac-toe knowledge — it cannot tell a winning square from any other, only
-a familiar one from a strange one.
-
-**And there is no banner.** Steps 1 and 2 both end in a proof; this one cannot have one, and the app says so
-where the banner would be. Measured instead against a rule-based opponent written out by hand — take
-any win, block any loss, else prefer the middle — which the learner is never shown:
+**So it stops improving.** Two hand-written opponents, identical except that one has three extra
+clauses — win the match if you can, do not send them somewhere they win, weigh a board by how many
+lines of three it sits on. Matches lost of 200, after each burst of 600:
 
 ```
-burst        0     1     2     3     4
-lost       200   385   255   110     0   of 400 matches
+burst                    0    1    2    3    4    5
+lost to board-local    122   96   81   62   59   54
+lost to send-aware     167  139  145  138  124  137
 ```
 
-Arc: 1,000 matches per burst, four bursts, ~100 ms each.
+Against the opponent that shares its blind spot it learns, and losses more than halve. Against the
+one that does not, it improves once and then flatlines. Those three clauses are an afternoon's work
+for a person — the send-aware player beats the board-local one **200 matches to nothing** — and all
+three are things this memory has no slot for, so no amount of experience puts them in. Finding a
+representation that *does* have room for them, without being told, is the next rung and a separate
+build.
+
+**Nothing repeats, either**, which is why the obvious fix — a table over whole positions — is not
+available. Measured live after each burst, at the budget each step actually trains on. A position
+here includes which board you were sent to, because the same 81 marks with the opponent pointed
+somewhere else is a different position:
+
+| | positions met | different | times each came round |
+|---|---|---|---|
+| one board | 37,415 | 3,543 | 10.6× |
+| ultimate | 24,424 | 22,653 | 1.08× |
+
+Over 41-move matches. And **most of step 2 does not transfer**: you can play twice in the same board
+while your opponent is busy elsewhere, so a board can hold three of yours and one of theirs, a
+picture ordinary tic-tac-toe cannot produce. 51% of the board pictures met in a match are of that
+kind. Step 2 hands over **5,477 of 37,506** usable entries — **15%**, free and exact — and the rest
+starts at zero. Turn the inspector on mid-match and it tells you what share of the squares it is
+weighing sit on a picture it has never seen.
+
+### 2. The search space stops being reducible
+
+Ordinary tic-tac-toe has **255,168** complete games, which is why steps 1 and 2 can end in a proof:
+the app walks every one of them. Ultimate cannot be walked, and the two reductions people reach for
+are both gone.
+
+You cannot treat the boards as interchangeable, because you win three *in a row* and where a board
+sits is the whole question. You cannot rotate one board on its own either — that would move its
+cells, and its cells are what name the next board. Exactly one symmetry survives: turn or reflect
+the whole 9×9 at once, eight ways.
+
+Counting what is left. All of it is recomputed in `src/ultimate.js` and pinned in the test suite:
+
+```
+small-board pictures this game can actually produce    18,753  of 19,683
+                                     up to symmetry     2,694
+table entries the learner can therefore use            37,506
+
+upper bound on whole positions   18,753⁹ × 10 ÷ 8  =  3.6 × 10³⁸
+```
+
+The ten is which board you were sent to, or "anywhere" — and it is needed, because in ultimate the
+picture is no longer the position. The eight is the one surviving symmetry, and dividing by it is
+the *most* symmetry can ever buy, since a symmetric position has fewer than eight images. **Whose
+turn it is needs no factor of its own**: marks strictly alternate across the whole grid, so the
+counts already say. The result is still an over-count — it includes nine-picture combinations no
+single game could reach.
+
+The point of that arithmetic is what it buys, which is nothing. Ignore the rules entirely and you
+get 3⁸¹ = **4.4 × 10³⁸**. Do all of the above and you land at **0.81** of it. Counting a billion
+positions a second, starting at the big bang, you would still be about **820 billion** times short.
+
+### 3. And the game is solved anyway
+
+Bertholon, Géraud-Stewart, Kugelmann, Lenoir and Naccache, *"At Most 43 Moves, At Least 29: Optimal
+Strategies and Bounds for Ultimate Tic-Tac-Toe"*, **arXiv:2006.02353** (2020): the first player has
+a forced win, **at most 43 moves**, with the second player able to hold out **at least 29**. Nobody
+visited 3.6 × 10³⁸ positions to establish that. They wrote down a strategy and proved it always
+works.
+
+That is the three-layer lesson, and the third layer is the interesting one: *a proof does not
+require checking every case*. "Too big to search" and "unknowable" are not the same sentence.
+
+**One honest caveat, which the app prints too.** The paper's rules free your choice only when the
+board you are sent to is **full**; a board that has been *won* but still has empty squares must be
+played in anyway, to no effect. This demo uses the commoner convention, where a won board frees you
+as well — and the published strategy leans on sending the second player back into a board the first
+has already won, which this page would not allow. Near neighbours, not the same game. The result is
+quoted, not claimed for the squares on screen.
+
+### And our learner still has no proof
+
+Steps 1 and 2 end in a banner because the app searched every game. This one cannot, and the app says
+so where the banner would be — better motivated now, not worse. The thing you are playing is not
+running the published strategy, has never been shown it, and cannot have its tree searched here. It
+is only ever *good*, measured. That is the ordinary situation for every serious AI system: chess
+engines, self-driving cars, language models. Somebody may have proved something about the
+**problem**. Nobody has proved anything about the **program**.
+
+### What carried over unchanged
+
+The learning rule is step 2's, with the turn carried explicitly instead of read off the mark counts,
+so an unbalanced board is representable at all. Exploration is count-based rather than a coin flip —
+it goes where it has been least, which contains no tic-tac-toe knowledge: it cannot tell a winning
+square from any other, only a familiar one from a strange one. Neither is new here; both are written
+up in `src/ultimate.js` where they live.
 
 ## Look and feel
 
@@ -251,9 +358,16 @@ settings and the notes. Above 760px wide and
 roughly landscape, the page becomes two columns: board on the left, training on the right. That
 covers a phone turned sideways as well as a laptop. The integration suite asserts all of this at
 eight viewports from 320×568 up — in both modes — plus presenter mode on 720p and 1080p projectors,
-so the layout cannot quietly regress. Nine boards would be 81 live cells at 36px each on a phone, so
-it is laid out as two square panes instead: the whole match on the left, and the one board you are
-actually playing in at full size on the right.
+so the layout cannot quietly regress. Step 3's 9×9 would be 81 live cells at 36px each on a phone,
+so it is laid out as two square panes instead: the meta-grid on the left, and the board you were
+**sent to** at full size on the right, its squares 41px at 320×568 and never under 36px anywhere.
+Ultimate rules make that split more honest than it was for nine independent boards — you do not
+choose which board to play in, so the right-hand pane is not a viewport onto something you might
+rather be looking at, it is the only board you are allowed to touch. Three exclusive signals carry
+the rule: a gold ring that breathes on the board you were sent to, a dashed ring on every live board
+when the send has freed you, and a blue ring on the destination of whichever square you are
+touching. A line of prose under the panes says which and why on every single turn, and a ✦ on a
+square means its board is finished, so playing there hands the opponent the whole grid.
 
 Presenter mode changes exactly one CSS variable.
 
@@ -269,14 +383,14 @@ can be re-run in front of an audience from **Settings → Run the full self-test
 ## Tests
 
 ```
-node src/playtest.test.js     # 66 checks: the rule ladder, uniformity, unbeatability,
-                              #            blind spots, pacing, nine boards
+node src/playtest.test.js     # 100 checks: the rule ladder, uniformity, unbeatability,
+                              #             blind spots, pacing, ultimate  (~2s)
 node tools/integration.mjs    # browser, including modal/RNG/self-test honesty checks
 node tools/tune.mjs           # characterise the arc;  --sweep  to grid search
 ```
 
 `src/playtest.test.js` covers verifications 1–4 from the brief plus the rule ladder and the
-nine-board step, including a behavioural proof
+ultimate step, including a behavioural proof
 that no strategy is baked in: a newborn takes a free win 42.9% of the time against a chance
 rate of 43.3%, and blocks a threat 42.4% against 42.9%. For step 1 it re-derives each of the eight
 rules' own definition and checks that every square the ladder picks satisfies the rule that picked
@@ -304,12 +418,16 @@ promise cannot rot.
 ```
 src/engine.js          one board: learning, opponents, verification — no DOM, no UI
 src/rules.js           step 1: the eight hand-written rules, why each fired, the depth dial
-src/nine.js            nine at once: rules, the bigger table, the ported CPU benchmark
+src/ultimate.js        step 3: ultimate rules, the inherited table, the two blindness probes,
+                       the state-space counts, and the two hand-written opponents
+src/net.js             NOT BUILT IN. A working MLP and TD trainer, built against the retired
+                       nine-independent-boards ruleset and kept as machinery for a later rung.
+                       Nothing references it; the build and the tests run without it.
 src/app.js             game, montage, eras, inspector, explainers
 src/styles.css         phone-first; presenter mode scales one CSS variable
 src/template.html      shell with /*__CSS__*/ and /*__JS__*/ placeholders
 src/demo-guide.html    the printable session guide
-src/playtest.test.js   verifications 1-4, plus the rule ladder and nine boards
+src/playtest.test.js   verifications 1-4, plus the rule ladder and ultimate
 tools/integration.mjs  verifications 5-6, in a real browser
 tools/tune.mjs         hyperparameter sweep scored on the arc
 tools/pdf.mjs          guide -> PDF
