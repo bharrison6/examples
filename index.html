@@ -199,7 +199,8 @@
     <div id="ring-note" hidden></div>
     <p class="caption">
       <b>When something is labelled &ldquo;AI&rdquo;, ask which ring.</b> Demos 1, 2 and 3 are the
-      same game played by three different machines, one per ring. Most of the AI already running in
+      same game, moving inward one ring at a time: rules a person wrote, then a learner taught by
+      nothing but won-lost-drew, then the wall that learner hits. Most of the AI already running in
       industry is nowhere near the gold chips in the middle &mdash; and the outer rings did not stop
       working when the inner ones arrived.
     </p>
@@ -209,9 +210,11 @@
     <div class="part-head">
       <span class="part-num">Part one</span>
       <h2>What AI is</h2>
-      <p class="part-q">Four rungs, working outside-in through those rings. The first three are the
-      same game &mdash; tic-tac-toe &mdash; played by three completely different kinds of machine, so
-      the only thing changing is the machinery. Then the one inside the chatbot.</p>
+      <p class="part-q">Four rungs, working outside-in through those rings. The first three are one
+      game &mdash; tic-tac-toe &mdash; with the machinery swapped underneath it: rules a person wrote
+      by hand, then a learner told nothing but won, lost or drew, and then the wall that learner runs
+      into &mdash; which is the problem neural networks were invented to solve. Then the one inside
+      the chatbot.</p>
     </div>
     <div class="take"><b>Leave with:</b> AI is a family of methods. Each ring solves the problem the
     ring outside it could not, and each one is still in production somewhere today &mdash; the outer
@@ -236,7 +239,7 @@
         <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Machine learning &mdash; one ring in</span></div>
         <p class="sec-sub">Same board. An opponent that has played zero games and holds no rules at
         all, learning only from won, lost or drew. Train it in three-second bursts until you cannot
-        win &mdash; then the app proves it, playing out all <b>15,776</b> games still reachable
+        win &mdash; then the app proves it, playing out every one of about <b>15,000</b> games still reachable
         against it. Tic-tac-toe has <b>255,168</b> games in total across <b>5,478</b> positions, so a
         laptop really can check every one. That is why this is a proof and not a win record.</p>
         <p class="sec-take">Same result as the rules. Nobody wrote a single one of them.</p>
@@ -255,10 +258,11 @@
         neural networks exist to get over: computing a value for a position you have never seen.</p>
         <p class="sec-sub">The proof goes with it. If the nine boards were independent you could
         shrink this space enormously &mdash; they would be interchangeable, and each could be rotated
-        on its own. Coupling them kills both shortcuts, so the honest bound is
-        <b>3.6&times;10<sup>38</sup></b>: <b>0.81&times;</b> the naive 3<sup>81</sup>, meaning every
-        reduction available buys essentially nothing. That is <b>820 billion times</b> more than you
-        could count at a billion a second since the Big Bang &mdash; and yet the game <i>was</i>
+        on its own. Coupling them kills both shortcuts. A <i>crude</i> upper bound is
+        <b>3.6&times;10<sup>38</sup></b> &mdash; <b>820 billion times</b> more than you could count
+        at a billion a second since the Big Bang. Apply the constraints that bound ignores and it
+        drops by an order of magnitude, which changes nothing: no honest bound here is small enough
+        to count &mdash; and yet the game <i>was</i>
         solved, in 2020, by cleverness rather than by counting.</p>
         <div class="eg"><span class="lbl">the same idea, in the wild</span>
         <b>AlexNet</b> won ImageNet in 2012 and restarted the whole field. <b>AlphaGo</b> beat Lee
@@ -351,7 +355,7 @@
       <a class="card" href="two-winters/index.html">
         <div class="topic">Has this happened before?</div>
         <h2><span class="emoji">❄️</span>Two Winters</h2>
-        <p>Ten real, sourced predictions with the speaker and the date hidden: guess the year and guess whether it came true. Six confident promises that missed by decades, three confident dismissals that aged worse, one warning that was right. Then a scrubbable 1950–2026 timeline whose lanes are the five stages of an AI winter — promise, money, limit, naming, withdrawal — firing in order, twice.</p>
+        <p>Ten real, sourced predictions with the speaker and the date hidden: guess the year and guess whether it came true. Six confident promises — five have resolved and not one arrived inside the window it named — three confident dismissals that aged worse, and one warning that was right. Then a scrubbable 1950–2026 timeline whose lanes are the five stages of an AI winter — promise, money, limit, naming, withdrawal — firing in order, twice.</p>
         <div class="go">Open demo →</div>
       </a>
     </div>

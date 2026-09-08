@@ -103,8 +103,9 @@ training run, and a program a person can read and check. It was finished before 
 played its first game.
 
 What rules cannot do is exist for a problem nobody can write down. Change the board to 4×4 and the
-eight rules are worthless until somebody works out the new ones. Chess has more positions than there
-are atoms on Earth and language has no fixed number at all; nobody has written the ladder for either,
+eight rules are worthless until somebody works out the new ones. Chess has more possible games than
+there are atoms in the observable universe and language has no fixed number at all; nobody has
+written the ladder for either,
 and not for want of trying. Learning is what you reach for when the rules *cannot* be written — which
 is the point of steps 2 and 3, and the reason this page says so in its own explainer rather than
 letting the demo imply that learning is simply superior.
@@ -176,7 +177,8 @@ era  games   seen   eps    wins-vs-random  casual player beats it  verified
  4   20000   5476   0.43           87%               0 of 1000  UNBEATABLE
 ```
 
-Over 12 seeds: unbeatable at burst **3 to 5**, mean **4.08**, never earlier than 3.
+Over 24 seeds: unbeatable at burst **3 to 5**, mean **3.9**, never earlier than 3 and never
+later than 5. The same figure is in `src/engine.js` and is cross-checked by the test suite.
 
 ## Step 3 — Ultimate tic-tac-toe
 
@@ -383,7 +385,7 @@ can be re-run in front of an audience from **Settings → Run the full self-test
 ## Tests
 
 ```
-node src/playtest.test.js     # 100 checks: the rule ladder, uniformity, unbeatability,
+node src/playtest.test.js     # the rule ladder, uniformity, unbeatability,
                               #             blind spots, pacing, ultimate  (~2s)
 node tools/integration.mjs    # browser, including modal/RNG/self-test honesty checks
 node tools/tune.mjs           # characterise the arc;  --sweep  to grid search
@@ -444,6 +446,7 @@ rotations and mirrors are folded together, each holding coloured beads, one colo
 square. To move you shook the box for the current position and drew a bead; if MENACE won you
 added three beads of each colour it had played, if it drew you added one, and if it lost
 you took one away. That is a
-physical implementation of exactly what this page runs, and it took a couple of hundred games
-by hand to make it unbeatable, with no computer at all. The app tells the story in its
+physical implementation of exactly what this page runs, and Michie and the machine began to
+draw consistently after about twenty games, by hand, with no computer at all. It was never shown to
+be unbeatable. The app tells the story in its
 "How is it learning?" panel.

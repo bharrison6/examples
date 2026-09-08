@@ -996,6 +996,28 @@ head('7. Step 1 — the hand-written rules');
   check('every number quoted in README.md, the guide and the manifest matches the code',
     missing.length === 0, 'not found in the prose: ' + missing.join(', '));
   console.log(`        ${quoted.length} figures cross-checked against the three documents`);
+
+  /* ---- the burst arc agrees across the three files that state it ----
+
+     This figure is a measurement written into a comment, not a value the
+     code returns, so the cross-check above cannot see it. README.md said
+     "mean 4.08 over 12 seeds" and SPEC.md said "mean 3.8" while engine.js
+     said "mean 3.9 over 24 seeds" — three numbers for one measurement.
+     Take engine.js as canonical and make any disagreement fail. */
+  const hp = fs.readFileSync(path.join(__dirname, 'engine.js'), 'utf8');
+  const arc = hp.match(/over (\d+) seeds[\s\S]{0,240}?mean (\d+(?:\.\d+)?)/);
+  check('src/engine.js states the burst arc it is the canonical copy of', !!arc);
+  if (arc) {
+    const [, seeds, mean] = arc;
+    for (const f of ['../README.md', '../SPEC.md']) {
+      const txt = fs.readFileSync(path.join(__dirname, f), 'utf8');
+      const hasSeeds = txt.includes(seeds + ' seeds');
+      const hasMean = txt.includes('mean ' + mean) || txt.includes('mean **' + mean + '**');
+      check(`${f.replace('../', '')} quotes the same burst arc as engine.js (${seeds} seeds, mean ${mean})`,
+        hasSeeds && hasMean,
+        `seeds ${hasSeeds ? 'ok' : 'MISSING'}, mean ${hasMean ? 'ok' : 'MISSING'}`);
+    }
+  }
 }
 
 /* ===================================================================== */
