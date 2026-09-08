@@ -26,11 +26,42 @@ const p = M.peak({ timeS: base, sigmaS: 0.3e-6, counts: 173 });
 near(M.integratedCounts(p), 173, 2e-7);
 const broad = M.peak({ timeS: base, sigmaS: 0.9e-6, counts: 173 });
 near(M.integratedCounts(broad), 173, 2e-7);
-assert.equal(M.challenges.length, 3);
-assert.equal(M.challenges.find(c => c.id === 'mz').correct, 1);
-assert.equal(M.challenges.find(c => c.id === 'limit').correct, 1);
-const constrained = { voltageV: 20000, lengthM: 1, spread: { mode: 'fractional', value: 0.015 } };
-const a = M.packetPeak({ massDa: 200, charge: 1, counts: 100 }, constrained);
-const b = M.packetPeak({ massDa: 205, charge: 1, counts: 100 }, constrained);
-assert.equal(M.canResolveByFwhm(a, b), false);
-console.log('Ion Flight model: 15 assertions passed.');
+// Core lesson order and evidence are production data, not a detached answer key.
+assert.deepEqual(M.CORE_LESSONS.map(lesson => lesson.id), ['mass', 'charge', 'ratio']);
+assert.equal(M.detectorFinding('mass', 0).supported, true);
+assert.equal(M.detectorFinding('mass', 1).supported, false);
+assert.equal(M.detectorFinding('charge', 1).supported, true);
+const ratioFinding = M.detectorFinding('ratio', 2);
+assert.equal(ratioFinding.supported, true);
+near(ratioFinding.arrivalGapUs, 0, 0);
+
+// The state model gates results on a prediction and unlocks the sequence deterministically.
+const initial = M.initialLessonState();
+assert.throws(() => M.reduceLessonState(initial, { type: 'RUN_COMPLETE' }), /prediction is required/);
+const predicted = M.reduceLessonState(initial, { type: 'SELECT_PREDICTION', choiceIndex: 0 });
+assert.equal(predicted.predictions.mass, 0);
+const completed = M.reduceLessonState(predicted, { type: 'RUN_COMPLETE' });
+assert.equal(completed.completed.mass, true);
+assert.equal(completed.unlockedThrough, 1);
+const stepTwo = M.reduceLessonState(completed, { type: 'GO_TO_STEP', stepIndex: 1 });
+assert.equal(stepTwo.stepIndex, 1);
+assert.throws(() => M.reduceLessonState(stepTwo, { type: 'GO_TO_STEP', stepIndex: 2 }), /not unlocked/);
+assert.deepEqual(M.reduceLessonState(stepTwo, { type: 'RESET' }), initial);
+
+// One physical-time-to-screen-time scale applies to every run and reverses exactly.
+const screenMs = M.screenMilliseconds(base);
+near(M.physicalElapsedSeconds(screenMs), base);
+near(M.screenMilliseconds(base * 2) / screenMs, 2);
+
+// The optional comparison names its width assumptions and uses the same FWHM criterion.
+const fixedWidth = M.resolutionComparison({ spread: { mode: 'absolute', value: 0.06 } });
+assert.equal(fixedWidth[0].resolved, false);
+assert.equal(fixedWidth[1].resolved, true);
+near(fixedWidth[1].separationUs / fixedWidth[0].separationUs, 2);
+near(fixedWidth[1].meanFwhmUs / fixedWidth[0].meanFwhmUs, 1);
+const proportionalWidth = M.resolutionComparison({ spread: { mode: 'fractional', value: 0.015 } });
+assert.equal(proportionalWidth[0].resolved, false);
+assert.equal(proportionalWidth[1].resolved, false);
+near(proportionalWidth[1].separationToWidth, proportionalWidth[0].separationToWidth);
+
+console.log('Ion Flight model: physics, lesson state, evidence, timing, and resolution checks passed.');
