@@ -1,0 +1,30 @@
+{
+  "slug": "wavelet-lab",
+  "title": "Wavelet Lab",
+  "emoji": "〰",
+  "topic": "Applied Mathematics · Signals & Images",
+  "discipline": "Applied Mathematics",
+  "tagline": "Build, prune, and reconstruct a Haar representation",
+  "card_blurb": "An interactive Haar-wavelet workspace: choose coefficients for an eight-value signal, then retain a counted budget for a grayscale reconstruction and inspect raw numerical error.",
+  "description": "**Wavelet Lab** — a self-contained Haar-wavelet reconstruction workspace. Students edit an eight-value signal, select approximation/detail coefficients, and inspect the inverse reconstruction; then they retain a counted budget of largest-magnitude coefficients from three procedural 64 × 64 grayscale scenes and compare original, reconstruction, and absolute error. It teaches orthonormal energy, squared-error tradeoffs, and the limits of a coefficient budget without claiming denoising or file compression.",
+  "entry": "index.html",
+  "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": ["codex", "gpt-5.6-terra", "gpt-6-astra"],
+  "status": "active",
+  "added": "2026-09-08",
+  "compliance": {
+    "readme": true,
+    "guide": true,
+    "howto_popup": true,
+    "settings_menu": true,
+    "presentation_mode": true,
+    "presenter_notes": true,
+    "msu_theme": true,
+    "attribution_visible": true,
+    "mobile": true,
+    "offline_no_inference": "unverified"
+  }
+}

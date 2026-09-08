@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Build Wavelet Lab for the AI Fellows
 created: 2026-09-08T19:37:11Z
-updated: 2026-09-08T19:37:11Z
+updated: 2026-09-08T20:04:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -20,17 +20,28 @@ tags: [ai-fellows, demos, wavelets]
 
 # Wavelet Lab builder brief
 
+## Standalone completion — 2026-09-08
+
+Built and reviewed; model/build checks, Chrome controls/mobile and teacher-guide
+PDF inspection passed as recorded in [[fellow-build-verification]]. Remaining
+task scope is shared hub integration by Opus and the final scoped record. Offline
+browser compliance remains explicitly unverified; static runtime audit is clean.
+
+## Original intended build
+
 User selected the best two reviewed demos for immediate parallel build, with
 another eligible after one completes. Expected outcome: a polished, scientifically
 checked, self-contained `wavelet-lab/` demo matching neighboring examples and
 `CONTRACT.md`, with README, demo.json, teacher-guide.html/PDF, reproducible source,
-and meaningful model tests. Parent owns final PDF rendering, browser QA, hub edits,
-and git commits; builder supplies the guide HTML and own model/build tests.
+and meaningful model tests. Parent owns PDF rendering, browser QA, and demo commits;
+builder supplies guide HTML and model/build tests. Opus owns shared hub integration
+after receiving the parent's contract-complete handoff (2026-09-08 coordination).
 
 ## Owned surfaces and handoff
 
 - Builder may write only `wavelet-lab/` and `.aia/.data/fellow-builds/wavelet-progress.md`.
-- Parent owns root files, tours, shared scripts, memory, changelog, and git/index.
+- Opus session `53af9ff3-b420-4ade-9e04-50c2bc8fae47` owns root index/README/tours
+  and existing demos. Parent owns new-demo memory, changelog entries, and scoped commits.
   Do not change branches, commit, push, install dependencies, or edit other demos.
 - Keep progress and decisions incrementally in the named progress file. Other
   builder owns `ion-flight/`; report intended files to parent. No child agents.
