@@ -234,20 +234,25 @@ function newBrain() {
     heldSkipped: 0,
     absorbPasses: 1,              /* one assignment is the whole handover */
     absorb(code, t, value, n) {
-      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       const k = code * 2 + t - 1;
       if (this.N[k] === 0) this.seen++;
-      this.U[k] = value;
       this.N[k] = n;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      this.U[k] = value;
     },
     at(code, t) { return this.U[code * 2 + t - 1]; },
     hits(code, t) { return this.N[code * 2 + t - 1]; },
     nudge(code, t, target) {
       const k = code * 2 + t - 1;
-      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       if (this.N[k] === 0) this.seen++;
       const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + this.N[k]));
       this.N[k]++;
+      /* A held-out picture is experienced normally -- it is counted, it
+         steers the exploration, it is not hidden from the run -- and only
+         the WRITE is refused. Skipping the count as well would make the
+         count-based exploration chase held-out pictures forever, since
+         nothing could ever raise their count. */
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       this.U[k] += a * (target - this.U[k]);
     }
   };

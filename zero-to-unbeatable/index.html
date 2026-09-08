@@ -501,6 +501,18 @@ input[type=text]::placeholder { color: var(--ink-3); }
 #depth-seg { margin-top: 0; flex: 1 1 auto; }
 #depth-seg button { font-size: calc(.72 * var(--u)); }
 
+/* Step 3's memory toggle SHARES the row the era dropdown already
+   occupies. On its own line it costs 44px, which is enough on a 320x568
+   phone to push the TRAIN button off the bottom — and the TRAIN button
+   never going below the fold is the one layout rule this demo has. So
+   the row turns horizontal for step 3 only, the dropdown takes whatever
+   is left and truncates as selects do, and the toggle keeps its full
+   tap target. Steps 1 and 2 are untouched. */
+#mem-seg { margin-top: 0; flex: 0 0 auto; }
+#mem-seg button { font-size: calc(.72 * var(--u)); padding-inline: calc(.5 * var(--u)); }
+body.step-nine #opp-row { flex-direction: row; align-items: center; gap: calc(.35 * var(--u)); }
+body.step-nine #opp-row select { flex: 1 1 auto; width: auto; min-width: 0; }
+
 /* Step 1 carries one panel step 2 does not — the commentary line under
    the board — so the board yields a little further here, exactly as it
    does for the TRAIN button in step 2. Same principle, same place. */
@@ -701,6 +713,20 @@ table.cmp th:first-child, table.cmp td:first-child { text-align: left; color: va
 table.cmp th { color: var(--gold); font-size: calc(.62 * var(--u)); letter-spacing: .1em; text-transform: uppercase; }
 table.cmp td { font-variant-numeric: tabular-nums; }
 table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font-size: calc(.86 * var(--u)); }
+/* three held-out pictures with each memory's answer beside them */
+.gex { display: flex; gap: calc(.4 * var(--u)); margin-top: calc(.5 * var(--u)); }
+.ge { flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: 1fr 1fr;
+      gap: calc(.18 * var(--u)); }
+.ge .mini { grid-column: 1 / -1; border-radius: 5px; }
+.gv { display: block; text-align: center; border-radius: 5px; font-weight: 800;
+      font-size: calc(.62 * var(--u)); padding: calc(.16 * var(--u)) 0;
+      font-variant-numeric: tabular-nums; }
+.ge .gk { grid-column: 1 / -1; text-align: center; color: var(--ink-3);
+          font-size: calc(.56 * var(--u)); }
+.gexk { margin-top: calc(.3 * var(--u)); font-size: calc(.62 * var(--u)); color: var(--ink-3); }
+.gexk .gv { display: inline-block; padding-inline: calc(.4 * var(--u)); font-weight: 700;
+            background: var(--panel-2); color: var(--ink-2); border: 1px solid var(--line); }
+
 .score3 { display: flex; gap: calc(.35 * var(--u)); margin: calc(.4 * var(--u)) 0; }
 .score3 .s3 {
   flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;
@@ -930,6 +956,8 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       <div id="opp-row">
         <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
         <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules are switched on" hidden></div>
+        <!-- Step 3 only: which memory is behind the same learning rule. -->
+        <div class="seg" id="mem-seg" role="group" aria-label="Which memory the learner uses" hidden></div>
       </div>
       <div id="score-row"></div>
       <div id="era-strip" hidden></div>
@@ -2535,6 +2563,608 @@ return {
 if (typeof module !== 'undefined' && module.exports) module.exports = RULES;
 
 
+/* ==== net.js ==== */
+/* =====================================================================
+   Zero to Unbeatable — Step 3's other memory: a neural network
+
+   This file exists to change ONE thing about step 3 and nothing else.
+
+   Step 3 already learns. Its rule is Act I's rule with the turn carried
+   explicitly: a board picture is worth the best thing the player to move
+   can reach from it, discounted, and a finished board is worth its
+   result. That rule lives in nine.js and this file does not touch it.
+
+   What this file replaces is WHERE the answer is kept.
+
+     the table    39,366 numbers, one per (board picture, whose turn).
+                  Reading is an array index. It can only give back a
+                  value for a picture somebody has already written to;
+                  everything else reads 0.00, which is indistinguishable
+                  from "even".
+
+     the network  a few thousand weights. Reading is a forward pass, so
+                  it has an answer for EVERY picture, including ones it
+                  has never been shown. Whether that answer is any good
+                  is the thing the demo measures rather than asserts.
+
+   Both are plugged into nine.js through the same three calls — at(),
+   hits(), nudge() — so the training loop, the exploration, the move
+   choice, the discount and the alpha schedule are shared code. If the
+   two behaved differently for any other reason, the comparison this
+   step makes would be worthless.
+
+   The architecture
+   ----------------
+   29 inputs -> 32 rectified units -> 24 rectified units -> 1 number.
+   1,777 weights against the table's 39,366 entries.
+
+   The output is plain linear, and the read is clamped to [-1,1] because
+   nothing can be worth more than a win. A squashing tanh was tried first
+   and had to go: it interacts badly with the update below, which divides
+   by the size of the gradient, and a saturating tanh drives that size to
+   zero. Everything pinned to +1.00 within two hundred matches. The
+   clamp does the same job without the singularity.
+
+   The input is the board picture and nothing else:
+
+     27  nine cells x three states (empty / X / O), one-hot
+      2  whose turn it is, one-hot
+
+   Exactly ten of those twenty-nine are 1 and the rest are 0, always. So
+   the first layer is not a matrix multiply at all -- it is ten rows of
+   W1 added together, which is why this runs at demo speed in plain JS
+   on a phone. No tic-tac-toe knowledge is encoded: the network is not
+   told what a line is, which cells share one, or that the centre is
+   special. It gets nine independent squares and a turn bit.
+
+   The update
+   ----------
+   The table's update is
+                    U += alpha * (target - U)
+   -- move this one number a fixed fraction of the way to the target.
+
+   The network's update is written to do exactly that to its ANSWER:
+
+        theta += alpha * (target - y) * grad(y) / (|grad(y)|^2 + eps)
+
+   which is normalised least-mean-squares. To first order the new output
+   for this position is y + alpha*(target - y): the same fraction of the
+   way to the same target, from the same alpha schedule. The difference
+   is not the size of the step, it is that a table's step moves one
+   entry and a network's step moves every position that shares structure
+   with this one. That is the entire lesson of the step, so it is worth
+   the twenty lines it takes to make the two steps genuinely comparable
+   instead of approximately comparable.
+
+   Determinism
+   -----------
+   Same seed, same numbers, on every device, and this file gets there by
+   never using a transcendental at all. IEEE +, -, *, / and sqrt are
+   correctly rounded on every engine; Math.exp, Math.log and Math.tanh
+   are not, and one differing last bit changes which story a run tells.
+   So: weights initialised uniform from the mulberry32 stream (a normal
+   sampler would need a logarithm), rectifiers for the hidden units (a
+   comparison and a multiply), and a linear output. Where a transcendental
+   IS unavoidable, glass-box/src/engine.js builds its own from
+   polynomials over IEEE ops; that is the house solution and the reason
+   this file was written to avoid needing it.
+   ===================================================================== */
+
+const NET = (function (OG) {
+'use strict';
+
+const { POW3, NCODE, CELLS, WINNER, NEMPTY } = OG;
+
+/* ------------------------------------------------------------------ *
+ * 1. The input: ten ones among twenty-nine
+ * ------------------------------------------------------------------ */
+
+const NIN = 29;                 /* 27 cell one-hots + 2 turn one-hots */
+const ACTIVE = 10;              /* nine cells plus the turn, always */
+
+/* Every board picture's ten active input indices, precomputed once.
+   19,683 x 9 bytes for the cells; the turn index is appended at use.
+   Building this costs about a millisecond and removes the encode from
+   the inner loop entirely. */
+const FEAT = new Uint8Array(NCODE * 9);
+(function buildFeatures() {
+  for (let code = 0; code < NCODE; code++) {
+    const off = code * 9;
+    for (let i = 0; i < 9; i++) FEAT[off + i] = i * 3 + CELLS[off + i];
+  }
+})();
+
+/* The same encoding, spelled out, for anything that wants to show a
+   student what actually goes in. */
+function encode(code, turn) {
+  const x = new Float32Array(NIN);
+  const off = code * 9;
+  for (let i = 0; i < 9; i++) x[FEAT[off + i]] = 1;
+  x[26 + turn] = 1;             /* 27 = X to move, 28 = O to move */
+  return x;
+}
+
+/* ------------------------------------------------------------------ *
+ * 2. Hyperparameters
+ *
+ * alphaFloor is smaller than the table's 0.60 and that is a real
+ * difference, stated rather than hidden: a table entry is private, so
+ * slamming it 60% of the way to a target costs nothing anybody else is
+ * using. A network weight is shared by every position that touches it,
+ * so a step that large makes the last position it saw the only one it
+ * believes. The rule is identical; the size of the step it can afford
+ * is not.
+ * ------------------------------------------------------------------ */
+
+const HPN = {
+  hidden: 32,         /* first hidden layer */
+  hidden2: 24,        /* second; see newNet for why there are two */
+  alphaFloor: 0.20,   /* fraction of the way to the target, per update */
+  initScale: 0.35,    /* uniform init half-width */
+  outScale: 0.02,     /* the last layer starts near zero, so a newborn
+                         network answers about 0.00 everywhere and plays
+                         very nearly at random, as a newborn table does.
+                         Not exactly: a table's zeros are identical and a
+                         network's near-zeros are not, so it is born with
+                         faint preferences it did nothing to earn. That is
+                         what random initialisation is, and the demo says
+                         so rather than hiding it. */
+  eps: 1e-4,          /* floor under the NLMS denominator */
+  seedPasses: 3,      /* passes over Act I's handover when it is fitted */
+  burst: 250,         /* matches per burst. A forward pass costs about a
+                         thousand times an array index, so the same
+                         wall clock buys far fewer matches. Giving the
+                         network the table's full 1,000 -- or 5,000 --
+                         changes none of the conclusions; that was
+                         measured and is written up in README.md. */
+  bursts: [100, 250, 500]
+};
+
+/* ------------------------------------------------------------------ *
+ * 3. The weights
+ * ------------------------------------------------------------------ */
+
+/* TWO hidden layers, and the second one is not decoration -- it was
+   measured. Fitted to the answer key with everything else held the same,
+   one hidden layer stalls at a root-mean-square error of about 0.35 no
+   matter how wide it is -- 24 units and 384 units land in the same
+   place -- and a net that far out cannot play. Two layers reach 0.15 at
+   a quarter of the width. The reason is that "three in a row" is a
+   CONJUNCTION -- this cell AND that cell AND that one -- and one layer
+   of rectifiers over one-hot cells has to spend a unit on each one it
+   needs, while a second layer can assemble them from parts it already
+   has. Those numbers are in README.md; they were measured, not assumed. */
+function newNet(opts) {
+  opts = opts || {};
+  const H1 = opts.hidden || HPN.hidden;
+  const H2 = opts.hidden2 || HPN.hidden2;
+  const rnd = OG.makeRng(opts.seed == null ? 'net' : opts.seed);
+  const s = HPN.initScale;
+  /* Uniform, not Gaussian: a normal sampler needs a logarithm, and this
+     file is trying to stay inside the four arithmetic operations. */
+  const fill = (n, scale) => {
+    const a = new Float32Array(n);
+    for (let i = 0; i < n; i++) a[i] = (2 * rnd() - 1) * scale;
+    return a;
+  };
+  return {
+    H1, H2,
+    W1: fill(NIN * H1, s),                  b1: fill(H1, s * 0.5),
+    W2: fill(H1 * H2, s * 2 / Math.sqrt(H1)), b2: new Float32Array(H2),
+    W3: fill(H2, HPN.outScale),             b3: 0,
+    z1: new Float32Array(H1), a1: new Float32Array(H1),
+    z2: new Float32Array(H2), a2: new Float32Array(H2),
+    d1: new Float32Array(H1), d2: new Float32Array(H2)
+  };
+}
+
+function cloneNet(n) {
+  return {
+    H1: n.H1, H2: n.H2,
+    W1: new Float32Array(n.W1), b1: new Float32Array(n.b1),
+    W2: new Float32Array(n.W2), b2: new Float32Array(n.b2),
+    W3: new Float32Array(n.W3), b3: n.b3,
+    z1: new Float32Array(n.H1), a1: new Float32Array(n.H1),
+    z2: new Float32Array(n.H2), a2: new Float32Array(n.H2),
+    d1: new Float32Array(n.H1), d2: new Float32Array(n.H2)
+  };
+}
+
+function paramCount(n) {
+  return n.W1.length + n.b1.length + n.W2.length + n.b2.length + n.W3.length + 1;
+}
+
+/* Forward pass. Pre-activations and activations are left on the net,
+   because the update needs both and re-running the forward pass to get
+   them would double the cost of learning. */
+function forward(net, code, turn) {
+  const H1 = net.H1, H2 = net.H2;
+  const W1 = net.W1, b1 = net.b1, W2 = net.W2, b2 = net.b2, W3 = net.W3;
+  const z1 = net.z1, a1 = net.a1, z2 = net.z2, a2 = net.a2;
+  const off = code * 9;
+  /* ten rows of W1, added. No multiply anywhere: every active input is 1. */
+  for (let j = 0; j < H1; j++) z1[j] = b1[j];
+  for (let i = 0; i < 9; i++) {
+    const wo = FEAT[off + i] * H1;
+    for (let j = 0; j < H1; j++) z1[j] += W1[wo + j];
+  }
+  const wt = (26 + turn) * H1;
+  for (let j = 0; j < H1; j++) z1[j] += W1[wt + j];
+  for (let j = 0; j < H1; j++) a1[j] = z1[j] > 0 ? z1[j] : 0;
+
+  for (let k = 0; k < H2; k++) z2[k] = b2[k];
+  for (let j = 0; j < H1; j++) {
+    const av = a1[j];
+    if (av === 0) continue;                  /* rectifiers are off half the time */
+    const wo = j * H2;
+    for (let k = 0; k < H2; k++) z2[k] += av * W2[wo + k];
+  }
+  let o = net.b3;
+  for (let k = 0; k < H2; k++) {
+    const z = z2[k];
+    if (z > 0) { a2[k] = z; o += z * W3[k]; } else a2[k] = 0;
+  }
+  return o;
+}
+
+/* Normalised LMS: move the OUTPUT for this position `alpha` of the way
+   to `target`, by the smallest change to the weights that achieves it.
+   Same alpha, same target, same arithmetic shape as the table's
+   `U += alpha * (target - U)`. What differs is what else moves with it,
+   and that difference is the whole point of the step.
+ *
+ * The derivatives are hand-written, as they are in glass-box: there is
+ * no autograd here and the chain rule is on the page to be checked. */
+function update(net, code, turn, target, alpha) {
+  const y = forward(net, code, turn);
+  const err = target - y;
+  if (err === 0) return y;
+  const H1 = net.H1, H2 = net.H2;
+  const W1 = net.W1, b1 = net.b1, W2 = net.W2, b2 = net.b2, W3 = net.W3;
+  const z1 = net.z1, a1 = net.a1, z2 = net.z2, a2 = net.a2;
+  const d1 = net.d1, d2 = net.d2;
+
+  /* d(output) / d(pre-activation), back to front */
+  let sumA2 = 0, sumD2 = 0;
+  for (let k = 0; k < H2; k++) {
+    sumA2 += a2[k] * a2[k];
+    const d = z2[k] > 0 ? W3[k] : 0;
+    d2[k] = d;
+    sumD2 += d * d;
+  }
+  let sumA1 = 0, sumD1 = 0;
+  for (let j = 0; j < H1; j++) {
+    sumA1 += a1[j] * a1[j];
+    let acc = 0;
+    if (z1[j] > 0) {
+      const wo = j * H2;
+      for (let k = 0; k < H2; k++) acc += d2[k] * W2[wo + k];
+    }
+    d1[j] = acc;
+    sumD1 += acc * acc;
+  }
+
+  /* |grad y|^2, one term per block of parameters. The ten active inputs
+     share a single derivative per first-layer unit, so that block
+     contributes its square eleven times over: ten weights and a bias. */
+  const g = 1 + sumA2                        /* b3 and W3 */
+          + sumD2 * (1 + sumA1)              /* b2 and W2 */
+          + sumD1 * (1 + ACTIVE);            /* b1 and W1 */
+  const k = alpha * err / (g + HPN.eps);
+
+  /* Apply. Every derivative above was taken with the weights as they
+     stand, so all of them are read before any of them is written. */
+  net.b3 += k;
+  for (let i = 0; i < H2; i++) W3[i] += k * a2[i];
+  for (let i = 0; i < H2; i++) b2[i] += k * d2[i];
+  for (let j = 0; j < H1; j++) {
+    const av = a1[j];
+    if (av === 0) continue;
+    const wo = j * H2, ka = k * av;
+    for (let i = 0; i < H2; i++) W2[wo + i] += ka * d2[i];
+  }
+  for (let j = 0; j < H1; j++) d1[j] *= k;
+  for (let j = 0; j < H1; j++) b1[j] += d1[j];
+  const off = code * 9;
+  for (let i = 0; i < 9; i++) {
+    const wo = FEAT[off + i] * H1;
+    for (let j = 0; j < H1; j++) W1[wo + j] += d1[j];
+  }
+  const wt = (26 + turn) * H1;
+  for (let j = 0; j < H1; j++) W1[wt + j] += d1[j];
+  return y;
+}
+
+/* ------------------------------------------------------------------ *
+ * 4. The store nine.js talks to
+ *
+ * nine.js reads and writes its memory through three calls and knows
+ * nothing else about it. This is the network's implementation of them;
+ * NINE.newBrain() is the table's. Everything else in step 3 -- the
+ * discount, the exploration, the tie-break, the move arithmetic, the
+ * match loop -- is one piece of code serving both.
+ *
+ * The visit counts stay a plain array in BOTH stores. They are not the
+ * memory being compared: they are the experience log, and the
+ * count-based exploration and the "never seen this" measure both read
+ * them. Sharing them means the two runs explore identically, so the
+ * only thing left that can differ is where the values are kept.
+ * ------------------------------------------------------------------ */
+
+const USIZE = NCODE * 2;
+const ui = (code, t) => code * 2 + t - 1;
+
+function newBrain(opts) {
+  opts = opts || {};
+  const net = newNet(opts);
+  return {
+    kind: 'net',
+    net,
+    N: new Uint32Array(USIZE),
+    matches: 0,
+    seen: 0,
+    seeded: 0,
+    blindLookups: 0,
+    lookups: 0,
+    updates: 0,
+    hold: null,                 /* (code,turn) => true means never train on it */
+    heldSkipped: 0,
+    params: paramCount(net),
+    /* Act I's handover cannot be assigned into a network, so it is shown
+       the same triples and fitted to them with the same update it uses
+       for everything else. It will not land on them exactly; in exchange
+       it has an answer for the 33,890 entries it was never shown. */
+    absorbPasses: HPN.seedPasses,
+    absorb(code, t, value, n) {
+      const k = ui(code, t);
+      if (this.N[k] === 0) this.seen++;
+      this.N[k] = n;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      this.updates++;
+      update(this.net, code, t, value, HPN.alphaFloor);
+    },
+    /* Clamped, because a board cannot be worth more than a win. The
+       table is inside [-1,1] by construction; the network has to be
+       held there, and without it the max in nine.js's backup feeds its
+       own overshoot back to itself until everything reads +1. */
+    at(code, t) {
+      const v = forward(this.net, code, t);
+      return v > 1 ? 1 : v < -1 ? -1 : v;
+    },
+    hits(code, t) { return this.N[ui(code, t)]; },
+    nudge(code, t, target) {
+      const k = ui(code, t);
+      if (this.N[k] === 0) this.seen++;
+      /* One constant rate, where the table ramps down from 1.0 with its
+         visit count. The table's ramp is right FOR A TABLE: the first
+         sight of a private entry should take the target outright,
+         because nothing else is using that number. Doing the same to a
+         network means slamming every weight the position touches to fit
+         one example. Measured: with the ramp it loses 200 of 200 to the
+         hand-written opponent, without it 52. */
+      const a = HPN.alphaFloor;
+      this.N[k]++;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      this.updates++;
+      update(this.net, code, t, target, a);
+    }
+  };
+}
+
+function cloneBrain(b) {
+  const c = newBrain();
+  c.net = cloneNet(b.net);
+  c.N = Uint32Array.from(b.N);
+  c.matches = b.matches; c.seen = b.seen; c.seeded = b.seeded;
+  c.blindLookups = b.blindLookups; c.lookups = b.lookups;
+  c.updates = b.updates; c.hold = b.hold; c.heldSkipped = b.heldSkipped;
+  c.params = b.params;
+  return c;
+}
+
+/* ------------------------------------------------------------------ *
+ * 5. Ground truth for one board picture, so generalisation can be
+ *    measured instead of admired
+ *
+ * U[picture, turn] is defined by the backup in nine.js: a picture is
+ * worth the best its mover can reach, and a finished board is worth its
+ * result. The fixed point of that backup on an isolated board is
+ * gamma^d times the minimax value of the picture with that turn to
+ * move -- so the SIGN of the fixed point is exactly the minimax winner.
+ *
+ * That gives an answer key neither memory has ever seen, computed here
+ * and used only for measurement. Nothing that plays or trains reads it.
+ * It covers every picture, including the unbalanced ones that ordinary
+ * tic-tac-toe cannot produce, because the turn is supplied rather than
+ * inferred.
+ * ------------------------------------------------------------------ */
+
+const _truth = new Int8Array(NCODE * 2).fill(127);
+function truth(code, t) {
+  const k = ui(code, t);
+  const cached = _truth[k];
+  if (cached !== 127) return cached;
+  let v;
+  const w = WINNER[code];
+  if (w === 1) v = 1;
+  else if (w === 2) v = -1;
+  else if (w === 3) v = 0;                 /* cannot occur; nothing to say */
+  else if (NEMPTY[code] === 0) v = 0;
+  else {
+    const off = code * 9, opp = t === 1 ? 2 : 1;
+    let best = t === 1 ? -2 : 2;
+    for (let c = 0; c < 9; c++) {
+      if (CELLS[off + c] !== 0) continue;
+      const v2 = truth(code + t * POW3[c], opp);
+      if (t === 1) { if (v2 > best) best = v2; } else { if (v2 < best) best = v2; }
+    }
+    v = best;
+  }
+  _truth[k] = v;
+  return v;
+}
+
+/* Board pictures the demo actually cares about being right on: the
+   mover has a line waiting, so a memory that reads 0.00 walks past a
+   free win. */
+function hasImmediateWin(code, t) {
+  const off = code * 9;
+  for (let c = 0; c < 9; c++) {
+    if (CELLS[off + c] !== 0) continue;
+    if (WINNER[code + t * POW3[c]] === t) return true;
+  }
+  return false;
+}
+
+/* ------------------------------------------------------------------ *
+ * 6. The held-out set
+ *
+ * A deterministic pseudo-random slice of (picture, turn) pairs that
+ * BOTH memories are forbidden to train on. It is chosen before training
+ * starts, from the seed alone, so nothing about how a run went can
+ * influence what it is tested on. Both stores consult it on every write
+ * and refuse, counting the refusal; `heldSkipped` rising while the
+ * held-out values stay exactly as they were born is the receipt.
+ *
+ * The refusal is on the WRITE only. A held-out picture is still counted,
+ * still steers the count-based exploration, still plays. Hiding it from
+ * the run entirely would be a different experiment -- and a worse one,
+ * because exploration that seeks out the least-visited picture would
+ * then chase the held-out set forever, since nothing could raise its
+ * count.
+ * ------------------------------------------------------------------ */
+
+/* One picture in eight. Big enough that the held-out set is thousands of
+   pictures rather than hundreds, and the honest reason it is not the
+   default: a table with one picture in eight blanked stops working
+   almost completely -- it loses 389 matches in 400 to the hand-written
+   opponent where a whole one loses none. Even ONE IN A HUNDRED costs it
+   114 of 400. So the held-out run is a separate experiment beside the
+   real one, not a tax on it, and the demo says which is which. */
+const HOLD_FRACTION = 0.125;
+
+function makeHoldout(seed, fraction) {
+  const h0 = OG.hashSeed('holdout:' + seed);
+  const cut = Math.round((fraction == null ? HOLD_FRACTION : fraction) * 4294967296);
+  return function (code, t) {
+    let h = (h0 ^ Math.imul(code, 0x9E3779B1)) >>> 0;
+    h = Math.imul(h ^ (h >>> 15), 0x85EBCA6B) >>> 0;
+    h = (h + Math.imul(t, 0xC2B2AE35)) >>> 0;
+    h = Math.imul(h ^ (h >>> 13), 0x27D4EB2F) >>> 0;
+    h = (h ^ (h >>> 16)) >>> 0;
+    return h < cut;
+  };
+}
+
+/* The measurement the whole step is for. Over every held-out picture,
+   how often does each memory get the sign of the answer right?
+ *
+ * The table's answer is 0.00 for all of them, so it scores exactly the
+ * fraction of them that really are drawn and nothing more. That is not
+ * a rigged comparison; it is what a lookup table does off the end of
+ * what it has stored. */
+function generalisation(netBrain, tableBrain, opts) {
+  opts = opts || {};
+  const hold = netBrain.hold;
+  const winsOnly = !!opts.winsOnly;
+  let n = 0, netRight = 0, tableRight = 0, netSum = 0, decisive = 0;
+  const examples = [];
+  for (let code = 0; code < NCODE; code++) {
+    if (WINNER[code] === 3) continue;
+    for (let t = 1; t <= 2; t++) {
+      if (!hold(code, t)) continue;
+      if (WINNER[code] !== 0 || NEMPTY[code] === 0) continue;  /* nothing to work out */
+      if (winsOnly && !hasImmediateWin(code, t)) continue;
+      const z = truth(code, t);
+      const nv = netBrain.at(code, t);
+      const tv = tableBrain ? tableBrain.at(code, t) : 0;
+      const sg = v => (v > 0.15 ? 1 : v < -0.15 ? -1 : 0);
+      n++;
+      if (z !== 0) decisive++;
+      if (sg(nv) === z) netRight++;
+      if (sg(tv) === z) tableRight++;
+      netSum += z === 0 ? -Math.abs(nv) : (z > 0 ? nv : -nv);
+      if (examples.length < 12 && z !== 0 && hasImmediateWin(code, t)) {
+        examples.push({ code, turn: t, truth: z, net: nv, table: tv });
+      }
+    }
+  }
+  return {
+    n, decisive,
+    netRight, tableRight,
+    netRate: n ? netRight / n : 0,
+    tableRate: n ? tableRight / n : 0,
+    margin: n ? netSum / n : 0,
+    examples
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * 7. The experiment, run the same way by the app and by the tests
+ *
+ * Two fresh memories, the same handover, the same seeded stream, the
+ * same number of matches, and the same one-in-eight of the board
+ * pictures forbidden to both. Then ask both of them about the pictures
+ * neither was allowed to learn.
+ *
+ * `nine` is passed in rather than required, because nine.js owns the
+ * training loop and must not depend on this file -- the network is a
+ * memory it can be handed, not a thing it knows about.
+ * ------------------------------------------------------------------ */
+
+function experiment(nine, agent, opts) {
+  opts = opts || {};
+  const seed = opts.seed == null ? 'demo' : opts.seed;
+  const matches = opts.matches == null ? HPN.burst : opts.matches;
+  const hold = makeHoldout(seed, opts.fraction);
+
+  const table = nine.newBrain();
+  const net = newBrain({ seed: 'net:' + seed });
+  table.hold = hold; net.hold = hold;
+  nine.seedFromAgent(table, agent);
+  nine.seedFromAgent(net, agent);
+
+  /* Separate streams with the same seed: each memory plays its own
+     matches, because each one's choices are its own. Same budget, same
+     rehearsal, different memory. */
+  const t0 = now();
+  nine.trainMatches(table, matches, OG.makeRng('exp:' + seed));
+  const tableMs = now() - t0;
+  const t1 = now();
+  nine.trainMatches(net, matches, OG.makeRng('exp:' + seed));
+  const netMs = now() - t1;
+
+  const all = generalisation(net, table);
+  const wins = generalisation(net, table, { winsOnly: true });
+  return {
+    seed, matches, fraction: opts.fraction == null ? HOLD_FRACTION : opts.fraction,
+    table, net, all, wins,
+    tableMs, netMs,
+    params: net.params,
+    slots: USIZE,
+    refusals: { table: table.heldSkipped, net: net.heldSkipped }
+  };
+}
+
+function now() {
+  return (typeof performance !== 'undefined' && performance.now)
+    ? performance.now() : Date.now();
+}
+
+/* ------------------------------------------------------------------ */
+
+return {
+  NIN, ACTIVE, HPN, USIZE, ui, HOLD_FRACTION, experiment,
+  encode, FEAT,
+  newNet, cloneNet, forward, update, paramCount,
+  newBrain, cloneBrain,
+  truth, hasImmediateWin, makeHoldout, generalisation
+};
+})(typeof OG !== 'undefined' ? OG : require('./engine.js'));
+
+if (typeof module !== 'undefined' && module.exports) module.exports = NET;
+
+
 /* ==== nine.js ==== */
 /* =====================================================================
    Zero to Unbeatable — nine boards at once
@@ -2737,22 +3367,72 @@ function epsilonAt(matches) {
 const USIZE = NCODE * 2;
 const ui = (code, t) => code * 2 + t - 1;
 
+/* THE MEMORY IS BEHIND THREE CALLS, and this is the reason.
+ *
+ * Step 3 ships two memories: this table, and the neural network in
+ * net.js. The whole claim the step makes is that they differ in ONE
+ * respect -- where the value is kept -- so the claim has to be true of
+ * the code and not just of the caption. Everything below this point in
+ * the file reaches its memory through
+ *
+ *     at(code, turn)          what is this board picture worth to X
+ *     hits(code, turn)        how many times have we updated it
+ *     nudge(code, turn, z)    move it a fraction of the way to z
+ *
+ * and nothing else. The discount, the exploration, the tie-break, the
+ * move arithmetic, the match loop and the alpha schedule are one piece
+ * of code serving both. If a reader can find a second difference, the
+ * step is not making the comparison it says it is.
+ *
+ * Visit counts stay a plain array in both. They are not the memory
+ * under comparison -- they are the experience log, and the count-based
+ * exploration and the "never seen this picture" measure both read them.
+ * Sharing them means the two explore identically. */
 function newBrain() {
   return {
+    kind: 'table',
     U: new Float32Array(USIZE),   /* board value to X, given whose turn it is */
     N: new Uint32Array(USIZE),
     matches: 0,
     seen: 0,
     seeded: 0,                    /* entries handed over from Act I */
     blindLookups: 0,              /* squares weighed up on a picture never seen */
-    lookups: 0
+    lookups: 0,
+    hold: null,                   /* (code,turn) => true means never train on it */
+    heldSkipped: 0,
+    absorbPasses: 1,              /* one assignment is the whole handover */
+    absorb(code, t, value, n) {
+      const k = code * 2 + t - 1;
+      if (this.N[k] === 0) this.seen++;
+      this.N[k] = n;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      this.U[k] = value;
+    },
+    at(code, t) { return this.U[code * 2 + t - 1]; },
+    hits(code, t) { return this.N[code * 2 + t - 1]; },
+    nudge(code, t, target) {
+      const k = code * 2 + t - 1;
+      if (this.N[k] === 0) this.seen++;
+      const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + this.N[k]));
+      this.N[k]++;
+      /* A held-out picture is experienced normally -- it is counted, it
+         steers the exploration, it is not hidden from the run -- and only
+         the WRITE is refused. Skipping the count as well would make the
+         count-based exploration chase held-out pictures forever, since
+         nothing could ever raise their count. */
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
+      this.U[k] += a * (target - this.U[k]);
+    }
   };
 }
 
 function cloneBrain(b) {
-  return { U: new Float32Array(b.U), N: new Uint32Array(b.N),
-           matches: b.matches, seen: b.seen, seeded: b.seeded,
-           blindLookups: b.blindLookups, lookups: b.lookups };
+  const c = newBrain();
+  c.U.set(b.U); c.N.set(b.N);
+  c.matches = b.matches; c.seen = b.seen; c.seeded = b.seeded;
+  c.blindLookups = b.blindLookups; c.lookups = b.lookups;
+  c.hold = b.hold; c.heldSkipped = b.heldSkipped;
+  return c;
 }
 
 /* Hand over everything Act I learned that still means something here.
@@ -2761,28 +3441,36 @@ function cloneBrain(b) {
    exactly into "value to X with the OTHER player to move". The entries
    that only exist with nine boards open, and the second turn value of
    every position, start at zero: unknown, and visibly so. */
+/* The handover itself — which entries convert and what they convert to —
+   is one piece of code. Only ABSORBING them differs, and it has to:
+   you can assign into a table, and a network can only be shown a value
+   and fitted towards it, which is why it takes more than one pass and
+   still will not land exactly. */
 function seedFromAgent(brain, agent) {
-  let n = 0;
+  const list = [];
   for (let code = 1; code < NCODE; code++) {
     const t = TOMOVE[code];
     if (t === 0 || WINNER[code] === 3) continue;      /* cannot occur */
     if (agent.N[code] === 0) continue;                /* never learned */
-    const x = moverOf(code) === 1 ? agent.V[code] : -agent.V[code];
-    const k = ui(code, t);
-    brain.U[k] = x;
-    brain.N[k] = agent.N[code];
-    n++;
+    list.push(code);
   }
-  brain.seen = n;
-  brain.seeded = n;
-  return n;
+  const passes = brain.absorbPasses || 1;
+  for (let p = 0; p < passes; p++) {
+    for (const code of list) {
+      const t = TOMOVE[code];
+      const x = moverOf(code) === 1 ? agent.V[code] : -agent.V[code];
+      brain.absorb(code, t, x, agent.N[code]);
+    }
+  }
+  brain.seeded = list.length;
+  return list.length;
 }
 
 /* Value of a candidate move to the player making it. Both terms are read
    with the OPPONENT to move — see the derivation at the top of the file. */
 function moveValue(brain, code, cell, mark) {
   const opp = mark === 1 ? 2 : 1;
-  const d = brain.U[ui(code + mark * POW3[cell], opp)] - brain.U[ui(code, opp)];
+  const d = brain.at(code + mark * POW3[cell], opp) - brain.at(code, opp);
   return mark === 1 ? d : -d;
 }
 
@@ -2800,7 +3488,7 @@ function policyMoves(brain, m) {
   });
   const tied = moves.filter((mv, i) => vals[i] >= best - 1e-9);
   const tried = tied.filter(mv =>
-    brain.N[ui(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp)] > 0);
+    brain.hits(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp) > 0);
   return tried.length ? tried : tied;
 }
 
@@ -2828,7 +3516,7 @@ function exploreMove(brain, m, rnd) {
   const moves = legalMoves(m), mark = m.turn, opp = mark === 1 ? 2 : 1;
   let fewest = Infinity;
   const counts = moves.map(mv => {
-    const n = brain.N[ui(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp)];
+    const n = brain.hits(m.b[(mv / 9) | 0] + mark * POW3[mv % 9], opp);
     if (n < fewest) fewest = n;
     return n;
   });
@@ -2857,7 +3545,7 @@ function blindFraction(brain, m) {
   let blind = 0;
   for (const mv of moves) {
     const after = m.b[(mv / 9) | 0] + mark * POW3[mv % 9];
-    if (brain.N[ui(after, opp)] === 0) blind++;
+    if (brain.hits(after, opp) === 0) blind++;
   }
   return blind / moves.length;
 }
@@ -2880,34 +3568,23 @@ function isImpossibleAlone(code) { return TOMOVE[code] === 0; }
  * ------------------------------------------------------------------ */
 
 function backup(brain, code, t) {
-  const U = brain.U, N = brain.N;
   const off = code * 9;
   let best = t === 1 ? -Infinity : Infinity;
   const opp = t === 1 ? 2 : 1;
   for (let c = 0; c < 9; c++) {
     if (CELLS[off + c] !== 0) continue;
-    const v = U[ui(code + t * POW3[c], opp)];
+    const v = brain.at(code + t * POW3[c], opp);
     if (t === 1) { if (v > best) best = v; } else { if (v < best) best = v; }
   }
   if (best === Infinity || best === -Infinity) return;      /* no legal move */
-  const k = ui(code, t);
-  if (N[k] === 0) brain.seen++;
-  const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + N[k]));
-  N[k]++;
-  U[k] += a * (HP9.gamma * best - U[k]);
+  brain.nudge(code, t, HP9.gamma * best);
 }
 
 /* a board just finished: its result is the reward, and it is worth that
    whoever is to move */
 function reward(brain, code, z) {
-  const U = brain.U, N = brain.N;
-  for (const t of [1, 2]) {
-    const k = ui(code, t);
-    if (N[k] === 0) brain.seen++;
-    const a = Math.max(HP9.alphaFloor, HP9.alphaWarm / (HP9.alphaWarm + N[k]));
-    N[k]++;
-    U[k] += a * (z - U[k]);
-  }
+  brain.nudge(code, 1, z);
+  brain.nudge(code, 2, z);
 }
 
 function playMatch(brain, rnd, mode, eps, learn, wildPlies) {
@@ -3127,7 +3804,12 @@ const S = {
   ruleCounts: {},      // depth -> how many moves each rule decided
   lastRule: null,      // the decision behind the move it just made
   live: null,          // the one-board agent that keeps training
-  live9: null,         // the nine-board brain
+  live9: null,         // the nine-board brain: a TABLE of 39,366 numbers
+  net9: null,          // the same brain with a NETWORK behind it instead
+  /* Step 3 ships two memories and trains both on every burst, so the
+     toggle is a real comparison and not a re-run. 'table' or 'net'. */
+  mem: 'table',
+  netStats: null,      // the held-out experiment, run once and cached
   eras: [],            // frozen snapshots, index === era number
   era: 0,              // which one you are playing
   game: null,          // one-board game in progress
@@ -3135,11 +3817,15 @@ const S = {
   focus: 0,            // which of the nine boards you are pointing at
   burst: OG.HP.burst,
   burst9: NINE.HP9.burst,
+  burstNet: NET.HPN.burst,
   brain: false,
   seed: '',
   // These streams deliberately never share state.  A reader (the report) or
   // a player must not be able to alter the next training example.
-  rng: Math.random,              // training only
+  rng: Math.random,              // training only, the table
+  rngNet: Math.random,           // training only, the network — a separate
+                                 // stream so switching memories cannot make
+                                 // one alter the other's next example
   liveRng: { rules: Math.random, one: Math.random, nine: Math.random }, // independent playable-game streams
   measureSalt: '',               // immutable for one reset/session
   humanFirstNext: true,
@@ -3148,6 +3834,12 @@ const S = {
   lastLearned: null
 };
 const isNine  = () => S.mode === 'nine';
+const isNet   = () => S.mem === 'net';
+/* Which of an era's two memories is on screen. Both implement at(),
+   hits() and nudge(), so everything downstream — the heat map, the move
+   choice, the blind measure — is one piece of code either way. */
+const mem9 = (era) => (isNet() ? era.net : era.brain);
+const memLabel = () => (isNet() ? 'network' : 'table');
 const isRules = () => S.mode === 'rules';
 
 const fmt = n => n.toLocaleString('en-US');
@@ -3204,10 +3896,11 @@ function policyDiff(a, b) {
 function makeEra(n, agent, prevAgent, mix, kind, nineStats) {
   const verified = OG.verifyUnbeatable(agent);
   const e = {
-    n, agent, brain: NINE.cloneBrain(S.live9),
+    n, agent, brain: NINE.cloneBrain(S.live9), net: NET.cloneBrain(S.net9),
     kind: kind || 'one',
     games: agent.games, seen: agent.seen,
     matches: S.live9.matches, seen9: S.live9.seen, seeded9: S.live9.seeded,
+    netMatches: S.net9.matches, netSeen: S.net9.seen,
     eps: OG.epsilonAt(agent.games), eps9: NINE.epsilonAt(S.live9.matches),
     verified, mix: mix || null, nine: nineStats || null,
     landmarks: snapshotLandmarks(agent),
@@ -3230,6 +3923,7 @@ function currentEra() { return S.eras[S.era]; }
 
 function resetAll() {
   S.rng = OG.makeRng(S.seed || null);
+  S.rngNet = OG.makeRng(S.seed ? 'net-train:' + S.seed : null);
   /* Keep one-board and nine-board play in distinct streams.  Switching
      modes must not make a prior one-board move alter a rehearsed nine-board
      reply (or vice versa).  A blank seed deliberately starts fresh streams. */
@@ -3243,7 +3937,15 @@ function resetAll() {
   };
   S.measureSalt = S.seed ? 'measure:' + S.seed : 'measure:' + Math.random().toString(36).slice(2);
   S.live = OG.newAgent();
+  /* NOTE: the two live memories hold nothing back. The held-out set
+     belongs to the side experiment in NET.experiment and to nothing
+     else — a table with one picture in eight blanked loses 389 matches
+     in 400, so making the demo's own opponent run that way would break
+     step 3 to make a point about step 3. The experiment runs its own
+     pair of memories, and the card says so. */
   S.live9 = NINE.newBrain();
+  S.net9 = NET.newBrain({ seed: 'net:' + (S.seed || 'unseeded') });
+  S.netStats = null;
   S.eras = [makeEra(0, OG.cloneAgent(S.live), null, null, 'one')];
   S.era = 0;
   S.humanFirstNext = true;
@@ -3270,11 +3972,20 @@ function measureRng(era, label) {
 function maybeSeed() {
   if (S.live9.matches > 0) return 0;
   S.live9 = NINE.newBrain();
+  S.net9 = NET.newBrain({ seed: 'net:' + (S.seed || 'unseeded') });
+  /* One handover, two absorptions. NINE.seedFromAgent decides WHICH of
+     Act I's entries convert and what they convert to; the table assigns
+     them and the network is fitted towards them, because that is the
+     only way to put a number into a network. */
   const n = NINE.seedFromAgent(S.live9, S.live);
+  NINE.seedFromAgent(S.net9, S.live);
+  S.netStats = null;
   S.eras.forEach(e => {
     if (e.brain.matches === 0) {
       e.brain = NINE.cloneBrain(S.live9);
+      e.net = NET.cloneBrain(S.net9);
       e.seen9 = S.live9.seen; e.seeded9 = S.live9.seeded;
+      e.netSeen = S.net9.seen;
     }
   });
   return n;
@@ -3404,7 +4115,7 @@ function nineAiTurn(delay) {
   renderNine(); renderStatus();
   setTimeout(() => {
     if (!S.match || S.match !== m || m.over) return;
-    applyNine(NINE.greedyMove(currentEra().brain, m, S.liveRng.nine));
+    applyNine(NINE.greedyMove(mem9(currentEra()), m, S.liveRng.nine));
     m.thinking = false;
     renderNine(); renderStatus();
   }, S.brain ? Math.max(delay, 1300) : delay);
@@ -3532,7 +4243,7 @@ for (let c = 0; c < 9; c++) {
 function renderNine() {
   const m = S.match;
   if (!m) return;
-  const brain = currentEra().brain;
+  const brain = mem9(currentEra());
   const RES = ['', 'X', 'O', '—'];
 
   $$('.nb', nineGrid).forEach((nb, b) => {
@@ -3566,12 +4277,16 @@ function renderNine() {
     if (v) { el.textContent = MARK[v]; el.setAttribute('aria-label', CELLNAME[c] + ', taken'); return; }
     if (showHeat) {
       const val = NINE.moveValue(brain, code, c, mark);
-      const seen = brain.N[NINE.ui(code + mark * OG.POW3[c], mark === 1 ? 2 : 1)];
+      const after = code + mark * OG.POW3[c], opp = mark === 1 ? 2 : 1;
+      const seen = brain.hits(after, opp);
       el.style.background = heat(val); el.style.color = heatInk(val);
+      /* "never seen" is the interesting one, and it means different
+         things either side of the toggle: for the table it is a
+         guaranteed 0.00, for the network it is a computed guess. */
+      const note = seen ? 'seen ' + fmt(seen) + '×' : 'never seen';
       el.innerHTML = `<span class="v">${sgn(val)}</span>` +
-        `<span class="n">${seen ? 'seen ' + fmt(seen) + '×' : 'never seen'}</span>`;
-      el.setAttribute('aria-label', CELLNAME[c] + ': ' + val.toFixed(2) +
-        (seen ? ', seen ' + seen + ' times' : ', never seen'));
+        `<span class="n">${note}</span>`;
+      el.setAttribute('aria-label', CELLNAME[c] + ': ' + val.toFixed(2) + ', ' + note);
     } else {
       el.textContent = '';
       el.setAttribute('aria-label', CELLNAME[c] + ', empty');
@@ -3715,19 +4430,28 @@ function renderBrainReadout() {
 }
 
 function renderNineReadout() {
-  const el = $('#brain-readout'), e = currentEra(), m = S.match, brain = e.brain;
+  const el = $('#brain-readout'), e = currentEra(), m = S.match, brain = mem9(e);
   const blind = m && !m.over ? NINE.blindFraction(brain, m) : 0;
   const total = OG.NCODE * 2;
+  const where = isNet()
+    ? `Era ${e.n}'s network: <b>${fmt(e.net.params)}</b> weights. There is no entry per ` +
+      `picture — every number you see was computed just now, including for pictures it has ` +
+      `never met. It has trained on <b>${fmt(e.netMatches)}</b> matches.`
+    : `Era ${e.n}'s nine-board table: <b>${fmt(brain.seen)}</b> of <b>${fmt(total)}</b> board ` +
+      `pictures have a number in them` +
+      (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from the ` +
+        `one-board table` : '') + '.';
   el.innerHTML =
     `<div>Scores for board ${S.focus + 1} only — how much each square would improve ` +
     `<b>that</b> board. The other eight do not change, so this is the whole comparison.</div>` +
-    `<div style="margin-top:.5em">Era ${e.n}'s nine-board table: <b>${fmt(brain.seen)}</b> of ` +
-    `<b>${fmt(total)}</b> board pictures have a number in them` +
-    (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from the one-board table` : '') +
-    `.</div>` +
+    `<div style="margin-top:.5em">${where}</div>` +
     (m && !m.over
-      ? `<div style="margin-top:.5em">Right now <b>${Math.round(blind * 100)}%</b> of the squares it is ` +
-        `weighing up sit on a board picture it has <b>never seen</b>.</div>` : '') +
+      ? `<div style="margin-top:.5em">Right now <b>${Math.round(blind * 100)}%</b> of the squares it ` +
+        `is weighing up sit on a board picture that has never been met. ` +
+        (isNet() ? `The network answers for them anyway; whether it is right is what the card after ` +
+                   `a burst measures.`
+                 : `The table reads 0.00 for every one of them, which looks exactly like "even".`) +
+        `</div>` : '') +
     `<div class="legend"><span>losing</span><span class="ramp"></span><span>winning</span></div>`;
 }
 
@@ -3754,6 +4478,27 @@ function renderDepthSeg() {
     S.depth = n;
     if (!S.ruleRec[n]) resetRuleTally(n);
     renderDepthSeg(); renderScore(); renderRulesPanel(); renderBanner();
+    newGame();
+  }));
+}
+
+/* Step 3's own segmented control: which memory you are playing. Same
+   widget as the depth dial and the burst sizes — no new mechanism — and
+   it swaps nothing but the store, because both memories answer at(),
+   hits() and nudge() and every other line of step 3 is shared. */
+function renderMemSeg() {
+  const seg = $('#mem-seg');
+  const opts = [
+    { k: 'table', label: 'Table',   title: '39,366 numbers, one per board picture and turn' },
+    { k: 'net',   label: 'Network', title: '1,777 weights that compute a value for any picture' }
+  ];
+  seg.innerHTML = opts.map(o =>
+    `<button data-m="${o.k}" class="${o.k === S.mem ? 'on' : ''}" ` +
+    `aria-pressed="${o.k === S.mem}" title="${o.title}">${o.label}</button>`).join('');
+  $$('#mem-seg button').forEach(b => b.addEventListener('click', () => {
+    if (S.mem === b.dataset.m || S.training) return;
+    S.mem = b.dataset.m;
+    renderMemSeg(); renderTrain(); renderBanner(); renderScore();
     newGame();
   }));
 }
@@ -3805,19 +4550,25 @@ function renderTrain() {
   const e = S.eras[S.eras.length - 1];
   const nine = isNine();
   $('.t-main', $('#btn-train')).textContent = nine ? 'Train on nine boards' : 'Train the AI';
-  $('#train-sub').textContent = nine ? fmt(S.burst9) + ' matches' : fmt(S.burst) + ' games';
-  const sizes = nine ? NINE.HP9.bursts : OG.HP.bursts;
-  const cur = nine ? S.burst9 : S.burst;
+  $('#train-sub').textContent = nine
+    ? fmt(isNet() ? S.burstNet : S.burst9) + ' matches' : fmt(S.burst) + ' games';
+  const sizes = nine ? (isNet() ? NET.HPN.bursts : NINE.HP9.bursts) : OG.HP.bursts;
+  const cur = nine ? (isNet() ? S.burstNet : S.burst9) : S.burst;
   $('#burst-seg').innerHTML = sizes.map(b =>
     `<button data-b="${b}" class="${b === cur ? 'on' : ''}" aria-pressed="${b === cur}">${fmt(b)}</button>`).join('');
   $$('#burst-seg button').forEach(b => b.addEventListener('click', () => {
-    if (isNine()) S.burst9 = +b.dataset.b; else S.burst = +b.dataset.b;
+    if (isNine()) { if (isNet()) S.burstNet = +b.dataset.b; else S.burst9 = +b.dataset.b; }
+    else S.burst = +b.dataset.b;
     renderTrain();
   }));
   $('#train-stats').innerHTML = nine
-    ? `<div class="st"><span class="n">${fmt(e.matches)}</span><span class="k">matches trained</span></div>` +
-      `<div class="st"><span class="n">${fmt(e.seen9)}</span><span class="k">pictures seen</span></div>` +
-      `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">table slots</span></div>`
+    ? (isNet()
+      ? `<div class="st"><span class="n">${fmt(e.netMatches)}</span><span class="k">matches trained</span></div>` +
+        `<div class="st"><span class="n">${fmt(e.net.params)}</span><span class="k">weights</span></div>` +
+        `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">it answers for</span></div>`
+      : `<div class="st"><span class="n">${fmt(e.matches)}</span><span class="k">matches trained</span></div>` +
+        `<div class="st"><span class="n">${fmt(e.seen9)}</span><span class="k">pictures seen</span></div>` +
+        `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">table slots</span></div>`)
     : `<div class="st"><span class="n">${S.eras.length - 1}</span><span class="k">eras</span></div>` +
       `<div class="st"><span class="n">${fmt(e.games)}</span><span class="k">games trained</span></div>` +
       `<div class="st"><span class="n">${fmt(e.seen)}</span><span class="k">positions seen</span></div>`;
@@ -3902,9 +4653,18 @@ function renderBanner() {
       `serious AI system: chess engines, self-driving cars, language models. Nobody can check all the ` +
       `cases, so nobody can promise. They measure instead — which is what the card after each burst ` +
       `does.</p>` +
-      `<div class="proof">Handed over from the one-board table: ` +
-      `${fmt(S.live9.seeded)} of the ${fmt(OG.NCODE * 2)} entries this game needs · ` +
-      `filled so far ${fmt(S.live9.seen)} · matches trained ${fmt(S.live9.matches)}</div>`;
+      (isNet()
+        ? `<p>The memory on the toggle is the <b>network</b>: ${fmt(S.net9.params)} weights in ` +
+          `place of ${fmt(OG.NCODE * 2)} table slots, learning by exactly the same rule. It has ` +
+          `an answer for every board picture there is, and no proof is available for it either — ` +
+          `less of one, if anything, because you cannot read a network the way you can read a ` +
+          `table.</p>` +
+          `<div class="proof">Network: ${fmt(S.net9.params)} weights · ` +
+          `matches trained ${fmt(S.net9.matches)} · answers for all ${fmt(OG.NCODE * 2)} ` +
+          `board pictures, right or wrong</div>`
+        : `<div class="proof">Handed over from the one-board table: ` +
+          `${fmt(S.live9.seeded)} of the ${fmt(OG.NCODE * 2)} entries this game needs · ` +
+          `filled so far ${fmt(S.live9.seen)} · matches trained ${fmt(S.live9.matches)}</div>`);
     return;
   }
   el.classList.remove('quiet');
@@ -4015,9 +4775,17 @@ function mini9HTML(m) {
   return h + '</div>';
 }
 
+/* Both memories train on every burst, so the toggle is a comparison and
+   not a re-run. Each plays its own matches -- it must, because each
+   one's choices are its own -- from streams seeded the same way, and
+   each gets its own budget: a forward pass costs about a thousand times
+   an array index, so equal wall clock does not buy equal matches. The
+   card afterwards prints both budgets and both clocks rather than
+   quietly averaging them. */
 async function trainNine() {
   S.training = true;
   const size = S.burst9;
+  const sizeNet = S.burstNet;
   const ov = $('#montage'); ov.hidden = false;
   $('#m-count').classList.add('blur');
   $('#m-count-sub').textContent = 'matches played against itself and against chance';
@@ -4026,21 +4794,32 @@ async function trainNine() {
   $('#m-wr-label').textContent = 'holds or beats the hand-written player';
 
   const STEPS = 30, per = Math.ceil(size / STEPS);
+  const perNet = Math.ceil(sizeNet / STEPS);
   const t0 = performance.now();
-  let done = 0, selfPlay = 0, vsRandom = 0, hold = null, pool = [];
+  let done = 0, doneNet = 0, selfPlay = 0, vsRandom = 0, hold = null, pool = [];
+  let msTable = 0, msNet = 0;
 
   for (let i = 0; i < STEPS; i++) {
     const n = Math.min(per, size - done);
     if (n > 0) {
+      const c0 = performance.now();
       const r = NINE.trainMatches(S.live9, n, S.rng, { sampleEvery: Math.max(1, Math.floor(n / 2)) });
+      msTable += performance.now() - c0;
       done += n; selfPlay += r.selfPlay; vsRandom += r.vsRandom;
       pool = pool.concat(r.samples).slice(-12);
     }
+    const nn = Math.min(perNet, sizeNet - doneNet);
+    if (nn > 0) {
+      const c1 = performance.now();
+      NINE.trainMatches(S.net9, nn, S.rngNet);
+      msNet += performance.now() - c1;
+      doneNet += nn;
+    }
     if (i % 7 === 4) {
-      const sc = NINE.vsHeuristic(S.live9, 60, S.rng);
+      const sc = NINE.vsHeuristic(mem9({ brain: S.live9, net: S.net9 }), 60, S.rng);
       hold = (sc.wins + sc.draws) / sc.matches;
     }
-    $('#m-count').textContent = fmt(done);
+    $('#m-count').textContent = fmt(isNet() ? doneNet : done);
     const eps = NINE.epsilonAt(S.live9.matches);
     $('#m-eps').textContent = eps.toFixed(2);
     $('#m-eps-fill').style.width = (eps * 100).toFixed(1) + '%';
@@ -4059,7 +4838,7 @@ async function trainNine() {
   await pauseUntil(t0 + MONTAGE_MS + 160);
 
   const era = makeEra(S.eras.length, OG.cloneAgent(S.live), null, null, 'nine',
-    { selfPlay, vsRandom, matches: size });
+    { selfPlay, vsRandom, matches: size, matchesNet: sizeNet, msTable, msNet });
   S.eras.push(era);
   S.era = era.n;
   ov.hidden = true;
@@ -4188,6 +4967,44 @@ function buildLearned(era, before) {
    interesting thing here is not what it learned about any one picture —
    it is whether a table can work at all. So it reports the measurements
    that answer that. */
+/* The held-out experiment, rendered. Run once and cached on the app,
+   because it is a self-contained side experiment rather than a property
+   of an era: two fresh memories, the same handover, the same budget, and
+   one board picture in eight that NEITHER of them is allowed to write.
+   Then both are asked about exactly those pictures. */
+function generalisationCard(era) {
+  const r = S.netStats || (S.netStats = NET.experiment(NINE, era.agent, {
+    seed: S.seed || 'unseeded', matches: NET.HPN.burst
+  }));
+  const pct = v => (100 * v).toFixed(0) + '%';
+  const ex = r.all.examples.slice(0, 3).map(e =>
+    `<div class="ge">${miniHTML(e.code)}` +
+    `<span class="gv net" style="background:${heat(e.net)};color:${heatInk(e.net)}">${sgn(e.net)}</span>` +
+    `<span class="gv tab" style="background:${heat(e.table)};color:${heatInk(e.table)}">${sgn(e.table)}</span>` +
+    `<span class="gk">${e.turn === 1 ? '✕' : '◯'} to move</span></div>`).join('');
+  return `<div class="lc"><h3>The one thing a table cannot do</h3>` +
+    `<div class="ask">A side experiment, run fresh: two memories, the same rule, the same ` +
+    `${fmt(r.matches)} matches — and <b>one board picture in eight</b> picked from the seed ` +
+    `<i>before</i> training and forbidden to both. They still meet those pictures and still ` +
+    `count them; neither is allowed to store a value for one. Then both are asked what those ` +
+    `pictures are worth, and marked against the answer worked out separately.</div>` +
+    `<table class="cmp"><tr><th></th><th>table</th><th>network</th></tr>` +
+    `<tr><td>values stored</td><td>${fmt(r.slots)} slots</td><td>${fmt(r.params)} weights</td></tr>` +
+    `<tr><td>right on ${fmt(r.all.n)} held-out pictures</td>` +
+    `<td>${pct(r.all.tableRate)}</td><td>${pct(r.all.netRate)}</td></tr>` +
+    `<tr class="hi"><td>of the ${fmt(r.wins.n)} with a win waiting</td>` +
+    `<td>${pct(r.wins.tableRate)}</td><td>${pct(r.wins.netRate)}</td></tr></table>` +
+    (ex ? `<div class="gex">${ex}</div>` +
+      `<div class="gexk"><span class="gv net">network</span><span class="gv tab">table</span> ` +
+      `— three of the held-out pictures, each one a free win for the player to move.</div>` : '') +
+    `<div class="delta"><span class="up">The network has an answer for a picture it was never ` +
+    `allowed to learn.</span> The table has ${pct(r.all.tableRate)} — which is exactly the share ` +
+    `of those pictures that really are drawn, because it returns 0.00 for every single one and ` +
+    `0.00 means "even". On the pictures where somebody can win right now it scores nothing at ` +
+    `all. That is not a rigged comparison; it is what a lookup table does past the edge of what ` +
+    `it has stored, and it is the whole reason a network is worth the trouble.</div></div>`;
+}
+
 function buildLearnedNine(era, before) {
   $('#learned-title').textContent = 'Era ' + era.n + ' — nine at once';
   $('#learned-sub').textContent =
@@ -4201,14 +5018,20 @@ function buildLearnedNine(era, before) {
     rec9: NINE.measureRecurrence(era.brain, NINE.HP9.burst, measureRng(era, 'rec9')),
     rec1: NINE.measureRecurrenceSingle(era.agent, OG.HP.burst, measureRng(era, 'rec1')),
     cpu: NINE.vsHeuristic(era.brain, 200, measureRng(era, 'heuristic')),
-    rnd: NINE.vsRandom(era.brain, 100, measureRng(era, 'random'))
+    rnd: NINE.vsRandom(era.brain, 100, measureRng(era, 'random')),
+    /* the same two questions, asked of the network that trained beside it */
+    cpuNet: NINE.vsHeuristic(era.net, 200, measureRng(era, 'heuristic')),
+    rndNet: NINE.vsRandom(era.net, 100, measureRng(era, 'random'))
   });
-  const { rec9, rec1, cpu, rnd } = metrics;
+  const { rec9, rec1, cpu, rnd, cpuNet, rndNet } = metrics;
   const grew = before ? era.seen9 - before.seen9 : era.seen9;
 
   const head =
-    `<div class="headline">It played <b>${fmt(era.nine.selfPlay)} matches against itself and ` +
-    `${fmt(era.nine.vsRandom)} against a random mover</b>. Its nine-board table now holds ` +
+    `<div class="headline">Two memories trained side by side on the same rule. The <b>table</b> ` +
+    `played ${fmt(era.matches)} matches in ${Math.round(era.nine.msTable)} ms; the <b>network</b> ` +
+    `played ${fmt(era.netMatches)} in ${Math.round(era.nine.msNet)} ms — a forward pass costs ` +
+    `about a thousand times an array lookup, and that is the bill for being able to answer at ` +
+    `all about a picture you have never seen. Its nine-board table now holds ` +
     `<b>${fmt(era.seen9)}</b> of ${fmt(total)} board pictures` +
     (grew > 0 ? `, ${fmt(grew)} of them new this burst` : '') +
     (era.seeded9 ? `. <b>${fmt(era.seeded9)}</b> were handed straight over from what it learned on one board — ` +
@@ -4243,6 +5066,39 @@ function buildLearnedNine(era, before) {
           `from results alone.`
         : `Still losing ${cpu.losses} of ${cpu.matches}. Train it again.`}` +
     ` Against a player choosing at random it wins ${rnd.wins} of ${rnd.matches}.</div></div>`,
+
+    generalisationCard(era),
+
+    `<div class="lc"><h3>Which one actually plays better</h3>` +
+    `<div class="ask">The same benchmark, asked of both memories: the hand-written opponent, ` +
+    `200 matches, alternating who starts. Neither has ever been shown those rules.</div>` +
+    `<table class="cmp"><tr><th></th><th>table</th><th>network</th></tr>` +
+    `<tr><td>matches trained</td><td>${fmt(era.matches)}</td><td>${fmt(era.netMatches)}</td></tr>` +
+    `<tr><td>lost of 200</td><td>${cpu.losses}</td><td>${cpuNet.losses}</td></tr>` +
+    `<tr><td>drawn</td><td>${cpu.draws}</td><td>${cpuNet.draws}</td></tr>` +
+    `<tr class="hi"><td>vs a random player</td><td>${rnd.wins} of ${rnd.matches}</td>` +
+    `<td>${rndNet.wins} of ${rndNet.matches}</td></tr></table>` +
+    `<div class="delta">${
+      cpuNet.losses > cpu.losses + 20
+      ? `<span class="down">The table is the better player, and by a distance.</span> That is ` +
+        `the honest result and it is worth sitting with, because it is not the one a demo would ` +
+        `choose. The network is not an improved table, it is a different trade: it answers about ` +
+        `pictures nobody showed it — the card above — and it pays for that by never being ` +
+        `exactly right about the ones it did see. A move here is picked by <b>subtracting</b> ` +
+        `two of its values, and a small error in each does not cancel in the difference. Train ` +
+        `it further and this does not close: measured out to 12,000 matches, the network gets ` +
+        `to roughly level and then wanders, winning both seats after one burst and losing one ` +
+        `after the next, where the table stops losing and stays stopped.`
+      : cpu.losses > cpuNet.losses + 20
+      ? `The network is ahead <b>at this point</b>, and that is mostly the table still being ` +
+        `young: it needs about three bursts before it stops losing, and it has had ` +
+        `${S.eras.length - 1}. Train them both again. The table catches up and passes it, and ` +
+        `the honest summary of the whole race is that the table ends up the better player.`
+      : `The two are level on this benchmark just now. Watch which way it goes: the table, once ` +
+        `it stops losing, stays stopped, while the network's score wanders from burst to burst — ` +
+        `every update it makes moves every position at once, so nothing it has learned is ever ` +
+        `quite safe from what it learns next.`}` +
+    `</div></div>`,
 
     `<div class="lc"><h3>What it could not carry over</h3>` +
     `<div class="ask">On one board, the marks tell you whose turn it is. Here you can play twice in the ` +
@@ -4534,12 +5390,15 @@ function applyMode() {
     x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on));
   });
   document.body.classList.toggle('step-rules', rules);
+  document.body.classList.toggle('step-nine', nine);
   $('#how-head span').textContent = rules ? 'Rules, learning, and which is better'
                                           : 'How is it learning?';
   $('#board-wrap').hidden = nine;
   $('#nine-wrap').hidden = !nine;
   $('#era-select').hidden = rules;
   $('#depth-seg').hidden = !rules;
+  $('#mem-seg').hidden = !nine;
+  if (nine) renderMemSeg();
   $('#btn-brain').hidden = rules;
   $('#btn-learned').hidden = rules || S.lastLearned === null;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here

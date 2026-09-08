@@ -7,9 +7,12 @@ const SRC = path.join(__dirname, 'src');
 const OUT = __dirname;
 
 const CSS_FILES = ['styles.css'];
-/* engine.js first: rules.js and nine.js both close over the OG global it
-   defines, and app.js needs all three. */
-const JS_FILES  = ['engine.js', 'rules.js', 'nine.js', 'app.js'];
+/* engine.js first: rules.js, net.js and nine.js all close over the OG
+   global it defines, and app.js needs all four. net.js sits before
+   nine.js because it reads better in that order; nine.js does not
+   reference it, on purpose — the network is a memory nine.js can be
+   handed, not a thing it knows about. */
+const JS_FILES  = ['engine.js', 'rules.js', 'net.js', 'nine.js', 'app.js'];
 
 const read = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 
