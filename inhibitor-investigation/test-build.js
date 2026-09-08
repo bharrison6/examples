@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
+const model = fs.readFileSync(__dirname + '/model.js', 'utf8').replace(/\r\n/g, '\n');
+assert.ok(html.includes('/* INHIBITOR_MODEL: BEGIN */\n' + model + '\n/* INHIBITOR_MODEL: END */'), 'built page must embed the tested production model verbatim');
+assert.ok(html.includes('M.baselineRate'), 'the chart must call the production calibrated-baseline function');
+assert.ok(html.includes('newSampleButton'), 'the page must expose a fresh mystery sample control');
+const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+assert.equal(scripts.length, 2, 'the standalone page has its model and controller scripts');
+scripts.forEach((source, index) => new vm.Script(source, { filename: 'index.html inline script ' + (index + 1) }));
+assert.ok(!/<(?:script|link|img|iframe)\b[^>]+(?:https?:)?\/\//i.test(html), 'no external runtime assets are referenced');
+console.log('PASS  verbatim model bundle, inline-script parsing, and no external runtime assets');

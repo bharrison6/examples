@@ -61,9 +61,10 @@ node build.js
 
 `node build.js --check` is read-only and fails if `index.html` is not the exact bundle
 of the checked-in template and production model. `node build.js` writes that bundle.
-There are no runtime scripts, stylesheets, fonts, image requests, analytics, or AI
-calls. Browser-only contract checks remain marked unverified until the parent’s browser
-pass.
+Scripts and styles are embedded; the page loads no external fonts, images, analytics,
+or AI services. Controls, presentation features, and a 390px responsive view were
+checked in Chrome. Direct-file/disconnected-network behavior remains unverified;
+the corresponding manifest field records that limit.
 
 ## Scope and sources
 
@@ -81,4 +82,4 @@ MALDI overview for classroom context; neither source endorses this demo.
   Murray State University attribution.
 - Reopenable how-to, settings, presentation mode, and presenter’s notes.
 - Responsive controls and canvas traces for phone-sized layouts.
-- Printable HTML teacher guide plus a manifest slot for the rendered PDF.
+- Printable [HTML teacher guide](teacher-guide.html) and [PDF](teacher-guide.pdf).
