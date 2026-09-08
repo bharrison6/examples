@@ -3,40 +3,659 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Ion Flight, an offline linear time-of-flight mass spectrometry teaching demo.">
-  <title>Ion Flight · Linear TOF Mass Spectrometry</title>
+  <meta name="description" content="Ion Flight is an offline guided investigation of what a time-of-flight detector measures.">
+  <title>Ion Flight · Guided TOF Investigation</title>
   <style>
-    :root{--navy:#002144;--blue:#006aa6;--sky:#00A4E3;--gold:#ECAC00;--ink:#102a43;--muted:#61758a;--paper:#f4f8fb;--white:#fff;--line:#c7d7e5;--green:#007f64;--orange:#b64800;--shadow:0 14px 34px #00214418}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#eaf4fa,#f8fbfd 55%,#f5eee0);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}button,select,input{font:inherit}button{cursor:pointer;border:0;border-radius:9px;font-weight:750}button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--sky);outline-offset:2px}.top{background:var(--navy);color:white;padding:12px clamp(14px,3vw,34px);display:flex;gap:12px;align-items:center;justify-content:space-between;box-shadow:0 3px 13px #00214444}.brand{display:flex;gap:12px;align-items:center}.brand-icon{width:37px;height:37px;border:2px solid var(--gold);border-radius:50%;display:grid;place-items:center;color:var(--gold);font-size:20px}.eyebrow{color:#b8dff2;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;font-weight:800}.title{font-size:1.2rem;font-weight:850;line-height:1.1}.actions{display:flex;gap:8px;position:relative}.icon-btn{background:#fff1;color:inherit;border:1px solid #fff4;width:40px;height:36px;font-size:18px}.icon-btn:hover{background:#fff3}.settings{position:absolute;right:0;top:44px;width:260px;padding:12px;background:white;color:var(--ink);border-radius:10px;box-shadow:var(--shadow);z-index:8}.settings[hidden]{display:none}.settings button{margin-top:8px;width:100%;padding:9px;background:#eaf4fa;color:var(--navy);text-align:left}.settings button:hover{background:#d7ecf7}.wrap{max-width:1280px;margin:auto;padding:clamp(14px,2.4vw,30px)}.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-bottom:18px}.lead,.formula,.panel{background:var(--white);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)}.lead{padding:clamp(18px,3vw,31px)}h1{font-size:clamp(1.8rem,4vw,3.2rem);letter-spacing:-.04em;line-height:1;margin:0 0 12px;color:var(--navy)}.lead p{max-width:58ch;margin:0;color:#385069}.formula{padding:20px;background:linear-gradient(135deg,#002144,#064f75);color:white;display:flex;flex-direction:column;justify-content:center}.formula .eq{font:700 clamp(1.3rem,3vw,2rem) Georgia,serif;color:var(--gold);margin:9px 0}.formula small{color:#d7edf8}.grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:18px}.controls{padding:17px}.controls h2,.panel h2{font-size:1.05rem;margin:0 0 12px;color:var(--navy)}.control{margin:15px 0}.control label{font-weight:750;font-size:.9rem;display:flex;justify-content:space-between;gap:8px}.value{color:var(--blue);font-variant-numeric:tabular-nums}.control input{width:100%;accent-color:var(--sky)}select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:white;color:var(--ink)}.segmented{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:7px}.segmented button{border-radius:0;padding:8px;background:white;color:var(--muted)}.segmented button.active{background:var(--navy);color:white}.run-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:22px}.run{padding:11px;background:var(--gold);color:var(--navy)}.reset{padding:11px;background:#e8f1f6;color:var(--navy)}.hint{font-size:.83rem;color:var(--muted);margin:13px 0 0}.lab{display:grid;grid-template-rows:auto minmax(220px,1fr) auto;gap:13px}.instrument{padding:0;overflow:hidden;min-height:310px}.instrument-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1px solid var(--line)}.badge{border-radius:999px;padding:4px 8px;background:#e3f3f9;color:#005d8b;font-size:.78rem;font-weight:800}.stage{position:relative;min-height:280px;background:linear-gradient(#e8f5fb,#fff)}#flightCanvas,#traceCanvas{display:block;width:100%}.readout{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}.readout div{padding:10px 14px;border-right:1px solid var(--line)}.readout div:last-child{border:0}.readout span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;font-weight:800}.readout b{font-variant-numeric:tabular-nums;color:var(--navy)}.trace{padding:14px}.trace-note{margin:0 0 8px;font-size:.84rem;color:var(--muted)}.packet-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.packet{border-left:5px solid var(--sky);background:#f4f9fc;padding:9px;border-radius:8px;font-size:.85rem}.packet:nth-child(2){border-color:var(--gold)}.packet:nth-child(3){border-color:#9d4edd}.packet b{display:block;color:var(--navy)}.lesson{margin-top:18px;padding:18px}.lesson-top{display:flex;justify-content:space-between;gap:18px;align-items:center}.lesson-top p{margin:3px 0;color:var(--muted);font-size:.9rem}.challenge{border-top:1px solid var(--line);padding:15px 0}.challenge:last-child{padding-bottom:0}.challenge p{margin:0 0 10px;font-weight:700}.choices{display:flex;flex-wrap:wrap;gap:8px}.choice{background:#eaf4fa;color:var(--navy);padding:8px 10px;border:1px solid #d0e2ed}.choice:hover{background:#d7edf8}.choice.correct{background:#d9f3e9;color:#075b47;border-color:#75bda5}.choice.wrong{background:#fff0e8;color:#913800;border-color:#f3a577}.feedback{margin:9px 0 0;font-size:.9rem;color:#36536c}.footer{display:flex;justify-content:space-between;gap:15px;align-items:center;padding:18px 2px 2px;color:#526a7e;font-size:.82rem}.footer a{color:#005f90}.overlay{position:fixed;inset:0;background:#00172dd0;z-index:12;display:grid;place-items:center;padding:16px}.overlay[hidden]{display:none}.modal{width:min(720px,100%);max-height:calc(100vh - 32px);overflow:auto;background:white;border-radius:16px;padding:clamp(20px,4vw,36px);box-shadow:0 25px 60px #0008}.modal h2{color:var(--navy);font-size:1.6rem;margin:0 0 9px}.modal li{margin:8px 0}.modal .close{margin-top:18px;padding:11px 16px;background:var(--navy);color:white}.notes{white-space:pre-line;color:#2b4760}.presentation .wrap{max-width:1500px}.presentation{font-size:18px}.presentation .controls{font-size:1.05rem}.presentation .hero{grid-template-columns:1fr .7fr}.presentation .lead{padding:35px}.presentation .title{font-size:1.45rem}@media(max-width:800px){.hero,.grid{grid-template-columns:1fr}.controls{order:2}.stage{min-height:220px}.packet-list{grid-template-columns:1fr}.readout{grid-template-columns:1fr 1fr}.readout div:nth-child(2){border-right:0}.readout div:last-child{grid-column:1/-1;border-top:1px solid var(--line)}.footer{display:block}.footer a{display:inline-block;margin-top:6px}}@media print{.top,.controls,.footer,.lesson,.overlay{display:none}.wrap{padding:0}.hero{grid-template-columns:1fr}.lead,.formula,.panel{box-shadow:none}.instrument{break-inside:avoid}}
+    :root {
+      --navy: #002144;
+      --navy-2: #06345d;
+      --sky: #00a4e3;
+      --sky-soft: #dff5fd;
+      --gold: #ecac00;
+      --gold-soft: #fff3c9;
+      --ink: #142c43;
+      --muted: #536b7f;
+      --paper: #edf4f8;
+      --white: #ffffff;
+      --line: #b9cedb;
+      --green: #087a62;
+      --green-soft: #e0f5ee;
+      --orange: #9b4800;
+      --orange-soft: #fff0e2;
+      --shadow: 0 18px 46px rgba(0, 33, 68, 0.13);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 84% -5%, rgba(0, 164, 227, 0.17), transparent 31rem),
+        linear-gradient(180deg, #f8fbfd 0, var(--paper) 32rem, #f8fbfd 100%);
+      font: 16px/1.5 Inter, Aptos, "Segoe UI", system-ui, sans-serif;
+    }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible, select:focus-visible, summary:focus-visible, a:focus-visible {
+      outline: 3px solid var(--sky);
+      outline-offset: 3px;
+    }
+    button:disabled { cursor: not-allowed; opacity: 0.52; }
+    [hidden] { display: none !important; }
+
+    .topbar {
+      min-height: 68px;
+      padding: 11px clamp(16px, 3vw, 38px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      color: white;
+      background: var(--navy);
+      border-bottom: 4px solid var(--gold);
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border: 2px solid var(--gold);
+      border-radius: 50%;
+      color: var(--gold);
+      font-size: 1.35rem;
+      font-weight: 900;
+    }
+    .brand small, .eyebrow {
+      display: block;
+      color: #bde8f8;
+      font-size: 0.75rem;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .brand strong { display: block; font-size: 1.12rem; line-height: 1.2; }
+    .top-actions { display: flex; gap: 8px; position: relative; }
+    .icon-button {
+      width: 42px;
+      height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 10px;
+      color: white;
+      background: rgba(255, 255, 255, 0.08);
+      font-weight: 850;
+    }
+    .icon-button:hover { background: rgba(255, 255, 255, 0.18); }
+    .settings {
+      position: absolute;
+      z-index: 10;
+      top: 48px;
+      right: 0;
+      width: 270px;
+      padding: 13px;
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+    }
+    .settings strong { display: block; color: var(--navy); margin-bottom: 7px; }
+    .settings button {
+      width: 100%;
+      padding: 9px 10px;
+      margin-top: 6px;
+      text-align: left;
+      color: var(--navy);
+      background: #edf5f9;
+      border: 0;
+      border-radius: 8px;
+      font-weight: 750;
+    }
+
+    .shell { width: min(1440px, 100%); margin: auto; padding: clamp(16px, 2.5vw, 32px); }
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+      gap: clamp(18px, 3vw, 34px);
+      align-items: end;
+      margin: 4px 0 22px;
+    }
+    .intro .eyebrow { color: #006692; }
+    h1 {
+      max-width: 760px;
+      margin: 5px 0 10px;
+      color: var(--navy);
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      line-height: 0.98;
+      letter-spacing: -0.045em;
+    }
+    .lede { max-width: 69ch; margin: 0; color: #38556d; font-size: 1.05rem; }
+    .definition {
+      margin: 14px 0 0;
+      padding-left: 13px;
+      border-left: 4px solid var(--gold);
+      color: var(--navy);
+      font-weight: 680;
+    }
+    .path {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      overflow: hidden;
+      background: var(--navy);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+    }
+    .path div { min-height: 114px; padding: 15px 13px; color: white; border-right: 1px solid rgba(255,255,255,.18); }
+    .path div:last-child { border: 0; }
+    .path b { display: block; margin-bottom: 5px; color: var(--gold); font-size: 0.78rem; letter-spacing: .08em; text-transform: uppercase; }
+    .path span { font-size: 0.9rem; line-height: 1.35; }
+
+    .step-nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-bottom: 13px;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      overflow: hidden;
+      background: white;
+    }
+    .step-tab {
+      min-height: 64px;
+      padding: 10px clamp(8px, 2vw, 18px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-align: left;
+      border: 0;
+      border-right: 1px solid var(--line);
+      color: #496176;
+      background: white;
+      font-weight: 730;
+    }
+    .step-tab:last-child { border-right: 0; }
+    .step-tab.active { color: white; background: var(--navy); }
+    .step-tab.complete:not(.active) { color: var(--navy); background: #e8f6fb; }
+    .step-number {
+      flex: 0 0 auto;
+      width: 29px;
+      height: 29px;
+      display: grid;
+      place-items: center;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      font-size: .82rem;
+      font-weight: 900;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(310px, 0.72fr) minmax(520px, 1.5fr);
+      min-height: 690px;
+      overflow: hidden;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+    .task-panel {
+      padding: clamp(18px, 2.5vw, 28px);
+      border-right: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff, #f6fafc);
+    }
+    .step-kicker { margin: 0 0 2px; color: #0073a5; font-size: .78rem; font-weight: 900; letter-spacing: .1em; text-transform: uppercase; }
+    h2 { margin: 0; color: var(--navy); font-size: clamp(1.35rem, 2.2vw, 1.8rem); line-height: 1.15; }
+    .purpose { margin: 8px 0 15px; color: var(--muted); }
+    .conditions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 0 0 15px;
+    }
+    .condition {
+      padding: 9px 10px;
+      background: #edf5f9;
+      border-radius: 9px;
+    }
+    .condition span { display: block; color: var(--muted); font-size: .75rem; font-weight: 760; text-transform: uppercase; letter-spacing: .05em; }
+    .condition b { color: var(--navy); font-variant-numeric: tabular-nums; }
+    .sample-list { display: grid; gap: 8px; margin-bottom: 15px; }
+    .sample {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-left: 6px solid var(--sample);
+      border-radius: 10px;
+      background: white;
+    }
+    .sample-letter {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      color: var(--navy);
+      background: color-mix(in srgb, var(--sample) 22%, white);
+      border-radius: 50%;
+      font-weight: 900;
+    }
+    .sample b { display: block; color: var(--navy); }
+    .sample span { color: var(--muted); font-size: .88rem; }
+    .unit-key {
+      margin: 0 0 18px;
+      color: #486176;
+      font-size: .84rem;
+      line-height: 1.4;
+    }
+    .unit-key b { color: var(--navy); }
+    fieldset { padding: 0; margin: 0; border: 0; }
+    legend { width: 100%; margin-bottom: 9px; color: var(--navy); font-weight: 830; }
+    .prediction-list { display: grid; gap: 7px; }
+    .prediction {
+      width: 100%;
+      padding: 10px 12px;
+      text-align: left;
+      color: var(--ink);
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      font-weight: 680;
+    }
+    .prediction:hover { border-color: var(--sky); background: #f0faff; }
+    .prediction.selected { border: 2px solid var(--sky); padding: 9px 11px; background: var(--sky-soft); color: var(--navy); }
+    .action-row { display: grid; grid-template-columns: 1fr auto; gap: 9px; margin-top: 14px; }
+    .primary, .secondary {
+      min-height: 46px;
+      padding: 10px 15px;
+      border-radius: 10px;
+      font-weight: 850;
+    }
+    .primary { color: var(--navy); background: var(--gold); border: 1px solid #cb9000; }
+    .primary:hover:not(:disabled) { background: #ffc72c; }
+    .secondary { color: var(--navy); background: #e8f1f6; border: 1px solid var(--line); }
+    .run-hint { min-height: 1.4em; margin: 7px 0 0; color: var(--muted); font-size: .84rem; }
+    .finding {
+      margin-top: 17px;
+      padding: 14px;
+      border-radius: 12px;
+      border-left: 5px solid var(--green);
+      background: var(--green-soft);
+    }
+    .finding.contradicted { border-left-color: var(--orange); background: var(--orange-soft); }
+    .finding h3 { margin: 0 0 5px; color: var(--navy); font-size: 1rem; }
+    .finding p { margin: 5px 0; font-size: .91rem; }
+    .arrival-list { display: grid; gap: 5px; margin: 9px 0; }
+    .arrival-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 5px; border-top: 1px solid rgba(0, 33, 68, .15); }
+    .arrival-row b:last-child { font-variant-numeric: tabular-nums; }
+    .next-button { width: 100%; margin-top: 8px; }
+
+    .evidence-panel { min-width: 0; background: #f8fbfd; }
+    .evidence-panel:focus { outline: none; }
+    .instrument-head {
+      min-height: 64px;
+      padding: 13px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: white;
+      background: var(--navy-2);
+    }
+    .instrument-head h2 { color: white; font-size: 1.08rem; }
+    .scale-badge {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      color: var(--navy);
+      background: var(--gold);
+      border-radius: 999px;
+      font-size: .76rem;
+      font-weight: 900;
+    }
+    .flight-wrap { position: relative; background: linear-gradient(180deg, #e8f7fc, #fdfefe); }
+    canvas { display: block; width: 100%; }
+    #flightCanvas { height: 330px; }
+    .live-strip {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: .8fr 1.2fr;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: white;
+    }
+    .live-strip div { padding: 11px 16px; }
+    .live-strip div + div { border-left: 1px solid var(--line); }
+    .live-strip span { display: block; color: var(--muted); font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+    .live-strip b { color: var(--navy); font-variant-numeric: tabular-nums; }
+    .trace-block { padding: 16px 18px 14px; }
+    .trace-title-row { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; }
+    .trace-title-row h3 { margin: 0; color: var(--navy); font-size: 1.02rem; }
+    .trace-title-row span { color: var(--muted); font-size: .79rem; }
+    #traceCanvas { height: 235px; margin-top: 4px; }
+    .peak-note {
+      margin: 8px 0 0;
+      padding: 9px 11px;
+      color: #3f5b70;
+      background: #eaf3f8;
+      border-radius: 8px;
+      font-size: .84rem;
+    }
+
+    .transfer {
+      margin-top: 20px;
+      padding: clamp(18px, 2.5vw, 28px);
+      color: white;
+      background: linear-gradient(125deg, var(--navy), #07557b);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .transfer .eyebrow { color: var(--gold); }
+    .transfer h2 { margin: 4px 0 7px; color: white; }
+    .transfer p { max-width: 80ch; }
+    .transfer-options { display: flex; flex-wrap: wrap; gap: 8px; }
+    .transfer-options button { padding: 10px 13px; color: white; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.35); border-radius: 9px; font-weight: 750; }
+    .transfer-options button.selected { color: var(--navy); background: var(--gold); border-color: var(--gold); }
+    .transfer-feedback { min-height: 1.5em; margin-bottom: 0; color: #dff5fd; }
+
+    .advanced {
+      margin-top: 20px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 28px rgba(0,33,68,.08);
+    }
+    .advanced > summary { padding: 16px 18px; color: var(--navy); font-weight: 880; cursor: pointer; }
+    .advanced-body { padding: 0 18px 20px; }
+    .advanced-intro { max-width: 88ch; color: var(--muted); }
+    .advanced-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 13px 0; }
+    .mode-button { padding: 9px 12px; color: var(--navy); background: #edf5f9; border: 1px solid var(--line); border-radius: 9px; font-weight: 750; }
+    .mode-button.active { color: white; background: var(--navy); }
+    #advancedCanvas { height: 300px; border: 1px solid var(--line); border-radius: 10px; }
+    .advanced-legend { margin: 8px 0 0; color: var(--muted); font-size: .84rem; }
+    .comparison-table { width: 100%; margin-top: 12px; border-collapse: collapse; font-size: .9rem; }
+    .comparison-table th, .comparison-table td { padding: 8px 9px; text-align: left; border-bottom: 1px solid var(--line); }
+    .comparison-table th { color: var(--navy); background: #edf5f9; }
+    .methods { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--line); }
+    .methods summary { color: var(--navy); cursor: pointer; font-weight: 800; }
+    .formula { margin: 10px 0; padding: 12px; color: white; background: var(--navy); border-radius: 9px; font: 700 1.1rem Georgia, serif; text-align: center; }
+    .methods p, .methods li { color: #425d72; }
+    .methods a, footer a { color: #006e9e; }
+
+    footer {
+      padding: 20px 2px 5px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      color: var(--muted);
+      font-size: .84rem;
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      padding: 18px;
+      display: grid;
+      place-items: center;
+      background: rgba(0, 22, 44, .84);
+    }
+    .modal {
+      width: min(760px, 100%);
+      max-height: calc(100vh - 36px);
+      overflow: auto;
+      padding: clamp(22px, 4vw, 38px);
+      background: white;
+      border-radius: 17px;
+      box-shadow: 0 28px 70px rgba(0,0,0,.45);
+    }
+    .modal .eyebrow { color: #006e9e; }
+    .modal h2 { margin: 5px 0 10px; }
+    .modal li { margin: 8px 0; }
+    .modal-close { margin-top: 14px; }
+    .presenter-notes { white-space: pre-line; color: #34526a; }
+
+    .presentation { font-size: 18px; }
+    .presentation .shell { width: min(1580px, 100%); }
+    .presentation .intro { grid-template-columns: 1fr; }
+    .presentation .path { display: none; }
+    .presentation .workspace { grid-template-columns: minmax(360px, .65fr) minmax(650px, 1.6fr); }
+
+    @media (max-width: 960px) {
+      .intro, .workspace { grid-template-columns: 1fr; }
+      .intro { align-items: stretch; }
+      .task-panel { border-right: 0; border-bottom: 1px solid var(--line); }
+      .workspace { min-height: 0; }
+      #flightCanvas { height: 285px; }
+      .presentation .workspace { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .topbar { padding: 9px 12px; }
+      .brand small { display: none; }
+      .shell { padding: 13px; }
+      h1 { font-size: 2.25rem; }
+      .intro { margin-bottom: 15px; }
+      .path { grid-template-columns: 1fr; }
+      .path div { min-height: 0; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.18); }
+      .step-tab { min-height: 78px; padding: 8px; display: block; text-align: center; font-size: .78rem; }
+      .step-number { margin: 0 auto 4px; }
+      .conditions { grid-template-columns: 1fr 1fr; }
+      .action-row { grid-template-columns: 1fr; }
+      .instrument-head { align-items: flex-start; flex-direction: column; }
+      .scale-badge { max-width: 100%; white-space: normal; line-height: 1.35; }
+      .live-strip { grid-template-columns: 1fr; }
+      .live-strip div + div { border-left: 0; border-top: 1px solid var(--line); }
+      #flightCanvas { height: 250px; }
+      #traceCanvas { height: 220px; }
+      .trace-title-row { display: block; }
+      .trace-title-row span { display: block; margin-top: 3px; }
+      .comparison-table { display: block; overflow-x: auto; white-space: nowrap; }
+      footer { display: block; }
+      footer a { display: inline-block; margin-top: 7px; }
+    }
+    @media print {
+      .topbar, .step-nav, .task-panel, .transfer, .advanced, footer, .overlay { display: none !important; }
+      body { background: white; }
+      .shell { width: 100%; padding: 0; }
+      .intro { grid-template-columns: 1fr; }
+      .path { display: none; }
+      .workspace { display: block; border: 0; box-shadow: none; }
+    }
   </style>
 </head>
 <body>
-  <header class="top"><div class="brand"><div class="brand-icon">+</div><div><div class="eyebrow">Murray State University · Instrumentation lab</div><div class="title">Ion Flight</div></div></div><div class="actions"><button class="icon-btn" id="howButton" aria-label="Open how to use Ion Flight">?</button><button class="icon-btn" id="settingsButton" aria-label="Open settings">⚙</button><div class="settings" id="settings" hidden><b>Settings</b><button id="presentButton">▣ Presentation mode</button><button id="notesButton">🎙 Presenter’s notes</button><button id="resetSettingsButton">↺ Reset instrument</button></div></div></header>
-  <main class="wrap">
-    <section class="hero"><div class="lead"><div class="eyebrow" style="color:#006aa6">Linear time-of-flight mass spectrometry</div><h1>Which ion gets there first?</h1><p>Accelerate packets through the same voltage, then let them drift. A detector clock turns their arrival times into a separation by <em>mass-to-charge ratio</em>, m/z.</p></div><aside class="formula"><small>Idealized field-free drift after acceleration</small><div class="eq">t = L √[m / (2qV)]</div><small>m is converted from Da to kg; q = z·e in coulombs. The clock begins at drift-tube entry: acceleration time is excluded.</small></aside></section>
-    <div class="grid"><aside class="controls panel"><h2>Instrument controls</h2><div class="control"><label for="profile">Packet set</label><select id="profile"><option value="standard">Three packets: 200, 400/2+, 205 Da</option><option value="charge">Same mass, different charge</option><option value="equal">Different mass, equal m/z</option><option value="close">Resolution pair: 200 and 205 Da</option></select></div><div class="control"><label for="length">Flight length <output class="value" id="lengthOut"></output></label><input id="length" type="range" min="0.5" max="4" value="1.5" step="0.1"></div><div class="control"><label for="voltage">Acceleration voltage <output class="value" id="voltageOut"></output></label><input id="voltage" type="range" min="5" max="30" value="20" step="1"></div><div class="control"><label for="spread">Timing spread, σ <output class="value" id="spreadOut"></output></label><input id="spread" type="range" min="0.05" max="1.5" value="0.25" step="0.05"><div class="segmented" aria-label="Timing spread convention"><button id="absoluteMode" class="active" aria-pressed="true">fixed absolute σ</button><button id="fractionalMode" aria-pressed="false">fixed fractional σ</button></div></div><div class="run-row"><button class="run" id="runButton">Run packets</button><button class="reset" id="resetButton">Reset</button></div><p class="hint">Change length while comparing modes: fixed absolute σ can raise resolving power; fixed fractional σ preserves the relative blur.</p></aside>
-      <section class="lab"><section class="instrument panel"><div class="instrument-header"><h2>Drift tube cutaway</h2><span class="badge" id="runState">Ready to pulse</span></div><div class="stage"><canvas id="flightCanvas" aria-label="Animated ion packets traveling through a time-of-flight drift tube"></canvas></div><div class="readout"><div><span>Detector clock</span><b id="clockOut">0.000 µs</b></div><div><span>Fastest arrival</span><b id="fastestOut">—</b></div><div><span>Resolution reference</span><b id="resolutionOut">—</b></div></div></section><section class="trace panel"><h2>Detector trace</h2><p class="trace-note">A uniform time axis. Gaussian peak area equals ion count even when σ changes; peak height is density, not extra ions.</p><canvas id="traceCanvas" aria-label="Detector signal plotted against drift time"></canvas><div class="packet-list" id="packetList"></div></section></section>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">+</div>
+      <div><small>Murray State University · Instrument analysis</small><strong>Ion Flight</strong></div>
     </div>
-    <section class="lesson panel"><div class="lesson-top"><div><h2>Predict before you run</h2><p>Three checks for what an ideal linear TOF clock can—and cannot—tell you.</p></div><span class="badge" id="score">0 / 3 mastered</span></div><div id="challenges"></div></section>
-    <footer class="footer"><span><b>Ion Flight</b> · Bryant Harrison · Murray State University · offline teaching model</span><a href="teacher-guide.html">Open printable teacher guide</a></footer>
+    <div class="top-actions">
+      <button class="icon-button" id="howButton" aria-label="Open how to use Ion Flight">?</button>
+      <button class="icon-button" id="settingsButton" aria-label="Open settings" aria-expanded="false">⚙</button>
+      <div class="settings" id="settingsMenu" hidden>
+        <strong>Settings</strong>
+        <button id="presentationButton">▣ Enter presentation mode</button>
+        <button id="notesButton">Presenter’s notes</button>
+        <button id="resetAllButton">↺ Start investigation over</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="intro" aria-labelledby="pageTitle">
+      <div>
+        <span class="eyebrow">Guided time-of-flight investigation</span>
+        <h1 id="pageTitle">Time the flight. Read what arrives.</h1>
+        <p class="lede">Analyze charged particles by timing their flight. In this simplified instrument, a voltage gives each ion a boost, the ions coast through a vacuum, and a detector records when each packet arrives.</p>
+        <p class="definition">An <strong>ion</strong> is an electrically charged atom or molecule.</p>
+      </div>
+      <div class="path" aria-label="Simplified instrument path">
+        <div><b>1 · Boost</b><span>Voltage adds kinetic energy before the clock starts.</span></div>
+        <div><b>2 · Coast</b><span>Ions cross a 1.50 metre field-free tube in vacuum.</span></div>
+        <div><b>3 · Detect</b><span>Arrival time becomes the measured evidence.</span></div>
+      </div>
+    </section>
+
+    <nav class="step-nav" id="stepNav" aria-label="Three linked investigations"></nav>
+
+    <section class="workspace" aria-label="Current ion flight experiment">
+      <section class="task-panel" aria-labelledby="lessonTitle">
+        <p class="step-kicker" id="stepKicker"></p>
+        <h2 id="lessonTitle"></h2>
+        <p class="purpose" id="lessonPurpose"></p>
+
+        <div class="conditions" aria-label="Controlled instrument conditions">
+          <div class="condition"><span>Flight tube</span><b>1.50 metre (m)</b></div>
+          <div class="condition"><span>Voltage boost</span><b>20 kilovolts (kV)</b></div>
+        </div>
+
+        <div class="sample-list" id="sampleList" aria-label="Known simulated ion inputs"></div>
+        <p class="unit-key"><b>Da</b> means dalton, a mass unit for atoms and molecules. <b>+1e</b> means one positive elementary charge; <b>+2e</b> means two. The charge number <b>z</b> is 1 or 2 here.</p>
+
+        <fieldset>
+          <legend id="predictionQuestion"></legend>
+          <div class="prediction-list" id="predictionList"></div>
+        </fieldset>
+        <div class="action-row">
+          <button class="primary" id="runButton" disabled>Choose a prediction first</button>
+          <button class="secondary" id="replayButton" hidden>Replay</button>
+        </div>
+        <p class="run-hint" id="runHint">Arrival values and the trace stay hidden until you run the detector.</p>
+
+        <section class="finding" id="finding" aria-live="polite" hidden>
+          <h3 id="findingVerdict"></h3>
+          <div class="arrival-list" id="arrivalList"></div>
+          <p id="findingExplanation"></p>
+          <p id="findingConclusion"></p>
+          <button class="primary next-button" id="nextButton" hidden></button>
+        </section>
+      </section>
+
+      <section class="evidence-panel" id="instrumentPanel" tabindex="-1" aria-label="Instrument and detector evidence">
+        <div class="instrument-head">
+          <h2>Linear time-of-flight instrument</h2>
+          <span class="scale-badge">1 µs = one millionth s · 160 ms on screen</span>
+        </div>
+        <div class="flight-wrap">
+          <canvas id="flightCanvas" aria-label="Ion packet centers moving from the drift-tube entrance to the detector"></canvas>
+        </div>
+        <div class="live-strip">
+          <div><span>Detector clock</span><b id="clockReadout">Waiting for Run</b></div>
+          <div><span>Detector event</span><b id="detectorEvent" aria-live="polite">No arrivals recorded</b></div>
+        </div>
+        <div class="trace-block">
+          <div class="trace-title-row">
+            <h3>Detector trace</h3>
+            <span>Fixed time axis for all three investigations: 0–18 microseconds</span>
+          </div>
+          <canvas id="traceCanvas" aria-label="Detector signal versus flight time; no evidence recorded yet"></canvas>
+          <p class="peak-note">A <strong>peak</strong> represents a group of ions arriving over a range of times. The navy trace is the total detector signal; colored ticks mark the known packets’ center times. Moving markers show group centers, not exact individual paths.</p>
+        </div>
+      </section>
+    </section>
+
+    <section class="transfer" id="transferPanel" hidden>
+      <span class="eyebrow">Use what the detector taught you</span>
+      <h2>Can one peak identify one kind of ion?</h2>
+      <p>A real sample produces one detector peak at 10.80 microseconds. Which conclusion is justified by flight time alone?</p>
+      <div class="transfer-options" id="transferOptions">
+        <button data-transfer="0">Exactly one ion must be present</button>
+        <button data-transfer="1">Different ions could share the same mass-to-charge ratio</button>
+      </div>
+      <p class="transfer-feedback" id="transferFeedback" aria-live="polite"></p>
+    </section>
+
+    <details class="advanced" id="advancedPanel">
+      <summary>Optional advanced extension · When do two peaks count as separate?</summary>
+      <div class="advanced-body">
+        <p class="advanced-intro">Real ion packets do not all arrive at one exact instant, so each peak has a <strong>timing width</strong>. This extension compares 200 Da and 205 Da ions at +1 charge in a 1.00 m tube and a 2.00 m tube. It uses two stated, assumed width rules. <strong>Sigma (σ)</strong> is the Gaussian timing spread, and <strong>FWHM</strong> is full width at half maximum. This activity counts centers as resolved when separation is at least mean FWHM; that is a stated classroom comparison rule, not a universal resolution or identification guarantee.</p>
+        <div class="advanced-controls" aria-label="Timing width assumption">
+          <button class="mode-button active" id="absoluteWidthButton" aria-pressed="true">Fixed width: σ = 0.06 µs</button>
+          <button class="mode-button" id="fractionalWidthButton" aria-pressed="false">Proportional width: σ = 1.5% of time</button>
+          <button class="primary" id="compareButton">Run paired comparison</button>
+        </div>
+        <div id="advancedResult" hidden>
+          <canvas id="advancedCanvas" aria-label="Paired summed detector-signal traces for short and long tubes using the same time and signal scales"></canvas>
+          <p class="advanced-legend"><strong>Navy line:</strong> total detector signal. <strong>Dashed sky/gold lines:</strong> known simulated packet components. Both rows use the same vertical signal scale.</p>
+          <table class="comparison-table">
+            <thead><tr><th>Tube</th><th>Peak separation</th><th>Mean peak width (FWHM)</th><th>Criterion</th></tr></thead>
+            <tbody id="comparisonBody"></tbody>
+          </table>
+          <p id="advancedFinding"></p>
+        </div>
+
+        <details class="methods">
+          <summary>Methods, symbols, and sources</summary>
+          <div class="formula">t = L √[m / (2qV)]</div>
+          <ul>
+            <li><b>t</b> is field-free flight time in seconds, displayed here in microseconds (µs). One µs is one millionth of a second.</li>
+            <li><b>L</b> is tube length in metres (m). <b>m</b> is ion mass, converted from daltons (Da) to kilograms.</li>
+            <li><b>q = z·e</b> is positive charge in coulombs. <b>z</b> is the dimensionless charge number; <b>e</b> is one elementary charge.</li>
+            <li><b>V</b> is acceleration voltage in volts, displayed in kilovolts (kV); one kV is 1,000 volts. Acceleration happens before this clock starts.</li>
+            <li><b>m/z</b> is the conventional mass-to-charge label. For example, 400 Da with z = 2 has m/z = 400 ÷ 2 = 200.</li>
+            <li><b>σ</b> (sigma) is the assumed Gaussian timing spread. FWHM, the full width at half maximum, equals 2.355σ.</li>
+          </ul>
+          <p>For this comparison, peaks count as resolved when their center separation is at least their mean FWHM. This is a declared classroom criterion, and the timing widths are assumptions. A longer tube helps under the fixed-width assumption here; it is not a universal instrument promise.</p>
+          <p>Concept sources: <a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial">Iowa State University Chemical Instrumentation Facility, Mass Spectrometry Tutorial</a>, and <a href="https://www.shimadzu.com/an/sites/shimadzu.com.an/files/pim/pim_document_file/technical/11021/journal_vol_11_issue_2_02.pdf">Shimadzu MALDI basics</a>. They support the underlying concepts and do not endorse this activity.</p>
+        </details>
+      </div>
+    </details>
+
+    <footer>
+      <span><b>Ion Flight</b> · Bryant Harrison · Murray State University · idealized offline teaching model</span>
+      <a href="teacher-guide.html">Open printable teacher guide</a>
+    </footer>
   </main>
-  <section class="overlay" id="howOverlay" role="dialog" aria-modal="true" aria-labelledby="howTitle"><div class="modal"><div class="eyebrow" style="color:#006aa6">How to use Ion Flight</div><h2 id="howTitle">Follow the packets, then read the clock.</h2><ol><li>Choose a packet set. The labels give mass in Da, positive charge number z, and packet counts.</li><li>Adjust flight length and acceleration voltage. Run the packets to animate a <b>field-free</b> drift region; the displayed microseconds are physical flight times scaled for the screen.</li><li>Read the detector trace. A shared arrival means equal m/z in this ideal model, even if the two ions have different mass and charge.</li><li>Switch timing-spread conventions. σ is the Gaussian standard deviation. Longer flight helps only when the absolute timing spread does not grow with arrival time.</li></ol><p>This is a stripped-down linear TOF model, not a full ion source, reflectron, or identification workflow.</p><button class="close" data-close="howOverlay">Start exploring</button></div></section>
-  <section class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-labelledby="notesTitle" hidden><div class="modal"><div class="eyebrow" style="color:#006aa6">Presenter’s notes · about 12 minutes</div><h2 id="notesTitle">A short classroom run of show</h2><div class="notes">1. Ask for a prediction: “Does a heavier ion always arrive later?” Run the equal-m/z profile after taking votes.
 
-2. Name the boundary: this clock separates m/z, not mass alone. 200 Da, +1 and 400 Da, +2 coincide in the ideal model.
+  <section class="overlay" id="howOverlay" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+    <div class="modal">
+      <span class="eyebrow">How to use Ion Flight</span>
+      <h2 id="howTitle">Make a prediction, then let the detector answer.</h2>
+      <ol>
+        <li>Begin with Investigation 1. The colored cards are known simulated inputs: mass, positive charge, and sample name.</li>
+        <li>Choose a prediction. Run stays locked until you commit to one.</li>
+        <li>Select <b>Run detector</b>. Watch the same slow-motion scale each time, then use the arrival cues and detector trace as evidence.</li>
+        <li>Read why the observation supports or contradicts your prediction, then continue from mass to charge to equal m/z.</li>
+      </ol>
+      <p>The detector measures arrival time directly. The model uses mass and charge to simulate that time. The optional advanced extension comes after the core investigation.</p>
+      <button class="primary modal-close" data-close="howOverlay">Begin Investigation 1</button>
+    </div>
+  </section>
 
-3. Move L from short to long with fixed absolute σ. The peaks become farther apart while their absolute widths stay fixed. Then switch to fractional σ and repeat: both distance and blur grow together.
+  <section class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-labelledby="notesTitle" hidden>
+    <div class="modal">
+      <span class="eyebrow">Presenter’s notes · 12–15 minutes</span>
+      <h2 id="notesTitle">Keep the evidence and the claim together.</h2>
+      <div class="presenter-notes">1. Read the three-part instrument path. Ask what is known before the run and what the detector will actually measure.
 
-4. Use challenge 3 to make the constraint explicit. More drift length is not a universal resolution cure; the width mechanism matters.
+2. Investigation 1: hold +1 charge constant. Take predictions, then run. Compare the 100 Da and 400 Da arrival times on the fixed axis.
 
-5. Close by pointing students to the guide’s assumptions and prompts. Do not treat this simplified trace as a molecular identification result.</div><button class="close" data-close="notesOverlay">Close notes</button></div></section>
+3. Investigation 2: hold 200 Da mass constant. The +2 ion receives more energy from the same voltage and arrives first.
+
+4. Investigation 3: ask for predictions before naming m/z. The 200 Da/+1 and 400 Da/+2 inputs coincide because both ratios equal 200.
+
+5. Use the transfer prompt to separate “one peak” from “one identified ion.” Flight time alone does not identify a real molecule.
+
+Optional: open the width extension. Define timing width before sigma. Compare 1 m and 2 m on the shared axis under each assumed width rule.</div>
+      <button class="secondary modal-close" data-close="notesOverlay">Close notes</button>
+    </div>
+  </section>
+
   <script>
-/* Ion Flight's small, dependency-free physics model. It is bundled into index.html by build.js. */
+/* Ion Flight's dependency-free physics and lesson model. Bundled into index.html by build.js. */
 const IonFlightModel = (() => {
   'use strict';
 
   const DALTON_KG = 1.66053906660e-27;
   const ELEMENTARY_CHARGE_C = 1.602176634e-19;
   const GAUSSIAN_FWHM = 2 * Math.sqrt(2 * Math.log(2));
+  const SCREEN_MS_PER_MICROSECOND = 160;
+  const CORE_TRACE_DOMAIN_US = Object.freeze([0, 18]);
+  const CORE_INSTRUMENT = Object.freeze({
+    lengthM: 1.5,
+    voltageV: 20000,
+    spread: Object.freeze({ mode: 'absolute', value: 0.18 })
+  });
 
   function positive(value, name) {
     if (!(Number.isFinite(value) && value > 0)) throw new RangeError(`${name} must be positive`);
@@ -62,7 +681,9 @@ const IonFlightModel = (() => {
 
   function sigmaSeconds(timeSeconds, spread) {
     positive(timeSeconds, 'timeSeconds');
-    if (!spread || !Number.isFinite(spread.value) || spread.value <= 0) throw new RangeError('spread.value must be positive');
+    if (!spread || !Number.isFinite(spread.value) || spread.value <= 0) {
+      throw new RangeError('spread.value must be positive');
+    }
     if (spread.mode === 'fractional') return timeSeconds * spread.value;
     if (spread.mode === 'absolute') return spread.value * 1e-6;
     throw new RangeError('spread.mode must be absolute or fractional');
@@ -71,7 +692,6 @@ const IonFlightModel = (() => {
   function resolvingPower(timeSeconds, sigmaS) {
     positive(timeSeconds, 'timeSeconds');
     positive(sigmaS, 'sigmaS');
-    // For narrow peaks m ∝ t², so m/Δm ≈ t/(2Δt); Δt here is FWHM.
     return timeSeconds / (2 * GAUSSIAN_FWHM * sigmaS);
   }
 
@@ -79,15 +699,21 @@ const IonFlightModel = (() => {
     positive(timeS, 'timeS');
     positive(sigmaS, 'sigmaS');
     positive(counts, 'counts');
-    return { timeS, sigmaS, counts, fwhmS: GAUSSIAN_FWHM * sigmaS, resolution: resolvingPower(timeS, sigmaS) };
+    return {
+      timeS,
+      sigmaS,
+      counts,
+      fwhmS: GAUSSIAN_FWHM * sigmaS,
+      resolution: resolvingPower(timeS, sigmaS)
+    };
   }
 
   function gaussianDensity(timeS, peakData) {
     const z = (timeS - peakData.timeS) / peakData.sigmaS;
-    return peakData.counts * Math.exp(-0.5 * z * z) / (peakData.sigmaS * Math.sqrt(2 * Math.PI));
+    return peakData.counts * Math.exp(-0.5 * z * z)
+      / (peakData.sigmaS * Math.sqrt(2 * Math.PI));
   }
 
-  // A finite numerical area is used only in tests and for trace normalization checks.
   function integratedCounts(peakData, steps = 12000) {
     const lo = peakData.timeS - 7 * peakData.sigmaS;
     const hi = peakData.timeS + 7 * peakData.sigmaS;
@@ -101,8 +727,20 @@ const IonFlightModel = (() => {
   }
 
   function packetPeak(packet, instrument) {
-    const timeS = flightTimeSeconds({ massDa: packet.massDa, charge: packet.charge, voltageV: instrument.voltageV, lengthM: instrument.lengthM });
-    return { ...packet, ...peak({ timeS, sigmaS: sigmaSeconds(timeS, instrument.spread), counts: packet.counts }) };
+    const timeS = flightTimeSeconds({
+      massDa: packet.massDa,
+      charge: packet.charge,
+      voltageV: instrument.voltageV,
+      lengthM: instrument.lengthM
+    });
+    return {
+      ...packet,
+      ...peak({
+        timeS,
+        sigmaS: sigmaSeconds(timeS, instrument.spread),
+        counts: packet.counts
+      })
+    };
   }
 
   function sameMassToCharge(a, b, epsilon = 1e-12) {
@@ -113,38 +751,195 @@ const IonFlightModel = (() => {
     return Math.abs(a.timeS - b.timeS) >= (a.fwhmS + b.fwhmS) / 2;
   }
 
-  const challenges = [
-    {
+  const CORE_LESSONS = Object.freeze([
+    Object.freeze({
+      id: 'mass',
+      number: 1,
+      shortTitle: 'Change mass',
+      title: 'Same charge, different masses',
+      purpose: 'Hold charge constant. Test how mass changes arrival time.',
+      question: 'Both ions carry +1 charge. Which packet reaches the detector first?',
+      choices: Object.freeze(['Ion A — 100 Da, +1', 'Ion B — 400 Da, +1', 'They arrive together']),
+      correctChoice: 0,
+      mechanism: 'With the same charge and voltage boost, the lighter ion moves faster through the same tube.',
+      packets: Object.freeze([
+        Object.freeze({ name: 'Ion A', shortName: 'A', massDa: 100, charge: 1, counts: 150, color: '#00A4E3' }),
+        Object.freeze({ name: 'Ion B', shortName: 'B', massDa: 400, charge: 1, counts: 150, color: '#ECAC00' })
+      ])
+    }),
+    Object.freeze({
       id: 'charge',
-      prompt: 'Two 100 Da packets get the same voltage. Which reaches the detector first?',
-      choices: ['z = 1', 'z = 2', 'They coincide'],
-      correct: 1,
-      explanation: 'The z = 2 ion receives twice qV. Its speed is √2 times larger, so it arrives first.',
-      setup: { profile: 'charge' }
-    },
-    {
-      id: 'mz',
-      prompt: 'A 200 Da, z = 1 ion and a 400 Da, z = 2 ion enter this ideal linear TOF. What does the clock distinguish?',
-      choices: ['Two arrivals', 'One coincident arrival', 'Only their masses'],
-      correct: 1,
-      explanation: 'Both have m/z = 200 Da per charge. The ideal drift-time expression gives the same arrival time; a time trace alone cannot separate them.',
-      setup: { profile: 'equal' }
-    },
-    {
-      id: 'limit',
-      prompt: 'With a 1.5% fractional σ timing spread, can increasing only the flight length resolve 200 and 205 Da, both z = 1?',
-      choices: ['Yes, make L as long as possible', 'No, the relative width scales with time', 'Yes, because voltage no longer matters'],
-      correct: 1,
-      explanation: 'At fixed fractional σ, both the separation and peak width grow in proportion to flight time. Their FWHM overlap ratio stays the same, so length alone cannot win this constrained challenge.',
-      setup: { profile: 'close', length: 1.5, voltage: 20, mode: 'fractional', spread: 1.5 }
+      number: 2,
+      shortTitle: 'Change charge',
+      title: 'Same mass, different positive charges',
+      purpose: 'Hold mass constant. Test how charge changes the energy gained from the same voltage.',
+      question: 'Both ions have a mass of 200 Da. Which packet reaches the detector first?',
+      choices: Object.freeze(['Ion A — 200 Da, +1', 'Ion B — 200 Da, +2', 'They arrive together']),
+      correctChoice: 1,
+      mechanism: 'Ion B has twice the positive charge, so the same voltage gives it more kinetic energy and it crosses the tube sooner.',
+      packets: Object.freeze([
+        Object.freeze({ name: 'Ion A', shortName: 'A', massDa: 200, charge: 1, counts: 150, color: '#00A4E3' }),
+        Object.freeze({ name: 'Ion B', shortName: 'B', massDa: 200, charge: 2, counts: 150, color: '#ECAC00' })
+      ])
+    }),
+    Object.freeze({
+      id: 'ratio',
+      number: 3,
+      shortTitle: 'Match the ratio',
+      title: 'Different values, equal mass-to-charge ratio',
+      purpose: 'Change mass and charge together. Test what the detector can distinguish.',
+      question: 'Ion A is 200 Da at +1; Ion B is 400 Da at +2. What will the detector record?',
+      choices: Object.freeze(['Ion A arrives first', 'Ion B arrives first', 'One coincident arrival']),
+      correctChoice: 2,
+      mechanism: 'Both ions have m/z = 200 because 200 ÷ 1 and 400 ÷ 2 are equal. This ideal clock therefore records the same arrival time.',
+      packets: Object.freeze([
+        Object.freeze({ name: 'Ion A', shortName: 'A', massDa: 200, charge: 1, counts: 150, color: '#00A4E3' }),
+        Object.freeze({ name: 'Ion B', shortName: 'B', massDa: 400, charge: 2, counts: 150, color: '#ECAC00' })
+      ])
+    })
+  ]);
+
+  function getLesson(lessonId) {
+    const lesson = CORE_LESSONS.find(item => item.id === lessonId);
+    if (!lesson) throw new RangeError(`Unknown lesson: ${lessonId}`);
+    return lesson;
+  }
+
+  function experimentPeaks(lessonId, instrument = CORE_INSTRUMENT) {
+    return getLesson(lessonId).packets.map(packet => packetPeak(packet, instrument));
+  }
+
+  function detectorFinding(lessonId, predictionIndex, instrument = CORE_INSTRUMENT) {
+    const lesson = getLesson(lessonId);
+    if (!Number.isInteger(predictionIndex) || predictionIndex < 0 || predictionIndex >= lesson.choices.length) {
+      throw new RangeError('predictionIndex must identify a lesson choice');
     }
-  ];
+    const arrivals = experimentPeaks(lessonId, instrument);
+    const arrivalGapUs = Math.abs(arrivals[0].timeS - arrivals[1].timeS) * 1e6;
+    const supported = predictionIndex === lesson.correctChoice;
+    return {
+      supported,
+      verdict: supported ? 'Your prediction is supported.' : 'The detector contradicts your prediction.',
+      explanation: lesson.mechanism,
+      arrivalGapUs,
+      arrivals
+    };
+  }
+
+  function screenMilliseconds(timeSeconds, millisecondsPerMicrosecond = SCREEN_MS_PER_MICROSECOND) {
+    positive(timeSeconds, 'timeSeconds');
+    positive(millisecondsPerMicrosecond, 'millisecondsPerMicrosecond');
+    return timeSeconds * 1e6 * millisecondsPerMicrosecond;
+  }
+
+  function physicalElapsedSeconds(screenElapsedMs, millisecondsPerMicrosecond = SCREEN_MS_PER_MICROSECOND) {
+    if (!(Number.isFinite(screenElapsedMs) && screenElapsedMs >= 0)) {
+      throw new RangeError('screenElapsedMs must be nonnegative');
+    }
+    positive(millisecondsPerMicrosecond, 'millisecondsPerMicrosecond');
+    return screenElapsedMs / millisecondsPerMicrosecond / 1e6;
+  }
+
+  function initialLessonState() {
+    return {
+      stepIndex: 0,
+      unlockedThrough: 0,
+      predictions: {},
+      completed: {},
+      runRevision: 0
+    };
+  }
+
+  function reduceLessonState(state, action) {
+    const current = state || initialLessonState();
+    if (!action || typeof action.type !== 'string') throw new TypeError('action.type is required');
+    if (action.type === 'RESET') return initialLessonState();
+    if (action.type === 'GO_TO_STEP') {
+      if (!Number.isInteger(action.stepIndex) || action.stepIndex < 0 || action.stepIndex > current.unlockedThrough) {
+        throw new RangeError('step is not unlocked');
+      }
+      return { ...current, stepIndex: action.stepIndex };
+    }
+    const lesson = CORE_LESSONS[current.stepIndex];
+    if (action.type === 'SELECT_PREDICTION') {
+      if (current.completed[lesson.id]) return current;
+      if (!Number.isInteger(action.choiceIndex) || action.choiceIndex < 0 || action.choiceIndex >= lesson.choices.length) {
+        throw new RangeError('choice is not valid');
+      }
+      return {
+        ...current,
+        predictions: { ...current.predictions, [lesson.id]: action.choiceIndex }
+      };
+    }
+    if (action.type === 'RUN_COMPLETE') {
+      if (!Number.isInteger(current.predictions[lesson.id])) {
+        throw new Error('a prediction is required before evidence can be completed');
+      }
+      const unlockedThrough = Math.min(
+        CORE_LESSONS.length - 1,
+        Math.max(current.unlockedThrough, current.stepIndex + 1)
+      );
+      return {
+        ...current,
+        unlockedThrough,
+        completed: { ...current.completed, [lesson.id]: true },
+        runRevision: current.runRevision + 1
+      };
+    }
+    throw new RangeError(`Unknown lesson action: ${action.type}`);
+  }
+
+  function resolutionComparison({
+    spread,
+    shortLengthM = 1,
+    longLengthM = 2,
+    voltageV = 20000
+  }) {
+    const packets = [
+      { name: 'Ion C', shortName: 'C', massDa: 200, charge: 1, counts: 150, color: '#00A4E3' },
+      { name: 'Ion D', shortName: 'D', massDa: 205, charge: 1, counts: 150, color: '#ECAC00' }
+    ];
+    return [shortLengthM, longLengthM].map(lengthM => {
+      const peaks = packets.map(packet => packetPeak(packet, { lengthM, voltageV, spread }));
+      const separationUs = Math.abs(peaks[0].timeS - peaks[1].timeS) * 1e6;
+      const meanFwhmUs = ((peaks[0].fwhmS + peaks[1].fwhmS) / 2) * 1e6;
+      return {
+        lengthM,
+        peaks,
+        separationUs,
+        meanFwhmUs,
+        separationToWidth: separationUs / meanFwhmUs,
+        resolved: canResolveByFwhm(peaks[0], peaks[1])
+      };
+    });
+  }
 
   return {
-    DALTON_KG, ELEMENTARY_CHARGE_C, GAUSSIAN_FWHM,
-    flightTimeSeconds, speedMetersPerSecond, sigmaSeconds, resolvingPower,
-    peak, gaussianDensity, integratedCounts, packetPeak, sameMassToCharge,
-    canResolveByFwhm, challenges
+    DALTON_KG,
+    ELEMENTARY_CHARGE_C,
+    GAUSSIAN_FWHM,
+    SCREEN_MS_PER_MICROSECOND,
+    CORE_TRACE_DOMAIN_US,
+    CORE_INSTRUMENT,
+    CORE_LESSONS,
+    flightTimeSeconds,
+    speedMetersPerSecond,
+    sigmaSeconds,
+    resolvingPower,
+    peak,
+    gaussianDensity,
+    integratedCounts,
+    packetPeak,
+    sameMassToCharge,
+    canResolveByFwhm,
+    getLesson,
+    experimentPeaks,
+    detectorFinding,
+    screenMilliseconds,
+    physicalElapsedSeconds,
+    initialLessonState,
+    reduceLessonState,
+    resolutionComparison
   };
 })();
 
@@ -152,37 +947,603 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
 
   </script>
   <script>
-  (() => {
-    'use strict';
-    const M = IonFlightModel;
-    const $ = id => document.getElementById(id);
-    const packetsByProfile = {
-      standard:[{name:'A',massDa:200,charge:1,counts:160,color:'#00A4E3'},{name:'B',massDa:400,charge:2,counts:130,color:'#ECAC00'},{name:'C',massDa:205,charge:1,counts:110,color:'#9d4edd'}],
-      charge:[{name:'A',massDa:100,charge:1,counts:150,color:'#00A4E3'},{name:'B',massDa:100,charge:2,counts:150,color:'#ECAC00'}],
-      equal:[{name:'A',massDa:200,charge:1,counts:150,color:'#00A4E3'},{name:'B',massDa:400,charge:2,counts:150,color:'#ECAC00'}],
-      close:[{name:'A',massDa:200,charge:1,counts:160,color:'#00A4E3'},{name:'C',massDa:205,charge:1,counts:130,color:'#9d4edd'}]
-    };
-    const defaults={profile:'standard',length:1.5,voltage:20,mode:'absolute',spread:0.25};
-    let state={...defaults, running:false, start:0, elapsed:0};
-    const flight=$('flightCanvas'),trace=$('traceCanvas'),fctx=flight.getContext('2d'),tctx=trace.getContext('2d');
-    const instrument=()=>({lengthM:state.length,voltageV:state.voltage*1000,spread:state.mode==='absolute'?{mode:'absolute',value:state.spread}:{mode:'fractional',value:state.spread/100}});
-    const peaks=()=>packetsByProfile[state.profile].map(p=>M.packetPeak(p,instrument()));
-    const fmt=(s,d=3)=>(s*1e6).toFixed(d)+' µs';
-    function resize(canvas,height){const rect=canvas.getBoundingClientRect(),dpr=devicePixelRatio||1;canvas.width=Math.round(rect.width*dpr);canvas.height=Math.round(height*dpr);canvas.style.height=height+'px';return {w:rect.width,h:height,dpr};}
-    function fastestTimeS(){return Math.min(...packetsByProfile[state.profile].map(p=>M.flightTimeSeconds({massDa:p.massDa,charge:p.charge,voltageV:state.voltage*1000,lengthM:state.length})));}
-    function syncControls(){const spread=$('spread');if(state.mode==='absolute'){const max=fastestTimeS()*1e6/6;state.spread=Math.min(state.spread,max);spread.min='.05';spread.max=max.toFixed(3);spread.step='.01';}else{spread.min='.1';spread.max='5';spread.step='.1';} $('profile').value=state.profile;$('length').value=state.length;$('voltage').value=state.voltage;spread.value=state.spread;$('lengthOut').value=state.length.toFixed(1)+' m';$('voltageOut').value=state.voltage+' kV';$('spreadOut').value=state.mode==='absolute'?state.spread.toFixed(2)+' µs (≤ '+(+spread.max).toFixed(2)+')':state.spread.toFixed(1)+'% of t'; $('absoluteMode').classList.toggle('active',state.mode==='absolute');$('fractionalMode').classList.toggle('active',state.mode==='fractional');$('absoluteMode').setAttribute('aria-pressed',state.mode==='absolute');$('fractionalMode').setAttribute('aria-pressed',state.mode==='fractional');}
-    function renderPacketList(data){$('packetList').innerHTML=data.map(p=>`<div class="packet" style="border-color:${p.color}"><b>${p.name}: ${p.massDa} Da, z = ${p.charge}</b><span>m/z ${p.massDa/p.charge} · ${fmt(p.timeS)} · σ ${fmt(p.sigmaS)}</span></div>`).join('');}
-    function drawFlight(data){const {w,h,dpr}=resize(flight,280);fctx.setTransform(dpr,0,0,dpr,0,0);fctx.clearRect(0,0,w,h);const left=54,right=w-56,top=66,bottom=200,tubeW=right-left;fctx.fillStyle='#c9e7f3';fctx.fillRect(left,top,tubeW,bottom-top);fctx.strokeStyle='#006aa6';fctx.lineWidth=3;fctx.strokeRect(left,top,tubeW,bottom-top);fctx.fillStyle='#002144';fctx.font='800 13px system-ui';fctx.fillText('PULSE',12,top-16);fctx.fillText('FIELD-FREE DRIFT REGION',left+tubeW/2-84,top-16);fctx.fillText('DETECTOR',right-31,top-16);for(let x=left+35;x<right;x+=35){fctx.strokeStyle='#fff9';fctx.beginPath();fctx.moveTo(x,top);fctx.lineTo(x,bottom);fctx.stroke()}fctx.fillStyle='#243b53';fctx.fillRect(left-12,top+40,12,54);fctx.fillStyle='#ECAC00';fctx.fillRect(right,top,12,bottom-top);const maxT=Math.max(...data.map(p=>p.timeS));const clockS=Math.min(maxT,state.elapsed);data.forEach((p,i)=>{const pgr=Math.min(1,clockS/p.timeS);const x=left+13+(right-left-25)*pgr;const y=top+35+i*42;fctx.fillStyle=p.color;fctx.beginPath();fctx.arc(x,y,10,0,Math.PI*2);fctx.fill();fctx.fillStyle='#002144';fctx.font='700 12px system-ui';fctx.fillText(`${p.name}  ${p.massDa}/${p.charge}`,Math.min(x+14,right-78),y+4);});fctx.fillStyle='#385069';fctx.font='600 12px system-ui';fctx.fillText(`L = ${state.length.toFixed(1)} m`,left,237);fctx.fillText(`V = ${state.voltage} kV`,left+125,237);fctx.font='600 11px system-ui';fctx.fillText(w<520?'motion scaled; labels show real time':'screen motion is speed-scaled; labels use actual drift time',left,260);$('clockOut').textContent=fmt(clockS);$('fastestOut').textContent=fmt(Math.min(...data.map(p=>p.timeS)));$('resolutionOut').textContent='m/Δm ≈ '+Math.round(Math.max(...data.map(p=>p.resolution)));}
-    function drawTrace(data){const {w,h,dpr}=resize(trace,205);tctx.setTransform(dpr,0,0,dpr,0,0);tctx.clearRect(0,0,w,h);const pad={l:60,r:16,t:38,b:31};const minT=Math.min(...data.map(p=>p.timeS-4*p.sigmaS)),maxT=Math.max(...data.map(p=>p.timeS+4*p.sigmaS));const span=Math.max(maxT-minT,1e-9);const densityUs=t=>data.reduce((sum,p)=>sum+M.gaussianDensity(t,p),0)*1e-6;let maxY=0;for(let i=0;i<400;i++)maxY=Math.max(maxY,densityUs(minT+span*i/399));const mapX=t=>pad.l+(t-minT)/span*(w-pad.l-pad.r);const mapY=y=>h-pad.b-y/maxY*(h-pad.t-pad.b);tctx.strokeStyle='#dbe7ee';tctx.lineWidth=1;tctx.fillStyle='#526a7e';tctx.font='600 10px system-ui';for(let i=0;i<4;i++){const y=pad.t+i*(h-pad.t-pad.b)/3;tctx.beginPath();tctx.moveTo(pad.l,y);tctx.lineTo(w-pad.r,y);tctx.stroke();tctx.fillText((maxY*(1-i/3)).toFixed(0),8,y+3)}tctx.strokeStyle='#002144';tctx.beginPath();tctx.moveTo(pad.l,pad.t);tctx.lineTo(pad.l,h-pad.b);tctx.lineTo(w-pad.r,h-pad.b);tctx.stroke();tctx.beginPath();for(let i=0;i<400;i++){const x=minT+span*i/399,y=densityUs(x);if(i===0)tctx.moveTo(mapX(x),mapY(y));else tctx.lineTo(mapX(x),mapY(y));}tctx.lineTo(mapX(maxT),h-pad.b);tctx.lineTo(mapX(minT),h-pad.b);tctx.fillStyle='#00A4E340';tctx.fill();tctx.strokeStyle='#006aa6';tctx.lineWidth=2.3;tctx.stroke();tctx.fillStyle='#385069';tctx.font='700 10px system-ui';tctx.fillText('counts/µs',4,12);tctx.fillText('autoscaled',4,24);tctx.fillText(fmt(minT,2),pad.l,h-10);tctx.fillText(fmt(maxT,2),w-pad.r-53,h-10);tctx.fillText('drift time →',w/2-30,h-10);data.forEach(p=>{tctx.fillStyle=p.color;tctx.fillRect(mapX(p.timeS)-2,h-pad.b-5,4,5);});}
-    function render(){syncControls();const data=peaks();renderPacketList(data);drawFlight(data);drawTrace(data);}
-    function animate(now){if(!state.running)return;const data=peaks();const maxT=Math.max(...data.map(p=>p.timeS));const duration=2300;state.elapsed=(now-state.start)/duration*maxT;render();if(state.elapsed>=maxT){state.running=false;state.elapsed=maxT;$('runState').textContent='Detector trace complete';render();return;}requestAnimationFrame(animate);}
-    function run(){state.running=true;state.elapsed=0;state.start=performance.now();$('runState').textContent='Packets in flight';requestAnimationFrame(animate)}
-    function reset(){state={...defaults,running:false,start:0,elapsed:0};$('runState').textContent='Ready to pulse';render();}
-    $('profile').addEventListener('change',e=>{state.profile=e.target.value;state.running=false;state.elapsed=0;render()});$('length').addEventListener('input',e=>{state.length=+e.target.value;state.running=false;state.elapsed=0;render()});$('voltage').addEventListener('input',e=>{state.voltage=+e.target.value;state.running=false;state.elapsed=0;render()});$('spread').addEventListener('input',e=>{state.spread=+e.target.value;state.running=false;state.elapsed=0;render()});$('absoluteMode').onclick=()=>{state.mode='absolute';state.spread=.25;render()};$('fractionalMode').onclick=()=>{state.mode='fractional';state.spread=1.5;render()};$('runButton').onclick=run;$('resetButton').onclick=reset;$('resetSettingsButton').onclick=()=>{reset();$('settings').hidden=true};
-    $('howButton').onclick=()=>$('howOverlay').hidden=false;$('settingsButton').onclick=()=>{$('settings').hidden=!$('settings').hidden};$('presentButton').onclick=()=>{document.body.classList.toggle('presentation');$('settings').hidden=true};$('notesButton').onclick=()=>{$('settings').hidden=true;$('notesOverlay').hidden=false};document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).hidden=true);document.addEventListener('keydown',e=>{if(e.key==='Escape'){document.querySelectorAll('.overlay').forEach(x=>x.hidden=true);$('settings').hidden=true}});
-    function challengeMarkup(){const parent=$('challenges');parent.innerHTML=M.challenges.map(c=>`<article class="challenge" data-id="${c.id}"><p>${c.prompt}</p><div class="choices">${c.choices.map((choice,i)=>`<button class="choice" data-choice="${i}">${choice}</button>`).join('')}<button class="choice try" data-setup>Try this setup</button></div><p class="feedback" aria-live="polite"></p></article>`).join('');parent.querySelectorAll('.challenge').forEach(el=>{const c=M.challenges.find(x=>x.id===el.dataset.id);el.querySelector('[data-setup]').onclick=()=>{Object.assign(state,c.setup,{running:false,elapsed:0});$('runState').textContent='Challenge setup loaded';render();window.scrollTo({top:0,behavior:'smooth'});};el.querySelectorAll('.choice[data-choice]').forEach(button=>button.onclick=()=>{const pick=+button.dataset.choice,correct=pick===c.correct;el.querySelectorAll('.choice[data-choice]').forEach(b=>b.classList.remove('correct','wrong'));button.classList.add(correct?'correct':'wrong');if(correct)el.querySelectorAll('.choice[data-choice]').forEach(b=>b.disabled=true);el.querySelector('.feedback').textContent=(correct?'Correct. ':'Not yet—try another answer. ')+c.explanation;const scored=[...parent.querySelectorAll('.challenge')].filter(card=>card.querySelector('.correct')).length;$('score').textContent=scored+' / 3 mastered';});});}
-    challengeMarkup();window.addEventListener('resize',render);render();
-  })();
+    (() => {
+      'use strict';
+
+      const M = IonFlightModel;
+      const byId = id => document.getElementById(id);
+      const flightCanvas = byId('flightCanvas');
+      const traceCanvas = byId('traceCanvas');
+      const flightContext = flightCanvas.getContext('2d');
+      const traceContext = traceCanvas.getContext('2d');
+      const runtime = {
+        phase: 'ready',
+        startMs: 0,
+        elapsedS: 0,
+        frameId: 0,
+        runToken: 0,
+        advancedMode: 'absolute'
+      };
+      let lessonState = M.initialLessonState();
+
+      function microseconds(seconds, digits) {
+        return (seconds * 1e6).toFixed(digits === undefined ? 2 : digits) + ' µs';
+      }
+
+      function setupCanvas(canvas, height) {
+        const rect = canvas.getBoundingClientRect();
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * ratio);
+        canvas.height = Math.round(height * ratio);
+        canvas.style.height = height + 'px';
+        return { width: rect.width, height, ratio };
+      }
+
+      function currentLesson() {
+        return M.CORE_LESSONS[lessonState.stepIndex];
+      }
+
+      function currentPeaks() {
+        return M.experimentPeaks(currentLesson().id);
+      }
+
+      function cancelRun(nextPhase) {
+        runtime.runToken += 1;
+        if (runtime.frameId) cancelAnimationFrame(runtime.frameId);
+        runtime.frameId = 0;
+        runtime.startMs = 0;
+        runtime.elapsedS = 0;
+        runtime.phase = nextPhase || 'ready';
+      }
+
+      function renderStepNavigation() {
+        byId('stepNav').innerHTML = M.CORE_LESSONS.map((lesson, index) => {
+          const unlocked = index <= lessonState.unlockedThrough;
+          const active = index === lessonState.stepIndex;
+          const complete = Boolean(lessonState.completed[lesson.id]);
+          const classes = ['step-tab', active ? 'active' : '', complete ? 'complete' : ''].filter(Boolean).join(' ');
+          const marker = complete ? '✓' : lesson.number;
+          return '<button class="' + classes + '" data-step="' + index + '" ' +
+            (unlocked ? '' : 'disabled ') +
+            (active ? 'aria-current="step"' : '') +
+            '><span class="step-number">' + marker + '</span><span>' + lesson.shortTitle + '</span></button>';
+        }).join('');
+        byId('stepNav').querySelectorAll('[data-step]').forEach(button => {
+          button.addEventListener('click', () => {
+            const nextIndex = Number(button.dataset.step);
+            if (nextIndex === lessonState.stepIndex) return;
+            cancelRun(lessonState.completed[M.CORE_LESSONS[nextIndex].id] ? 'complete' : 'ready');
+            lessonState = M.reduceLessonState(lessonState, { type: 'GO_TO_STEP', stepIndex: nextIndex });
+            renderCurrentStep();
+          });
+        });
+      }
+
+      function renderSamples(lesson) {
+        byId('sampleList').innerHTML = lesson.packets.map(packet => {
+          return '<article class="sample" style="--sample:' + packet.color + '">' +
+            '<span class="sample-letter">' + packet.shortName + '</span>' +
+            '<div><b>' + packet.name + '</b><span>Mass ' + packet.massDa +
+            ' Da · charge +' + packet.charge + 'e (z = ' + packet.charge + ')</span></div></article>';
+        }).join('');
+      }
+
+      function renderPredictions(lesson) {
+        const selected = lessonState.predictions[lesson.id];
+        const completed = Boolean(lessonState.completed[lesson.id]);
+        byId('predictionList').innerHTML = lesson.choices.map((choice, index) => {
+          return '<button class="prediction ' + (selected === index ? 'selected' : '') +
+            '" data-choice="' + index + '" aria-pressed="' + (selected === index) + '" ' +
+            (completed || runtime.phase === 'running' ? 'disabled' : '') + '>' + choice + '</button>';
+        }).join('');
+        byId('predictionList').querySelectorAll('[data-choice]').forEach(button => {
+          button.addEventListener('click', () => {
+            lessonState = M.reduceLessonState(lessonState, {
+              type: 'SELECT_PREDICTION',
+              choiceIndex: Number(button.dataset.choice)
+            });
+            renderCurrentStep();
+          });
+        });
+      }
+
+      function renderFinding(lesson) {
+        const completed = Boolean(lessonState.completed[lesson.id]);
+        const finding = byId('finding');
+        finding.hidden = !completed;
+        if (!completed) return;
+        const result = M.detectorFinding(lesson.id, lessonState.predictions[lesson.id]);
+        finding.classList.toggle('contradicted', !result.supported);
+        byId('findingVerdict').textContent = result.verdict;
+        byId('arrivalList').innerHTML = result.arrivals.map(arrival => {
+          return '<div class="arrival-row"><b style="color:' + arrival.color + '">' +
+            arrival.name + ' arrival</b><b>' + microseconds(arrival.timeS, 2) + '</b></div>';
+        }).join('');
+        byId('findingExplanation').textContent = result.explanation;
+        if (lesson.id === 'ratio') {
+          byId('findingConclusion').textContent =
+            'Observation: both packet centers arrive together and their peaks overlap. One peak does not establish one kind of ion.';
+        } else {
+          byId('findingConclusion').textContent =
+            'Observed separation between packet centers: ' + result.arrivalGapUs.toFixed(2) + ' µs.';
+        }
+        const nextButton = byId('nextButton');
+        if (lessonState.stepIndex < M.CORE_LESSONS.length - 1) {
+          nextButton.hidden = false;
+          nextButton.textContent = 'Continue to Investigation ' + (lesson.number + 1);
+        } else {
+          nextButton.hidden = true;
+        }
+      }
+
+      function renderCurrentStep() {
+        const lesson = currentLesson();
+        const completed = Boolean(lessonState.completed[lesson.id]);
+        if (runtime.phase !== 'running') runtime.phase = completed ? 'complete' : 'ready';
+        renderStepNavigation();
+        byId('stepKicker').textContent = 'Investigation ' + lesson.number + ' of 3';
+        byId('lessonTitle').textContent = lesson.title;
+        byId('lessonPurpose').textContent = lesson.purpose;
+        byId('predictionQuestion').textContent = 'Predict · ' + lesson.question;
+        renderSamples(lesson);
+        renderPredictions(lesson);
+        renderFinding(lesson);
+        const hasPrediction = Number.isInteger(lessonState.predictions[lesson.id]);
+        byId('runButton').disabled = !hasPrediction || runtime.phase === 'running';
+        byId('runButton').textContent = hasPrediction ? (completed ? 'Run detector again' : 'Run detector') : 'Choose a prediction first';
+        byId('replayButton').hidden = !completed;
+        byId('runHint').textContent = completed
+          ? 'The trace and exact arrivals above are detector evidence from this simulated run.'
+          : 'Arrival values and the trace stay hidden until you run the detector.';
+        byId('transferPanel').hidden = Object.keys(lessonState.completed).length < M.CORE_LESSONS.length;
+        drawCore();
+      }
+
+      function drawFlight(peaks, physicalTimeS) {
+        const cssHeight = window.innerWidth <= 620 ? 250 : window.innerWidth <= 960 ? 285 : 330;
+        const surface = setupCanvas(flightCanvas, cssHeight);
+        const ctx = flightContext;
+        ctx.setTransform(surface.ratio, 0, 0, surface.ratio, 0, 0);
+        ctx.clearRect(0, 0, surface.width, surface.height);
+
+        const sourceX = 30;
+        const tubeStart = Math.max(102, surface.width * 0.16);
+        const detectorX = surface.width - 52;
+        const top = 91;
+        const bottom = surface.height - 74;
+        const tubeHeight = bottom - top;
+
+        ctx.fillStyle = '#d8eef7';
+        ctx.fillRect(tubeStart, top, detectorX - tubeStart, tubeHeight);
+        ctx.strokeStyle = '#067aa9';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(tubeStart, top, detectorX - tubeStart, tubeHeight);
+        ctx.fillStyle = '#ecac00';
+        ctx.fillRect(detectorX, top - 3, 14, tubeHeight + 6);
+        ctx.fillStyle = '#002144';
+        ctx.fillRect(tubeStart - 12, top + 18, 12, Math.max(45, tubeHeight - 36));
+
+        ctx.font = '800 12px system-ui';
+        ctx.fillStyle = '#002144';
+        ctx.fillText('VOLTAGE BOOST', 15, 35);
+        ctx.fillText('CLOCK STARTS', tubeStart - 28, 58);
+        ctx.fillText(surface.width <= 520 ? 'DRIFT TUBE' : 'FIELD-FREE DRIFT IN VACUUM', tubeStart + 18, 35);
+        ctx.fillText('DETECTOR', surface.width <= 520 ? detectorX - 34 : Math.max(tubeStart + 150, detectorX - 38), 58);
+        ctx.strokeStyle = '#7897aa';
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(tubeStart, 64);
+        ctx.lineTo(tubeStart, bottom + 10);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        for (let x = tubeStart + 44; x < detectorX; x += 44) {
+          ctx.strokeStyle = 'rgba(255,255,255,.82)';
+          ctx.beginPath();
+          ctx.moveTo(x, top);
+          ctx.lineTo(x, bottom);
+          ctx.stroke();
+        }
+
+        peaks.forEach((peakData, index) => {
+          const beforeRun = runtime.phase === 'ready';
+          const progress = beforeRun ? 0 : Math.min(1, physicalTimeS / peakData.timeS);
+          const x = beforeRun ? sourceX + 26 : tubeStart + progress * (detectorX - tubeStart);
+          const y = top + tubeHeight * (index + 1) / 3;
+          const arrived = !beforeRun && physicalTimeS >= peakData.timeS;
+          ctx.globalAlpha = arrived ? .45 : 1;
+          ctx.fillStyle = peakData.color;
+          ctx.beginPath();
+          ctx.arc(x, y, 12, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = '#002144';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.fillStyle = '#002144';
+          ctx.font = '900 12px system-ui';
+          ctx.fillText(peakData.shortName, x - 4, y + 4);
+          if (surface.width > 520) {
+            ctx.font = '700 12px system-ui';
+            ctx.fillText(
+              peakData.massDa + ' Da / +' + peakData.charge + 'e',
+              Math.min(x + 17, detectorX - 104),
+              y + 4
+            );
+          }
+        });
+
+        ctx.fillStyle = '#466176';
+        ctx.font = '650 12px system-ui';
+        ctx.fillText('1.50 m timed flight', tubeStart, surface.height - 42);
+        if (surface.width > 520) {
+          ctx.fillText('Physical flight time →', Math.max(tubeStart, detectorX - 135), surface.height - 42);
+          ctx.fillStyle = '#6a7f90';
+          ctx.font = '600 11px system-ui';
+          ctx.fillText('Markers show packet centers; motion uses one fixed slow-motion scale.', tubeStart, surface.height - 20);
+        }
+      }
+
+      function drawTrace(peaks, physicalTimeS) {
+        const cssHeight = window.innerWidth <= 620 ? 220 : 235;
+        const surface = setupCanvas(traceCanvas, cssHeight);
+        const ctx = traceContext;
+        ctx.setTransform(surface.ratio, 0, 0, surface.ratio, 0, 0);
+        ctx.clearRect(0, 0, surface.width, surface.height);
+        const pad = { left: surface.width < 520 ? 48 : 58, right: 15, top: 22, bottom: 40 };
+        const plotWidth = surface.width - pad.left - pad.right;
+        const plotHeight = surface.height - pad.top - pad.bottom;
+        const domain = M.CORE_TRACE_DOMAIN_US;
+        const yMax = 700;
+        const mapX = timeUs => pad.left + (timeUs - domain[0]) / (domain[1] - domain[0]) * plotWidth;
+        const mapY = value => pad.top + plotHeight - value / yMax * plotHeight;
+
+        ctx.strokeStyle = '#cbdbe4';
+        ctx.fillStyle = '#526b7f';
+        ctx.font = '650 11px system-ui';
+        [0, 350, 700].forEach(value => {
+          const y = mapY(value);
+          ctx.beginPath();
+          ctx.moveTo(pad.left, y);
+          ctx.lineTo(surface.width - pad.right, y);
+          ctx.stroke();
+          ctx.fillText(String(value), 8, y + 4);
+        });
+        for (let value = 0; value <= 18; value += 3) {
+          const x = mapX(value);
+          ctx.strokeStyle = '#e1ebf0';
+          ctx.beginPath();
+          ctx.moveTo(x, pad.top);
+          ctx.lineTo(x, pad.top + plotHeight);
+          ctx.stroke();
+          ctx.fillStyle = '#526b7f';
+          ctx.fillText(String(value), x - 4, surface.height - 21);
+        }
+        ctx.strokeStyle = '#002144';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, pad.top);
+        ctx.lineTo(pad.left, pad.top + plotHeight);
+        ctx.lineTo(surface.width - pad.right, pad.top + plotHeight);
+        ctx.stroke();
+        ctx.fillStyle = '#38566e';
+        ctx.font = '750 11px system-ui';
+        ctx.fillText('counts / µs', 7, 13);
+        ctx.fillText('flight time (µs)', pad.left + plotWidth / 2 - 38, surface.height - 4);
+
+        const cutoffUs = runtime.phase === 'complete'
+          ? domain[1]
+          : runtime.phase === 'running'
+            ? physicalTimeS * 1e6
+            : 0;
+        const firstSignalUs = Math.min.apply(null, peaks.map(peakData => peakData.timeS * 1e6 - 4 * peakData.sigmaS * 1e6));
+        const hasSignal = cutoffUs >= firstSignalUs;
+        if (hasSignal) {
+          const samples = 420;
+          ctx.beginPath();
+          ctx.moveTo(mapX(domain[0]), mapY(0));
+          for (let point = 0; point <= samples; point += 1) {
+            const timeUs = domain[0] + (domain[1] - domain[0]) * point / samples;
+            if (timeUs > cutoffUs) break;
+            const density = peaks.reduce((total, peakData) => {
+              return total + M.gaussianDensity(timeUs * 1e-6, peakData) * 1e-6;
+            }, 0);
+            ctx.lineTo(mapX(timeUs), mapY(density));
+          }
+          ctx.lineTo(mapX(Math.min(cutoffUs, domain[1])), mapY(0));
+          ctx.closePath();
+          ctx.fillStyle = 'rgba(0, 164, 227, .20)';
+          ctx.fill();
+          ctx.strokeStyle = '#002144';
+          ctx.lineWidth = 2.7;
+          ctx.stroke();
+
+          peaks.forEach((peakData, index) => {
+            if (peakData.timeS * 1e6 > cutoffUs) return;
+            const centerX = mapX(peakData.timeS * 1e6);
+            const offset = Math.abs(peaks[0].timeS - peaks[1].timeS) < 1e-12 ? (index === 0 ? -3 : 3) : 0;
+            ctx.fillStyle = peakData.color;
+            ctx.fillRect(centerX + offset - 2, mapY(0) - 12, 4, 12);
+          });
+        }
+
+        if (!hasSignal) {
+          ctx.fillStyle = '#526b7f';
+          ctx.font = '750 14px system-ui';
+          ctx.textAlign = 'center';
+          ctx.fillText(
+            runtime.phase === 'running' ? 'Detector waiting for the first arrival…' : 'No detector evidence yet',
+            pad.left + plotWidth / 2,
+            pad.top + plotHeight / 2
+          );
+          ctx.textAlign = 'left';
+        }
+        traceCanvas.setAttribute(
+          'aria-label',
+          hasSignal
+            ? 'Detector trace showing the summed signal recorded so far on a zero to eighteen microsecond axis'
+            : 'Detector signal versus flight time; no evidence recorded yet'
+        );
+      }
+
+      function updateLiveReadout(peaks, physicalTimeS) {
+        if (runtime.phase === 'ready') {
+          byId('clockReadout').textContent = 'Waiting for Run';
+          byId('detectorEvent').textContent = 'No arrivals recorded';
+          return;
+        }
+        const maximum = Math.max.apply(null, peaks.map(item => item.timeS));
+        byId('clockReadout').textContent = microseconds(Math.min(physicalTimeS, maximum + 5 * Math.max.apply(null, peaks.map(item => item.sigmaS))), 2);
+        const arrived = peaks.filter(item => physicalTimeS >= item.timeS);
+        if (!arrived.length) {
+          byId('detectorEvent').textContent = 'Packets are crossing the drift tube';
+        } else if (arrived.length === peaks.length && runtime.phase === 'complete') {
+          byId('detectorEvent').textContent = 'Run complete · total signal recorded';
+        } else if (arrived.length === peaks.length) {
+          const coincident = Math.abs(peaks[0].timeS - peaks[1].timeS) < 1e-12;
+          byId('detectorEvent').textContent = coincident
+            ? 'Ion A + Ion B · coincident arrival'
+            : arrived.map(item => item.name).join(', ') + ' recorded';
+        } else {
+          byId('detectorEvent').textContent = arrived[arrived.length - 1].name + ' arrived';
+        }
+      }
+
+      function drawCore() {
+        const peaks = currentPeaks();
+        const maximum = Math.max.apply(null, peaks.map(item => item.timeS + 5 * item.sigmaS));
+        const physicalTime = runtime.phase === 'complete' ? maximum : runtime.elapsedS;
+        drawFlight(peaks, physicalTime);
+        drawTrace(peaks, physicalTime);
+        updateLiveReadout(peaks, physicalTime);
+      }
+
+      function runCurrentExperiment() {
+        const lesson = currentLesson();
+        if (!Number.isInteger(lessonState.predictions[lesson.id])) return;
+        cancelRun('running');
+        const token = runtime.runToken;
+        byId('instrumentPanel').scrollIntoView({ behavior: 'instant', block: 'start' });
+        byId('instrumentPanel').focus({ preventScroll: true });
+        runtime.startMs = performance.now();
+        byId('runButton').disabled = true;
+        byId('replayButton').hidden = true;
+        byId('finding').hidden = true;
+        byId('runHint').textContent = 'Running at 160 milliseconds per physical microsecond (160,000× slow motion).';
+        const peaks = currentPeaks();
+        const maximum = Math.max.apply(null, peaks.map(item => item.timeS + 5 * item.sigmaS));
+        renderPredictions(lesson);
+
+        function frame(now) {
+          if (token !== runtime.runToken || runtime.phase !== 'running') return;
+          runtime.elapsedS = Math.min(
+            maximum,
+            M.physicalElapsedSeconds(now - runtime.startMs)
+          );
+          drawCore();
+          if (runtime.elapsedS >= maximum) {
+            runtime.phase = 'complete';
+            runtime.frameId = 0;
+            lessonState = M.reduceLessonState(lessonState, { type: 'RUN_COMPLETE' });
+            renderCurrentStep();
+            return;
+          }
+          runtime.frameId = requestAnimationFrame(frame);
+        }
+        runtime.frameId = requestAnimationFrame(frame);
+      }
+
+      function goToNextStep() {
+        const nextIndex = lessonState.stepIndex + 1;
+        if (nextIndex >= M.CORE_LESSONS.length) return;
+        cancelRun('ready');
+        lessonState = M.reduceLessonState(lessonState, { type: 'GO_TO_STEP', stepIndex: nextIndex });
+        renderCurrentStep();
+        byId('lessonTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      function resetAll() {
+        cancelRun('ready');
+        lessonState = M.reduceLessonState(lessonState, { type: 'RESET' });
+        byId('transferFeedback').textContent = '';
+        byId('transferOptions').querySelectorAll('button').forEach(button => button.classList.remove('selected'));
+        byId('advancedResult').hidden = true;
+        byId('settingsMenu').hidden = true;
+        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        renderCurrentStep();
+      }
+
+      function advancedSpread() {
+        return runtime.advancedMode === 'absolute'
+          ? { mode: 'absolute', value: 0.06 }
+          : { mode: 'fractional', value: 0.015 };
+      }
+
+      function drawAdvanced(results) {
+        const canvas = byId('advancedCanvas');
+        const ctx = canvas.getContext('2d');
+        const surface = setupCanvas(canvas, 300);
+        ctx.setTransform(surface.ratio, 0, 0, surface.ratio, 0, 0);
+        ctx.clearRect(0, 0, surface.width, surface.height);
+        const pad = { left: 70, right: 15, top: 24, bottom: 35 };
+        const domainMax = 16;
+        const rowHeight = (surface.height - pad.top - pad.bottom) / 2;
+        const summedDensity = (result, timeUs) => result.peaks.reduce((total, peakData) => {
+          return total + M.gaussianDensity(timeUs * 1e-6, peakData) * 1e-6;
+        }, 0);
+        let maxDensity = 0;
+        results.forEach(result => {
+          for (let point = 0; point <= 400; point += 1) {
+            maxDensity = Math.max(maxDensity, summedDensity(result, domainMax * point / 400));
+          }
+        });
+        maxDensity *= 1.12;
+        const mapX = timeUs => pad.left + timeUs / domainMax * (surface.width - pad.left - pad.right);
+
+        results.forEach((result, row) => {
+          const rowTop = pad.top + row * rowHeight;
+          const baseline = rowTop + rowHeight - 25;
+          ctx.fillStyle = row === 0 ? '#f7fbfd' : '#eef6fa';
+          ctx.fillRect(pad.left, rowTop, surface.width - pad.left - pad.right, rowHeight);
+          ctx.strokeStyle = '#b9cedb';
+          ctx.beginPath();
+          ctx.moveTo(pad.left, baseline);
+          ctx.lineTo(surface.width - pad.right, baseline);
+          ctx.stroke();
+          ctx.fillStyle = '#002144';
+          ctx.font = '800 12px system-ui';
+          ctx.fillText(result.lengthM.toFixed(2) + ' m tube', 7, rowTop + 23);
+
+          result.peaks.forEach(peakData => {
+            ctx.beginPath();
+            for (let point = 0; point <= 400; point += 1) {
+              const timeUs = domainMax * point / 400;
+              const density = M.gaussianDensity(timeUs * 1e-6, peakData) * 1e-6;
+              const x = mapX(timeUs);
+              const y = baseline - density / maxDensity * (rowHeight - 42);
+              if (point === 0) ctx.moveTo(x, y);
+              else ctx.lineTo(x, y);
+            }
+            ctx.strokeStyle = peakData.color;
+            ctx.lineWidth = 1.2;
+            ctx.setLineDash([4, 4]);
+            ctx.stroke();
+          });
+          ctx.setLineDash([]);
+
+          ctx.beginPath();
+          for (let point = 0; point <= 400; point += 1) {
+            const timeUs = domainMax * point / 400;
+            const x = mapX(timeUs);
+            const y = baseline - summedDensity(result, timeUs) / maxDensity * (rowHeight - 42);
+            if (point === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.strokeStyle = '#002144';
+          ctx.lineWidth = 2.7;
+          ctx.stroke();
+        });
+
+        ctx.fillStyle = '#526b7f';
+        ctx.font = '650 11px system-ui';
+        for (let value = 0; value <= domainMax; value += 2) {
+          const x = mapX(value);
+          ctx.fillText(String(value), x - 4, surface.height - 17);
+        }
+        ctx.fillStyle = '#38566e';
+        ctx.font = '750 11px system-ui';
+        ctx.fillText('shared flight-time axis (µs)', pad.left + (surface.width - pad.left - pad.right) / 2 - 66, surface.height - 3);
+      }
+
+      function renderAdvancedComparison() {
+        const results = M.resolutionComparison({
+          spread: advancedSpread(),
+          shortLengthM: 1,
+          longLengthM: 2
+        });
+        byId('advancedResult').hidden = false;
+        drawAdvanced(results);
+        byId('comparisonBody').innerHTML = results.map(result => {
+          return '<tr><td>' + result.lengthM.toFixed(2) + ' m</td><td>' +
+            result.separationUs.toFixed(3) + ' µs</td><td>' +
+            result.meanFwhmUs.toFixed(3) + ' µs</td><td>' +
+            (result.resolved ? 'Resolved: separation ≥ width' : 'Overlapping: separation < width') +
+            '</td></tr>';
+        }).join('');
+        if (runtime.advancedMode === 'absolute') {
+          byId('advancedFinding').textContent =
+            'With fixed 0.06 µs sigma, doubling the tube doubles the center separation while FWHM stays fixed. This pair crosses the stated criterion only in the 2.00 m tube.';
+        } else {
+          byId('advancedFinding').textContent =
+            'With sigma fixed at 1.5% of arrival time, doubling the tube doubles both separation and width. The separation-to-width ratio stays the same, so this pair remains overlapped.';
+        }
+      }
+
+      byId('runButton').addEventListener('click', runCurrentExperiment);
+      byId('replayButton').addEventListener('click', runCurrentExperiment);
+      byId('nextButton').addEventListener('click', goToNextStep);
+      byId('resetAllButton').addEventListener('click', resetAll);
+
+      byId('transferOptions').querySelectorAll('button').forEach(button => {
+        button.addEventListener('click', () => {
+          byId('transferOptions').querySelectorAll('button').forEach(item => item.classList.remove('selected'));
+          button.classList.add('selected');
+          byId('transferFeedback').textContent = button.dataset.transfer === '1'
+            ? 'Supported. Different masses and charge numbers can share one m/z and one flight time. A real molecular identity needs additional evidence, calibration, and instrument context.'
+            : 'The equal-ratio investigation rules that out. One peak can contain different ions that share the same m/z, so flight time alone does not identify a real molecule.';
+        });
+      });
+
+      function setAdvancedMode(mode) {
+        runtime.advancedMode = mode;
+        const absolute = mode === 'absolute';
+        byId('absoluteWidthButton').classList.toggle('active', absolute);
+        byId('fractionalWidthButton').classList.toggle('active', !absolute);
+        byId('absoluteWidthButton').setAttribute('aria-pressed', String(absolute));
+        byId('fractionalWidthButton').setAttribute('aria-pressed', String(!absolute));
+        byId('advancedResult').hidden = true;
+      }
+      byId('absoluteWidthButton').addEventListener('click', () => setAdvancedMode('absolute'));
+      byId('fractionalWidthButton').addEventListener('click', () => setAdvancedMode('fractional'));
+      byId('compareButton').addEventListener('click', renderAdvancedComparison);
+
+      byId('howButton').addEventListener('click', () => { byId('howOverlay').hidden = false; });
+      byId('settingsButton').addEventListener('click', () => {
+        const menu = byId('settingsMenu');
+        menu.hidden = !menu.hidden;
+        byId('settingsButton').setAttribute('aria-expanded', String(!menu.hidden));
+      });
+      byId('presentationButton').addEventListener('click', () => {
+        document.body.classList.toggle('presentation');
+        byId('presentationButton').textContent = document.body.classList.contains('presentation')
+          ? '▣ Exit presentation mode'
+          : '▣ Enter presentation mode';
+        byId('settingsMenu').hidden = true;
+        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        drawCore();
+      });
+      byId('notesButton').addEventListener('click', () => {
+        byId('settingsMenu').hidden = true;
+        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        byId('notesOverlay').hidden = false;
+      });
+      document.querySelectorAll('[data-close]').forEach(button => {
+        button.addEventListener('click', () => { byId(button.dataset.close).hidden = true; });
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          document.querySelectorAll('.overlay').forEach(overlay => { overlay.hidden = true; });
+          byId('settingsMenu').hidden = true;
+          byId('settingsButton').setAttribute('aria-expanded', 'false');
+        }
+      });
+      window.addEventListener('resize', () => {
+        drawCore();
+        if (!byId('advancedResult').hidden) renderAdvancedComparison();
+      });
+
+      renderCurrentStep();
+    })();
   </script>
 </body>
 </html>
