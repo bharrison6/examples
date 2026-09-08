@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Build Missing Time for AI Fellows
 created: 2026-09-08T21:10:00Z
-updated: 2026-09-08T21:10:00Z
+updated: 2026-09-08T21:22:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -94,3 +94,15 @@ mapping; hiatus duration distinct from thickness; sample reveal only changes
 observations, not truth. Test evidence/feedback against displayed observations,
 including same observations compatible with more than one history. Production
 module is bundled verbatim into the shipped page. Persist runnable checkpoints.
+
+## Checkpoint review refinements
+
+Exact times/gaps use explicitly supplied synthetic chronology anchors, not dates
+inferred from rock thickness. Independent Astra ledger fixtures verified top-down
+erosion, partial-layer mapping and gap duration. Required repairs: canonical
+surviving layers contain only preserved specimens; evidence actions validate real
+targets and relevant fossil/age observations; irrelevant samples cannot unlock
+conclusions. Gap ages alone do not distinguish erosion from nondeposition, so
+reserve hidden mechanism for truth reveal unless independent erosion evidence is
+shown. Include a continuous-record sampling case; do not require a hiatus for
+every conclusion. Preserve the limited-inference teaching boundary across cases.

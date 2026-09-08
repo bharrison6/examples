@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Build What the Survey Missed for AI Fellows
 created: 2026-09-08T21:10:00Z
-updated: 2026-09-08T21:10:00Z
+updated: 2026-09-08T21:22:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -53,8 +53,9 @@ when acting. No score that claims mastery, no hidden-truth leak before reveal.
 Teach occupancy (whether a site is used), not abundance (number of animals).
 Two comparable synthetic habitat groups, initially 24 sites each; a fixed visit
 round surveys every site in both groups. At most three rounds, visibly accounting
-for 48 site-visits per round. Students predict which habitat is more occupied,
-survey, inspect detection histories and repeat visits, then compare the evidence
+for 48 site-visits per round. Run round one before asking students to interpret or
+predict from the first evidence; an uninformed A/B choice is not a useful gate.
+Students inspect detection histories and repeat visits, then compare the evidence
 with hidden truth. Site clicks inspect records; they do not create adaptive sampling.
 Use reproducible seeded scenarios, with explicit reset/replay/new-seed semantics.
 Occupancy at each site stays fixed across visits; detections are conditionally
@@ -90,3 +91,14 @@ closure across visits; seeded replay; p/psi endpoints; likelihood reference valu
 from an independent small grid, one-visit nonidentifiability, and sparse/boundary
 cases. Test the production module and exact shipped bundle. Keep runnable first
 checkpoint small, then refine the visual/evidence experience.
+
+## Checkpoint review refinements
+
+Independent Astra numerical fixtures and 1,000 seeded scenarios passed. Required
+representation repairs: truth reveal changes the same site arrays into detected,
+occupied-but-missed and unoccupied states; no hidden parameters in early feedback;
+reset clears every response/reveal DOM surface; likelihood axes/coordinates are
+visible and usable on touch. Further rounds after reveal remain labelled informed
+exploration. Skip zero-count likelihood terms to avoid zero times log-zero, and
+reject invalid counts. Stage the current question/action/evidence together, with
+later exercises gated and likelihood optional. These refine the existing outcome.
