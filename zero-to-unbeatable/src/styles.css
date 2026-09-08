@@ -476,6 +476,18 @@ input[type=text]::placeholder { color: var(--ink-3); }
 #depth-seg { margin-top: 0; flex: 1 1 auto; }
 #depth-seg button { font-size: calc(.72 * var(--u)); }
 
+/* Step 3's memory toggle SHARES the row the era dropdown already
+   occupies. On its own line it costs 44px, which is enough on a 320x568
+   phone to push the TRAIN button off the bottom — and the TRAIN button
+   never going below the fold is the one layout rule this demo has. So
+   the row turns horizontal for step 3 only, the dropdown takes whatever
+   is left and truncates as selects do, and the toggle keeps its full
+   tap target. Steps 1 and 2 are untouched. */
+#mem-seg { margin-top: 0; flex: 0 0 auto; }
+#mem-seg button { font-size: calc(.72 * var(--u)); padding-inline: calc(.5 * var(--u)); }
+body.step-nine #opp-row { flex-direction: row; align-items: center; gap: calc(.35 * var(--u)); }
+body.step-nine #opp-row select { flex: 1 1 auto; width: auto; min-width: 0; }
+
 /* Step 1 carries one panel step 2 does not — the commentary line under
    the board — so the board yields a little further here, exactly as it
    does for the TRAIN button in step 2. Same principle, same place. */
@@ -676,6 +688,20 @@ table.cmp th:first-child, table.cmp td:first-child { text-align: left; color: va
 table.cmp th { color: var(--gold); font-size: calc(.62 * var(--u)); letter-spacing: .1em; text-transform: uppercase; }
 table.cmp td { font-variant-numeric: tabular-nums; }
 table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font-size: calc(.86 * var(--u)); }
+/* three held-out pictures with each memory's answer beside them */
+.gex { display: flex; gap: calc(.4 * var(--u)); margin-top: calc(.5 * var(--u)); }
+.ge { flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: 1fr 1fr;
+      gap: calc(.18 * var(--u)); }
+.ge .mini { grid-column: 1 / -1; border-radius: 5px; }
+.gv { display: block; text-align: center; border-radius: 5px; font-weight: 800;
+      font-size: calc(.62 * var(--u)); padding: calc(.16 * var(--u)) 0;
+      font-variant-numeric: tabular-nums; }
+.ge .gk { grid-column: 1 / -1; text-align: center; color: var(--ink-3);
+          font-size: calc(.56 * var(--u)); }
+.gexk { margin-top: calc(.3 * var(--u)); font-size: calc(.62 * var(--u)); color: var(--ink-3); }
+.gexk .gv { display: inline-block; padding-inline: calc(.4 * var(--u)); font-weight: 700;
+            background: var(--panel-2); color: var(--ink-2); border: 1px solid var(--line); }
+
 .score3 { display: flex; gap: calc(.35 * var(--u)); margin: calc(.4 * var(--u)) 0; }
 .score3 .s3 {
   flex: 1; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px;

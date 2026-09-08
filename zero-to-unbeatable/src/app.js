@@ -28,7 +28,12 @@ const S = {
   ruleCounts: {},      // depth -> how many moves each rule decided
   lastRule: null,      // the decision behind the move it just made
   live: null,          // the one-board agent that keeps training
-  live9: null,         // the nine-board brain
+  live9: null,         // the nine-board brain: a TABLE of 39,366 numbers
+  net9: null,          // the same brain with a NETWORK behind it instead
+  /* Step 3 ships two memories and trains both on every burst, so the
+     toggle is a real comparison and not a re-run. 'table' or 'net'. */
+  mem: 'table',
+  netStats: null,      // the held-out experiment, run once and cached
   eras: [],            // frozen snapshots, index === era number
   era: 0,              // which one you are playing
   game: null,          // one-board game in progress
@@ -36,11 +41,15 @@ const S = {
   focus: 0,            // which of the nine boards you are pointing at
   burst: OG.HP.burst,
   burst9: NINE.HP9.burst,
+  burstNet: NET.HPN.burst,
   brain: false,
   seed: '',
   // These streams deliberately never share state.  A reader (the report) or
   // a player must not be able to alter the next training example.
-  rng: Math.random,              // training only
+  rng: Math.random,              // training only, the table
+  rngNet: Math.random,           // training only, the network — a separate
+                                 // stream so switching memories cannot make
+                                 // one alter the other's next example
   liveRng: { rules: Math.random, one: Math.random, nine: Math.random }, // independent playable-game streams
   measureSalt: '',               // immutable for one reset/session
   humanFirstNext: true,
@@ -49,6 +58,12 @@ const S = {
   lastLearned: null
 };
 const isNine  = () => S.mode === 'nine';
+const isNet   = () => S.mem === 'net';
+/* Which of an era's two memories is on screen. Both implement at(),
+   hits() and nudge(), so everything downstream — the heat map, the move
+   choice, the blind measure — is one piece of code either way. */
+const mem9 = (era) => (isNet() ? era.net : era.brain);
+const memLabel = () => (isNet() ? 'network' : 'table');
 const isRules = () => S.mode === 'rules';
 
 const fmt = n => n.toLocaleString('en-US');
@@ -105,10 +120,11 @@ function policyDiff(a, b) {
 function makeEra(n, agent, prevAgent, mix, kind, nineStats) {
   const verified = OG.verifyUnbeatable(agent);
   const e = {
-    n, agent, brain: NINE.cloneBrain(S.live9),
+    n, agent, brain: NINE.cloneBrain(S.live9), net: NET.cloneBrain(S.net9),
     kind: kind || 'one',
     games: agent.games, seen: agent.seen,
     matches: S.live9.matches, seen9: S.live9.seen, seeded9: S.live9.seeded,
+    netMatches: S.net9.matches, netSeen: S.net9.seen,
     eps: OG.epsilonAt(agent.games), eps9: NINE.epsilonAt(S.live9.matches),
     verified, mix: mix || null, nine: nineStats || null,
     landmarks: snapshotLandmarks(agent),
@@ -131,6 +147,7 @@ function currentEra() { return S.eras[S.era]; }
 
 function resetAll() {
   S.rng = OG.makeRng(S.seed || null);
+  S.rngNet = OG.makeRng(S.seed ? 'net-train:' + S.seed : null);
   /* Keep one-board and nine-board play in distinct streams.  Switching
      modes must not make a prior one-board move alter a rehearsed nine-board
      reply (or vice versa).  A blank seed deliberately starts fresh streams. */
@@ -144,7 +161,15 @@ function resetAll() {
   };
   S.measureSalt = S.seed ? 'measure:' + S.seed : 'measure:' + Math.random().toString(36).slice(2);
   S.live = OG.newAgent();
+  /* NOTE: the two live memories hold nothing back. The held-out set
+     belongs to the side experiment in NET.experiment and to nothing
+     else — a table with one picture in eight blanked loses 389 matches
+     in 400, so making the demo's own opponent run that way would break
+     step 3 to make a point about step 3. The experiment runs its own
+     pair of memories, and the card says so. */
   S.live9 = NINE.newBrain();
+  S.net9 = NET.newBrain({ seed: 'net:' + (S.seed || 'unseeded') });
+  S.netStats = null;
   S.eras = [makeEra(0, OG.cloneAgent(S.live), null, null, 'one')];
   S.era = 0;
   S.humanFirstNext = true;
@@ -171,11 +196,20 @@ function measureRng(era, label) {
 function maybeSeed() {
   if (S.live9.matches > 0) return 0;
   S.live9 = NINE.newBrain();
+  S.net9 = NET.newBrain({ seed: 'net:' + (S.seed || 'unseeded') });
+  /* One handover, two absorptions. NINE.seedFromAgent decides WHICH of
+     Act I's entries convert and what they convert to; the table assigns
+     them and the network is fitted towards them, because that is the
+     only way to put a number into a network. */
   const n = NINE.seedFromAgent(S.live9, S.live);
+  NINE.seedFromAgent(S.net9, S.live);
+  S.netStats = null;
   S.eras.forEach(e => {
     if (e.brain.matches === 0) {
       e.brain = NINE.cloneBrain(S.live9);
+      e.net = NET.cloneBrain(S.net9);
       e.seen9 = S.live9.seen; e.seeded9 = S.live9.seeded;
+      e.netSeen = S.net9.seen;
     }
   });
   return n;
@@ -305,7 +339,7 @@ function nineAiTurn(delay) {
   renderNine(); renderStatus();
   setTimeout(() => {
     if (!S.match || S.match !== m || m.over) return;
-    applyNine(NINE.greedyMove(currentEra().brain, m, S.liveRng.nine));
+    applyNine(NINE.greedyMove(mem9(currentEra()), m, S.liveRng.nine));
     m.thinking = false;
     renderNine(); renderStatus();
   }, S.brain ? Math.max(delay, 1300) : delay);
@@ -433,7 +467,7 @@ for (let c = 0; c < 9; c++) {
 function renderNine() {
   const m = S.match;
   if (!m) return;
-  const brain = currentEra().brain;
+  const brain = mem9(currentEra());
   const RES = ['', 'X', 'O', '—'];
 
   $$('.nb', nineGrid).forEach((nb, b) => {
@@ -467,12 +501,16 @@ function renderNine() {
     if (v) { el.textContent = MARK[v]; el.setAttribute('aria-label', CELLNAME[c] + ', taken'); return; }
     if (showHeat) {
       const val = NINE.moveValue(brain, code, c, mark);
-      const seen = brain.N[NINE.ui(code + mark * OG.POW3[c], mark === 1 ? 2 : 1)];
+      const after = code + mark * OG.POW3[c], opp = mark === 1 ? 2 : 1;
+      const seen = brain.hits(after, opp);
       el.style.background = heat(val); el.style.color = heatInk(val);
+      /* "never seen" is the interesting one, and it means different
+         things either side of the toggle: for the table it is a
+         guaranteed 0.00, for the network it is a computed guess. */
+      const note = seen ? 'seen ' + fmt(seen) + '×' : 'never seen';
       el.innerHTML = `<span class="v">${sgn(val)}</span>` +
-        `<span class="n">${seen ? 'seen ' + fmt(seen) + '×' : 'never seen'}</span>`;
-      el.setAttribute('aria-label', CELLNAME[c] + ': ' + val.toFixed(2) +
-        (seen ? ', seen ' + seen + ' times' : ', never seen'));
+        `<span class="n">${note}</span>`;
+      el.setAttribute('aria-label', CELLNAME[c] + ': ' + val.toFixed(2) + ', ' + note);
     } else {
       el.textContent = '';
       el.setAttribute('aria-label', CELLNAME[c] + ', empty');
@@ -616,19 +654,28 @@ function renderBrainReadout() {
 }
 
 function renderNineReadout() {
-  const el = $('#brain-readout'), e = currentEra(), m = S.match, brain = e.brain;
+  const el = $('#brain-readout'), e = currentEra(), m = S.match, brain = mem9(e);
   const blind = m && !m.over ? NINE.blindFraction(brain, m) : 0;
   const total = OG.NCODE * 2;
+  const where = isNet()
+    ? `Era ${e.n}'s network: <b>${fmt(e.net.params)}</b> weights. There is no entry per ` +
+      `picture — every number you see was computed just now, including for pictures it has ` +
+      `never met. It has trained on <b>${fmt(e.netMatches)}</b> matches.`
+    : `Era ${e.n}'s nine-board table: <b>${fmt(brain.seen)}</b> of <b>${fmt(total)}</b> board ` +
+      `pictures have a number in them` +
+      (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from the ` +
+        `one-board table` : '') + '.';
   el.innerHTML =
     `<div>Scores for board ${S.focus + 1} only — how much each square would improve ` +
     `<b>that</b> board. The other eight do not change, so this is the whole comparison.</div>` +
-    `<div style="margin-top:.5em">Era ${e.n}'s nine-board table: <b>${fmt(brain.seen)}</b> of ` +
-    `<b>${fmt(total)}</b> board pictures have a number in them` +
-    (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from the one-board table` : '') +
-    `.</div>` +
+    `<div style="margin-top:.5em">${where}</div>` +
     (m && !m.over
-      ? `<div style="margin-top:.5em">Right now <b>${Math.round(blind * 100)}%</b> of the squares it is ` +
-        `weighing up sit on a board picture it has <b>never seen</b>.</div>` : '') +
+      ? `<div style="margin-top:.5em">Right now <b>${Math.round(blind * 100)}%</b> of the squares it ` +
+        `is weighing up sit on a board picture that has never been met. ` +
+        (isNet() ? `The network answers for them anyway; whether it is right is what the card after ` +
+                   `a burst measures.`
+                 : `The table reads 0.00 for every one of them, which looks exactly like "even".`) +
+        `</div>` : '') +
     `<div class="legend"><span>losing</span><span class="ramp"></span><span>winning</span></div>`;
 }
 
@@ -655,6 +702,27 @@ function renderDepthSeg() {
     S.depth = n;
     if (!S.ruleRec[n]) resetRuleTally(n);
     renderDepthSeg(); renderScore(); renderRulesPanel(); renderBanner();
+    newGame();
+  }));
+}
+
+/* Step 3's own segmented control: which memory you are playing. Same
+   widget as the depth dial and the burst sizes — no new mechanism — and
+   it swaps nothing but the store, because both memories answer at(),
+   hits() and nudge() and every other line of step 3 is shared. */
+function renderMemSeg() {
+  const seg = $('#mem-seg');
+  const opts = [
+    { k: 'table', label: 'Table',   title: '39,366 numbers, one per board picture and turn' },
+    { k: 'net',   label: 'Network', title: '1,777 weights that compute a value for any picture' }
+  ];
+  seg.innerHTML = opts.map(o =>
+    `<button data-m="${o.k}" class="${o.k === S.mem ? 'on' : ''}" ` +
+    `aria-pressed="${o.k === S.mem}" title="${o.title}">${o.label}</button>`).join('');
+  $$('#mem-seg button').forEach(b => b.addEventListener('click', () => {
+    if (S.mem === b.dataset.m || S.training) return;
+    S.mem = b.dataset.m;
+    renderMemSeg(); renderTrain(); renderBanner(); renderScore();
     newGame();
   }));
 }
@@ -706,19 +774,25 @@ function renderTrain() {
   const e = S.eras[S.eras.length - 1];
   const nine = isNine();
   $('.t-main', $('#btn-train')).textContent = nine ? 'Train on nine boards' : 'Train the AI';
-  $('#train-sub').textContent = nine ? fmt(S.burst9) + ' matches' : fmt(S.burst) + ' games';
-  const sizes = nine ? NINE.HP9.bursts : OG.HP.bursts;
-  const cur = nine ? S.burst9 : S.burst;
+  $('#train-sub').textContent = nine
+    ? fmt(isNet() ? S.burstNet : S.burst9) + ' matches' : fmt(S.burst) + ' games';
+  const sizes = nine ? (isNet() ? NET.HPN.bursts : NINE.HP9.bursts) : OG.HP.bursts;
+  const cur = nine ? (isNet() ? S.burstNet : S.burst9) : S.burst;
   $('#burst-seg').innerHTML = sizes.map(b =>
     `<button data-b="${b}" class="${b === cur ? 'on' : ''}" aria-pressed="${b === cur}">${fmt(b)}</button>`).join('');
   $$('#burst-seg button').forEach(b => b.addEventListener('click', () => {
-    if (isNine()) S.burst9 = +b.dataset.b; else S.burst = +b.dataset.b;
+    if (isNine()) { if (isNet()) S.burstNet = +b.dataset.b; else S.burst9 = +b.dataset.b; }
+    else S.burst = +b.dataset.b;
     renderTrain();
   }));
   $('#train-stats').innerHTML = nine
-    ? `<div class="st"><span class="n">${fmt(e.matches)}</span><span class="k">matches trained</span></div>` +
-      `<div class="st"><span class="n">${fmt(e.seen9)}</span><span class="k">pictures seen</span></div>` +
-      `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">table slots</span></div>`
+    ? (isNet()
+      ? `<div class="st"><span class="n">${fmt(e.netMatches)}</span><span class="k">matches trained</span></div>` +
+        `<div class="st"><span class="n">${fmt(e.net.params)}</span><span class="k">weights</span></div>` +
+        `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">it answers for</span></div>`
+      : `<div class="st"><span class="n">${fmt(e.matches)}</span><span class="k">matches trained</span></div>` +
+        `<div class="st"><span class="n">${fmt(e.seen9)}</span><span class="k">pictures seen</span></div>` +
+        `<div class="st"><span class="n">${fmt(OG.NCODE * 2)}</span><span class="k">table slots</span></div>`)
     : `<div class="st"><span class="n">${S.eras.length - 1}</span><span class="k">eras</span></div>` +
       `<div class="st"><span class="n">${fmt(e.games)}</span><span class="k">games trained</span></div>` +
       `<div class="st"><span class="n">${fmt(e.seen)}</span><span class="k">positions seen</span></div>`;
@@ -803,9 +877,18 @@ function renderBanner() {
       `serious AI system: chess engines, self-driving cars, language models. Nobody can check all the ` +
       `cases, so nobody can promise. They measure instead — which is what the card after each burst ` +
       `does.</p>` +
-      `<div class="proof">Handed over from the one-board table: ` +
-      `${fmt(S.live9.seeded)} of the ${fmt(OG.NCODE * 2)} entries this game needs · ` +
-      `filled so far ${fmt(S.live9.seen)} · matches trained ${fmt(S.live9.matches)}</div>`;
+      (isNet()
+        ? `<p>The memory on the toggle is the <b>network</b>: ${fmt(S.net9.params)} weights in ` +
+          `place of ${fmt(OG.NCODE * 2)} table slots, learning by exactly the same rule. It has ` +
+          `an answer for every board picture there is, and no proof is available for it either — ` +
+          `less of one, if anything, because you cannot read a network the way you can read a ` +
+          `table.</p>` +
+          `<div class="proof">Network: ${fmt(S.net9.params)} weights · ` +
+          `matches trained ${fmt(S.net9.matches)} · answers for all ${fmt(OG.NCODE * 2)} ` +
+          `board pictures, right or wrong</div>`
+        : `<div class="proof">Handed over from the one-board table: ` +
+          `${fmt(S.live9.seeded)} of the ${fmt(OG.NCODE * 2)} entries this game needs · ` +
+          `filled so far ${fmt(S.live9.seen)} · matches trained ${fmt(S.live9.matches)}</div>`);
     return;
   }
   el.classList.remove('quiet');
@@ -916,9 +999,17 @@ function mini9HTML(m) {
   return h + '</div>';
 }
 
+/* Both memories train on every burst, so the toggle is a comparison and
+   not a re-run. Each plays its own matches -- it must, because each
+   one's choices are its own -- from streams seeded the same way, and
+   each gets its own budget: a forward pass costs about a thousand times
+   an array index, so equal wall clock does not buy equal matches. The
+   card afterwards prints both budgets and both clocks rather than
+   quietly averaging them. */
 async function trainNine() {
   S.training = true;
   const size = S.burst9;
+  const sizeNet = S.burstNet;
   const ov = $('#montage'); ov.hidden = false;
   $('#m-count').classList.add('blur');
   $('#m-count-sub').textContent = 'matches played against itself and against chance';
@@ -927,21 +1018,32 @@ async function trainNine() {
   $('#m-wr-label').textContent = 'holds or beats the hand-written player';
 
   const STEPS = 30, per = Math.ceil(size / STEPS);
+  const perNet = Math.ceil(sizeNet / STEPS);
   const t0 = performance.now();
-  let done = 0, selfPlay = 0, vsRandom = 0, hold = null, pool = [];
+  let done = 0, doneNet = 0, selfPlay = 0, vsRandom = 0, hold = null, pool = [];
+  let msTable = 0, msNet = 0;
 
   for (let i = 0; i < STEPS; i++) {
     const n = Math.min(per, size - done);
     if (n > 0) {
+      const c0 = performance.now();
       const r = NINE.trainMatches(S.live9, n, S.rng, { sampleEvery: Math.max(1, Math.floor(n / 2)) });
+      msTable += performance.now() - c0;
       done += n; selfPlay += r.selfPlay; vsRandom += r.vsRandom;
       pool = pool.concat(r.samples).slice(-12);
     }
+    const nn = Math.min(perNet, sizeNet - doneNet);
+    if (nn > 0) {
+      const c1 = performance.now();
+      NINE.trainMatches(S.net9, nn, S.rngNet);
+      msNet += performance.now() - c1;
+      doneNet += nn;
+    }
     if (i % 7 === 4) {
-      const sc = NINE.vsHeuristic(S.live9, 60, S.rng);
+      const sc = NINE.vsHeuristic(mem9({ brain: S.live9, net: S.net9 }), 60, S.rng);
       hold = (sc.wins + sc.draws) / sc.matches;
     }
-    $('#m-count').textContent = fmt(done);
+    $('#m-count').textContent = fmt(isNet() ? doneNet : done);
     const eps = NINE.epsilonAt(S.live9.matches);
     $('#m-eps').textContent = eps.toFixed(2);
     $('#m-eps-fill').style.width = (eps * 100).toFixed(1) + '%';
@@ -960,7 +1062,7 @@ async function trainNine() {
   await pauseUntil(t0 + MONTAGE_MS + 160);
 
   const era = makeEra(S.eras.length, OG.cloneAgent(S.live), null, null, 'nine',
-    { selfPlay, vsRandom, matches: size });
+    { selfPlay, vsRandom, matches: size, matchesNet: sizeNet, msTable, msNet });
   S.eras.push(era);
   S.era = era.n;
   ov.hidden = true;
@@ -1089,6 +1191,44 @@ function buildLearned(era, before) {
    interesting thing here is not what it learned about any one picture —
    it is whether a table can work at all. So it reports the measurements
    that answer that. */
+/* The held-out experiment, rendered. Run once and cached on the app,
+   because it is a self-contained side experiment rather than a property
+   of an era: two fresh memories, the same handover, the same budget, and
+   one board picture in eight that NEITHER of them is allowed to write.
+   Then both are asked about exactly those pictures. */
+function generalisationCard(era) {
+  const r = S.netStats || (S.netStats = NET.experiment(NINE, era.agent, {
+    seed: S.seed || 'unseeded', matches: NET.HPN.burst
+  }));
+  const pct = v => (100 * v).toFixed(0) + '%';
+  const ex = r.all.examples.slice(0, 3).map(e =>
+    `<div class="ge">${miniHTML(e.code)}` +
+    `<span class="gv net" style="background:${heat(e.net)};color:${heatInk(e.net)}">${sgn(e.net)}</span>` +
+    `<span class="gv tab" style="background:${heat(e.table)};color:${heatInk(e.table)}">${sgn(e.table)}</span>` +
+    `<span class="gk">${e.turn === 1 ? '✕' : '◯'} to move</span></div>`).join('');
+  return `<div class="lc"><h3>The one thing a table cannot do</h3>` +
+    `<div class="ask">A side experiment, run fresh: two memories, the same rule, the same ` +
+    `${fmt(r.matches)} matches — and <b>one board picture in eight</b> picked from the seed ` +
+    `<i>before</i> training and forbidden to both. They still meet those pictures and still ` +
+    `count them; neither is allowed to store a value for one. Then both are asked what those ` +
+    `pictures are worth, and marked against the answer worked out separately.</div>` +
+    `<table class="cmp"><tr><th></th><th>table</th><th>network</th></tr>` +
+    `<tr><td>values stored</td><td>${fmt(r.slots)} slots</td><td>${fmt(r.params)} weights</td></tr>` +
+    `<tr><td>right on ${fmt(r.all.n)} held-out pictures</td>` +
+    `<td>${pct(r.all.tableRate)}</td><td>${pct(r.all.netRate)}</td></tr>` +
+    `<tr class="hi"><td>of the ${fmt(r.wins.n)} with a win waiting</td>` +
+    `<td>${pct(r.wins.tableRate)}</td><td>${pct(r.wins.netRate)}</td></tr></table>` +
+    (ex ? `<div class="gex">${ex}</div>` +
+      `<div class="gexk"><span class="gv net">network</span><span class="gv tab">table</span> ` +
+      `— three of the held-out pictures, each one a free win for the player to move.</div>` : '') +
+    `<div class="delta"><span class="up">The network has an answer for a picture it was never ` +
+    `allowed to learn.</span> The table has ${pct(r.all.tableRate)} — which is exactly the share ` +
+    `of those pictures that really are drawn, because it returns 0.00 for every single one and ` +
+    `0.00 means "even". On the pictures where somebody can win right now it scores nothing at ` +
+    `all. That is not a rigged comparison; it is what a lookup table does past the edge of what ` +
+    `it has stored, and it is the whole reason a network is worth the trouble.</div></div>`;
+}
+
 function buildLearnedNine(era, before) {
   $('#learned-title').textContent = 'Era ' + era.n + ' — nine at once';
   $('#learned-sub').textContent =
@@ -1102,14 +1242,20 @@ function buildLearnedNine(era, before) {
     rec9: NINE.measureRecurrence(era.brain, NINE.HP9.burst, measureRng(era, 'rec9')),
     rec1: NINE.measureRecurrenceSingle(era.agent, OG.HP.burst, measureRng(era, 'rec1')),
     cpu: NINE.vsHeuristic(era.brain, 200, measureRng(era, 'heuristic')),
-    rnd: NINE.vsRandom(era.brain, 100, measureRng(era, 'random'))
+    rnd: NINE.vsRandom(era.brain, 100, measureRng(era, 'random')),
+    /* the same two questions, asked of the network that trained beside it */
+    cpuNet: NINE.vsHeuristic(era.net, 200, measureRng(era, 'heuristic')),
+    rndNet: NINE.vsRandom(era.net, 100, measureRng(era, 'random'))
   });
-  const { rec9, rec1, cpu, rnd } = metrics;
+  const { rec9, rec1, cpu, rnd, cpuNet, rndNet } = metrics;
   const grew = before ? era.seen9 - before.seen9 : era.seen9;
 
   const head =
-    `<div class="headline">It played <b>${fmt(era.nine.selfPlay)} matches against itself and ` +
-    `${fmt(era.nine.vsRandom)} against a random mover</b>. Its nine-board table now holds ` +
+    `<div class="headline">Two memories trained side by side on the same rule. The <b>table</b> ` +
+    `played ${fmt(era.matches)} matches in ${Math.round(era.nine.msTable)} ms; the <b>network</b> ` +
+    `played ${fmt(era.netMatches)} in ${Math.round(era.nine.msNet)} ms — a forward pass costs ` +
+    `about a thousand times an array lookup, and that is the bill for being able to answer at ` +
+    `all about a picture you have never seen. Its nine-board table now holds ` +
     `<b>${fmt(era.seen9)}</b> of ${fmt(total)} board pictures` +
     (grew > 0 ? `, ${fmt(grew)} of them new this burst` : '') +
     (era.seeded9 ? `. <b>${fmt(era.seeded9)}</b> were handed straight over from what it learned on one board — ` +
@@ -1144,6 +1290,39 @@ function buildLearnedNine(era, before) {
           `from results alone.`
         : `Still losing ${cpu.losses} of ${cpu.matches}. Train it again.`}` +
     ` Against a player choosing at random it wins ${rnd.wins} of ${rnd.matches}.</div></div>`,
+
+    generalisationCard(era),
+
+    `<div class="lc"><h3>Which one actually plays better</h3>` +
+    `<div class="ask">The same benchmark, asked of both memories: the hand-written opponent, ` +
+    `200 matches, alternating who starts. Neither has ever been shown those rules.</div>` +
+    `<table class="cmp"><tr><th></th><th>table</th><th>network</th></tr>` +
+    `<tr><td>matches trained</td><td>${fmt(era.matches)}</td><td>${fmt(era.netMatches)}</td></tr>` +
+    `<tr><td>lost of 200</td><td>${cpu.losses}</td><td>${cpuNet.losses}</td></tr>` +
+    `<tr><td>drawn</td><td>${cpu.draws}</td><td>${cpuNet.draws}</td></tr>` +
+    `<tr class="hi"><td>vs a random player</td><td>${rnd.wins} of ${rnd.matches}</td>` +
+    `<td>${rndNet.wins} of ${rndNet.matches}</td></tr></table>` +
+    `<div class="delta">${
+      cpuNet.losses > cpu.losses + 20
+      ? `<span class="down">The table is the better player, and by a distance.</span> That is ` +
+        `the honest result and it is worth sitting with, because it is not the one a demo would ` +
+        `choose. The network is not an improved table, it is a different trade: it answers about ` +
+        `pictures nobody showed it — the card above — and it pays for that by never being ` +
+        `exactly right about the ones it did see. A move here is picked by <b>subtracting</b> ` +
+        `two of its values, and a small error in each does not cancel in the difference. Train ` +
+        `it further and this does not close: measured out to 12,000 matches, the network gets ` +
+        `to roughly level and then wanders, winning both seats after one burst and losing one ` +
+        `after the next, where the table stops losing and stays stopped.`
+      : cpu.losses > cpuNet.losses + 20
+      ? `The network is ahead <b>at this point</b>, and that is mostly the table still being ` +
+        `young: it needs about three bursts before it stops losing, and it has had ` +
+        `${S.eras.length - 1}. Train them both again. The table catches up and passes it, and ` +
+        `the honest summary of the whole race is that the table ends up the better player.`
+      : `The two are level on this benchmark just now. Watch which way it goes: the table, once ` +
+        `it stops losing, stays stopped, while the network's score wanders from burst to burst — ` +
+        `every update it makes moves every position at once, so nothing it has learned is ever ` +
+        `quite safe from what it learns next.`}` +
+    `</div></div>`,
 
     `<div class="lc"><h3>What it could not carry over</h3>` +
     `<div class="ask">On one board, the marks tell you whose turn it is. Here you can play twice in the ` +
@@ -1435,12 +1614,15 @@ function applyMode() {
     x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on));
   });
   document.body.classList.toggle('step-rules', rules);
+  document.body.classList.toggle('step-nine', nine);
   $('#how-head span').textContent = rules ? 'Rules, learning, and which is better'
                                           : 'How is it learning?';
   $('#board-wrap').hidden = nine;
   $('#nine-wrap').hidden = !nine;
   $('#era-select').hidden = rules;
   $('#depth-seg').hidden = !rules;
+  $('#mem-seg').hidden = !nine;
+  if (nine) renderMemSeg();
   $('#btn-brain').hidden = rules;
   $('#btn-learned').hidden = rules || S.lastLearned === null;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here

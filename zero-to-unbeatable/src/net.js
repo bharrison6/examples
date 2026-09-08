@@ -29,9 +29,15 @@
 
    The architecture
    ----------------
-   One hidden layer. 29 inputs -> HIDDEN rectified units -> 1 output
-   squashed through tanh into [-1,1], because that is the range a value
-   lives in.
+   29 inputs -> 32 rectified units -> 24 rectified units -> 1 number.
+   1,777 weights against the table's 39,366 entries.
+
+   The output is plain linear, and the read is clamped to [-1,1] because
+   nothing can be worth more than a win. A squashing tanh was tried first
+   and had to go: it interacts badly with the update below, which divides
+   by the size of the gradient, and a saturating tanh drives that size to
+   zero. Everything pinned to +1.00 within two hundred matches. The
+   clamp does the same job without the singularity.
 
    The input is the board picture and nothing else:
 
@@ -66,14 +72,16 @@
 
    Determinism
    -----------
-   Same seed, same numbers, on every device. IEEE +, -, *, / and sqrt
-   are correctly rounded everywhere; Math.exp and Math.tanh are not. So
-   the weights are initialised from the mulberry32 stream with uniform
-   arithmetic only, the hidden units are rectifiers (a comparison and a
-   multiply), and the one transcendental in the file -- the output
-   tanh -- is built from the polynomial EXP that glass-box/src/engine.js
-   uses for the same reason. Credit there; it is the house solution to
-   this problem.
+   Same seed, same numbers, on every device, and this file gets there by
+   never using a transcendental at all. IEEE +, -, *, / and sqrt are
+   correctly rounded on every engine; Math.exp, Math.log and Math.tanh
+   are not, and one differing last bit changes which story a run tells.
+   So: weights initialised uniform from the mulberry32 stream (a normal
+   sampler would need a logarithm), rectifiers for the hidden units (a
+   comparison and a multiply), and a linear output. Where a transcendental
+   IS unavoidable, glass-box/src/engine.js builds its own from
+   polynomials over IEEE ops; that is the house solution and the reason
+   this file was written to avoid needing it.
    ===================================================================== */
 
 const NET = (function (OG) {
@@ -82,52 +90,7 @@ const NET = (function (OG) {
 const { POW3, NCODE, CELLS, WINNER, NEMPTY } = OG;
 
 /* ------------------------------------------------------------------ *
- * 1. Deterministic tanh
- *
- * Math.exp / Math.tanh are implementation-defined in their last bits,
- * so two browsers can disagree and a rehearsed run stops reproducing.
- * EXP is a range reduction plus a degree-12 Taylor over IEEE ops only,
- * lifted from glass-box/src/engine.js where the same problem was
- * solved for the same reason.
- * ------------------------------------------------------------------ */
-
-const LN2 = 0.6931471805599453;
-const INV_LN2 = 1.4426950408889634;
-function EXP(x) {
-  if (x !== x) return NaN;
-  if (x > 709) return Infinity;
-  if (x < -745) return 0;
-  let k = x * INV_LN2;
-  k = k >= 0 ? (k + 0.5) | 0 : -((-k + 0.5) | 0);
-  const r = x - k * LN2;
-  let p = 1 / 479001600;
-  p = p * r + 1 / 39916800;
-  p = p * r + 1 / 3628800;
-  p = p * r + 1 / 362880;
-  p = p * r + 1 / 40320;
-  p = p * r + 1 / 5040;
-  p = p * r + 1 / 720;
-  p = p * r + 1 / 120;
-  p = p * r + 1 / 24;
-  p = p * r + 1 / 6;
-  p = p * r + 0.5;
-  p = p * r + 1;
-  p = p * r + 1;
-  let s = 1, b = 2, n = k < 0 ? -k : k;
-  if (k < 0) b = 0.5;
-  while (n > 0) { if (n & 1) s *= b; b *= b; n >>= 1; }
-  return p * s;
-}
-function TANH(x) {
-  if (x !== x) return NaN;
-  if (x > 20) return 1;
-  if (x < -20) return -1;
-  const e = EXP(2 * x);
-  return (e - 1) / (e + 1);
-}
-
-/* ------------------------------------------------------------------ *
- * 2. The input: ten ones among twenty-nine
+ * 1. The input: ten ones among twenty-nine
  * ------------------------------------------------------------------ */
 
 const NIN = 29;                 /* 27 cell one-hots + 2 turn one-hots */
@@ -156,7 +119,7 @@ function encode(code, turn) {
 }
 
 /* ------------------------------------------------------------------ *
- * 3. Hyperparameters
+ * 2. Hyperparameters
  *
  * alphaFloor is smaller than the table's 0.60 and that is a real
  * difference, stated rather than hidden: a table entry is private, so
@@ -168,119 +131,186 @@ function encode(code, turn) {
  * ------------------------------------------------------------------ */
 
 const HPN = {
-  hidden: 48,
-  alphaFloor: 0.06,   /* fraction of the way to the target, per update */
-  alphaWarm: 1,       /* alpha = max(floor, warm / (warm + visits)) */
-  initScale: 0.35,    /* uniform init half-width for W1 */
-  outScale: 0.02,     /* W2 starts near zero so a newborn is near-silent */
-  eps: 1e-4,          /* NLMS denominator floor */
+  hidden: 32,         /* first hidden layer */
+  hidden2: 24,        /* second; see newNet for why there are two */
+  alphaFloor: 0.20,   /* fraction of the way to the target, per update */
+  initScale: 0.35,    /* uniform init half-width */
+  outScale: 0.02,     /* the last layer starts near zero, so a newborn
+                         network answers about 0.00 everywhere and plays
+                         very nearly at random, as a newborn table does.
+                         Not exactly: a table's zeros are identical and a
+                         network's near-zeros are not, so it is born with
+                         faint preferences it did nothing to earn. That is
+                         what random initialisation is, and the demo says
+                         so rather than hiding it. */
+  eps: 1e-4,          /* floor under the NLMS denominator */
   seedPasses: 3,      /* passes over Act I's handover when it is fitted */
-  burst: 400,         /* matches per burst; the forward passes cost more
-                         than an array index, so the burst is smaller and
-                         the wall clock is comparable */
-  bursts: [100, 400, 1000]
+  burst: 250,         /* matches per burst. A forward pass costs about a
+                         thousand times an array index, so the same
+                         wall clock buys far fewer matches. Giving the
+                         network the table's full 1,000 -- or 5,000 --
+                         changes none of the conclusions; that was
+                         measured and is written up in README.md. */
+  bursts: [100, 250, 500]
 };
 
 /* ------------------------------------------------------------------ *
- * 4. The weights
+ * 3. The weights
  * ------------------------------------------------------------------ */
 
+/* TWO hidden layers, and the second one is not decoration -- it was
+   measured. Fitted to the answer key with everything else held the same,
+   one hidden layer stalls at a root-mean-square error of about 0.35 no
+   matter how wide it is -- 24 units and 384 units land in the same
+   place -- and a net that far out cannot play. Two layers reach 0.15 at
+   a quarter of the width. The reason is that "three in a row" is a
+   CONJUNCTION -- this cell AND that cell AND that one -- and one layer
+   of rectifiers over one-hot cells has to spend a unit on each one it
+   needs, while a second layer can assemble them from parts it already
+   has. Those numbers are in README.md; they were measured, not assumed. */
 function newNet(opts) {
   opts = opts || {};
-  const H = opts.hidden || HPN.hidden;
+  const H1 = opts.hidden || HPN.hidden;
+  const H2 = opts.hidden2 || HPN.hidden2;
   const rnd = OG.makeRng(opts.seed == null ? 'net' : opts.seed);
-  const W1 = new Float32Array(NIN * H);
-  const b1 = new Float32Array(H);
-  const W2 = new Float32Array(H);
   const s = HPN.initScale;
-  /* Uniform, not Gaussian: a normal sampler needs a logarithm and this
+  /* Uniform, not Gaussian: a normal sampler needs a logarithm, and this
      file is trying to stay inside the four arithmetic operations. */
-  for (let i = 0; i < W1.length; i++) W1[i] = (2 * rnd() - 1) * s;
-  for (let j = 0; j < H; j++) b1[j] = (2 * rnd() - 1) * s * 0.5;
-  for (let j = 0; j < H; j++) W2[j] = (2 * rnd() - 1) * HPN.outScale;
-  return { H, W1, b1, W2, b2: 0, hid: new Float32Array(H), act: new Float32Array(H) };
+  const fill = (n, scale) => {
+    const a = new Float32Array(n);
+    for (let i = 0; i < n; i++) a[i] = (2 * rnd() - 1) * scale;
+    return a;
+  };
+  return {
+    H1, H2,
+    W1: fill(NIN * H1, s),                  b1: fill(H1, s * 0.5),
+    W2: fill(H1 * H2, s * 2 / Math.sqrt(H1)), b2: new Float32Array(H2),
+    W3: fill(H2, HPN.outScale),             b3: 0,
+    z1: new Float32Array(H1), a1: new Float32Array(H1),
+    z2: new Float32Array(H2), a2: new Float32Array(H2),
+    d1: new Float32Array(H1), d2: new Float32Array(H2)
+  };
 }
 
 function cloneNet(n) {
-  return { H: n.H, W1: new Float32Array(n.W1), b1: new Float32Array(n.b1),
-           W2: new Float32Array(n.W2), b2: n.b2,
-           hid: new Float32Array(n.H), act: new Float32Array(n.H) };
+  return {
+    H1: n.H1, H2: n.H2,
+    W1: new Float32Array(n.W1), b1: new Float32Array(n.b1),
+    W2: new Float32Array(n.W2), b2: new Float32Array(n.b2),
+    W3: new Float32Array(n.W3), b3: n.b3,
+    z1: new Float32Array(n.H1), a1: new Float32Array(n.H1),
+    z2: new Float32Array(n.H2), a2: new Float32Array(n.H2),
+    d1: new Float32Array(n.H1), d2: new Float32Array(n.H2)
+  };
 }
 
-function paramCount(n) { return n.W1.length + n.b1.length + n.W2.length + 1; }
+function paramCount(n) {
+  return n.W1.length + n.b1.length + n.W2.length + n.b2.length + n.W3.length + 1;
+}
 
-/* Forward pass. The hidden pre-activations are left in n.hid and the
-   rectified ones in n.act, because the update needs both and re-running
-   the forward pass to get them would double the cost of learning. */
+/* Forward pass. Pre-activations and activations are left on the net,
+   because the update needs both and re-running the forward pass to get
+   them would double the cost of learning. */
 function forward(net, code, turn) {
-  const H = net.H, W1 = net.W1, b1 = net.b1, W2 = net.W2;
-  const hid = net.hid, act = net.act;
+  const H1 = net.H1, H2 = net.H2;
+  const W1 = net.W1, b1 = net.b1, W2 = net.W2, b2 = net.b2, W3 = net.W3;
+  const z1 = net.z1, a1 = net.a1, z2 = net.z2, a2 = net.a2;
   const off = code * 9;
-  for (let j = 0; j < H; j++) hid[j] = b1[j];
-  /* ten rows of W1, added. No multiply: every active input is 1. */
+  /* ten rows of W1, added. No multiply anywhere: every active input is 1. */
+  for (let j = 0; j < H1; j++) z1[j] = b1[j];
   for (let i = 0; i < 9; i++) {
-    const wo = FEAT[off + i] * H;
-    for (let j = 0; j < H; j++) hid[j] += W1[wo + j];
+    const wo = FEAT[off + i] * H1;
+    for (let j = 0; j < H1; j++) z1[j] += W1[wo + j];
   }
-  const wt = (26 + turn) * H;
-  for (let j = 0; j < H; j++) hid[j] += W1[wt + j];
-  let o = net.b2;
-  for (let j = 0; j < H; j++) {
-    const h = hid[j];
-    if (h > 0) { act[j] = h; o += h * W2[j]; } else act[j] = 0;
+  const wt = (26 + turn) * H1;
+  for (let j = 0; j < H1; j++) z1[j] += W1[wt + j];
+  for (let j = 0; j < H1; j++) a1[j] = z1[j] > 0 ? z1[j] : 0;
+
+  for (let k = 0; k < H2; k++) z2[k] = b2[k];
+  for (let j = 0; j < H1; j++) {
+    const av = a1[j];
+    if (av === 0) continue;                  /* rectifiers are off half the time */
+    const wo = j * H2;
+    for (let k = 0; k < H2; k++) z2[k] += av * W2[wo + k];
   }
-  return TANH(o);
+  let o = net.b3;
+  for (let k = 0; k < H2; k++) {
+    const z = z2[k];
+    if (z > 0) { a2[k] = z; o += z * W3[k]; } else a2[k] = 0;
+  }
+  return o;
 }
 
 /* Normalised LMS: move the OUTPUT for this position `alpha` of the way
-   to `target`, by the smallest change to the weights that does it.
-   Same alpha schedule, same target, same arithmetic shape as the
-   table's `U += alpha * (target - U)`. The difference is what else
-   moves with it. */
+   to `target`, by the smallest change to the weights that achieves it.
+   Same alpha, same target, same arithmetic shape as the table's
+   `U += alpha * (target - U)`. What differs is what else moves with it,
+   and that difference is the whole point of the step.
+ *
+ * The derivatives are hand-written, as they are in glass-box: there is
+ * no autograd here and the chain rule is on the page to be checked. */
 function update(net, code, turn, target, alpha) {
   const y = forward(net, code, turn);
   const err = target - y;
   if (err === 0) return y;
-  const H = net.H, W1 = net.W1, b1 = net.b1, W2 = net.W2;
-  const hid = net.hid, act = net.act;
-  const s = 1 - y * y;                     /* d tanh */
+  const H1 = net.H1, H2 = net.H2;
+  const W1 = net.W1, b1 = net.b1, W2 = net.W2, b2 = net.b2, W3 = net.W3;
+  const z1 = net.z1, a1 = net.a1, z2 = net.z2, a2 = net.a2;
+  const d1 = net.d1, d2 = net.d2;
 
-  /* |grad y|^2. The ten active inputs all share one derivative per
-     hidden unit, so the first-layer contribution is that derivative
-     squared, eleven times over: ten weights plus the bias. */
-  let sumA2 = 0, sumW2 = 0;
-  for (let j = 0; j < H; j++) {
-    const a = act[j];
-    sumA2 += a * a;
-    if (hid[j] > 0) sumW2 += W2[j] * W2[j];
+  /* d(output) / d(pre-activation), back to front */
+  let sumA2 = 0, sumD2 = 0;
+  for (let k = 0; k < H2; k++) {
+    sumA2 += a2[k] * a2[k];
+    const d = z2[k] > 0 ? W3[k] : 0;
+    d2[k] = d;
+    sumD2 += d * d;
   }
-  const g = s * s * (1 + sumA2 + (ACTIVE + 1) * sumW2);
+  let sumA1 = 0, sumD1 = 0;
+  for (let j = 0; j < H1; j++) {
+    sumA1 += a1[j] * a1[j];
+    let acc = 0;
+    if (z1[j] > 0) {
+      const wo = j * H2;
+      for (let k = 0; k < H2; k++) acc += d2[k] * W2[wo + k];
+    }
+    d1[j] = acc;
+    sumD1 += acc * acc;
+  }
+
+  /* |grad y|^2, one term per block of parameters. The ten active inputs
+     share a single derivative per first-layer unit, so that block
+     contributes its square eleven times over: ten weights and a bias. */
+  const g = 1 + sumA2                        /* b3 and W3 */
+          + sumD2 * (1 + sumA1)              /* b2 and W2 */
+          + sumD1 * (1 + ACTIVE);            /* b1 and W1 */
   const k = alpha * err / (g + HPN.eps);
 
-  /* second layer first, so the first layer still sees the W2 that the
-     gradient was computed with */
-  const ks = k * s;
-  net.b2 += ks;
-  const d = net.act;                       /* reuse: act is finished with */
-  for (let j = 0; j < H; j++) {
-    const a = act[j];
-    const dj = hid[j] > 0 ? ks * W2[j] : 0;
-    W2[j] += ks * a;
-    d[j] = dj;
-    b1[j] += dj;
+  /* Apply. Every derivative above was taken with the weights as they
+     stand, so all of them are read before any of them is written. */
+  net.b3 += k;
+  for (let i = 0; i < H2; i++) W3[i] += k * a2[i];
+  for (let i = 0; i < H2; i++) b2[i] += k * d2[i];
+  for (let j = 0; j < H1; j++) {
+    const av = a1[j];
+    if (av === 0) continue;
+    const wo = j * H2, ka = k * av;
+    for (let i = 0; i < H2; i++) W2[wo + i] += ka * d2[i];
   }
+  for (let j = 0; j < H1; j++) d1[j] *= k;
+  for (let j = 0; j < H1; j++) b1[j] += d1[j];
   const off = code * 9;
   for (let i = 0; i < 9; i++) {
-    const wo = FEAT[off + i] * H;
-    for (let j = 0; j < H; j++) W1[wo + j] += d[j];
+    const wo = FEAT[off + i] * H1;
+    for (let j = 0; j < H1; j++) W1[wo + j] += d1[j];
   }
-  const wt = (26 + turn) * H;
-  for (let j = 0; j < H; j++) W1[wt + j] += d[j];
+  const wt = (26 + turn) * H1;
+  for (let j = 0; j < H1; j++) W1[wt + j] += d1[j];
   return y;
 }
 
 /* ------------------------------------------------------------------ *
- * 5. The store nine.js talks to
+ * 4. The store nine.js talks to
  *
  * nine.js reads and writes its memory through three calls and knows
  * nothing else about it. This is the network's implementation of them;
@@ -320,21 +350,35 @@ function newBrain(opts) {
        it has an answer for the 33,890 entries it was never shown. */
     absorbPasses: HPN.seedPasses,
     absorb(code, t, value, n) {
-      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       const k = ui(code, t);
       if (this.N[k] === 0) this.seen++;
       this.N[k] = n;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       this.updates++;
       update(this.net, code, t, value, HPN.alphaFloor);
     },
-    at(code, t) { return forward(this.net, code, t); },
+    /* Clamped, because a board cannot be worth more than a win. The
+       table is inside [-1,1] by construction; the network has to be
+       held there, and without it the max in nine.js's backup feeds its
+       own overshoot back to itself until everything reads +1. */
+    at(code, t) {
+      const v = forward(this.net, code, t);
+      return v > 1 ? 1 : v < -1 ? -1 : v;
+    },
     hits(code, t) { return this.N[ui(code, t)]; },
     nudge(code, t, target) {
       const k = ui(code, t);
-      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       if (this.N[k] === 0) this.seen++;
-      const a = Math.max(HPN.alphaFloor, HPN.alphaWarm / (HPN.alphaWarm + this.N[k]));
+      /* One constant rate, where the table ramps down from 1.0 with its
+         visit count. The table's ramp is right FOR A TABLE: the first
+         sight of a private entry should take the target outright,
+         because nothing else is using that number. Doing the same to a
+         network means slamming every weight the position touches to fit
+         one example. Measured: with the ramp it loses 200 of 200 to the
+         hand-written opponent, without it 52. */
+      const a = HPN.alphaFloor;
       this.N[k]++;
+      if (this.hold && this.hold(code, t)) { this.heldSkipped++; return; }
       this.updates++;
       update(this.net, code, t, target, a);
     }
@@ -353,7 +397,7 @@ function cloneBrain(b) {
 }
 
 /* ------------------------------------------------------------------ *
- * 6. Ground truth for one board picture, so generalisation can be
+ * 5. Ground truth for one board picture, so generalisation can be
  *    measured instead of admired
  *
  * U[picture, turn] is defined by the backup in nine.js: a picture is
@@ -407,19 +451,35 @@ function hasImmediateWin(code, t) {
 }
 
 /* ------------------------------------------------------------------ *
- * 7. The held-out set
+ * 6. The held-out set
  *
  * A deterministic pseudo-random slice of (picture, turn) pairs that
  * BOTH memories are forbidden to train on. It is chosen before training
  * starts, from the seed alone, so nothing about how a run went can
- * influence what it is tested on. `nudge` and `seedFromAgent` both
- * consult it, so a held-out pair is never written by either store, and
- * its visit count stays at zero as the receipt.
+ * influence what it is tested on. Both stores consult it on every write
+ * and refuse, counting the refusal; `heldSkipped` rising while the
+ * held-out values stay exactly as they were born is the receipt.
+ *
+ * The refusal is on the WRITE only. A held-out picture is still counted,
+ * still steers the count-based exploration, still plays. Hiding it from
+ * the run entirely would be a different experiment -- and a worse one,
+ * because exploration that seeks out the least-visited picture would
+ * then chase the held-out set forever, since nothing could raise its
+ * count.
  * ------------------------------------------------------------------ */
+
+/* One picture in eight. Big enough that the held-out set is thousands of
+   pictures rather than hundreds, and the honest reason it is not the
+   default: a table with one picture in eight blanked stops working
+   almost completely -- it loses 389 matches in 400 to the hand-written
+   opponent where a whole one loses none. Even ONE IN A HUNDRED costs it
+   114 of 400. So the held-out run is a separate experiment beside the
+   real one, not a tax on it, and the demo says which is which. */
+const HOLD_FRACTION = 0.125;
 
 function makeHoldout(seed, fraction) {
   const h0 = OG.hashSeed('holdout:' + seed);
-  const cut = Math.round((fraction == null ? 0.15 : fraction) * 4294967296);
+  const cut = Math.round((fraction == null ? HOLD_FRACTION : fraction) * 4294967296);
   return function (code, t) {
     let h = (h0 ^ Math.imul(code, 0x9E3779B1)) >>> 0;
     h = Math.imul(h ^ (h >>> 15), 0x85EBCA6B) >>> 0;
@@ -430,10 +490,8 @@ function makeHoldout(seed, fraction) {
   };
 }
 
-/* The measurement the whole step is for. Over every held-out pair the
-   training run actually walked into -- provably, because the visit
-   count is still zero and the store refused the write -- how often does
-   each memory get the sign of the answer right?
+/* The measurement the whole step is for. Over every held-out picture,
+   how often does each memory get the sign of the answer right?
  *
  * The table's answer is 0.00 for all of them, so it scores exactly the
  * fraction of them that really are drawn and nothing more. That is not
@@ -449,7 +507,6 @@ function generalisation(netBrain, tableBrain, opts) {
     if (WINNER[code] === 3) continue;
     for (let t = 1; t <= 2; t++) {
       if (!hold(code, t)) continue;
-      if (netBrain.N[ui(code, t)] !== 0) continue;      /* receipt: untouched */
       if (WINNER[code] !== 0 || NEMPTY[code] === 0) continue;  /* nothing to work out */
       if (winsOnly && !hasImmediateWin(code, t)) continue;
       const z = truth(code, t);
@@ -476,11 +533,63 @@ function generalisation(netBrain, tableBrain, opts) {
   };
 }
 
+/* ------------------------------------------------------------------ *
+ * 7. The experiment, run the same way by the app and by the tests
+ *
+ * Two fresh memories, the same handover, the same seeded stream, the
+ * same number of matches, and the same one-in-eight of the board
+ * pictures forbidden to both. Then ask both of them about the pictures
+ * neither was allowed to learn.
+ *
+ * `nine` is passed in rather than required, because nine.js owns the
+ * training loop and must not depend on this file -- the network is a
+ * memory it can be handed, not a thing it knows about.
+ * ------------------------------------------------------------------ */
+
+function experiment(nine, agent, opts) {
+  opts = opts || {};
+  const seed = opts.seed == null ? 'demo' : opts.seed;
+  const matches = opts.matches == null ? HPN.burst : opts.matches;
+  const hold = makeHoldout(seed, opts.fraction);
+
+  const table = nine.newBrain();
+  const net = newBrain({ seed: 'net:' + seed });
+  table.hold = hold; net.hold = hold;
+  nine.seedFromAgent(table, agent);
+  nine.seedFromAgent(net, agent);
+
+  /* Separate streams with the same seed: each memory plays its own
+     matches, because each one's choices are its own. Same budget, same
+     rehearsal, different memory. */
+  const t0 = now();
+  nine.trainMatches(table, matches, OG.makeRng('exp:' + seed));
+  const tableMs = now() - t0;
+  const t1 = now();
+  nine.trainMatches(net, matches, OG.makeRng('exp:' + seed));
+  const netMs = now() - t1;
+
+  const all = generalisation(net, table);
+  const wins = generalisation(net, table, { winsOnly: true });
+  return {
+    seed, matches, fraction: opts.fraction == null ? HOLD_FRACTION : opts.fraction,
+    table, net, all, wins,
+    tableMs, netMs,
+    params: net.params,
+    slots: USIZE,
+    refusals: { table: table.heldSkipped, net: net.heldSkipped }
+  };
+}
+
+function now() {
+  return (typeof performance !== 'undefined' && performance.now)
+    ? performance.now() : Date.now();
+}
+
 /* ------------------------------------------------------------------ */
 
 return {
-  NIN, ACTIVE, HPN, USIZE, ui,
-  EXP, TANH, encode, FEAT,
+  NIN, ACTIVE, HPN, USIZE, ui, HOLD_FRACTION, experiment,
+  encode, FEAT,
   newNet, cloneNet, forward, update, paramCount,
   newBrain, cloneBrain,
   truth, hasImmediateWin, makeHoldout, generalisation

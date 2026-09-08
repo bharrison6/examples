@@ -29,6 +29,7 @@ const path = require('path');
 const OG = require('./engine.js');
 const RULES = require('./rules.js');
 const NINE = require('./nine.js');
+const NET = require('./net.js');
 
 let failures = 0, checks = 0;
 function check(name, cond, detail) {
@@ -483,6 +484,230 @@ head('6. Nine at once — the same method, a bigger world');
   check('there is no unbeatability proof on offer for nine boards',
     typeof NINE.verifyUnbeatable === 'undefined',
     'a proof would be a lie here — the space cannot be searched');
+}
+
+/* =====================================================================
+   6b. THE SAME RULE, A DIFFERENT MEMORY
+
+   Step 3 ships two memories: a table of 39,366 numbers and a neural
+   network of 1,777 weights. The demo's whole claim is that they differ
+   in exactly one respect -- where the value is kept -- and that the
+   network can answer about board pictures nobody ever showed it.
+
+   Both halves of that are checked here, and so is the uncomfortable
+   half: at the budget the demo actually runs, the network is the WORSE
+   PLAYER. If that ever stops being true this check fails and the prose
+   has to be rewritten, which is exactly why it is pinned.
+   ===================================================================== */
+head('6b. The same rule, a different memory');
+
+{
+  /* ---- the seam is real, not a caption ---- */
+  /* Comments are stripped before any of these are read: the claim is
+     about the CODE, and a file that only discussed the seam in its
+     header would pass a check made against its own prose. */
+  const decomment = f => fs.readFileSync(path.join(__dirname, f), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/[^\n]*/g, '$1 ');
+  {
+    const src = decomment('nine.js');
+    check('nine.js never names the network -- it is handed a memory, not a kind',
+      !/\bNET\b|net\.js/.test(src));
+    const body = src.slice(src.indexOf('function moveValue'));
+    check('nothing below the store reaches past at() / hits() / nudge() into a raw array',
+      !/brain\.(U|N)\[/.test(body), 'a direct array access would be a second difference');
+    const table = NINE.newBrain(), net = NET.newBrain();
+    const api = ['at', 'hits', 'nudge', 'absorb'];
+    check('both memories implement the same four calls',
+      api.every(k => typeof table[k] === 'function' && typeof net[k] === 'function'));
+  }
+
+  /* ---- the update really is the table's update, in output space ---- */
+  {
+    const net = NET.newNet({ seed: 'gradcheck' });
+    let worst = 0;
+    const rnd = OG.makeRng('gradcheck');
+    for (let i = 0; i < 500; i++) {
+      const code = (rnd() * OG.NCODE) | 0, t = 1 + (i % 2);
+      const target = (i % 3) - 1, alpha = 0.1;
+      const before = NET.forward(net, code, t);
+      NET.update(net, code, t, target, alpha);
+      const after = NET.forward(net, code, t);
+      worst = Math.max(worst, Math.abs(after - (before + alpha * (target - before))));
+    }
+    check('one update moves the network answer alpha of the way to the target, exactly as ' +
+      'the table update does', worst < 0.05, 'worst deviation ' + worst.toExponential(2));
+    console.log(`        worst deviation from  y += alpha*(target-y):  ${worst.toExponential(2)}`);
+  }
+
+  /* ---- a newborn network ---- */
+  {
+    const net = NET.newBrain();
+    let worst = 0;
+    for (let c = 0; c < OG.NCODE; c += 7) worst = Math.max(worst, Math.abs(net.at(c, 1)));
+    check('a newborn network answers about 0.00 everywhere, as a newborn table does',
+      worst < 0.05, 'largest newborn value ' + worst.toFixed(3));
+    check('but not IDENTICALLY zero -- a network is born with preferences it did not earn',
+      net.at(0, 1) !== net.at(1, 1),
+      'if these matched, the honest note in the guide would be wrong');
+  }
+
+  /* ---- determinism ---- */
+  {
+    const a = NET.newBrain({ seed: 'same' }), b = NET.newBrain({ seed: 'same' });
+    NINE.trainMatches(a, 60, OG.makeRng('rep'));
+    NINE.trainMatches(b, 60, OG.makeRng('rep'));
+    let same = true;
+    for (let i = 0; i < a.net.W1.length && same; i++) if (a.net.W1[i] !== b.net.W1[i]) same = false;
+    for (let i = 0; i < a.net.W3.length && same; i++) if (a.net.W3[i] !== b.net.W3[i]) same = false;
+    check('a seeded network run reproduces bit for bit', same);
+    check('the network uses none of the maths browsers round differently',
+      !/Math\.(exp|log|tanh|pow|sin|cos|atan|asin|acos|cbrt|hypot)\b/.test(decomment('net.js')),
+      'Math.exp/log/tanh are implementation-defined in their last bits; ' +
+      'the four operations and sqrt are not');
+  }
+
+  /* ---- the answer key is independent of both memories ---- */
+  {
+    let agree = 0, tested = 0, bad = 0;
+    for (let code = 0; code < OG.NCODE; code += 3) {
+      const t = OG.TOMOVE[code];
+      if (t === 0 || OG.WINNER[code] !== 0 || OG.NEMPTY[code] === 0) continue;
+      /* where both are defined -- a balanced board -- the answer key must
+         agree with this file's own minimax, which knows nothing of net.js */
+      const want = t === 1 ? minimax(code) : -minimax(code);   // to X
+      tested++;
+      if (NET.truth(code, t) === want) agree++; else bad++;
+    }
+    check('the held-out answer key agrees with an independent minimax wherever both are defined',
+      bad === 0, `${agree} of ${tested}`);
+    console.log(`        answer key checked against this file's own minimax on ${fmt(tested)} positions`);
+  }
+
+  /* ---- the held-out set is genuinely never written ---- */
+  const A1 = trainTo('net-actone', 4);
+  const exp = NET.experiment(NINE, A1, { seed: 'demo', matches: NET.HPN.burst });
+  {
+    const hold = NET.makeHoldout('demo');
+    let leaked = 0, held = 0;
+    for (let code = 0; code < OG.NCODE; code++) {
+      for (let t = 1; t <= 2; t++) {
+        if (!hold(code, t)) continue;
+        held++;
+        if (exp.table.U[NET.ui(code, t)] !== 0) leaked++;
+      }
+    }
+    check('every held-out picture is still exactly as the table was born -- nothing leaked in',
+      leaked === 0, leaked + ' of ' + held + ' had been written');
+    check('and both memories refused the same writes, in quantity',
+      exp.refusals.table > 1000 && exp.refusals.net > 1000, JSON.stringify(exp.refusals));
+    console.log(`        ${fmt(held)} held-out entries; ${fmt(exp.refusals.table)} table writes ` +
+                `and ${fmt(exp.refusals.net)} network writes refused`);
+  }
+
+  /* ---- THE RESULT ---- */
+  {
+    const g = exp.all, w = exp.wins;
+    check('the network is right about held-out pictures far more often than the table',
+      g.netRate > 0.6 && g.netRate > g.tableRate + 0.4,
+      `network ${(100 * g.netRate).toFixed(1)}%, table ${(100 * g.tableRate).toFixed(1)}%`);
+    /* the table's score is not a number it earned: it answers 0.00 to
+       every held-out picture, so it is right exactly on the drawn ones */
+    const drawn = (g.n - g.decisive) / g.n;
+    check('the table score is exactly the share of held-out pictures that are drawn -- it ' +
+      'answered 0.00 to all of them', Math.abs(g.tableRate - drawn) < 1e-9,
+      `${g.tableRate.toFixed(6)} vs ${drawn.toFixed(6)}`);
+    check('on held-out pictures with a win waiting, the table scores nothing at all',
+      w.tableRate === 0 && w.netRate > 0.6,
+      `network ${(100 * w.netRate).toFixed(1)}%, table ${(100 * w.tableRate).toFixed(1)}%`);
+    console.log(`        ${fmt(g.n)} held-out pictures (${(100 * g.decisive / g.n).toFixed(0)}% decisive): ` +
+                `network ${(100 * g.netRate).toFixed(1)}% right, table ${(100 * g.tableRate).toFixed(1)}%`);
+    console.log(`        ${fmt(w.n)} of them have a win waiting: ` +
+                `network ${(100 * w.netRate).toFixed(1)}%, table ${(100 * w.tableRate).toFixed(1)}%`);
+  }
+
+  /* ---- and the part the demo must not dress up ---- */
+  {
+    const T = NINE.newBrain(); NINE.seedFromAgent(T, A1);
+    const N9 = NET.newBrain({ seed: 'strength' }); NINE.seedFromAgent(N9, A1);
+    NINE.trainMatches(T, NINE.HP9.burst * 3, OG.makeRng('str'));
+    const t0 = Date.now();
+    NINE.trainMatches(N9, NET.HPN.burst, OG.makeRng('str'));
+    const netMs = Date.now() - t0;
+    const ct = NINE.vsHeuristic(T, 200, OG.makeRng('sc'));
+    const cn = NINE.vsHeuristic(N9, 200, OG.makeRng('sc'));
+    check('the network is the WORSE PLAYER at the budget the demo runs, and the page says so',
+      cn.losses > ct.losses,
+      `table lost ${ct.losses}, network lost ${cn.losses} -- if this flips, rewrite the prose`);
+    check('a network burst still fits the demo idiom of a few seconds',
+      netMs < 6000, netMs + 'ms for ' + NET.HPN.burst + ' matches');
+    check('the network still beats a random player',
+      NINE.vsRandom(N9, 100, OG.makeRng('sr')).winRate > 0.85);
+    console.log(`        vs the hand-written rules, of 200: table lost ${ct.losses}, ` +
+                `network lost ${cn.losses}`);
+    console.log(`        ${fmt(NET.HPN.burst)} network matches in ${netMs}ms ` +
+                `(${fmt(N9.params)} weights against ${fmt(OG.NCODE * 2)} table slots)`);
+  }
+
+  /* ---- WHERE the network falls down, pinned so the explanation cannot
+         quietly become wrong.
+
+     The demo's account of why the network plays worse is specific: it is
+     not that the network is too small to hold the answer, and not that
+     the update is the wrong one. It is that self-play cannot DRIVE this
+     memory to the precision the move rule needs, because a move is
+     chosen by subtracting two values and the errors do not cancel.
+
+     That account only stands if the same network, shown the answers
+     outright, does markedly better than the same network left to work
+     them out. So: fit it to the answer key with the SAME update, and
+     measure the gap. ---- */
+  {
+    const items = [];
+    for (let code = 0; code < OG.NCODE; code++) {
+      if (OG.WINNER[code] === 3) continue;
+      for (let t = 1; t <= 2; t++) items.push([code, t, NET.truth(code, t)]);
+    }
+    const rms = (b) => {
+      let e = 0;
+      for (const [c, t, z] of items) { const d = b.at(c, t) - z; e += d * d; }
+      return Math.sqrt(e / items.length);
+    };
+
+    /* self-play, the way the demo trains it */
+    const played = NET.newBrain({ seed: 'gap' });
+    NINE.seedFromAgent(played, A1);
+    NINE.trainMatches(played, NET.HPN.burst * 4, OG.makeRng('gap'));
+
+    /* the same network, same update, same alpha — just shown the answers */
+    const shown = NET.newBrain({ seed: 'gap' });
+    for (let i = 0; i < shown.N.length; i++) shown.N[i] = 1;
+    const rnd = OG.makeRng('gap-fit');
+    const idx = items.map((_, i) => i);
+    for (let e = 0; e < 25; e++) {
+      for (let i = idx.length - 1; i > 0; i--) {
+        const j = (rnd() * (i + 1)) | 0; const q = idx[i]; idx[i] = idx[j]; idx[j] = q;
+      }
+      for (const i of idx) {
+        const [c, t, z] = items[i];
+        NET.update(shown.net, c, t, z, NET.HPN.alphaFloor);
+      }
+    }
+
+    const rPlayed = rms(played), rShown = rms(shown);
+    check('the network is not too small to hold the answer — shown it outright, the same ' +
+      'weights fit it far better than self-play ever gets them to',
+      rShown < rPlayed * 0.75,
+      `self-play ${rPlayed.toFixed(3)}, shown the answers ${rShown.toFixed(3)}`);
+    check('so the gap the demo explains is a LEARNING gap, not a capacity one',
+      rShown < 0.25 && rPlayed > 0.3,
+      `shown ${rShown.toFixed(3)}, self-play ${rPlayed.toFixed(3)}`);
+    console.log(`        error against the answer key — self-play ${rPlayed.toFixed(3)}, ` +
+                `same network shown the answers ${rShown.toFixed(3)}`);
+  }
+
+  check('there is no unbeatability proof on offer for the network either',
+    typeof NET.verifyUnbeatable === 'undefined' && typeof NET.verify === 'undefined',
+    'nine boards cannot be searched, whichever memory is behind the values');
 }
 
 /* =====================================================================
