@@ -65,6 +65,10 @@ h2 { font-size: clamp(1.15rem, 3.6vw, 1.6rem); font-weight: 800; }
 h3 { font-size: clamp(1.02rem, 3vw, 1.22rem); font-weight: 800; }
 p  { margin: 0 0 1em; }
 a  { color: var(--sky); }
+button:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
 
 /* --------------------------------------------------------------- chrome */
 
@@ -175,6 +179,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 18px 14px 64px; }
   letter-spacing: .04em; text-transform: uppercase;
 }
 .src:hover { background: rgba(0,164,227,0.18); }
+.src:focus-visible { color: var(--navy-deep); background: var(--gold); border-color: var(--gold); }
 .src.bad { color: var(--red); border-color: var(--red); background: rgba(255,69,0,0.1); }
 .src-title { color: var(--dim); font-size: .76rem; line-height: 1.35; flex: 1 1 220px; min-width: 0; }
 .src-id { color: var(--dim); font-size: .7rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
