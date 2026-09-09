@@ -576,6 +576,62 @@ function wireSettings() {
     app.timeline.setBig(app.big);
   });
   $('#btn-selftest').addEventListener('click', runSelfTest);
+  $('#btn-reset').addEventListener('click', resetAll);
+}
+
+/* ---- reset ----------------------------------------------------------------
+   The state a reload would clear, cleared without a reload — for the presenter
+   who has just finished with one room and wants the next one to draw its own
+   lines. Nothing is persisted anywhere, so this is the whole of it: the five
+   results, the drawn line, the scorecard, the timeline's cursor and filters,
+   and the self-test output.
+
+   Two deliberate exceptions, both because a reload is the wrong model here.
+   Presentation mode stays on: it describes the projector, not the talk, and
+   dropping a presenter back to phone-sized type mid-session would be a bug
+   wearing a feature's clothes. And the Guide does not reopen, though it does on
+   load — the person pressing Reset is the one person in the room who has read
+   it, and putting it back in their face is the opposite of helpful.
+   -------------------------------------------------------------------------- */
+
+function resetAll() {
+  while (sheetStack.length) closeSheet(sheetStack[sheetStack.length - 1].id);
+  stopPlay();
+
+  /* Act I, back to the opening screen. */
+  app.roundIx = 0;
+  app.results = [];
+  app.started = false;
+  $('#intro').hidden = false;
+  $('#round-body').hidden = true;
+  $('#scorecard').hidden = true;
+  $('#verdict').hidden = true;
+  $('#twist-wrap').hidden = true;
+  $('#btn-next').hidden = true;
+  $('#round-example').open = false;
+  app.chart.setRound(D.ROUNDS[0]);
+  app.chart.reset();
+  $('#btn-reveal').disabled = true;
+  $('#draw-hint').textContent = 'Drag across the shaded region.';
+
+  /* Act II, back to the full timeline with no filter. */
+  const slider = $('#tl-slider');
+  slider.value = 1000;
+  app.timeline.setCursor(1);
+  const first = group => {
+    const all = $$('#' + group + ' button');
+    all.forEach((x, i) => x.classList.toggle('on', i === 0));
+    return all[0];
+  };
+  app.timeline.setFilter(first('tl-filter').dataset.filter);
+  app.timeline.setRegion(first('tl-region').dataset.region);
+  $('#tl-hover').hidden = true;
+  syncTimeline();
+
+  /* Proof panel, back to unrun. */
+  $('#selftest-out').innerHTML = '';
+
+  goAct(1);
 }
 
 /* ---- self test ------------------------------------------------------------
