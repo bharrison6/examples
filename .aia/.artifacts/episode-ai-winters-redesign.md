@@ -1,32 +1,64 @@
 ---
 id: ai-winters-redesign
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: task
+memory_class: episodic
+lifecycle: complete
 schema_version: 2
 title: Redesign AI Winters with balanced history and teaching
 created: 2026-09-09T13:24:52Z
-updated: 2026-09-09T14:08:13Z
+updated: 2026-09-09T14:36:10Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
-status: executing
+status: active
 scope: examples
 source_basis: conversation
 sensitivity: normal
-sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T13:24:18Z
 tags: [ai-fellows, teaching, design]
 ---
 
-## Expected outcome and owned work
+## Completed result
+
+The completed Astra interface overhaul is e4dc300, integrated in 416bfad after
+the Terra content corrections through 6a448b3. The cream/navy/gold workbench,
+event panel, five comparison lenses with three era cards at a time, side Details,
+collapsed supporting sections and named source controls replace the old expanded
+layout. Required Guide, Settings, Reset, Presentation, Notes and print PDF remain.
+
+Independent subject-matter review accepted the final source, generated app and
+canonical guide. Five forecasts, four assessments/untimed ambitions and one warning
+remain distinct; context claims and unresolved forecasts receive no outcome score.
+Mixed funding bases, contested history, dated evidence and analogy limits stay
+explicit. Historical secondary quotations are reported rather than falsely treated
+as independently verified originals. [[ai-progress-winters-evidence-2026-09-09]]
+contains the source review and its remaining retrieval limits.
+
+Builder observed 81 data/engine, 48 contract and 246 focused browser checks passing
+at desktop/390/320. The four-page PDF was rebuilt, all pages visually inspected,
+and the integration packaging agent verified final build/guide/PDF/hub parity.
+Independent Chrome-extension QA accepted all five lenses and fifteen Details
+drawers, focus/Escape, corrected timeline endpoint and event Details, representative
+claim classifications, named sources, Guide/Notes/Presentation/Reset, all four
+stages at 320px and phone drawers. All 17 embedded checks passed; no console errors
+were observed. It did not exercise every historical card or external source link.
+Screenshots are in the local temporary acc-final-demo-qa-20260909 folder.
+
+The timeline retains the selected event when leaving the canvas so Details stays
+usable. Its internal exclusive 2027 boundary displays 2026. These are implementation
+choices, not claims of evidence beyond the dated snapshot. Parent coordinated,
+verified commit/file boundaries and integrated; agents performed all implementation,
+research, tests and visual verification. Publication follows this completion record.
+
+## Review history
 
 Independent acceptance on 2026-09-09 rejected the initial candidate's visual
 treatment: despite corrected evidence and passing automated checks, Chrome QA
 observed the old dark expanded layout, no side Details and generic source labels.
-The Terra lane is finishing content propagation through its final commit, then
-transferring exclusive two-winters ownership to the Astra builder for the complete
-interface overhaul. This task remains executing; it is not complete on the basis
-of automated checks or a builder's handoff alone. Parent stays coordination-only.
+The Terra lane finished content propagation, then transferred exclusive two-winters
+ownership to Astra. Completion followed independent visual and functional acceptance
+of the replacement interface, rather than the initial automated checks alone.
+
+## Original expected outcome and owned work
 
 Redesign two-winters/ (AI Winters: Boom and Bust) with the complete visual and
 teaching treatment of zero-to-unbeatable and glass-box (read-only references).
