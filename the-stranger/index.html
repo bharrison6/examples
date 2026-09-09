@@ -1,12 +1,15 @@
 <!doctype html>
 <!--
-  THE STRANGER — a fully deterministic classroom demo about why prompts work.
-  Every response in this file was written by hand at build time. There is no
+  PROMPTING STRATEGIES (THE STRANGER) — a fully deterministic classroom demo about why
+  prompts work. Every response in this file was written by hand at build time. There is no
   model, no API key, and no request of any kind at runtime. Open it from a thumb
   drive on a machine with the wifi off; it behaves identically.
   4 scenarios x 8 lever states, with three alternate
   target-deck responses for each of the four states where the success spec is off:
   64 authored responses, 25,723 words.
+
+  The presenter notes in Settings are presenter-sheet.html, injected here at build time:
+  one document, one source, and `node build.js --check` fails if they drift.
 
   SINGLE-LEVER ISOLATION — what each lever, and only that lever, changed:
   test: Help me get ready for my test
@@ -43,11 +46,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=yes">
 <meta name="color-scheme" content="dark">
-<title>The Stranger — why prompts work</title>
+<title>Prompting Strategies — why prompts work</title>
 <style>
-/* ============================================================ THE STRANGER
-   Single file. Zero network. Every response below is hand-authored at build
-   time; there is no model behind this glass and never was.
+/* =============================================== PROMPTING STRATEGIES
+   (The Stranger.) Single file. Zero network. Every response below is
+   hand-authored at build time; there is no model behind this glass and never was.
    ------------------------------------------------------------------------ */
 *,*::before,*::after{box-sizing:border-box}
 /* Murray State palette. MSU Blue is the surface family, MSU Gold the accent and
@@ -62,6 +65,15 @@
   --c1:#ECAC00; --c1b:#4a3600; --c2:#00A4E3; --c2b:#00344a; --c3:#b49bff; --c3b:#2c2455;
   --acc:#ECAC00; --onacc:#002144; --bad:#FF4500;
   --sunk:#001526;
+  /* The presenter sheet ships its own stylesheet into the notes overlay (build.js
+     lifts it out of presenter-sheet.html). These are the only app values that
+     stylesheet reads: it writes var(--g-x, printFallback), so the one file prints
+     as ink on white and reads as this theme in the overlay, with no second copy. */
+  --g-head:var(--ink); --g-body:var(--dim); --g-mute:var(--dim2); --g-line:var(--line);
+  --g-panel:var(--panel);
+  --g-l1:rgba(236,172,0,.2);  --g-l1t:var(--c1);
+  --g-l2:rgba(0,164,227,.22); --g-l2t:var(--c2);
+  --g-l3:rgba(180,155,255,.2); --g-l3t:var(--c3);
   --fs:19px; --pad:18px; --r:14px;
   --stream:420; /* characters per second */
 }
@@ -253,7 +265,9 @@ body.rehearsal .rehearse{display:flex}
 /* ------------------------------------------------------------------ chat */
 #cols{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:1fr;gap:0}
 #cols.compare{grid-template-columns:1fr 1fr}
-.col{min-height:0;overflow:auto;padding:var(--pad);display:flex;flex-direction:column;gap:.8em;scroll-behavior:smooth}
+/* the extra bottom padding is the attribution pill's footprint: without it the last
+   line of a fully scrolled answer (or the 1-10 strip) sits under the pill */
+.col{min-height:0;overflow:auto;padding:var(--pad);padding-bottom:calc(var(--pad) + 24px);display:flex;flex-direction:column;gap:.8em;scroll-behavior:smooth}
 .col+.col{border-left:1px solid var(--line)}
 .colhead{
   position:sticky;top:calc(var(--pad) * -1);margin:calc(var(--pad) * -1) calc(var(--pad) * -1) 0;
@@ -374,26 +388,14 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
 .mrow.on .tsw{background:var(--acc);border-color:var(--acc)}
 .mrow.on .tsw::after{left:calc(100% - 1.06em);background:var(--onacc)}
 
-/* --------------------------------------------------- presenter's notes ---
-   The three acts from the printed presenter sheet, cut to what you can read at
-   a glance with a room watching. Same script, standing up. */
-.sheet.notes{width:min(46em,100%)}
-.pnsetup{font-size:.8em;line-height:1.55;color:var(--dim);font-style:italic;
-  border-left:2px solid var(--line);padding-left:.7em;margin:0 0 .9em}
-.pnact{border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:.75em .9em;margin:.5em 0}
-.pnhd{display:flex;align-items:baseline;gap:.6em;flex-wrap:wrap;margin-bottom:.35em}
-.pnhd b{font-size:.86em;letter-spacing:.11em}
-.pnhd .pnt{font-size:.66em;color:var(--dim2);margin-left:auto}
-.pnsay{font-size:.8em;line-height:1.5;font-style:italic;color:var(--ink);margin:.15em 0 .45em}
-.pnact ol{margin:.2em 0 .3em;padding-left:1.25em;font-size:.8em;line-height:1.5;color:var(--dim)}
-.pnact ol li{margin:.26em 0}
-.pnact ol b,.pnsetup b{color:var(--ink);font-weight:650}
-.pnland{margin-top:.5em;padding:.42em .65em;border-left:3px solid var(--acc);
-  background:rgba(236,172,0,.09);border-radius:0 8px 8px 0;font-size:.82em;font-weight:650;color:var(--ink)}
-.sheet.notes ol.pnq,.sheet.notes ol.pnrules{font-size:.8em;line-height:1.55;color:var(--dim);padding-left:1.3em;margin:.2em 0}
-.sheet.notes ol.pnq li,.sheet.notes ol.pnrules li{margin:.3em 0}
-.sheet.notes ol.pnrules b{color:var(--ink)}
-.pnfoot{margin-top:1.2em;border-top:1px solid var(--line);padding-top:.6em;font-size:.7em;line-height:1.6;color:var(--dim2)}
+/* ---------------------------------------------------- presenter notes ----
+   The notes overlay is the printable presenter sheet itself. build.js lifts the
+   sheet's scoped stylesheet and its .guide-scope body out of presenter-sheet.html
+   and drops them in here, so there is one script, one file and nothing to keep in
+   sync by hand. The only rules below are the ones that host it. */
+.sheet.notes{width:min(58em,100%)}
+.sheet.notes .guide-scope{margin-top:.4em}
+.sheet.notes .notesrule{border-top:1px solid var(--line);margin:.9em 0 1em}
 
 /* closing screen */
 #closing{position:fixed;inset:0;z-index:90;display:none;background:radial-gradient(70vw 60vh at 50% 10%,rgba(236,172,0,.16),transparent 60%),#000914}
@@ -443,6 +445,9 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
   .modal.menu{padding-left:.4em;padding-right:.4em}
   .sheet.menu{width:100%}
   .sheet{padding:1.1em .9em}
+  /* the wrapped attribution pill is two lines tall down here; reserve that much
+     under the answer so its last line can always be scrolled clear of it */
+  .col{padding-bottom:calc(var(--pad) + 34px)}
 }
 .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:0 0 auto}
 .seg button{font-size:.78em;padding:.42em .8em;color:var(--dim);background:var(--panel);white-space:nowrap}
@@ -471,13 +476,56 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
 /* .col sets display:flex, which outranks the UA rule for the hidden attribute */
 [hidden]{display:none !important}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* The presenter sheet's own stylesheet lands here, last, so its .guide-scope rules
+   outrank the sheet defaults above for the notes overlay and nothing else. build.js
+   refuses the build if that stylesheet carries a page-level rule. */
+/* GUIDE_CSS: BEGIN */
+.guide-scope{color:var(--g-body,#111);font-size:.78em;line-height:1.4}
+.guide-scope b{color:var(--g-head,#111)}
+.guide-scope h1{font-size:2.09em;margin:0;letter-spacing:-.01em;color:var(--g-head,#111)}
+.guide-scope h1 span{font-weight:400;color:var(--g-mute,#777);font-size:.53em;letter-spacing:.08em;text-transform:uppercase;margin-left:.6em}
+.guide-scope .rule{border-bottom:2px solid var(--g-head,#111);margin:.28em 0 .7em}
+.guide-scope h2{font-size:.88em;letter-spacing:.16em;text-transform:uppercase;color:var(--g-mute,#555);margin:1em 0 .35em;
+  border-bottom:1px solid var(--g-line,#ccc);padding-bottom:.18em}
+.guide-scope .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(19em,1fr));gap:0 1.7em}
+.guide-scope .act{break-inside:avoid;margin-bottom:.7em}
+.guide-scope .act h3{font-size:1.06em;margin:0 0 .2em;color:var(--g-head,#111)}
+.guide-scope .act h3 b{display:inline-block;min-width:3.4em}
+.guide-scope .act .t{float:right;font-weight:400;color:var(--g-mute,#777);font-size:.88em}
+.guide-scope .act p{margin:.18em 0}
+.guide-scope .act .setup{font-style:italic;color:var(--g-body,#333)}
+.guide-scope .beat{padding-left:1.15em;text-indent:-1.15em}
+.guide-scope .beat b{font-weight:700}
+.guide-scope .land{margin-top:.28em;padding:.28em .45em;background:var(--g-panel,#f2f2f2);
+  border-left:3px solid var(--g-head,#111);font-weight:600;color:var(--g-head,#111)}
+.guide-scope ol,.guide-scope ul{margin:.15em 0 .5em;padding-left:1.15em}
+.guide-scope li{margin:.14em 0}
+.guide-scope table{width:100%;border-collapse:collapse;font-size:.92em}
+.guide-scope td{padding:.16em .3em;border-bottom:1px solid var(--g-line,#e3e3e3);vertical-align:top}
+.guide-scope td.k{width:3.4em;color:var(--g-mute,#666);font-variant-numeric:tabular-nums;white-space:nowrap}
+.guide-scope .lev{display:inline-block;padding:0 .3em;border-radius:2px;font-weight:700}
+.guide-scope .l1{background:var(--g-l1,#ffe6bf);color:var(--g-l1t,#111)}
+.guide-scope .l2{background:var(--g-l2,#c8f2e0);color:var(--g-l2t,#111)}
+.guide-scope .l3{background:var(--g-l3,#e2d9ff);color:var(--g-l3t,#111)}
+.guide-scope .foot{margin-top:.5em;font-size:.84em;color:var(--g-mute,#777);border-top:1px solid var(--g-line,#ddd);padding-top:.3em;line-height:1.5}
+.guide-scope .page2{margin-top:1.2em}
+.guide-scope .sheet-title{font-size:1.21em;font-weight:700;margin:0 0 .1em;color:var(--g-head,#111)}
+.guide-scope .sheet-sub{font-size:.88em;color:var(--g-mute,#777);margin:0 0 .5em}
+.guide-scope .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(14em,1fr));gap:0}
+.guide-scope .card{border:1px dashed var(--g-mute,#999);padding:.8em .9em;display:flex;flex-direction:column;gap:.1em}
+.guide-scope .ci{font-size:1.65em;color:var(--g-mute,#888);line-height:1}
+.guide-scope .cl{font-size:1.43em;font-weight:800;line-height:1.12;margin-top:.18em;color:var(--g-head,#111)}
+.guide-scope .cs{font-size:.99em;color:var(--g-body,#333);margin-top:.28em;line-height:1.35}
+.guide-scope .cw{margin-top:auto;padding-top:.6em;font-size:.77em;color:var(--g-mute,#999);letter-spacing:.06em;text-transform:uppercase}
+/* GUIDE_CSS: END */
 </style>
 </head>
 <body class="mode-presenter rehearsal">
 <div id="app">
 
   <header id="bar">
-    <div class="brand"><span class="lamp"></span><b>THE STRANGER</b><small>three levers</small></div>
+    <div class="brand"><span class="lamp"></span><b>PROMPTING STRATEGIES</b><small>the stranger &middot; three levers</small></div>
     <div class="barright">
       <span class="fieldlabel">Mode</span>
       <div class="seg" id="modeSeg">
@@ -487,10 +535,10 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
       <button class="btn" id="btnCompare" title="Keep this answer on screen beside the next one (P)">Pin to compare</button>
       <button class="btn" id="btnScoreboard" title="The class scores so far, plotted against levers pulled (S)">Scoreboard</button>
       <button class="btn" id="btnFinish" title="The takeaway slide to end on">Closing slide</button>
-      <button class="btn icon" id="btnHelp" aria-label="How this works"
-              title="How this works &mdash; the three levers and how to run the demo (?)">?</button>
+      <button class="btn icon" id="btnHelp" aria-label="Guide"
+              title="Guide &mdash; the three levers and how to run the demo (?)">?</button>
       <button class="btn icon" id="btnSettings" aria-label="Settings" aria-haspopup="menu" aria-expanded="false"
-              title="Settings &mdash; presentation mode and the presenter&rsquo;s notes">&#9881;&#xFE0E;</button>
+              title="Settings &mdash; presenter notes, presentation mode and reset">&#9881;&#xFE0E;</button>
     </div>
     <div class="tabrow"><span class="fieldlabel">Question</span><nav id="tabs"></nav></div>
   </header>
@@ -555,11 +603,11 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
 
 <div class="modal" id="mHelp"><div class="sheet">
   <button class="btn close" data-close>close</button>
-  <h2>How this works</h2>
+  <h2>Guide <span style="font-weight:400;color:var(--dim2)">&mdash; how this works</span></h2>
   <div class="sub">A student asks a question. You decide how much you tell it before it answers. That is the whole demo.
-  This sheet opens itself every time the file loads &mdash; press <b>Esc</b>, tap outside it, or hit
+  This Guide opens itself every time the file loads &mdash; press <b>Esc</b>, tap outside it, or hit
   <b>Got it</b> to get out of the way. The <b>?</b> in the top right brings it back at any point, and the
-  <b>&#9881;&#xFE0E;</b> beside it holds presentation mode and the presenter&rsquo;s notes.</div>
+  <b>&#9881;&#xFE0E;</b> beside it holds <b>Open Presenter Notes</b>, <b>Presentation mode</b> and <b>Reset</b>.</div>
 
   <ol class="steps">
     <li>Pick a <b>question</b> along the top of the screen. These are things people really ask.</li>
@@ -597,9 +645,10 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
       <b>5.</b> The <b>card picker</b> in lever 2 is presenter-only; a student always gets a random draw, which is the honest version.
       Everything else &mdash; all four questions, all 64 answers, the deck, the counter &mdash; is identical in both. Hand a student a phone in student mode and they can run the whole lesson alone.</td></tr>
     <tr><td><b>Closing slide</b></td><td>The line to end on, plus what the class scored.</td></tr>
-    <tr><td><b>? (top right)</b></td><td>This sheet. It opens by itself on every load and this button brings it back &mdash; mid-demo, mid-answer, from a phone. It never goes away, at any screen width.</td></tr>
-    <tr><td><b>&#9881;&#xFE0E; Settings</b></td><td>The small menu next to it. <b>Presentation mode</b> is the projector build of the app (big type, class scoring, compare, card picker); switch it off and you are in student mode. Underneath it sit the <b>presenter&rsquo;s notes</b>. Below that, the expert-term highlighter and a way back to this sheet or straight to the closing slide. On a phone the mode switch and the closing slide live here rather than on the toolbar.</td></tr>
-    <tr><td><b>Presenter&rsquo;s notes</b></td><td>Settings &rarr; Presenter&rsquo;s notes, or press <b>N</b>. The three-act roleplay as stage notes: what to say, what to do with the printed deck of target cards, and the line each act lands on &mdash; plus the house rules, the running order and the discussion questions. The same script as the printable presenter sheet, cut down to what you can read at a glance while a room is watching.</td></tr>
+    <tr><td><b>? &mdash; Guide (top right)</b></td><td>This sheet. It opens by itself on every load and this button brings it back &mdash; mid-demo, mid-answer, from a phone. It never goes away, at any screen width.</td></tr>
+    <tr><td><b>&#9881;&#xFE0E; Settings</b></td><td>The small menu next to it. <b>Open Presenter Notes</b> is the stage script; <b>Presentation mode</b> is the projector build of the app (big type, class scoring, compare, card picker), and switching it off puts you in student mode; <b>Reset</b> puts the whole demo back to a fresh load. Below those, the expert-term highlighter, a way back to this Guide, and the closing slide. On a phone the mode switch and the closing slide live here rather than on the toolbar.</td></tr>
+    <tr><td><b>Open Presenter Notes</b></td><td>Settings &rarr; Open Presenter Notes, or press <b>N</b>. The printable presenter sheet itself, on screen: the three-act roleplay as stage notes &mdash; what to say, what to do with the printed deck of target cards, and the line each act lands on &mdash; plus the house rules, the running order, the discussion questions and the eight target cards. It is not a summary of the presenter sheet; the build injects that file, so the paper, the PDF and this overlay cannot disagree.</td></tr>
+    <tr><td><b>Reset</b></td><td>Settings &rarr; Reset. Question 1, all three levers off, no answer on screen, the scoreboard cleared, the highlighter off, the card picker back to Random &mdash; exactly the state you get by reloading the file. Presentation mode is left where you set it, because it is a property of the room rather than of the demo.</td></tr>
   </tbody></table>
 
   <h3>Keys</h3>
@@ -613,8 +662,8 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
     <div><kbd>&larr;</kbd><kbd>&rarr;</kbd> change scenario</div>
     <div><kbd>S</kbd> scoreboard</div>
     <div><kbd>M</kbd> presenter / student</div>
-    <div><kbd>N</kbd> presenter&rsquo;s notes</div>
-    <div><kbd>?</kbd> this sheet</div>
+    <div><kbd>N</kbd> presenter notes</div>
+    <div><kbd>?</kbd> this Guide</div>
     <div><kbd>0</kbd> all levers off</div>
     <div><kbd>9</kbd> all levers on</div>
     <div><kbd>Esc</kbd> close anything</div>
@@ -638,10 +687,14 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
   </button>
   <div class="mgroup">
     <button class="mrow" id="setNotes" role="menuitem">
-      <span class="mtxt"><b>Presenter&rsquo;s notes</b><i>The three-act roleplay in stage-note form, plus house rules, running order and discussion questions.</i></span>
+      <span class="mtxt"><b>Open Presenter Notes</b><i>The printable presenter sheet itself: the three-act roleplay, house rules, running order, discussion questions and the target deck.</i></span>
       <span class="mk"><kbd>N</kbd></span>
     </button>
   </div>
+  <div class="msep"></div>
+  <button class="mrow" id="setReset" role="menuitem">
+    <span class="mtxt"><b>Reset</b><i>Back to a fresh load: question 1, levers off, no answer on screen, scoreboard cleared. Presentation mode stays where you set it.</i></span>
+  </button>
   <div class="msep"></div>
   <button class="mrow" id="setHl" role="menuitemcheckbox" aria-checked="false" data-hl>
     <span class="mtxt"><b>Highlight expert terms</b><i>Colour the specialist words inside every answer so the room can count them.</i></span>
@@ -649,7 +702,7 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
   </button>
   <div class="msep"></div>
   <button class="mrow" id="setHelp" role="menuitem">
-    <span class="mtxt"><b>How this works</b><i>Reopen the sheet that explains the three levers and every control.</i></span>
+    <span class="mtxt"><b>Guide</b><i>Reopen the sheet that explains the three levers and every control.</i></span>
     <span class="mk"><kbd>?</kbd></span>
   </button>
   <button class="mrow" id="setClosing" role="menuitem">
@@ -657,96 +710,171 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
   </button>
 </div></div>
 
+<!-- PRESENTER NOTES. The body and the stylesheet in the head are lifted verbatim out of
+     presenter-sheet.html by build.js, so this overlay, the printable page and the PDF are
+     one document from one source; node build.js --check fails if they drift. -->
 <div class="modal" id="mNotes"><div class="sheet notes">
   <button class="btn close" data-close>close</button>
-  <h2>Presenter&rsquo;s notes</h2>
-  <div class="sub">The stage script, standing up. Same three acts as the printed presenter sheet &mdash; about twelve minutes.</div>
+  <h2>Presenter Notes</h2>
+  <div class="sub">The printable presenter sheet, on screen. Same file, same words, same eight target cards &mdash;
+  print it from <b>presenter-sheet.html</b> or the PDF beside it if you would rather hold the paper.</div>
+  <div class="notesrule"></div>
+  <!-- GUIDE: BEGIN --><div class="guide-scope">
 
-  <p class="pnsetup">You are the Stranger. A volunteer is the Asker. The app is on the projector behind you;
-  run the same states on it as you say them out loud.</p>
+<h1>PROMPTING STRATEGIES <span>The Stranger &middot; presenter sheet &middot; 12 minutes</span></h1>
+<div class="rule"></div>
 
-  <div class="pnact">
-    <div class="pnhd"><b>ACT I</b> <span class="swatch s1">CONTEXT</span><span class="pnt">~3 min</span></div>
-    <p class="pnsay">&ldquo;I am a stranger on a street corner. I am not stupid. I know a great deal about
-    almost everything. I have never met you.&rdquo;</p>
-    <ol>
-      <li>The Asker says only <b>&ldquo;Help me get ready for my test.&rdquo;</b> Answer out loud, as blandly and
-      generally as you honestly can. Cover every case &mdash; and do not clown it.</li>
-      <li>Ask the room what you would have needed to know. Take three answers onto the board.</li>
-      <li>The Asker reads the context block. Answer again, aimed at that kid.</li>
-    </ol>
-    <div class="pnland">&ldquo;I didn&rsquo;t get smarter. You got specific.&rdquo;</div>
-  </div>
+<div class="cols">
+<div>
 
-  <div class="pnact">
-    <div class="pnhd"><b>ACT II</b> <span class="swatch s2">THE TARGET DECK</span><span class="pnt">~4 min</span></div>
-    <p class="pnsay">Hold the eight printed cards face down. &ldquo;Somebody has to decide what a good answer
-    looks like. If you don&rsquo;t decide, I do. And I never tell you what I picked.&rdquo;</p>
-    <ol>
-      <li>Same question, context on, no success spec. <b>Draw a card and do not show it.</b> Answer to the card
-      &mdash; if it says exhaustive, talk for forty-five seconds without stopping.</li>
-      <li>Now show the card. Wait for the room.</li>
-      <li>Draw a different card and answer again. Same asker, same words, different answer &mdash; and the
-      difference was never theirs.</li>
-      <li>The Asker reads the success spec. Put the deck down and slide it away from you. On screen, flip
-      lever 2 and the card names get struck out where they sit, inside the lever.</li>
-    </ol>
-    <div class="pnland">&ldquo;You just took the deck out of my hands.&rdquo;</div>
-  </div>
+<h2>The roleplay &mdash; three acts</h2>
+<p style="margin:0 0 .5em">You are the Stranger. A volunteer is the Asker. The app is on the projector
+behind you; run the same states on it as you say them out loud.</p>
 
-  <div class="pnact">
-    <div class="pnhd"><b>ACT III</b> <span class="swatch s3">THE FOLDERS</span><span class="pnt">~4 min</span></div>
-    <p class="pnsay">Three labelled folders: <b>BIOLOGY</b>, <b>BRIDGES</b>, <b>WRITING AT WORK</b>.
-    &ldquo;I have a folder on nearly everything. The words you use decide which one I open.&rdquo;</p>
-    <ol>
-      <li>The Asker: <b>&ldquo;Why do bridges stay up?&rdquo;</b> Open nothing. Answer in plain words &mdash; the
-      bottom gets stretched, the top gets squished. All true. All unusable.</li>
-      <li>The Asker adds the keyword block. Open BRIDGES and answer in the real vocabulary: load path,
-      bending moment, neutral axis, section depth.</li>
-      <li>On screen press <b>H</b> and count aloud the expert words in the answer the Asker never typed.</li>
-    </ol>
-    <div class="pnland">&ldquo;You didn&rsquo;t know those words. You didn&rsquo;t have to. You only had to point
-    at the folder.&rdquo;</div>
-  </div>
+<div class="act">
+  <h3><span class="t">~3 min</span><b>ACT I</b> &mdash; <span class="lev l1">CONTEXT</span></h3>
+  <p class="setup">&ldquo;I am a stranger on a street corner. I am not stupid. I know a great
+  deal about almost everything. I have never met you.&rdquo;</p>
+  <p class="beat"><b>1.</b> The Asker says only: <i>&ldquo;Help me get ready for my test.&rdquo;</i>
+  Answer out loud, as blandly and generally as you honestly can. Cover every case. Do not clown it &mdash;
+  a real assistant is competent here, just aimed at nobody.</p>
+  <p class="beat"><b>2.</b> Ask the room: what would I have needed to know? Take three answers, put them
+  on the board.</p>
+  <p class="beat"><b>3.</b> The Asker reads the context block. Answer again, aimed at that kid.</p>
+  <p class="land">&ldquo;I didn't get smarter. You got specific.&rdquo;</p>
+</div>
 
-  <h3>House rules</h3>
-  <ol class="pnrules">
-    <li><b>The Stranger is never stupid.</b> The honest failure of a bare prompt is blandness, not garbage.
-    The demo dies the moment the bad answer looks rigged.</li>
-    <li><b>No trick answers.</b> If the prompt supports a good answer, give a good answer.</li>
-    <li><b>Every answer gets a number.</b> 1&ndash;10, from the room, out loud, before the next one.</li>
-    <li><b>Nobody says &ldquo;the AI is bad at this&rdquo;</b> without naming which lever is off.</li>
-    <li><b>The Asker types nothing they wouldn&rsquo;t really type.</b> No inventing a great prompt to prove a point.</li>
-  </ol>
+<div class="act">
+  <h3><span class="t">~4 min</span><b>ACT II</b> &mdash; <span class="lev l2">THE TARGET DECK</span></h3>
+  <p class="setup">Hold the eight cards from page two face down. &ldquo;Somebody has to decide what a
+  good answer looks like. If you don't decide, I do. And I never tell you what I picked.&rdquo;</p>
+  <p class="beat"><b>1.</b> Same question, context on, no success spec. <b>Draw a card and do not show
+  it.</b> Answer to the card &mdash; if it says exhaustive, talk for forty-five seconds without stopping.</p>
+  <p class="beat"><b>2.</b> Now show the card. Wait for the room.</p>
+  <p class="beat"><b>3.</b> Draw a different card. Same question, answer again. Same asker, same words,
+  different answer &mdash; and the difference was never theirs.</p>
+  <p class="beat"><b>4.</b> The Asker reads the success spec. Put the deck down and slide it across the
+  table, away from you. On the app, the deck lives <i>inside</i> lever 2: flip it on and the three card
+  names get struck out where they sit. Same gesture, same panel.</p>
+  <p class="land">&ldquo;You just took the deck out of my hands.&rdquo;</p>
+</div>
 
-  <h3>Running order</h3>
-  <table class="tbl"><tbody>
-    <tr><td>0:00</td><td>Cold open. Act I, live, no screen.</td></tr>
-    <tr><td>3:00</td><td>App, scenario 1, all levers off. Draw the card. Score it.</td></tr>
-    <tr><td>4:30</td><td>One lever at a time. Score each. The curve argues for you.</td></tr>
-    <tr><td>7:00</td><td>Act III on the bridge scenario. Highlighter on, count the words.</td></tr>
-    <tr><td>9:30</td><td>&ldquo;Which lever would fix this?&rdquo; &mdash; two rounds, hands up.</td></tr>
-    <tr><td>11:00</td><td>Closing slide. Read the line. Stop talking.</td></tr>
-  </tbody></table>
+<h2>On the app</h2>
+<p style="margin:0 0 .3em"><b>?</b> is the <b>Guide</b>: what every control does. It opens itself on load.
+<b>&#9881;&#xFE0E;</b> beside it is Settings &mdash; <b>Open Presenter Notes</b> (this sheet, on screen; or press
+<b>N</b>), <b>Presentation mode</b> (the projector build: big type, the 1&ndash;10 score strip, compare, and the
+card picker inside lever 2) and <b>Reset</b>.</p>
+<p style="margin:.18em 0"><b>Reset</b> is a fresh load without the reload: question 1, levers off, no answer on
+screen, scoreboard cleared. It deliberately leaves Presentation mode where you set it, so resetting between
+classes never drops you into student mode.</p>
 
-  <h3>Discussion questions</h3>
-  <ol class="pnq">
-    <li>The first answer was accurate. Why was it useless?</li>
-    <li>Who decided what a good answer looked like, and when?</li>
-    <li>The expert answer used words you never typed. Where did they come from, and how did asking in plain
-    words keep them hidden?</li>
-    <li>Which of the three levers is hardest to pull for a subject you know nothing about? What do you do then?</li>
-    <li>Name a time you blamed a tool for an answer you had underspecified.</li>
-    <li>Success spec means saying what &ldquo;done&rdquo; looks like. When is that hard to say &mdash; and what
-    does that tell you about the task itself?</li>
-  </ol>
+</div>
+<div>
 
-  <div class="pnfoot">The app is one file and touches no network; every answer in it was written by hand
-  before the file was saved. Keys: <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> levers &middot; <kbd>Enter</kbd> ask &middot;
-  <kbd>Space</kbd> skip typing &middot; <kbd>H</kbd> highlight &middot; <kbd>R</kbd> replay card &middot;
-  <kbd>P</kbd> pin to compare &middot; <kbd>S</kbd> scoreboard &middot; <kbd>M</kbd> student mode &middot;
-  <kbd>N</kbd> these notes. The printable version, with the eight target cards to cut out, is the
-  presenter sheet that ships beside this file.</div>
+<div class="act">
+  <h3><span class="t">~4 min</span><b>ACT III</b> &mdash; <span class="lev l3">THE FOLDERS</span></h3>
+  <p class="setup">Three labelled folders or sheets: <b>BIOLOGY</b>, <b>BRIDGES</b>,
+  <b>WRITING AT WORK</b>. &ldquo;I have a folder on nearly everything. The words you use decide which
+  one I open.&rdquo;</p>
+  <p class="beat"><b>1.</b> The Asker: <i>&ldquo;Why do bridges stay up?&rdquo;</i> Open nothing. Answer in
+  plain words: the bottom gets stretched, the top gets squished. All true. All unusable.</p>
+  <p class="beat"><b>2.</b> The Asker adds the keyword block. Open BRIDGES and answer in the real
+  vocabulary &mdash; load path, bending moment, neutral axis, section depth.</p>
+  <p class="beat"><b>3.</b> On the app, press <b>H</b>. Count aloud the expert words in the answer that
+  the Asker never typed.</p>
+  <p class="land">&ldquo;You didn't know those words. You didn't have to. You only had to point at the
+  folder.&rdquo;</p>
+</div>
+
+<h2>House rules</h2>
+<ol>
+  <li><b>The Stranger is never stupid.</b> The honest failure of a bare prompt is blandness, not garbage.
+  The demo dies the moment the bad answer looks rigged.</li>
+  <li><b>No trick answers.</b> If the prompt supports a good answer, give a good answer.</li>
+  <li><b>Every answer gets a number.</b> 1&ndash;10, from the room, out loud, on the board before the next one.</li>
+  <li><b>Nobody says &ldquo;the AI is bad at this&rdquo;</b> without naming which lever is off.</li>
+  <li><b>The Asker types nothing they wouldn't really type.</b> No fair inventing a great prompt to prove
+  a point.</li>
+</ol>
+
+<h2>Running order</h2>
+<table><tbody>
+  <tr><td class="k">0:00</td><td>Cold open. Act I, live, no screen.</td></tr>
+  <tr><td class="k">3:00</td><td>App, scenario 1, all levers off. Draw the card. Score it.</td></tr>
+  <tr><td class="k">4:30</td><td>One lever at a time. Score each. The curve argues for you.</td></tr>
+  <tr><td class="k">7:00</td><td>Act III on the bridge scenario. Highlighter on, count the words.</td></tr>
+  <tr><td class="k">9:30</td><td>&ldquo;Which lever would fix this?&rdquo; &mdash; two rounds, hands up.</td></tr>
+  <tr><td class="k">11:00</td><td>Closing slide. Read the line. Stop talking.</td></tr>
+</tbody></table>
+
+<h2>Discussion questions</h2>
+<ol>
+  <li>The first answer was accurate. Why was it useless?</li>
+  <li>Who decided what a good answer looked like, and when?</li>
+  <li>The expert answer used words you never typed. Where did they come from, and how did asking in
+  plain words keep them hidden?</li>
+  <li>Which of the three levers is hardest to pull for a subject you know nothing about? What do you do then?</li>
+  <li>Name a time you blamed a tool for an answer you had underspecified.</li>
+  <li>Success spec means saying what &ldquo;done&rdquo; looks like. When is that hard to say &mdash; and what does
+  that tell you about the task itself?</li>
+</ol>
+
+<div class="foot">The app is one HTML file and touches no network. Every answer in it was written by hand
+before the file was saved: there is no model behind the glass. Keys: <b>1 2 3</b> levers &middot;
+<b>Enter</b> ask &middot; <b>Space</b> skip typing &middot; <b>H</b> highlight &middot; <b>R</b> replay card &middot;
+<b>P</b> pin to compare &middot; <b>S</b> scoreboard &middot; <b>M</b> student mode &middot; <b>N</b> these notes.</div>
+
+</div>
+</div>
+
+<div class="page2">
+  <p class="sheet-title">The target deck &mdash; cut along the dashed lines</p>
+  <p class="sheet-sub">Eight editorial choices somebody has to make. When the Asker doesn't make them,
+  the machine does, silently. Hold these face down; draw one whenever the success-spec lever is off.</p>
+  <div class="grid"><div class="card">
+  <div class="ci">▤</div>
+  <div class="cl">Length: exhaustive</div>
+  <div class="cs">Cover everything that could possibly be relevant. Leave nothing out.</div>
+  <div class="cw">turns up in: test · email</div>
+</div><div class="card">
+  <div class="ci">◐</div>
+  <div class="cl">Audience: someone who missed the whole semester</div>
+  <div class="cs">Assume they know nothing. Define every term before using it.</div>
+  <div class="cw">turns up in: test</div>
+</div><div class="card">
+  <div class="ci">▬</div>
+  <div class="cl">Format: dense paragraphs</div>
+  <div class="cs">No headings. No bullets. Flowing prose, start to finish.</div>
+  <div class="cw">turns up in: test · essay</div>
+</div><div class="card">
+  <div class="ci">▫</div>
+  <div class="cl">Length: short and safe</div>
+  <div class="cs">Keep it brief. Don&#x27;t risk being wrong about the details.</div>
+  <div class="cw">turns up in: bridge</div>
+</div><div class="card">
+  <div class="ci">☰</div>
+  <div class="cl">Format: numbered listicle</div>
+  <div class="cs">Everything as a numbered list. Ten items. Equal weight to each.</div>
+  <div class="cw">turns up in: bridge · email</div>
+</div><div class="card">
+  <div class="ci">◆</div>
+  <div class="cl">Audience: an expert peer</div>
+  <div class="cs">Assume deep familiarity. Skip the basics, get to the interesting part.</div>
+  <div class="cw">turns up in: bridge · essay</div>
+</div><div class="card">
+  <div class="ci">✦</div>
+  <div class="cl">Tone: encouraging coach</div>
+  <div class="cs">Lead with affirmation. Soften every critique. Protect motivation.</div>
+  <div class="cw">turns up in: essay</div>
+</div><div class="card">
+  <div class="ci">◇</div>
+  <div class="cl">Coverage: hedge every claim</div>
+  <div class="cs">Present all sides. Avoid committing to one recommendation.</div>
+  <div class="cw">turns up in: email</div>
+</div></div>
+</div>
+
+</div><!-- GUIDE: END -->
 </div></div>
 
 <div class="modal" id="mDraft"><div class="sheet draft">
@@ -769,8 +897,9 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
 <script>
 "use strict";
 /* =====================================================================
-   THE STRANGER — runtime
-   No network. No storage APIs. Everything in memory, gone on refresh.
+   PROMPTING STRATEGIES (The Stranger) — runtime
+   No network. No storage APIs. Everything in memory, gone on refresh — which is
+   also what Settings → Reset gives you without the reload.
    ===================================================================== */
 
 const LEVERS = [
@@ -1301,7 +1430,7 @@ function showQuiz(q){
 
 /* --------------------------------------------------------------- modes --- */
 const MODE_TEXT = {
-  presenter: "Projector-sized type. You drive it: score every answer 1\u201310 and watch the curve build, pin two answers side by side, and choose which target card gets drawn. No walkthrough \u2014 you decide where to go next. The stage script lives in the presenter\u2019s notes (\u2699 Settings, or press N).",
+  presenter: "Projector-sized type. You drive it: score every answer 1\u201310 and watch the curve build, pin two answers side by side, and choose which target card gets drawn. No walkthrough \u2014 you decide where to go next. The stage script lives in the presenter notes (\u2699 Settings \u2192 Open Presenter Notes, or press N).",
   student:   "Self-paced and smaller type. A guided walkthrough at the bottom of the screen takes you through the levers one at a time, then asks three \u201Cwhich lever would fix this?\u201D questions. No class scoring, no compare, and the target card is always drawn at random \u2014 the way it happens in real life."
 };
 function renderModeBanner(flash){
@@ -1314,6 +1443,7 @@ function setMode(m){
   const changed = S.mode !== m;
   S.mode = m;
   document.body.className = "mode-" + m + (S.highlight ? " hl" : "");
+  syncOverlayFlag();   // the line above rewrites every body class, overlay-open included
   $$("#modeSeg button").forEach(b=> b.classList.toggle("on", b.dataset.mode === m));
   $("#guide").classList.toggle("hidden", m !== "student");
   ["#btnScoreboard","#btnCompare"].forEach(s=> $(s).classList.toggle("hidden", m !== "presenter"));
@@ -1355,6 +1485,42 @@ function closeSettings(){
   $("#btnSettings").setAttribute("aria-expanded", "false");
 }
 function showModal(id){ closeSettings(); $(id).classList.add("show"); }
+
+/* The attribution pill shares the bottom-left corner with the sheets, which are
+   nearly full-width on a phone: measured at 390px, the wrapped pill covered five
+   lines of the presenter notes. Stand it down while any sheet or the closing
+   screen is open. Watching the class attribute rather than patching every open
+   and close path means Esc, a backdrop click, [data-close] and Reset all count. */
+function syncOverlayFlag(){
+  const open = !!document.querySelector(".modal.show") || $("#closing").classList.contains("show");
+  document.body.classList.toggle("overlay-open", open);
+}
+
+/* ----------------------------------------------------------------- reset --
+   A fresh load, without the reload: question 1, every lever off, no answer on
+   screen, an empty scoreboard, the highlighter off, the card picker back to
+   Random, every overlay and the menu closed. Presentation mode is deliberately
+   NOT reset — it is a property of the room you are standing in, not of the demo,
+   and a presenter who resets between classes should not be dropped into student
+   mode. The Guide stays closed too: Reset is for mid-demo, and the person
+   pressing it has already read it. */
+function resetDemo(){
+  if(activeTyper && !activeTyper.done) activeTyper.skip();   // stop the animation frame first
+  activeTyper = null;
+  dismissCard();
+  closeSettings();
+  $$(".modal.show").forEach(m=> m.classList.remove("show"));
+  $("#closing").classList.remove("show");
+  S.sc = 0; S.bits = [0,0,0]; S.forced = ""; S.lastCard = null; S.lastKey = null;
+  S.scores = []; S.heard = 0; S.novelSeen = 0; S.pinned = null; S.asked = false;
+  setHighlight(false);
+  renderPin();
+  showEmpty();
+  renderAll();
+  drawChart();
+  renderModeBanner(false);
+  if(S.mode === "student") runGuide(0); else S.guideIdx = -1;
+}
 
 /* -------------------------------------------------------------- closing -- */
 function showClosing(){
@@ -1412,6 +1578,7 @@ function init(){
     $("#mSettings").classList.contains("show") ? closeSettings() : openSettings());
   $("#setPresentation").addEventListener("click", ()=> setMode(S.mode === "presenter" ? "student" : "presenter"));
   $("#setNotes").addEventListener("click", ()=> showModal("#mNotes"));
+  $("#setReset").addEventListener("click", resetDemo);
   $("#setHl").addEventListener("click", ()=> setHighlight(!S.highlight));
   $("#setHelp").addEventListener("click", ()=> showModal("#mHelp"));
   $("#setClosing").addEventListener("click", ()=>{ closeSettings(); showClosing(); });
@@ -1458,10 +1625,14 @@ function init(){
     if(k === "ArrowLeft"){ S.sc = (S.sc - 1 + DATA.scenarios.length) % DATA.scenarios.length; showEmpty(); S.lastKey=null; renderAll(); }
   });
 
+  const overlayWatch = new MutationObserver(syncOverlayFlag);
+  $$(".modal").concat([$("#closing")]).forEach(el=> overlayWatch.observe(el, { attributes:true, attributeFilter:["class"] }));
+
   showEmpty();
   renderModeBanner(false);
   renderSettings();
   $("#mHelp").classList.add("show");   // first thing anyone sees is what everything does
+  syncOverlayFlag();
 }
 function toggle(i){
   S.bits[i] = S.bits[i] ? 0 : 1;
@@ -1476,9 +1647,9 @@ function showEmpty(){
       '<li>Turn on <b>one</b> lever, press Ask again, and see exactly what that one lever bought you.</li>' +
       '<li>Then all three.</li>' +
     "</ol><p>Every answer in this file was written by hand before the file was saved. Nothing is generated live and nothing touches the internet. " +
-      "Lost? <b>?</b> at the top right reopens the how-to sheet; <b>⚙︎</b> beside it has presentation mode and the presenter’s notes.</p></div>";
+      "Lost? <b>?</b> at the top right reopens the Guide; <b>⚙︎</b> beside it has Open Presenter Notes, Presentation mode and Reset.</p></div>";
 }
-window.__stranger = { S, DATA, ask, toggle, setMode, showEmpty, runGuide, recordScore, pin, setHighlight,
+window.__stranger = { S, DATA, ask, toggle, setMode, showEmpty, runGuide, recordScore, pin, setHighlight, resetDemo,
   drawCard, guideSteps, renderAll, drawChart, showClosing, renderPin,
   unpin(){ S.pinned = null; renderPin(); },
   get typer(){ return activeTyper; },
@@ -1486,6 +1657,21 @@ window.__stranger = { S, DATA, ask, toggle, setMode, showEmpty, runGuide, record
   set(i, bits, card){ S.sc = i; S.bits = bits.split("").map(Number); S.forced = card || ""; renderAll(); } };
 init();
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<style>
+/* The shared attribution pill. It used to be one nowrap line, which ran off the
+   left edge of a phone and took "Bryant Harrison" with it; it now wraps inside the
+   viewport. Wrapped it is two lines tall, so on a narrow screen it sits above the
+   Ask row rather than on top of it. */
+@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}
+.bh-credit{position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));
+  z-index:2147483000;pointer-events:none;white-space:normal;max-width:calc(100vw - 16px);
+  font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;
+  background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;
+  border-radius:999px;letter-spacing:.03em;animation:bh-settle 9s ease forwards}
+@media (max-width:560px){
+  .bh-credit{left:4px;max-width:calc(100vw - 8px);font-size:9.5px;padding:2px 8px}
+}
+body.overlay-open .bh-credit{animation:none;opacity:0;transition:opacity .18s ease}
+</style><div class="bh-credit">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
 </body>
 </html>
