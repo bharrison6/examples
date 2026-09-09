@@ -243,17 +243,9 @@ function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 /* ---- scoring ------------------------------------------------------------- */
 
-/**
- * Compare the drawn curve to the truth at the ask date.
- *
- * The headline number is a RATIO, not a percentage-point difference, because
- * the whole point is that people are wrong multiplicatively. Being told you
- * were "40 points low" on SWE-bench does not land; being told the real answer
- * was 2.4x your guess does.
- *
- * For a percentage metric the ratio is taken on the value itself. For the
- * price round — where the truth falls — the ratio is inverted so that
- * "undershot the change" still reads as a number greater than one.
+/** Compare the drawn endpoint with the final selected measurement.
+ * The legacy direction-adjusted ratio remains available to numerical tests;
+ * UI copy compares actual values directly so a falling price stays clear.
  */
 function score(round_, guess) {
   const truth = finalValue(round_);

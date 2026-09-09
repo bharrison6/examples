@@ -1,12 +1,4 @@
-/* ==========================================================================
-   Undershoot — Act II, the cadence.
-
-   A time axis from ChatGPT to now. Drag the scrubber and the releases land
-   as they actually landed. The vertical axis is deliberately NOT a benchmark
-   score — it is a coarse generation band, and the UI says so, because a
-   single "intelligence" number across labs and years would be the exact kind
-   of confident nonsense this demo is arguing against.
-   ========================================================================== */
+/* A selected release catalog. Dates are horizontal; company lanes have no capability ordering. */
 
 const Timeline = (() => {
 
@@ -173,10 +165,10 @@ function axisTitles(st) {
   ctx.fillStyle = 'rgba(143,163,192,0.55)';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  
+
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
-  
+
 }
 
 function render(st) {

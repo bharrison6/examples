@@ -1,16 +1,5 @@
 #!/usr/bin/env node
-/* ==========================================================================
-   Undershoot — dataset and engine checks.
-
-   Run: node src/playtest.test.js
-
-   Two jobs. The first is ordinary unit testing of the scales, the guess
-   curve and the scoring. The second matters more: the dataset is the demo's
-   entire claim to credibility, so these checks assert that every number on
-   screen resolves to a declared source, that no series has been quietly
-   reordered to look better, and that the figures stated in prose agree with
-   the figures actually plotted.
-   ========================================================================== */
+/* Numerical regressions, source-graph controls, and offline/guide contract checks. Source truth requires a separate audit. */
 
 const fs = require('fs');
 const path = require('path');
