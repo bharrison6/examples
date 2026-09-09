@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Front Doors — the application.
+   AI Tool Guide (folder: front-doors) — the application.
 
    Three acts:
      I   The four doors — four surfaces against four axes, sixteen cells.
@@ -519,14 +519,43 @@ function wireOverlays() {
     if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
   });
   $('#btn-howto').addEventListener('click', () => open('howto'));
-  $('#btn-howto-2').addEventListener('click', () => { close('settings'); open('howto'); });
   $('#btn-settings').addEventListener('click', () => open('settings'));
   $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
   $('#chk-presenter').addEventListener('change', ev => {
     S.presenter = ev.target.checked;
     document.body.classList.toggle('presenting', S.presenter);
   });
+  $('#btn-reset').addEventListener('click', resetDemo);
   $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ================================ reset =================================
+   Whole-demo, fresh-load semantics: everything boot() leaves behind except
+   the two things that are not demo state.
+
+   Presentation mode survives on purpose. It is a property of the room — the
+   projector is still a projector — and a presenter who reset between sessions
+   and had to re-enable it every time would stop using the button. The Guide
+   overlay stays CLOSED, because reset is not a reload: the presenter pressing
+   it is mid-session and does not need the how-to panel in the way.
+
+   Everything else here is genuinely all of this demo's mutable state. S holds
+   three fields, one of which is `presenter`; the rest of what a session
+   accumulates lives in the DOM, in the job output and the self-test results.
+   ---------------------------------------------------------------------- */
+
+function resetDemo() {
+  S.job = null;
+  $$('#job-picker .job-btn').forEach(b => b.classList.remove('on'));
+  renderJob();                       /* clears #job-out and restores .empty */
+
+  const st = $('#selftest-out');
+  if (st) st.innerHTML = '';
+
+  $$('.overlay').forEach(o => { o.hidden = true; });
+  lockScroll();
+
+  setAct(1);                         /* also scrolls to the top */
 }
 
 /* ============================== self-test ===============================
@@ -618,7 +647,7 @@ function runSelfTest() {
   });
   box.appendChild(ul);
   /* eslint-disable no-console */
-  console.log('Front Doors self-test:', fails ? fails + ' FAILED' : 'all pass');
+  console.log('AI Tool Guide self-test:', fails ? fails + ' FAILED' : 'all pass');
   out.forEach(r => console.log(r[0] ? 'PASS' : 'FAIL', r[1], r[2]));
 }
 

@@ -31,8 +31,12 @@ const CHECK = process.argv.includes('--check');
 if (!fs.existsSync(guide)) {
   throw new Error(`Presenter guide is missing: ${guide}. Run: node build.js`);
 }
+/* Refuse to render a file that is not the guide. The check is on the guide's
+   own <title>, which the 2026-09-09 retitle changed from "Front Doors —
+   presenter guide" to the display title below; the OUTPUT filename is
+   deliberately unchanged, because the hub links to it. */
 const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>Front Doors — presenter guide<\/title>/.test(html)) {
+if (!/<title>AI Tool Guide — notes for the presenter<\/title>/.test(html)) {
   throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
 }
 

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Front Doors — styles.
+   AI Tool Guide (folder: front-doors) — styles.
 
    Phone first, and the four-by-four grid in Act I is the reason this file
    exists. A capability table is the classic thing that ships as a horizontal
@@ -95,6 +95,15 @@ a  { color: var(--sky); }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #brand .b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: .8em; }
+
+/* The 2026-09-09 retitle made the brand line 4px wider ("AI TOOL GUIDE" against
+   "FRONT DOORS"), enough to start ellipsising the tagline at 360px where the old
+   title just fitted. The demo name itself measures 108px and was never at risk;
+   this keeps the tagline whole down to 360 as well, and leaves every width from
+   400px up exactly as it was. */
+@media (max-width: 399px) {
+  #brand .b1 em { font-size: .74em; }
+}
 
 #topbar-tools { display: flex; gap: 8px; flex: none; }
 

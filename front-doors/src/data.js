@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Front Doors — the dataset.
+   AI Tool Guide (folder: front-doors) — the dataset.
 
    Every sentence on screen comes from this file, and every product claim in
    this file carries a `conf` label and, where the label is `verified`, one or
