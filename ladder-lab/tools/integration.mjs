@@ -283,16 +283,33 @@ check('ladder pane returns when the toggle is cleared', restored);
 check('presenter-notes button hides again when presentation mode is off',
   await page.evaluate(() => document.getElementById('btn-notes-quick').offsetParent === null));
 
-/* ---------- required UX: settings menu + presenter's notes ---------- */
+/* ---------- required UX: settings menu + presenter notes ----------
+   Label assertions are scoped to #teacher-drop, never to the document: once
+   the guide is injected, its own prose names all three menu entries, so a
+   page-wide search would be matching its own answer key. */
 await openMenu();
-check('settings menu offers presentation mode', /presentation mode/i.test(await page.textContent('#teacher-drop')));
+const menu = await page.evaluate(() => {
+  const drop = document.getElementById('teacher-drop');
+  return {
+    leaked: !!drop.querySelector('.guide-scope'),
+    items: [...drop.children].map(n => n.textContent.trim()).filter(Boolean),
+  };
+});
+check('the settings block carries no injected guide prose', menu.leaked === false);
+for (const want of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
+  const hits = menu.items.filter(t => t === want || t.replace(/^[^A-Za-z]+/, '') === want);
+  check(`settings menu offers exactly one "${want}"`, hits.length === 1, JSON.stringify(menu.items));
+}
 await page.click('#btn-notes');
 await page.waitForTimeout(250);
 check('presenter notes open from the settings menu', await page.evaluate(() => document.getElementById('presenter-notes').open));
 check('settings menu closes behind the notes sheet', await page.evaluate(() => !document.getElementById('teacher-menu').hasAttribute('open')));
-const notesText = await page.textContent('#presenter-notes');
-check('presenter notes carry stage notes distilled from the teacher guide',
-  /run of show/i.test(notesText) && /scan cycle/i.test(notesText) && /misconceptions/i.test(notesText) && /debrief/i.test(notesText),
+/* The notes ARE the teacher guide, injected from src/teacher-guide.html by
+   build.js. Assert the guide's own headings, not a distilled paraphrase. */
+const notesText = await page.textContent('#presenter-notes .guide-scope');
+check('presenter notes are the teacher guide itself',
+  /scan cycle/i.test(notesText) && /45-minute lesson plan/i.test(notesText) &&
+  /misconceptions/i.test(notesText) && /discussion questions/i.test(notesText) && /cheat sheet/i.test(notesText),
   notesText.slice(0, 60));
 await page.screenshot({ path: SHOTS + '/17-presenter-notes.png' });
 await page.keyboard.press('Escape');

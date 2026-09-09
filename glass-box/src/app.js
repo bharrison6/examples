@@ -69,10 +69,12 @@
   // One CSS variable scales the whole page; the body class also reveals the
   // header's quick route to the presenter's notes. Reachable from Settings and
   // from the footer, so a presenter never has to hunt for it mid-session.
-  const presBtn = $('presbtn'), presFoot = $('presfoot');
+  // CONTRACT.md names this control exactly "Presentation mode", so its state
+  // rides in a badge and in aria-pressed rather than inside the label.
+  const presBtn = $('presbtn'), presState = presBtn.querySelector('.state'), presFoot = $('presfoot');
   function syncPresenterUI() {
     const on = document.body.classList.contains('presenter');
-    presBtn.textContent = 'Presentation mode: ' + (on ? 'on' : 'off');
+    presState.textContent = on ? 'on' : 'off';
     presBtn.setAttribute('aria-pressed', String(on));
     presFoot.textContent = on ? 'leave presentation mode' : 'presentation mode';
   }

@@ -1,7 +1,12 @@
-# Front Doors — what to ask it with
+# AI Tool Guide — what to ask it with
 
 A phone-first, single-file, offline teaching module about the **surfaces** through which a
 person can use AI, and why the surface decides what the tool can actually reach.
+
+It was called **Front Doors** while it was being built. The display title is now *AI Tool
+Guide*; the folder, the guide filenames and the public URL keep the old name, and the four
+surfaces are still "the four doors" throughout, because that is what the module actually
+argues about.
 
 Built for **"AI: From Zero to Takeoff"** (Bryant Harrison, Murray State University), part
 three. It runs immediately after **The Stranger**: that module taught the room that *how you
@@ -196,18 +201,25 @@ non-Google models and puts the list here.
 Open `index.html`. No server, no build step, no network. About 12 minutes, or 4 if you are
 behind — the presenter guide has both timings.
 
-- **?** (top right) reopens the how-to overlay.
-- **⚙** opens settings: presentation mode for a projector, the presenter's notes, and
-  **Run the self-test**.
+- **?** (top right) is the **Guide** — the how-to overlay. It opens on first load and that
+  button reopens it at any point.
+- **⚙** opens Settings: **Open Presenter Notes**, **Presentation mode** for a projector,
+  **Reset**, and **Run the self-test**.
+
+**Reset** returns the demo to how it opened — Act I, no job picked, no self-test on screen,
+every overlay closed. It deliberately leaves Presentation mode alone: the projector is still
+a projector, and a reset that switched it off every time would stop being used.
 
 The self-test is the answer to "how do you know any of this?". Press it in front of whoever is
 asking. It re-derives, live, the properties the shipped test suite asserts at build time —
 every claim resolving to a declared source, no source cited and never used, no price and no
 ranking anywhere, and the review row genuinely failing to rise the way the other three do.
 
-**Printable guide:** `presenter-guide.html` and `Front-Doors-Presenter-Guide.pdf`. The same
-text appears under Settings → Presenter's notes; the HTML file is canonical and the copy
-inside the app is injected at build time, so there is one source of truth.
+**Printable guide:** `presenter-guide.html` and `Front-Doors-Presenter-Guide.pdf` (the
+filenames keep the old name, because the hub links to them). The same text appears under
+Settings → Open Presenter Notes; the HTML file is canonical and the copy inside the app is
+injected at build time, so there is one source of truth. `node build.js --check` fails if
+the two ever drift apart.
 
 ### The phone case
 
@@ -249,7 +261,7 @@ node front-doors/tools/pdf.mjs --check
 | `src/app.js` | DOM only. Reads `engine.js`; derives nothing of its own. |
 | `src/styles.css` | The palette, and the grid mechanism described above. |
 | `src/template.html` | Page shell and the four overlays. Carries the build placeholders. |
-| `src/presenter-guide.html` | Canonical printable guide. First `<style>` block must stay scoped to `.guide-scope`. |
+| `src/presenter-guide.html` | Canonical printable guide. Its `<style id="guide-css">` block is the one lifted into the app, so everything in it must stay scoped to `.guide-scope`; the second, unnamed sheet is page chrome for the printed page and is not extracted. |
 | `src/playtest.test.js` | The guard. Run it before you present. |
 | `tools/pdf.mjs` | Dependency-free PDF render. Uses Playwright if present, otherwise an installed Chrome or Edge; `CHROME_PATH` wins. |
 
@@ -291,21 +303,29 @@ have been.
 
 ## Contract compliance
 
-Meets [CONTRACT.md](../CONTRACT.md): single self-contained `index.html`, how-to popup with a
-reopen control, settings menu with presentation mode and presenter's notes, Murray State
-theme, Bryant Harrison and Murray State University visible, phone-first, printable guide plus
-PDF, `built_with` recorded.
+Meets [CONTRACT.md](../CONTRACT.md) → **Required UX**: single self-contained `index.html`; a
+`?` button named **Guide** beside Settings, opening the Guide overlay on first load and
+reopening it on demand; a Settings menu carrying **Open Presenter Notes**, **Presentation
+mode** and **Reset**; presenter notes generated at build time from the same file as the
+printable guide, with `node build.js --check` failing on drift; Murray State theme; Bryant
+Harrison and Murray State University visible; phone-first; printable guide plus PDF;
+`built_with` recorded.
 
-**One flag is deliberately not `true`.** `offline_no_inference` is set to `"unverified"` in
-`demo.json`. What *was* confirmed: the built file contains no `script`, `link`, `img`,
-`iframe`, `source`, `video`, `audio`, `embed`, `object` or `track` element that fetches
-anything; no `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`, `importScripts` or
-`sendBeacon` call; no storage of any kind; no AI endpoint; and every URL present is an
-outbound `<a href>` to a declared source. Both the build and the test suite enforce all of
-that, and the page was opened in a browser with no external request observed. What was *not*
-done is opening it on a machine with the network adapter switched off, which is the bar
-`CONTRACT.md` sets. Turn your wifi off, open the file, and set the flag to `true` — it will
-pass.
+**`offline_no_inference` is now `true`, and here is what earned it.** Statically, the built
+file contains no `script`, `link`, `img`, `iframe`, `source`, `video`, `audio`, `embed`,
+`object` or `track` element that fetches anything; no `fetch`, `XMLHttpRequest`, `WebSocket`,
+`EventSource`, `importScripts` or `sendBeacon` call; no `@import` or `url(http…)`; no storage
+of any kind; no AI endpoint. Both the build and the test suite enforce all of that.
+
+Dynamically (2026-09-09), the page was loaded in headless Chrome over the DevTools protocol
+with `Network.requestWillBeSent` recording, and **every one of its 52 controls was clicked** —
+both header buttons, every settings control including the self-test and Reset, all three act
+tabs, all four door headers, all sixteen grid cells, all seven job buttons, and every overlay
+close. Exactly one request was recorded: the `file://` document itself. The recorder was
+proved capable of seeing a request by running it unchanged against a control page that loads a
+remote image and calls `fetch` — both showed up. The 21 outbound source links were not
+followed, which is the point: they are links a reader may choose to follow, permitted by the
+contract's 2026-09-08 amendment, and the page never follows one on its own.
 
 Outbound source links are permitted under the contract's 2026-09-08 amendment: a link the
 reader may choose to follow is not a network call by the page. Every one of them is a source

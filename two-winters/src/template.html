@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#00142B">
-<title>Two Winters — has this happened before?</title>
+<title>AI Winters: Boom and Bust — has this happened before?</title>
 <!--
-  Two Winters — a single-file, offline demonstration of the two AI funding
-  collapses of the twentieth century, the mechanism they shared, and an
-  even-handed comparison with the present.
+  AI Winters: Boom and Bust — a single-file, offline demonstration of the two
+  AI funding collapses of the twentieth century, the mechanism they shared,
+  and an even-handed comparison with the present.
 
   Four acts: guess the year on ten real predictions with the date hidden;
   scrub a 1950-2026 timeline whose lanes are the five stages of the
@@ -35,10 +35,10 @@
   <header id="topbar">
     <div id="brand">
       <span class="b0">Murray State University</span>
-      <span class="b1">TWO WINTERS <em>has this happened before?</em></span>
+      <span class="b1">AI WINTERS: BOOM AND BUST <em>has this happened before?</em></span>
     </div>
     <div id="topbar-tools">
-      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide">?</button>
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
     </div>
   </header>
@@ -198,11 +198,14 @@
   <span>One HTML file &middot; runs offline &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</span>
 </footer>
 
-<!-- ========================== HOW TO USE ============================ -->
+<!-- ============================= GUIDE ============================== -->
 <div class="overlay" id="howto" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How this works</h2><div class="sub">Four acts &middot; about 15 minutes</div></div>
+      <!-- Subtitle measured at 320px: this wording keeps the sheet head one line
+           (71px, unchanged from before the rename); adding "four acts" wraps it
+           to two and costs 20px of a phone screen. The acts are listed below. -->
+      <div><h2 id="howto-title">Guide</h2><div class="sub">How this works &middot; about 15 minutes</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
@@ -240,9 +243,10 @@
       <div class="field">
         <span class="lbl">The two buttons, top right</span>
         <ul class="ht-acts">
-          <li><b>?</b> &mdash; reopens this panel at any point.</li>
-          <li><b>&#9881;</b> &mdash; presenter mode, the presenter&rsquo;s notes, and a self-test that checks
-            every claim against its declared source, live, in front of whoever is asking.</li>
+          <li><b>?</b> &mdash; <b>Guide</b>. Reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; <b>Settings</b>: <em>Open Presenter Notes</em>, <em>Presentation mode</em>,
+            <em>Reset</em>, and a self-test that checks every claim against its declared source, live,
+            in front of whoever is asking.</li>
         </ul>
       </div>
 
@@ -263,27 +267,34 @@
 <div class="overlay" id="settings" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Session &middot; Proof</div></div>
       <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
       <div class="field">
         <span class="lbl">Presentation</span>
-        <label class="switch">
-          <input type="checkbox" id="chk-presenter">
-          <span>Presenter mode &mdash; oversized UI for a projector</span>
-        </label>
-        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <button class="btn" id="btn-notes">Open Presenter Notes</button>
         <p class="help">
           The session plan: what to say at each act, which predictions to keep if you are
-          short of time, the questions you will get, and a six-minute cut. Distilled from the
-          printable guide that ships beside this file.
+          short of time, the questions you will get, and a six-minute cut. This is the
+          printable guide itself, not a summary of it &mdash; the same file that ships
+          beside this one, shown on screen.
         </p>
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presentation mode</span>
+        </label>
+        <p class="help">Oversized UI for a projector: larger controls and a taller timeline.</p>
       </div>
       <div class="field">
-        <span class="lbl">Help</span>
-        <button class="btn" id="btn-howto-2">How this works</button>
-        <p class="help">Reopens the panel that explains the exercise.</p>
+        <span class="lbl">Session</span>
+        <button class="btn" id="btn-reset">Reset</button>
+        <p class="help">
+          Back to a fresh load, without reloading: every answer cleared, Act I back at its
+          opening screen, the timeline rewound to the full span, the self-test output
+          cleared. Presentation mode is a projector setting rather than demo state, so
+          Reset leaves it as you set it.
+        </p>
       </div>
       <div class="field">
         <span class="lbl">Proof</span>
@@ -302,8 +313,9 @@
         <span class="lbl">About</span>
         <p class="help">
           Built for Murray State University by Bryant Harrison. All data is embedded; the app
-          makes no network requests and stores nothing. Reloading resets it. Sources were
-          checked in September 2026.
+          makes no network requests and stores nothing. Nothing survives a reload, and
+          <em>Reset</em> above gets you to the same place without one. Sources were checked in
+          September 2026.
         </p>
       </div>
     </div>
@@ -311,14 +323,14 @@
   </div>
 </div>
 
-<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- ======================= PRESENTER NOTES =========================== -->
 <!-- Lifted verbatim from presenter-guide.html, which stays canonical and
      printable. One source of truth: the guide's own stylesheet and its own
      markup, both scoped to .guide-scope, are injected by build.js. -->
 <div class="overlay" id="notes" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <div><h2 id="notes-title">Presenter Notes</h2><div class="sub">The printable guide, on screen</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">

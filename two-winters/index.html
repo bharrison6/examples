@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#00142B">
-<title>Two Winters — has this happened before?</title>
+<title>AI Winters: Boom and Bust — has this happened before?</title>
 <!--
-  Two Winters — a single-file, offline demonstration of the two AI funding
-  collapses of the twentieth century, the mechanism they shared, and an
-  even-handed comparison with the present.
+  AI Winters: Boom and Bust — a single-file, offline demonstration of the two
+  AI funding collapses of the twentieth century, the mechanism they shared,
+  and an even-handed comparison with the present.
 
   Four acts: guess the year on ten real predictions with the date hidden;
   scrub a 1950-2026 timeline whose lanes are the five stages of the
@@ -113,11 +113,30 @@ a  { color: var(--sky); }
   font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
   color: var(--gold); font-weight: 700;
 }
+/* The display title is long and has no break opportunity inside a word, so it
+   is FITTED rather than ellipsised on a phone. Measured in headless Chrome at
+   320/360/390/430px: the wordmark alone wants 244px at .96rem, and the line
+   available beside the two 44px buttons is only 190px at 320px, so the
+   committed .96rem sliced it mid-word. The clamp reaches .96rem at ~452px
+   viewport and above, which is every desktop width — desktop is unchanged. */
 #brand .b1 {
-  font-size: .96rem; font-weight: 800; letter-spacing: .02em;
+  font-size: clamp(.7rem, 3.4vw, .96rem);
+  font-weight: 800; letter-spacing: .02em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #brand .b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: .8em; }
+
+/* Wordmark plus trailing question needs a 521px viewport at full size, so
+   below that the question is dropped whole rather than sliced — it is still in
+   <title>, in the Guide overlay and on the Act I intro. 560px, not 521px,
+   leaves room for a system font wider than the ones this was measured against.
+   Wrapping replaces the ellipsis at those widths for the same reason: if a
+   platform runs wide, a second line loses nothing, a truncation loses letters
+   (and Presentation mode's 52px buttons take another 16px off this line). */
+@media (max-width: 559px) {
+  #brand .b1 { white-space: normal; overflow: visible; }
+  #brand .b1 em { display: none; }
+}
 
 #topbar-tools { display: flex; gap: 8px; flex: none; }
 
@@ -587,17 +606,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 }
 
 /* ==== presenter guide (scoped to .guide-scope) ==== */
- block and the .guide-scope div out of here verbatim
-  and injects them into index.html, so Settings -> Presenter's notes shows
-  exactly this text with no sibling file to go looking for. Edit here; never
-  edit the copy inside index.html.
 
-  Everything in the first <style> block MUST be scoped to .guide-scope, because
-  it is injected into an app with its own stylesheet. Page-level styles for the
-  standalone printable version live in the second <style> block, which is not
-  extracted.
--->
-<style>
 .guide-scope { color: inherit; }
 .guide-scope .g-head { margin-bottom: 18px; }
 .guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
@@ -635,10 +644,10 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <header id="topbar">
     <div id="brand">
       <span class="b0">Murray State University</span>
-      <span class="b1">TWO WINTERS <em>has this happened before?</em></span>
+      <span class="b1">AI WINTERS: BOOM AND BUST <em>has this happened before?</em></span>
     </div>
     <div id="topbar-tools">
-      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide">?</button>
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
     </div>
   </header>
@@ -798,11 +807,14 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <span>One HTML file &middot; runs offline &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</span>
 </footer>
 
-<!-- ========================== HOW TO USE ============================ -->
+<!-- ============================= GUIDE ============================== -->
 <div class="overlay" id="howto" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How this works</h2><div class="sub">Four acts &middot; about 15 minutes</div></div>
+      <!-- Subtitle measured at 320px: this wording keeps the sheet head one line
+           (71px, unchanged from before the rename); adding "four acts" wraps it
+           to two and costs 20px of a phone screen. The acts are listed below. -->
+      <div><h2 id="howto-title">Guide</h2><div class="sub">How this works &middot; about 15 minutes</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
@@ -840,9 +852,10 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
       <div class="field">
         <span class="lbl">The two buttons, top right</span>
         <ul class="ht-acts">
-          <li><b>?</b> &mdash; reopens this panel at any point.</li>
-          <li><b>&#9881;</b> &mdash; presenter mode, the presenter&rsquo;s notes, and a self-test that checks
-            every claim against its declared source, live, in front of whoever is asking.</li>
+          <li><b>?</b> &mdash; <b>Guide</b>. Reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; <b>Settings</b>: <em>Open Presenter Notes</em>, <em>Presentation mode</em>,
+            <em>Reset</em>, and a self-test that checks every claim against its declared source, live,
+            in front of whoever is asking.</li>
         </ul>
       </div>
 
@@ -863,27 +876,34 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 <div class="overlay" id="settings" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Session &middot; Proof</div></div>
       <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
       <div class="field">
         <span class="lbl">Presentation</span>
-        <label class="switch">
-          <input type="checkbox" id="chk-presenter">
-          <span>Presenter mode &mdash; oversized UI for a projector</span>
-        </label>
-        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <button class="btn" id="btn-notes">Open Presenter Notes</button>
         <p class="help">
           The session plan: what to say at each act, which predictions to keep if you are
-          short of time, the questions you will get, and a six-minute cut. Distilled from the
-          printable guide that ships beside this file.
+          short of time, the questions you will get, and a six-minute cut. This is the
+          printable guide itself, not a summary of it &mdash; the same file that ships
+          beside this one, shown on screen.
         </p>
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presentation mode</span>
+        </label>
+        <p class="help">Oversized UI for a projector: larger controls and a taller timeline.</p>
       </div>
       <div class="field">
-        <span class="lbl">Help</span>
-        <button class="btn" id="btn-howto-2">How this works</button>
-        <p class="help">Reopens the panel that explains the exercise.</p>
+        <span class="lbl">Session</span>
+        <button class="btn" id="btn-reset">Reset</button>
+        <p class="help">
+          Back to a fresh load, without reloading: every answer cleared, Act I back at its
+          opening screen, the timeline rewound to the full span, the self-test output
+          cleared. Presentation mode is a projector setting rather than demo state, so
+          Reset leaves it as you set it.
+        </p>
       </div>
       <div class="field">
         <span class="lbl">Proof</span>
@@ -902,8 +922,9 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
         <span class="lbl">About</span>
         <p class="help">
           Built for Murray State University by Bryant Harrison. All data is embedded; the app
-          makes no network requests and stores nothing. Reloading resets it. Sources were
-          checked in September 2026.
+          makes no network requests and stores nothing. Nothing survives a reload, and
+          <em>Reset</em> above gets you to the same place without one. Sources were checked in
+          September 2026.
         </p>
       </div>
     </div>
@@ -911,14 +932,14 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   </div>
 </div>
 
-<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- ======================= PRESENTER NOTES =========================== -->
 <!-- Lifted verbatim from presenter-guide.html, which stays canonical and
      printable. One source of truth: the guide's own stylesheet and its own
      markup, both scoped to .guide-scope, are injected by build.js. -->
 <div class="overlay" id="notes" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <div><h2 id="notes-title">Presenter Notes</h2><div class="sub">The printable guide, on screen</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
@@ -926,7 +947,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 
   <div class="g-head">
     <div class="g-kicker">Murray State University &middot; Bryant Harrison</div>
-    <h1>Two Winters &mdash; presenter guide</h1>
+    <h1>AI Winters: Boom and Bust &mdash; presenter guide</h1>
     <div class="g-sub">
       Part two of &ldquo;AI: From Zero to Takeoff&rdquo;. Runs 12&ndash;18 minutes full, 6 minutes cut.
       One HTML file, offline, no AI at runtime.
@@ -952,6 +973,10 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   </p>
 
   <h2>The shape of the session</h2>
+  <!-- .scroll, like the deck table below: tables here have min-width 420px, and
+       without the wrapper this one dragged the whole guide sideways inside the
+       in-app notes panel (measured: 435px of content in a 318px sheet at 320px). -->
+  <div class="scroll">
   <table>
     <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
     <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced predictions with the speaker and date hidden. The room guesses the year and the outcome. Scorecard splits promises from dismissals.</td><td>7&ndash;9 min</td></tr>
@@ -959,6 +984,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
     <tr><td><b>III &mdash; Anatomy</b></td><td>The two winters and the present, on the same five stages. Two cells in the third column are empty.</td><td>2&ndash;3 min</td></tr>
     <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
   </table>
+  </div>
 
   <h2>Act I &mdash; running the prediction round</h2>
   <p>
@@ -1094,14 +1120,26 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 
   <h2>Before you present</h2>
   <ul>
-    <li>Open <b>Settings &rarr; Presenter mode</b> for projector-sized type.</li>
+    <li>Turn on <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
     <li>Run the self-test once so you know it is green before anyone asks.</li>
-    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>Between rooms, <b>Settings &rarr; Reset</b> returns the whole demo to a fresh load
+      &mdash; answers cleared, Act I back at its opening screen, timeline rewound &mdash;
+      without a reload. It leaves Presentation mode on, so the projector does not change
+      under you.</li>
+    <li>The app saves nothing anywhere, so a reload resets it too.</li>
     <li>No network is needed at any point. If the room&rsquo;s wifi is down, nothing changes.</li>
   </ul>
 
+  <h2>The two buttons, top right</h2>
+  <ul>
+    <li><b>?</b> &mdash; <b>Guide</b>: the short how-to panel that opens on first load,
+      reopenable at any point. (Not this document.)</li>
+    <li><b>&#9881;</b> &mdash; <b>Settings</b>: <b>Open Presenter Notes</b> (this document,
+      on screen), <b>Presentation mode</b>, <b>Reset</b>, and <b>Run the self-test</b>.</li>
+  </ul>
+
   <div class="g-foot">
-    Two Winters &mdash; Bryant Harrison, Murray State University.
+    AI Winters: Boom and Bust &mdash; Bryant Harrison, Murray State University.
     Sources checked September 2026. Every figure on screen links to its origin;
     everything that could not be sourced is listed in Act IV under &ldquo;What was cut, and why&rdquo;.
   </div>
@@ -2160,7 +2198,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Timeline;
 
 /* ==== app.js ==== */
 /* ==========================================================================
-   Two Winters — the application.
+   AI Winters: Boom and Bust — the application.
 
    Four acts:
      I   Guess the year — ten sourced predictions, date and speaker hidden.
@@ -2675,15 +2713,66 @@ function wireOverlays() {
     if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
   });
   $('#btn-howto').addEventListener('click', () => open('howto'));
-  $('#btn-howto-2').addEventListener('click', () => { close('settings'); open('howto'); });
   $('#btn-settings').addEventListener('click', () => open('settings'));
   $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
+  $('#btn-reset').addEventListener('click', resetDemo);
   $('#chk-presenter').addEventListener('change', ev => {
     S.presenter = ev.target.checked;
     document.body.classList.toggle('presenting', S.presenter);
     if (S.tl) { S.tl.setBig(S.presenter); }
   });
   $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ================================ reset =================================
+   Settings -> Reset. Whole-demo, not per-act: every piece of session state
+   goes back to the value it has on a fresh load, without a reload. Nothing
+   here is persisted (no storage of any kind), so restoring S and the few
+   pieces of DOM that render from it IS a fresh load.
+
+   Two deliberate exceptions, both from the contract:
+     - Presentation mode stays as the presenter set it. It is a projector
+       preference, not demo state; a presenter who reset mid-talk would not
+       want the type to shrink on the projector.
+     - The Guide overlay stays closed. It opens on first load as onboarding;
+       Reset is not re-onboarding, and reopening it would hide the demo the
+       presenter just reset in front of a room.
+   ---------------------------------------------------------------------- */
+
+function resetDemo() {
+  S.i = 0;
+  S.answers = {};
+  S.pending = { year: 1985, verdict: null };
+  S.revealed = false;
+
+  /* Act I, back before the first card. renderCard() re-initialises every
+     control inside #card-body when Begin is pressed again, so hiding the
+     block is enough to undo a half-answered card. */
+  renderIntro();
+  $('#intro').hidden = false;
+  $('#card-body').hidden = true;
+  $('#scorecard').hidden = true;
+
+  /* Act II is built lazily and owns a canvas plus a window resize listener,
+     so rewind it in place; rebuilding would attach a second listener. Its
+     fresh-load cursor is 1 — the whole 1950-2026 span shown. */
+  if (S.tl) {
+    S.tl.select(null);
+    S.tl.setCursor(1);
+    $('#tl-slider').value = '1000';
+    syncTimelineChrome();
+  }
+  showEvent(null);
+
+  /* The self-test panel is output, not state: a fresh load has none. */
+  $('#selftest-out').innerHTML = '';
+
+  /* Close the Settings sheet the button was pressed in, and anything else
+     left open, then release the scroll lock those sheets took. */
+  $$('.overlay').forEach(o => { o.hidden = true; });
+  lockScroll();
+
+  setAct(1);
 }
 
 /* ============================== self-test ===============================
@@ -2764,7 +2853,7 @@ function runSelfTest() {
   }
   box.appendChild(ul);
   /* eslint-disable no-console */
-  console.log('Two Winters self-test:', fails ? fails + ' FAILED' : 'all pass');
+  console.log('AI Winters: Boom and Bust self-test:', fails ? fails + ' FAILED' : 'all pass');
   out.forEach(r => console.log(r[0] ? 'PASS' : 'FAIL', r[1], r[2]));
 }
 

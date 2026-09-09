@@ -1,4 +1,7 @@
-# The Stranger
+# Prompting Strategies
+
+*The roleplay at the centre of this demo is called **The Stranger**, which is where the folder
+and the guide filenames get their name.*
 
 A single-file, offline classroom demo of **why prompts work**. A student's question sits on
 the screen with three toggleable blocks of text beside it, and the "AI" answers. Flip a lever,
@@ -10,7 +13,9 @@ on a phone with airplane mode on, and off a thumb drive in a room with no wifi.
 
 **Companion:** `presenter-sheet.html` / `The-Stranger-Presenter-Sheet.pdf` — the live roleplay
 script in three acts, house rules, a running order under 12 minutes, discussion questions, and
-a second page of eight target cards to print and cut out.
+a second page of eight target cards to print and cut out. That file is also the **presenter
+notes inside the app**: `build.js` injects it into `index.html`, so the paper, the PDF and the
+overlay are one document from one source and `node build.js --check` fails if they drift.
 
 ---
 
@@ -69,19 +74,20 @@ student never typed** — handed over for free because the prompt signalled a re
 
 ## Classroom features
 
-- **How to use it, on screen.** A how-to sheet opens on every load: the three levers, what
-  every control does, and the shape of the twelve minutes. Dismiss it with `Esc`, a tap
-  outside it, or *Got it*. The **?** at the top right brings it back at any point, at any
-  screen width — it is the one control that never goes away.
-- **Settings (⚙).** The menu beside the **?**. **Presentation mode** is the projector build of
+- **Guide (?).** The Guide opens on every load: the three levers, what every control does, and
+  the shape of the twelve minutes. Dismiss it with `Esc`, a tap outside it, or *Got it*. The
+  **?** at the top right brings it back at any point, at any screen width — it is the one
+  control that never goes away.
+- **Settings (⚙).** The menu beside the **?**, with three standard items at the top.
+  **Open Presenter Notes** shows the printable presenter sheet on screen — the same file,
+  injected at build time, not a summary of it. **Presentation mode** is the projector build of
   the app — big type, the 1–10 class score strip, pin-to-compare, and the card picker inside
-  lever 2; switch it off and you are in student mode. The **presenter's notes** sit inside it:
-  the three acts as stage notes — what to say, what to do with the printed deck, the line each
-  act lands on — plus the house rules, the running order and the discussion questions. It is
-  the presenter sheet's script cut down to what you can read at a glance with a room watching.
-  Below that, the expert-term highlighter and a way back to the how-to sheet or the closing
-  slide. On a phone the mode switch and the closing slide move into this menu, so the toolbar
-  stays a thumb wide.
+  lever 2; switch it off and you are in student mode. **Reset** returns the whole demo to its
+  fresh-load state — question 1, levers off, no answer on screen, scoreboard cleared,
+  highlighter off, card picker back to Random — and deliberately leaves Presentation mode
+  alone, since that is a property of the room rather than of the demo. Below those, the
+  expert-term highlighter, a way back to the Guide, and the closing slide. On a phone the mode
+  switch and the closing slide move into this menu, so the toolbar stays a thumb wide.
 - **Scoreboard.** Score each answer 1–10 from the room; the chart plots score against levers
   pulled and the curve climbs across the session on its own.
 - **Compare.** Pin any answer beside the next one for A/B.
@@ -93,7 +99,7 @@ student never typed** — handed over for free because the prompt signalled a re
 - **Closing slide:** *When AI gives you a bad answer, ask which lever you left unpulled.*
 
 Keys: `1` `2` `3` levers · `Enter` ask · `Space` skip typing · `H` highlight · `R` replay card ·
-`P` pin · `S` scoreboard · `M` mode · `N` presenter's notes · `?` the how-to sheet · `Esc` close
+`P` pin · `S` scoreboard · `M` mode · `N` presenter notes · `?` the Guide · `Esc` close
 anything.
 
 ## Theme
@@ -110,18 +116,35 @@ ink to give it.
 `index.html` is generated; do not edit it directly.
 
 ```
-node build.js            # src/ -> index.html (refuses to emit any network or storage call)
+node build.js            # src/ + presenter-sheet.html -> index.html (refuses any network or storage call)
 node build.js --check    # parity check, writes nothing
+node tools/pdf.mjs       # presenter-sheet.html -> The-Stranger-Presenter-Sheet.pdf
+node tools/pdf.mjs --check   # the sheet parses and the PDF exists; writes nothing
 ```
+
+`build.js` also injects the presenter sheet: it lifts the `<style id="guide-css">` stylesheet
+and the `.guide-scope` body out of `presenter-sheet.html` and drops them into the notes overlay,
+so **Settings → Open Presenter Notes shows that file itself**. `--check` fails if `index.html`
+has fallen behind the sheet, which is what keeps the paper, the PDF and the app in agreement.
+It carries one more gate: the eight cut-out target cards on page two of the sheet are verified
+field by field against `src/scenarios.json`, so the printed deck cannot drift from the deck the
+app deals. `tools/pdf.mjs` uses a system Chrome (`CHROME_PATH`, else the usual install
+locations) and Node builtins; nothing is installed and nothing is downloaded.
 
 The authoring pipeline is Python, and is only needed if you change a response:
 
 ```
 python tools/validate.py    # merges src/content/*.json -> src/content.json, enforces the gates
 node   build.js
-python tools/companion.py   # presenter-sheet.html + the PDF
-python tools/playtest.py    # drives all 64 states in headless Chromium
+python tools/playtest.py    # drives all 64 states in headless Chromium (needs playwright)
 ```
+
+`tools/companion.py` is **retired to a signpost**. It used to generate `presenter-sheet.html`
+and the PDF from a copy of the sheet embedded in its own source, which made it a second source
+for a file that is edited by hand — running it would silently have reverted those edits. The
+sheet is now authored directly, the PDF comes from `tools/pdf.mjs`, and the one piece of real
+logic it held (deriving the eight target cards from `src/scenarios.json`) lives on in `build.js`
+as the parity gate described above.
 
 `tools/validate.py` enforces seven content gates: every tagged term occurs verbatim on a word
 boundary, no term is a substring of another in its list, keyword-on states carry ≥10 terms
@@ -143,11 +166,11 @@ projector.
 ## Source layout
 
 ```
-index.html                     built, self-contained, 281 KB
-build.js                       src/ -> index.html, with the offline guard
-presenter-sheet.html           the printable companion
-The-Stranger-Presenter-Sheet.pdf
-src/app.template.html          all markup, CSS and app code; one __DATA__ placeholder
+index.html                     built, self-contained, 292 KB
+build.js                       src/ + presenter-sheet.html -> index.html, offline guard, deck parity gate
+presenter-sheet.html           canonical: the printable companion, the PDF, AND the in-app notes
+The-Stranger-Presenter-Sheet.pdf   rendered from it by tools/pdf.mjs
+src/app.template.html          all markup, CSS and app code; one __DATA__ and two guide placeholders
 src/content/<scenario>_on.json the four success-spec-on responses per scenario
 src/content/<scenario>_off.json the twelve success-spec-off responses (4 states x 3 cards)
 src/content.json               merged + gate-checked bundle (generated by tools/validate.py)
@@ -155,5 +178,6 @@ src/scenarios.json             the four questions, their three lever blocks, the
 src/learn.json                 student walkthrough steps, quizzes, the attached essay, closing line
 src/AUTHORING.md               the rules the responses were written to — read this before editing one
 src/essay-draft.md             the student essay attached in all eight states of scenario 4
-tools/                         validate.py, companion.py, playtest.py
+tools/pdf.mjs                  presenter-sheet.html -> the PDF, via a system Chrome
+tools/                         validate.py, playtest.py, companion.py (retired signpost)
 ```
