@@ -1,6 +1,7 @@
-# Two Winters
+# AI Winters: Boom and Bust
 
 **Has this happened before?** — the fifth demo in *AI: From Zero to Takeoff*.
+(Folder and URL stay `two-winters`; the two winters are still what it is about.)
 
 `takeoff` ends with the room having watched capability curves go nearly vertical. The
 honest next question, and you will get it, is *"is this another bubble?"* This demo
@@ -49,10 +50,14 @@ predict.
 ## How to present it
 
 The full session plan is `presenter-guide.html` (and its PDF), and the same text is
-readable on screen at **Settings → Presenter's notes** so you never need a second window.
-Short version:
+readable on screen at **Settings → Open Presenter Notes** so you never need a second
+window. It is the same file, injected at build time, not a summary of it. Short version:
 
-- **Presenter mode** (Settings) enlarges everything for a projector.
+- **Presentation mode** (Settings) enlarges everything for a projector.
+- **Settings → Reset** returns the whole demo to a fresh load between rooms — answers
+  cleared, Act I back at its opening screen, timeline rewound — without a reload, and
+  leaves Presentation mode on.
+- **The `?` button is Guide** — the short how-to panel, which opens on first load.
 - **Do the first two cards yourself, out loud.** Then hand it over. Ask for a show of
   hands on the year *before* dragging the slider. The room being wrong together is the
   experience.
@@ -107,6 +112,7 @@ Sources live in `src/`. `index.html` is the committed build output; do not edit 
 node build.js            # writes index.html and presenter-guide.html
 node build.js --check    # verifies both match the canonical build; writes nothing
 node src/playtest.test.js   # dataset + engine tests
+node src/contract.test.js   # built index.html against CONTRACT.md's Required UX
 node tools/pdf.mjs       # regenerates Two-Winters-Presenter-Guide.pdf
 node tools/pdf.mjs --check  # verifies the guide parses and the PDF exists
 ```
@@ -124,8 +130,9 @@ resource-loading tag, so a stray CDN reference fails the build rather than shipp
 | `src/app.js` | Controller: the four acts, the overlays, the live self-test. |
 | `src/styles.css` | Phone-first. |
 | `src/template.html` | The shell. `build.js` fills four placeholders. |
-| `src/presenter-guide.html` | **Canonical** presenter guide. Its first `<style>` block and its `.guide-scope` div are lifted into the app so the on-screen notes and the printable guide cannot drift. |
-| `src/playtest.test.js` | 86 checks. Run before committing. |
+| `src/presenter-guide.html` | **Canonical** presenter guide. Its `<style id="guide-css">` block and its `.guide-scope` div are lifted into the app so the on-screen notes and the printable guide cannot drift. Both markers must start a line and occur exactly once outside a comment, or `build.js` refuses to run. |
+| `src/playtest.test.js` | 86 checks on the data and the engine. Run before committing. |
+| `src/contract.test.js` | Checks the built `index.html` against CONTRACT.md's Required UX: the Guide button and overlay, the three Settings labels (asserted inside the Settings block only, never against the injected guide text), and a clean guide injection. |
 | `tools/pdf.mjs` | Guide → PDF. Prefers Playwright, falls back to a system Chrome or Edge. |
 
 ### The PDF tool differs from its neighbours
@@ -158,7 +165,7 @@ The tests also enforce the prose. If you add a card, the counts quoted on the sc
 — which is the point. The same is true of the money panel's "four commitments" caption and
 the "ten predictions" line in the how-to.
 
-Then: `node src/playtest.test.js && node build.js`.
+Then: `node src/playtest.test.js && node build.js && node src/contract.test.js`.
 
 ---
 
@@ -166,9 +173,10 @@ Then: `node src/playtest.test.js && node build.js`.
 
 | Item | State |
 |------|-------|
-| How-to popup on load, dismissible, reopenable from `?` | yes |
-| Settings menu with presentation mode | yes |
-| Presenter's notes openable in-app | yes, injected from the canonical guide |
+| Guide overlay on load, dismissible, reopenable from the `?` button (named **Guide**) | yes |
+| Settings menu offering **Open Presenter Notes**, **Presentation mode**, **Reset** | yes — plus this demo's own **Run the self-test** |
+| **Reset** returns the whole demo to fresh-load state | yes — answers, act, timeline cursor and self-test output; Presentation mode is left alone by design |
+| Presenter notes openable in-app, and identical to the printable guide | yes — injected from `src/presenter-guide.html` at build time; `node build.js --check` fails on drift |
 | Murray State theme | yes — navy `#002144`, gold `#ECAC00`, sky `#00A4E3` |
 | Red-orange `#FF4500` reserved for genuine failure states | yes — a wrong verdict, the "money leaves" stage, a failed self-test check, an unresolved source. Nothing else. |
 | Attribution visible | yes, in the footer on every act |
