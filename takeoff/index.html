@@ -1115,9 +1115,12 @@ body.presenter .pn-table { font-size: 0.88rem; }
         <p>Open the example: a real bug report, 1.2 million lines of code, write the patch,
           graded by the project&rsquo;s own tests. Ask for a number out loud before revealing &mdash;
           a spoken guess lands harder than a private one. Most rooms say 60&ndash;65%.</p>
-        <p><b>The line that matters comes after the number:</b> the labs retired this test in
-          February 2026 &mdash; not for being too easy, but because the models had been trained on
-          the answers, and 59% of the hard problems they still failed turned out to have broken tests.</p>
+        <p><b>The line that matters comes after the number:</b> in February 2026 OpenAI stopped
+          evaluating this test &mdash; not for being too easy, but because the models had been trained
+          on the answers, and 59% of the hard problems they still failed turned out to have broken
+          tests. Anthropic never headlined it again either. But it did not die: independent evaluators
+          still run it. <b>Say this:</b> a benchmark rarely gets retired, it stops being the number
+          anyone leads with.</p>
       </div>
 
       <div class="pn-beat">
@@ -1174,7 +1177,7 @@ body.presenter .pn-table { font-size: 0.88rem; }
 
       <h3 class="pn-h">Act II &mdash; where all this came from &middot; 5 min</h3>
       <p>
-        Press <b>Play</b> and stop talking for thirty seconds. 123 releases arrive; the
+        Press <b>Play</b> and stop talking for thirty seconds. 124 releases arrive; the
         argument makes itself as the gaps between them shrink from months to weeks.
       </p>
       <ul class="pn-list">
@@ -1375,7 +1378,7 @@ const INTRO = {
    are visually comparable and none of them look like they stopped caring in
    2025. Where a series genuinely has no data past some date, the line ends and
    the chart says so — see `endNote`. */
-const AXIS_END = '2026-08-15';
+const AXIS_END = '2026-09-30';
 
 const ROUNDS = [
 
@@ -1413,13 +1416,13 @@ const ROUNDS = [
     { date: '2025-08-07', label: 'GPT-5', value: 74.9, status: 'primary', src: 'openai-gpt5' },
     { date: '2025-09-29', label: 'Claude Sonnet 4.5', value: 77.2, note: 'single attempt; 82.0% with parallel test-time compute', status: 'primary', src: 'anthropic-45' },
     { date: '2025-11-24', label: 'Claude Opus 4.5', value: 80.9, status: 'primary', src: 'anthropic-opus45' },
-    { date: '2026-02-05', label: 'Claude Opus 4.6', value: 80.84, note: 'averaged over 25 trials — and the last figure published before the exam was retired', status: 'primary', src: 'anthropic-opus46' }
+    { date: '2026-02-05', label: 'Claude Opus 4.6', value: 80.84, note: 'averaged over 25 trials — and the last figure Anthropic put in a headline', status: 'primary', src: 'anthropic-opus46' }
   ],
-  endNote: 'then it flattened, and the exam was retired',
+  endNote: 'then it flattened, and the labs stopped leading with it',
   reveal: {
     headline: 'A third of them, to four in five — and then it stopped moving.',
-    body: 'Then something more telling than another number: in February 2026 the labs retired this test. OpenAI published why — the models had been trained on the answers, and when it audited the hard problems they still failed, 59% of those turned out to have broken tests. Anthropic’s Opus 4.7 page mentions it only to say it screens for memorisation of it. The Opus 4.8 page does not mention it at all. Opus 5 reports a different test entirely.',
-    caveat: 'These scores are reported by the companies that make the models, and how you run the test matters: the same model scores several points apart depending on how many attempts it is allowed. Every point on this line is a single-attempt figure so the curve compares like with like — Sonnet 4.5 reads 77.2% that way and 82.0% when it is allowed several attempts. Notice the last three points: eighteen months of furious progress, then fifteen months that went nowhere. That flattening is part of why the exam was retired.'
+    body: 'Then something more telling than another number: in February 2026 OpenAI stopped evaluating this test, and published why — the models had been trained on the answers, and when it audited the hard problems they still failed, 59% of those turned out to have broken tests. Anthropic never put it in a headline again either: the Opus 4.7 page mentions it only to say it screens for memorisation of it, the Opus 4.8 page does not mention it at all, and Opus 5 leads with a different test. But the exam did not die — independent evaluators still run it, and one scored Opus 5 at 97% in September 2026. That is the thing worth taking away: a benchmark rarely gets retired, it stops being the number anyone leads with.',
+    caveat: 'These scores are reported by the companies that make the models, and how you run the test matters: the same model scores several points apart depending on how many attempts it is allowed. Every point on this line is a single-attempt figure so the curve compares like with like — Sonnet 4.5 reads 77.2% that way and 82.0% when it is allowed several attempts. Notice the last three points: eighteen months of furious progress, then fifteen months that went nowhere. That flattening is part of why the labs stopped leading with it.'
   }
 },
 
@@ -1800,7 +1803,8 @@ const MODELS = [
   { d:'2026-07-09', lab:'openai',   name:'GPT-5.6 (Sol / Terra / Luna)', open:false, tier:8, note:'METR measured Sol finishing eleven-hour jobs, half the time.' },
   { d:'2026-07-09', lab:'xai',      name:'Grok 4.5',       open:false, tier:7 },
   { d:'2026-07-17', lab:'moonshot', name:'Kimi K3',        open:true,  lic:'Kimi K3 licence', tier:7, note:'2.8T parameters. The largest openly released model so far — from a startup, in Beijing.' },
-  { d:'2026-07-24', lab:'anthropic',name:'Claude Opus 5',  open:false, tier:8 }
+  { d:'2026-07-24', lab:'anthropic',name:'Claude Opus 5',  open:false, tier:8 },
+  { d:'2026-09-03', lab:'openai',   name:'GPT-6 Astra',    open:false, tier:8 }
 ];
 
 /* --------------------------------------------------------------------------
@@ -2065,6 +2069,7 @@ const SOURCES = {
   'anthropic-45':  { t:'Anthropic — Claude Sonnet 4.5', u:'https://www.anthropic.com/news/claude-sonnet-4-5' },
   'anthropic-opus45': { t:'Anthropic — Claude Opus 4.5', u:'https://www.anthropic.com/news/claude-opus-4-5' },
   'anthropic-opus46': { t:'Anthropic — Claude Opus 4.6 system card (Feb 2026)', u:'https://www.anthropic.com/news/claude-opus-4-6' },
+  'vals-swebench':    { t:'SWE-bench Verified, re-run independently — Vals AI leaderboard', u:'https://www.vals.ai/benchmarks/swebench' },
   'openai-gpt5':   { t:'OpenAI — Introducing GPT-5', u:'https://openai.com/index/introducing-gpt-5/' },
   'openai-o1':     { t:'OpenAI — Learning to reason with LLMs', u:'https://openai.com/index/learning-to-reason-with-llms/' },
   'gpt4v':         { t:'OpenAI — GPT-4V system card', u:'https://openai.com/index/gpt-4v-system-card/' },

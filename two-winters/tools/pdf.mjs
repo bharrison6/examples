@@ -10,10 +10,9 @@
 
    Two engines, tried in order. Playwright if the repository happens to have it
    installed, otherwise a system Chrome or Edge in headless mode. This
-   repository has no node_modules and the sibling demos' PDF tools assume
-   Playwright, which is why this one does not: it has to work on a machine that
-   only has a browser. No path is hardcoded to one machine — CHROME_PATH wins,
-   then the usual install locations on Windows, macOS and Linux. */
+   repository has no node_modules, so the browser path is the one that actually
+   runs. No path is hardcoded to one machine — CHROME_PATH wins, then the usual
+   install locations on Windows, macOS and Linux. */
 
 import fs from 'fs';
 import os from 'os';

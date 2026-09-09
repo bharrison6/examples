@@ -39,16 +39,28 @@ if (offenders.length) {
   process.exit(1);
 }
 
+/* The guide is canonical in src/ and ships at the demo root, which is what
+   tools/pdf.mjs renders. Copying it here is the whole reason the two ever
+   agree: before this, src/ was corrected and the shipped copy was not. */
+const guide = read('presenter-guide.html');
+const guideOut = path.join(OUT, 'presenter-guide.html');
+
 const indexOut = path.join(OUT, 'index.html');
-const same = file => fs.existsSync(file) && fs.readFileSync(file, 'utf8') === html;
+const same = (file, want) => fs.existsSync(file) && fs.readFileSync(file, 'utf8') === want;
 if (CHECK) {
-  if (!same(indexOut)) {
+  if (!same(indexOut, html)) {
     console.error('PARITY MISMATCH: index.html differs from the canonical build output. Run: node build.js');
     process.exit(2);
   }
-  console.log('PARITY OK: index.html matches canonical build output; no files written.');
+  if (!same(guideOut, guide)) {
+    console.error('PARITY MISMATCH: presenter-guide.html differs from src/presenter-guide.html. Run: node build.js');
+    process.exit(2);
+  }
+  console.log('PARITY OK: index.html and presenter-guide.html match the canonical build; no files written.');
   process.exit(0);
 }
 
 fs.writeFileSync(indexOut, html);
 console.log('WRITE OK: index.html written:', (html.length / 1024).toFixed(0) + ' KB');
+fs.writeFileSync(guideOut, guide);
+console.log('WRITE OK: presenter-guide.html copied');
