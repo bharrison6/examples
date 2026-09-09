@@ -48,9 +48,9 @@
   and let people draw.
 </p>
 <p>
-  The bet: the room will draw five lines, get four of them badly wrong in the same
-  direction, and then get the fifth wrong in the opposite direction. Everything after
-  that explains why.
+  The bet: most of the room will draw these lines too low — underestimating how far the
+  numbers actually ran — and the last of the five tests flips the very intuition the
+  first four build. Everything after that explains why.
 </p>
 
 <h2>Before you start</h2>
@@ -64,9 +64,10 @@
 
 <h2>The opening screen (1 minute)</h2>
 <p>
-  Read the first line aloud and then stop: <span class="say">“You are going to draw five lines, and get four
-  of them wrong.”</span> The screen explains that AI systems are graded on public, checkable
-  tests, and that this demo shows five of them. Do not add to it. Press the button.
+  Read the headline aloud and then stop: <span class="say">“How much has AI changed since
+  ChatGPT? Draw your guess, then see the real answer.”</span> The screen explains that AI is
+  graded on public, checkable tests, and that this demo shows five of them. Do not add to it.
+  Press the button.
 </p>
 
 <h2>Act I — the five tests (14 minutes)</h2>
@@ -76,9 +77,11 @@
   Open the example: a real bug report, 1.2 million lines of code, write the patch, graded
   by the project's own tests. Ask for a number out loud before revealing — a spoken guess
   lands harder than a private one. Most rooms say 60–65%.
-  <br><b>The line that matters comes after the number:</b> the labs stopped reporting this
-  test in 2026. It was retired for being too easy, about two years after it was built to
-  be hard.
+  <br><b>The line that matters comes after the number:</b> in February 2026 OpenAI stopped
+  evaluating this test &mdash; not for being too easy, but because the models had been trained on
+  the answers, and 59% of the hard problems they still failed turned out to have broken tests.
+  Anthropic never headlined it again either. But it did not die: independent evaluators still run
+  it. <b>Say this:</b> a benchmark rarely gets retired, it stops being the number anyone leads with.
 </div>
 
 <div class="beat">
@@ -119,10 +122,8 @@
   <br>Then: five years near zero, then 87.5% in one announcement. Let them draw it steeply.
   They have earned it.
   <br>Then press <b>Show me</b>. Three months later, harder version, same model: 4%. Then
-  March 2026, version three: the average human tester scored <b>48%</b>. GPT-5.6 Sol
-  reached <b>38.3%</b> when allowed to retain reasoning between turns, versus <b>13.3%</b>
-  with standard wiring. A <b>0.51%</b> bare-model result came from ARC Prize’s different
-  game set and harness, so it is not a like-for-like fourth bar.
+  March 2026, version three: an average person <b>48%</b>, the best model <b>38.3%</b> when it is
+  allowed to remember, <b>13.3%</b> when it is not, and <b>0.51%</b> on ARC Prize&rsquo;s own harness-less run.
   <br><b>Pause here.</b> Do not talk over the bars. Wait for someone to say “wait, what?”
 </div>
 
@@ -134,7 +135,7 @@
 
 <h2>Act II — where all this came from (5 minutes)</h2>
 <p>
-  Press <b>Play</b> and stop talking for thirty seconds. 123 releases arrive; the argument
+  Press <b>Play</b> and stop talking for thirty seconds. 124 releases arrive; the argument
   makes itself as the gaps between them shrink from months to weeks.
 </p>
 <ul>
@@ -191,7 +192,7 @@
   <tr><td>Working alone</td><td class="n">3.5 min · Mar 2023</td><td class="n">11.3 hr · Jun 2026</td><td>METR Time Horizon 1.1</td></tr>
   <tr><td>Price at GPT-4 ability</td><td class="n">$37.50/M · Mar 2023</td><td class="n">$0.18/M · Feb 2025</td><td>Epoch AI</td></tr>
   <tr><td>Grid puzzles, v1</td><td class="n">~0% · 2020–2024</td><td class="n">87.5% · Dec 2024</td><td>ARC Prize</td></tr>
-  <tr><td>Grid puzzles, v3</td><td class="n">human average 48%</td><td class="n">Sol 38.3% with memory; 13.3% standard</td><td>OpenAI / ARC Prize; bare 0.51% is a different run</td></tr>
+  <tr><td>Grid puzzles, v3</td><td class="n">average person 48%</td><td class="n">best AI 38.3% with memory, 0.51% bare</td><td>ARC Prize / METR, 2026</td></tr>
   <tr><td>Developers with AI tools</td><td class="n">expected 24% faster</td><td class="n">measured 19% slower</td><td>METR randomised trial</td></tr>
 </table>
 
@@ -203,17 +204,15 @@
   on the grid puzzles had been trained on 75% of the public practice set, and that score
   cost about $4,560 per puzzle. Meta once submitted a tuned variant to a leaderboard that
   was not the model it released. One test's own answer key was found to have errors. All
-  real. The 0.51% bare-model result is informative precisely because it is a different
-  game set and harness, not a direct comparison with the 48%, 38.3%, and 13.3% public-game
-  measurements — which is why the demo keeps the wiring and run conditions visible.
+  real. And the 0.51% result is what a test looks like <em>before</em> anyone has had time
+  to game it — which is rather the point of showing it.
 </p>
 
 <h3>“So is it about to replace everyone or not?”</h3>
 <p>
   The honest answer this demo supports: the length of job it can finish is doubling roughly
-  every three months for recent models; there is a whole category of task where standard
-  wiring scored 13.3% and memory-preserving wiring 38.3% against a 48% human average;
-  a separate bare-model run scored 0.51%; and in the best-controlled study, it made expert
+  every three months for recent models; there is a whole category of task where it scores
+  half a percent against a human hundred; and in the best-controlled study, it made expert
   programmers slower while convincing them it had made them faster. All three are true, of
   the same systems, in the same months. Anyone confident in either direction is reading one
   curve and ignoring the others.
@@ -238,9 +237,9 @@
 <h2>Misconceptions to head off</h2>
 <ul>
   <li><b>“Test 3 shows how long the AI can run.”</b> It shows how long the <em>job</em> takes a person. Correct it every time; it will come back.</li>
-  <li><b>“Scores going up means it is generally getting smarter.”</b> Test 5 exists to break this. Same generation, different task and wiring: 94% on science questions, 13.3% standard or 38.3% memory-preserving on public ARC-AGI-3 games; the 0.51% bare-model result is a separate, non-comparable run.</li>
+  <li><b>“Scores going up means it is generally getting smarter.”</b> Test 5 exists to break this. Same models, same month: 94% and 0.51%.</li>
   <li><b>“Open source AI is way behind / has already won.”</b> Four months behind on Epoch's index as of May 2026, and that predates Kimi K3. Also, “downloadable” is not “open source”.</li>
-  <li><b>“The curve will obviously keep going.”</b> The demo does not claim this and neither should you. It shows what happened. Four of the five extrapolations the room just made were wrong, which is a good reason for humility about the sixth.</li>
+  <li><b>“The curve will obviously keep going.”</b> The demo does not claim this and neither should you. It shows what happened. Most of the extrapolations the room just made came in low, and the fifth flipped on them — which is a good reason for humility about the next one.</li>
   <li><b>“It obviously makes people more productive.”</b> The one randomised trial we have says the opposite for experienced developers on familiar code — and that they could not tell.</li>
 </ul>
 
