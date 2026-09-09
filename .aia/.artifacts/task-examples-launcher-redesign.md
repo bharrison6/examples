@@ -97,6 +97,17 @@ guarantee generalisation or that normalized updates are exact output steps.
 
 # Delivery
 
+## PDF packaging lane
+
+The packaging worker owns only `zero-to-unbeatable/tools/render_guide.py` and
+`.aia/.data/launcher-redesign/pdf-progress.md`. Adapt the existing standalone
+ReportLab guide renderer to the canonical tic-tac-toe HTML. Do not change the
+guide, PDF, demo code, other tools or git state. Return a source-driven renderer
+and extraction checks; parent runs PDF authoring after the guide is stable,
+inspects every page and commits it. Return early if the guide structure cannot
+be faithfully represented rather than silently dropping text. The tic-tac-toe
+worker has been told this one tools path is reserved to packaging.
+
 Parent verifies committed files, Chrome desktop and phone interactions and final
 guide pages. Existing shared work must be preserved during integration. No push
 without explicit operator authorization. Completing this task also finishes the
