@@ -6,7 +6,7 @@ lifecycle: complete
 schema_version: 2
 title: Completed Wavelet Lab build and hub integration
 created: 2026-09-08T19:37:11Z
-updated: 2026-09-08T21:06:00Z
+updated: 2026-09-09T03:16:11Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -113,8 +113,9 @@ orthogonality/round trip/energy; omitted energy equals squared error; enumerate
 small best-k subsets. Fixtures include [3,1] → coarse-only [2,2], squared error 2.
 Test actual production module then bundle it verbatim/reproducibly into HTML.
 Sources in optional methods view/guide: MathWorks wavelet-data-compression and
-two-dimensional-wavelet-packet-analysis documentation; Murray DrRoachBio.pdf for
-faculty fit. Do not imply current course assignment or faculty endorsement.
+two-dimensional-wavelet-packet-analysis documentation; a Murray State faculty bio
+for faculty fit (name removed at operator direction, 2026-09-09). Do not imply
+current course assignment or faculty endorsement.
 
 Match how-to, settings, presentation mode/notes, attribution, mobile interaction,
 and teacher guide conventions. Mark browser-only manifest compliance unverified
