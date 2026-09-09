@@ -1,25 +1,59 @@
 ---
 id: contract-ux-pass
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: task
+memory_class: episodic
+lifecycle: complete
 schema_version: 2
-title: Contract UX pass — Guide, Settings (notes/presentation/reset), single-sourced presenter notes across every demo
+title: Completed contract UX pass — Guide, Settings (notes/presentation/reset), single-sourced presenter notes across every demo
 created: 2026-09-09T03:21:00Z
-updated: 2026-09-09T03:21:00Z
+updated: 2026-09-09T05:40:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: executing
+status: active
 scope: examples
 source_basis: conversation
 sensitivity: normal
-sanctioned_by: prose:79d3584e-dc82-4b90-84ba-ee7b6491e5fd@2026-09-09T03:10:51Z
 priority: high
 priority_by: human
 tags: [demo-contract, presenter-notes, guide, settings, ai-fellows]
 aliases: [contract pass, guide settings reset pass, notes equal guide]
 ---
+
+# Completion — 2026-09-09
+
+Sanction, preserved as historical provenance: `prose:79d3584e-dc82-4b90-84ba-ee7b6491e5fd@2026-09-09T03:10:51Z`
+("Make that in the contract and fix everything that doesn't meet the contract standard").
+
+All sixteen demos meet the rewritten `CONTRACT.md` Required UX, and the hub reports every
+compliance key `true` for every demo (`node tools/build-hub.js --check`, commit `6da61ec`).
+Fifteen lanes ran as opus builder subagents in three batches of five; each lane's own checks
+were re-run by the orchestrator before its commit, and every lane also ran a real headless
+Chrome check with a network probe and a positive control. The sixteenth demo,
+`zero-to-unbeatable`, was brought to the standard by Codex session 01a08159 on its own branch
+(`aaf3da6`, `eebd08a`, `e0c2561`) and verified against the tree here.
+
+Lane commits: inhibitor-investigation `3b66317`, ion-flight `8ee5e18`, takeoff `b81ed54`,
+wavelet-lab `0f26955` (with the Part 3 live check), bridge-works `af6ed35`,
+what-the-survey-missed `bcae257`, missing-time `a657431`, topping-out `c115d16`, fuel-golf
+`24198a7`, should-have-known-that `5924297`, front-doors `cab22b3`, two-winters `56cb7f6`,
+ladder-lab `5916f6c`, the-stranger `3b3160e`, glass-box `57ba874`; credit-pill phone fix
+`51a2c9e`; attribution removals and the inhibitor extraction fix `3d6a2cd`; hub `6da61ec`.
+The Path A retitle ([[demo-titles-retitle]]) and the wavelet Part 3 rework
+([[wavelet-lab-part-3-live]]) were folded into these lanes and completed with them.
+
+Limits, stated plainly: the Playwright-based suites in takeoff, bridge-works, fuel-golf,
+ladder-lab, glass-box, the-stranger and topping-out could not run here (no playwright, installs
+barred), so their edited assertions are unexecuted; every property they assert was checked in
+a real browser by the lane instead. `offline_no_inference` rests on in-browser request logs
+with positive controls, not on a physically disconnected network. Four Codex-built demos keep
+a legacy ReportLab renderer marked reference-only beside the working Chrome renderer. Batch 3
+was interrupted once by an opus monthly spend limit and resumed from the lanes' progress
+files with no loss. Follow-ups the lanes surfaced are minted as proposals:
+[[run-playwright-suites-after-contract-pass]], [[retire-legacy-reportlab-renderers]],
+[[glass-box-dialog-centering]], [[shared-credit-pill-design]].
+
+## Original brief (preserved)
 
 # Contract UX pass (2026-09-09)
 
@@ -125,6 +159,9 @@ From the fuel-golf and topping-out lanes (2026-09-09):
 - **After the pill fix, re-measure what the wrapped pill lands on.** At 320 to 480px it wraps to
   two lines (about 34px) and can cover a bottom control bar or the notes overlay's foot; raise
   the reserved height or lift the pill at the narrow breakpoint and re-measure at several widths.
+  Correction from the ladder-lab lane: an overlay opened with `<dialog>.showModal()` paints in
+  the top layer above every z-index including the pill's, so no reserve is needed there; only
+  plain `div` overlays and bottom control bars can collide with the pill.
 
 From the should-have-known-that lane (2026-09-09):
 

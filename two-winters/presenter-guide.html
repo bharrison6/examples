@@ -3,22 +3,27 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Two Winters — presenter guide</title>
+<title>AI Winters: Boom and Bust — presenter guide</title>
 <!--
-  Canonical, printable presenter guide for the Two Winters demo.
+  Canonical, printable presenter guide for the AI Winters: Boom and Bust demo.
 
-  This file is the single source of truth for the presenter's notes. build.js
-  lifts the first <style> block and the .guide-scope div out of here verbatim
-  and injects them into index.html, so Settings -> Presenter's notes shows
-  exactly this text with no sibling file to go looking for. Edit here; never
-  edit the copy inside index.html.
+  This file is the single source of truth for the presenter notes. build.js
+  lifts the stylesheet marked with the id guide-css, and the guide-scope div,
+  out of here verbatim and injects them into index.html, so Settings ->
+  Open Presenter Notes shows exactly this text with no sibling file to go
+  looking for. Edit here; never edit the copy inside index.html.
 
-  Everything in the first <style> block MUST be scoped to .guide-scope, because
+  Three markers are contractual, and build.js refuses to run unless each one
+  starts a line and occurs exactly once outside a comment: the opening tag of
+  the scoped stylesheet, the opening tag of the guide-scope div, and the
+  closing tag of that div with its trailing marker comment.
+
+  Everything in the scoped stylesheet MUST be scoped to .guide-scope, because
   it is injected into an app with its own stylesheet. Page-level styles for the
-  standalone printable version live in the second <style> block, which is not
+  standalone printable version live in the unnamed block after it, which is not
   extracted.
 -->
-<style>
+<style id="guide-css">
 .guide-scope { color: inherit; }
 .guide-scope .g-head { margin-bottom: 18px; }
 .guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
@@ -70,7 +75,7 @@ body {
 
   <div class="g-head">
     <div class="g-kicker">Murray State University &middot; Bryant Harrison</div>
-    <h1>Two Winters &mdash; presenter guide</h1>
+    <h1>AI Winters: Boom and Bust &mdash; presenter guide</h1>
     <div class="g-sub">
       Part two of &ldquo;AI: From Zero to Takeoff&rdquo;. Runs 12&ndash;18 minutes full, 6 minutes cut.
       One HTML file, offline, no AI at runtime.
@@ -96,6 +101,10 @@ body {
   </p>
 
   <h2>The shape of the session</h2>
+  <!-- .scroll, like the deck table below: tables here have min-width 420px, and
+       without the wrapper this one dragged the whole guide sideways inside the
+       in-app notes panel (measured: 435px of content in a 318px sheet at 320px). -->
+  <div class="scroll">
   <table>
     <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
     <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced predictions with the speaker and date hidden. The room guesses the year and the outcome. Scorecard splits promises from dismissals.</td><td>7&ndash;9 min</td></tr>
@@ -103,6 +112,7 @@ body {
     <tr><td><b>III &mdash; Anatomy</b></td><td>The two winters and the present, on the same five stages. Two cells in the third column are empty.</td><td>2&ndash;3 min</td></tr>
     <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
   </table>
+  </div>
 
   <h2>Act I &mdash; running the prediction round</h2>
   <p>
@@ -238,14 +248,26 @@ body {
 
   <h2>Before you present</h2>
   <ul>
-    <li>Open <b>Settings &rarr; Presenter mode</b> for projector-sized type.</li>
+    <li>Turn on <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
     <li>Run the self-test once so you know it is green before anyone asks.</li>
-    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>Between rooms, <b>Settings &rarr; Reset</b> returns the whole demo to a fresh load
+      &mdash; answers cleared, Act I back at its opening screen, timeline rewound &mdash;
+      without a reload. It leaves Presentation mode on, so the projector does not change
+      under you.</li>
+    <li>The app saves nothing anywhere, so a reload resets it too.</li>
     <li>No network is needed at any point. If the room&rsquo;s wifi is down, nothing changes.</li>
   </ul>
 
+  <h2>The two buttons, top right</h2>
+  <ul>
+    <li><b>?</b> &mdash; <b>Guide</b>: the short how-to panel that opens on first load,
+      reopenable at any point. (Not this document.)</li>
+    <li><b>&#9881;</b> &mdash; <b>Settings</b>: <b>Open Presenter Notes</b> (this document,
+      on screen), <b>Presentation mode</b>, <b>Reset</b>, and <b>Run the self-test</b>.</li>
+  </ul>
+
   <div class="g-foot">
-    Two Winters &mdash; Bryant Harrison, Murray State University.
+    AI Winters: Boom and Bust &mdash; Bryant Harrison, Murray State University.
     Sources checked September 2026. Every figure on screen links to its origin;
     everything that could not be sourced is listed in Act IV under &ldquo;What was cut, and why&rdquo;.
   </div>

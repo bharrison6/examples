@@ -63,26 +63,48 @@ body.bigui { --fs: 19px; }
 .student-guide-actions { flex: 0 0 auto; display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
 .student-guide-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #002144; border-radius: 7px; background: #002144; color: #fff; font-weight: 750; cursor: pointer; }
 
-/* presenter's notes — same shell, wider and denser (a lectern read, not a lesson) */
-.presenter-notes { width: min(760px, calc(100% - 24px)); }
-.pn-run { list-style: none; padding-left: 0; }
-.pn-run li { display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-top: 1px solid #e6e9ec; }
-.pn-run li:first-child { border-top: 0; }
-.pn-time {
-  flex: 0 0 auto; min-width: 52px; text-align: center; font: 800 .8rem var(--font-ui, system-ui, sans-serif);
-  color: #002144; background: #ECAC00; border-radius: 999px; padding: 2px 7px;
+/* the subtitle after a sheet's title ("Guide · PLC Ladder Logic Trainer") */
+.sg-sub { font: 400 .62em var(--font-ui, system-ui, sans-serif); color: #c9d8e8; letter-spacing: .04em; }
+.sg-sub::before { content: "·"; margin: 0 .5em 0 .6em; opacity: .7; }
+
+/* ---------- presenter notes = the teacher guide ----------
+   #presenter-notes carries the guide's own .guide-scope body and its scoped
+   stylesheet, injected by build.js from src/teacher-guide.html. Those styles
+   are tuned for an 8.5in printed sheet: sizes are all in em off one root, and
+   the columns assume the width of the page. The overlay is a screen at arm's
+   length instead, so it raises that root and stacks the bands. Nothing here
+   changes the document — only how the same document is laid out. */
+.presenter-notes { width: min(820px, calc(100% - 24px)); }
+.presenter-notes .guide-scope { font-size: 13.6px; color: var(--paper-ink); }
+.presenter-notes .guide-scope .trio,
+.presenter-notes .guide-scope .cols,
+.presenter-notes .guide-scope .foot { display: block; }
+.presenter-notes .guide-scope .foot span + span { display: block; margin-top: .3em; }
+.presenter-notes .guide-scope h1 { line-height: 1.18; }
+/* on the printed sheet the strapline trails the title on one line; in the
+   narrower sheet it reads better on its own */
+.presenter-notes .guide-scope h1 small { display: block; margin-top: .3em; }
+.presenter-notes .student-guide-body { padding-bottom: 14px; }
+/* the printable-copy link sits beside Close in the sheet's action row */
+.pn-print {
+  min-height: 44px; display: inline-flex; align-items: center; padding: 8px 16px; margin-right: 8px;
+  border: 1px solid #002144; border-radius: 7px; background: #fff; color: #002144;
+  font-weight: 700; text-decoration: none;
 }
-.pn-myths li b { color: #002144; }
-.pn-table { width: 100%; border-collapse: collapse; margin: 4px 0 12px; font-size: .88em; }
-.pn-table th, .pn-table td { border: 1px solid #d5d9dd; padding: 3px 6px; text-align: left; vertical-align: top; }
-.pn-table th { background: #eef4fa; color: #002144; font-weight: 700; }
+.pn-print:hover { background: #eef4fa; }
 
 @media (max-width: 600px) {
   .student-guide { width: 100%; max-width: none; max-height: 100dvh; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
   .student-guide-body { padding: 14px 14px 6px; }
-  .pn-run li { flex-wrap: wrap; }
-  .pn-table { font-size: .82em; }
+  .presenter-notes .guide-scope { font-size: 13px; }
 }
+/* No bottom reserve is needed in these sheets for the attribution pill. It is
+   fixed to the bottom-left and wraps to two lines (~34px) below about 500px,
+   but both sheets are opened with showModal(), so they paint in the CSS top
+   layer — above every z-index in the normal flow, the pill's included.
+   Measured: with either sheet open the pill's whole box renders blank at 390px
+   and is dimmed to nothing behind the backdrop at 1400px. In the bare app,
+   where the pill IS visible, it covers no control at 320/360/390/430/480. */
 
 * { box-sizing: border-box; }
 html, body { height: 100%; }
@@ -259,25 +281,6 @@ body.bigui #mode-tabs button, body.bigui .tb-btn, body.bigui select { min-height
   #teacher-drop { left: 0; right: auto; width: min(280px, calc(100vw - 16px)); min-width: 0; }
 }
 
-/* in-app teacher guide */
-.msu-guide-overlay {
-  position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center;
-  justify-content: center; padding: 12px; background: rgba(0, 10, 24, .84);
-}
-.msu-guide-overlay[hidden] { display: none; }
-.msu-guide-dialog {
-  width: min(1000px, 100%); height: min(92dvh, 900px); background: #fff; color: #172231;
-  border: 2px solid var(--msu-blue); border-top: 5px solid var(--msu-gold); border-radius: 12px;
-  display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.65);
-}
-.msu-guide-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--msu-blue); color: #fff; }
-.msu-guide-bar h2 { margin: 0; font: 700 1.05rem var(--font-ui); }
-.msu-guide-spacer { flex: 1; }
-.msu-guide-bar button { min-height: 40px; background: #fff; color: var(--msu-blue); border: 1px solid #fff; border-radius: 7px; padding: 7px 12px; font-weight: 700; }
-.msu-guide-bar button:last-child { background: var(--msu-gold); border-color: var(--msu-gold); }
-.msu-guide-frame { width: 100%; flex: 1; border: 0; background: #fff; }
-@media (max-width: 600px) {
-  .msu-guide-overlay { padding: 0; }
-  .msu-guide-dialog { width: 100%; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
-  .msu-guide-bar h2 { flex: 1 1 100%; }
-}
+/* The in-app iframe rendering of the teacher guide is gone: Presenter Notes IS
+   the guide now, from the same source, so a second in-app copy could only
+   diverge from it. Settings links out to the printable file instead. */

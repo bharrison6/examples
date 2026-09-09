@@ -48,24 +48,42 @@
 .student-guide-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #002144; border-radius: 7px; background: #002144; color: #fff; font-weight: 750; cursor: pointer; }
 @media (max-width: 600px) {
   .student-guide { width: 100%; max-width: none; max-height: 100dvh; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
-  .student-guide-body { padding: 14px 14px 6px; }
+  /* The fixed byline pill wraps to two lines on a phone and floats over the
+     bottom-left of whatever is on screen, these full-height cards included.
+     Reserve the band it occupies so it never sits on the last line of text. */
+  .student-guide-body { padding: 14px 14px 44px; }
 }
 .student-guide-body .lede { color: #41505f; }
 .student-guide-body .setnote { color: #41505f; font-size: .88rem; margin-bottom: 6px; }
 .student-guide-body .btn { width: 100%; }
 .student-guide-body .btn + .btn { margin-top: 8px; }
+.student-guide-head h2 .head-sub { display: block; font-size: .72rem; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase; color: #ECAC00; margin-top: 2px; }
+/* Presentation mode is labelled exactly that (CONTRACT.md), so on/off is a
+   badge on the right of the button rather than part of its name. */
+#presbtn { display: flex; align-items: center; justify-content: center; gap: 8px; }
+#presbtn .state { border: 1px solid currentColor; border-radius: 999px; padding: 0 8px;
+  font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .85; }
 
-/* presenter's notes — stage cues distilled from the printable teacher guide */
-.pnotes h3 { display: flex; align-items: baseline; gap: 8px; margin-top: 18px;
-  border-bottom: 2px solid #ECAC00; padding-bottom: 3px; }
-.pnotes h3 .mins { margin-left: auto; font-size: .78rem; font-weight: 600; color: #41505f; }
-.pnotes .beat { display: grid; grid-template-columns: 40px 1fr; gap: 10px; margin: 0 0 9px; }
-.pnotes .beat .t { font-weight: 800; color: #002144; font-variant-numeric: tabular-nums; font-size: .84rem; }
-.pnotes .say { display: block; background: #FFF7E4; border-left: 3px solid #ECAC00;
-  padding: 5px 8px; margin-top: 4px; font-style: italic; }
-.pnotes .mis { border: 1px solid #c2cede; border-radius: 8px; padding: 7px 9px; margin-bottom: 7px; }
-.pnotes .mis b { color: #002144; }
-.pnotes .nums { background: #f2f6fb; border: 1px solid #c2cede; border-radius: 8px; padding: 8px 10px; }
+/* ---------- presenter notes = the printable guide, injected ----------
+   src/demo-guide.html is the single source; build.js lifts its .guide-scope
+   body and its scoped stylesheet into this page. That stylesheet is written in
+   print units (7.4pt body, mm gutters) because it is what renders the A4 PDF,
+   so the app scales the whole block with `zoom` rather than re-unitting it —
+   the shipped guide and the PDF stay byte-identical to what they were, and only
+   the on-screen copy is enlarged. Two columns are right for A4 and wrong for a
+   660px dialog, so the column rules are overridden here at id specificity
+   (#presenter-notes beats the injected .guide-scope rules on tie). */
+.guide-host { padding-top: 14px; }
+#presenter-notes .guide-scope { zoom: 1.6; }
+#presenter-notes .guide-scope .cols { column-count: 1; column-rule: 0; }
+#presenter-notes .guide-scope header { display: block; }
+#presenter-notes .guide-scope .meta { text-align: left; margin-top: 1.6mm; }
+#presenter-notes .guide-scope .page2 { break-before: auto; padding-top: 0; }
+@media (max-width: 600px) { #presenter-notes .guide-scope { zoom: 1.35; } }
+.guide-print { margin: 14px 0 4px; padding-top: 10px; border-top: 1px solid #c2cede;
+  font-size: .88rem; color: #41505f; }
+.guide-print a { color: #005a9c; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
@@ -90,8 +108,18 @@ header.top {
   padding: calc(var(--u) * .6) calc(var(--u) * .8) 0;
   max-width: 780px; margin: 0 auto;
 }
-.brandline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.brandline h1 { font-size: calc(var(--u) * 1.3); letter-spacing: .3px; }
+/* "How a Language Model Works" is a long title in a header that is sticky, so
+   every line it wraps to is a line stolen from the demo for the whole session.
+   Squeezed into the old three-across brandline it wrapped five deep at 360px
+   and pushed the header from 198px to 242px. Below 700px the title takes the
+   whole first row and the brand line drops beneath it; at 700px and up the
+   original single-row brandline is unchanged. */
+.brandline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.brandline h1 { flex: 1 1 100%; letter-spacing: .3px; line-height: 1.14;
+  /* 5.9vw only bites below ~353px, where the title would otherwise take two
+     lines; 360px and every size above it keeps the original 1.3u exactly. */
+  font-size: clamp(calc(var(--u) * 1.02), 5.9vw, calc(var(--u) * 1.3)); }
+@media (min-width: 700px) { .brandline { flex-wrap: nowrap; } .brandline h1 { flex: 0 0 auto; } }
 .brandline h1 b { color: var(--gold); font-weight: 800; }
 .msu-brand { color: var(--gold); font-size: calc(var(--u) * .62); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
 .brandline .sub { color: var(--ink3); font-size: calc(var(--u) * .72); text-align: right; }
@@ -364,12 +392,9 @@ details.fold summary { cursor: pointer; color: var(--sky); font-size: calc(var(-
 @keyframes sp { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
 
-/* in-app presenter guide */
-.msu-guide-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0,10,24,.84); }
-.msu-guide-overlay[hidden] { display: none; }
-.msu-guide-dialog { width: min(1000px,100%); height: min(92dvh,900px); background: #fff; color: #172231; border: 2px solid var(--navy); border-top: 5px solid var(--gold); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.65); }
-.msu-guide-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--navy); color: #fff; }
-.msu-guide-bar h2 { margin: 0; font-size: 1.05rem; }.msu-guide-spacer { flex: 1; }
-.msu-guide-bar button { min-height: 40px; padding: 7px 12px; border: 1px solid #fff; border-radius: 7px; background: #fff; color: var(--navy); font-weight: 700; }.msu-guide-bar button:last-child { background: var(--gold); border-color: var(--gold); }
-.msu-guide-frame { width: 100%; flex: 1; border: 0; background: #fff; }
-@media (max-width: 600px) { .msu-guide-overlay { padding: 0; }.msu-guide-dialog { width: 100%; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }.msu-guide-bar h2 { flex: 1 1 100%; } }
+/* The teacher guide used to open here in a frame pointed at the sibling guide
+   file.
+   Now that Presenter Notes ARE that guide, injected at build time, a second
+   copy fetched at runtime was both a duplicate and the one file this page
+   loaded from disk. Both the overlay and its stylesheet are gone; the route to
+   the printable file is a plain link in the notes footer. */

@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-/* Front Doors build: concatenate src/ into a single offline index.html in this
+/* AI Tool Guide (folder: front-doors) build: concatenate src/ into a single offline index.html in this
    folder, and copy the printable presenter guide alongside it.
 
    `node build.js`         writes index.html and presenter-guide.html
    `node build.js --check` verifies both match the canonical build, writes nothing
 
-   The guide is canonical in src/presenter-guide.html. Its first <style> block
+   The guide is canonical in src/presenter-guide.html. Its guide-css stylesheet
    and its .guide-scope div are lifted into the app verbatim, so Settings ->
-   Presenter's notes works from the single file with no sibling to fetch. One
-   source of truth: edit src/presenter-guide.html, never the copies.
+   Open Presenter Notes works from the single file with no sibling to fetch.
+   One source of truth: edit src/presenter-guide.html, never the copies.
 
    This demo is about products, and the two rules it holds itself to are worth
    enforcing at the gate rather than trusting to a reviewer's memory: no price
@@ -59,26 +59,93 @@ js = js.replace(/<\/script/gi, '<\\/script');
   }
 }
 
-/* Pull the guide apart. The FIRST <style> block is the one scoped to
-   .guide-scope and safe to inject; the second is page chrome for the
-   standalone printable file and must not leak into the app. */
+/* ---- pull the guide apart ------------------------------------------------
+   Two things are lifted out of the canonical guide: the stylesheet named
+   guide-css, which is scoped to .guide-scope and safe to inject, and the
+   .guide-scope div itself. The guide's OTHER stylesheet is page chrome for the
+   standalone printable file and must not leak into the app.
+
+   Finding either with a bare indexOf is a trap this build was in: the guide's
+   own head comment describes its markers, indexOf matched the description
+   first, extraction began inside the comment, and the browser then dropped the
+   first scoped rule as part of an unparseable selector. The rule now is the one
+   the sibling demos settled on -- mask every comment to same-length spaces,
+   anchor each marker to the start of a line, and refuse to build unless it
+   matches exactly once.
+   ------------------------------------------------------------------------ */
 const guideSrc = read('presenter-guide.html');
-const sOpen = guideSrc.indexOf('<style>');
-const sClose = guideSrc.indexOf('</style>');
-const gStart = guideSrc.indexOf('<div class="guide-scope">');
-const gEnd = guideSrc.indexOf('</div><!-- /guide -->');
-if (sOpen < 0 || sClose < 0 || gStart < 0 || gEnd < 0) {
-  console.error('guide markers missing in src/presenter-guide.html'); process.exit(1);
+
+/** Blank every <!-- ... --> region, keeping length and newlines, so a marker
+ *  merely NAMED in a comment can never be mistaken for the marker itself. */
+const maskComments = s => s.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
+
+/** The one and only match of a line-anchored marker, or a refusal. Two matches
+ *  is as much a defect as none: it means the file no longer says which is the
+ *  real one. */
+function onlyMatch(hay, re, what) {
+  const rx = new RegExp(re.source, re.flags.replace('g', '') + 'g');
+  const hits = [];
+  for (let m = rx.exec(hay); m; m = rx.exec(hay)) {
+    hits.push(m);
+    if (m[0] === '') rx.lastIndex++;
+  }
+  if (hits.length !== 1) {
+    console.error('guide marker must appear exactly once, found ' + hits.length + ': ' + what);
+    process.exit(1);
+  }
+  return hits[0];
 }
-const guideCss = guideSrc.slice(sOpen + '<style>'.length, sClose);
+
+const masked = maskComments(guideSrc);
+const CSS_OPEN = '<style id="guide-css">';
+const GUIDE_OPEN = '<div class="guide-scope">';
+const GUIDE_CLOSE = '</div><!-- /guide -->';
+
+const mCss = onlyMatch(masked, /^[ \t]*<style id="guide-css">[ \t]*$/m, CSS_OPEN);
+const sOpen = mCss.index + mCss[0].indexOf(CSS_OPEN);
+const sClose = masked.indexOf('</style>', sOpen + CSS_OPEN.length);
+if (sClose < 0) { console.error('guide-css stylesheet is never closed'); process.exit(1); }
+
+const mGuide = onlyMatch(masked, /^[ \t]*<div class="guide-scope">[ \t]*$/m, GUIDE_OPEN);
+const gStart = mGuide.index + mGuide[0].indexOf(GUIDE_OPEN);
+
+/* The end marker is deliberately a comment, so masking would erase it: it is
+   found in the raw text instead, under the same line-anchor and exactly-once
+   rule, which is the equivalent guard. */
+const mEnd = onlyMatch(guideSrc, /^[ \t]*<\/div><!-- \/guide -->[ \t]*$/m, GUIDE_CLOSE);
+const gEnd = mEnd.index + mEnd[0].indexOf(GUIDE_CLOSE);
+if (gEnd <= gStart) { console.error('the guide closes before it opens'); process.exit(1); }
+
+const guideCss = guideSrc.slice(sOpen + CSS_OPEN.length, sClose);
 const guideHtml = guideSrc.slice(gStart, gEnd) + '</div>';
+
+/* Proof that extraction landed on the stylesheet rather than on prose about it.
+   The first of these three is exactly the check that would have caught the
+   indexOf defect on the day it shipped. */
+if (/<style|-->/.test(guideCss)) {
+  console.error('guide stylesheet extraction started inside a comment'); process.exit(1);
+}
+if (!/^\s*\.guide-scope\b/m.test(guideCss)) {
+  console.error('guide stylesheet does not begin with a .guide-scope rule'); process.exit(1);
+}
 if (/^\s*body\s*[,{]/m.test(guideCss)) {
   console.error('guide stylesheet leaks a page-level rule into the app'); process.exit(1);
 }
+if (guideCss.includes('Standalone printable page only') ||
+    guideHtml.includes('Standalone printable page only')) {
+  console.error('the printable page chrome leaked into the app'); process.exit(1);
+}
 
+/* Placeholders must occur EXACTLY once. String.replace substitutes the first
+   occurrence, so a placeholder also named in a head comment would quietly
+   receive the whole guide. */
 const tpl = read('template.html');
 for (const ph of ['/*__CSS__*/', '/*__JS__*/', '/*__GUIDE_CSS__*/', '<!--__GUIDE__-->']) {
-  if (!tpl.includes(ph)) { console.error('template placeholder missing: ' + ph); process.exit(1); }
+  const seen = tpl.split(ph).length - 1;
+  if (seen !== 1) {
+    console.error('template placeholder ' + ph + ' must appear exactly once, found ' + seen);
+    process.exit(1);
+  }
 }
 const html = tpl
   .replace('/*__CSS__*/', () => css)

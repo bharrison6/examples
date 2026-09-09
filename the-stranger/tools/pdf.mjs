@@ -1,18 +1,20 @@
 #!/usr/bin/env node
-/* Render the presenter guide to PDF.
+/* Render the printable presenter sheet to PDF.
 
-   `node tools/pdf.mjs`         writes Front-Doors-Presenter-Guide.pdf
-   `node tools/pdf.mjs --check` verifies the guide loads and the PDF exists
+   `node tools/pdf.mjs`         writes The-Stranger-Presenter-Sheet.pdf
+   `node tools/pdf.mjs --check` verifies the sheet parses and the PDF exists
 
-   The canonical guide is src/presenter-guide.html; the copy at the demo root
-   is what build.js writes and what this reads, so the PDF always matches the
-   file that ships beside it.
+   presenter-sheet.html is the one source: this PDF, the printable page, and the
+   in-app presenter notes (injected by build.js) all come out of it, so the paper
+   in a presenter's hand and the overlay on the projector cannot disagree.
 
-   Two engines, tried in order. Playwright if the repository happens to have it
-   installed, otherwise a system Chrome or Edge in headless mode. This
-   repository has no node_modules, so the browser path is the one that actually
-   runs. No path is hardcoded to one machine — CHROME_PATH wins, then the usual
-   install locations on Windows, macOS and Linux. */
+   This replaces the PDF half of tools/companion.py, which needed Playwright and
+   generated a second copy of the sheet. Two engines, tried in order: Playwright if
+   this checkout happens to have it, otherwise a system Chrome or Edge in headless
+   mode. This repository has no node_modules, so the browser path is the one that
+   actually runs. No path is hardcoded to one machine — CHROME_PATH wins, then the
+   usual install locations on Windows, macOS and Linux. Node builtins only; nothing
+   is installed and nothing is downloaded. */
 
 import fs from 'fs';
 import os from 'os';
@@ -24,33 +26,25 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
-const guide = path.join(ROOT, 'presenter-guide.html');
-const out = path.join(ROOT, 'Front-Doors-Presenter-Guide.pdf');
+const sheet = path.join(ROOT, 'presenter-sheet.html');
+const out = path.join(ROOT, 'The-Stranger-Presenter-Sheet.pdf');
 const CHECK = process.argv.includes('--check');
 
-if (!fs.existsSync(guide)) {
-  throw new Error(`Presenter guide is missing: ${guide}. Run: node build.js`);
-}
-/* Refuse to render a file that is not the guide. The check is on the guide's
-   own <title>, which the 2026-09-09 retitle changed from "Front Doors —
-   presenter guide" to the display title below; the OUTPUT filename is
-   deliberately unchanged, because the hub links to it. */
-const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>AI Tool Guide — notes for the presenter<\/title>/.test(html)) {
-  throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
+if (!fs.existsSync(sheet)) throw new Error(`Presenter sheet is missing: ${sheet}`);
+const html = fs.readFileSync(sheet, 'utf8');
+if (!/presenter sheet<\/title>/.test(html) || !/<div class="guide-scope">/.test(html)) {
+  throw new Error('Unexpected sheet structure; refusing to render a file that is not the presenter sheet.');
 }
 
 if (CHECK) {
-  if (!fs.existsSync(out)) {
-    throw new Error(`PDF CHECK FAILED: ${path.basename(out)} is missing; run node tools/pdf.mjs`);
-  }
+  if (!fs.existsSync(out)) throw new Error(`PDF CHECK FAILED: ${path.basename(out)} is missing; run node tools/pdf.mjs`);
   const bytes = fs.statSync(out).size;
   if (bytes < 8192) throw new Error(`PDF CHECK FAILED: ${path.basename(out)} is only ${bytes} bytes`);
-  console.log(`PDF CHECK OK: guide parses and ${path.basename(out)} exists (${(bytes / 1024).toFixed(0)} KB); no files written.`);
+  console.log(`PDF CHECK OK: presenter-sheet.html parses and ${path.basename(out)} exists (${(bytes / 1024).toFixed(0)} KB); no files written.`);
   process.exit(0);
 }
 
-const src = pathToFileURL(guide).href;
+const src = pathToFileURL(sheet).href;
 
 /* --- engine 1: Playwright, if this checkout has it ---------------------- */
 let done = false;
@@ -59,8 +53,7 @@ try {
   const b = await chromium.launch();
   const p = await b.newPage();
   await p.goto(src, { waitUntil: 'load' });
-  await p.pdf({ path: out, format: 'Letter', printBackground: true,
-                margin: { top: '0.6in', bottom: '0.6in', left: '0.6in', right: '0.6in' } });
+  await p.pdf({ path: out, format: 'Letter', printBackground: true });
   await b.close();
   done = true;
   console.log('WRITE OK (playwright):', path.basename(out));
@@ -90,10 +83,10 @@ if (!done) {
                     'Set CHROME_PATH to a Chromium-based browser and re-run.');
   }
 
-  /* --print-to-pdf needs a writable profile directory or it will contend with
-     the user's running browser. A throwaway one under the OS temp dir keeps
-     this off the user's real profile. */
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'front-doors-pdf-'));
+  /* --print-to-pdf needs a writable profile directory or it contends with the
+     user's running browser. A throwaway one under the OS temp dir keeps this off
+     the real profile. The page's own @page rule owns the margins. */
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'stranger-pdf-'));
   const r = spawnSync(exe, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     `--user-data-dir=${profile}`,
@@ -103,9 +96,7 @@ if (!done) {
   ], { stdio: 'inherit' });
   try { fs.rmSync(profile, { recursive: true, force: true }); } catch { /* best effort */ }
 
-  if (r.status !== 0 || !fs.existsSync(out)) {
-    throw new Error(`Headless print failed (exit ${r.status}) using ${exe}`);
-  }
+  if (r.status !== 0 || !fs.existsSync(out)) throw new Error(`Headless print failed (exit ${r.status}) using ${exe}`);
   console.log('WRITE OK (' + path.basename(exe) + '):', path.basename(out),
               (fs.statSync(out).size / 1024).toFixed(0) + ' KB');
 }

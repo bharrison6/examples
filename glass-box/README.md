@@ -1,4 +1,7 @@
-# Glass Box
+# How a Language Model Works
+
+*(folder and public URL stay `glass-box`; the demo still signs itself **Glass Box** in the
+header subtitle, the guide and the footer)*
 
 A single-file, phone-first interactive demo of how modern AI works, in three acts:
 **Act 1** — what a language model is (a real transformer trains from scratch in front of you);
@@ -12,6 +15,9 @@ Built for showing other educators what is actually inside the black box — each
 
 **Companion:** `demo-guide.html` / `Glass-Box-Demo-Guide.pdf` — a printable session plan
 (three 10-minute acts, quotable lines, misconceptions to draw out, the questions you will get).
+That file is also the in-app presenter notes: `src/demo-guide.html` is the single source and
+`build.js` injects it into `index.html`, so the printable page, the PDF and Settings → Open
+Presenter Notes cannot drift — `node build.js --check` fails if they do.
 
 ---
 
@@ -126,18 +132,33 @@ Three overlay cards share one style — a white panel with a navy bar and a gold
 under 600px, with the title bar and the closing button pinned so only the body scrolls. Each one
 closes on Escape, on a tap outside it, on its ×, and on its footer button.
 
-- **How to use** — opens on every load and explains what to do in each of the three acts. Reopen
-  it any time from the **?** in the sticky header (or `how to use` in the footer).
-- **Settings** — the header's second control. Holds **presentation mode**, which scales one CSS
-  variable to enlarge the whole page for a projector and puts a **Notes** button in the header;
-  the **presenter's notes**; and the full teacher guide.
-- **Presenter's notes** — the stage version of `demo-guide.html`, distilled: what to do before you
-  start, the timed beats and quotable lines for each act, the numbers this seeded run produces, the
-  six misconceptions to draw out, and the four questions you will get. The complete printable plan
-  stays in the teacher guide. Reachable from Settings, from the footer, and — while presenting —
-  from the header.
+- **Guide** — opens on every load and explains what to do in each of the three acts. Reopen it any
+  time from the **?** in the sticky header (its accessible name is exactly *Guide*) or `guide` in
+  the footer.
+- **⚙ Settings** — the header's second control. Its menu carries exactly the three things
+  CONTRACT.md requires: **Open Presenter Notes**, **Presentation mode** (scales one CSS variable to
+  enlarge the whole page for a projector and puts a **Notes** button in the header), and **Reset**.
+  The mode control keeps that exact label; its on/off state rides in an `aria-hidden` badge and in
+  `aria-pressed`.
+- **Presenter Notes** — the printable guide itself, injected at build time from
+  `src/demo-guide.html`: what to do before you start, the timed beats and quotable lines for each
+  act, the numbers this seeded run produces, the six misconceptions to draw out, and the four
+  questions you will get. Its two A4 columns collapse to one and the block is scaled with `zoom`,
+  so the print stylesheet that renders the PDF is the same bytes on screen and the PDF cannot move
+  when the overlay is restyled. Reachable from Settings, from the footer, and — while presenting —
+  from the header; a link at its foot opens the printable copy in a new tab.
+- **Reset** — reloads the page. Not laziness: "fresh" here means an untrained transformer in a new
+  Web Worker, the four era checkpoints gone, both Act 2 models and the STaR rounds discarded, and
+  Act 3's transcript, tool log and context meter cleared — a reload *is* that state by construction,
+  where a hand-written teardown is a wide surface on which missing one field leaves a presenter with
+  a half-reset page and no way to tell. Two deltas ride in the URL fragment, because this demo
+  writes no storage of any kind: the Guide overlay stays shut, and Presentation mode is restored,
+  since that is a display preference rather than demo state. The fragment is stripped on arrival, so
+  a later manual refresh is an ordinary fresh load. Act 3's own per-run control is labelled
+  **restart run**, to keep the two apart.
 
-The byline pill (bottom-left, fixed) lifts clear of the sticky TRAIN button on narrow screens.
+The byline pill (bottom-left, fixed) lifts clear of the sticky TRAIN button on narrow screens and
+wraps to two lines rather than running off the right edge — at 320px it used to extend 180px past it.
 
 Training normally runs in a Web Worker so the UI never blocks. Some hosts refuse blob workers
 (sandboxed preview panes, strict CSP) — synchronously, with a late error event, or by silently
@@ -155,8 +176,9 @@ node src/selftest.test.js     # 29 checks, ~60s: gradient check vs numerics, unt
                               # calculator/search/policy behavior, the 11-turn run, the
                               # tiny-window failure
 node tools/integration.mjs    # drives the built file in a phone-sized browser (~4 min):
-                              # the required-UX pass (how-to on load, Escape and the ? control,
-                              # settings, presenter's notes, presentation mode, the byline),
+                              # the required-UX pass (Guide overlay on load, Escape and the ?
+                              # control, the exact Settings menu, notes == guide, presentation
+                              # mode, Reset, the byline fitting a 375px screen),
                               # trains era 1 live, full Act 2 (both models + voting + a
                               # self-improvement round, asserting the gaps), Act 3 autoplay to
                               # the correct answer and the context-window failure, zero network
@@ -173,14 +195,16 @@ that matters.
 `index.html` is generated. Edit `src/`, then:
 
 ```
-node build.js        # concatenates src/ into index.html + copies the guide
-node build.js --check # read-only source/generated parity check
+node build.js        # concatenates src/ into index.html, injecting the guide, and ships it
+node build.js --check # read-only parity check: index.html, demo-guide.html, the in-app notes,
+                     # and that the PDF is no older than the guide it renders
 node tools/pdf.mjs   # re-renders Glass-Box-Demo-Guide.pdf
 node tools/shots.mjs # screenshot pass at phone + desktop sizes (visual review)
 ```
 
-The build refuses to emit a file containing any external `src` or `href`, so the single-file
-promise cannot rot.
+The build refuses to emit a file containing any external `src` or `href`, or anything that would
+load at runtime, so the single-file promise cannot rot. That runtime scan runs on a de-commented
+copy and is proved on three synthetic positives before its silence is believed.
 
 ```
 src/engine.js          the transformer: forward, hand-derived backward, Adam, sampling,
@@ -194,7 +218,8 @@ src/worker.js          the training worker (chunked loops, progress messages, er
 src/app.js             all UI
 src/styles.css         phone-first; presenter mode scales one variable
 src/template.html      shell and copy, with build placeholders
-src/demo-guide.html    the printable presenter guide
+src/demo-guide.html    the printable presenter guide — and the in-app presenter notes:
+                       <style id="guide-css"> and the .guide-scope div are lifted verbatim
 src/selftest.test.js   the 29 node checks, including cooperative STaR parity
 tools/integration.mjs  the browser suite
 tools/pdf.mjs          guide -> PDF        tools/shots.mjs   screenshots

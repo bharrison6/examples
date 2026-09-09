@@ -1,5 +1,8 @@
 # Ladder Lab — Shared Architecture Spec (v1)
 
+*Shipped as **PLC Ladder Logic Trainer**. "Ladder Lab" stays the internal and brand name;
+the folder, the source files and the guide filenames are unchanged.*
+
 Single self-contained offline HTML app: a PLC trainer centered on a stoplight program.
 This spec is the binding contract between modules. Do not deviate from names, formats,
 or semantics defined here. If something is unspecified, choose sensibly and document
@@ -332,7 +335,10 @@ Presets/timing are part of the program `notes` so the ladder matches its spec.
 <body>
  <header id="topbar">  title · program <select> · mode tabs [Trainer|Editor|Challenges|Troubleshoot]
    · run controls (Run/Pause, Step Scan, speed select, scanMs select 10/20/50/100)
-   · teacher menu (☰: Big UI toggle, Hide ladder toggle, Reset everything, Teacher guide link (opens teacher-guide.html), Self-test)
+   · Guide button (?) then Settings (⚙). The Settings menu leads with the three
+     contract entries, labelled exactly — Open Presenter Notes, Presentation mode,
+     Reset — and this demo's own controls follow below a rule: Hide ladder toggle,
+     Printable teacher guide link (opens teacher-guide.html), Self-test.
  <main id="panes">
    <section id="left-pane">   … ladder OR editor OR challenge UI (challenges embed the editor)
    <section id="right-pane">  … sim pane (always visible) + fault panel (troubleshoot mode)
@@ -342,8 +348,16 @@ Presets/timing are part of the program `notes` so the ladder matches its spec.
 Modes: Trainer (ladder+sim), Editor (editor+sim — running student program drives
 the sim), Challenges (challenge list/spec + editor + sim), Troubleshoot (ladder+
 sim + fault panel). Hide-ladder toggle collapses left pane (Trainer/Troubleshoot).
-Big-UI toggle adds `body.bigui` scaling ~1.35× fonts/symbols. Reset everything:
-reload program fresh, sim reset with fixed seed 12345, timers zeroed.
+Presentation mode adds `body.bigui` (scaling ~1.35× fonts/symbols) and
+`body.presentation` (the one-tap notes button in the top bar). Settings → Reset
+returns the whole app to its just-opened state by reloading: six stateful modules
+would otherwise each need a hand-written teardown, and one missed field is a demo
+that looks reset and is not. Two flags ride across in `location.hash` (which works
+on `file://`, where the storage APIs are not guaranteed to) and are consumed on
+boot: `reset` suppresses the Guide-on-load greeting, and `pres` restores
+Presentation mode, which is a display preference rather than demo state. The top
+bar's own **⟲ Reset PLC** is the smaller control: sim reset with fixed seed 12345,
+timers zeroed, program untouched.
 `?selftest=1` runs engine unit tests and renders a pass/fail report (also
 runnable in node: `node src/engine.js --test` guarded by `typeof window`).
 
