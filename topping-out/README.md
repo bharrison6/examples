@@ -1,4 +1,6 @@
-# Topping Out — competitive construction scheduling for the classroom
+# Construction Scheduling
+
+*Topping Out* — competitive construction scheduling for the classroom.
 
 **Murray State edition** — navy and gold throughout, cartoon crews in gold hard hats, the pennant on
 the field office, and the projects renamed for home: *Racer Commons — Chestnut Street* and the *Shoe
@@ -10,17 +12,20 @@ offline on school laptops straight off a USB stick or a shared drive.
 
 | File | What it is |
 |---|---|
-| `index.html` | The whole game — one self-contained file (~332 KB). |
+| `index.html` | The whole game, instructor guide included — one self-contained file (~388 KB). |
 | `teacher-guide.html` | Printable instructor guide — 75-minute session plan, CPM background, sources. |
 | `Topping-Out-Instructor-Guide.pdf` | The same guide, pre-rendered to Letter. |
 | `SPEC.md` | The original design brief this was built against. |
+| `src/` | Sources. `teacher-guide.html` here is the canonical guide; the two copies are generated. |
+| `build.js` | Concatenates `src/` into `index.html` and injects the guide into the presenter notes. |
+| `tools/pdf.mjs` | Renders the guide to the PDF above. |
 
 Teams manage the schedule of the same small commercial building, week by week, against the
 same run of bad luck. Highest profit at completion wins.
 
-A **how-to briefing** opens on every load — the weekly loop, the three views and the three
-things that cost teams the game, on one sheet. Dismiss it with the button, a tap on the paper
-around it, or Esc; the **?** in the title bar (and on the setup sheet) puts it back up any time.
+The **Guide** opens on every load — the weekly loop, the three views and the three things that
+cost teams the game, on one sheet. Dismiss it with the button, a tap on the paper around it, or
+Esc; the **?** in the title bar (and on the setup sheet) puts it back up any time.
 
 ## What makes it a real scheduler and not a scripted timeline
 
@@ -217,16 +222,24 @@ against the **no-intervention baseline** — the same seed played by simply lett
 
 ## Instructor features
 
-**⚙ Settings** menu: **presentation mode** (large UI, readable from the back of a room — the
-old projector mode), the **presenter's notes**, the how-to briefing, new game / change seed,
-leaderboard reset, a link to the printable guide, and an engine self-test that runs 36
-assertions — including the CPM hand calculation — in front of the class.
+**⚙ Settings** sits beside the **?** in the title bar. It always offers the same three things
+first — **Open Presenter Notes**, **Presentation mode** and **Reset** — followed by this demo’s
+own controls: the Guide, a link to the printable instructor guide, an engine self-test that runs
+36 assertions (including the CPM hand calculation) in front of the class, and a leaderboard reset.
 
-**Presenter's notes** are the stage version of the instructor guide, distilled to what you need
-while you are standing up: the 75-minute running order, the lines worth saying out loud, the five
-misconceptions and the moment that exposes each, six debrief openers, and what to do when the
-session drifts. Five collapsible sections, readable on a phone, with a link out to the full
-printable guide. Turning presentation mode on also puts a 🎙 shortcut to them in the title bar.
+**Open Presenter Notes** shows the instructor guide itself, in full, inside the game: the same
+document as `teacher-guide.html` and the PDF, not a summary of it. It is injected at build time
+from `src/teacher-guide.html`, so there is only one copy to keep current and `node build.js
+--check` fails if the app and the printed sheet ever drift apart. Turning Presentation mode on
+also puts a 🎙 shortcut to the notes in the title bar.
+
+**Presentation mode** is the large-type UI, readable from the back of a room — the old projector
+mode. It is a display preference for the machine, not part of a run, so it survives a Reset.
+
+**Reset** returns the machine to the setup sheet exactly as the page opens: no run in progress,
+seed and team cleared, tutorial and Standard selected, every overlay closed and the Guide left
+down. Mid-run it asks first. The leaderboard is not run state — it survives a reload, so it
+survives a Reset, and has its own control in the same menu for clearing between sections.
 
 Difficulty (Easy / Standard / Hard) scales how often events fire and how hard they hit. The seed
 fixes *which* events fire and in what order.
@@ -237,10 +250,16 @@ loop and the views before the competitive run on *Racer Commons — Chestnut Str
 
 ## Developing
 
-Sources live in `src/` and are concatenated by `build.js` into the single `index.html`.
+Sources live in `src/` and are concatenated by `build.js` into the single `index.html`. The
+instructor guide is canonical in `src/teacher-guide.html`: `build.js` copies it to the demo root
+and lifts its `.guide-scope` body and scoped stylesheet into the app, so the presenter notes, the
+printable page and the PDF are one document from one file. Edit the guide there, never a copy.
 
 ```
-node build.js                  # rebuild index.html from src/
+node build.js                  # rebuild index.html from src/, guide and all
+node build.js --check          # fails if index.html or the shipped guide has drifted from src/
+node tools/pdf.mjs             # re-render Topping-Out-Instructor-Guide.pdf from the guide
+node tools/pdf.mjs --check     # fails if the PDF is missing or older than the guide
 node src/engine.js --test      # 36 engine assertions (also runs in-browser from the Settings menu)
 node src/playtest.test.js      # 83 assertions — the seven required verifications, plus proof the decisions matter
 node tools/integration.mjs     # 87 checks — desktop and phone viewports — drives the built game in a real browser, end to end (needs playwright)

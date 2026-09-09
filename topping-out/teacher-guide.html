@@ -2,114 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Topping Out — Instructor Guide</title>
-<style>
+<title>Construction Scheduling — Instructor Guide</title>
+<!-- Page chrome for the standalone printable file. NOT injected into the app:
+     build.js lifts only the guide-css stylesheet and the .guide-scope div, so
+     nothing here can leak a page-level rule into index.html. -->
+<style id="guide-page">
   @page { size: letter; margin: 0.62in 0.7in; }
 
   html { -webkit-text-size-adjust: 100%; }
-  body {
-    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
-    font-size: 10.5pt;
-    line-height: 1.42;
-    color: #141414;
-    background: #fff;
+  body { background: #fff; margin: 0; padding: 0; }
+
+  /* Sheet geometry belongs to the standalone page. In the app the guide is
+     laid out by the notes overlay instead, so this stays out of #guide-css. */
+  body > .guide-scope {
     max-width: 7.1in;
     margin: 0 auto;
     padding: 28px 22px 60px;
-  }
-  p { margin: 0 0 .58em; }
-  b, strong { font-weight: 700; }
-
-  /* ---- drawing-set typography ---------------------------------- */
-  .mono, th, .tag, .sheetno, .titleblock, caption {
-    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
-  }
-
-  /* ---- title block --------------------------------------------- */
-  .titleblock {
-    border: 1.5px solid #111;
-    margin-bottom: 20px;
-  }
-  .tb-row { display: flex; border-bottom: 1px solid #111; }
-  .tb-row:last-child { border-bottom: 0; }
-  .tb-cell { padding: 5px 8px 6px; border-right: 1px solid #111; flex: 1 1 auto; }
-  .tb-cell:last-child { border-right: 0; }
-  .tb-lab {
-    font-size: 6.6pt; letter-spacing: .13em; text-transform: uppercase;
-    color: #555; display: block; margin-bottom: 1px;
-  }
-  .tb-val { font-size: 9.2pt; font-weight: 700; letter-spacing: .02em; }
-  .tb-title { flex: 3 1 auto; }
-  .tb-title .tb-val { font-size: 17pt; letter-spacing: .06em; text-transform: uppercase; line-height: 1.1; }
-  .tb-title .tb-sub { font-size: 9pt; font-weight: 400; color: #333; margin-top: 2px; }
-  .sheetno { flex: 0 0 92px; text-align: center; }
-  .sheetno .tb-val { font-size: 20pt; letter-spacing: .04em; }
-
-  /* ---- sections -------------------------------------------------- */
-  h2 {
-    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
-    font-size: 11.5pt; text-transform: uppercase; letter-spacing: .11em;
-    margin: 17px 0 7px; padding-bottom: 3px;
-    border-bottom: 1.5px solid #111;
-    break-after: avoid; page-break-after: avoid;
-  }
-  h2 .num {
-    display: inline-block; min-width: 1.5em;
-    color: #b4531c; font-weight: 700;
-  }
-  h3 {
-    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
-    font-size: 9.6pt; text-transform: uppercase; letter-spacing: .07em;
-    margin: 11px 0 4px;
-    break-after: avoid; page-break-after: avoid;
-  }
-  .lead { font-size: 10.8pt; }
-
-  /* ---- tables ---------------------------------------------------- */
-  table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.3pt; }
-  caption {
-    caption-side: top; text-align: left; font-size: 7.6pt; letter-spacing: .1em;
-    text-transform: uppercase; color: #444; padding-bottom: 4px;
-  }
-  th {
-    text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: .06em;
-    border-bottom: 1.2px solid #111; padding: 3px 6px 3px 0; vertical-align: bottom;
-  }
-  td { padding: 3px 6px 3px 0; border-bottom: .5px solid #c8c8c8; vertical-align: top; }
-  tr:last-child td { border-bottom: 1px solid #111; }
-  td.n, th.n { text-align: right; padding-right: 12px; font-variant-numeric: tabular-nums; }
-  tbody tr.hi td { background: #f2ece4; }
-  .tight td, .tight th { padding-top: 2px; padding-bottom: 2px; }
-
-  /* ---- boxes ----------------------------------------------------- */
-  .box {
-    border: 1px solid #111; border-left: 4px solid #b4531c;
-    padding: 7px 11px 2px; margin: 9px 0 11px; background: #fbfaf8;
-    break-inside: avoid; page-break-inside: avoid;
-  }
-  .box .tag {
-    font-size: 7.2pt; letter-spacing: .14em; text-transform: uppercase;
-    color: #b4531c; font-weight: 700; display: block; margin-bottom: 3px;
-  }
-  .note { font-size: 9.2pt; color: #333; }
-
-  code, .act {
-    font-family: "SF Mono", "DejaVu Sans Mono", Consolas, monospace;
-    font-size: 8.8pt; letter-spacing: -.01em;
-  }
-  .act { font-weight: 700; white-space: nowrap; }
-
-  ol, ul { margin: 4px 0 10px; padding-left: 1.75em; }
-  li { margin-bottom: 5px; }
-  ol.q > li { margin-bottom: 7px; }
-  .src { font-size: 9.2pt; margin: 0 0 7px; padding-left: 1.1em; text-indent: -1.1em; }
-
-  .foot {
-    margin-top: 18px; padding-top: 6px; border-top: 1.5px solid #111;
-    font-size: 8pt; letter-spacing: .04em; color: #444;
-    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
-    text-transform: uppercase;
-    display: flex; justify-content: space-between;
   }
 
   .printbtn {
@@ -121,12 +29,146 @@
   .printbtn:hover { background: #b4531c; }
 
   @media print {
-    body { max-width: none; margin: 0; padding: 0; font-size: 9.8pt; }
+    body > .guide-scope { max-width: none; margin: 0; padding: 0; font-size: 9.8pt; }
     .printbtn { display: none !important; }
-    .box, table, .titleblock { break-inside: avoid; page-break-inside: avoid; }
-    h2, h3 { break-after: avoid; page-break-after: avoid; }
-    p, li { orphans: 2; widows: 2; }
-    a { color: #000; text-decoration: none; }
+  }
+</style>
+
+<!-- The guide's own typography, every selector scoped to .guide-scope. This is
+     the block build.js injects verbatim into index.html, so the in-app
+     presenter notes and this printed sheet are one document from one source.
+     Found by its id, never by indexOf of a bare style tag. -->
+<style id="guide-css">
+  .guide-scope {
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.42;
+    color: #141414;
+    background: #fff;
+  }
+  .guide-scope p { margin: 0 0 .58em; }
+  .guide-scope b, .guide-scope strong { font-weight: 700; }
+
+  /* ---- drawing-set typography ---------------------------------- */
+  .guide-scope .mono, .guide-scope th, .guide-scope .tag,
+  .guide-scope .sheetno, .guide-scope .titleblock, .guide-scope caption {
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* ---- title block --------------------------------------------- */
+  .guide-scope .titleblock {
+    border: 1.5px solid #111;
+    margin-bottom: 20px;
+  }
+  .guide-scope .tb-row { display: flex; border-bottom: 1px solid #111; }
+  .guide-scope .tb-row:last-child { border-bottom: 0; }
+  .guide-scope .tb-cell { padding: 5px 8px 6px; border-right: 1px solid #111; flex: 1 1 auto; }
+  .guide-scope .tb-cell:last-child { border-right: 0; }
+  .guide-scope .tb-lab {
+    font-size: 6.6pt; letter-spacing: .13em; text-transform: uppercase;
+    color: #555; display: block; margin-bottom: 1px;
+  }
+  .guide-scope .tb-val { font-size: 9.2pt; font-weight: 700; letter-spacing: .02em; }
+  .guide-scope .tb-title { flex: 3 1 auto; }
+  .guide-scope .tb-title .tb-val { font-size: 17pt; letter-spacing: .06em; text-transform: uppercase; line-height: 1.1; }
+  .guide-scope .tb-title .tb-sub { font-size: 9pt; font-weight: 400; color: #333; margin-top: 2px; }
+  .guide-scope .sheetno { flex: 0 0 92px; text-align: center; }
+  .guide-scope .sheetno .tb-val { font-size: 20pt; letter-spacing: .04em; }
+
+  /* ---- sections -------------------------------------------------- */
+  .guide-scope h2 {
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 11.5pt; text-transform: uppercase; letter-spacing: .11em;
+    margin: 17px 0 7px; padding-bottom: 3px;
+    border-bottom: 1.5px solid #111;
+    color: #141414;
+    break-after: avoid; page-break-after: avoid;
+  }
+  .guide-scope h2 .num {
+    display: inline-block; min-width: 1.5em;
+    color: #b4531c; font-weight: 700;
+  }
+  .guide-scope h3 {
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 9.6pt; text-transform: uppercase; letter-spacing: .07em;
+    margin: 11px 0 4px;
+    color: #141414; border-bottom: 0; padding-bottom: 0;
+    break-after: avoid; page-break-after: avoid;
+  }
+  .guide-scope .lead { font-size: 10.8pt; }
+
+  /* ---- tables ---------------------------------------------------- */
+  .guide-scope table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.3pt; }
+  .guide-scope caption {
+    caption-side: top; text-align: left; font-size: 7.6pt; letter-spacing: .1em;
+    text-transform: uppercase; color: #444; padding-bottom: 4px;
+  }
+  .guide-scope th {
+    text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1.2px solid #111; padding: 3px 6px 3px 0; vertical-align: bottom;
+    background: transparent; color: #141414;
+  }
+  .guide-scope td { padding: 3px 6px 3px 0; border-bottom: .5px solid #c8c8c8; vertical-align: top; }
+  .guide-scope tr:last-child td { border-bottom: 1px solid #111; }
+  .guide-scope td.n, .guide-scope th.n { text-align: right; padding-right: 12px; font-variant-numeric: tabular-nums; }
+  .guide-scope tbody tr.hi td { background: #f2ece4; }
+  .guide-scope .tight td, .guide-scope .tight th { padding-top: 2px; padding-bottom: 2px; }
+
+  /* ---- boxes ----------------------------------------------------- */
+  .guide-scope .box {
+    border: 1px solid #111; border-left: 4px solid #b4531c;
+    padding: 7px 11px 2px; margin: 9px 0 11px; background: #fbfaf8;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .guide-scope .box .tag {
+    font-size: 7.2pt; letter-spacing: .14em; text-transform: uppercase;
+    color: #b4531c; font-weight: 700; display: block; margin-bottom: 3px;
+  }
+  .guide-scope .note { font-size: 9.2pt; color: #333; }
+
+  .guide-scope code, .guide-scope .act {
+    font-family: "SF Mono", "DejaVu Sans Mono", Consolas, monospace;
+    font-size: 8.8pt; letter-spacing: -.01em;
+  }
+  .guide-scope .act { font-weight: 700; white-space: nowrap; }
+
+  .guide-scope ol, .guide-scope ul { margin: 4px 0 10px; padding-left: 1.75em; }
+  .guide-scope li { margin-bottom: 5px; }
+  .guide-scope ol.q > li { margin-bottom: 7px; }
+  .guide-scope .src { font-size: 9.2pt; margin: 0 0 7px; padding-left: 1.1em; text-indent: -1.1em; }
+
+  .guide-scope .foot {
+    margin-top: 18px; padding-top: 6px; border-top: 1.5px solid #111;
+    font-size: 8pt; letter-spacing: .04em; color: #444;
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between;
+  }
+
+  /* A drawing-set title block and a six-column table are drawn for a 7.1in
+     sheet. The guide is read on phones too — as this page, and inside the
+     app’s notes overlay, which cannot scroll sideways — so under 560px the
+     title block stacks and a wide table scrolls inside its own box instead of
+     pushing the document off the screen. */
+  @media (max-width: 560px) {
+    .guide-scope .tb-row { flex-wrap: wrap; }
+    .guide-scope .tb-cell {
+      flex: 1 1 100%; min-width: 0;
+      border-right: 0; border-bottom: 1px solid #111;
+    }
+    .guide-scope .tb-row:last-child .tb-cell:last-child { border-bottom: 0; }
+    .guide-scope .sheetno { flex: 1 1 100%; text-align: left; }
+    .guide-scope .tb-title .tb-val { font-size: 14pt; }
+    .guide-scope table { display: block; width: 100%; overflow-x: auto; }
+    .guide-scope .foot { display: block; }
+    .guide-scope .foot span { display: block; }
+  }
+
+  @media print {
+    .guide-scope .box, .guide-scope table, .guide-scope .titleblock { break-inside: avoid; page-break-inside: avoid; }
+    .guide-scope h2, .guide-scope h3 { break-after: avoid; page-break-after: avoid; }
+    .guide-scope p, .guide-scope li { orphans: 2; widows: 2; }
+    .guide-scope a { color: #000; text-decoration: none; }
   }
 </style>
 </head>
@@ -134,13 +176,15 @@
 
 <button class="printbtn" onclick="window.print()">Print</button>
 
+<div class="guide-scope">
+
 <!-- ============================ TITLE BLOCK ============================ -->
 <div class="titleblock">
   <div class="tb-row">
     <div class="tb-cell tb-title">
       <span class="tb-lab">Instructor Guide</span>
-      <span class="tb-val">Topping&nbsp;Out</span>
-      <div class="tb-sub">A week-by-week construction scheduling game &mdash; <i>Racer Commons</i>, 3-story commercial, 38 activities</div>
+      <span class="tb-val">Construction&nbsp;Scheduling</span>
+      <div class="tb-sub"><i>Topping Out</i> &mdash; a week-by-week scheduling game &mdash; <i>Racer Commons</i>, 3-story commercial, 38 activities</div>
     </div>
     <div class="tb-cell sheetno">
       <span class="tb-lab">Sheet</span>
@@ -198,7 +242,7 @@ interface on the graded run spend six weeks clicking instead of thinking, and th
     <tr><th class="n" style="width:62px">Minutes</th><th style="width:58px">Length</th><th>Segment</th></tr>
   </thead>
   <tbody>
-    <tr><td class="n">0&ndash;5</td><td>5 min</td><td><b>Setup.</b> Seed code and difficulty on the board. Teams open the game, enter both, name themselves. Projector mode up front. Confirm every team reads the same project start date, Mon 7 Sep 2026, before anyone commits a week.</td></tr>
+    <tr><td class="n">0&ndash;5</td><td>5 min</td><td><b>Setup.</b> Seed code and difficulty on the board. Teams open the game, enter both, name themselves. Presentation mode up front. Confirm every team reads the same project start date, Mon 7 Sep 2026, before anyone commits a week.</td></tr>
     <tr><td class="n">5&ndash;11</td><td>6 min</td><td><b>CPM at the board.</b> Forward pass, backward pass, total float, on the ten-activity tutorial network (Section 2). Land one sentence: float is not slack in your day, it is what a specific activity can slip before it moves the finish. Leave free float for the debrief.</td></tr>
     <tr><td class="n">11&ndash;22</td><td>11 min</td><td><b>Tutorial run</b> &mdash; <i>Shoe Tree Annex</i>, nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
     <tr><td class="n">22&ndash;26</td><td>4 min</td><td><b>Brief the competition.</b> Same seed, same difficulty, score is profit, no undo. Show where float and the critical path live, then say two things out loud: calls default to the free option, so not answering is answering; and crews take two weeks, so manpower is a forecast.</td></tr>
@@ -781,9 +825,12 @@ is harder because more goes wrong, not because the remedies quietly stop working
 session, Easy if this is the class's first exposure to CPM at all, and Hard for a second run on a seed they have
 already seen.</p>
 
-<h3>Projector mode and the leaderboard</h3>
-<p>Run projector mode on the instructor machine from the Settings menu: larger type, the schedule and the
-computed critical path readable from the back row. Use it for THE NEWS each week so the whole room hears the
+<h3>Presentation mode and the leaderboard</h3>
+<p>The Settings menu (⚙ in the title bar, beside the ? that reopens the Guide) holds three things:
+<b>Open Presenter Notes</b>, which puts this guide on screen inside the game; <b>Presentation mode</b>; and
+<b>Reset</b>, which returns the machine to the setup sheet as if it had just been opened. Turn Presentation
+mode on — projector mode, if you have called it that — on the instructor machine: larger type, the schedule
+and the computed critical path readable from the back row. Use it for THE NEWS each week so the whole room hears the
 same card at the same time, and for the leaderboard and the calls tables at minute 59. Clear the leaderboard from the same menu
 between sections &mdash; scores are held locally on that machine, so a second section starts clean and does not
 inherit the first section's spread.</p>
@@ -805,10 +852,12 @@ commit. Save the deliberation for the nine calls, the weather weeks with critica
 three weeks where manpower has to be ordered before the need is visible.</p>
 
 <div class="foot">
-  <span>Topping Out &mdash; Instructor Guide</span>
+  <span>Construction Scheduling &mdash; Instructor Guide</span>
   <span>Sheet IG-01</span>
   <span>Racer Commons &mdash; 38 activities &mdash; 134 working days</span>
 </div>
+
+</div><!-- /guide -->
 
 </body>
 </html>
