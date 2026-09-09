@@ -8,7 +8,8 @@
  *   node src/arc.test.js        (~4-6 minutes)
  *
  * If it fails after a deliberate change, update BOTH this file and the numbers
- * quoted in README.md, src/template.html (presenter notes) and src/demo-guide.html.
+ * quoted in README.md and src/demo-guide.html (which is now the only copy of the
+ * presenter notes - build.js injects it into the app).
  */
 'use strict';
 const GB = require('./engine.js');
