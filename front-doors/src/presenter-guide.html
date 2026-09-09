@@ -3,22 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Front Doors — presenter guide</title>
+<title>AI Tool Guide — notes for the presenter</title>
 <!--
-  Canonical, printable presenter guide for the Front Doors demo.
+  Canonical, printable presenter guide for the AI Tool Guide demo (folder:
+  front-doors).
 
   This file is the single source of truth for the presenter's notes. build.js
-  lifts the first <style> block and the .guide-scope div out of here verbatim
-  and injects them into index.html, so Settings -> Presenter's notes shows
-  exactly this text with no sibling file to go looking for. Edit here; never
-  edit the copy inside index.html.
+  lifts the stylesheet named guide-css and the .guide-scope div out of here
+  verbatim and injects them into index.html, so Settings -> Open Presenter
+  Notes shows exactly this text with no sibling file to go looking for. Edit
+  here; never edit the copy inside index.html.
 
-  Everything in the first <style> block MUST be scoped to .guide-scope, because
-  it is injected into an app with its own stylesheet. Page-level styles for the
-  standalone printable version live in the second <style> block, which is not
-  extracted.
+  Everything in the guide-css sheet MUST be scoped to .guide-scope, because it
+  is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the second, unnamed sheet below, which
+  is not extracted. build.js finds both markers by a line-anchored search over
+  a comment-masked copy of this file and refuses to build if either matches
+  more or fewer than once -- so this paragraph cannot become the match.
 -->
-<style>
+<style id="guide-css">
 .guide-scope { color: inherit; }
 .guide-scope .g-head { margin-bottom: 18px; }
 .guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
@@ -69,10 +72,11 @@ body {
 
   <div class="g-head">
     <div class="g-kicker">AI: From Zero to Takeoff &middot; Part three</div>
-    <h1>Front Doors &mdash; presenter guide</h1>
+    <h1>AI Tool Guide &mdash; notes for the presenter</h1>
     <div class="g-sub">
-      What to ask it with. Runs after The Stranger, which covered how to phrase the request.
-      About 12 minutes, or 4 if you are behind. Product claims checked 8 September 2026.
+      Front Doors: what to ask it with. Runs after The Stranger, which covered how to phrase
+      the request. About 12 minutes, or 4 if you are behind.
+      Product claims checked 8 September 2026.
     </div>
   </div>
 
@@ -232,7 +236,7 @@ body {
 
   <h3>&ldquo;How do you know any of this?&rdquo;</h3>
   <p>
-    Open <b>Settings &rarr; Run the self-test</b> in front of them. It checks that every claim
+    Open <b>&#9881; &rarr; Run the self-test</b> in front of them. It checks that every claim
     resolves to a declared source, that no source is cited and never used, that no price and no
     vendor ranking leaked into anything the page can display, and that the review row genuinely
     does not rise the way the other three do. Then tap any cell and follow the link.
@@ -280,20 +284,31 @@ body {
 
   <h2>Before you present</h2>
   <ul>
-    <li>Open <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
+    <li>
+      <b>The two buttons, top right.</b> <b>?</b> is the Guide &mdash; the how-to panel that
+      opens on first load and reopens from that button. <b>&#9881;</b> is Settings, and it
+      offers <b>Open Presenter Notes</b> (this document, on screen),
+      <b>Presentation mode</b>, <b>Reset</b>, and the self-test.
+    </li>
+    <li>Turn on <b>&#9881; &rarr; Presentation mode</b> for projector-sized type.</li>
     <li>Run the self-test once so you know it is green before anyone asks.</li>
     <li>
       <b>Re-read Act III the morning of.</b> This is the one demo in the collection with a real
       shelf life. If a name on screen has changed, say so from the stage &mdash; it is a better
       moment than a correct page would have been.
     </li>
-    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>
+      <b>&#9881; &rarr; Reset</b> puts the demo back to how it opened &mdash; Act I, no job
+      picked, no self-test on screen &mdash; without turning Presentation mode off, so you can
+      hand the room a clean page between sessions. Reloading does the same; the app saves
+      nothing anywhere either way.
+    </li>
     <li>No network is needed at any point. The source links need one, but only if somebody
       asks you to follow one, and you can promise to send it instead.</li>
   </ul>
 
   <div class="g-foot">
-    Front Doors &mdash; Bryant Harrison, Murray State University.
+    AI Tool Guide (Front Doors) &mdash; Bryant Harrison, Murray State University.
     Product claims checked 8 September 2026 against first-party sources. Every claim on screen
     carries a confidence label and links to its origin; everything researched and left off is
     listed in Act III under &ldquo;Researched, and deliberately not on the page&rdquo;.

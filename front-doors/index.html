@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#00142B">
-<title>Front Doors — what to ask it with</title>
+<title>AI Tool Guide — what to ask it with</title>
 <!--
-  Front Doors — a single-file, offline teaching module about the four surfaces
-  through which a person can use AI, and why the surface decides what the tool
-  can reach.
+  AI Tool Guide (folder: front-doors) — a single-file, offline teaching module
+  about the four surfaces through which a person can use AI, and why the
+  surface decides what the tool can reach.
 
   Three acts: the four doors against four axes as a grid the room can read in
   one look; seven realistic faculty jobs against those same four doors, with
@@ -31,7 +31,7 @@
 <style>
 /* ==== styles.css ==== */
 /* ==========================================================================
-   Front Doors — styles.
+   AI Tool Guide (folder: front-doors) — styles.
 
    Phone first, and the four-by-four grid in Act I is the reason this file
    exists. A capability table is the classic thing that ships as a horizontal
@@ -127,6 +127,15 @@ a  { color: var(--sky); }
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #brand .b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: .8em; }
+
+/* The 2026-09-09 retitle made the brand line 4px wider ("AI TOOL GUIDE" against
+   "FRONT DOORS"), enough to start ellipsising the tagline at 360px where the old
+   title just fitted. The demo name itself measures 108px and was never at risk;
+   this keeps the tagline whole down to 360 as well, and leaves every width from
+   400px up exactly as it was. */
+@media (max-width: 399px) {
+  #brand .b1 em { font-size: .74em; }
+}
 
 #topbar-tools { display: flex; gap: 8px; flex: none; }
 
@@ -623,17 +632,7 @@ body.presenting .bar i { width: 19px; height: 9px; }
 }
 
 /* ==== presenter guide (scoped to .guide-scope) ==== */
- block and the .guide-scope div out of here verbatim
-  and injects them into index.html, so Settings -> Presenter's notes shows
-  exactly this text with no sibling file to go looking for. Edit here; never
-  edit the copy inside index.html.
 
-  Everything in the first <style> block MUST be scoped to .guide-scope, because
-  it is injected into an app with its own stylesheet. Page-level styles for the
-  standalone printable version live in the second <style> block, which is not
-  extracted.
--->
-<style>
 .guide-scope { color: inherit; }
 .guide-scope .g-head { margin-bottom: 18px; }
 .guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
@@ -671,10 +670,10 @@ body.presenting .bar i { width: 19px; height: 9px; }
   <header id="topbar">
     <div id="brand">
       <span class="b0">Murray State University</span>
-      <span class="b1">FRONT DOORS <em>what to ask it with</em></span>
+      <span class="b1">AI TOOL GUIDE <em>what to ask it with</em></span>
     </div>
     <div id="topbar-tools">
-      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide">?</button>
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
     </div>
   </header>
@@ -778,11 +777,11 @@ body.presenting .bar i { width: 19px; height: 9px; }
   <span>One HTML file &middot; runs offline &middot; product claims checked <span class="js-date"></span></span>
 </footer>
 
-<!-- ========================== HOW TO USE ============================ -->
+<!-- ============================= GUIDE ============================== -->
 <div class="overlay" id="howto" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How to use this</h2><div class="sub">Three acts &middot; about 12 minutes</div></div>
+      <div><h2 id="howto-title">Guide</h2><div class="sub">Three acts &middot; about 12 minutes</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
@@ -829,9 +828,10 @@ body.presenting .bar i { width: 19px; height: 9px; }
       <div class="field">
         <span class="lbl">The two buttons, top right</span>
         <ul class="ht-acts">
-          <li><b>?</b> &mdash; reopens this panel at any point.</li>
-          <li><b>&#9881;</b> &mdash; presentation mode, the presenter&rsquo;s notes, and a self-test that
-            checks every claim against its declared source live, in front of whoever is asking.</li>
+          <li><b>?</b> &mdash; the Guide. Reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; Settings: <b>Open Presenter Notes</b>, <b>Presentation mode</b>,
+            <b>Reset</b>, and a self-test that checks every claim against its declared source live,
+            in front of whoever is asking.</li>
         </ul>
       </div>
 
@@ -859,22 +859,23 @@ body.presenting .bar i { width: 19px; height: 9px; }
     <div class="sheet-body">
       <div class="field">
         <span class="lbl">Presentation</span>
+        <button class="btn" id="btn-notes">Open Presenter Notes</button>
+        <p class="help">
+          The session plan: what to say at each act, which cells to open if you have four
+          minutes, the questions you will get, and what to do when a product name on the
+          screen has changed since it was checked. This is the printable guide that ships
+          beside this file, shown on screen &mdash; one document, not a summary of one.
+        </p>
         <label class="switch">
           <input type="checkbox" id="chk-presenter">
           <span>Presentation mode &mdash; oversized UI for a projector</span>
         </label>
-        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <button class="btn" id="btn-reset">Reset</button>
         <p class="help">
-          The session plan: what to say at each act, which cells to open if you have four
-          minutes, the questions you will get, and what to do when a product name on the
-          screen has changed since it was checked. Distilled from the printable guide that
-          ships beside this file.
+          Puts the demo back to how it opened: Act I, no job picked, no self-test on screen.
+          Presentation mode is a setting for the room rather than part of the demo, so Reset
+          leaves it exactly as you had it.
         </p>
-      </div>
-      <div class="field">
-        <span class="lbl">Help</span>
-        <button class="btn" id="btn-howto-2">How to use this</button>
-        <p class="help">Reopens the panel that explains the three acts and the honesty labels.</p>
       </div>
       <div class="field">
         <span class="lbl">Proof</span>
@@ -898,8 +899,8 @@ body.presenting .bar i { width: 19px; height: 9px; }
           Built for Murray State University by Bryant Harrison. Product claims were checked on
           <span class="js-date"></span> against first-party sources. All content is embedded;
           the page makes no network requests, runs no AI, and stores nothing on your device.
-          Reloading resets it. The only URLs here are outbound links to sources, which you may
-          choose to follow.
+          Reloading resets it, and so does <b>Reset</b> above. The only URLs here are outbound
+          links to sources, which you may choose to follow.
         </p>
       </div>
     </div>
@@ -907,14 +908,14 @@ body.presenting .bar i { width: 19px; height: 9px; }
   </div>
 </div>
 
-<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- ======================== PRESENTER NOTES ========================== -->
 <!-- Lifted verbatim from presenter-guide.html, which stays canonical and
      printable. One source of truth: the guide's own stylesheet and its own
      markup, both scoped to .guide-scope, are injected by build.js. -->
 <div class="overlay" id="notes" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <div><h2 id="notes-title">Presenter Notes</h2><div class="sub">The printable guide, on screen</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
@@ -922,10 +923,11 @@ body.presenting .bar i { width: 19px; height: 9px; }
 
   <div class="g-head">
     <div class="g-kicker">AI: From Zero to Takeoff &middot; Part three</div>
-    <h1>Front Doors &mdash; presenter guide</h1>
+    <h1>AI Tool Guide &mdash; notes for the presenter</h1>
     <div class="g-sub">
-      What to ask it with. Runs after The Stranger, which covered how to phrase the request.
-      About 12 minutes, or 4 if you are behind. Product claims checked 8 September 2026.
+      Front Doors: what to ask it with. Runs after The Stranger, which covered how to phrase
+      the request. About 12 minutes, or 4 if you are behind.
+      Product claims checked 8 September 2026.
     </div>
   </div>
 
@@ -1085,7 +1087,7 @@ body.presenting .bar i { width: 19px; height: 9px; }
 
   <h3>&ldquo;How do you know any of this?&rdquo;</h3>
   <p>
-    Open <b>Settings &rarr; Run the self-test</b> in front of them. It checks that every claim
+    Open <b>&#9881; &rarr; Run the self-test</b> in front of them. It checks that every claim
     resolves to a declared source, that no source is cited and never used, that no price and no
     vendor ranking leaked into anything the page can display, and that the review row genuinely
     does not rise the way the other three do. Then tap any cell and follow the link.
@@ -1133,20 +1135,31 @@ body.presenting .bar i { width: 19px; height: 9px; }
 
   <h2>Before you present</h2>
   <ul>
-    <li>Open <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
+    <li>
+      <b>The two buttons, top right.</b> <b>?</b> is the Guide &mdash; the how-to panel that
+      opens on first load and reopens from that button. <b>&#9881;</b> is Settings, and it
+      offers <b>Open Presenter Notes</b> (this document, on screen),
+      <b>Presentation mode</b>, <b>Reset</b>, and the self-test.
+    </li>
+    <li>Turn on <b>&#9881; &rarr; Presentation mode</b> for projector-sized type.</li>
     <li>Run the self-test once so you know it is green before anyone asks.</li>
     <li>
       <b>Re-read Act III the morning of.</b> This is the one demo in the collection with a real
       shelf life. If a name on screen has changed, say so from the stage &mdash; it is a better
       moment than a correct page would have been.
     </li>
-    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>
+      <b>&#9881; &rarr; Reset</b> puts the demo back to how it opened &mdash; Act I, no job
+      picked, no self-test on screen &mdash; without turning Presentation mode off, so you can
+      hand the room a clean page between sessions. Reloading does the same; the app saves
+      nothing anywhere either way.
+    </li>
     <li>No network is needed at any point. The source links need one, but only if somebody
       asks you to follow one, and you can promise to send it instead.</li>
   </ul>
 
   <div class="g-foot">
-    Front Doors &mdash; Bryant Harrison, Murray State University.
+    AI Tool Guide (Front Doors) &mdash; Bryant Harrison, Murray State University.
     Product claims checked 8 September 2026 against first-party sources. Every claim on screen
     carries a confidence label and links to its origin; everything researched and left off is
     listed in Act III under &ldquo;Researched, and deliberately not on the page&rdquo;.
@@ -1173,7 +1186,7 @@ body.presenting .bar i { width: 19px; height: 9px; }
 <script>
 /* ==== data.js ==== */
 /* ==========================================================================
-   Front Doors — the dataset.
+   AI Tool Guide (folder: front-doors) — the dataset.
 
    Every sentence on screen comes from this file, and every product claim in
    this file carries a `conf` label and, where the label is `verified`, one or
@@ -1736,7 +1749,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = DATA;
 
 /* ==== engine.js ==== */
 /* ==========================================================================
-   Front Doors — the engine.
+   AI Tool Guide (folder: front-doors) — the engine.
 
    Every fact this demo DERIVES rather than states lives here, once. Three
    consumers share it: the screen (app.js), the build-time test suite
@@ -2029,7 +2042,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = ENGINE;
 
 /* ==== app.js ==== */
 /* ==========================================================================
-   Front Doors — the application.
+   AI Tool Guide (folder: front-doors) — the application.
 
    Three acts:
      I   The four doors — four surfaces against four axes, sixteen cells.
@@ -2549,14 +2562,43 @@ function wireOverlays() {
     if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
   });
   $('#btn-howto').addEventListener('click', () => open('howto'));
-  $('#btn-howto-2').addEventListener('click', () => { close('settings'); open('howto'); });
   $('#btn-settings').addEventListener('click', () => open('settings'));
   $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
   $('#chk-presenter').addEventListener('change', ev => {
     S.presenter = ev.target.checked;
     document.body.classList.toggle('presenting', S.presenter);
   });
+  $('#btn-reset').addEventListener('click', resetDemo);
   $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ================================ reset =================================
+   Whole-demo, fresh-load semantics: everything boot() leaves behind except
+   the two things that are not demo state.
+
+   Presentation mode survives on purpose. It is a property of the room — the
+   projector is still a projector — and a presenter who reset between sessions
+   and had to re-enable it every time would stop using the button. The Guide
+   overlay stays CLOSED, because reset is not a reload: the presenter pressing
+   it is mid-session and does not need the how-to panel in the way.
+
+   Everything else here is genuinely all of this demo's mutable state. S holds
+   three fields, one of which is `presenter`; the rest of what a session
+   accumulates lives in the DOM, in the job output and the self-test results.
+   ---------------------------------------------------------------------- */
+
+function resetDemo() {
+  S.job = null;
+  $$('#job-picker .job-btn').forEach(b => b.classList.remove('on'));
+  renderJob();                       /* clears #job-out and restores .empty */
+
+  const st = $('#selftest-out');
+  if (st) st.innerHTML = '';
+
+  $$('.overlay').forEach(o => { o.hidden = true; });
+  lockScroll();
+
+  setAct(1);                         /* also scrolls to the top */
 }
 
 /* ============================== self-test ===============================
@@ -2648,7 +2690,7 @@ function runSelfTest() {
   });
   box.appendChild(ul);
   /* eslint-disable no-console */
-  console.log('Front Doors self-test:', fails ? fails + ' FAILED' : 'all pass');
+  console.log('AI Tool Guide self-test:', fails ? fails + ' FAILED' : 'all pass');
   out.forEach(r => console.log(r[0] ? 'PASS' : 'FAIL', r[1], r[2]));
 }
 
