@@ -9,8 +9,7 @@
       "title": "What AI is",
       "demos": [
         "zero-to-unbeatable",
-        "glass-box",
-        "the-stranger"
+        "glass-box"
       ]
     },
     {
@@ -25,6 +24,7 @@
       "num": "PART THREE",
       "title": "What AI can do for your discipline",
       "demos": [
+        "the-stranger",
         "fuel-golf",
         "bridge-works",
         "ladder-lab",
