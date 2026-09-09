@@ -383,6 +383,15 @@ select {
 #learned-inline-sub { color: var(--ink-2); font-size: calc(.7 * var(--u)); line-height: 1.45; }
 #learned-inline-body .headline { margin-bottom: calc(.6 * var(--u)); }
 #learned-inline-body .lc:last-child { margin-bottom: 0; }
+#learned-inline-body .lc summary {
+  cursor: pointer; list-style-position: outside; color: var(--ink);
+  padding: calc(.05 * var(--u)) calc(.08 * var(--u));
+}
+#learned-inline-body .lc summary::marker { color: var(--gold); }
+#learned-inline-body .lc summary:focus-visible { outline: 3px solid var(--lite); outline-offset: 3px; }
+#learned-inline-body .lc .lc-title { display: block; color: var(--gold); font-size: calc(.88 * var(--u)); font-weight: 800; }
+#learned-inline-body .lc .lc-ask { display: block; margin-top: calc(.1 * var(--u)); color: var(--ink-3); font-size: calc(.71 * var(--u)); line-height: 1.5; }
+#learned-inline-body .lc .lc-body { margin-top: calc(.55 * var(--u)); }
 #learned-inline-body .lc-grid { max-width: min(100%, calc(20 * var(--u))); }
 #learned-inline-body .lc-cell .lv,
 #learned-inline-body .lc-cell .value-pair { font-size: max(12px, calc(.75 * var(--u))); }
@@ -591,8 +600,6 @@ input[type=text]::placeholder { color: var(--ink-3); }
 /* ------------------------------------------------------ learned cards */
 .lc { background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
   padding: calc(.65 * var(--u)); margin-bottom: calc(.6 * var(--u)); }
-.lc h3 { font-size: calc(.88 * var(--u)); margin-bottom: calc(.1 * var(--u)); color: var(--gold); }
-.lc .ask { font-size: calc(.71 * var(--u)); color: var(--ink-3); line-height: 1.5; margin-bottom: calc(.55 * var(--u)); }
 .lc-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: calc(.28 * var(--u));
   max-width: min(100%, calc(10.5 * var(--u))); margin: 0 auto; }
 .lc-cell { aspect-ratio: 1; border-radius: 7px; display: grid; place-items: center;
