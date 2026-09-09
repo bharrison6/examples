@@ -155,12 +155,13 @@ function renderReveal() {
   const miss = E.yearMiss(a.year, c.year);
   const band = E.missBand(miss);
   const assessment = c.verdict === 'context';
+  const untimedAmbition = c.id === 'nyt-1958';
   const right = assessment ? a.verdict === 'context' : E.verdictCorrect(a.verdict, c.verdict);
 
   $('#guess-wrap').hidden = true;
   $('#btn-lock').hidden = true;
   $('#btn-next-card').hidden = false;
-  $('#btn-next-card').textContent = S.i === D.CARDS.length - 1 ? 'See how you did' : 'Next prediction';
+  $('#btn-next-card').textContent = S.i === D.CARDS.length - 1 ? 'See how you did' : 'Next claim';
 
   const w = $('#reveal-wrap'); w.innerHTML = ''; w.hidden = false;
 
@@ -183,7 +184,9 @@ function renderReveal() {
   const m2 = el('div', 'mark ' + (right === null ? 'openv' : right ? 'good' : 'bad'));
   m2.appendChild(el('b', null, assessment ? (right ? 'Classified correctly' : 'Read the distinction') : right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
   m2.appendChild(el('span', null, assessment
-    ? (right ? 'It diagnoses conditions at a date; it is not a future forecast.' : 'Read the reveal: this evaluates conditions at a date rather than predicting what must happen next.')
+    ? (untimedAmbition
+      ? (right ? 'It is an untimed ambition to classify, not a forecast with a scoreable deadline.' : 'Read the reveal: this is an untimed ambition without a scoreable deadline. Future-facing language alone does not create a forecast window.')
+      : (right ? 'It diagnoses conditions at a date; it is not a future forecast.' : 'Read the reveal: this evaluates conditions at a date rather than predicting what must happen next.'))
     : right === null
     ? 'This one has not resolved. Nobody is marked on it.'
     : 'You said ' + VERDICT_WORD[a.verdict].toLowerCase() + '.'));
@@ -641,8 +644,8 @@ function runSelfTest() {
 
   ok('Every card year falls inside the timeline window',
      D.CARDS.every(c => c.year >= Timeline.Y0 && c.year <= Timeline.Y1));
-  ok('Exactly one card is left unresolved',
-     D.CARDS.filter(c => c.verdict === 'open').length === 1);
+  ok('Exactly two cards are left unresolved',
+     D.CARDS.filter(c => c.verdict === 'open').length === 2);
 
   ok('Both winters start after their own first promise',
      D.WINTERS.every(w => D.EVENTS.some(e => e.stage === 'promise' && E.t(e.d) < E.t(w.from))));
