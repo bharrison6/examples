@@ -115,7 +115,7 @@ const DOORS = [
   {
     id: 'inapp', n: 2, name: 'Inside the tools you already have',
     tag: 'The door you are most likely to meet first',
-    products: 'Word · Excel · PowerPoint (Microsoft) · Docs · Sheets (Google)',
+    products: 'Docs · Sheets · Slides (Google) · Word · Excel · PowerPoint (Microsoft)',
     where: 'A pane inside the app, acting on the file that is already open.',
     whereSrc: ['ms-word-edit', 'gdocs-gemini'],
     confusable: 'Microsoft ships two different things with almost the same name, and it is worth five seconds to tell them apart. The one described here lives inside Word or Excel and edits the document you have open. Separately, there are Word, Excel and PowerPoint “Agents” inside the Copilot app, which generate a NEW file from a description and save it to your OneDrive. Same words, different door — the second is closer to door 1 with a file attached.',
@@ -198,14 +198,14 @@ const CELLS = {
   'inapp.see': {
     bar: 2, conf: 'verified', src: ['ms-word-edit', 'gdocs-gemini'],
     head: 'The document you have open',
-    why: 'It reads the file you are working in, which sounds small until you notice that the file is the thing you actually wanted help with. Google’s version goes further: in Docs it can pull material out of your Drive and Gmail into the document you are writing.',
+    why: 'It reads the file you are working in, which sounds small until you notice that the file is the thing you actually wanted help with. In Docs it goes further still: it can pull material out of your Drive and Gmail into the document you are writing. The Microsoft version is aimed at the open file.',
     quote: 'pull stats, evidence, and citations directly from your Google Drive, Gmail, or the web into your document',
     quoteSrc: 'gdocs-gemini'
   },
   'inapp.do': {
     bar: 2, conf: 'verified', src: ['ms-word-edit', 'ms-excel-edit'],
     head: 'Edits it in place, with the app’s own tools',
-    why: 'This is the difference that matters. It does not describe the change, it makes it — using Word’s real styles, Excel’s real formulas, the app’s own features — so the result is a document that behaves like one you made, not text pasted into one.',
+    why: 'This is the difference that matters. It does not describe the change, it makes it — in the document’s own styles, the spreadsheet’s own formulas, the application’s own features — so the result is a file that behaves like one you made, not text pasted into one. The quote below is Microsoft’s wording; Google’s Docs pane refines in place the same way.',
     quote: 'create, edit, refine, and format content in place',
     quoteSrc: 'ms-word-edit'
   },
@@ -372,7 +372,7 @@ const JOBS = [
     detail: 'A folder of scan0001.pdf. You want surname-year-topic, and you are not doing four hundred by hand.',
     doors: {
       chat:     { v: 'no',     axis: 'do',   hand: '', why: 'It cannot touch your file system. This is the clearest floor in the table: no amount of better prompting gets a browser tab to rename a file on your disk. It will happily write you instructions for doing it yourself.' },
-      inapp:    { v: 'no',     axis: 'do',   hand: '', why: 'The agent lives inside one document. Renaming files is not something Word does, so it is not something the agent inside Word does.' },
+      inapp:    { v: 'no',     axis: 'do',   hand: '', why: 'The agent lives inside one document. Renaming files is not something Docs does, so it is not something the agent inside Docs does.' },
       coworker: { v: 'yes',    axis: 'do',   hand: 'read and write access to the folder', why: 'The smallest door that does this. It opens the files, reads them, renames them. Note what you handed over: write access to four hundred files, and no diff to check afterwards.' },
       coding:   { v: 'yes',    axis: 'do',   hand: 'a folder, and permission to run commands on it', why: 'Four lines of script and it is done, including the four hundredth. Also the door where a mistake renames four hundred files wrongly in one go.' }
     }
@@ -383,14 +383,14 @@ const JOBS = [
     detail: 'A single page a student can open, that does something when they click it.',
     doors: {
       chat:     { v: 'partly', axis: 'do',   hand: 'saving, testing and hosting it yourself', why: 'It will write you the file. You then have to save it somewhere, open it, find what is broken, and describe the breakage back — a loop you run by hand, once per bug.' },
-      inapp:    { v: 'no',     axis: 'do',   hand: '', why: 'PowerPoint is not a web page. There is nothing here for a document agent to edit.' },
+      inapp:    { v: 'no',     axis: 'do',   hand: '', why: 'Slides is not a web page. There is nothing here for a document agent to edit.' },
       coworker: { v: 'yes',    axis: 'do',   hand: 'a working folder, and a deliverable with no diff', why: 'A finished small thing is exactly this door’s unit of work — OpenAI lists a Site among the deliverables it produces.' },
       coding:   { v: 'yes',    axis: 'check', hand: 'a project folder, command execution, and a diff to review', why: 'The door this demo came through, and the reason it can say so: every demo in this collection records which tool built it. It runs the page, sees its own error, and fixes it without asking you — which is the whole advantage and the whole review problem.' }
     }
   }
 ];
 
-const JOBS_NOTE = 'These seven were chosen to span the four doors, which makes the higher doors look more necessary than your week actually will. Two of the seven are done best by a chat window and one by the agent already inside Word — and that ratio is closer to a real semester than this list is.';
+const JOBS_NOTE = 'These seven were chosen to span the four doors, which makes the higher doors look more necessary than your week actually will. Two of the seven are done best by a chat window and one by the agent already inside Docs — and that ratio is closer to a real semester than this list is.';
 
 const VERDICT_LABEL = {
   yes:    'Does the whole job',

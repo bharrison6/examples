@@ -36,7 +36,7 @@ And **4 doors**, deliberately ordered as a ladder of reach:
 | # | Door | Products on the check date | Getting in |
 |---|------|----------------------------|------------|
 | 1 | A chat window | ChatGPT (Chat), Claude, the Gemini app | Free tier on all three |
-| 2 | Inside the tools you already have | Word, Excel, PowerPoint; Docs, Sheets | Institutional licence |
+| 2 | Inside the tools you already have | Docs, Sheets, Slides (Google); Word, Excel, PowerPoint (Microsoft) | Institutional licence |
 | 3 | A desktop coworker | Claude Cowork, ChatGPT Work | Paid plan |
 | 4 | A coding agent | Codex, Claude Code, Antigravity | Two paid, one free tier |
 
@@ -49,7 +49,7 @@ Rows 1 to 3 rise neatly left to right — and the page says out loud that this i
 of choosing the doors as a ladder, not a discovery. **Row 4 does not rise**, and that is the
 payload:
 
-- **Door 2 is among the cheapest to check.** The agent inside Word or Docs hands you a
+- **Door 2 is among the cheapest to check.** The agent inside Docs or Word hands you a
   *change to accept or reject*, inside a document that already has undo and version history.
 - **Door 4 is easier to check than door 3.** Code comes with a diff, a history and tests, so
   the review has a shape — at the cost of needing to read code, and of the commands it ran
@@ -73,7 +73,7 @@ cannot, and for each one **what you would have to hand over**.
 |-----|-------------------------------|
 | Draft ten multiple-choice questions on this week's reading | 1 — a chat window, handing over nothing |
 | Turn an assignment sheet into a grading rubric | 1 — a chat window |
-| Reformat a syllabus into the department's template | 2 — the agent already inside Word |
+| Reformat a syllabus into the department's template | 2 — the agent already inside Docs |
 | Summarise eighty student reflections and pull out the themes | 3 — a desktop coworker |
 | Find where your lecture notes disagree with the textbook | 3 — a desktop coworker |
 | Rename four hundred scanned files from what is inside them | 3 — a desktop coworker |
