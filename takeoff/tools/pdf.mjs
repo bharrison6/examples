@@ -89,7 +89,7 @@ if (!done) {
   /* --print-to-pdf needs a writable profile directory or it will contend with
      the user's running browser. A throwaway one under the OS temp dir keeps
      this off the user's real profile. */
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'takeoff-pdf-'));
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'acc-takeoff-pdf-'));
   const r = spawnSync(exe, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     `--user-data-dir=${profile}`,
