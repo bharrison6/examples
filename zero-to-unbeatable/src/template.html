@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#00142B">
-<title>Zero to Unbeatable — watch an AI learn</title>
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
+<title>Types of AI — rules, learning, and neural networks</title>
 <!--
-  Zero to Unbeatable — a single-file, offline demonstration of the three
+  Types of AI — a single-file, offline demonstration of three
   things people call AI, on one tic-tac-toe board.
 
   1a: eight hand-written if/else rules, with no learning. 1b: a table of
@@ -37,16 +37,31 @@
   <div id="brandbar">
   <header id="topbar">
     <div id="brand">
-      <span class="b0">Murray State University</span>
-      <span class="b1">ZERO TO UNBEATABLE <em>watch it learn</em></span>
+      <span class="b0">Murray State University · AI literacy</span>
+      <span class="b1">Types of AI</span>
     </div>
-    <button class="icon-btn" id="btn-howto" aria-label="How to play" title="How to play">?</button>
-    <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
   </header>
-  <div id="rule" aria-hidden="true"></div>
   </div>
 
   <main id="main">
+
+    <section id="stage-intro" aria-labelledby="stage-title">
+      <div class="intro-copy">
+        <p class="eyebrow" id="stage-kicker">Stage 1a · written rules</p>
+        <h1 id="stage-title">Rules-based intelligence</h1>
+        <p class="frame-question">Where does an AI’s skill come from? Compare written rules, learned scores, and a neural network on the same game.</p>
+        <p class="learning-question" id="stage-question">Can a program play well without learning?</p>
+      </div>
+      <div class="lesson-strip" aria-label="What to try and notice">
+        <article><span>Try now</span><p id="stage-try">Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.</p></article>
+        <article><span>Observe</span><p id="stage-observe">Changing the rules changes its play. Playing more games does not.</p></article>
+        <article><span>Takeaway</span><p id="stage-takeaway">A person supplied its strategy; this opponent never learns from experience.</p></article>
+      </div>
+    </section>
 
     <!-- Two wrappers, not a bare grid. On a phone #main is a plain block,
          so column A stacks above column B and the reading order is the
@@ -107,7 +122,7 @@
 
     <section class="panel" id="play-controls">
       <button class="btn" id="btn-newgame">New game</button>
-      <button class="btn" id="btn-brain" aria-pressed="false">Show its brain</button>
+      <button class="btn" id="btn-brain" aria-pressed="false">Show move scores</button>
     </section>
 
     <div id="brain-readout" hidden></div>
@@ -167,46 +182,28 @@
 <div class="overlay sheet" id="howto" hidden role="dialog" aria-modal="true" aria-labelledby="howto-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How to play</h2><div class="sub">Three things people call AI</div></div>
+      <div><h2 id="howto-title">Guide</h2><div class="sub">One game · three sources of skill</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
-      <p class="howto-lede">Tic-tac-toe against three different opponents. They are numbered along
-      the top, and they are not three difficulty levels. They compare written instructions,
-      experience stored in a table, and a neural network that learns to approximate that
-      experience.</p>
+      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? The three tabs compare written instructions, experience stored as scores, and neural-network weights—adjustable numbers reused to score many board positions. They are different mechanisms, not difficulty levels.</p>
       <ol class="howto-steps">
-        <li><b>1a &middot; Rules-based intelligence.</b> Eight if/else rules a person wrote down. It has played zero
-        games and it cannot be beaten &mdash; the app searches every game that could still be
-        played against it and finds no line where it loses. Every rule it uses is listed on the
-        screen, and it tells you which one it just used and why. Turn rules off with
-        <b>First 2 / First 4 / All 8</b>: two rules is what most people write first, and the app
-        will show you the game where that loses.</li>
-        <li><b>1b &middot; Machine learning.</b> The move scores begin at zero. People supplied the game
-        representation, rewards, and learning procedure; experience changes the scores.
-        Try the untrained opponent, then press <b>TRAIN</b> &mdash; it plays
-        5,000 games against itself and against chance and freezes the result as a new era. Play the
-        new era. Train again. Somewhere around the third to fifth burst the same exhaustive search
-        stops finding a line where it loses.</li>
-        <li><b>1c &middot; Neural networks.</b> First choose <b>Create learning examples</b>. The
-        fresh copy of the 1b algorithm plays 20,000 seeded games and its current estimates are frozen as examples. Then
-        train a smaller network with shared weights. The screen keeps some board positions out of
-        training and shows those results separately from its actual play. Its moves come from those
-        weights, not a hidden table lookup.</li>
+        <li><b>1a · Rules-based intelligence.</b> Play once and watch the highlighted rule explain each reply. Compare <b>First 2</b> with <b>All 8</b>. A person supplied every move priority; playing more games cannot change them.</li>
+        <li><b>1b · Machine learning.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the new era with Era 0. Outcomes update a stored score for each board position.</li>
+        <li><b>1c · Neural networks.</b> Choose <b>Create learning examples</b>, then train the network. Compare error on practiced examples and <b>held-out positions</b>—positions kept out of training—then check playing results separately.</li>
       </ol>
       <p class="howto-note">The full rule set and a sufficiently trained table can both play
       unbeatable tic-tac-toe. People wrote the first opponent's move priorities directly;
       the second learns its priorities through games. The same exhaustive search checks
       each displayed policy before the app calls it unbeatable.</p>
-      <p class="howto-note"><b>Show its brain</b> (steps 1b and 1c) prints the value it has learned or
+      <p class="howto-note"><b>Show move scores</b> (stages 1b and 1c) prints the value it has learned or
       predicted for every
-      empty square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0 is all zeros
-      because it genuinely knows nothing. The dropdown lets you go back and play any earlier era.</p>
-      <p class="howto-note quiet">Everything happens on this device: no network, no account, nothing
-      stored. Reloading starts over. Reopen these instructions any time with the
-      <b>?</b> button at the top.</p>
+      empty square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0’s learned
+      scores are all zero. The dropdown lets you go back and play any earlier era.</p>
+      <p class="howto-note"><a class="text-link" href="Zero-to-Unbeatable-Demo-Guide.pdf" target="_blank" rel="noopener">Open the printable PDF guide →</a></p>
+      <p class="howto-note quiet">Everything happens on this device: no network, no account, nothing stored. Reloading starts over. Reopen this Guide any time with the <b>?</b> button.</p>
     </div>
-    <div class="sheet-foot"><button class="btn primary" data-close="howto">Play the rules</button></div>
+    <div class="sheet-foot"><button class="btn primary" data-close="howto">Start with 1a</button></div>
   </div>
 </div>
 
@@ -258,6 +255,7 @@
 <!--__GUIDE__-->
     </div>
     <div class="sheet-foot">
+      <a class="btn" href="Zero-to-Unbeatable-Demo-Guide.pdf" target="_blank" rel="noopener">Open printable PDF</a>
       <button class="btn" id="btn-print-notes">Print</button>
       <button class="btn primary" data-close="notes">Done</button>
     </div>
@@ -267,17 +265,17 @@
 <div class="overlay sheet" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="settings-title">Settings</h2><div class="sub">PRESENTATION &middot; REHEARSAL &middot; PROOF</div></div>
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation · rehearsal · verification</div></div>
       <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
       <div class="field">
         <label class="lbl">Presentation mode</label>
         <label class="switch">
-          <input type="checkbox" id="chk-presenter">
-          <span>Presenter mode &mdash; oversized UI for a projector</span>
+          <input type="checkbox" id="chk-presenter" aria-label="Presentation mode">
+          <span>Presentation mode — larger type and controls for a projector</span>
         </label>
-        <button class="btn" id="btn-notes">Open the presenter notes</button>
+        <button class="btn" id="btn-notes">Open Presenter Notes</button>
         <p class="help">The 20-minute session plan covers all three tabs, the optional
         extension, and discussion prompts. It is built into this file and includes
         a print button.</p>
@@ -288,18 +286,18 @@
           <input type="checkbox" id="chk-first">
           <span>I always move first (otherwise it alternates)</span>
         </label>
-        <button class="btn" id="btn-howto-2">How to play</button>
-        <p class="help">Reopens the instructions that appear when the page loads. The
-        <b>?</b> button at the top of the page does the same thing at any time.</p>
+        <button class="btn" id="btn-howto-2">Open Guide</button>
+        <p class="help">Reopens the Guide that appears when the page loads.</p>
       </div>
       <div class="field">
         <label class="lbl" for="in-seed">Rehearsal seed</label>
         <div class="row">
           <input type="text" id="in-seed" placeholder="blank = different every time" autocomplete="off" spellcheck="false">
-          <button class="btn sm" id="btn-reset">Reset to Era 0</button>
+          <button class="btn sm" id="btn-reset">Reset</button>
         </div>
         <p class="help">Type a seed and reset: training then unfolds identically every
-        time, so a rehearsal matches the lesson. Your own moves are still yours.</p>
+        time, so a rehearsal matches the lesson. Reset returns to stage 1a, All 8 rules,
+        hidden move scores, and Era 0. Your presentation and playing preferences stay set.</p>
       </div>
       <div class="field">
         <label class="lbl">Verification</label>

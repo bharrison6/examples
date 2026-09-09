@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#00142B">
-<title>Zero to Unbeatable — watch an AI learn</title>
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
+<title>Types of AI — rules, learning, and neural networks</title>
 <!--
-  Zero to Unbeatable — a single-file, offline demonstration of the three
+  Types of AI — a single-file, offline demonstration of three
   things people call AI, on one tic-tac-toe board.
 
   1a: eight hand-written if/else rules, with no learning. 1b: a table of
@@ -54,12 +54,17 @@
   --lite:    #00A4E3;          /* brand accent */
   --warm:    #FF4500;          /* brand accent, sparingly */
 
-  --bg:      #00142B;          /* a shade under brand navy */
+  --bg:      #FFFDF8;
   --bg-2:    #001B3A;
   --panel:   #002144;
   --panel-2: #0A3161;
   --line:    #14406F;
   --line-2:  #1E5490;
+  --paper:   #FFFDF8;
+  --paper-2: #F2F0E9;
+  --paper-line: #D7D5CC;
+  --paper-ink: #132238;
+  --paper-muted: #536174;
 
   --ink:     #F3F7FF;
   --ink-2:   #A9C0DD;
@@ -81,7 +86,7 @@
   :root { --u: .94rem; }
 }
 
-body.presenter { --u: 1.5rem; }
+body.presenter { --u: 1.25rem; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -91,11 +96,8 @@ body.presenter { --u: 1.5rem; }
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  background:
-    radial-gradient(120% 60% at 50% 0%, #063061 0%, transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
-  color: var(--ink);
+  background: var(--paper);
+  color: var(--paper-ink);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   font-size: var(--u);
   line-height: 1.4;
@@ -105,28 +107,30 @@ body {
 
 :focus-visible { outline: 3px solid var(--lite); outline-offset: 2px; }
 
-#app { max-width: calc(29 * var(--u)); margin: 0 auto; padding: 0 calc(.7 * var(--u)); }
-body.presenter #app { max-width: calc(25 * var(--u)); }
+#app { width: 100%; }
+body.presenter #app { width: 100%; }
 
 /* ---------------------------------------------------------------- top */
 /* The wordmark and the gold rule stay pinned together, so the brand bar
    reads as one object and page content never peeks through it. */
 #brandbar {
   position: sticky; top: 0; z-index: 30;
-  background: var(--bg); padding-bottom: calc(.55 * var(--u));
+  background: var(--navy);
+  border-bottom: 3px solid var(--gold);
 }
 #topbar {
   display: flex; align-items: center; justify-content: space-between; gap: calc(.5 * var(--u));
-  padding: calc(.5 * var(--u) + var(--safe-t)) calc(.1 * var(--u)) calc(.4 * var(--u));
+  width: min(1180px, calc(100% - 40px)); margin-inline: auto;
+  padding: calc(.75 * var(--u) + var(--safe-t)) 0 calc(.72 * var(--u));
 }
 #brand { min-width: 0; }
 #brand .b0 {
-  display: block; font-size: calc(.56 * var(--u)); letter-spacing: .2em; font-weight: 700;
+  display: block; font-size: calc(.58 * var(--u)); letter-spacing: .18em; font-weight: 800;
   text-transform: uppercase; color: var(--gold); white-space: nowrap;
 }
 #brand .b1 {
-  display: block; font-weight: 800; letter-spacing: .1em; line-height: 1.05;
-  font-size: calc(1.22 * var(--u)); color: var(--ink); margin-top: 1px;
+  display: block; font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: -.02em; line-height: 1.05;
+  font-size: calc(1.55 * var(--u)); color: var(--ink); margin-top: .12em;
 }
 #brand .b1 em {
   font-style: normal; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
@@ -134,28 +138,45 @@ body.presenter #app { max-width: calc(25 * var(--u)); }
 }
 .icon-btn {
   flex: 0 0 auto;
-  background: var(--panel); border: 1px solid var(--line-2); color: var(--gold);
-  width: calc(2.7 * var(--u)); height: calc(2.7 * var(--u));
-  border-radius: 50%; font-size: calc(1.1 * var(--u)); cursor: pointer;
-  display: grid; place-items: center; line-height: 1;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.24); color: var(--ink);
+  min-width: calc(2.8 * var(--u)); min-height: calc(2.8 * var(--u)); padding: 0 calc(.75 * var(--u));
+  border-radius: 999px; font-size: calc(.95 * var(--u)); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: .45em; line-height: 1;
 }
 .icon-btn:active { background: var(--panel-2); }
+.header-actions { display: flex; gap: calc(.45 * var(--u)); }
+.icon-label { font-size: calc(.72 * var(--u)); font-weight: 800; }
 @media (max-width: 430px) {
   #brand .b1 { white-space: nowrap; font-size: calc(1.05 * var(--u)); letter-spacing: .055em; }
   #brand .b1 em { display: none; }
 }
 
 /* the brand rule: gold, then the accent blue */
-#rule { height: 3px; border-radius: 3px;
-        background: linear-gradient(90deg, var(--gold) 0 62%, var(--lite) 62% 100%); }
-
-#main { padding-bottom: calc(1.2 * var(--u) + var(--safe-b)); }
+#main {
+  width: min(1180px, calc(100% - 40px)); margin-inline: auto;
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr);
+  gap: calc(1.35 * var(--u)); align-items: start;
+  padding: calc(1.05 * var(--u)) 0 calc(2 * var(--u) + var(--safe-b));
+}
+#stage-intro { grid-column: 1 / -1; color: var(--paper-ink); }
+.intro-copy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .7fr); gap: 8px 48px; align-items: end; }
+.eyebrow { grid-column: 1 / -1; margin: 0; color: #006b9a; font-size: calc(.7 * var(--u)); font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+#stage-title { margin: 0; color: var(--navy); font: 700 clamp(2rem, 3.6vw, 2.65rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -.035em; }
+.frame-question { margin: 0; color: var(--paper-muted); font-size: calc(.9 * var(--u)); line-height: 1.4; }
+.learning-question { grid-column: 1 / -1; margin: calc(.65 * var(--u)) 0 0; padding-top: calc(.7 * var(--u)); border-top: 1px solid var(--paper-line); color: var(--navy); font: 700 calc(1.25 * var(--u))/1.25 Georgia, "Times New Roman", serif; }
+.lesson-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: calc(.6 * var(--u)); overflow: hidden; border: 1px solid var(--paper-line); border-radius: 14px; background: var(--paper-line); }
+.lesson-strip article { padding: calc(.58 * var(--u)) calc(.7 * var(--u)); background: #fff; }
+.lesson-strip span { display: block; margin-bottom: .35em; color: #006b9a; font-size: calc(.59 * var(--u)); font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+.lesson-strip article:first-child span { color: #7B5A00; }
+.lesson-strip p { margin: 0; color: var(--paper-muted); font-size: calc(.9 * var(--u)); line-height: 1.35; }
+#col-a { min-width: 0; padding: calc(1 * var(--u)); border-radius: 22px; color: var(--ink); background: var(--navy); box-shadow: 0 18px 48px rgba(0,33,68,.16); }
+#col-b { min-width: 0; }
 
 /* ------------------------------------------------------------- panels */
 .panel {
   background: var(--panel); border: 1px solid var(--line);
   border-radius: var(--r); padding: calc(.7 * var(--u));
-  margin-bottom: calc(.6 * var(--u));
+  margin-bottom: calc(.6 * var(--u)); color: var(--ink);
 }
 .lbl {
   font-size: calc(.6 * var(--u)); letter-spacing: .16em; text-transform: uppercase;
@@ -165,7 +186,7 @@ body.presenter #app { max-width: calc(25 * var(--u)); }
 .row { display: flex; gap: calc(.5 * var(--u)); align-items: center; flex-wrap: wrap; }
 
 /* ---------------------------------------------------------- opponent */
-#opponent-panel { padding: calc(.6 * var(--u)); }
+#opponent-panel { padding: 0 0 calc(.75 * var(--u)); border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
 #opp-row { display: flex; flex-direction: column; gap: calc(.25 * var(--u)); margin-top: calc(.45 * var(--u)); }
 select {
   width: 100%; min-width: 0;
@@ -211,7 +232,7 @@ select {
      29u is the measured height of everything else stacked above and
      below it in the one-column layout; the floor stops the board
      collapsing to nothing on a very short window. */
-  max-width: min(100%, max(calc(11 * var(--u)), calc(100dvh - 29 * var(--u))));
+  max-width: min(100%, 340px);
   margin-inline: auto;
 }
 .cell {
@@ -264,6 +285,7 @@ select {
   cursor: pointer; min-height: calc(2.75 * var(--u)); flex: 1;
   display: inline-flex; align-items: center; justify-content: center; gap: .4em;
 }
+.btn:hover, .seg button:hover, .icon-btn:hover { filter: brightness(1.1); }
 .btn:active { transform: translateY(1px); }
 .btn.primary {
   background: linear-gradient(180deg, #FFC42B, var(--gold));
@@ -277,7 +299,7 @@ select {
 .btn.big .t-sub { font-size: calc(.68 * var(--u)); opacity: .78; font-weight: 700; }
 .btn:disabled { opacity: .45; cursor: default; }
 
-#play-controls { display: flex; gap: calc(.45 * var(--u)); padding: calc(.4 * var(--u)); }
+#play-controls { display: flex; gap: calc(.45 * var(--u)); padding: calc(.4 * var(--u)); margin-bottom: 0; }
 
 /* ------------------------------------------------------ brain readout */
 #brain-readout {
@@ -291,7 +313,7 @@ select {
   background: linear-gradient(90deg, #FF4500, #8A2C33, #0A3161, #97781A, #ECAC00); }
 
 /* -------------------------------------------------------------- train */
-#train-panel { border-color: var(--line-2); background: linear-gradient(180deg, #04264D, #002144); }
+#train-panel { border-color: var(--navy); background: var(--navy); box-shadow: 0 12px 34px rgba(0,33,68,.12); }
 .seg { display: flex; gap: calc(.35 * var(--u)); margin-top: calc(.5 * var(--u)); }
 .seg button {
   flex: 1; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--ink-2);
@@ -314,37 +336,37 @@ select {
 #banner {
   border-radius: var(--r); padding: calc(.85 * var(--u));
   margin-bottom: calc(.6 * var(--u));
-  background: linear-gradient(160deg, #0A3161, #002144 70%);
-  border: 2px solid var(--gold);
+  background: #fff;
+  border: 1px solid var(--paper-line); border-left: 5px solid var(--gold);
 }
-#banner h3 { font-size: calc(1.02 * var(--u)); line-height: 1.25; margin-bottom: calc(.4 * var(--u)); color: var(--gold); }
-#banner p { font-size: calc(.77 * var(--u)); color: var(--ink-2); line-height: 1.55; }
+#banner h3 { font: 700 calc(1.12 * var(--u))/1.25 Georgia, "Times New Roman", serif; margin-bottom: calc(.4 * var(--u)); color: var(--navy); }
+#banner p { font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.55; }
 #banner p + p { margin-top: calc(.45 * var(--u)); }
 #banner .proof {
-  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--ink-3);
-  border-top: 1px solid var(--line-2); padding-top: calc(.45 * var(--u));
+  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--paper-muted);
+  border-top: 1px solid var(--paper-line); padding-top: calc(.45 * var(--u));
   font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------- accordion */
-.accordion { padding: 0; overflow: hidden; }
+.accordion { padding: 0; overflow: hidden; background: #fff; border-color: var(--paper-line); }
 .acc-head {
-  width: 100%; background: none; border: 0; color: var(--ink);
+  width: 100%; background: none; border: 0; color: var(--navy);
   font-family: inherit; font-size: calc(.86 * var(--u)); font-weight: 700;
   padding: calc(.7 * var(--u)); display: flex; justify-content: space-between;
   align-items: center; cursor: pointer; min-height: calc(2.9 * var(--u)); text-align: left;
 }
 .acc-head .chev { transition: transform .18s ease; color: var(--gold); }
 .acc-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
-.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--ink-2); line-height: 1.6; }
-.acc-body h4 { color: var(--gold); font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
+.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.6; }
+.acc-body h4 { color: #006b9a; font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
 .acc-body h4:first-child { margin-top: 0; }
 .acc-body p + p { margin-top: calc(.5 * var(--u)); }
-.acc-body b { color: var(--ink); }
+.acc-body b { color: var(--navy); }
 .acc-body code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; color: var(--lite); }
 
-#foot { text-align: center; color: var(--ink-3); font-size: calc(.64 * var(--u)); padding: calc(.7 * var(--u)) 0; line-height: 1.6; }
-#foot .msu { color: var(--gold); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; display: block; }
+#foot { grid-column: 1 / -1; text-align: center; color: var(--paper-muted); font-size: calc(.64 * var(--u)); padding: calc(.7 * var(--u)) 0; line-height: 1.6; }
+#foot .msu { color: var(--navy); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; display: block; }
 /* Standing byline, always on screen. It sits under the overlays rather
    than over them (z-index below .overlay), never takes a pointer event,
    and settles back so it cannot compete with the board. Fixed in px, not
@@ -367,46 +389,53 @@ select {
 }
 .overlay.sheet { place-items: end center; padding: 0; }
 .sheet-inner {
-  background: var(--bg-2); border: 1px solid var(--line-2); border-top: 3px solid var(--gold);
+  background: var(--paper); color: var(--paper-ink); border: 1px solid var(--paper-line); border-top: 4px solid var(--gold);
   border-radius: var(--r) var(--r) 0 0; width: 100%;
-  max-width: calc(29 * var(--u)); max-height: 92dvh; display: flex; flex-direction: column;
+  max-width: min(760px, 100%); max-height: 92dvh; display: flex; flex-direction: column;
   animation: rise .22s ease;
 }
 @keyframes rise { from { transform: translateY(18px); opacity: .4 } to { transform: none; opacity: 1 } }
 .sheet-head {
   display: flex; justify-content: space-between; align-items: flex-start; gap: calc(.5 * var(--u));
-  padding: calc(.8 * var(--u)); border-bottom: 1px solid var(--line);
+  padding: calc(.8 * var(--u)); border-bottom: 1px solid var(--paper-line);
 }
-.sheet-head h2 { font-size: calc(1.02 * var(--u)); }
-.sheet-head .sub { font-size: calc(.6 * var(--u)); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+.sheet-head h2 { color: var(--navy); font: 700 calc(1.35 * var(--u))/1.1 Georgia, "Times New Roman", serif; }
+.sheet-head .sub { font-size: calc(.6 * var(--u)); letter-spacing: .14em; text-transform: uppercase; color: #006b9a; margin-top: 3px; }
 .sheet-body { padding: calc(.8 * var(--u)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.sheet-foot { padding: calc(.7 * var(--u)); padding-bottom: calc(.7 * var(--u) + var(--safe-b)); border-top: 1px solid var(--line); display: flex; gap: calc(.5 * var(--u)); }
+.sheet-foot { padding: calc(.7 * var(--u)); padding-bottom: calc(.7 * var(--u) + var(--safe-b)); border-top: 1px solid var(--paper-line); display: flex; gap: calc(.5 * var(--u)); }
+.sheet-inner .icon-btn { color: var(--navy); background: #fff; border-color: var(--paper-line); }
+.sheet-inner .btn:not(.primary) { color: var(--navy); background: #fff; border-color: #AAB7C6; text-decoration: none; }
+.sheet-inner .lbl { color: #006b9a; }
+.sheet-inner .help, .sheet-inner .switch { color: var(--paper-muted); }
+.sheet-inner input[type=text] { background: #fff; color: var(--paper-ink); border-color: #AAB7C6; }
+.sheet-inner input[type=text]::placeholder { color: #687789; }
+.text-link { color: #005F8C; font-weight: 800; text-underline-offset: .18em; }
 /* ---------------------------------------------------- how to play */
 /* The instructions sheet borrows the app's sheet chrome wholesale; only
    the prose inside it needs rules. Everything sizes off --u, so it grows
    with presenter mode and shrinks on a short phone like the rest. */
-#howto .howto-lede { font-size: calc(.82 * var(--u)); line-height: 1.55; color: var(--ink); }
+#howto .howto-lede { font-size: calc(.88 * var(--u)); line-height: 1.55; color: var(--paper-ink); }
 #howto .howto-steps {
   list-style: none; counter-reset: howto; margin: calc(.8 * var(--u)) 0;
   display: grid; gap: calc(.55 * var(--u));
 }
 #howto .howto-steps li {
   counter-increment: howto; position: relative;
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  background: #fff; border: 1px solid var(--paper-line); border-radius: var(--r);
   padding: calc(.55 * var(--u)) calc(.6 * var(--u)) calc(.55 * var(--u)) calc(2.5 * var(--u));
-  font-size: calc(.76 * var(--u)); line-height: 1.5; color: var(--ink-2);
+  font-size: calc(.78 * var(--u)); line-height: 1.5; color: var(--paper-muted);
 }
-#howto .howto-steps li b { color: var(--ink); }
+#howto .howto-steps li b { color: var(--navy); }
 #howto .howto-steps li::before {
   content: counter(howto); position: absolute; left: calc(.55 * var(--u)); top: calc(.5 * var(--u));
   width: calc(1.5 * var(--u)); height: calc(1.5 * var(--u)); border-radius: 50%;
   background: var(--gold); color: var(--navy); font-weight: 800; font-size: calc(.72 * var(--u));
   display: grid; place-items: center; line-height: 1;
 }
-#howto .howto-note { font-size: calc(.74 * var(--u)); line-height: 1.55; color: var(--ink-2); margin-top: calc(.6 * var(--u)); }
-#howto .howto-note b { color: var(--gold); }
-#howto .howto-note.quiet { color: var(--ink-3); font-size: calc(.7 * var(--u)); }
-#howto .howto-note.quiet b { color: var(--ink-2); }
+#howto .howto-note { font-size: calc(.76 * var(--u)); line-height: 1.55; color: var(--paper-muted); margin-top: calc(.6 * var(--u)); }
+#howto .howto-note b { color: var(--navy); }
+#howto .howto-note.quiet { color: var(--paper-muted); font-size: calc(.7 * var(--u)); }
+#howto .howto-note.quiet b { color: var(--navy); }
 
 .field { margin-bottom: calc(1.1 * var(--u)); }
 .field:last-child { margin-bottom: 0; }
@@ -491,7 +520,7 @@ input[type=text]::placeholder { color: var(--ink-3); }
 /* Full lesson names wrap within equal-width tabs on narrow screens. */
 #mode-seg button {
   flex: 1 1 0; min-width: 0; white-space: normal; line-height: 1.3;
-  font-size: calc(.72 * var(--u)); padding-inline: calc(.25 * var(--u));
+  font-size: calc(.86 * var(--u)); padding-inline: calc(.3 * var(--u));
 }
 
 #depth-seg { margin-top: 0; flex: 1 1 auto; }
@@ -513,7 +542,7 @@ body.step-ult #opp-row select { flex: 1 1 auto; width: auto; min-width: 0; }
    the board — so the board yields a little further here, exactly as it
    does for the TRAIN button in step 2. Same principle, same place. */
 body.step-rules #board {
-  max-width: min(100%, max(calc(9 * var(--u)), calc(100dvh - 33 * var(--u))));
+  max-width: min(100%, 340px);
 }
 
 /* The commentary line under the board: which rule answered you. */
@@ -521,7 +550,7 @@ body.step-rules #board {
   background: var(--panel); border: 1px solid var(--lite); border-left-width: 3px;
   border-radius: var(--r); padding: calc(.55 * var(--u)) calc(.65 * var(--u));
   margin-bottom: calc(.55 * var(--u));
-  font-size: calc(.74 * var(--u)); color: var(--ink-2); line-height: 1.5;
+  font-size: calc(.875 * var(--u)); color: var(--ink-2); line-height: 1.5;
 }
 #rule-fired.waiting { border-color: var(--line-2); color: var(--ink-3); }
 #rule-fired.nofire  { border-color: var(--warm); }
@@ -552,8 +581,8 @@ body.step-rules #board {
   padding: 1px 0; line-height: 1.5;
 }
 .rule .rt { flex: 1 1 auto; min-width: 0; }
-.rule .rt b { display: block; font-size: calc(.76 * var(--u)); color: var(--ink); font-weight: 700; }
-.rule .rg { display: block; font-size: calc(.62 * var(--u)); color: var(--ink-3); line-height: 1.35; }
+.rule .rt b { display: block; font-size: calc(.875 * var(--u)); color: var(--ink); font-weight: 700; }
+.rule .rg { display: block; font-size: calc(.875 * var(--u)); color: var(--ink-2); line-height: 1.35; }
 .rule .rc {
   flex: 0 0 auto; font-size: calc(.6 * var(--u)); color: var(--ink-3);
   font-variant-numeric: tabular-nums; padding-top: 2px;
@@ -570,7 +599,7 @@ body.step-rules #board {
 .rule.fallback.fired { border-color: var(--warm); background: var(--panel-2); }
 .rule.fallback.fired .rt b { color: var(--warm); }
 .rp-foot {
-  margin-top: calc(.5 * var(--u)); font-size: calc(.66 * var(--u));
+  margin-top: calc(.5 * var(--u)); font-size: calc(.8 * var(--u));
   color: var(--ink-3); line-height: 1.5;
   border-top: 1px solid var(--line); padding-top: calc(.4 * var(--u));
 }
@@ -594,18 +623,32 @@ body.step-rules #board {
 /* Wide AND not much taller than it is wide: catches laptops, tablets in
    landscape and a phone turned sideways, but leaves a portrait tablet as
    one tall column where it belongs. */
-@media (min-width: 760px) and (min-aspect-ratio: 4/5) {
-  /* presenter mode is listed too: `body.presenter #app` out-specifies a
-     bare `#app`, so without it a projector collapses back to one column
-     with an enormous board and the TRAIN button off the bottom */
-  #app, body.presenter #app { max-width: calc(50 * var(--u)); }
-  #main { display: flex; align-items: flex-start; gap: calc(.8 * var(--u)); flex-wrap: wrap; }
-  #col-a { flex: 1 1 calc(20 * var(--u)); min-width: 0; }
-  #col-b { flex: 1 1 calc(18 * var(--u)); min-width: 0; }
-  #foot  { flex: 1 0 100%; }
-  /* side by side, so only column A has to fit the board */
-  #board { max-width: min(100%, max(calc(11 * var(--u)), calc(100dvh - 13 * var(--u)))); }
+@media (max-width: 820px) {
+  #main { grid-template-columns: 1fr; width: min(100% - 28px, 1180px); padding-top: calc(1.1 * var(--u)); }
+  #stage-intro, #foot { grid-column: 1; }
+  .intro-copy { grid-template-columns: 1fr; gap: 8px; }
+  .eyebrow, .learning-question { grid-column: 1; }
+  #stage-title { font-size: clamp(2rem, 10vw, 3rem); }
+  .lesson-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lesson-strip article { padding: calc(.62 * var(--u)); }
+  .lesson-strip p { font-size: calc(.68 * var(--u)); }
+  #col-b { display: flex; flex-direction: column; }
+  #train-panel { order: -2; }
+  #rules-panel { order: -2; }
+  #banner { order: -1; }
 }
+
+@media (max-width: 520px) {
+  #topbar { width: min(100% - 28px, 1180px); }
+  .icon-btn { width: calc(2.75 * var(--u)); padding: 0; }
+  .icon-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .lesson-strip { grid-template-columns: 1fr; }
+  .lesson-strip article { display: grid; grid-template-columns: 4.6rem 1fr; gap: .5rem; align-items: start; }
+  .lesson-strip span { margin: .12em 0 0; }
+  .lesson-strip p { font-size: calc(.875 * var(--u)); }
+}
+
+body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 440px); }
 
 /* A phone held sideways has almost no height to spare. Stop the sticky
    header eating a fifth of it, tighten the rhythm, and fold the opponent
@@ -619,7 +662,14 @@ body.step-rules #board {
   #mode-seg { flex: 0 0 auto; }
   #score-row { margin-top: 0; flex: 0 0 auto; }
   .sc { padding-inline: calc(.4 * var(--u)); }
-  #board { max-width: min(100%, max(calc(9 * var(--u)), calc(100dvh - 14 * var(--u)))); }
+  #main { grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); }
+  #stage-intro .eyebrow, #stage-intro #stage-title, #stage-intro .frame-question { display: none; }
+  #stage-intro .intro-copy { display: block; }
+  #stage-intro .learning-question { margin: 0; padding: 0; border: 0; font-size: calc(1 * var(--u)); }
+  #stage-intro .lesson-strip { grid-template-columns: 1fr; margin-top: calc(.35 * var(--u)); }
+  #stage-intro .lesson-strip article { display: none; }
+  #stage-intro .lesson-strip article:first-child { display: grid; grid-template-columns: 4.5rem 1fr; gap: .5rem; }
+  #board { max-width: min(100%, calc(100dvh - 12 * var(--u))); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -958,16 +1008,31 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
   <div id="brandbar">
   <header id="topbar">
     <div id="brand">
-      <span class="b0">Murray State University</span>
-      <span class="b1">ZERO TO UNBEATABLE <em>watch it learn</em></span>
+      <span class="b0">Murray State University · AI literacy</span>
+      <span class="b1">Types of AI</span>
     </div>
-    <button class="icon-btn" id="btn-howto" aria-label="How to play" title="How to play">?</button>
-    <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+    <div class="header-actions">
+      <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
   </header>
-  <div id="rule" aria-hidden="true"></div>
   </div>
 
   <main id="main">
+
+    <section id="stage-intro" aria-labelledby="stage-title">
+      <div class="intro-copy">
+        <p class="eyebrow" id="stage-kicker">Stage 1a · written rules</p>
+        <h1 id="stage-title">Rules-based intelligence</h1>
+        <p class="frame-question">Where does an AI’s skill come from? Compare written rules, learned scores, and a neural network on the same game.</p>
+        <p class="learning-question" id="stage-question">Can a program play well without learning?</p>
+      </div>
+      <div class="lesson-strip" aria-label="What to try and notice">
+        <article><span>Try now</span><p id="stage-try">Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.</p></article>
+        <article><span>Observe</span><p id="stage-observe">Changing the rules changes its play. Playing more games does not.</p></article>
+        <article><span>Takeaway</span><p id="stage-takeaway">A person supplied its strategy; this opponent never learns from experience.</p></article>
+      </div>
+    </section>
 
     <!-- Two wrappers, not a bare grid. On a phone #main is a plain block,
          so column A stacks above column B and the reading order is the
@@ -1028,7 +1093,7 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 
     <section class="panel" id="play-controls">
       <button class="btn" id="btn-newgame">New game</button>
-      <button class="btn" id="btn-brain" aria-pressed="false">Show its brain</button>
+      <button class="btn" id="btn-brain" aria-pressed="false">Show move scores</button>
     </section>
 
     <div id="brain-readout" hidden></div>
@@ -1088,46 +1153,28 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 <div class="overlay sheet" id="howto" hidden role="dialog" aria-modal="true" aria-labelledby="howto-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How to play</h2><div class="sub">Three things people call AI</div></div>
+      <div><h2 id="howto-title">Guide</h2><div class="sub">One game · three sources of skill</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
-      <p class="howto-lede">Tic-tac-toe against three different opponents. They are numbered along
-      the top, and they are not three difficulty levels. They compare written instructions,
-      experience stored in a table, and a neural network that learns to approximate that
-      experience.</p>
+      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? The three tabs compare written instructions, experience stored as scores, and neural-network weights—adjustable numbers reused to score many board positions. They are different mechanisms, not difficulty levels.</p>
       <ol class="howto-steps">
-        <li><b>1a &middot; Rules-based intelligence.</b> Eight if/else rules a person wrote down. It has played zero
-        games and it cannot be beaten &mdash; the app searches every game that could still be
-        played against it and finds no line where it loses. Every rule it uses is listed on the
-        screen, and it tells you which one it just used and why. Turn rules off with
-        <b>First 2 / First 4 / All 8</b>: two rules is what most people write first, and the app
-        will show you the game where that loses.</li>
-        <li><b>1b &middot; Machine learning.</b> The move scores begin at zero. People supplied the game
-        representation, rewards, and learning procedure; experience changes the scores.
-        Try the untrained opponent, then press <b>TRAIN</b> &mdash; it plays
-        5,000 games against itself and against chance and freezes the result as a new era. Play the
-        new era. Train again. Somewhere around the third to fifth burst the same exhaustive search
-        stops finding a line where it loses.</li>
-        <li><b>1c &middot; Neural networks.</b> First choose <b>Create learning examples</b>. The
-        fresh copy of the 1b algorithm plays 20,000 seeded games and its current estimates are frozen as examples. Then
-        train a smaller network with shared weights. The screen keeps some board positions out of
-        training and shows those results separately from its actual play. Its moves come from those
-        weights, not a hidden table lookup.</li>
+        <li><b>1a · Rules-based intelligence.</b> Play once and watch the highlighted rule explain each reply. Compare <b>First 2</b> with <b>All 8</b>. A person supplied every move priority; playing more games cannot change them.</li>
+        <li><b>1b · Machine learning.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the new era with Era 0. Outcomes update a stored score for each board position.</li>
+        <li><b>1c · Neural networks.</b> Choose <b>Create learning examples</b>, then train the network. Compare error on practiced examples and <b>held-out positions</b>—positions kept out of training—then check playing results separately.</li>
       </ol>
       <p class="howto-note">The full rule set and a sufficiently trained table can both play
       unbeatable tic-tac-toe. People wrote the first opponent's move priorities directly;
       the second learns its priorities through games. The same exhaustive search checks
       each displayed policy before the app calls it unbeatable.</p>
-      <p class="howto-note"><b>Show its brain</b> (steps 1b and 1c) prints the value it has learned or
+      <p class="howto-note"><b>Show move scores</b> (stages 1b and 1c) prints the value it has learned or
       predicted for every
-      empty square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0 is all zeros
-      because it genuinely knows nothing. The dropdown lets you go back and play any earlier era.</p>
-      <p class="howto-note quiet">Everything happens on this device: no network, no account, nothing
-      stored. Reloading starts over. Reopen these instructions any time with the
-      <b>?</b> button at the top.</p>
+      empty square &mdash; gold looks promising to it, red-orange looks dangerous. Era 0’s learned
+      scores are all zero. The dropdown lets you go back and play any earlier era.</p>
+      <p class="howto-note"><a class="text-link" href="Zero-to-Unbeatable-Demo-Guide.pdf" target="_blank" rel="noopener">Open the printable PDF guide →</a></p>
+      <p class="howto-note quiet">Everything happens on this device: no network, no account, nothing stored. Reloading starts over. Reopen this Guide any time with the <b>?</b> button.</p>
     </div>
-    <div class="sheet-foot"><button class="btn primary" data-close="howto">Play the rules</button></div>
+    <div class="sheet-foot"><button class="btn primary" data-close="howto">Start with 1a</button></div>
   </div>
 </div>
 
@@ -1179,70 +1226,86 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 <div class="guide">
 <header>
   <div class="eyebrow">Murray State University</div>
-  <h1>Zero to Unbeatable<small>Demo 1 · rules, machine learning, neural networks · 20 minutes</small></h1>
-  <p class="meta"><b>You need:</b> one browser and the demo’s `index.html`. It works offline. For projection, use Settings → Presentation mode. Start with a fresh page so the group sees the learning take place.</p>
+  <h1>Types of AI<small>Demo 1 · rules, machine learning, neural networks · 20 minutes</small></h1>
+  <p class="meta"><b>You need:</b> one browser and the demo’s <code>index.html</code>. It works offline. Start with a fresh page; use Settings → Presentation mode to project, Open Presenter Notes for this guide in the app, and Open printable PDF when a handout helps.</p>
 </header>
 
 <section>
-<h2>Purpose</h2>
-<p>This is not a race from “simple AI” to “better AI.” It puts three different sources of a program’s skill beside the same small game: a person’s written instructions, experience stored in a table, and shared weights that learn to approximate that table.</p>
-<p class="say">“Watch where the skill comes from. The board stays the same; the mechanism changes.”</p>
+<h2>The question for all 20 minutes</h2>
+<p><b>Where does this opponent’s skill come from?</b> The board and game rules stay the same. What changes is the source of the move: written instructions, experience stored as move scores, or a network’s adjustable numbers—called weights—reused to score many board positions.</p>
+<p class="say">“Do not rank these as old AI and new AI. Watch what supplied the skill.”</p>
 </section>
 
 <section>
 <h2>1a · Rules-based intelligence — 5 minutes</h2>
-<p>Open <b>1a Rules-based intelligence</b>. Ask a volunteer to play the full eight-rule opponent. Point to the highlighted rule after each reply. It can say why it moved because a person wrote its decision process down in advance.</p>
+<h3>Question</h3>
+<p>Can an opponent be skilled when it has never learned from a game?</p>
+<h3>Activity</h3>
 <ol>
-<li>Switch to First 2 and invite the room to find a fork.</li>
-<li>Return to All 8. Explain that the app checks every reachable game line against this policy. The full rule set has no losing line.</li>
-<li>Ask: “If it is skilled but never learned, should we call it AI?”</li>
+<li>Open <b>1a Rules-based intelligence</b> and play a few moves against All 8.</li>
+<li>Point to the highlighted rule after each reply. Switch to First 2 and invite the room to find a fork, then return to All 8.</li>
+<li>Choose the policy check if time allows. It examines every reachable game line for this written policy.</li>
 </ol>
-<p class="note">The useful distinction is not whether the program is impressive. It is whether its competence came from a person’s rules or from experience.</p>
+<h3>Expected observation</h3>
+<p>The opponent can explain a move by naming a rule. All 8 has no losing line because the app checks the whole policy, not because it won a few demonstrations.</p>
+<h3>Teaching limit</h3>
+<p>Its skill came from a person’s move priorities. Changing its behavior means revising those instructions; playing it supplies no new experience.</p>
 </section>
 
 <section>
 <h2>1b · Machine learning — 7 minutes</h2>
-<p>Open <b>1b Machine learning</b>. Era 0 begins with a table full of zeroes. Let someone beat it, then run a visible training burst and play the new era. The program changes only the numeric values it has learned from completed games.</p>
+<h3>Question</h3>
+<p>What changes when an opponent keeps a score for positions it has experienced?</p>
+<h3>Activity</h3>
 <ol>
-<li>Use the era selector to compare an earlier and later opponent.</li>
-<li>Turn on Show its brain. Each empty square displays the learned score for the position created by that move.</li>
-<li>When a later era is checked, distinguish a search-based proof from a good-looking win streak.</li>
+<li>Open <b>1b Machine learning</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
+<li>Play one short game, then run a visible training burst. Select an earlier and a later era to compare their move scores.</li>
+<li>Use the policy check on a later era if time allows, then use <b>New game</b> to return the board to play.</li>
 </ol>
-<p class="say">“This is machine learning, but its memory is a filing cabinet: one number for each position it has room to store.”</p>
+<h3>Expected observation</h3>
+<p>Completed games change stored move scores. A later era can choose differently because the table remembers estimates for positions it has encountered.</p>
+<h3>Teaching limit</h3>
+<p>Human play does not train this table. Only the app’s training burst updates it. The table also has one separate score per position, so it does not automatically carry what it learned to a different situation.</p>
 </section>
 
 <section class="page-break">
 <h2>1c · Neural networks — 7 minutes</h2>
-<p>Open <b>1c Neural networks</b>. The first button says <b>Create learning examples</b>. It visibly lets a fresh copy of the 1b algorithm play 20,000 seeded games, then freezes the values it learned. Those frozen examples are the teacher for a new small network of shared weights.</p>
+<h3>Question</h3>
+<p>Can adjustable numbers reused across many boards approximate the scores a table learned?</p>
+<h3>Activity</h3>
 <ol>
-<li>Press Create learning examples. Explain that these are learned examples, not answers copied from a perfect-game solver.</li>
-<li>Press Train network. The live display shows how closely the weights match examples used for training and positions kept out of training.</li>
-<li>After a run, read the separate playing score. Each 100-game check uses the same random seed and scoring procedure, though game paths can change as the network changes. MSE means average squared prediction-score error; zero is an exact match. A lower error and a better score are observations, not a promise that the network will handle every unseen position well.</li>
-<li>Turn on Show its brain. Its squares now come from a network calculation. The frozen table is not consulted while it chooses a move.</li>
+<li>Open <b>1c Neural networks</b> and choose <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its resulting estimates are frozen as the teacher.</li>
+<li>Choose <b>Train network</b>. Compare the error for examples used in training with the error for positions kept out of training.</li>
+<li>Read the separate playing score, then use <b>Show move scores</b> to see the network’s calculation for each legal move.</li>
 </ol>
-<p class="note">The examples are the fresh table’s current estimates. A position it never visited can still have its initial score of zero, even where a perfect-game solver would give a different answer.</p>
-<p class="note">Technical detail for interested students: rotations and reflections of the same board are kept together when examples are split, preventing an obvious near-copy from appearing in both the practice and check sets. The app’s source test also compares its hand-written gradient with a finite-difference estimate away from ReLU corners.</p>
-<p class="say">“A neural network is a kind of machine learning. Here it is learning a compact approximation of another learner’s experience, not receiving tic-tac-toe strategy by hand.”</p>
+<h3>Expected observation</h3>
+<p>Training changes weights: adjustable numbers reused to calculate scores for many boards, rather than a separate stored entry for every board. Lower training and held-out error mean closer agreement with this frozen teacher; the playing score is a different measurement.</p>
+<h3>Teaching limit</h3>
+<p>Preparation creates a fresh learned teacher; it does not copy answers from a perfect-game solver. People still chose the board description and learning procedure. Held-out error measures agreement on withheld examples, not playing strength or a promise about every unseen board. When the network plays, it uses its own calculation and does not consult the frozen table.</p>
+<p class="note">A fresh teacher can leave an unvisited position at its initial score of zero. That is a limit of the examples, not proof that the position is neutral in perfect tic-tac-toe.</p>
+<p class="say">“A neural network is a type of machine learning. Here it learns a compact approximation of another learner’s experience.”</p>
 </section>
 
 <section>
-<h2>Optional advanced extension</h2>
-<p>The Neural networks tab links to Ultimate tic-tac-toe as an optional representation-limit activity. It changes the game and adds global information: a board’s place in the meta-grid and where a square sends the opponent. A one-board table leaves those facts out, and a neural network with the same inputs would too. It is deliberately separate from the neural-network lesson.</p>
+<h2>Optional advanced extension — 1 minute</h2>
+<p>Open Ultimate tic-tac-toe from the neural tab only after the three-stage comparison. It adds facts a one-board picture omits: a board’s place in the larger grid and where a move sends the next player. Network weights cannot repair missing inputs; a network given the same incomplete one-board picture misses those facts too.</p>
 </section>
 
 <section>
-<h2>Discussion prompts</h2>
+<h2>Close with evidence, not a winner</h2>
 <ul>
-<li>Which opponent is easiest to explain? Which is easiest to update?</li>
-<li>Why is a held-out score more useful than reporting only the examples used to train?</li>
-<li>What would have to be checked before calling a trained network unbeatable?</li>
+<li>Which source of skill was easiest to explain? Which was easiest to update?</li>
+<li>Why compare held-out error with training error?</li>
+<li>What evidence would you need before calling a network unbeatable?</li>
 </ul>
+<p class="note">Reopen Guide with the header’s Guide button. Settings also offers Open Presenter Notes, Presentation mode, and Reset; Reset returns the full demonstration to its initial state.</p>
 </section>
 
-<footer>Bryant Harrison · Murray State University · Zero to Unbeatable · single-file offline demo · no accounts or runtime network requests</footer>
+<footer>Bryant Harrison · Murray State University · Types of AI · single-file offline demo · no accounts or runtime network requests</footer>
 </div>
     </div>
     <div class="sheet-foot">
+      <a class="btn" href="Zero-to-Unbeatable-Demo-Guide.pdf" target="_blank" rel="noopener">Open printable PDF</a>
       <button class="btn" id="btn-print-notes">Print</button>
       <button class="btn primary" data-close="notes">Done</button>
     </div>
@@ -1252,17 +1315,17 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 <div class="overlay sheet" id="settings" hidden role="dialog" aria-modal="true" aria-labelledby="settings-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="settings-title">Settings</h2><div class="sub">PRESENTATION &middot; REHEARSAL &middot; PROOF</div></div>
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation · rehearsal · verification</div></div>
       <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
       <div class="field">
         <label class="lbl">Presentation mode</label>
         <label class="switch">
-          <input type="checkbox" id="chk-presenter">
-          <span>Presenter mode &mdash; oversized UI for a projector</span>
+          <input type="checkbox" id="chk-presenter" aria-label="Presentation mode">
+          <span>Presentation mode — larger type and controls for a projector</span>
         </label>
-        <button class="btn" id="btn-notes">Open the presenter notes</button>
+        <button class="btn" id="btn-notes">Open Presenter Notes</button>
         <p class="help">The 20-minute session plan covers all three tabs, the optional
         extension, and discussion prompts. It is built into this file and includes
         a print button.</p>
@@ -1273,18 +1336,18 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
           <input type="checkbox" id="chk-first">
           <span>I always move first (otherwise it alternates)</span>
         </label>
-        <button class="btn" id="btn-howto-2">How to play</button>
-        <p class="help">Reopens the instructions that appear when the page loads. The
-        <b>?</b> button at the top of the page does the same thing at any time.</p>
+        <button class="btn" id="btn-howto-2">Open Guide</button>
+        <p class="help">Reopens the Guide that appears when the page loads.</p>
       </div>
       <div class="field">
         <label class="lbl" for="in-seed">Rehearsal seed</label>
         <div class="row">
           <input type="text" id="in-seed" placeholder="blank = different every time" autocomplete="off" spellcheck="false">
-          <button class="btn sm" id="btn-reset">Reset to Era 0</button>
+          <button class="btn sm" id="btn-reset">Reset</button>
         </div>
         <p class="help">Type a seed and reset: training then unfolds identically every
-        time, so a rehearsal matches the lesson. Your own moves are still yours.</p>
+        time, so a rehearsal matches the lesson. Reset returns to stage 1a, All 8 rules,
+        hidden move scores, and Era 0. Your presentation and playing preferences stay set.</p>
       </div>
       <div class="field">
         <label class="lbl">Verification</label>
@@ -4035,6 +4098,34 @@ return {
 if (typeof module !== 'undefined' && module.exports) module.exports = NET;
 
 
+/* ==== ui-state.js ==== */
+/* Side-effect-free UI selectors for evidence and report routing. */
+(function (root) {
+'use strict';
+
+function selectedEra(state) {
+  return state.eras[state.era];
+}
+
+function canOpenLearnedReport(state) {
+  if (state.mode === 'rules' || state.mode === 'net') return false;
+  if (state.lastLearned === null || state.lastLearned !== state.era) return false;
+  const era = selectedEra(state);
+  if (!era) return false;
+  return state.mode === 'ult' ? era.kind === 'ult' : era.kind !== 'ult';
+}
+
+function canShowMoveScores(state) {
+  if (!state.brain || state.mode === 'rules' || (state.game && state.game.over)) return false;
+  return state.mode !== 'net' || !!(state.neural && state.neural.model);
+}
+
+const api = { selectedEra, canOpenLearnedReport, canShowMoveScores };
+if (typeof module !== 'undefined' && module.exports) module.exports = api;
+else root.UI_STATE = api;
+})(typeof globalThis !== 'undefined' ? globalThis : this);
+
+
 /* ==== app.js ==== */
 /* =====================================================================
    Zero to Unbeatable — user interface
@@ -4096,6 +4187,51 @@ const S = {
 const isUlt   = () => S.mode === 'ult';
 const isRules = () => S.mode === 'rules';
 const isNet   = () => S.mode === 'net';
+
+const STAGE_COPY = {
+  rules: {
+    kicker: 'Stage 1a · written rules', title: 'Rules-based intelligence',
+    question: 'Can a program play well without learning?',
+    try: 'Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.',
+    observe: 'Changing the rules changes its play. Playing more games does not.',
+    takeaway: 'A person supplied its strategy; this opponent never learns from experience.'
+  },
+  one: {
+    kicker: 'Stage 1b · learned scores', title: 'Machine learning',
+    question: 'Can experience improve its choices?',
+    try: 'Show move scores in Era 0. Train 5,000 games, then compare the new era with Era 0.',
+    observe: 'Game outcomes change the scores attached to board positions.',
+    takeaway: 'This learner stores experience as a separate score for each position.'
+  },
+  net: {
+    kicker: 'Stage 1c · shared weights', title: 'Neural networks',
+    question: 'Can one set of learned numbers score many positions?',
+    try: 'Create learning examples, then train adjustable weights—numbers reused to score many board positions.',
+    observe: 'Held-out means positions kept out of training. Lower error is a closer match to the frozen table estimates.',
+    takeaway: 'Check playing results separately. A neural network is a kind of machine learning.'
+  },
+  ult: {
+    kicker: 'Optional extension · missing information', title: 'Ultimate tic-tac-toe',
+    question: 'What happens when the learner cannot see the whole game?',
+    try: 'Play a match, turn on move scores, and notice which global facts are absent.',
+    observe: 'The learner sees each small board, but not its location or where a move sends the opponent.',
+    takeaway: 'More training cannot recover information the representation leaves out.'
+  }
+};
+
+function renderStageIntro() {
+  const c = STAGE_COPY[S.mode] || STAGE_COPY.rules;
+  $('#stage-kicker').textContent = c.kicker;
+  $('#stage-title').textContent = c.title;
+  $('#stage-question').textContent = c.question;
+  $('#stage-try').textContent = c.try;
+  $('#stage-observe').textContent = c.observe;
+  $('#stage-takeaway').textContent = c.takeaway;
+}
+
+function reportAvailable() {
+  return UI_STATE.canOpenLearnedReport(S);
+}
 
 const fmt = n => n.toLocaleString('en-US');
 /* compact so an era label still fits a projector-sized dropdown */
@@ -4173,9 +4309,9 @@ function makeEra(n, agent, prevAgent, mix, kind, ultStats) {
   return e;
 }
 
-function currentEra() { return S.eras[S.era]; }
+function currentEra() { return UI_STATE.selectedEra(S); }
 
-function resetAll() {
+function resetAll(resetStage) {
   S.neuralRun++;
   S.training = false;
   $('#montage').hidden = true;
@@ -4203,6 +4339,16 @@ function resetAll() {
   S.humanFirstNext = true;
   S.lastLearned = null;
   S.lastRule = null;
+  S.depth = RULES.DEFAULT_DEPTH;
+  S.brain = false;
+  $('#btn-brain').ariaPressed = 'false';
+  $('#btn-brain').textContent = 'Show move scores';
+  $('#brain-readout').hidden = true;
+  $('#selftest-out').textContent = '';
+  if (resetStage) {
+    S.mode = 'rules';
+    history.replaceState(null, '', location.pathname + location.search + '#rules');
+  }
   S.ruleRec = {};
   S.ruleCounts = {};
   RULES.DEPTHS.forEach(d => resetRuleTally(d.n));
@@ -4249,7 +4395,7 @@ function currentRec() {
 }
 
 /* What to call the thing you are playing, wherever the copy needs it. */
-function oppLabel() { return isRules() ? 'The rules' : 'Era ' + S.era; }
+function oppLabel() { return isRules() ? 'The rules' : isNet() ? 'The network' : 'Era ' + S.era; }
 
 /* ------------------------------------------------------------------ *
  * The game
@@ -4437,7 +4583,8 @@ for (let i = 0; i < 9; i++) {
 function renderBoard() {
   const g = S.game, cells = OG.cellsOf(g.code);
   const agent = currentEra().agent;
-  const showHeat = S.brain && !isRules() && !g.over;
+  const neuralReady = !isNet() || !!(S.neural && S.neural.model);
+  const showHeat = UI_STATE.canShowMoveScores(S);
   const vals = showHeat && isNet() && S.neural && S.neural.model
     ? OG.legalList(g.code).map(cell => ({ cell, value: NET.predict(S.neural.model, OG.child(g.code, cell, OG.TOMOVE[g.code])), visits: 0 }))
     : showHeat ? OG.moveValues(agent, g.code) : [];
@@ -4453,7 +4600,6 @@ function renderBoard() {
                     g.lastCell >= 0 && cells[g.lastCell] === g.aiMark;
   const trig = freshRule ? S.lastRule.cells : [];
 
-  const neuralReady = !isNet() || (S.neural && S.neural.model);
   $$('.cell', boardEl).forEach((el, i) => {
     const m = cells[i];
     el.className = 'cell' + (m ? ' mk' + m : ' open') +
@@ -4474,10 +4620,12 @@ function renderBoard() {
       const v = byCell[i];
       el.style.background = heat(v.value);
       el.style.color = heatInk(v.value);
-      el.innerHTML = `<span class="v">${sgn(v.value)}</span>` +
-                     `<span class="n">seen ${fmt(v.visits)}×</span>`;
-      el.setAttribute('aria-label',
-        `${CELLNAME[i]}: value ${v.value.toFixed(2)}, seen ${v.visits} times`);
+      el.innerHTML = isNet()
+        ? `<span class="v">${sgn(v.value)}</span>`
+        : `<span class="v">${sgn(v.value)}</span><span class="n">seen ${fmt(v.visits)}×</span>`;
+      el.setAttribute('aria-label', isNet()
+        ? `${CELLNAME[i]}: network predicted score ${v.value.toFixed(2)}`
+        : `${CELLNAME[i]}: learned score ${v.value.toFixed(2)}, seen ${v.visits} times`);
     } else {
       el.textContent = '';
       el.setAttribute('aria-label', CELLNAME[i] + ', empty');
@@ -4642,16 +4790,16 @@ function renderStatus() {
   if (g.over) {
     const rules = isRules();
     const t = g.result === 'win'
-        ? ['You win.', rules ? `${S.depth} rules were not enough.` : 'Era ' + S.era + ' let you through.']
+        ? ['You win.', rules ? `${S.depth} rules were not enough.` : oppLabel() + ' let you through.']
       : g.result === 'loss'
         ? ['It beat you.', rules ? 'The ladder had a rule for every square.'
-                                 : 'Era ' + S.era + ' found a line you missed.']
+                                 : oppLabel() + ' found a line you missed.']
         : ['Drawn.', 'Neither of you got through.'];
     el.classList.add(g.result === 'win' ? 'you-win' : g.result === 'loss' ? 'you-lose' : 'drawn');
     el.innerHTML = `<div><span class="big">${t[0]}</span><br><span class="sub">${t[1]}</span></div>`;
     return;
   }
-  if (g.thinking) { el.innerHTML = `<div><span class="sub">${isRules() ? 'Checking the rules in order' : 'Era ' + S.era + ' is choosing'}…</span></div>`; return; }
+  if (g.thinking) { el.innerHTML = `<div><span class="sub">${isRules() ? 'Checking the rules in order' : oppLabel() + ' is choosing'}…</span></div>`; return; }
   const yours = OG.TOMOVE[g.code] === g.humanMark;
   el.innerHTML = `<div><span class="big">${yours ? 'Your move' : 'Its move'}</span><br>` +
     `<span class="sub">you are ${MARK[g.humanMark]} ${g.humanMark === 1 ? '(you go first)' : '(it goes first)'}</span></div>`;
@@ -4742,10 +4890,10 @@ function renderRulesPanel() {
   $('#rp-foot').innerHTML = total
     ? `${fmt(total)} move${total === 1 ? '' : 's'} decided so far. ` +
       (S.depth === 8
-        ? `None of them came from experience: this opponent has played zero games.`
+        ? `None of them came from experience: this fixed policy has had no training.`
         : `Rules ${S.depth + 1}–8 are switched off, and the panel below shows the game that costs it.`)
     : (S.depth === 8
-        ? `Eight rules, written out in advance by a person. It has played zero games and it cannot learn one. ` +
+        ? `Eight rules, written out in advance by a person. This is a fixed policy with no training process. ` +
           `The panel below searches all ${fmt(r.lines)} games playable against it.`
         : `A shortened ladder. Rules ${S.depth + 1}–8 are switched off, which opens up ` +
           `${fmt(r.lines)} playable games instead of ${fmt(RULES.report(8).lines)}.`);
@@ -4771,8 +4919,8 @@ function renderBrainReadout() {
             : 'These are its scores for <b>its own</b> options. It will play one of the outlined squares.';
   el.innerHTML =
     `<div>${whose}</div>` +
-    `<div style="margin-top:.5em">Era ${e.n}’s entire mind: <b>${fmt(e.seen)}</b> positions with a number attached, ` +
-    `out of <b>${fmt(OG.OPEN_POSITIONS.length + 958)}</b> that can occur. That is the whole thing. There is nothing else in there.</div>` +
+    `<div style="margin-top:.5em">Era ${e.n}’s learned memory: <b>${fmt(e.seen)}</b> positions with a score attached, ` +
+    `out of <b>${fmt(OG.OPEN_POSITIONS.length + 958)}</b> that can occur.</div>` +
     `<div class="legend"><span>losing</span><span class="ramp"></span><span>winning</span></div>`;
 }
 
@@ -4823,6 +4971,7 @@ function renderDepthSeg() {
     const n = +b.dataset.d;
     if (n === S.depth) return;
     S.depth = n;
+    $('#selftest-out').textContent = '';
     if (!S.ruleRec[n]) resetRuleTally(n);
     renderDepthSeg(); renderScore(); renderRulesPanel(); renderBanner();
     newGame();
@@ -4934,7 +5083,7 @@ function losingGameHTML(g) {
 
 function renderBanner() {
   const el = $('#banner');
-  const top = S.eras[S.eras.length - 1];
+  const top = currentEra();
 
   /* ---- Step 1: the same search, run on the hand-written ladder ---- */
   if (isRules()) {
@@ -4943,15 +5092,14 @@ function renderBanner() {
     el.classList.toggle('quiet', !r.safe);
     if (r.safe) {
       el.innerHTML =
-        `<h3>You cannot beat this one either — and it has never played a game.</h3>` +
+        `<h3>Eight written rules produce a policy with no losing line.</h3>` +
         `<p>Every game that can still be played against these eight rules was searched, with the ` +
         `rules moving first and moving second, and in none of them do they lose. That is the same ` +
         `exhaustive search used in 1b, run on a rule-based opponent.</p>` +
         `<p>Where the skill came from is the whole difference. Every bit of this one came out of a ` +
-        `person's head and none of it out of experience. It played zero games, it cannot improve, ` +
-        `and would need to be redesigned for a different game. For a game this small that is the <b>better</b> piece ` +
-        `of engineering — shorter, faster, and checkable by reading it. Step 2 does the same job ` +
-        `the other way round. The neural tab then asks what changes when shared weights approximate the learned table.</p>` +
+        `person's design and none of it out of training experience. Its policy stays fixed during play ` +
+        `and would need to be redesigned for a different game. For this small game it is short, fast, and readable. ` +
+        `The next two tabs show two ways experience can shape a policy instead.</p>` +
         `<div class="proof">Proof: ${fmt(r.lines)} complete game lines searched · ` +
         `${fmt(r.positions)} positions examined · 0 losses · both roles · ` +
         `re-run any time from Settings &rarr; Run the full self-test.</div>`;
@@ -5005,27 +5153,21 @@ function renderBanner() {
     el.hidden = false;
     el.classList.add('quiet');
     el.innerHTML =
-      `<h3>This game is solved. This app still cannot prove anything about it.</h3>` +
-      `<p>A proof about the game does not prove that this particular learner plays it well. This extension shows why its limited view of the board matters.</p>` +
-      `<p><b>Ordinary tic-tac-toe: ${fmt(ULT.SMALLGAMES)} complete games.</b> Steps 1 and 2 end in a ` +
-      `banner because the app can walk every one of them and come back. Proof by exhaustion — you ` +
-      `check all the cases, and there is nothing clever about it.</p>` +
+      `<h3>What happens when the learner cannot see the whole game?</h3>` +
+      `<p>This optional extension changes the representation. The learner scores each small board but omits where that board sits and where a move sends the opponent. More training cannot restore inputs it never receives.</p>` +
+      `<p><b>Ordinary tic-tac-toe: ${fmt(ULT.SMALLGAMES)} complete games.</b> The app can exhaustively check a displayed policy on that smaller game.</p>` +
       `<p><b>Ultimate tic-tac-toe: an upper bound of about ${e38(SP.bound)} board descriptions.</b> ` +
       `This is not a count of legal game states, so it cannot by itself prove that enumeration is ` +
       `impossible. The meaningful limitation here is representational: the inherited one-board ` +
       `learner omits where a board sits on the meta-grid and where a square sends the opponent. ` +
       `An ordinary neural network given the same incomplete inputs omits those facts too.</p>` +
-      `<p><b>And it is solved anyway.</b> ${SV.authors} proved in ${SV.year} that the first player ` +
+      `<p><b>A nearby published variant is solved.</b> ${SV.authors} proved in ${SV.year} that the first player ` +
       `has a forced win — <b>in at most ${SV.atMost} moves</b>, with the second player able to hold ` +
       `out <b>at least ${SV.atLeast}</b>. Nobody visited ${e38(SP.bound)} positions to do it. They ` +
       `wrote down a strategy and proved it always works, which is what mathematics is for. <b>A ` +
       `proof does not require checking every case</b> — that is the most interesting thing on this ` +
       `page, and it is why "too big to search" and "unknowable" are not the same sentence.</p>` +
-      `<p><b>None of which helps the thing you are playing.</b> It is not running that strategy, it ` +
-      `has never been shown it, and this app cannot search its tree. So it is only ever <i>good</i>, ` +
-      `measured — never proven. That is the ordinary situation for every serious AI system: chess ` +
-      `engines, self-driving cars, language models. Somebody may have proved something about the ` +
-      `problem. Nobody has proved anything about the program.</p>` +
+      `<p>The opponent here does not run that strategy, and this app does not claim the published proof for its different rules. Its results are sampled measurements of this learner.</p>` +
       `<div class="proof">${SV.title} · ${SV.ref} · ` +
       `Worth reading before quoting: the paper proves this for the variant in which ` +
       `${SV.variant}. The squares above use the commoner convention, where a won board frees ` +
@@ -5036,7 +5178,7 @@ function renderBanner() {
       (S.liveU.seeded
         ? `Handed over from 1b: ${fmt(S.liveU.seeded)} of the ${fmt(SP.slots)} entries this ` +
           `game can use`
-        : `Step 2 has not trained yet, so there was nothing to hand over — this table started at ` +
+        : `The table learner has not trained yet, so there was nothing to hand over — this table started at ` +
           `zero, of ${fmt(SP.slots)} entries the game can use`) +
       ` · filled so far ${fmt(S.liveU.seen)} · matches trained ${fmt(S.liveU.matches)}</div>`;
     return;
@@ -5051,9 +5193,8 @@ function renderBanner() {
     `none of them does it lose.</p>` +
     `<p>Tic-tac-toe ends here because it is small: about five and a half thousand positions, so a ` +
     `table can hold all of them. Chess has more possible games than there are atoms in the observable universe, and language ` +
-    `has no fixed number at all — no table can hold either. So the big systems throw the table away ` +
-    `and use a neural network, which stores a compressed guess instead of an exact entry. Different ` +
-    `brain, same idea: play, get feedback, adjust, repeat.</p>` +
+    `has no fixed number at all. Larger systems therefore use representations that share parameters ` +
+    `across inputs. That tradeoff can reach new cases, but it replaces separate stored estimates with a shared approximation.</p>` +
     `<div class="proof">Proof: ${fmt(top.verified.lines)} complete game lines searched · ` +
     `${fmt(top.verified.positions)} positions examined · 0 losses · both roles · ` +
     `re-run any time from Settings &rarr; Run the full self-test.</div>`;
@@ -5544,10 +5685,10 @@ function buildLearnedUlt(era, before) {
     `and one of theirs — a picture ordinary tic-tac-toe cannot produce at all.</div>` +
     `<div class="delta">` +
     (era.seededU
-      ? `Step 2 handed over <b>${fmt(era.seededU)}</b> entries. This game can use ` +
+      ? `The table learner handed over <b>${fmt(era.seededU)}</b> entries. This game can use ` +
         `<b>${fmt(SP.slots)}</b>, so <b>${Math.round(100 - 100 * era.seededU / SP.slots)}%</b> of ` +
         `what it needed had to be learned from nothing.`
-      : `Step 2 has not trained yet, so nothing came across at all and every one of the ` +
+      : `The table learner has not trained yet, so nothing came across at all and every one of the ` +
         `<b>${fmt(SP.slots)}</b> entries started at zero. Train 1b first and come back: it ` +
         `hands over what it can, and it is a small fraction.`) +
     ` Turn the inspector on during a match and it will tell you how many of the squares it is ` +
@@ -5725,7 +5866,7 @@ function selfTest() {
 
 
 $('#about-text').innerHTML =
-  `Zero to Unbeatable was built by Bryant Harrison, Murray State University. ` +
+  `Types of AI was built by Bryant Harrison, Murray State University. ` +
   `It runs entirely on this device: no network request is made, no account exists, ` +
   `nothing is stored, and no AI service is involved. Reloading the page returns it to Era 0. ` +
   `1a is a hand-written ${RULES.LADDER.length}-rule ladder with nothing learned in it; ` +
@@ -5808,11 +5949,12 @@ function applyMode() {
   $('#era-select').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
   $('#btn-brain').hidden = rules;
-  $('#btn-learned').hidden = rules || S.lastLearned === null;
+  $('#btn-learned').hidden = !reportAvailable();
+  if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here
     S.brain = false;
     $('#btn-brain').setAttribute('aria-pressed', 'false');
-    $('#btn-brain').textContent = 'Show its brain';
+    $('#btn-brain').textContent = 'Show move scores';
     $('#brain-readout').hidden = true;
   }
   if (ult) maybeSeed();
@@ -5821,7 +5963,7 @@ function applyMode() {
      no rule commentary to draw, so leaving step 1 for step 3 used to
      strand the panel on screen, and on a phone that pushed TRAIN below
      the fold. One place decides what a step shows; this is it. */
-  renderEraSelect(); renderTrain(); renderRulesPanel(); renderRuleFired();
+  renderStageIntro(); renderEraSelect(); renderTrain(); renderRulesPanel(); renderRuleFired();
   renderBanner(); renderScore();
   newGame();
 }
@@ -5830,6 +5972,7 @@ $$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
   if (S.mode === btn.dataset.mode) return;
   if (S.training) S.cancelTraining = true;
   S.mode = btn.dataset.mode;
+  $('#selftest-out').textContent = '';
   applyMode();
 }));
 $$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
@@ -5845,6 +5988,7 @@ $$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
   const chosen = tabs[next];
   if (S.training) S.cancelTraining = true;
   S.mode = chosen.dataset.mode;
+  $('#selftest-out').textContent = '';
   applyMode();
   chosen.focus();
 }));
@@ -5860,16 +6004,20 @@ function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }
 $('#btn-brain').addEventListener('click', () => {
   S.brain = !S.brain;
   $('#btn-brain').setAttribute('aria-pressed', String(S.brain));
-  $('#btn-brain').textContent = S.brain ? 'Hide its brain' : 'Show its brain';
+  $('#btn-brain').textContent = S.brain ? 'Hide move scores' : 'Show move scores';
   renderPlay();
 });
 $('#era-select').addEventListener('change', e => {
   S.era = +e.target.value;
-  renderScore(); newGame();
+  $('#selftest-out').textContent = '';
+  renderScore(); renderTrain(); renderBanner();
+  $('#btn-learned').hidden = !reportAvailable();
+  if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
+  newGame();
 });
 $('#btn-learned').addEventListener('click', e => {
-  if (S.lastLearned === null) return;
-  const era = S.eras[S.lastLearned], prev = S.eras[S.lastLearned - 1];
+  if (!reportAvailable()) return;
+  const era = currentEra(), prev = S.eras[S.era - 1];
   if (era.kind === 'ult') buildLearnedUlt(era, prev); else buildLearned(era, prev);
   openSheet('learned', e.currentTarget);
 });
@@ -5893,7 +6041,7 @@ $('#in-seed').addEventListener('change', e => { S.seed = e.target.value.trim(); 
 $('#btn-reset').addEventListener('click', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
-  resetAll();
+  resetAll(true);
   closeSheet('settings');
 });
 
