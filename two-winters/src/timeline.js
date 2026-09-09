@@ -68,7 +68,7 @@ function create(canvas, data) {
     setCursor: v => { st.cursor = E.clamp(v, 0, 1); clearHidden(st); render(st); },
     setBig: b => { st.big = b; resize(st); },
     cursorAt: () => at(st),
-    cursorYear: () => E.yearOf(at(st)),
+    cursorYear: () => displayedYear(st),
     visible: () => visible(st),
     stats: () => stats(st),
     winterNow: () => winterAt(st, at(st)),
@@ -80,6 +80,8 @@ function create(canvas, data) {
 }
 
 const at = st => st.t0 + st.cursor * (st.t1 - st.t0);
+/* Y1 is the exclusive axis boundary; its last included year is Y1 - 1. */
+const displayedYear = st => Math.min(Y1 - 1, E.yearOf(at(st)));
 const pw = st => Math.max(1, st.w - st.pad.l - st.pad.r);
 const ph = st => Math.max(1, st.h - st.pad.t - st.pad.b);
 const px = (st, ms) => st.pad.l + (ms - st.t0) / (st.t1 - st.t0) * pw(st);
@@ -156,9 +158,11 @@ function bind(st) {
   };
   st.canvas.addEventListener('pointermove', ev => {
     if (ev.pointerType === 'touch') return;
-    setHover(st, pick(ev, st.big ? 26 : 20));
+    const event = pick(ev, st.big ? 26 : 20);
+    if (event && event !== st.hover) setHover(st, event);
   });
-  st.canvas.addEventListener('pointerleave', () => { if (st.hover) setHover(st, null); });
+  /* Keep the inspected event while the pointer travels to its Details button.
+     Blank canvas and pointer leave are not a request to discard the selection. */
   /* Touch gets a generous radius: a fingertip is about 44px and the lanes
      are the only thing it can land on. */
   st.canvas.addEventListener('pointerdown', ev => setHover(st, pick(ev, st.big ? 34 : 28)));
@@ -271,7 +275,7 @@ function cursorLine(st) {
   ctx.font = `800 ${st.fs + 2}px system-ui, sans-serif`;
   const right = x > st.w - 56;
   ctx.textAlign = right ? 'right' : 'left'; ctx.textBaseline = 'bottom';
-  ctx.fillText(String(E.yearOf(at(st))), x + (right ? -6 : 6), st.pad.t - 14);
+  ctx.fillText(String(displayedYear(st)), x + (right ? -6 : 6), st.pad.t - 14);
 }
 
 function render(st) {
