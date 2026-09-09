@@ -1,9 +1,16 @@
 'use strict';
 var W = require('./wavelet.js');
 var failures = 0;
+var checks = 0;
 function close(a, b, eps) { return Math.abs(a - b) <= (eps || 1e-9); }
 function vectorsClose(a, b) { return a.length === b.length && a.every(function (v, i) { return close(v, b[i]); }); }
-function check(name, fn) { try { if (!fn()) throw new Error('assertion failed'); console.log('PASS  ' + name); } catch (err) { failures += 1; console.log('FAIL  ' + name + ': ' + err.message); } }
+function check(name, fn) { checks += 1; try { if (!fn()) throw new Error('assertion failed'); console.log('PASS  ' + name); } catch (err) { failures += 1; console.log('FAIL  ' + name + ': ' + err.message); } }
+// Reconstruct from a keep-mask exactly the way Part 1 does: zero the omitted
+// coefficients, invert, and compare with the original signal.
+function errorFor(signal, coefficients, mask) {
+  var kept = coefficients.map(function (v, i) { return mask[i] ? v : 0; });
+  return W.squaredError(signal, W.inverseHaar1D(kept));
+}
 // Written directly from the scale functions and signed Haar wavelets; it does
 // not call the production transform under test.
 function haarMatrix8(row, col) {
@@ -30,5 +37,36 @@ check('omitted coefficient energy equals reconstruction squared error', function
 check('largest-magnitude coefficients are best k-term subsets for a small signal', function () { var x = [1, 4, -2, 3], c = W.haar1D(x), best = W.keepLargest(c, 2), target = W.squaredError(x, W.inverseHaar1D(best)), options = []; subsets(4, 2, 0, [], options); return options.every(function (set) { var trial = c.map(function (v, i) { return set.indexOf(i) >= 0 ? v : 0; }); return target <= W.squaredError(x, W.inverseHaar1D(trial)) + 1e-9; }); });
 check('formatter renders the default coarse-only error and omitted energy consistently', function () { var signal=[3,1,4,1,5,9,2,6], c=W.haar1D(signal), kept=[c[0],0,0,0,0,0,0,0], reconstructed=W.inverseHaar1D(kept); return W.formatNumber(W.squaredError(signal,reconstructed),3)==='52.875' && W.formatNumber(W.energy(c)-W.energy(kept),3)==='52.875' && W.formatNumber(reconstructed[0],3)==='3.875'; });
 check('coefficient labels explain the 8-value layout', function () { return W.coefficientLabels(8).join(',') === 'A3,D3,D2.1,D2.2,D1.1,D1.2,D1.3,D1.4'; });
-console.log('----\n' + (12 - failures) + ' passed, ' + failures + ' failed');
+// --- Part 1's live check: the claim the lab asks students to predict before it drops a card.
+check('dropping one retained coefficient raises squared error by exactly that coefficient squared', function () {
+  var signal = [3, 1, 4, 1, 5, 9, 2, 6], c = W.haar1D(signal);
+  var starts = [[1, 1, 1, 1, 1, 1, 1, 1], [1, 0, 1, 0, 1, 0, 1, 0], [1, 1, 0, 0, 0, 0, 0, 1], [1, 0, 0, 0, 0, 0, 0, 0]];
+  return starts.every(function (start) {
+    var mask = start.map(Boolean);
+    return c.every(function (value, index) {
+      if (!mask[index]) return true;                       // only a retained card can be dropped
+      var after = mask.slice(); after[index] = false;
+      var rise = errorFor(signal, c, after) - errorFor(signal, c, mask);
+      return close(rise, value * value);
+    });
+  });
+});
+check('a dropped coefficient moves squared error and omitted energy by the same amount', function () {
+  var signal = [2, 7, -3, 4, 1, -5, 8, 0], c = W.haar1D(signal), index = 3;
+  var before = [true, true, true, true, true, true, true, true], after = before.slice(); after[index] = false;
+  var keptBefore = c.map(function (v, i) { return before[i] ? v : 0; });
+  var keptAfter = c.map(function (v, i) { return after[i] ? v : 0; });
+  var riseError = errorFor(signal, c, after) - errorFor(signal, c, before);
+  var riseOmitted = (W.energy(c) - W.energy(keptAfter)) - (W.energy(c) - W.energy(keptBefore));
+  return close(riseError, riseOmitted) && close(riseError, c[index] * c[index]);
+});
+check('the default signal drops D1.3 at −2.828 and the readout rises 0.000 → 8.000', function () {
+  var signal = [3, 1, 4, 1, 5, 9, 2, 6], c = W.haar1D(signal), index = 6;
+  var before = new Array(8).fill(true), after = before.slice(); after[index] = false;
+  var riseShown = W.formatNumber(errorFor(signal, c, after) - errorFor(signal, c, before), 3);
+  return W.coefficientLabels(8)[index] === 'D1.3' && W.formatNumber(c[index], 3) === '-2.828' &&
+    W.formatNumber(errorFor(signal, c, before), 3) === '0.000' && W.formatNumber(errorFor(signal, c, after), 3) === '8.000' &&
+    riseShown === '8.000' && W.formatNumber(c[index] * c[index], 3) === '8.000';
+});
+console.log('----\n' + (checks - failures) + ' passed, ' + failures + ' failed');
 process.exit(failures ? 1 : 0);

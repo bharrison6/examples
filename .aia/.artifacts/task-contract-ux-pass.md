@@ -71,6 +71,24 @@ Standardizations from the first completed lane (inhibitor-investigation, 2026-09
   positive control** (for example, CDP `Network.requestWillBeSent` while exercising every
   control, with a control page that makes external requests and is seen to do so).
 
+Lessons from the ion-flight and takeoff lanes (2026-09-09):
+
+- **Do not locate the guide stylesheet with `indexOf('<style>')`** as `two-winters/build.js`
+  does: a literal `<style>` inside an HTML comment in the guide makes extraction start inside
+  the comment and the browser then drops the first scoped rule. Use an explicit marker such
+  as `<style id="guide-css">` (the two-winters and front-doors lanes should fix the reference
+  implementation the same way).
+- **Placeholders must appear exactly once in the template.** `String.replace` substitutes the
+  first occurrence; a placeholder named in a head comment received the whole guide. Guard for
+  duplicate placeholders in `build.js`.
+- **Pass a function, not a string, as the replacement** in `String.replace(from, to)` when the
+  injected text may contain `$` (`$$`, `$&`, `` $` ``, `$'` are otherwise consumed).
+- **Reset present in the audit table may be a per-round or per-level control**, not a
+  whole-demo reset; verify fresh-load semantics rather than trusting the label.
+- **The browser pane cannot run local files and its tabs are shared across lanes**; the working
+  route is headless Chrome over the DevTools protocol with Node builtins (no installs), as the
+  inhibitor-investigation and takeoff lanes did.
+
 ## Folded in (operator answers of 2026-09-09, before the pass started)
 
 - **Retitle, Path A** ([[demo-titles-descriptive-retitle]], [[demo-titles-retitle]]): each lane
