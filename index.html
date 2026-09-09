@@ -81,7 +81,7 @@
   }
   nav a:hover { background: rgba(255,255,255,.09); }
   .hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .65fr); gap: 72px; align-items: end; }
-  .eyebrow, .part-num, .feature-number, .catalog-label {
+  .eyebrow, .part-num, .feature-number {
     margin: 0 0 12px;
     color: var(--gold);
     font-size: .73rem;
@@ -248,9 +248,6 @@
   .practical-grid .card .topic { color: var(--gold); }
   .practical-grid .card h2, .practical-grid .card .go { color: var(--white); }
   .practical-grid .card p { color: #c9d4df; }
-  .catalog-head { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin: 0 0 18px; }
-  .catalog-head h3 { margin: 0; color: var(--navy); font-size: clamp(1.6rem, 4vw, 2.3rem); }
-  .catalog-head p { max-width: 570px; margin: 0; color: var(--muted); font-size: .9rem; }
   .catalog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .catalog .card { min-height: 220px; padding: 20px; }
   .catalog .card h2 { font-size: 1.2rem; }
@@ -315,8 +312,7 @@
     .stage-list li { grid-template-columns: 2.35rem 1fr; }
     .concept-grid, .catalog { grid-template-columns: 1fr; }
     .concept-caveat { grid-column: auto; }
-    .catalog-head, footer .shell { display: block; }
-    .catalog-head p { margin-top: 10px; }
+    footer .shell { display: block; }
     .closing { padding: 28px 24px; }
     footer .shell > :last-child { margin-top: 8px; }
     .phone-link { text-align: left; }
@@ -336,7 +332,8 @@
         <nav aria-label="Launcher sections">
           <a href="#part-one">What AI is</a>
           <a href="#part-two">Where it is going</a>
-          <a href="#part-three">For your discipline</a>
+          <a href="#part-three">How to use AI</a>
+          <a href="#part-four">Example projects</a>
         </nav>
       </div>
       <div class="hero" id="top">
@@ -436,9 +433,9 @@
       <div class="part-head">
         <div>
           <p class="part-num">Part three</p>
-          <h2>What it can do for your discipline</h2>
+          <h2>How to use AI</h2>
         </div>
-        <p class="part-intro">Begin with the request and the tool. Then browse classroom activities that turn a model, a prediction, or a body of evidence into something students can inspect and challenge.</p>
+        <p class="part-intro">Practice writing a clear request, then choose the right tool for the job. These two activities show how your instructions and your choice of tools shape what AI can help you do.</p>
       </div>
 
       <div class="practical-grid" aria-label="Practical starting points">
@@ -456,12 +453,15 @@
         </a>
       </div>
 
-      <div class="catalog-head">
+    </section>
+
+    <section class="part" id="part-four">
+      <div class="part-head">
         <div>
-          <p class="catalog-label">Classroom activity catalog</p>
-          <h3>Choose a discipline</h3>
+          <p class="part-num">Part four</p>
+          <h2>Example projects</h2>
         </div>
-        <p>Each activity is self-contained and includes a guide to its model, assumptions, and teaching use. Start from your learning goal and inspect the evidence before adapting it for class.</p>
+        <p class="part-intro">Explore classroom projects built with AI. Each activity includes a guide to its model, assumptions, and teaching use. Start with a learning goal and inspect the evidence before adapting a project for your class.</p>
       </div>
 
       <div class="catalog">

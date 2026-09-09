@@ -2,7 +2,7 @@
   "slug": "zero-to-takeoff",
   "title": "AI: From Zero to Takeoff",
   "page": "index.html",
-  "note": "Part/section ordering for the master launcher. Section headings and narrative prose are hand-authored in the page itself; this file defines which demos appear and in what order, and drives README table ordering. Parts one/two/three mirror the launcher: what AI is, where it is going, what it can do.",
+  "note": "Part/section ordering for the master launcher. Section headings and narrative prose are hand-authored in the page itself; this file defines which demos appear and in what order, and drives README table ordering. Parts one through four mirror the launcher: what AI is, where it is going, how to use AI, and example projects.",
   "sections": [
     {
       "num": "PART ONE",
@@ -22,10 +22,16 @@
     },
     {
       "num": "PART THREE",
-      "title": "What AI can do for your discipline",
+      "title": "How to use AI",
       "demos": [
         "the-stranger",
-        "front-doors",
+        "front-doors"
+      ]
+    },
+    {
+      "num": "PART FOUR",
+      "title": "Example projects",
+      "demos": [
         "fuel-golf",
         "bridge-works",
         "ladder-lab",

@@ -6,7 +6,7 @@ lifecycle: complete
 schema_version: 2
 title: Redesign the examples launcher and consolidate the tic-tac-toe teaching sequence
 created: 2026-09-09T02:07:00Z
-updated: 2026-09-09T02:59:00Z
+updated: 2026-09-09T03:16:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -19,6 +19,19 @@ source: .aia/.artifacts/task-examples-launcher-redesign.md
 ---
 
 # Completion — 2026-09-09
+
+## Follow-up: four-part tour
+
+At Bryant's direction, Part Three is **How to use AI**, containing The Stranger
+and Front Doors. Part Four is **Example projects**, containing the ten classroom
+demos. Navigation, section introductions and canonical tour data agree; the full
+demo order and public folder URLs are preserved. Generated README is unchanged.
+Parent observed all three hub checks pass and checked the four sections' card
+counts (2/2/2/10), the new anchor link and a 390px Chrome layout without horizontal
+overflow. Earlier three-part descriptions below are historical.
+
+The earlier redesign through `ec643ce` was pushed on Bryant's explicit request.
+This structural follow-up continues that authorized publication workflow.
 
 The redesigned launcher and three real tic-tac-toe tabs are committed at `0d7c145`
 and integrated into local main at `aeff5ec`, preserving concurrent `8bd3d1f`.
