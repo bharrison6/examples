@@ -5,6 +5,7 @@
   "topic": "Engineering · Statics",
   "discipline": "Engineering",
   "tagline": "Truss bridge builder on a real direct-stiffness solver — cheapest surviving bridge wins",
+  "hub_blurb": "Build a truss, watch the real solver expose tension, buckling, and collapse, then compete for the cheapest bridge that survives.",
   "card_blurb": "Truss bridge builder on a real direct-stiffness solver: live tension and compression, Euler buckling, progressive collapse. Cheapest bridge that survives wins.",
   "description": "**Bridge Works** — truss bridge builder for physics class. Real direct-stiffness truss solver, live tension/compression colouring, Euler buckling, progressive collapse, five levels with golf-style par budgets plus a sandbox. Includes a printable teacher guide.",
   "entry": "index.html",

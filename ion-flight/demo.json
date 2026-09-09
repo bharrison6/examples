@@ -5,6 +5,7 @@
   "topic": "Chemistry · Instrumental Analysis",
   "discipline": "Chemistry",
   "tagline": "Predict, time, and explain what a flight-time detector can reveal",
+  "hub_blurb": "Predict and time ion flights, then use detector evidence to separate mass and charge effects without claiming more than the trace shows.",
   "card_blurb": "Run three linked ion comparisons, use detector evidence to separate mass and charge effects, and discover why different ions can share one flight-time peak.",
   "description": "**Ion Flight** — an offline guided linear TOF investigation. Predict and run mass, charge, and equal-ratio comparisons; watch the fixed-scale flight; then explain what the summed detector trace can and cannot establish. Includes an optional peak-width extension and printable teacher guide.",
   "entry": "index.html",
