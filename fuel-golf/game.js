@@ -954,7 +954,12 @@ $('btnLevels').addEventListener('click', () => { renderLevelGrid(); openModal('l
 $('closeLevels').addEventListener('click', () => closeModal('levelsModal'));
 
 /* settings modal */
-$('btnTeacher').addEventListener('click', () => openModal('teacherModal'));
+$('btnTeacher').addEventListener('click', () => {
+  // never reopen onto a confirmation somebody walked away from
+  $('resetConfirmRow').style.display = 'none';
+  $('resetAllConfirmRow').style.display = 'none';
+  openModal('teacherModal');
+});
 $('closeTeacher').addEventListener('click', () => closeModal('teacherModal'));
 $('tgProjector').addEventListener('click', () => {
   const on = document.body.classList.toggle('projector');
@@ -966,7 +971,8 @@ function setProjectorLabel(on) {
   $('tgProjector').setAttribute('aria-pressed', on ? 'true' : 'false');
 }
 
-/* presenter's notes — stage notes for whoever is running the room */
+/* Presenter Notes — the printable teacher guide, injected into #notesModal from
+   teacher-guide.html by tools/guide-sync.js. Nothing is fetched to show them. */
 function showNotes() {
   const opener = document.activeElement;
   closeModal('teacherModal');
@@ -975,11 +981,39 @@ function showNotes() {
 $('tgNotes').addEventListener('click', showNotes);
 $('btnNotes').addEventListener('click', showNotes);
 $('closeNotes').addEventListener('click', () => closeModal('notesModal'));
+/* ---------- Reset (whole demo) ----------
+   Puts the page back where a fresh load leaves it: Level 1 on the pad, nothing
+   saved on this machine, every panel closed. Two things are deliberately NOT
+   touched. Presentation mode is a presenter's display preference, not demo
+   state, so a reset between class periods does not throw the projector back to
+   small type. And the Guide overlay, which a real first load opens, stays shut —
+   the presenter has just been in Settings and does not need the how-to. */
+function resetDemo() {
+  LEVELS.forEach(L => store.del(LB_KEY(L.id)));
+  store.del(PROG_KEY);
+  store.del('fuelgolf_name');
+  $('dbName').value = '';
+  document.querySelectorAll('.modal.show').forEach(m => closeModal(m.id));
+  $('resetConfirmRow').style.display = 'none';
+  $('resetAllConfirmRow').style.display = 'none';
+  // transient UI loadLevel() does not own
+  $('hud').classList.remove('show');
+  $('btnHud').classList.remove('active');
+  $('hint').classList.remove('show');
+  renderLevelGrid();
+  loadLevel(0);            // also resets camera, warp, engine, undo stack, Δv
+  toast('Reset to a fresh start');
+}
+$('tgResetAll').addEventListener('click', () => { $('resetAllConfirmRow').style.display = 'flex'; });
+$('tgResetAllNo').addEventListener('click', () => { $('resetAllConfirmRow').style.display = 'none'; });
+$('tgResetAllYes').addEventListener('click', resetDemo);
+
 $('tgReset').addEventListener('click', () => { $('resetConfirmRow').style.display = 'flex'; });
 $('tgResetNo').addEventListener('click', () => { $('resetConfirmRow').style.display = 'none'; });
 $('tgResetYes').addEventListener('click', () => {
   LEVELS.forEach(L => store.del(LB_KEY(L.id)));
   $('resetConfirmRow').style.display = 'none';
+  toast('Leaderboards cleared');
 });
 if (store.get('fuelgolf_projector', false)) { document.body.classList.add('projector'); setProjectorLabel(true); }
 

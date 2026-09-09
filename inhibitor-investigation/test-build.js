@@ -15,8 +15,9 @@ assert.ok(html.includes('newSampleButton'), 'the page must expose a fresh myster
 /* --- presenter notes ARE the printable guide -------------------------------- */
 const gStart = guideSrc.indexOf('<div class="guide-scope">');
 const gEnd = guideSrc.indexOf('</div><!-- /guide -->');
-const sOpen = guideSrc.indexOf('<style>');
-const sClose = guideSrc.indexOf('</style>');
+const sOpenMatch = /^<style>$/m.exec(guideSrc);  // line-anchored, as build.js does
+const sOpen = sOpenMatch ? sOpenMatch.index : -1;
+const sClose = guideSrc.indexOf('</style>', sOpen);
 assert.ok(gStart > -1 && gEnd > gStart && sOpen > -1 && sClose > sOpen, 'the canonical guide keeps its injection markers');
 const guideBody = guideSrc.slice(gStart, gEnd) + '</div>';
 const guideCss = guideSrc.slice(sOpen + '<style>'.length, sClose);
@@ -31,9 +32,16 @@ assert.ok(words(guideBody) > 400, 'the presenter notes carry the whole guide, no
 assert.ok(/<button[^>]*id="helpButton"[^>]*aria-label="Guide"/.test(html), 'the ? button must be named exactly "Guide"');
 assert.ok(/<h2 id="howTitle">Guide\b/.test(html), 'the Guide overlay heading must read "Guide"');
 assert.ok(/<button[^>]*id="settingsButton"/.test(html), 'the page must expose a Settings button');
+// Scoped to the Settings menu block: the injected guide's prose also names these
+// labels, so a document-wide search would match its own answer key.
+const menuStart = html.indexOf('id="settingsMenu"');
+assert.ok(menuStart > 0, 'the page must expose the Settings menu');
+const menu = html.slice(menuStart, html.indexOf('</div>', menuStart));
+assert.ok(!menu.includes('guide-scope'), 'the Settings menu block must not contain the injected guide');
 for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
-  assert.ok(html.includes('>' + label + '<') || html.includes('> ' + label + '</label>'), 'the Settings menu must offer "' + label + '"');
+  assert.ok(menu.includes('>' + label + '<') || menu.includes('> ' + label + '</label>'), 'the Settings menu must offer "' + label + '"');
 }
+assert.ok(!/GUIDE_CSS: BEGIN \*\/[^{]*[<]/.test(html.slice(html.indexOf('/* GUIDE_CSS: BEGIN */'), html.indexOf('/* GUIDE_CSS: END */'))), 'the injected guide stylesheet must contain no markup');
 assert.ok(/id="settingsMenu"[^>]*hidden/.test(html), 'the Settings menu starts closed');
 assert.ok(/id="presenterNotes"[^>]*hidden/.test(html), 'the presenter-notes overlay starts closed');
 assert.ok(!/id="howTo"[^>]*\shidden/.test(html), 'the Guide overlay opens on first load');

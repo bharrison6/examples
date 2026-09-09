@@ -32,13 +32,19 @@ const guideSrc = read(path.join(root, 'src', 'teacher-guide.html'));
 /* Pull the guide apart. The FIRST <style> block is the one scoped to
    .guide-scope and safe to inject; the SECOND is standalone page/print chrome
    and must not leak into the app. */
-const sOpen = guideSrc.indexOf('<style>');
-const sClose = guideSrc.indexOf('</style>');
+// Line-anchored: the guide's head comment names "<style>" in prose, and a bare indexOf
+// landed inside that comment (found 2026-09-09: the first .guide-scope rule shipped
+// swallowed). The open tag must sit alone on a line; the close is the first after it.
+const sOpenMatch = /^<style>$/m.exec(guideSrc);
+if (!sOpenMatch) throw new Error('src/teacher-guide.html has no line-anchored <style> block to lift.');
+const sOpen = sOpenMatch.index;
+const sClose = guideSrc.indexOf('</style>', sOpen);
 const gStart = guideSrc.indexOf('<div class="guide-scope">');
 const gEnd = guideSrc.indexOf('</div><!-- /guide -->');
 if (sOpen < 0 || sClose < 0 || gStart < 0 || gEnd < 0) throw new Error('Guide markers are missing in src/teacher-guide.html.');
 const guideCss = guideSrc.slice(sOpen + '<style>'.length, sClose);
 const guideHtml = guideSrc.slice(gStart, gEnd) + '</div>';
+if (guideCss.includes('<')) throw new Error('The lifted guide stylesheet contains markup; the <style> marker matched the wrong place.');
 if (/^\s*(?:body|html|\*)\s*[,{]/m.test(guideCss)) throw new Error('The guide stylesheet leaks a page-level rule into the app; scope every rule to .guide-scope.');
 if (/<\/script/i.test(guideHtml)) throw new Error('The guide body must not contain a script close tag.');
 

@@ -177,8 +177,8 @@ TO.App = (function () {
     host.innerHTML =
       '<div class="sheet">' +
         '<div class="sheet-title">' +
-          '<div><div class="msu-line"><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div><h1>TOPPING OUT</h1>' +
-            '<div class="tagline">Competitive construction scheduling. Same building, same weather, same bad luck — the only variable is what you decide. Go Racers.</div></div>' +
+          '<div><div class="msu-line"><svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div><h1>CONSTRUCTION SCHEDULING</h1>' +
+            '<div class="tagline"><b>Topping Out</b> — competitive construction scheduling. Same building, same weather, same bad luck: the only variable is what you decide. Go Racers.</div></div>' +
           '<div class="stamp">RACER CONSTRUCTION MGMT<br>SCHEDULING SIMULATION<br>REV 3.0</div>' +
         '</div>' +
         '<div class="sheet-body">' +
@@ -207,7 +207,7 @@ TO.App = (function () {
           '</div>' +
           '<div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">' +
             '<button class="btn primary" id="btn-start" style="font-size:1rem;padding:11px 24px">Start the job</button>' +
-            '<button class="btn ghost" id="btn-howto3">? How to play</button>' +
+            '<button class="btn ghost" id="btn-howto3">? Guide</button>' +
             '<label style="font-size:.85rem;display:flex;align-items:center;gap:6px;cursor:pointer">' +
               '<input type="checkbox" id="chk-big"' + (document.body.classList.contains('big') ? ' checked' : '') + '> Presentation mode</label>' +
             '<a class="btn ghost" href="teacher-guide.html" target="_blank">📄 Instructor guide</a>' +
@@ -1339,6 +1339,36 @@ TO.App = (function () {
     document.getElementById('selftest').hidden = false;
   }
 
+  /* ---------- Reset ------------------------------------------------
+     The contract’s Reset: the demo as it is on a fresh load — the setup
+     sheet, empty fields, no run in progress, every overlay closed. The
+     Guide overlay opens on load but NOT on Reset: a presenter who has
+     just reset does not want the briefing back over the sheet.
+
+     Two things deliberately survive, because they survive a reload too
+     and so are not demo state: Presentation mode, which is a display
+     preference for the room, and the leaderboard, which holds earlier
+     sections’ scores and has its own control in Settings. */
+  function resetDemo() {
+    Array.prototype.forEach.call(document.querySelectorAll('.overlay'), function (ov) { ov.hidden = true; });
+    g = null;
+    baseline = null;
+    lastProjection = null;
+    pending = null;
+    animating = false;
+    phase = 'news';
+    view = '4d';
+    document.body.classList.remove('m-site');
+    var ms = document.getElementById('m-site'), mm = document.getElementById('m-meet');
+    if (ms) ms.classList.remove('on');
+    if (mm) mm.classList.add('on');
+    document.getElementById('app').hidden = true;
+    document.getElementById('setup').hidden = false;
+    setupState = { team: '', seed: '', project: 'tutorial', difficulty: 'standard' };
+    renderSetup();
+    toast('Reset — back to the setup sheet.');
+  }
+
   /* =================================================================
      BOOT
      ================================================================= */
@@ -1388,18 +1418,16 @@ TO.App = (function () {
       setPresentation(this.checked);
       if (g) renderAll();
     };
-    document.getElementById('btn-newgame').onclick = function () {
-      if (!window.confirm('Abandon this run and go back to setup?')) return;
-      document.getElementById('instructor').hidden = true;
-      document.getElementById('debrief').hidden = true;
-      document.getElementById('app').hidden = true;
-      document.getElementById('setup').hidden = false;
-      g = null;
-      renderSetup();
+    /* Mid-run a Reset throws away a class’s work, so it asks first; from
+       the setup sheet there is nothing to lose and it just runs. */
+    document.getElementById('btn-reset').onclick = function () {
+      if (g && !window.confirm('Reset? The run in progress is lost.')) return;
+      resetDemo();
     };
     document.getElementById('btn-lb-reset2').onclick = function () {
       if (!window.confirm('Clear the leaderboard for every seed on this computer?')) return;
       store('to.leaderboard', []); toast('Leaderboard cleared.');
+      if (!g) renderSetup();
     };
     Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) {
       b.onclick = function () { closeOverlay(b.getAttribute('data-close')); };

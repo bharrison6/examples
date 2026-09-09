@@ -1,8 +1,76 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>What the Survey Missed - Teacher Guide</title><style>@page{size:letter;margin:.55in}body{max-width:7.4in;margin:auto;color:#172b42;font:10pt/1.35 Arial,sans-serif}header{border-bottom:5px solid #ecac00;padding-bottom:9px}h1{margin:0;color:#002144;font-size:23pt}header p{color:#526a7e}h2{color:#002144;font-size:14pt;break-after:avoid}p{margin:5px 0}li{margin:3px 0}.lead{font-size:11pt}.box{margin:9px 0;padding:9px 11px;border-left:5px solid #00a4e3;background:#eef8fc}.warning{border-color:#ecac00;background:#fff6d9}table{width:100%;border-collapse:collapse;margin:7px 0}th,td{padding:5px 6px;border:1px solid #b8cad8;text-align:left;vertical-align:top}th{background:#002144;color:#fff;font-size:9pt}.page-break{break-before:page;page-break-before:always}footer{margin-top:14px;padding-top:7px;border-top:1px solid #b8cad8;color:#526a7e;font-size:8.5pt}</style></head><body><header><h1>What the Survey Missed</h1><p>Teacher and presenter guide - bounded synthetic occupancy investigation - Murray State University</p></header><main>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What the Survey Missed - Teacher Guide</title>
+<!--
+  CANONICAL SOURCE for the printable teacher guide AND for the in-app presenter
+  notes. There is no copy of this text anywhere: build.js lifts the style block
+  tagged id="guide-css" and the div.guide-scope body straight into index.html,
+  so Settings then Open Presenter Notes shows this document with nothing to
+  fetch at runtime. Edit this file, then run `node build.js`.
+  `node build.js --check` fails if index.html has drifted from it.
+
+  Every rule in the id="guide-css" block MUST be scoped to .guide-scope and must
+  not use an at-rule: it is injected into the running app, where a page-level
+  rule would repaint the demo. build.js refuses the build otherwise.
+  The SECOND style block is standalone page/print chrome for this file only and
+  never reaches the app; the letter-size print layout lives there.
+-->
+<style id="guide-css">
+.guide-scope{color:inherit;font-size:.95rem;line-height:1.45}
+.guide-scope h1{margin:0;color:#002144;font-size:1.5rem}
+.guide-scope h2{margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #00a4e3;color:#002144;font-size:1.05rem}
+.guide-scope .head{margin-bottom:4px;padding-bottom:8px;border-bottom:5px solid #ecac00}
+.guide-scope .sub{margin:4px 0;color:#526a7e;font-size:.9rem}
+.guide-scope .lead{font-size:1rem}
+.guide-scope p{margin:0 0 .7em}
+.guide-scope ul,.guide-scope ol{margin:0 0 .8em;padding-left:20px}
+.guide-scope li{margin-bottom:4px}
+.guide-scope .box{margin:9px 0;padding:8px 11px;border-left:5px solid #00a4e3;background:#eef8fc}
+.guide-scope .warning{border-left-color:#ecac00;background:#fff6d9}
+.guide-scope .scroll{max-width:100%;overflow-x:auto}
+.guide-scope table{width:100%;min-width:360px;border-collapse:collapse;margin:7px 0;font-size:.85rem}
+.guide-scope th,.guide-scope td{padding:5px 6px;border:1px solid #b8cad8;text-align:left;vertical-align:top}
+.guide-scope th{background:#002144;color:#fff}
+.guide-scope code{padding:1px 3px;background:#e8eef2}
+.guide-scope .foot{margin-top:12px;padding-top:7px;border-top:1px solid #b8cad8;color:#526a7e;font-size:.8rem}
+.guide-scope a{color:#00618c}
+</style>
+<style>
+@page{size:letter;margin:.55in}
+*{box-sizing:border-box}
+body{max-width:7.4in;margin:auto;color:#172b42;font:10pt/1.32 Arial,sans-serif}
+.guide-scope{font-size:10pt;line-height:1.32}
+.guide-scope h1{font-size:23pt}
+.guide-scope h2{margin:9px 0 3px;padding-bottom:0;font-size:14pt;break-after:avoid}
+.guide-scope .head{padding-bottom:7px}
+.guide-scope .lead{font-size:11pt}
+.guide-scope p{margin:0 0 .45em}
+.guide-scope ul,.guide-scope ol{margin:0 0 .5em}
+.guide-scope li{margin-bottom:2px}
+.guide-scope .box{margin:6px 0;padding:6px 9px}
+.guide-scope table{min-width:0;margin:5px 0;break-inside:avoid}
+.guide-scope th,.guide-scope td{padding:4px 5px}
+.guide-scope th{font-size:9pt}
+/* The guide runs to two letter pages. Let it break where the flow falls, but
+   never inside a table or a callout box, and never straight after a heading. */
+.guide-scope .box{break-inside:avoid}
+.guide-scope .foot{font-size:8.5pt}
+@media print{.guide-scope a{color:#172b42}}
+</style>
+</head>
+<body>
+<div class="guide-scope">
+<header class="head"><h1>What the Survey Missed</h1><p class="sub">Teacher and presenter guide - bounded synthetic occupancy investigation - Murray State University - Bryant Harrison</p></header>
 <section><h2>Purpose and learning target</h2><p class="lead">Students distinguish observed fraction ever detected, realized occupied-site fraction in one synthetic scenario, occupancy probability (psi), and detection probability (p). Occupancy means whether a site is used in this model; it is not abundance or a number of animals.</p><div class="box"><strong>Target claim:</strong> fewer detections do not by themselves establish lower occupancy. Detection probability can differ between habitats.</div><p>Every round visits the same 24 Habitat A and 24 Habitat B sites: 48 site-visits. A site click inspects a fixed detection history; it never changes the sample.</p></section>
-<section><h2>Current app flow</h2><ol><li>Run fixed round 1 across all 48 sites.</li><li>Inspect observed fraction ever detected and choose the cautious claim: a difference can reflect occupancy, detection probability, or both.</li><li>Only then choose fixed rounds 2 and 3, transfer, optional likelihood, or reveal.</li><li>After reveal, the same arrays distinguish detections, occupied-but-missed sites, and unoccupied sites. Further rounds are exploration, not a blind new test.</li></ol><p><strong>Controls:</strong> <b>?</b> reopens how-to. <b>Settings</b> contains presentation mode, openable presenter notes, reset responses, practice replay of the same seed, and a new seeded scenario.</p></section>
-<section><h2>Declared synthetic model</h2><table><thead><tr><th>Habitat</th><th>Generating occupancy psi</th><th>Detection p</th><th>Meaning</th></tr></thead><tbody><tr><td>A</td><td>0.8</td><td>0.25</td><td>Higher generating occupancy probability, lower detection probability.</td></tr><tr><td>B</td><td>0.5</td><td>0.8</td><td>Lower generating occupancy probability, higher detection probability.</td></tr></tbody></table><p>Sites remain occupied or unoccupied across the three visits (closure). Given occupancy, detections are conditionally independent; there are no false positives; and p is constant within a habitat. These are teaching assumptions, not claims about local wildlife.</p></section>
-<section><h2>Why raw detections can mislead</h2><p>For K visits, expected fraction ever detected is <code>psi x [1 - (1 - p)^K]</code>.</p><table><thead><tr><th>Visits K</th><th>A expected ever detected</th><th>B expected ever detected</th><th>Implication</th></tr></thead><tbody><tr><td>1</td><td>0.20</td><td>0.40</td><td>B is expected to have more detections although A has greater psi.</td></tr><tr><td>3</td><td>0.4625</td><td>0.496</td><td>More visits improve evidence but do not guarantee a finite ranking matches occupancy.</td></tr></tbody></table><div class="box warning"><strong>Do not score the ranking.</strong> After reveal, compare observed fraction, realized occupancy, generating psi, and p by name. A seeded realization can differ from either expectation.</div></section>
-<section class="page-break"><h2>Optional likelihood view</h2><p>The app uses observed K-visit histories for one habitat only. For an ordered history with d detections, likelihood is <code>psi p^d (1-p)^(K-d)</code> when d is positive; for an all-zero history it is <code>(1-psi) + psi(1-p)^K</code>.</p><div class="box"><strong>Interpret carefully:</strong> shading is relative likelihood on a bounded psi/p grid. It is not posterior probability or a calibrated confidence interval. Multiply exact ordered-history probabilities over sites; do not add a binomial coefficient to one particular history.</div><p>With one visit, detections chiefly identify psi p. A high-psi/low-p and lower-psi/higher-p combination can fit the same observed fraction. The app supplies axis labels plus keyboard/touch readout rather than a unique occupancy estimate.</p></section>
-<section><h2>Facilitation and boundaries</h2><ul><li>Before round 1, contrast “not detected” with “not present.”</li><li>After round 1, ask for the unit of effort: 48 site-visits, not 48 animals counted.</li><li>Before another round, ask what changes (histories) and what stays fixed (sites).</li><li>For transfer, ask whether a different detection process could explain fewer detections.</li></ul><p>This activity teaches detection confounding. It does not estimate a real species, habitat, population, conservation priority, or field-survey result.</p></section>
-<section><h2>Sources and attribution</h2><p>MacKenzie, D. I., et al. (2002), “Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One,” <em>Ecology</em>, 83(8), 2248-2255. U.S. Geological Survey: <a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one">Estimating site occupancy rates when detection probabilities are less than one</a>.</p><p>U.S. Geological Survey, <a href="https://www.mbr-pwrc.usgs.gov/workshops/occupancy2023online.html">RPresence occupancy workshop, 2023 online</a>, for occupancy/detection-history context. These are source context, not course assignment information or endorsement.</p></section></main><footer><strong>What the Survey Missed</strong> - Bryant Harrison - Murray State University - Offline synthetic teaching model. This HTML file is the canonical guide source.</footer></body></html>
+<section><h2>Current app flow</h2><ol><li>Open <code>index.html</code> locally; the <strong>Guide</strong> overlay opens automatically. Dismiss it, then run fixed round 1 across all 48 sites.</li><li>Inspect observed fraction ever detected and choose the cautious claim: a difference can reflect occupancy, detection probability, or both.</li><li>Only then choose fixed rounds 2 and 3, transfer, optional likelihood, or reveal.</li><li>After reveal, the same arrays distinguish detections, occupied-but-missed sites, and unoccupied sites. Further rounds are exploration, not a blind new test.</li></ol><p><strong>Controls:</strong> <b>?</b> reopens the <strong>Guide</strong> at any point. <b>Settings</b> offers <strong>Open Presenter Notes</strong> (this guide, on screen), <strong>Presentation mode</strong> (hides the case aside, the transfer and reveal panels, and the likelihood view for a projector), and <strong>Reset</strong> (the whole demo back to first load: the first seeded scenario, no rounds run, no claims chosen, nothing revealed, the likelihood view closed and re-centred). Reset leaves Presentation mode as you set it. Two scenario controls sit below the rule: <strong>Replay as practice (same seed)</strong> keeps whatever scenario is on screen, and <strong>New seeded scenario</strong> draws the next one.</p></section>
+<section><h2>Declared synthetic model</h2><div class="scroll"><table><thead><tr><th>Habitat</th><th>Generating occupancy psi</th><th>Detection p</th><th>Meaning</th></tr></thead><tbody><tr><td>A</td><td>0.8</td><td>0.25</td><td>Higher generating occupancy probability, lower detection probability.</td></tr><tr><td>B</td><td>0.5</td><td>0.8</td><td>Lower generating occupancy probability, higher detection probability.</td></tr></tbody></table></div><p>Sites remain occupied or unoccupied across the three visits (closure). Given occupancy, detections are conditionally independent; there are no false positives; and p is constant within a habitat. These are teaching assumptions, not claims about local wildlife.</p></section>
+<section><h2>Why raw detections can mislead</h2><p>For K visits, expected fraction ever detected is <code>psi x [1 - (1 - p)^K]</code>.</p><div class="scroll"><table><thead><tr><th>Visits K</th><th>A expected ever detected</th><th>B expected ever detected</th><th>Implication</th></tr></thead><tbody><tr><td>1</td><td>0.20</td><td>0.40</td><td>B is expected to have more detections although A has greater psi.</td></tr><tr><td>3</td><td>0.4625</td><td>0.496</td><td>More visits improve evidence but do not guarantee a finite ranking matches occupancy.</td></tr></tbody></table></div><div class="box warning"><strong>Do not score the ranking.</strong> After reveal, compare observed fraction, realized occupancy, generating psi, and p by name. A seeded realization can differ from either expectation.</div></section>
+<section><h2>Optional likelihood view</h2><p>The app uses observed K-visit histories for one habitat only. For an ordered history with d detections, likelihood is <code>psi p^d (1-p)^(K-d)</code> when d is positive; for an all-zero history it is <code>(1-psi) + psi(1-p)^K</code>.</p><div class="box"><strong>Interpret carefully:</strong> shading is relative likelihood on a bounded psi/p grid. It is not posterior probability or a calibrated confidence interval. Multiply exact ordered-history probabilities over sites; do not add a binomial coefficient to one particular history.</div><p>With one visit, detections chiefly identify psi p. A high-psi/low-p and lower-psi/higher-p combination can fit the same observed fraction. The app supplies axis labels plus keyboard/touch readout rather than a unique occupancy estimate.</p></section>
+<section><h2>Facilitation and boundaries</h2><ul><li>Before round 1, contrast &ldquo;not detected&rdquo; with &ldquo;not present.&rdquo;</li><li>After round 1, ask for the unit of effort: 48 site-visits, not 48 animals counted.</li><li>Before another round, ask what changes (histories) and what stays fixed (sites).</li><li>For transfer, ask whether a different detection process could explain fewer detections.</li></ul><p>This activity teaches detection confounding. It does not estimate a real species, habitat, population, conservation priority, or field-survey result.</p></section>
+<section><h2>Sources and attribution</h2><p>MacKenzie, D. I., et al. (2002), &ldquo;Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One,&rdquo; <em>Ecology</em>, 83(8), 2248-2255. U.S. Geological Survey: <a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one">Estimating site occupancy rates when detection probabilities are less than one</a>.</p><p>U.S. Geological Survey, <a href="https://www.mbr-pwrc.usgs.gov/workshops/occupancy2023online.html">RPresence occupancy workshop, 2023 online</a>, for occupancy/detection-history context. These are source context, not course assignment information or endorsement.</p></section>
+<p class="foot"><strong>What the Survey Missed</strong> - Bryant Harrison - Murray State University - Offline synthetic teaching model. This HTML file is the canonical guide source: the printable sheet, the PDF, and the in-app presenter notes all come from it.</p>
+</div><!-- /guide -->
+</body>
+</html>
