@@ -4,9 +4,10 @@
    `node tools/pdf.mjs`         writes Glass-Box-Demo-Guide.pdf
    `node tools/pdf.mjs --check` verifies the guide loads and the PDF exists
 
-   The canonical guide is src/presenter-guide.html; the copy at the demo root
+   The canonical guide is src/demo-guide.html; the copy at the demo root
    is what build.js writes and what this reads, so the PDF always matches the
-   file that ships beside it.
+   file that ships beside it — and the same file supplies the app’s in-app
+   presenter notes, so all three surfaces move together.
 
    Two engines, tried in order. Playwright if the repository happens to have it
    installed, otherwise a system Chrome or Edge in headless mode. This
@@ -32,7 +33,7 @@ if (!fs.existsSync(guide)) {
   throw new Error(`Presenter guide is missing: ${guide}. Run: node build.js`);
 }
 const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>Glass Box — presenter guide<\/title>/.test(html)) {
+if (!/<title>How a Language Model Works — presenter guide<\/title>/.test(html)) {
   throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
 }
 

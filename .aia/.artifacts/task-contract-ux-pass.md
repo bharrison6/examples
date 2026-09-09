@@ -125,6 +125,9 @@ From the fuel-golf and topping-out lanes (2026-09-09):
 - **After the pill fix, re-measure what the wrapped pill lands on.** At 320 to 480px it wraps to
   two lines (about 34px) and can cover a bottom control bar or the notes overlay's foot; raise
   the reserved height or lift the pill at the narrow breakpoint and re-measure at several widths.
+  Correction from the ladder-lab lane: an overlay opened with `<dialog>.showModal()` paints in
+  the top layer above every z-index including the pill's, so no reserve is needed there; only
+  plain `div` overlays and bottom control bars can collide with the pill.
 
 From the should-have-known-that lane (2026-09-09):
 

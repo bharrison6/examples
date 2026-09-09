@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Glass Box — how modern AI works, live on this device</title>
+<title>How a Language Model Works — Glass Box, live on this device</title>
 <style>
 /* Glass Box — phone-first. Murray State palette: navy #002144, gold #ECAC00,
    accents #00A4E3 (sky) and #FF4500 (used only when something is wrong).
@@ -55,24 +55,42 @@
 .student-guide-actions button { min-height: 44px; padding: 8px 16px; border: 1px solid #002144; border-radius: 7px; background: #002144; color: #fff; font-weight: 750; cursor: pointer; }
 @media (max-width: 600px) {
   .student-guide { width: 100%; max-width: none; max-height: 100dvh; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }
-  .student-guide-body { padding: 14px 14px 6px; }
+  /* The fixed byline pill wraps to two lines on a phone and floats over the
+     bottom-left of whatever is on screen, these full-height cards included.
+     Reserve the band it occupies so it never sits on the last line of text. */
+  .student-guide-body { padding: 14px 14px 44px; }
 }
 .student-guide-body .lede { color: #41505f; }
 .student-guide-body .setnote { color: #41505f; font-size: .88rem; margin-bottom: 6px; }
 .student-guide-body .btn { width: 100%; }
 .student-guide-body .btn + .btn { margin-top: 8px; }
+.student-guide-head h2 .head-sub { display: block; font-size: .72rem; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase; color: #ECAC00; margin-top: 2px; }
+/* Presentation mode is labelled exactly that (CONTRACT.md), so on/off is a
+   badge on the right of the button rather than part of its name. */
+#presbtn { display: flex; align-items: center; justify-content: center; gap: 8px; }
+#presbtn .state { border: 1px solid currentColor; border-radius: 999px; padding: 0 8px;
+  font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; opacity: .85; }
 
-/* presenter's notes — stage cues distilled from the printable teacher guide */
-.pnotes h3 { display: flex; align-items: baseline; gap: 8px; margin-top: 18px;
-  border-bottom: 2px solid #ECAC00; padding-bottom: 3px; }
-.pnotes h3 .mins { margin-left: auto; font-size: .78rem; font-weight: 600; color: #41505f; }
-.pnotes .beat { display: grid; grid-template-columns: 40px 1fr; gap: 10px; margin: 0 0 9px; }
-.pnotes .beat .t { font-weight: 800; color: #002144; font-variant-numeric: tabular-nums; font-size: .84rem; }
-.pnotes .say { display: block; background: #FFF7E4; border-left: 3px solid #ECAC00;
-  padding: 5px 8px; margin-top: 4px; font-style: italic; }
-.pnotes .mis { border: 1px solid #c2cede; border-radius: 8px; padding: 7px 9px; margin-bottom: 7px; }
-.pnotes .mis b { color: #002144; }
-.pnotes .nums { background: #f2f6fb; border: 1px solid #c2cede; border-radius: 8px; padding: 8px 10px; }
+/* ---------- presenter notes = the printable guide, injected ----------
+   src/demo-guide.html is the single source; build.js lifts its .guide-scope
+   body and its scoped stylesheet into this page. That stylesheet is written in
+   print units (7.4pt body, mm gutters) because it is what renders the A4 PDF,
+   so the app scales the whole block with `zoom` rather than re-unitting it —
+   the shipped guide and the PDF stay byte-identical to what they were, and only
+   the on-screen copy is enlarged. Two columns are right for A4 and wrong for a
+   660px dialog, so the column rules are overridden here at id specificity
+   (#presenter-notes beats the injected .guide-scope rules on tie). */
+.guide-host { padding-top: 14px; }
+#presenter-notes .guide-scope { zoom: 1.6; }
+#presenter-notes .guide-scope .cols { column-count: 1; column-rule: 0; }
+#presenter-notes .guide-scope header { display: block; }
+#presenter-notes .guide-scope .meta { text-align: left; margin-top: 1.6mm; }
+#presenter-notes .guide-scope .page2 { break-before: auto; padding-top: 0; }
+@media (max-width: 600px) { #presenter-notes .guide-scope { zoom: 1.35; } }
+.guide-print { margin: 14px 0 4px; padding-top: 10px; border-top: 1px solid #c2cede;
+  font-size: .88rem; color: #41505f; }
+.guide-print a { color: #005a9c; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-text-size-adjust: 100%; }
@@ -97,8 +115,18 @@ header.top {
   padding: calc(var(--u) * .6) calc(var(--u) * .8) 0;
   max-width: 780px; margin: 0 auto;
 }
-.brandline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
-.brandline h1 { font-size: calc(var(--u) * 1.3); letter-spacing: .3px; }
+/* "How a Language Model Works" is a long title in a header that is sticky, so
+   every line it wraps to is a line stolen from the demo for the whole session.
+   Squeezed into the old three-across brandline it wrapped five deep at 360px
+   and pushed the header from 198px to 242px. Below 700px the title takes the
+   whole first row and the brand line drops beneath it; at 700px and up the
+   original single-row brandline is unchanged. */
+.brandline { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.brandline h1 { flex: 1 1 100%; letter-spacing: .3px; line-height: 1.14;
+  /* 5.9vw only bites below ~353px, where the title would otherwise take two
+     lines; 360px and every size above it keeps the original 1.3u exactly. */
+  font-size: clamp(calc(var(--u) * 1.02), 5.9vw, calc(var(--u) * 1.3)); }
+@media (min-width: 700px) { .brandline { flex-wrap: nowrap; } .brandline h1 { flex: 0 0 auto; } }
 .brandline h1 b { color: var(--gold); font-weight: 800; }
 .msu-brand { color: var(--gold); font-size: calc(var(--u) * .62); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-top: 2px; }
 .brandline .sub { color: var(--ink3); font-size: calc(var(--u) * .72); text-align: right; }
@@ -371,27 +399,86 @@ details.fold summary { cursor: pointer; color: var(--sky); font-size: calc(var(-
 @keyframes sp { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
 
-/* in-app presenter guide */
-.msu-guide-overlay { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 12px; background: rgba(0,10,24,.84); }
-.msu-guide-overlay[hidden] { display: none; }
-.msu-guide-dialog { width: min(1000px,100%); height: min(92dvh,900px); background: #fff; color: #172231; border: 2px solid var(--navy); border-top: 5px solid var(--gold); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.65); }
-.msu-guide-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 12px; background: var(--navy); color: #fff; }
-.msu-guide-bar h2 { margin: 0; font-size: 1.05rem; }.msu-guide-spacer { flex: 1; }
-.msu-guide-bar button { min-height: 40px; padding: 7px 12px; border: 1px solid #fff; border-radius: 7px; background: #fff; color: var(--navy); font-weight: 700; }.msu-guide-bar button:last-child { background: var(--gold); border-color: var(--gold); }
-.msu-guide-frame { width: 100%; flex: 1; border: 0; background: #fff; }
-@media (max-width: 600px) { .msu-guide-overlay { padding: 0; }.msu-guide-dialog { width: 100%; height: 100dvh; border-width: 0; border-top-width: 5px; border-radius: 0; }.msu-guide-bar h2 { flex: 1 1 100%; } }
+/* The teacher guide used to open here in a frame pointed at the sibling guide
+   file.
+   Now that Presenter Notes ARE that guide, injected at build time, a second
+   copy fetched at runtime was both a duplicate and the one file this page
+   loaded from disk. Both the overlay and its stylesheet are gone; the route to
+   the printable file is a plain link in the notes footer. */
 
+</style>
+<style>
+/* The presenter guide's own stylesheet, lifted verbatim out of
+   src/demo-guide.html by build.js. It lands after the app's CSS on purpose:
+   .guide-scope p and .student-guide-body p have equal specificity, so the
+   guide's own rules must be the later ones to win inside the notes overlay. */
+
+  /* Murray State palette: navy #002144 and gold #ECAC00. Gold is a rule and a
+     fill, never small type — it does not carry on white paper. The custom
+     properties live on .guide-scope, not :root, so the injected copy carries
+     its own light palette into the demo's dark one.
+
+     The print units (pt, mm) are deliberate: this stylesheet is what renders
+     the A4 PDF. The app does not re-unit them — it scales the whole injected
+     block with `zoom`, so the shipped page and the PDF are laid out by exactly
+     the bytes below. */
+  .guide-scope { --ink:#111820; --ink2:#41505f; --ink3:#71808f; --line:#c2cede;
+                 --navy:#002144; --gold:#ECAC00; --hi:#FFF7E4;
+                 font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+                 color: var(--ink); font-size: 7.4pt; line-height: 1.26; }
+  .guide-scope header { border-bottom: 2.4pt solid var(--navy); padding-bottom: 1.8mm; margin-bottom: 2.2mm;
+           display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; }
+  .guide-scope .eyebrow { font-size: 6.4pt; font-weight: 700; letter-spacing: 1.5pt; text-transform: uppercase;
+             color: var(--navy); border-bottom: 1.6pt solid var(--gold);
+             display: inline-block; padding-bottom: .5mm; margin-bottom: 1.2mm; }
+  .guide-scope h1 { font-size: 14pt; letter-spacing: .4pt; line-height: 1.04; color: var(--navy); }
+  .guide-scope h1 small { display: block; font-size: 6.9pt; font-weight: 600; letter-spacing: 1.4pt;
+             text-transform: uppercase; color: var(--ink2); margin-top: 1mm; }
+  .guide-scope .meta { text-align: right; font-size: 6.6pt; color: var(--ink2); line-height: 1.35; }
+  .guide-scope .cols { column-count: 2; column-gap: 5mm; column-rule: .4pt solid var(--line); }
+  .guide-scope section { break-inside: avoid; margin-bottom: 2mm; }
+  .guide-scope h2 { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .8pt; color: var(--navy);
+       border-bottom: 1.2pt solid var(--gold); padding-bottom: .5mm; margin-bottom: 1mm; }
+  .guide-scope p { margin-bottom: 1mm; }
+  .guide-scope ol { margin: 0 0 1mm 3.4mm; padding-left: 0; }
+  .guide-scope ul { margin: 0 0 1mm 3mm; padding-left: 0; }
+  .guide-scope li { margin-bottom: .6mm; }
+  .guide-scope .beat { display: grid; grid-template-columns: 10mm 1fr; gap: 1.2mm; margin-bottom: 1.2mm; break-inside: avoid; }
+  .guide-scope .beat .t { font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; font-size: 7pt; }
+  .guide-scope .beat > div > b:first-of-type { display: block; }
+  .guide-scope .say { background: var(--hi); border-left: 1.6pt solid var(--gold); padding: .9mm 1.3mm;
+         margin: .6mm 0; font-style: italic; break-inside: avoid; }
+  .guide-scope .mis { border: .5pt solid var(--line); border-radius: 1.4mm; padding: 1.1mm 1.4mm; margin-bottom: 1.2mm; break-inside: avoid; }
+  .guide-scope .mis .claim { font-weight: 700; color: var(--navy); }
+  .guide-scope .mis .claim::before { content: "“"; }
+  .guide-scope .mis .claim::after { content: "”"; }
+  .guide-scope .mis .ans { color: var(--ink2); margin-top: .3mm; }
+  .guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: 6.8pt; }
+  .guide-scope footer { margin-top: 2mm; padding-top: 1.2mm; border-top: .6pt solid var(--line);
+           font-size: 6.4pt; color: var(--ink3); display: flex; justify-content: space-between; gap: 4mm; }
+  .guide-scope .warn { color: #a3341f; font-weight: 600; }
+  .guide-scope .page2 { break-before: page; padding-top: 2mm; }
 </style>
 </head>
 <body>
+<script>
+/* Read the Reset flags before anything renders — app.js reads document.body's
+   presenter class while it initialises, so the class has to be on by then.
+   Why a URL fragment and not storage: see the Reset block at the foot of this
+   file. The fragment is stripped on arrival so a later manual refresh is an
+   ordinary fresh load. */
+window.GB_FLAGS = new Set(location.hash.replace(/^#/, '').split(',').filter(Boolean));
+if (window.GB_FLAGS.has('presenting')) document.body.classList.add('presenter');
+if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { /* some hosts refuse replaceState on file://; a visible #reset is cosmetic */ } }
+</script>
 
 <header class="top">
   <div class="brandline">
-    <h1>Glass <b>Box</b></h1>
+    <h1>How a Language Model <b>Works</b></h1>
     <div class="msu-brand">Murray State University · AI Learning Lab</div>
-    <div class="sub">how modern AI works<br>predictor → reasoner → agent</div>
+    <div class="sub">Glass Box<br>predictor → reasoner → agent</div>
   </div>
-  <div class="top-tools"><button class="btn small ghost presenter-notes-open" id="notes-open" title="Presenter's notes">Notes</button><button class="btn small ghost student-guide-open" id="howto-open" title="How to use Glass Box" aria-label="How to use Glass Box">?</button><button class="btn small ghost" id="glass-settings-open" title="Settings">Settings</button></div>
+  <div class="top-tools"><button class="btn small ghost presenter-notes-open" id="notes-open" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button><button class="btn small ghost student-guide-open" id="howto-open" title="Guide" aria-label="Guide">?</button><button class="btn small ghost" id="glass-settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙</span> Settings</button></div>
   <nav class="acts">
     <button id="nav1" class="on">Act 1<small>the predictor</small></button>
     <button id="nav2">Act 2<small>the reasoner</small></button>
@@ -663,7 +750,7 @@ details.fold summary { cursor: pointer; color: var(--sky); font-size: calc(var(-
     <div class="row">
       <button class="btn small" id="agmode-you">▸ you are the model</button>
       <button class="btn small ghost" id="agmode-auto">watch it run</button>
-      <button class="btn small ghost" id="agreset">reset</button>
+      <button class="btn small ghost" id="agreset">restart run</button>
       <div class="grow"></div>
       <select id="agwindow" title="context window">
         <option value="0">full context window</option>
@@ -712,12 +799,12 @@ details.fold summary { cursor: pointer; color: var(--sky); font-size: calc(var(-
 </main>
 
 <div class="footer">
-  Glass Box · everything computes live on this device — no network, no AI service, nothing pre-trained<span id="modenote"></span>
-  <div class="footer-tools"><button type="button" class="footer-link student-guide-open">how to use</button> · <button type="button" class="footer-link" id="presfoot">presentation mode</button> · <button type="button" class="footer-link presenter-notes-open">presenter's notes</button></div>
+  How a Language Model Works (Glass Box) · everything computes live on this device — no network, no AI service, nothing pre-trained<span id="modenote"></span>
+  <div class="footer-tools"><button type="button" class="footer-link student-guide-open">guide</button> · <button type="button" class="footer-link" id="presfoot">presentation mode</button> · <button type="button" class="footer-link presenter-notes-open">presenter notes</button></div>
 </div>
 
 <dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
-  <div class="student-guide-head"><h2 id="student-guide-title">How to use Glass Box</h2><form method="dialog"><button aria-label="Close">×</button></form></div>
+  <div class="student-guide-head"><h2 id="student-guide-title">Guide<span class="head-sub">how to use this demo</span></h2><form method="dialog"><button aria-label="Close">×</button></form></div>
   <div class="student-guide-body">
     <p class="lede">Nothing here is downloaded, faked, or phoned in — every number on the page is computed on this
     device while you watch. Three acts, roughly ten minutes each. Take them in order, or take just one.</p>
@@ -730,12 +817,14 @@ details.fold summary { cursor: pointer; color: var(--sky); font-size: calc(var(-
       one shown answers alone and one shown the working, then sit the same exam. Afterwards §2.3 and §2.4 unlock —
       buy accuracy with extra attempts, then let the model train on its own certified work.</li>
       <li><b>Act 3 — the agent.</b> Pick <b>you are the model</b> to choose every action yourself, or
-      <b>watch it run</b>. Then set the context window to <b>tiny</b>, reset, and run it again to break it
-      on purpose.</li>
+      <b>watch it run</b>. Then set the context window to <b>tiny</b>, press <b>restart run</b>, and run it
+      again to break it on purpose.</li>
     </ol>
     <h3>Getting around</h3>
-    <p>The three buttons under the title switch acts. <b>Settings</b> holds presentation mode and the presenter's
-    notes. Reopen this card any time with the <b>?</b> button beside it.</p>
+    <p>The three buttons under the title switch acts. This card opens on every load; the <b>?</b> button in the
+    header is the <b>Guide</b> button and brings it back any time. <b>⚙ Settings</b> beside it holds
+    <b>Open Presenter Notes</b> (the printable session plan, on screen), <b>Presentation mode</b> and
+    <b>Reset</b>.</p>
     <h3>Two things worth knowing</h3>
     <p>Training takes a couple of minutes per press — the page is working, not stuck. And every act closes with a
     <b>“What is real here”</b> panel that says exactly which parts compute live and which few pieces are
@@ -746,125 +835,253 @@ details.fold summary { cursor: pointer; color: var(--sky); font-size: calc(var(-
 
 <dialog class="student-guide" id="glass-settings" aria-labelledby="glass-settings-title">
   <div class="student-guide-head"><h2 id="glass-settings-title">Settings</h2><form method="dialog"><button aria-label="Close">×</button></form></div>
-  <div class="student-guide-body">
+  <!-- CONTRACT.md Required UX: this menu always carries exactly these three,
+       labelled exactly Open Presenter Notes, Presentation mode and Reset. -->
+  <div class="student-guide-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen: timings, the beats to hit, the lines
+    that land, the misconceptions, and the numbers this seeded run produces.</p>
+    <p><button class="btn presenter-notes-open">Open Presenter Notes</button></p>
     <h3>Presentation mode</h3>
     <p class="setnote">Scales the whole page up one notch for projecting to a room, and puts a
     <b>Notes</b> button in the header for the stage cues.</p>
-    <p><button class="btn" id="presbtn" aria-pressed="false">Presentation mode: off</button></p>
-    <h3>Presenter's notes</h3>
-    <p class="setnote">The stage version: timings, the beats to hit, the lines that land, and the
-    numbers this seeded run produces.</p>
-    <p><button class="btn ghost presenter-notes-open">Open presenter's notes</button></p>
-    <h3>Teacher guide</h3>
-    <p class="setnote">The complete printable session plan, misconceptions, and the questions you will get.</p>
-    <p><button class="btn ghost teacher-guide-open">Open teacher guide</button></p>
+    <p><button class="btn ghost" id="presbtn" aria-pressed="false">Presentation mode<span class="state" aria-hidden="true">off</span></button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to a fresh load — untrained model, no eras, Act 2 and Act 3 as they
+    started. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" id="resetbtn">Reset</button></p>
   </div>
   <form method="dialog" class="student-guide-actions"><button>Done</button></form>
 </dialog>
 
+<!-- Presenter notes ARE the printable guide. build.js injects the .guide-scope
+     body of src/demo-guide.html at the placeholder below, and `node build.js
+     --check` fails the moment the two drift. Nothing is fetched: the guide
+     travels inside this file. Do not hand-edit the notes here — edit src/demo-guide.html. -->
 <dialog class="student-guide" id="presenter-notes" aria-labelledby="presenter-notes-title">
-  <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter's notes</h2><form method="dialog"><button aria-label="Close">×</button></form></div>
-  <div class="student-guide-body pnotes">
-    <p class="lede">Three ten-minute acts. Each one stands alone — teach one, two, or all three. The full
-    session plan is in the teacher guide.</p>
+  <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2><form method="dialog"><button aria-label="Close">×</button></form></div>
+  <div class="student-guide-body guide-host">
+<div class="guide-scope">
 
-    <h3>Before you start</h3>
-    <ul>
-      <li><b>Do not train before the session.</b> The untrained model is the opening act.</li>
-      <li>A phone works; a projected laptop is better for a room. Presentation mode enlarges everything one notch.</li>
-      <li>Refreshing forgets everything — a teachable moment, but not one you want at minute 25.</li>
-    </ul>
+<header>
+  <div>
+    <div class="eyebrow">Murray State University</div>
+    <h1>How a Language Model Works<small>Glass Box &middot; three 10-minute acts &middot; for educators</small></h1>
+  </div>
+  <div class="meta">
+    <b>You need:</b> one phone, tablet or laptop. Open <code>index.html</code>.<br>
+    No install, no login, no network. Projecting? <b>&#9881; Settings &rarr; Presentation mode</b>.<br>
+    <b class="warn">Do not train before the session</b> — the untrained model is the opening act.<br>
+    Acts stand alone: teach one, two, or all three.
+  </div>
+</header>
 
-    <h3>Act 1 — the predictor <span class="mins">10 min</span></h3>
-    <div class="beat"><span class="t">0:00</span><div><b>§1.1</b> Type a sentence; watch it become numbered tokens.
-      <span class="say">"A model never sees words. It sees a list of numbers."</span></div></div>
-    <div class="beat"><span class="t">1:30</span><div><b>§1.2</b> Tap a row of the parameter map — those pixels are
-      the actual weights, currently random noise. Show the scale bars underneath.
-      <span class="say">"These 42,458 numbers are the entire machine — and until it is trained, it is all static."</span></div></div>
-    <div class="beat"><span class="t">3:00</span><div><b>§1.3</b> Read the untrained sample aloud; let it be ridiculous.
-      Then press <b>Train</b> and narrate the loss falling. Press through each era, reading one sample per era —
-      this is the demo's spine, so give it time. If someone asks what it is reading, open <b>“Read its entire
-      textbook”</b>: a 4,701-character original story, 252 distinct words, its whole universe.
-      <span class="say">"Its only teacher: guess character 41 from the last 40, be told the truth, nudge all 42,458 numbers a hair. Repeat."</span></div></div>
-    <div class="beat"><span class="t">7:00</span><div><b>§1.4</b> The probability table. Temperature 0 (repetitive),
-      0.8, then 1.6 (unhinged). Switch back to the <b>newborn</b> era chip: same machine, useless numbers.
-      <span class="say">"This table is the only thing it ever does. Chat is this, ten thousand times in a row."</span></div></div>
-    <div class="beat"><span class="t">8:30</span><div><b>§1.5</b> Tap characters in the attention view; gold is where
-      it is looking. Try the second “the”.
-      <span class="say">"Attention let each position rummage through everything before it. It is the T in GPT."</span></div></div>
+<div class="cols">
 
-    <h3>Act 2 — the reasoner <span class="mins">10 min</span></h3>
-    <div class="beat"><span class="t">0:00</span><div>Frame it <i>before</i> pressing anything: two identical brains,
-      equal training time, one shown only <code>347+285=632.</code> and one shown the carries written out. Ask the
-      room to predict the two exam scores, then press <b>Run the experiment</b> and talk over the training.</div></div>
-    <div class="beat"><span class="t">4:00</span><div>The reveal — typically around half right versus nearly all right.
-      In §2.2 read one red row from each side: Model D's misses are close and the right shape (it learned the vibe of
-      an answer); Model S's rare miss is one bad written step.
-      <span class="say">"Chain-of-thought isn't a trick prompt. It changes what is learnable: each small step is easy, the leap is not."</span></div></div>
-    <div class="beat"><span class="t">6:30</span><div><b>§2.3</b> Press Run. The under-trained sibling climbs as it gets
-      more attempts, because the verifier checks the written steps — never the answer key. Show the accepted and
-      rejected chains under the bars.
-      <span class="say">"Same frozen model on every row. We bought accuracy with compute at answer time — that is the 'thinking time' dial."</span></div></div>
-    <div class="beat"><span class="t">8:00</span><div><b>§2.4</b> Press Self-improvement three times. Point out that it
-      keeps far more of its own work than when it started — 82 of 120 in round 1, over 100 by round 3.
-      <span class="say">"No new human data entered. It posed problems, kept what its verifier certified, and studied its own best work."</span></div></div>
+<section>
+  <h2>What this is</h2>
+  <p>A complete, working language model — 42,458 parameters of real transformer, the same
+  architecture as the frontier models — that trains from scratch on the device in front of your
+  audience. Act 1 shows what a language model <i>is</i>. Act 2 shows how <b>reasoning models</b> are
+  made from one. Act 3 shows how a reasoning model plus tools becomes an <b>agent</b>. Nothing is
+  faked: every number on screen is computed live, and each act ends with a "What is real here" box
+  you can read aloud.</p>
+</section>
 
-    <h3>Act 3 — the agent <span class="mins">10 min</span></h3>
-    <div class="beat"><span class="t">0:00</span><div><b>§3.1</b> Read the loop out loud once — context → model → tool →
-      observation — then open the tool-definitions fold.
-      <span class="say">"An agent is not a new kind of AI. It is the same predictor, in a loop, where some of its text makes things happen."</span></div></div>
-    <div class="beat"><span class="t">1:30</span><div><b>§3.2</b> <b>“You are the model”</b> first. Hand the device to a
-      volunteer and let the room argue each choice. The tempting wrong choices really execute — picking the cheapest
-      pizzeria without reading its hours is the lesson, not a mistake.</div></div>
-    <div class="beat"><span class="t">5:30</span><div>Reset, then <b>watch it run</b>. Two beats to point at: the
-      calculator error (<code>9 x $13.00</code>) and the recovery on the next turn, and the context meter growing —
-      every turn re-reads the whole transcript.</div></div>
-    <div class="beat"><span class="t">8:00</span><div>The closer: set the window to <b>tiny</b>, reset, watch it run.
-      Mid-task the goal falls out of the window and the agent stops dead, telling you why. Open “what the model sees”
-      and show the red truncation line.
-      <span class="say">"The model remembers nothing between turns. The context window is its entire working memory."</span></div></div>
+<section>
+  <h2>Act 1 — the predictor (10 min)</h2>
 
-    <h3>Numbers this run produces</h3>
-    <p class="nums">Training is live but <b>seeded and deterministic</b>, so you can rehearse to the digit: Model D
-    ~54%, Model S ~96%; §2.3 climbs 60 → 78%; §2.4 rounds 49 → 77 → 83 → 84 → 85%. Timing: Act 1 is ~2–3 minutes of
-    compute across four presses, Act 2's experiment ~2–3 minutes, §2.3 ≈ 40s, each §2.4 round ≈ 20–30s.</p>
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>§1.1 — type a sentence, watch it become numbered tokens.</b>
+    <div class="say">"A model never sees words. It sees a list of numbers. Everything a chatbot has
+    ever 'read' entered as a list like this one."</div>
+  </div></div>
 
-    <h3>Misconceptions to draw out</h3>
-    <div class="mis"><b>“It's understanding the story.”</b> It is predicting the next character of one children's
-      story. Whether understanding at frontier scale differs in kind or only in degree is the question to raise, not
-      resolve — the demo gives both sides ammunition.</div>
-    <div class="mis"><b>“It memorized the text.”</b> 42,458 parameters cannot hold 4,700 characters verbatim plus
-      grammar, and its samples are recombinations, not quotes. (Frontier models <i>can</i> memorize — different regime.)</div>
-    <div class="mis"><b>“Reasoning models are just prompted to think step by step.”</b> Prompting only elicits it.
-      §2.1 puts the steps in the training data; §2.4 reinforces chains that verify.</div>
-    <div class="mis"><b>“The agent wanted the right answer.”</b> The decision rules here are scripted and the page says
-      so. What is genuinely shown: the loop, real tools, real errors, and total dependence on context.</div>
-    <div class="mis"><b>“Bigger context windows will fix agents.”</b> They help, and real windows are ~200k+ tokens.
-      But cost grows with context, attention gets diluted, and tasks can outlive any window — hence note-taking and retrieval.</div>
-    <div class="mis"><b>“Too small to say anything about ChatGPT or Claude.”</b> What transfers is the mechanism — same
-      architecture, same training rule, same loop — not the capability. Every “What is real here” box says where the
-      toy ends.</div>
+  <div class="beat"><div class="t">1:30</div><div>
+    <b>§1.2 — tap a row of the parameter map.</b> The pixels are the actual weights, currently
+    random noise. Show the scale bars below it.
+    <div class="say">"These 42,458 numbers are the entire machine. A frontier model is this exact
+    picture with about fifty million times more pixels — and until it is trained, it is all static."</div>
+  </div></div>
 
-    <h3>Questions you will get</h3>
-    <ul>
-      <li><b>How long would a frontier model take to train this way?</b> This page does ~15 updates/s on ~43k
-      parameters; frontier training is ~10²⁵ operations — months on tens of thousands of GPUs. Same rule, different budget.</li>
-      <li><b>Where do the words come from at temperature 0?</b> Always the top of the probability table. All variety in
-      AI output is controlled dice-rolling over that table.</li>
-      <li><b>Is the verifier cheating?</b> It never sees the true answer — only whether the written steps are valid
-      arithmetic that assembles into the stated answer. That is why it can reject a right answer with wrong work.</li>
-      <li><b>What would make Act 3's agent real?</b> Replace the scripted rulebook with Act 2's model at scale.</li>
-    </ul>
+  <div class="beat"><div class="t">3:00</div><div>
+    <b>§1.3 — read the untrained sample aloud.</b> Let it be ridiculous. Then press
+    <b>Train</b> and narrate the loss falling while live samples stream.
+    <div class="say">"Its only teacher: guess character 41 from the last 40, be told the truth,
+    nudge all 42,458 numbers a hair. Repeat."</div>
+    Press train through each era — babble, words, phrases, sentences — reading one sample per era.
+    The era comparison grid fills as you go. This is the demo's spine; give it time.
+    When someone asks what it is reading, open <b>"Read its entire textbook"</b>: an original
+    4,701-character story written for this demo, 252 distinct words — its whole universe. Everything
+    it writes is a recombination of that page.
+  </div></div>
+
+  <div class="beat"><div class="t">7:00</div><div>
+    <b>§1.4 — the probability table.</b> Type a prompt, show the ranked guesses. Play with
+    temperature at 0 (repetitive), 0.8, then 1.6 (unhinged). Switch back to the <b>newborn</b> era
+    chip: same machine, useless numbers.
+    <div class="say">"This table is the only thing it ever does. Chat is this, ten thousand times
+    in a row."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">8:30</div><div>
+    <b>§1.5 — tap characters in the attention view.</b> Gold = where it is looking. Try tapping the
+    second "the" — heads often glance back at earlier occurrences and at the word after them.
+    <div class="say">"Attention is the invention that let each position rummage through everything
+    before it. It is the T in GPT."</div>
+  </div></div>
+</section>
+
+<section>
+  <h2>Act 2 — the reasoner (10 min)</h2>
+
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>Frame it before pressing anything:</b> two identical brains, equal training time; one sees
+    only <code>347+285=632.</code>, the other sees the carries written out. Ask the room to predict
+    the two exam scores. <b>Then press "Run the experiment"</b> and talk over the two minutes of
+    training — there are live attempts and spot-checks to point at.
+  </div></div>
+
+  <div class="beat"><div class="t">4:00</div><div>
+    <b>The reveal:</b> typically around half right versus nearly all right. Scroll to §2.2 and read
+    a red row from each side — Model D's misses are "close, right shape" (it learned the vibe of an
+    answer); Model S's rare miss is one bad written step.
+    <div class="say">"Chain-of-thought isn't a trick prompt. It changes what is learnable: each
+    small step is easy, the leap is not. 'Thinking' models are models trained to take the steps."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">6:30</div><div>
+    <b>§2.3 — press Run.</b> A deliberately under-trained sibling of Model S climbs as it gets more attempts,
+    because a verifier checks the written steps — never the answer key. Show the accepted/rejected
+    chains under the bars.
+    <div class="say">"Same frozen model on every row. We bought accuracy with compute at answer
+    time. That is the 'thinking time' dial on every frontier reasoning model."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">8:00</div><div>
+    <b>§2.4 — press Self-improvement three times.</b> Watch accuracy climb round over round, and
+    point out it now keeps far <i>more of its own work</i> than when it started (82 of 120 in round 1, over 100 by round 3).
+    <div class="say">"No new human data entered. It posed problems, kept what its verifier
+    certified, and studied its own best work. Reinforcement learning — the essence of how reasoning
+    models are actually trained."</div>
+  </div></div>
+</section>
+
+<section>
+  <h2>Act 3 — the agent (10 min)</h2>
+
+  <div class="beat"><div class="t">0:00</div><div>
+    <b>§3.1 — read the loop out loud once</b> (context → model → tool → observation), then open the
+    tool definitions fold.
+    <div class="say">"An agent is not a new kind of AI. It is the same predictor, in a loop, where
+    some of its text makes things happen."</div>
+  </div></div>
+
+  <div class="beat"><div class="t">1:30</div><div>
+    <b>§3.2 — "you are the model" first.</b> Hand the device to a volunteer and let the room argue
+    over each choice. The tempting wrong choices really execute — picking the cheapest pizzeria
+    without reading its hours is the lesson, not a mistake.
+  </div></div>
+
+  <div class="beat"><div class="t">5:30</div><div>
+    <b>Press §3.2's <code>restart run</code>, then "watch it run".</b> Two beats to point at: the calculator error
+    (<code>9 x $13.00</code>) and the recovery on the next turn — errors are just observations; and
+    the context meter growing — every turn, the whole transcript is re-read.
+  </div></div>
+
+  <div class="beat"><div class="t">8:00</div><div>
+    <b>The closer: set the window to "tiny", <code>restart run</code>, watch it run.</b> Mid-task, the goal falls out
+    of the visible window and the agent stops dead, telling you why. Open "what the model sees" and
+    show the red truncation line.
+    <div class="say">"The model remembers nothing between turns. The context window is its entire
+    working memory — most of real agent engineering is a fight with exactly this."</div>
+  </div></div>
+</section>
+
+<section class="page2">
+  <h2>Misconceptions to draw out</h2>
+
+  <div class="mis"><div class="claim">It's understanding the story.</div>
+  <div class="ans">It is predicting the next character of one children's story. The interesting
+  question — raise it, don't resolve it — is whether "understanding" at frontier scale is different
+  in kind or only in degree. The demo gives both sides ammunition.</div></div>
+
+  <div class="mis"><div class="claim">It memorized the text.</div>
+  <div class="ans">42,458 parameters cannot hold 4,700 characters of text verbatim plus grammar; and
+  its samples are recombinations, not quotes. (Frontier models <i>can</i> memorize; that is a real
+  issue — different regime.)</div></div>
+
+  <div class="mis"><div class="claim">Reasoning models are just prompted to "think step by step."</div>
+  <div class="ans">Prompting only elicits it. Act 2 shows the training version: the steps are in the
+  data (§2.1), and reinforcement selects for chains that verify (§2.4). That is the difference
+  between a chat model and a reasoning model.</div></div>
+
+  <div class="mis"><div class="claim">The agent decided to check the hours — so it wanted the right answer.</div>
+  <div class="ans">In this demo the decision rules are scripted (the page says so on screen). What is
+  genuinely shown: the loop, real tools, real errors, and total dependence on context. Goals-talk is
+  a description of behavior, not evidence of desire.</div></div>
+
+  <div class="mis"><div class="claim">Bigger context windows will fix agents.</div>
+  <div class="ans">They help, and real windows are ~200k+ tokens. But cost grows with context,
+  attention gets diluted, and tasks can outlive any window — hence summarizing, note-taking (watch
+  the agent's <code>note</code> tool), and retrieval.</div></div>
+
+  <div class="mis"><div class="claim">This is too small to say anything about ChatGPT/Claude.</div>
+  <div class="ans">Fair challenge — answer it honestly: what transfers is the mechanism (same
+  architecture, same training rule, same loop), not the capability. Every "what is real here" box
+  states exactly where the toy ends and scale begins.</div></div>
+</section>
+
+<section>
+  <h2>Timing &amp; logistics</h2>
+  <ul>
+    <li>Act 1 training totals ~2–3 minutes of compute across four presses; each burst streams live
+    samples, so narrate over it. Act 2's experiment is one ~2–3 minute press; §2.3 ≈ 40s; each §2.4
+    round ≈ 20–30s.</li>
+    <li>Training happens live but is <b>seeded and deterministic</b> — the engine computes its own
+    math so the same run reproduces exactly, on every device (the shipped run: Model D ~54%, Model S
+    ~96%, §2.3 climbs 60→78%, §2.4 rounds 49→77→83→84→85%). You can rehearse to the digit. The README
+    documents the honest spread across other seeds.</li>
+    <li>Phone works; a projected laptop is better for rooms. <b>Presentation mode</b> (&#9881; Settings)
+    enlarges everything one notch.</li>
+    <li><b>Controls:</b> <b>?</b> opens the <b>Guide</b> overlay — it also opens on every load, so a
+    late arrival can read it themselves. <b>&#9881; Settings</b> holds <b>Open Presenter Notes</b>
+    (this document, on screen), <b>Presentation mode</b> and <b>Reset</b>.</li>
+    <li>Refreshing the page forgets everything — which is itself a teachable moment, but not one you
+    want at minute 25. <b>Settings &rarr; Reset</b> does the same on purpose, for a clean start between
+    rooms; it leaves Presentation mode as you set it.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Questions you will get</h2>
+  <ul>
+    <li><b>"How long would a frontier model take to train this way?"</b> This page does ~15 updates/s
+    on ~43k parameters. Frontier training is ~10²⁵ floating-point operations — months on tens of
+    thousands of GPUs. Same rule, different budget.</li>
+    <li><b>"Where do the words come from at temperature 0?"</b> Deterministic: always the top of the
+    probability table. All variety in AI output is controlled dice-rolling over that table.</li>
+    <li><b>"Is the verifier cheating?"</b> It never sees the true answer — only whether the written
+    steps are internally valid arithmetic that assembles into the stated answer. That is why it can
+    reject a right answer with wrong work.</li>
+    <li><b>"What would make Act 3's agent 'real'?"</b> Replace the scripted rulebook with Act 2's
+    model at scale — that is literally the architecture of Claude, ChatGPT agents, and coding
+    assistants.</li>
+  </ul>
+</section>
+
+</div>
+
+<footer>
+  <span>How a Language Model Works (Glass Box) &middot; examples repo &middot; runs entirely offline, on the device</span>
+  <span>Companion file: <code>index.html</code> &middot; this guide: <code>demo-guide.html</code></span>
+</footer>
+
+</div>
+    <p class="guide-print"><a href="demo-guide.html" target="_blank" rel="noopener">Open the printable copy (demo-guide.html)</a> — the same document, laid out for A4; the PDF beside it is a render of that file.</p>
   </div>
   <form method="dialog" class="student-guide-actions"><button>Back to the demo</button></form>
 </dialog>
-
-<div class="msu-guide-overlay" id="msu-guide" hidden>
-  <section class="msu-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="msu-guide-title" tabindex="-1">
-    <div class="msu-guide-bar"><h2 id="msu-guide-title">Glass Box teacher guide</h2><span class="msu-guide-spacer"></span><button type="button" id="msu-guide-print">Open printable copy</button><button type="button" id="msu-guide-close" aria-label="Close teacher guide">Close</button></div>
-    <iframe class="msu-guide-frame" id="msu-guide-frame" data-guide="demo-guide.html" title="Glass Box teacher guide"></iframe>
-  </section>
-</div>
 
 <script>
 // GlassBox tiny transformer engine — plain JS, no dependencies.
@@ -2493,10 +2710,12 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
   // One CSS variable scales the whole page; the body class also reveals the
   // header's quick route to the presenter's notes. Reachable from Settings and
   // from the footer, so a presenter never has to hunt for it mid-session.
-  const presBtn = $('presbtn'), presFoot = $('presfoot');
+  // CONTRACT.md names this control exactly "Presentation mode", so its state
+  // rides in a badge and in aria-pressed rather than inside the label.
+  const presBtn = $('presbtn'), presState = presBtn.querySelector('.state'), presFoot = $('presfoot');
   function syncPresenterUI() {
     const on = document.body.classList.contains('presenter');
-    presBtn.textContent = 'Presentation mode: ' + (on ? 'on' : 'off');
+    presState.textContent = on ? 'on' : 'off';
     presBtn.setAttribute('aria-pressed', String(on));
     presFoot.textContent = on ? 'leave presentation mode' : 'presentation mode';
   }
@@ -3271,21 +3490,32 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
   // Every card closes on Escape (native), on the × , on its footer button, and
   // on a tap outside it.
   [guide,settings,notes].forEach(dialog=>{dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()})});
-  // The how-to card greets every load; the ? button brings it back any time.
-  if(!guide.open){opener=document.getElementById('howto-open');guide.showModal();guide.querySelector('.student-guide-actions button').focus()}
+  // The Guide card greets every load; the ? button brings it back any time.
+  // A Reset arrives with the demo already explained, so it stays closed then.
+  if(!guide.open&&!window.GB_FLAGS.has('reset')){opener=document.getElementById('howto-open');guide.showModal();guide.querySelector('.student-guide-actions button').focus()}
+
+  /* ---- Reset: the whole demo, back to a fresh load ----------------------
+     What "fresh" has to undo here: a 42,458-parameter transformer training
+     inside a Web Worker, four frozen era checkpoints, the playground and
+     attention selections, two Act 2 models with their exam tables, the voting
+     curve, the STaR rounds, and Act 3's transcript, tool log and context meter.
+     A hand-written teardown of that is a wide surface where missing one field
+     leaves a presenter with a half-reset page and no way to tell. Reloading is
+     the fresh-load state by construction, and this is one offline file, so the
+     reload is free and touches no network.
+     Two deltas ride in the URL fragment because this demo deliberately writes
+     no storage of any kind: 'reset' keeps the Guide overlay shut (the presenter
+     has already seen it) and 'presenting' puts Presentation mode back, because
+     that is a display preference, not demo state — Reset leaves it alone. */
+  document.getElementById('resetbtn').addEventListener('click',()=>{
+    const flags=['reset'];
+    if(document.body.classList.contains('presenter'))flags.push('presenting');
+    const base=location.href.split('#')[0];
+    try{location.replace(base+'#'+flags.join(','))}catch(e){location.hash=flags.join(',')}
+    location.reload();
+  });
 })();
 </script>
-<script>
-(() => {
-  const overlay=document.getElementById('msu-guide');if(!overlay)return;
-  const dialog=overlay.querySelector('.msu-guide-dialog'),frame=document.getElementById('msu-guide-frame'),close=document.getElementById('msu-guide-close');let returnFocus=null,inerted=[],overlayWasInert=false;
-  const show=opener=>{returnFocus=opener||document.activeElement;overlayWasInert=overlay.inert;overlay.inert=false;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.dataset.guide);overlay.hidden=false;inerted=[...document.body.children].filter(node=>node!==overlay&&!node.inert);inerted.forEach(node=>{node.inert=true});dialog.focus()};
-  const hide=()=>{overlay.hidden=true;inerted.forEach(node=>{node.inert=false});inerted=[];overlay.inert=overlayWasInert;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus()};
-  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(!opener)return;event.preventDefault();const nativeDialog=opener.closest('dialog[open]');const restore=nativeDialog?document.getElementById('glass-settings-open'):opener;if(nativeDialog)nativeDialog.close();show(restore)});close.addEventListener('click',hide);
-  document.getElementById('msu-guide-print').addEventListener('click',()=>window.open(frame.dataset.guide,'_blank','noopener'));
-  overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
-})();
-</script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:normal;max-width:calc(100vw - 16px);animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
 </body>
 </html>
