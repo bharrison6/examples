@@ -59,6 +59,51 @@ const isUlt   = () => S.mode === 'ult';
 const isRules = () => S.mode === 'rules';
 const isNet   = () => S.mode === 'net';
 
+const STAGE_COPY = {
+  rules: {
+    kicker: 'Stage 1a · written rules', title: 'Rules-based intelligence',
+    question: 'Can a program play well without learning?',
+    try: 'Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.',
+    observe: 'Changing the rules changes its play. Playing more games does not.',
+    takeaway: 'A person supplied its strategy; this opponent never learns from experience.'
+  },
+  one: {
+    kicker: 'Stage 1b · learned scores', title: 'Machine learning',
+    question: 'Can experience improve its choices?',
+    try: 'Show move scores in Era 0. Train 5,000 games, then compare the new era with Era 0.',
+    observe: 'Game outcomes change the scores attached to board positions.',
+    takeaway: 'This learner stores experience as a separate score for each position.'
+  },
+  net: {
+    kicker: 'Stage 1c · shared weights', title: 'Neural networks',
+    question: 'Can one set of learned numbers score many positions?',
+    try: 'Create learning examples, then train adjustable weights—numbers reused to score many board positions.',
+    observe: 'Held-out means positions kept out of training. Lower error is a closer match to the frozen table estimates.',
+    takeaway: 'Check playing results separately. A neural network is a kind of machine learning.'
+  },
+  ult: {
+    kicker: 'Optional extension · missing information', title: 'Ultimate tic-tac-toe',
+    question: 'What happens when the learner cannot see the whole game?',
+    try: 'Play a match, turn on move scores, and notice which global facts are absent.',
+    observe: 'The learner sees each small board, but not its location or where a move sends the opponent.',
+    takeaway: 'More training cannot recover information the representation leaves out.'
+  }
+};
+
+function renderStageIntro() {
+  const c = STAGE_COPY[S.mode] || STAGE_COPY.rules;
+  $('#stage-kicker').textContent = c.kicker;
+  $('#stage-title').textContent = c.title;
+  $('#stage-question').textContent = c.question;
+  $('#stage-try').textContent = c.try;
+  $('#stage-observe').textContent = c.observe;
+  $('#stage-takeaway').textContent = c.takeaway;
+}
+
+function reportAvailable() {
+  return UI_STATE.canOpenLearnedReport(S);
+}
+
 const fmt = n => n.toLocaleString('en-US');
 /* compact so an era label still fits a projector-sized dropdown */
 const fmtk = n => n >= 1000 ? (n / 1000).toFixed(n % 1000 && n < 10000 ? 1 : 0).replace(/\.0$/, '') + 'k' : String(n);
@@ -135,9 +180,9 @@ function makeEra(n, agent, prevAgent, mix, kind, ultStats) {
   return e;
 }
 
-function currentEra() { return S.eras[S.era]; }
+function currentEra() { return UI_STATE.selectedEra(S); }
 
-function resetAll() {
+function resetAll(resetStage) {
   S.neuralRun++;
   S.training = false;
   $('#montage').hidden = true;
@@ -165,6 +210,16 @@ function resetAll() {
   S.humanFirstNext = true;
   S.lastLearned = null;
   S.lastRule = null;
+  S.depth = RULES.DEFAULT_DEPTH;
+  S.brain = false;
+  $('#btn-brain').ariaPressed = 'false';
+  $('#btn-brain').textContent = 'Show move scores';
+  $('#brain-readout').hidden = true;
+  $('#selftest-out').textContent = '';
+  if (resetStage) {
+    S.mode = 'rules';
+    history.replaceState(null, '', location.pathname + location.search + '#rules');
+  }
   S.ruleRec = {};
   S.ruleCounts = {};
   RULES.DEPTHS.forEach(d => resetRuleTally(d.n));
@@ -211,7 +266,7 @@ function currentRec() {
 }
 
 /* What to call the thing you are playing, wherever the copy needs it. */
-function oppLabel() { return isRules() ? 'The rules' : 'Era ' + S.era; }
+function oppLabel() { return isRules() ? 'The rules' : isNet() ? 'The network' : 'Era ' + S.era; }
 
 /* ------------------------------------------------------------------ *
  * The game
@@ -399,7 +454,8 @@ for (let i = 0; i < 9; i++) {
 function renderBoard() {
   const g = S.game, cells = OG.cellsOf(g.code);
   const agent = currentEra().agent;
-  const showHeat = S.brain && !isRules() && !g.over;
+  const neuralReady = !isNet() || !!(S.neural && S.neural.model);
+  const showHeat = UI_STATE.canShowMoveScores(S);
   const vals = showHeat && isNet() && S.neural && S.neural.model
     ? OG.legalList(g.code).map(cell => ({ cell, value: NET.predict(S.neural.model, OG.child(g.code, cell, OG.TOMOVE[g.code])), visits: 0 }))
     : showHeat ? OG.moveValues(agent, g.code) : [];
@@ -415,7 +471,6 @@ function renderBoard() {
                     g.lastCell >= 0 && cells[g.lastCell] === g.aiMark;
   const trig = freshRule ? S.lastRule.cells : [];
 
-  const neuralReady = !isNet() || (S.neural && S.neural.model);
   $$('.cell', boardEl).forEach((el, i) => {
     const m = cells[i];
     el.className = 'cell' + (m ? ' mk' + m : ' open') +
@@ -436,10 +491,12 @@ function renderBoard() {
       const v = byCell[i];
       el.style.background = heat(v.value);
       el.style.color = heatInk(v.value);
-      el.innerHTML = `<span class="v">${sgn(v.value)}</span>` +
-                     `<span class="n">seen ${fmt(v.visits)}×</span>`;
-      el.setAttribute('aria-label',
-        `${CELLNAME[i]}: value ${v.value.toFixed(2)}, seen ${v.visits} times`);
+      el.innerHTML = isNet()
+        ? `<span class="v">${sgn(v.value)}</span>`
+        : `<span class="v">${sgn(v.value)}</span><span class="n">seen ${fmt(v.visits)}×</span>`;
+      el.setAttribute('aria-label', isNet()
+        ? `${CELLNAME[i]}: network predicted score ${v.value.toFixed(2)}`
+        : `${CELLNAME[i]}: learned score ${v.value.toFixed(2)}, seen ${v.visits} times`);
     } else {
       el.textContent = '';
       el.setAttribute('aria-label', CELLNAME[i] + ', empty');
@@ -604,16 +661,16 @@ function renderStatus() {
   if (g.over) {
     const rules = isRules();
     const t = g.result === 'win'
-        ? ['You win.', rules ? `${S.depth} rules were not enough.` : 'Era ' + S.era + ' let you through.']
+        ? ['You win.', rules ? `${S.depth} rules were not enough.` : oppLabel() + ' let you through.']
       : g.result === 'loss'
         ? ['It beat you.', rules ? 'The ladder had a rule for every square.'
-                                 : 'Era ' + S.era + ' found a line you missed.']
+                                 : oppLabel() + ' found a line you missed.']
         : ['Drawn.', 'Neither of you got through.'];
     el.classList.add(g.result === 'win' ? 'you-win' : g.result === 'loss' ? 'you-lose' : 'drawn');
     el.innerHTML = `<div><span class="big">${t[0]}</span><br><span class="sub">${t[1]}</span></div>`;
     return;
   }
-  if (g.thinking) { el.innerHTML = `<div><span class="sub">${isRules() ? 'Checking the rules in order' : 'Era ' + S.era + ' is choosing'}…</span></div>`; return; }
+  if (g.thinking) { el.innerHTML = `<div><span class="sub">${isRules() ? 'Checking the rules in order' : oppLabel() + ' is choosing'}…</span></div>`; return; }
   const yours = OG.TOMOVE[g.code] === g.humanMark;
   el.innerHTML = `<div><span class="big">${yours ? 'Your move' : 'Its move'}</span><br>` +
     `<span class="sub">you are ${MARK[g.humanMark]} ${g.humanMark === 1 ? '(you go first)' : '(it goes first)'}</span></div>`;
@@ -704,10 +761,10 @@ function renderRulesPanel() {
   $('#rp-foot').innerHTML = total
     ? `${fmt(total)} move${total === 1 ? '' : 's'} decided so far. ` +
       (S.depth === 8
-        ? `None of them came from experience: this opponent has played zero games.`
+        ? `None of them came from experience: this fixed policy has had no training.`
         : `Rules ${S.depth + 1}–8 are switched off, and the panel below shows the game that costs it.`)
     : (S.depth === 8
-        ? `Eight rules, written out in advance by a person. It has played zero games and it cannot learn one. ` +
+        ? `Eight rules, written out in advance by a person. This is a fixed policy with no training process. ` +
           `The panel below searches all ${fmt(r.lines)} games playable against it.`
         : `A shortened ladder. Rules ${S.depth + 1}–8 are switched off, which opens up ` +
           `${fmt(r.lines)} playable games instead of ${fmt(RULES.report(8).lines)}.`);
@@ -733,8 +790,8 @@ function renderBrainReadout() {
             : 'These are its scores for <b>its own</b> options. It will play one of the outlined squares.';
   el.innerHTML =
     `<div>${whose}</div>` +
-    `<div style="margin-top:.5em">Era ${e.n}’s entire mind: <b>${fmt(e.seen)}</b> positions with a number attached, ` +
-    `out of <b>${fmt(OG.OPEN_POSITIONS.length + 958)}</b> that can occur. That is the whole thing. There is nothing else in there.</div>` +
+    `<div style="margin-top:.5em">Era ${e.n}’s learned memory: <b>${fmt(e.seen)}</b> positions with a score attached, ` +
+    `out of <b>${fmt(OG.OPEN_POSITIONS.length + 958)}</b> that can occur.</div>` +
     `<div class="legend"><span>losing</span><span class="ramp"></span><span>winning</span></div>`;
 }
 
@@ -785,6 +842,7 @@ function renderDepthSeg() {
     const n = +b.dataset.d;
     if (n === S.depth) return;
     S.depth = n;
+    $('#selftest-out').textContent = '';
     if (!S.ruleRec[n]) resetRuleTally(n);
     renderDepthSeg(); renderScore(); renderRulesPanel(); renderBanner();
     newGame();
@@ -896,7 +954,7 @@ function losingGameHTML(g) {
 
 function renderBanner() {
   const el = $('#banner');
-  const top = S.eras[S.eras.length - 1];
+  const top = currentEra();
 
   /* ---- Step 1: the same search, run on the hand-written ladder ---- */
   if (isRules()) {
@@ -905,15 +963,14 @@ function renderBanner() {
     el.classList.toggle('quiet', !r.safe);
     if (r.safe) {
       el.innerHTML =
-        `<h3>You cannot beat this one either — and it has never played a game.</h3>` +
+        `<h3>Eight written rules produce a policy with no losing line.</h3>` +
         `<p>Every game that can still be played against these eight rules was searched, with the ` +
         `rules moving first and moving second, and in none of them do they lose. That is the same ` +
         `exhaustive search used in 1b, run on a rule-based opponent.</p>` +
         `<p>Where the skill came from is the whole difference. Every bit of this one came out of a ` +
-        `person's head and none of it out of experience. It played zero games, it cannot improve, ` +
-        `and would need to be redesigned for a different game. For a game this small that is the <b>better</b> piece ` +
-        `of engineering — shorter, faster, and checkable by reading it. Step 2 does the same job ` +
-        `the other way round. The neural tab then asks what changes when shared weights approximate the learned table.</p>` +
+        `person's design and none of it out of training experience. Its policy stays fixed during play ` +
+        `and would need to be redesigned for a different game. For this small game it is short, fast, and readable. ` +
+        `The next two tabs show two ways experience can shape a policy instead.</p>` +
         `<div class="proof">Proof: ${fmt(r.lines)} complete game lines searched · ` +
         `${fmt(r.positions)} positions examined · 0 losses · both roles · ` +
         `re-run any time from Settings &rarr; Run the full self-test.</div>`;
@@ -967,27 +1024,21 @@ function renderBanner() {
     el.hidden = false;
     el.classList.add('quiet');
     el.innerHTML =
-      `<h3>This game is solved. This app still cannot prove anything about it.</h3>` +
-      `<p>A proof about the game does not prove that this particular learner plays it well. This extension shows why its limited view of the board matters.</p>` +
-      `<p><b>Ordinary tic-tac-toe: ${fmt(ULT.SMALLGAMES)} complete games.</b> Steps 1 and 2 end in a ` +
-      `banner because the app can walk every one of them and come back. Proof by exhaustion — you ` +
-      `check all the cases, and there is nothing clever about it.</p>` +
+      `<h3>What happens when the learner cannot see the whole game?</h3>` +
+      `<p>This optional extension changes the representation. The learner scores each small board but omits where that board sits and where a move sends the opponent. More training cannot restore inputs it never receives.</p>` +
+      `<p><b>Ordinary tic-tac-toe: ${fmt(ULT.SMALLGAMES)} complete games.</b> The app can exhaustively check a displayed policy on that smaller game.</p>` +
       `<p><b>Ultimate tic-tac-toe: an upper bound of about ${e38(SP.bound)} board descriptions.</b> ` +
       `This is not a count of legal game states, so it cannot by itself prove that enumeration is ` +
       `impossible. The meaningful limitation here is representational: the inherited one-board ` +
       `learner omits where a board sits on the meta-grid and where a square sends the opponent. ` +
       `An ordinary neural network given the same incomplete inputs omits those facts too.</p>` +
-      `<p><b>And it is solved anyway.</b> ${SV.authors} proved in ${SV.year} that the first player ` +
+      `<p><b>A nearby published variant is solved.</b> ${SV.authors} proved in ${SV.year} that the first player ` +
       `has a forced win — <b>in at most ${SV.atMost} moves</b>, with the second player able to hold ` +
       `out <b>at least ${SV.atLeast}</b>. Nobody visited ${e38(SP.bound)} positions to do it. They ` +
       `wrote down a strategy and proved it always works, which is what mathematics is for. <b>A ` +
       `proof does not require checking every case</b> — that is the most interesting thing on this ` +
       `page, and it is why "too big to search" and "unknowable" are not the same sentence.</p>` +
-      `<p><b>None of which helps the thing you are playing.</b> It is not running that strategy, it ` +
-      `has never been shown it, and this app cannot search its tree. So it is only ever <i>good</i>, ` +
-      `measured — never proven. That is the ordinary situation for every serious AI system: chess ` +
-      `engines, self-driving cars, language models. Somebody may have proved something about the ` +
-      `problem. Nobody has proved anything about the program.</p>` +
+      `<p>The opponent here does not run that strategy, and this app does not claim the published proof for its different rules. Its results are sampled measurements of this learner.</p>` +
       `<div class="proof">${SV.title} · ${SV.ref} · ` +
       `Worth reading before quoting: the paper proves this for the variant in which ` +
       `${SV.variant}. The squares above use the commoner convention, where a won board frees ` +
@@ -998,7 +1049,7 @@ function renderBanner() {
       (S.liveU.seeded
         ? `Handed over from 1b: ${fmt(S.liveU.seeded)} of the ${fmt(SP.slots)} entries this ` +
           `game can use`
-        : `Step 2 has not trained yet, so there was nothing to hand over — this table started at ` +
+        : `The table learner has not trained yet, so there was nothing to hand over — this table started at ` +
           `zero, of ${fmt(SP.slots)} entries the game can use`) +
       ` · filled so far ${fmt(S.liveU.seen)} · matches trained ${fmt(S.liveU.matches)}</div>`;
     return;
@@ -1013,9 +1064,8 @@ function renderBanner() {
     `none of them does it lose.</p>` +
     `<p>Tic-tac-toe ends here because it is small: about five and a half thousand positions, so a ` +
     `table can hold all of them. Chess has more possible games than there are atoms in the observable universe, and language ` +
-    `has no fixed number at all — no table can hold either. So the big systems throw the table away ` +
-    `and use a neural network, which stores a compressed guess instead of an exact entry. Different ` +
-    `brain, same idea: play, get feedback, adjust, repeat.</p>` +
+    `has no fixed number at all. Larger systems therefore use representations that share parameters ` +
+    `across inputs. That tradeoff can reach new cases, but it replaces separate stored estimates with a shared approximation.</p>` +
     `<div class="proof">Proof: ${fmt(top.verified.lines)} complete game lines searched · ` +
     `${fmt(top.verified.positions)} positions examined · 0 losses · both roles · ` +
     `re-run any time from Settings &rarr; Run the full self-test.</div>`;
@@ -1506,10 +1556,10 @@ function buildLearnedUlt(era, before) {
     `and one of theirs — a picture ordinary tic-tac-toe cannot produce at all.</div>` +
     `<div class="delta">` +
     (era.seededU
-      ? `Step 2 handed over <b>${fmt(era.seededU)}</b> entries. This game can use ` +
+      ? `The table learner handed over <b>${fmt(era.seededU)}</b> entries. This game can use ` +
         `<b>${fmt(SP.slots)}</b>, so <b>${Math.round(100 - 100 * era.seededU / SP.slots)}%</b> of ` +
         `what it needed had to be learned from nothing.`
-      : `Step 2 has not trained yet, so nothing came across at all and every one of the ` +
+      : `The table learner has not trained yet, so nothing came across at all and every one of the ` +
         `<b>${fmt(SP.slots)}</b> entries started at zero. Train 1b first and come back: it ` +
         `hands over what it can, and it is a small fraction.`) +
     ` Turn the inspector on during a match and it will tell you how many of the squares it is ` +
@@ -1687,7 +1737,7 @@ function selfTest() {
 
 
 $('#about-text').innerHTML =
-  `Zero to Unbeatable was built by Bryant Harrison, Murray State University. ` +
+  `Types of AI was built by Bryant Harrison, Murray State University. ` +
   `It runs entirely on this device: no network request is made, no account exists, ` +
   `nothing is stored, and no AI service is involved. Reloading the page returns it to Era 0. ` +
   `1a is a hand-written ${RULES.LADDER.length}-rule ladder with nothing learned in it; ` +
@@ -1770,11 +1820,12 @@ function applyMode() {
   $('#era-select').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
   $('#btn-brain').hidden = rules;
-  $('#btn-learned').hidden = rules || S.lastLearned === null;
+  $('#btn-learned').hidden = !reportAvailable();
+  if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here
     S.brain = false;
     $('#btn-brain').setAttribute('aria-pressed', 'false');
-    $('#btn-brain').textContent = 'Show its brain';
+    $('#btn-brain').textContent = 'Show move scores';
     $('#brain-readout').hidden = true;
   }
   if (ult) maybeSeed();
@@ -1783,7 +1834,7 @@ function applyMode() {
      no rule commentary to draw, so leaving step 1 for step 3 used to
      strand the panel on screen, and on a phone that pushed TRAIN below
      the fold. One place decides what a step shows; this is it. */
-  renderEraSelect(); renderTrain(); renderRulesPanel(); renderRuleFired();
+  renderStageIntro(); renderEraSelect(); renderTrain(); renderRulesPanel(); renderRuleFired();
   renderBanner(); renderScore();
   newGame();
 }
@@ -1792,6 +1843,7 @@ $$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
   if (S.mode === btn.dataset.mode) return;
   if (S.training) S.cancelTraining = true;
   S.mode = btn.dataset.mode;
+  $('#selftest-out').textContent = '';
   applyMode();
 }));
 $$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
@@ -1807,6 +1859,7 @@ $$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
   const chosen = tabs[next];
   if (S.training) S.cancelTraining = true;
   S.mode = chosen.dataset.mode;
+  $('#selftest-out').textContent = '';
   applyMode();
   chosen.focus();
 }));
@@ -1822,16 +1875,20 @@ function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }
 $('#btn-brain').addEventListener('click', () => {
   S.brain = !S.brain;
   $('#btn-brain').setAttribute('aria-pressed', String(S.brain));
-  $('#btn-brain').textContent = S.brain ? 'Hide its brain' : 'Show its brain';
+  $('#btn-brain').textContent = S.brain ? 'Hide move scores' : 'Show move scores';
   renderPlay();
 });
 $('#era-select').addEventListener('change', e => {
   S.era = +e.target.value;
-  renderScore(); newGame();
+  $('#selftest-out').textContent = '';
+  renderScore(); renderTrain(); renderBanner();
+  $('#btn-learned').hidden = !reportAvailable();
+  if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
+  newGame();
 });
 $('#btn-learned').addEventListener('click', e => {
-  if (S.lastLearned === null) return;
-  const era = S.eras[S.lastLearned], prev = S.eras[S.lastLearned - 1];
+  if (!reportAvailable()) return;
+  const era = currentEra(), prev = S.eras[S.era - 1];
   if (era.kind === 'ult') buildLearnedUlt(era, prev); else buildLearned(era, prev);
   openSheet('learned', e.currentTarget);
 });
@@ -1855,7 +1912,7 @@ $('#in-seed').addEventListener('change', e => { S.seed = e.target.value.trim(); 
 $('#btn-reset').addEventListener('click', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
-  resetAll();
+  resetAll(true);
   closeSheet('settings');
 });
 

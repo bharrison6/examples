@@ -13,7 +13,7 @@ const CSS_FILES = ['styles.css'];
    net.js supplies the neural-network tab. Its legacy experiment remains
    isolated; the public adapter trains shared weights against a frozen
    afterstate table with the current value perspective. */
-const JS_FILES  = ['engine.js', 'rules.js', 'ultimate.js', 'net.js', 'app.js'];
+const JS_FILES  = ['engine.js', 'rules.js', 'ultimate.js', 'net.js', 'ui-state.js', 'app.js'];
 
 const read = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 
