@@ -837,7 +837,7 @@ function renderDepthSeg() {
   const seg = $('#depth-seg');
   seg.innerHTML = RULES.DEPTHS.map(d =>
     `<button data-d="${d.n}" class="${d.n === S.depth ? 'on' : ''}" ` +
-    `aria-pressed="${d.n === S.depth}" title="${d.title}">${d.label}</button>`).join('');
+    `aria-pressed="${d.n === S.depth}" title="${d.title}">${d.label} rules</button>`).join('');
   $$('#depth-seg button').forEach(b => b.addEventListener('click', () => {
     const n = +b.dataset.d;
     if (n === S.depth) return;
@@ -1818,6 +1818,7 @@ function applyMode() {
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
   $('#era-select').hidden = rules || isNet();
+  $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
   $('#btn-brain').hidden = rules;
   $('#btn-learned').hidden = !reportAvailable();

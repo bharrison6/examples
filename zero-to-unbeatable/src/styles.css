@@ -120,6 +120,19 @@ body.presenter #app { width: 100%; }
 .icon-btn:active { background: var(--panel-2); }
 .header-actions { display: flex; gap: calc(.45 * var(--u)); }
 .icon-label { font-size: calc(.72 * var(--u)); font-weight: 800; }
+.tab-short { display: none; }
+#stage-nav { background: var(--paper); border-top: 1px solid rgba(255,255,255,.12); }
+#mode-seg {
+  width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: calc(.45 * var(--u)) 0;
+  gap: calc(.5 * var(--u));
+}
+#mode-seg button {
+  min-height: calc(2.75 * var(--u)); background: transparent; color: var(--paper-muted);
+  border-color: transparent; border-radius: 8px;
+}
+#mode-seg button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+#mode-seg .tab-code { color: #006b9a; font-weight: 900; }
+#mode-seg button.on .tab-code { color: var(--gold); }
 @media (max-width: 430px) {
   #brand .b1 { white-space: nowrap; font-size: calc(1.05 * var(--u)); letter-spacing: .055em; }
   #brand .b1 em { display: none; }
@@ -161,7 +174,8 @@ body.presenter #app { width: 100%; }
 
 /* ---------------------------------------------------------- opponent */
 #opponent-panel { padding: 0 0 calc(.75 * var(--u)); border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
-#opp-row { display: flex; flex-direction: column; gap: calc(.25 * var(--u)); margin-top: calc(.45 * var(--u)); }
+#opp-row { display: flex; flex-direction: column; gap: calc(.3 * var(--u)); margin: 0 0 calc(.65 * var(--u)); }
+.control-label { color: var(--gold); font-size: calc(.68 * var(--u)); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 select {
   width: 100%; min-width: 0;
   background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2);
@@ -497,8 +511,8 @@ input[type=text]::placeholder { color: var(--ink-3); }
   font-size: calc(.86 * var(--u)); padding-inline: calc(.3 * var(--u));
 }
 
-#depth-seg { margin-top: 0; flex: 1 1 auto; }
-#depth-seg button { font-size: calc(.72 * var(--u)); }
+#depth-seg { margin: calc(.65 * var(--u)) 0 calc(.7 * var(--u)); }
+#depth-seg button { font-size: calc(.82 * var(--u)); padding-inline: calc(.35 * var(--u)); }
 
 /* Step 3's memory toggle SHARES the row the era dropdown already
    occupies. On its own line it costs 44px, which is enough on a 320x568
@@ -537,8 +551,10 @@ body.step-rules #board {
 .cell.trig { border-color: var(--lite); box-shadow: 0 0 0 2px var(--lite) inset; }
 
 /* The ladder itself. */
-#rules-panel { padding: calc(.6 * var(--u)); }
-.rp-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5em; }
+#rules-panel { padding: calc(.8 * var(--u)); }
+.rule-control-head { display: flex; align-items: end; justify-content: space-between; gap: 1em; }
+.rule-control-head h2 { margin: 0; color: var(--gold); font: 700 calc(1.08 * var(--u))/1.2 Georgia, "Times New Roman", serif; }
+.rule-control-head p { max-width: 36em; margin: .3em 0 0; color: var(--ink-2); font-size: calc(.82 * var(--u)); line-height: 1.45; }
 .rp-sub { font-size: calc(.6 * var(--u)); color: var(--ink-3); text-transform: uppercase;
   letter-spacing: .1em; font-weight: 700; white-space: nowrap; }
 #rule-list { list-style: none; margin: calc(.5 * var(--u)) 0 0; padding: 0; }
@@ -615,6 +631,11 @@ body.step-rules #board {
 @media (max-width: 520px) {
   #topbar { width: min(100% - 28px, 1180px); }
   .brand-context { display: none; }
+  #mode-seg { width: min(100% - 28px, 1180px); gap: .25rem; }
+  .tab-long { display: none; }
+  .tab-short { display: inline; }
+  .rule-control-head { display: block; }
+  .rp-sub { display: block; margin-top: .35em; }
   .icon-btn { width: calc(2.75 * var(--u)); padding: 0; }
   .icon-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .lesson-strip { grid-template-columns: 1fr; }
@@ -634,7 +655,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
   #board-wrap { margin-bottom: calc(.4 * var(--u)); }
   #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
-  #mode-seg { flex: 0 0 auto; }
+  #mode-seg { width: min(100% - 28px, 1180px); }
   #score-row { margin-top: 0; flex: 0 0 auto; }
   .sc { padding-inline: calc(.4 * var(--u)); }
   #main { grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); }

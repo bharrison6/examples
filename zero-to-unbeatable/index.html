@@ -146,6 +146,19 @@ body.presenter #app { width: 100%; }
 .icon-btn:active { background: var(--panel-2); }
 .header-actions { display: flex; gap: calc(.45 * var(--u)); }
 .icon-label { font-size: calc(.72 * var(--u)); font-weight: 800; }
+.tab-short { display: none; }
+#stage-nav { background: var(--paper); border-top: 1px solid rgba(255,255,255,.12); }
+#mode-seg {
+  width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: calc(.45 * var(--u)) 0;
+  gap: calc(.5 * var(--u));
+}
+#mode-seg button {
+  min-height: calc(2.75 * var(--u)); background: transparent; color: var(--paper-muted);
+  border-color: transparent; border-radius: 8px;
+}
+#mode-seg button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
+#mode-seg .tab-code { color: #006b9a; font-weight: 900; }
+#mode-seg button.on .tab-code { color: var(--gold); }
 @media (max-width: 430px) {
   #brand .b1 { white-space: nowrap; font-size: calc(1.05 * var(--u)); letter-spacing: .055em; }
   #brand .b1 em { display: none; }
@@ -187,7 +200,8 @@ body.presenter #app { width: 100%; }
 
 /* ---------------------------------------------------------- opponent */
 #opponent-panel { padding: 0 0 calc(.75 * var(--u)); border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
-#opp-row { display: flex; flex-direction: column; gap: calc(.25 * var(--u)); margin-top: calc(.45 * var(--u)); }
+#opp-row { display: flex; flex-direction: column; gap: calc(.3 * var(--u)); margin: 0 0 calc(.65 * var(--u)); }
+.control-label { color: var(--gold); font-size: calc(.68 * var(--u)); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
 select {
   width: 100%; min-width: 0;
   background: var(--panel-2); color: var(--ink); border: 1px solid var(--line-2);
@@ -523,8 +537,8 @@ input[type=text]::placeholder { color: var(--ink-3); }
   font-size: calc(.86 * var(--u)); padding-inline: calc(.3 * var(--u));
 }
 
-#depth-seg { margin-top: 0; flex: 1 1 auto; }
-#depth-seg button { font-size: calc(.72 * var(--u)); }
+#depth-seg { margin: calc(.65 * var(--u)) 0 calc(.7 * var(--u)); }
+#depth-seg button { font-size: calc(.82 * var(--u)); padding-inline: calc(.35 * var(--u)); }
 
 /* Step 3's memory toggle SHARES the row the era dropdown already
    occupies. On its own line it costs 44px, which is enough on a 320x568
@@ -563,8 +577,10 @@ body.step-rules #board {
 .cell.trig { border-color: var(--lite); box-shadow: 0 0 0 2px var(--lite) inset; }
 
 /* The ladder itself. */
-#rules-panel { padding: calc(.6 * var(--u)); }
-.rp-head { display: flex; align-items: baseline; justify-content: space-between; gap: .5em; }
+#rules-panel { padding: calc(.8 * var(--u)); }
+.rule-control-head { display: flex; align-items: end; justify-content: space-between; gap: 1em; }
+.rule-control-head h2 { margin: 0; color: var(--gold); font: 700 calc(1.08 * var(--u))/1.2 Georgia, "Times New Roman", serif; }
+.rule-control-head p { max-width: 36em; margin: .3em 0 0; color: var(--ink-2); font-size: calc(.82 * var(--u)); line-height: 1.45; }
 .rp-sub { font-size: calc(.6 * var(--u)); color: var(--ink-3); text-transform: uppercase;
   letter-spacing: .1em; font-weight: 700; white-space: nowrap; }
 #rule-list { list-style: none; margin: calc(.5 * var(--u)) 0 0; padding: 0; }
@@ -641,6 +657,11 @@ body.step-rules #board {
 @media (max-width: 520px) {
   #topbar { width: min(100% - 28px, 1180px); }
   .brand-context { display: none; }
+  #mode-seg { width: min(100% - 28px, 1180px); gap: .25rem; }
+  .tab-long { display: none; }
+  .tab-short { display: inline; }
+  .rule-control-head { display: block; }
+  .rp-sub { display: block; margin-top: .35em; }
   .icon-btn { width: calc(2.75 * var(--u)); padding: 0; }
   .icon-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .lesson-strip { grid-template-columns: 1fr; }
@@ -660,7 +681,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
   #board-wrap { margin-bottom: calc(.4 * var(--u)); }
   #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
-  #mode-seg { flex: 0 0 auto; }
+  #mode-seg { width: min(100% - 28px, 1180px); }
   #score-row { margin-top: 0; flex: 0 0 auto; }
   .sc { padding-inline: calc(.4 * var(--u)); }
   #main { grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); }
@@ -1017,6 +1038,13 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
   </header>
+  <nav id="stage-nav" aria-label="Types of AI stages">
+    <div class="seg" id="mode-seg" role="tablist" aria-label="Types of AI stages">
+      <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="stage-intro" aria-label="1a Rules-based intelligence"><span class="tab-code">1a</span><span class="tab-long">Rules-based intelligence</span><span class="tab-short">Rules-based AI</span></button>
+      <button data-mode="one" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1b Machine learning"><span class="tab-code">1b</span><span class="tab-long">Machine learning</span><span class="tab-short">Machine learning</span></button>
+      <button data-mode="net" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1c Neural networks"><span class="tab-code">1c</span><span class="tab-long">Neural networks</span><span class="tab-short">Neural networks</span></button>
+    </div>
+  </nav>
   </div>
 
   <main id="main">
@@ -1044,17 +1072,6 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 
     <!-- ===================== OPPONENT / SCORE ===================== -->
     <section class="panel" id="opponent-panel">
-      <!-- The three things people call AI, in the order the demo walks
-           them. data-mode values for the existing two are unchanged. -->
-      <div class="seg" id="mode-seg" role="tablist" aria-label="Demo 1 stages">
-        <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="board-wrap">1a &middot; Rules-based intelligence</button>
-        <button data-mode="one" role="tab" aria-selected="false" aria-controls="board-wrap">1b &middot; Machine learning</button>
-        <button data-mode="net" role="tab" aria-selected="false" aria-controls="board-wrap">1c &middot; Neural networks</button>
-      </div>
-      <div id="opp-row">
-        <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
-        <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules are switched on" hidden></div>
-      </div>
       <div id="score-row"></div>
       <div id="era-strip" hidden></div>
     </section>
@@ -1108,16 +1125,24 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
          cannot disagree — the panel is a rendering of the ladder, not a
          second copy of it. -->
     <section class="panel" id="rules-panel" hidden>
-      <div class="rp-head">
-        <span class="lbl">The rules, in order</span>
+      <div class="rule-control-head">
+        <div>
+          <h2>Rules the opponent can use</h2>
+          <p>Enable the first two, first four, or all eight rules in the list. The remaining rules are switched off.</p>
+        </div>
         <span class="rp-sub" id="rp-sub"></span>
       </div>
+      <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules the opponent can use" hidden></div>
       <ol id="rule-list"></ol>
       <p class="rp-foot" id="rp-foot"></p>
     </section>
 
     <!-- ============================ TRAIN ========================= -->
     <section class="panel" id="train-panel">
+      <div id="opp-row">
+        <label class="control-label" for="era-select">Opponent era</label>
+        <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
+      </div>
       <button class="btn primary big" id="btn-train">
         <span class="t-main">Train the AI</span>
         <span class="t-sub" id="train-sub">5,000 games</span>
@@ -4967,7 +4992,7 @@ function renderDepthSeg() {
   const seg = $('#depth-seg');
   seg.innerHTML = RULES.DEPTHS.map(d =>
     `<button data-d="${d.n}" class="${d.n === S.depth ? 'on' : ''}" ` +
-    `aria-pressed="${d.n === S.depth}" title="${d.title}">${d.label}</button>`).join('');
+    `aria-pressed="${d.n === S.depth}" title="${d.title}">${d.label} rules</button>`).join('');
   $$('#depth-seg button').forEach(b => b.addEventListener('click', () => {
     const n = +b.dataset.d;
     if (n === S.depth) return;
@@ -5948,6 +5973,7 @@ function applyMode() {
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
   $('#era-select').hidden = rules || isNet();
+  $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
   $('#btn-brain').hidden = rules;
   $('#btn-learned').hidden = !reportAvailable();
