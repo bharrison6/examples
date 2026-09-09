@@ -19,6 +19,9 @@ tags: [design, teaching, tic-tac-toe, contract]
 
 # Completion — 2026-09-09
 
+Follow-up [[types-ai-controls]] moves stage tabs to page-level navigation, explains
+rule-count controls above the rules list, and groups Era selection with training.
+
 Delivered Types of AI, the descriptive display title for the existing
 zero-to-unbeatable URL. The first demo now uses the launcher's cream, navy and
 gold design, a visible question and Try/Observe/Takeaway for each stage, readable
