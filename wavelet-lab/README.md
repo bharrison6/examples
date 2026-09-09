@@ -21,8 +21,11 @@ The image slider counts retained coefficients precisely. It does not claim file 
 node build.js
 node src/wavelet.test.js
 node src/build.test.js
+node tools/pdf.mjs
 ```
 
 The tests compare the fast transform to a separately written 8 × 8 Haar matrix, check orthogonality, 1-D/2-D round trips and energy preservation, verify omitted energy equals squared error, and enumerate small best-k subsets.
+
+`tools/pdf.mjs` re-renders the teacher guide PDF from `teacher-guide.html` with an installed Chrome or Edge; no dependencies.
 
 The three scenes are generated procedurally in the browser. There are no runtime network requests or external assets.
