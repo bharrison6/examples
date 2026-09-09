@@ -25,6 +25,7 @@ const S = {
   pending: { year: 1985, verdict: null },
   revealed: false,
   presenter: false,
+  lens: 0,
   tl: null
 };
 
@@ -44,7 +45,8 @@ function srcChip(id) {
   const a = el('a', 'src');
   if (!s) { a.textContent = 'source missing: ' + id; a.classList.add('bad'); return a; }
   a.href = s.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
-  a.textContent = 'source';
+  a.textContent = s.t;
+  a.setAttribute('aria-label', 'Read source: ' + s.t);
   a.title = s.t;
   return a;
 }
@@ -78,8 +80,8 @@ const VERDICTS = [
   { id: 'open', label: 'Still open' }
 ];
 const ASSESSMENT_CHOICES = [
-  { id: 'context', label: 'A dated assessment' },
-  { id: 'no', label: 'A forecast about the future' },
+  { id: 'context', label: 'Assessment or untimed ambition' },
+  { id: 'no', label: 'Forecast with an outcome and deadline' },
   { id: 'open', label: 'I need more context' }
 ];
 
@@ -195,7 +197,7 @@ function renderReveal() {
 
   const verdict = el('div', 'rv-verdict ' + VERDICT_CLASS[c.verdict]);
   verdict.appendChild(el('b', null, c.verdictLine));
-  verdict.appendChild(el('span', 'rv-kind', 'This was ' + KIND_WORD[c.kind] + '.'));
+  verdict.appendChild(el('span', 'rv-kind', untimedAmbition ? 'This was an untimed ambition.' : 'This was ' + KIND_WORD[c.kind] + '.'));
   w.appendChild(verdict);
 
   w.appendChild(el('p', 'rv-what', c.what));
@@ -255,7 +257,7 @@ function renderScorecard() {
   split.appendChild(row('promise', 'Time-bounded promises', 'Five claims named a near-term outcome. Three have resolved, and none arrived inside the window it named.'));
   split.appendChild(row('warning', 'A warning about the field itself', 'One time-bounded warning. It was right, three years early.'));
   const assessment = el('div', 'sc-row');
-  assessment.appendChild(el('b', null, 'Dated assessments'));
+  assessment.appendChild(el('b', null, 'Assessments and untimed ambitions'));
   assessment.appendChild(el('span', 'sc-score', '4 to inspect, not score'));
   assessment.appendChild(el('span', 'sc-blurb', 'The 1958 press claim, ALPAC, Perceptrons, and Lighthill lack a scoreable future window or describe evidence at a time. Later developments do not turn them into failed forecasts.'));
   split.appendChild(assessment);
@@ -360,7 +362,7 @@ function showEvent(ev) {
   const head = el('div', 'ev-head');
   const chip = el('span', 'lane-chip');
   chip.style.background = Timeline.hexA(Timeline.LANE_COLOR[ev.stage], 0.22);
-  chip.style.color = Timeline.LANE_COLOR[ev.stage];
+  chip.style.color = '#002144';
   chip.textContent = ev.stage === 'result' ? 'result' : ev.stage;
   head.appendChild(chip);
   head.appendChild(el('b', null, E.fmtEventDate(ev.at, ev.p)));
@@ -373,52 +375,43 @@ function showEvent(ev) {
   const s = D.SOURCES[ev.src];
   if (s) foot.appendChild(el('span', 'src-title', s.t));
   box.appendChild(foot);
+  const more = el('button', 'btn ghost', 'Event Details');
+  more.setAttribute('aria-label', 'Event Details: ' + ev.label);
+  more.addEventListener('click', () => showDetails(ev.label, [E.fmtEventDate(ev.at, ev.p), ev.text], [ev.src]));
+  box.appendChild(more);
 }
 
 /* =============================== ACT III ================================ */
 
 function renderAnatomy() {
-  const box = $('#anatomy');
-  if (box.dataset.built) return;
-  box.dataset.built = '1';
-  const stageBlurb = D.STAGES.reduce((o, s) => (o[s.id] = s, o), {});
-
-  for (const row of D.ANATOMY) {
-    const st = stageBlurb[row.stage];
-    const r = el('div', 'an-row');
-
-    const head = el('div', 'an-stage');
-    head.appendChild(el('b', null, st.label));
-    head.appendChild(el('span', null, st.blurb));
-    r.appendChild(head);
-
-    const cols = el('div', 'an-cols');
-    const col = (key, title, cls) => {
-      const cell = row[key];
-      const c = el('div', 'an-cell ' + cls);
-      c.appendChild(el('span', 'an-era', title));
-      c.appendChild(el('b', null, cell.head));
-      c.appendChild(el('p', null, cell.body));
-      if (cell.pending) {
-        c.classList.add('pending');
-        c.appendChild(el('span', 'an-pending', 'open — ' + cell.pending));
-      }
-      if (cell.src.length) {
-        const f = el('div', 'an-src');
-        cell.src.forEach(id => f.appendChild(srcChip(id)));
-        c.appendChild(f);
-      } else {
-        c.classList.add('nosrc');
-        c.appendChild(el('span', 'an-nosrc', 'no figure shown — nothing sourceable'));
-      }
-      return c;
-    };
-    cols.appendChild(col('w1', 'First winter', 'w1'));
-    cols.appendChild(col('w2', 'Second winter', 'w2'));
-    cols.appendChild(col('now', 'Now', 'now'));
-    r.appendChild(cols);
-    box.appendChild(r);
-  }
+  const box = $('#anatomy'); box.innerHTML = '';
+  const nav = $('#lens-nav'); nav.innerHTML = '';
+  D.ANATOMY.forEach((row, i) => {
+    const st = D.STAGES.find(s => s.id === row.stage);
+    const button = el('button', 'lens-button', (i + 1) + ' · ' + st.label);
+    button.classList.toggle('on', S.lens === i);
+    button.type = 'button'; button.setAttribute('aria-pressed', String(S.lens === i));
+    button.addEventListener('click', () => { S.lens = i; renderAnatomy(); $('#lens-nav').children[i].focus(); });
+    nav.appendChild(button);
+  });
+  const row = D.ANATOMY[S.lens], st = D.STAGES.find(s => s.id === row.stage);
+  const r = el('div', 'an-row');
+  const head = el('div', 'an-stage');
+  head.appendChild(el('h2', null, st.label)); head.appendChild(el('p', null, st.blurb));
+  r.appendChild(head);
+  const cols = el('div', 'an-cols');
+  [['w1', 'First winter'], ['w2', 'Second winter'], ['now', 'Today']].forEach(([key, title]) => {
+    const cell = row[key], c = el('article', 'an-cell ' + key);
+    c.appendChild(el('span', 'an-era', title));
+    c.appendChild(el('h3', null, cell.head));
+    if (cell.pending) c.appendChild(el('span', 'an-pending', 'Unresolved · ' + cell.pending));
+    const button = el('button', 'btn ghost', 'Details');
+    button.setAttribute('aria-label', 'Details: ' + title + ' — ' + st.label);
+    button.addEventListener('click', () => showDetails(title + ' · ' + st.label, [cell.body], cell.src, cell.pending));
+    c.appendChild(button); cols.appendChild(c);
+  });
+  r.appendChild(cols); box.appendChild(r);
+  box.appendChild(el('p', 'lens-question', 'Discuss: which similarities survive once you account for the differences between these three settings?'));
 }
 
 /* =============================== ACT IV ================================= */
@@ -433,8 +426,8 @@ function renderClose() {
   const a = el('div', 'col rhymes');
   a.appendChild(el('h3', null, 'What rhymes'));
   for (const it of D.RHYMES) {
-    const d = el('div', 'item');
-    d.appendChild(el('b', null, it.head));
+    const d = el('details', 'item');
+    d.appendChild(el('summary', null, it.head));
     d.appendChild(el('p', null, it.body));
     d.appendChild(srcChip(it.src));
     a.appendChild(d);
@@ -444,8 +437,8 @@ function renderClose() {
   const b = el('div', 'col different');
   b.appendChild(el('h3', null, 'What is genuinely different'));
   for (const it of D.DIFFERENT) {
-    const d = el('div', 'item');
-    d.appendChild(el('b', null, it.head));
+    const d = el('details', 'item');
+    d.appendChild(el('summary', null, it.head));
     d.appendChild(el('p', null, it.body));
     d.appendChild(srcChip(it.src));
     b.appendChild(d);
@@ -458,8 +451,8 @@ function renderClose() {
   paras(cl, D.CLOSER.body);
   box.appendChild(cl);
 
-  const cut = el('div', 'panel cut');
-  cut.appendChild(el('h3', null, 'What was cut, and why'));
+  const cut = el('details', 'panel cut');
+  cut.appendChild(el('summary', null, 'What was cut, and why'));
   cut.appendChild(el('p', 'help', 'Researched for this demo and left out because it could not be sourced well enough. A demo that only shows what it kept is an advertisement.'));
   const ul = el('ul');
   for (const c of D.CUT) {
@@ -471,8 +464,8 @@ function renderClose() {
   cut.appendChild(ul);
   box.appendChild(cut);
 
-  const src = el('div', 'panel sources');
-  src.appendChild(el('h3', null, 'Every source'));
+  const src = el('details', 'panel sources');
+  src.appendChild(el('summary', null, 'Every source'));
   src.appendChild(el('p', 'help', D.SOURCE_NOTE));
   const sl = el('ul', 'src-list');
   Object.keys(D.SOURCES).sort().forEach(id => {
@@ -497,6 +490,7 @@ function setAct(n) {
     const on = +b.dataset.act === n;
     b.classList.toggle('on', on);
     b.setAttribute('aria-selected', String(on));
+    b.tabIndex = on ? 0 : -1;
   });
   if (n === 2) { buildTimeline(); requestAnimationFrame(() => { S.tl.resize(); syncTimelineChrome(); }); }
   if (n === 3) renderAnatomy();
@@ -512,25 +506,64 @@ function scrollActTop() {
 
 /** The page behind a sheet must not scroll with it — on a phone, dragging the
  *  sheet body otherwise drags the whole article underneath. */
+const modalStack = [];
 function lockScroll() {
-  document.body.style.overflowY = $$('.overlay').some(o => !o.hidden) ? 'hidden' : '';
+  const top = modalStack[modalStack.length - 1];
+  document.body.style.overflowY = top ? 'hidden' : '';
+  Array.from(document.body.children).forEach(n => {
+    if (n.tagName !== 'SCRIPT') n.inert = !!top && n.id !== top.id;
+  });
 }
 function open(id) {
   const o = document.getElementById(id);
-  o.hidden = false;
-  lockScroll();
-  const inner = o.querySelector('.sheet-inner');
-  if (inner) inner.focus();
+  if (modalStack.some(m => m.id === id)) return;
+  modalStack.push({ id, trigger: document.activeElement });
+  o.hidden = false; lockScroll();
+  o.querySelector('.sheet-body').scrollTop = 0;
+  o.querySelector('.sheet-inner').focus();
 }
-function close(id) { document.getElementById(id).hidden = true; lockScroll(); }
-
+function close(id) {
+  const index = modalStack.findIndex(m => m.id === id);
+  if (index < 0) return;
+  const entries = modalStack.splice(index);
+  entries.forEach(m => { document.getElementById(m.id).hidden = true; });
+  lockScroll();
+  const trigger = entries[0].trigger;
+  if (trigger && trigger.isConnected && !trigger.closest('[hidden]')) trigger.focus();
+}
+function showDetails(title, paragraphs, sources = [], pending) {
+  $('#details-title').textContent = title;
+  const body = $('#details-body'); body.innerHTML = '';
+  paras(body, paragraphs);
+  if (pending) body.appendChild(el('p', 'an-pending', 'Unresolved · ' + pending));
+  if (sources.length) {
+    body.appendChild(el('h3', null, 'Read the evidence'));
+    sources.forEach(id => body.appendChild(srcChip(id)));
+  }
+  open('details');
+}
+const ACT_DETAILS = {
+  claims: ['Read the claim', 'First place the statement in time. Then distinguish a forecast with an outcome and deadline from a dated assessment or untimed ambition. The reveal explains the distinction, names the speaker, and links to the source.', 'There are five time-bounded promises, four context cards, and one warning. Two forecasts remain unresolved. Context and unresolved forecasts do not enter the outcome score.'],
+  history: ['Read the timeline', 'Use the date slider to reveal events over time, or use Previous event and Next event to inspect each event. Select a dot for its date, explanation and source.', 'The six rows separate landmark results from five comparison lenses. They organize the evidence without implying a fixed historical cycle. Expand the supporting notes below the timeline for date boundaries and funding examples.'],
+  compare: ['Compare one lens at a time', 'Choose one of the five lenses. Read the three era headings, then open each era’s Details to inspect the complete explanation and sources.', 'The two unresolved present-day cells describe limits to what the evidence can currently settle. They are not missing scores or predictions of a coming winter.'],
+  today: ['Test the analogy', 'Expand a similarity and a difference. Ask what each source actually establishes, and whether your conclusion still holds when you include both.', 'Use the closing question to name observable evidence that would change your view. Historical parallels can guide questions without settling the outcome.']
+};
 function wireOverlays() {
   $$('[data-close]').forEach(b => b.addEventListener('click', () => close(b.dataset.close)));
-  $$('.overlay').forEach(o => o.addEventListener('click', ev => {
-    if (ev.target === o) { o.hidden = true; lockScroll(); }
+  $$('[data-details]').forEach(b => b.addEventListener('click', () => {
+    const [title, ...body] = ACT_DETAILS[b.dataset.details]; showDetails(title, body);
   }));
+  $$('.overlay').forEach(o => o.addEventListener('click', ev => { if (ev.target === o) close(o.id); }));
   document.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
+    const top = modalStack[modalStack.length - 1]; if (!top) return;
+    if (ev.key === 'Escape') { ev.preventDefault(); close(top.id); }
+    if (ev.key === 'Tab') {
+      const sheet = document.getElementById(top.id);
+      const focusable = Array.from(sheet.querySelectorAll('button, a[href], input, summary, [tabindex="0"]')).filter(n => !n.disabled && n.getClientRects().length);
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (ev.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) { ev.preventDefault(); last?.focus(); }
+      else if (!ev.shiftKey && (document.activeElement === last || !focusable.includes(document.activeElement))) { ev.preventDefault(); first?.focus(); }
+    }
   });
   $('#btn-howto').addEventListener('click', () => open('howto'));
   $('#btn-settings').addEventListener('click', () => open('settings'));
@@ -539,7 +572,7 @@ function wireOverlays() {
   $('#chk-presenter').addEventListener('change', ev => {
     S.presenter = ev.target.checked;
     document.body.classList.toggle('presenting', S.presenter);
-    if (S.tl) { S.tl.setBig(S.presenter); }
+    if (S.tl) S.tl.setBig(S.presenter);
   });
   $('#btn-selftest').addEventListener('click', runSelfTest);
 }
@@ -564,6 +597,10 @@ function resetDemo() {
   S.answers = {};
   S.pending = { year: 1985, verdict: null };
   S.revealed = false;
+  S.lens = 0;
+  $('#anatomy').innerHTML = '';
+  $('#lens-nav').innerHTML = '';
+  $$('details[open]').forEach(d => { d.open = false; });
 
   /* Act I, back before the first card. renderCard() re-initialises every
      control inside #card-body when Begin is pressed again, so hiding the
@@ -590,7 +627,9 @@ function resetDemo() {
   /* Close the Settings sheet the button was pressed in, and anything else
      left open, then release the scroll lock those sheets took. */
   $$('.overlay').forEach(o => { o.hidden = true; });
+  modalStack.length = 0;
   lockScroll();
+  $('#btn-settings').focus();
 
   setAct(1);
 }
@@ -703,6 +742,15 @@ function boot() {
   $('#btn-to-anatomy').addEventListener('click', () => setAct(3));
   $('#btn-to-now').addEventListener('click', () => setAct(4));
 
+  $$('#actnav button').forEach((b, i) => {
+    b.tabIndex = i === 0 ? 0 : -1;
+    b.addEventListener('keydown', ev => {
+      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
+      ev.preventDefault();
+      const next = ev.key === 'Home' ? 1 : ev.key === 'End' ? 4 : ((S.act - 1 + (ev.key === 'ArrowRight' ? 1 : 3)) % 4) + 1;
+      setAct(next); $('#actnav button[data-act="' + next + '"]').focus();
+    });
+  });
   showEvent(null);
   open('howto');
 }

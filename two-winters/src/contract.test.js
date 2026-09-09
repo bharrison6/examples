@@ -205,7 +205,8 @@ if (settings) {
   };
   const inApp = (() => {
     const a = html.indexOf('<div class="guide-scope">');
-    const b = html.indexOf('</div>\n    </div>', a);
+    const tail = html.slice(a).match(/<\/div>\r?\n    <\/div>/);
+    const b = tail ? a + tail.index : -1;
     return a < 0 ? null : html.slice(a, b < 0 ? undefined : b);
   })();
   ok('The in-app notes body is byte-identical to the printable guide body',
