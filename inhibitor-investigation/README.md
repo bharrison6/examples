@@ -2,7 +2,7 @@
 
 An offline, self-contained initial-rate enzyme-inhibition investigation for the AI Fellows collection. Students run a limited number of exact synthetic assays, compare observed rates to three declared candidate curves, and practice the scientifically valid conclusion that evidence can be insufficient.
 
-Open [index.html](index.html) in a modern browser. The how-to opens on first load; `?` reopens it. `⚙` contains presentation mode and presenter notes. The printable guide is available as [HTML](teacher-guide.html) and [PDF](teacher-guide.pdf). New mystery sample clears the bench and cycles the three synthetic cases without revealing the new label.
+Open [index.html](index.html) in a modern browser. The **Guide** opens on first load; the `?` button reopens it. `⚙` Settings offers **Open Presenter Notes**, **Presentation mode**, and **Reset**. The presenter notes *are* the printable guide — the same document, injected at build time — so the overlay, the [HTML](teacher-guide.html), and the [PDF](teacher-guide.pdf) can never drift. Reset returns the page to its fresh-load state: a new mystery sample, an empty bench, the first-load conclusion and transfer copy, and both overlays closed. It deliberately leaves Presentation mode as the presenter set it, since that is a display preference rather than demo state. New mystery sample clears the bench and cycles the three synthetic cases without revealing the new label.
 
 ## What it teaches
 
@@ -15,26 +15,23 @@ The activity uses exact synthetic rates: it contains no fake noise, fit toleranc
 
 ## Develop and verify
 
-`model.js` is the production model. `build.js` inserts it verbatim into the standalone page.
+Two files are canonical: `model.js` (the production model) and `src/teacher-guide.html` (the guide, which is also the presenter notes). `build.js` injects both into `src/template.html` verbatim and copies the guide out to `teacher-guide.html`. **Never hand-edit `index.html` or `teacher-guide.html`** — `--check` fails when either drifts from its source.
 
 ```text
 node test-model.js
 node build.js
 node build.js --check
 node test-build.js
+node tools/pdf.mjs
 ```
 
-The tests use independent hand-calculated fixtures for zero substrate, the baseline at Km, saturation limits, rate ordering, the S=Km ambiguity, high-substrate discrimination, assay budget, duplicate measurements, transfer feedback, reproducible bundling, and inline-script parsing.
+The tests use independent hand-calculated fixtures for zero substrate, the baseline at Km, saturation limits, rate ordering, the S=Km ambiguity, high-substrate discrimination, assay budget, duplicate measurements, transfer feedback, reproducible bundling, and inline-script parsing. `test-build.js` also asserts the shipped UX contract: the `?` button's accessible name, the Guide overlay heading and first-load state, the three Settings items, Reset restoring the first-load copy, the guide body and stylesheet appearing in the page verbatim, and the absence of any runtime network API.
 
-The runtime is self-contained, with no external assets or AI calls. Chrome checks cover the investigation, sample reset, assay limits, transfer feedback, settings/help, and a 390px layout. Direct-file/disconnected-network behavior remains unverified in the manifest.
+The runtime is self-contained, with no external assets or AI calls. Chrome checks cover the investigation, sample reset, assay limits, transfer feedback, the Guide and presenter-notes overlays, Reset, and a 390px layout. Loaded from `file://` in headless Chrome the page attempts exactly one request — itself; a page that does reference external assets was run through the same probe as a positive control.
 
-To rebuild the PDF from canonical guide HTML, use Python with ReportLab:
+`tools/pdf.mjs` renders `teacher-guide.pdf` from `teacher-guide.html` by driving an installed Chrome/Edge headless, so the PDF comes from the same canonical source as the on-screen notes and needs no packages installed. Set `CHROME_PATH` if your browser is somewhere unusual.
 
-```text
-python tools/render_guide.py
-```
-
-The renderer uses standard-library HTML parsing and preserves the guide's content and source links. It does not require browser automation.
+`tools/render_guide.py` is a **legacy** ReportLab renderer that predates the guide restructure. It is kept for reference only, is not the renderer behind the shipped PDF, and has not been re-verified against the current guide markup.
 
 ## Sources
 
