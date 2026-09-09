@@ -26,6 +26,13 @@
   .foot { margin-top: 22px; padding-top: 8px; border-top: 1px solid #ccd6e2; font-size: 8.6pt; color: #6b7c91; font-family: system-ui, sans-serif; }
   .pb { page-break-before: always; }
   @media print { body { padding: 0; } .beat, .warn { background: none; } }
+  @media screen and (max-width: 600px) {
+    body { width: 100%; max-width: none; margin: 0; padding: 18px 12px 30px; font-size: 11pt; overflow-wrap: anywhere; }
+    h1 { font-size: 22pt; }
+    table { display: block; max-width: 100%; overflow-x: auto; }
+    code { white-space: normal; overflow-wrap: anywhere; }
+    .beat, .warn { max-width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -70,9 +77,11 @@
   Open the example: a real bug report, 1.2 million lines of code, write the patch, graded
   by the project's own tests. Ask for a number out loud before revealing — a spoken guess
   lands harder than a private one. Most rooms say 60–65%.
-  <br><b>The line that matters comes after the number:</b> the labs retired this test in
-  February 2026 &mdash; not for being too easy, but because the models had been trained on the
-  answers, and 59% of the hard problems they still failed turned out to have broken tests.
+  <br><b>The line that matters comes after the number:</b> in February 2026 OpenAI stopped
+  evaluating this test &mdash; not for being too easy, but because the models had been trained on
+  the answers, and 59% of the hard problems they still failed turned out to have broken tests.
+  Anthropic never headlined it again either. But it did not die: independent evaluators still run
+  it. <b>Say this:</b> a benchmark rarely gets retired, it stops being the number anyone leads with.
 </div>
 
 <div class="beat">
@@ -126,7 +135,7 @@
 
 <h2>Act II — where all this came from (5 minutes)</h2>
 <p>
-  Press <b>Play</b> and stop talking for thirty seconds. 123 releases arrive; the argument
+  Press <b>Play</b> and stop talking for thirty seconds. 124 releases arrive; the argument
   makes itself as the gaps between them shrink from months to weeks.
 </p>
 <ul>

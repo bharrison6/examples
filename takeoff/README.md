@@ -33,7 +33,7 @@ reads 1 min · 5 min · 30 min · 2 hr · 8 hr · 2 days rather than 1.7 hr and
 
 | Test | What it measures | Shown | Revealed |
 |---|---|---|---|
-| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **80.8%** — a plateau, then the exam was retired as contaminated |
+| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **80.8%** — a plateau, then the labs stopped leading with it (contamination) |
 | 2 | Science questions PhDs get wrong | GPT-4 at 39% | **94.1%**, past the 69.7% PhD line since Sept 2024 |
 | 3 | How long a job it finishes alone | 3.5 min → 60 min | **11.3 hours**, doubling every 89 days lately |
 | 4 | What a fixed ability costs | $37.50 → $7.50 per million | **$0.18** — 208× cheaper in 23 months |
@@ -54,11 +54,12 @@ lesson, and why a startling share of any headline number is decided by how
 somebody wired the system up.
 
 Every chart's time axis runs to August 2026. Where a series genuinely stops
-earlier — SWE-bench Verified was retired in February 2026, and Epoch
+earlier — OpenAI stopped evaluating SWE-bench Verified in February 2026 and Anthropic
+stopped headlining it, and Epoch
 stopped publishing the cost curve in February 2025 — the line ends there and the
 chart says which of those happened.
 
-**Act II — The cadence.** 123 model releases since ChatGPT on a scrubbable
+**Act II — The cadence.** 124 model releases since ChatGPT on a scrubbable
 timeline, filterable by openness and by region. The height axis is labelled
 *roughly how capable — a generation band, not a score*, which is the most it can
 honestly claim. Hollow rings are models anyone

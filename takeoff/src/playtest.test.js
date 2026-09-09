@@ -12,6 +12,8 @@
    the figures actually plotted.
    ========================================================================== */
 
+const fs = require('fs');
+const path = require('path');
 const D = require('./data.js');
 const E = require('./engine.js');
 
@@ -251,7 +253,7 @@ ok('Median of an empty set is null', E.medianRatio([]) === null);
   mark(D.UNLOCKS); D.DOMAINS.forEach(d => mark(d.items));
   /* Cited in prose or on the timeline rather than attached to a plotted datum. */
   ['mittr-metr', 'erdos1196-tao', 'hle', 'nolima', 'kimi-k3', 'gemma', 'olmo', 'cursor', 'gpt-oss',
-   'arc-3', 'arc-3-human',
+   'arc-3', 'arc-3-human', 'vals-swebench',
    D.CLOSERS.gapSrc, D.CLOSERS.doublingSrc].forEach(k => used.add(k));
   const unused = Object.keys(D.SOURCES).filter(k => !used.has(k));
   ok('No source is declared and never used', unused.length === 0, unused.join(', '));
@@ -493,6 +495,22 @@ ok('Every cut entry gives a reason', D.CUT.every(c => c.why && c.why.length > 20
   ok('The timeline is majority downloadable models', open.length > D.MODELS.length / 2,
      open.length + ' of ' + D.MODELS.length);
   ok('The timeline carries at least 100 releases', D.MODELS.length >= 100, String(D.MODELS.length));
+
+  /* The release count is quoted in five documents and was pinned only as a
+     floor, so the timeline could grow and every one of them could go stale
+     without a single check going red. It did. Pin the exact number. */
+  {
+    const n = String(D.MODELS.length);
+    /* 'presenter-guide.html' is the shipped copy the PDF is rendered from.
+       Checking only src/ is what let the printed guide keep a stale count. */
+    for (const f of ['src/template.html', 'src/presenter-guide.html',
+                     'presenter-guide.html', 'README.md', 'demo.json']) {
+      const txt = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
+      ok(`${f} quotes the real release count (${n})`,
+         txt.includes(n + ' model releases') || txt.includes(n + ' releases arrive'),
+         'does not contain the count ' + n);
+    }
+  }
 
   const named = s => D.MODELS.some(m => new RegExp(s, 'i').test(m.name));
   const wanted = ['Gemma', 'MedGemma', 'Phi', 'OLMo', 'Nemotron', 'Granite', 'Falcon',
