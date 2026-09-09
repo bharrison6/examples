@@ -89,6 +89,21 @@ Lessons from the ion-flight and takeoff lanes (2026-09-09):
   route is headless Chrome over the DevTools protocol with Node builtins (no installs), as the
   inhibitor-investigation and takeoff lanes did.
 
+From the bridge-works lane (2026-09-09):
+
+- **The shared `.bh-credit` attribution pill is clipped off-screen at 390px** (measured
+  `left = -110px` on a 492px pill) in every demo that carries it: fuel-golf, glass-box,
+  ladder-lab, should-have-known-that, takeoff, the-stranger, topping-out, bridge-works,
+  zero-to-unbeatable. If your demo has it, add `max-width:calc(100vw - 16px); white-space:normal`
+  to the pill's rule and confirm "Bryant Harrison" is readable at 390px before setting
+  `attribution_visible` and `mobile` to `true`. The orchestrator patches the already-committed
+  bridge-works and takeoff copies; Astra owns zero-to-unbeatable's.
+- **Single-sourcing a stale guide exposes stale prose**: if the guide names controls that no
+  longer exist (old labels, removed modes), correct them to the real labels in the source as
+  back-propagation. Report what you changed.
+- **A guide that has outgrown its PDF** may legitimately become two pages; do not shrink type
+  below readability to force one page. Correct the README if it promised one page.
+
 ## Folded in (operator answers of 2026-09-09, before the pass started)
 
 - **Retitle, Path A** ([[demo-titles-descriptive-retitle]], [[demo-titles-retitle]]): each lane
