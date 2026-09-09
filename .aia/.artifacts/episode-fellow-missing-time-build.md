@@ -1,6 +1,40 @@
 ---
 id: fellow-missing-time-build
 artifact_kind: memory
+memory_class: episodic
+lifecycle: complete
+schema_version: 2
+title: Build Missing Time for AI Fellows
+created: 2026-09-08T21:10:00Z
+updated: 2026-09-09T02:59:00Z
+author: codex
+model: gpt-6-astra
+model_basis: confirmed
+status: active
+scope: examples
+source_basis: conversation
+sensitivity: normal
+tags: [ai-fellows, demos, geology, preservation]
+source: .aia/.artifacts/task-fellow-missing-time-build.md
+---
+
+# Completion — 2026-09-09
+
+Missing Time is complete in its own folder, with scientific review, interactive
+browser checks and an inspected guide in [[fellow-build-verification]]. The
+previously pending launcher/tour integration is complete: redesign commit
+`0d7c145` includes the card before What the Survey Missed, and local main contains
+it at `aeff5ec`. [[launcher-tictactoe-verification]] records the hub checks. The
+order follows the final compact discipline grid. No push by this Codex lane.
+Direct-file/disconnected-network browser verification remains unverified.
+
+# Original task history
+
+The following brief and checkpoints are historical; the completion above is current.
+
+```yaml
+id: fellow-missing-time-build
+artifact_kind: memory
 memory_class: prospective
 prospective_kind: task
 schema_version: 2
@@ -18,7 +52,8 @@ source_basis: conversation
 sensitivity: normal
 sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-08T21:08:00Z
 tags: [ai-fellows, demos, geology, preservation]
----
+```
+
 # Missing Time
 
 ## Standalone delivery — 2026-09-08, 22:39 UTC

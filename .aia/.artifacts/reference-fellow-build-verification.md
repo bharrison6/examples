@@ -4,7 +4,7 @@ artifact_kind: reference
 schema_version: 2
 title: AI Fellow demo build evidence and shared-repo handoff
 created: 2026-09-08T20:04:00Z
-updated: 2026-09-08T22:39:00Z
+updated: 2026-09-09T02:59:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -17,6 +17,16 @@ tags: [ai-fellows, verification, coordination]
 ---
 
 # AI Fellow demo verification
+
+## All five integrated — 2026-09-09, 02:59 UTC
+
+The final two cards and tour entries are included in launcher redesign `0d7c145`,
+integrated into local main at `aeff5ec` alongside the concurrent wavelet guide
+correction. [[launcher-tictactoe-verification]] records the generated hub checks.
+[[fellow-occupancy-build]] and [[fellow-missing-time-build]] are now completed
+episodes with their original briefs preserved. Earlier pending-integration notes
+below are historical. No push was performed by this Codex lane; offline-browser
+and educational-effectiveness limits remain as recorded.
 
 ## Final two standalone deliveries — 2026-09-08, 22:39 UTC
 

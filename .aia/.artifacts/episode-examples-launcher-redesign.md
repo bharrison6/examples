@@ -1,6 +1,45 @@
 ---
 id: examples-launcher-redesign
 artifact_kind: memory
+memory_class: episodic
+lifecycle: complete
+schema_version: 2
+title: Redesign the examples launcher and consolidate the tic-tac-toe teaching sequence
+created: 2026-09-09T02:07:00Z
+updated: 2026-09-09T02:59:00Z
+author: codex
+model: gpt-6-astra
+model_basis: confirmed
+status: active
+scope: examples
+source_basis: conversation
+sensitivity: normal
+tags: [launcher, design, teaching, tic-tac-toe, neural-networks]
+source: .aia/.artifacts/task-examples-launcher-redesign.md
+---
+
+# Completion — 2026-09-09
+
+The redesigned launcher and three real tic-tac-toe tabs are committed at `0d7c145`
+and integrated into local main at `aeff5ec`, preserving concurrent `8bd3d1f`.
+Independent Astra review, model/lifecycle/hub tests, Chrome responsive workflows
+and the two-page guide are recorded in [[launcher-tictactoe-verification]].
+All 16 tour cards are present, including the final two Fellow builds.
+
+The pre-existing uncommitted tic-tac-toe PDF is preserved in named stash
+`efb0bf7f6e39c8861f8e9c62559fec88afaa8167` ("Preserve pre-redesign uncommitted
+tic-tac-toe PDF 2026-09-09"); its blob remains
+`5f0220eaf38913a30f51f85a9f6ad4495ed60eca`. The source-derived replacement has
+blob `5fa928ed989a6e3022e47d4c5174770b0c70d897`. Other dirty main files were
+preserved. No push. This completes the authorized local redesign.
+
+# Original task history
+
+The following brief and checkpoints are historical; the completion above is current.
+
+```yaml
+id: examples-launcher-redesign
+artifact_kind: memory
 memory_class: prospective
 prospective_kind: task
 schema_version: 2
@@ -16,7 +55,8 @@ source_basis: conversation
 sensitivity: normal
 sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T02:02:00Z
 tags: [launcher, design, teaching, tic-tac-toe, neural-networks]
----
+```
+
 # Expected outcome
 
 A polished, mobile-friendly launcher with less visual and verbal clutter, clear
