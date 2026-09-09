@@ -1,6 +1,7 @@
-# ⛳ Fuel Golf — Murray State Racers Flight Lab
+# ⛳ Orbital Mechanics Golf — Murray State Racers Flight Lab
 
-A browser-based orbital mechanics game for physics class. Students complete missions
+A browser-based orbital mechanics game for physics class. (Shipped from the
+`fuel-golf/` folder, and known as *Fuel Golf* before it was renamed.) Students complete missions
 using the least Δv — and discover the **Oberth effect** because the physics makes it
 true, not because the game says so.
 
@@ -12,7 +13,8 @@ brand guidelines specify — for genuine failure states (crashes, fall-back traj
 
 Open `index.html` in any browser. Fully offline, no install, mouse + touch
 (Chromebook-friendly, with a phone layout). Teachers: open `teacher-guide.html` for a
-printable one-page session plan (also included pre-rendered as `teacher-guide.pdf`).
+printable two-page session plan (also included pre-rendered as `teacher-guide.pdf`).
+It is the same document the in-app **Presenter Notes** show — see below.
 
 ### Controls
 
@@ -20,8 +22,8 @@ printable one-page session plan (also included pre-rendered as `teacher-guide.pd
 |---|---|
 | <kbd>B</kbd> burn planner · <kbd>Enter</kbd> commit · <kbd>Esc</kbd> cancel | <kbd>Z</kbd> undo burn · <kbd>X</kbd> cut engine |
 | <kbd>Space</kbd> pause · <kbd>,</kbd> <kbd>.</kbd> warp down/up | <kbd>P</kbd> / <kbd>A</kbd> warp to periapsis / apoapsis |
-| <kbd>H</kbd> physics HUD · <kbd>M</kbd> mission briefing | <kbd>F</kbd> follow camera · <kbd>R</kbd> restart |
-| <kbd>?</kbd> how to play · <kbd>N</kbd> presenter's notes | <kbd>Esc</kbd> or a tap outside closes any popup |
+| <kbd>H</kbd> physics HUD · <kbd>M</kbd> mission briefing | <kbd>F</kbd> follow camera · <kbd>R</kbd> restart level |
+| <kbd>?</kbd> Guide · <kbd>N</kbd> Presenter Notes | <kbd>Esc</kbd> or a tap outside closes any popup |
 
 Drag the map to pan (or to aim a free-angle burn while the planner is open); scroll or
 pinch to zoom.
@@ -61,10 +63,10 @@ pinch to zoom.
 
 ## Play-experience features
 
-- **How to play, always one tap away** — the how-to popup opens on every load and
+- **Guide, always one tap away** — the Guide overlay opens on every load and
   covers the Δv budget, aiming, and committing a burn. Dismiss it by tapping outside,
-  pressing <kbd>Esc</kbd>, or hitting **Fly**; bring it back any time with **❓** in the
-  top bar (or <kbd>?</kbd>). The dialogs that ask for a decision — the crash screen and
+  pressing <kbd>Esc</kbd>, or hitting **Fly**; bring it back any time with **❓ Guide** in
+  the top bar (or <kbd>?</kbd>). The dialogs that ask for a decision — the crash screen and
   the debrief — deliberately ignore stray taps.
 - **↶ Undo burn** — every committed burn snapshots the flight state, so a misjudged or
   fatal burn rewinds instead of costing a level restart. Offered directly on the crash
@@ -86,8 +88,9 @@ pinch to zoom.
 ## Verifying the physics
 
 ```
-node test-physics.js   # 33 checks against the shipped physics + level definitions
-node ui-smoke.js       # headless UI checks, including keyboard cards and modal focus
+node test-physics.js              # 33 checks against the shipped physics + level definitions
+node tools/guide-sync.js --check  # fail if the in-app notes have drifted from the guide
+node ui-smoke.js                  # headless UI checks, including keyboard cards and modal focus
 ```
 
 The game itself has no build step, package install, or network dependency. The optional
@@ -116,12 +119,28 @@ Toggleable physics HUD (speed, altitude, specific orbital energy, and a live
 "energy gained per unit Δv" readout — the Oberth multiplier), per-level local
 leaderboards, and a settings menu (⚙) holding the instructor controls.
 
-**Presentation mode** (⚙ Settings) scales the UI for the back row and adds a 🎤 Notes
-button to the top bar. It opens the **presenter's notes** — the teacher guide distilled
-to one podium-sized screen: the 20-minute run of show, the one idea (Δ KE = v·Δv + ½Δv²),
-the three misconceptions to catch, the pars and the escape-cost gap, and questions to ask
-the room. Reachable from ⚙ Settings or <kbd>N</kbd> at any time, and it links through to
-the full printable guide. Leaderboard and mission-progress resets live in ⚙ Settings too.
+**⚙ Settings** carries the three presenter controls: **Open Presenter Notes**,
+**Presentation mode** and **Reset**. Presentation mode scales the UI for the back row and
+adds a 🎤 Notes button to the top bar. **Reset** returns the whole demo to a fresh load —
+Level 1, an empty Δv tally, saved scores, name and mission badges cleared, every panel
+closed — while deliberately leaving Presentation mode as you set it, since that is a
+display preference rather than demo state. Narrower controls sit alongside it:
+*Clear scores* and *Clear badges*.
+
+**The Presenter Notes are the printable guide.** What ⚙ Settings → **Open Presenter
+Notes** (or <kbd>N</kbd> while presenting) puts on screen is generated from
+`teacher-guide.html`, the same file `teacher-guide.pdf` is rendered from — one
+document, not a second copy that drifts. Nothing is fetched to show it: the guide is
+injected into `index.html` ahead of time.
+
+```
+node tools/guide-sync.js          # inject the guide into index.html
+node tools/guide-sync.js --check  # fail if the two have drifted, write nothing
+node tools/pdf.mjs                # re-render teacher-guide.pdf from the same source
+```
+
+Editing the notes block inside `index.html` is a fork, so `--check` exists to catch
+it. Edit `teacher-guide.html`, then re-run both scripts.
 
 The post-level debrief includes a **"show the math" proof panel**: every burn's
 recorded before-state, the predicted Δε = v⃗·Δv⃗ + ½Δv² evaluated with the
