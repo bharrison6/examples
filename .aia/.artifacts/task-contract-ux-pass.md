@@ -117,6 +117,15 @@ From the missing-time and what-the-survey-missed lanes (2026-09-09):
   stylesheet and `.guide-scope` body straight from the root `teacher-guide.html` gives one file,
   no copy, and the same `--check` (missing-time's `build.js` is the worked example).
 
+From the fuel-golf and topping-out lanes (2026-09-09):
+
+- **Any marker you document in a comment will be matched inside that comment first**, including
+  `<style id="guide-css">`. Mask every `<!-- -->` region to same-length spaces before searching,
+  and assert each marker occurs exactly once in the masked text.
+- **After the pill fix, re-measure what the wrapped pill lands on.** At 320 to 480px it wraps to
+  two lines (about 34px) and can cover a bottom control bar or the notes overlay's foot; raise
+  the reserved height or lift the pill at the narrow breakpoint and re-measure at several widths.
+
 ## Orchestrator sweep after batch 3 (not lane work)
 
 - `inhibitor-investigation/build.js` still locates the guide stylesheet with `indexOf('<style>')`
