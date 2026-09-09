@@ -1,18 +1,21 @@
 ---
 id: demo-titles-descriptive-retitle
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: decision
+memory_class: episodic
+episodic_kind: decision
+lifecycle: complete
 schema_version: 2
 title: "Retitle the cryptic demos: display titles only, or folder slugs too?"
 created: 2026-09-09T03:24:00Z
-updated: 2026-09-09T03:24:00Z
+updated: 2026-09-09T03:40:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: open
+status: active
+acted_on: "Folded into [[contract-ux-pass]] lanes as [[demo-titles-retitle]] (executing) on 2026-09-09"
+applied_in: [demo-titles-retitle, contract-ux-pass, event:441fc3445f164c2886e7ec24fadccb57]
 question: "Thirteen demos have evocative titles that do not say what they are. Should they be retitled in the descriptive layer only (folder slugs and public URLs unchanged), or should the folders be renamed as well?"
-position: "Path A: change display titles only. Slugs stay, the 2026-08-07 never-rename rule stands, and the old title survives as the tagline where it is good."
+position: "Path A: retitle in demo.json, each demo's header, tab, guide, PDF and README; folder slugs and URLs unchanged (recommended)"
 alternatives:
   - "Path A: retitle in demo.json, each demo's header, tab, guide, PDF and README; folder slugs and URLs unchanged (recommended)"
   - "Path B: retitle AND rename folders to descriptive slugs, leaving a redirect stub page at each old slug; supersedes the 2026-08-07 never-rename ruling"
@@ -31,6 +34,10 @@ source_basis: authored
 confidence: 85
 human_edited: false
 sensitivity: normal
+decided_by: human
+decided_via: console
+answer_event: 441fc3445f164c2886e7ec24fadccb57
+load_bearing: false
 ---
 
 # Retitling the cryptic demos

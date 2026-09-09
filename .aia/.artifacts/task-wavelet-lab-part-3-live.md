@@ -10,10 +10,10 @@ updated: 2026-09-09T03:24:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: proposed
-fires_on: "[[wavelet-lab-part-3-rework]] is answered"
-blocked_by: "Replace, remove, or keep is the operator's choice"
-snooze_until: 2026-09-16
+status: executing
+sanctioned_by: 16a888bbe48a4407aaf594599ad81d9a
+decided_choice: "Replace with the live predict-your-next-toggle mechanic and a Portrait preset (operator, console, 2026-09-09)"
+folded_into: contract-ux-pass
 priority: normal
 scope: examples
 source_basis: conversation

@@ -1,16 +1,22 @@
 ---
 id: contract-pass-fanout-width
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: decision
+memory_class: episodic
+episodic_kind: decision
+lifecycle: complete
 schema_version: 2
 title: "Approve the width of the per-demo builder fan-out for the contract UX pass"
 created: 2026-09-09T03:24:00Z
-updated: 2026-09-09T03:24:00Z
+updated: 2026-09-09T03:40:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: open
+status: active
+decided_by: human
+decided_via: prose
+answer: "Batches of five parallel builders; verify and commit each batch before launching the next"
+decided_at: 2026-09-09T03:33:00Z
+applied_in: [contract-ux-pass]
 question: "The contract UX pass needs one builder agent per demo folder (15 lanes now, zero-to-unbeatable later). How wide may the fan-out run?"
 position: "Batches of five parallel builders, opus tier, orchestrator verifies and commits each lane before the next batch starts."
 alternatives:
