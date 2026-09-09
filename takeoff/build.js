@@ -23,7 +23,7 @@ const OUT = __dirname;
 const CHECK = process.argv.includes('--check');
 
 const CSS_FILES = ['styles.css'];
-const JS_FILES  = ['data.js', 'engine.js', 'chart.js', 'timeline.js', 'app.js'];
+const JS_FILES  = ['data.js', 'engine.js', 'validation.js', 'chart.js', 'timeline.js', 'app.js'];
 
 const read = f => fs.readFileSync(path.join(SRC, f), 'utf8');
 
