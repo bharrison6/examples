@@ -6,12 +6,19 @@ function selectedEra(state) {
   return state.eras[state.era];
 }
 
-function canOpenLearnedReport(state) {
-  if (state.mode === 'rules' || state.mode === 'net') return false;
+function selectedEraComparison(state) {
+  const era = selectedEra(state);
+  return {
+    era: era || null,
+    before: era && era.n > 0 ? (state.eras[era.n - 1] || null) : null
+  };
+}
+
+function canOpenUltimateLearnedReport(state) {
+  if (state.mode !== 'ult') return false;
   if (state.lastLearned === null || state.lastLearned !== state.era) return false;
   const era = selectedEra(state);
-  if (!era) return false;
-  return state.mode === 'ult' ? era.kind === 'ult' : era.kind !== 'ult';
+  return !!era && era.kind === 'ult';
 }
 
 function canShowMoveScores(state) {
@@ -19,7 +26,7 @@ function canShowMoveScores(state) {
   return state.mode !== 'net' || !!(state.neural && state.neural.model);
 }
 
-const api = { selectedEra, canOpenLearnedReport, canShowMoveScores };
+const api = { selectedEra, selectedEraComparison, canOpenUltimateLearnedReport, canShowMoveScores };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.UI_STATE = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);

@@ -149,7 +149,7 @@ body.presenter #app { width: 100%; }
 .header-actions { display: flex; gap: calc(.45 * var(--u)); }
 .icon-label { font-size: calc(.72 * var(--u)); font-weight: 800; }
 .tab-short { display: none; }
-#stage-nav { background: var(--paper); border-top: 1px solid rgba(255,255,255,.12); }
+#stage-nav { background: var(--paper); border-top: 1px solid var(--paper-line); }
 #mode-seg {
   width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: calc(.45 * var(--u)) 0;
   gap: calc(.5 * var(--u));
@@ -162,9 +162,12 @@ body.presenter #app { width: 100%; }
 #mode-seg button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
 #mode-seg .tab-code { color: #006b9a; font-weight: 900; }
 #mode-seg button.on .tab-code { color: var(--gold); }
-#lens-nav { grid-column: 1 / -1; display: flex; justify-content: center; }
+#lens-nav {
+  display: flex; justify-content: center; padding: calc(.38 * var(--u)) 20px;
+  background: var(--paper); border-top: 1px solid rgba(255,255,255,.12);
+}
 #lens-seg {
-  width: min(440px, 100%); margin: 0; padding: 3px; gap: 3px;
+  width: min(520px, 100%); margin: 0; padding: 3px; gap: 3px;
   border: 1px solid var(--paper-line); border-radius: 10px; background: var(--paper-2);
 }
 #lens-seg button {
@@ -397,6 +400,22 @@ select {
 #train-stats .st .k { display: block; font-size: calc(.5 * var(--u)); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 #btn-learned { width: 100%; margin-top: calc(.5 * var(--u)); flex: none; }
 
+#learned-report { padding: calc(.8 * var(--u)); overflow: hidden; }
+.learned-inline-head { margin-bottom: calc(.65 * var(--u)); }
+.learned-inline-head h2 {
+  margin: calc(.12 * var(--u)) 0 calc(.18 * var(--u)); color: var(--ink);
+  font: 700 calc(1.18 * var(--u))/1.25 Georgia, "Times New Roman", serif;
+}
+#learned-inline-sub { color: var(--ink-2); font-size: calc(.7 * var(--u)); line-height: 1.45; }
+#learned-inline-body .headline { margin-bottom: calc(.6 * var(--u)); }
+#learned-inline-body .lc:last-child { margin-bottom: 0; }
+#learned-inline-body .lc-grid { max-width: min(100%, calc(20 * var(--u))); }
+#learned-inline-body .lc-cell .lv,
+#learned-inline-body .lc-cell .value-pair { font-size: max(12px, calc(.75 * var(--u))); }
+#learned-inline-body .lc-cell .value-pair .arrow { font-size: max(10px, calc(.62 * var(--u))); }
+#learned-inline-body .lc .ask,
+#learned-inline-body .lc .delta { font-size: max(13px, calc(.81 * var(--u))); }
+
 /* ------------------------------------------------------ network view */
 #network-view { padding: calc(.8 * var(--u)); overflow: hidden; }
 .network-view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(.5 * var(--u)); }
@@ -607,7 +626,16 @@ input[type=text]::placeholder { color: var(--ink-3); }
 .lc-cell.mk1 { color: var(--you); background: var(--panel-2); }
 .lc-cell.mk2 { color: var(--ai); background: var(--panel-2); }
 .lc-cell .lv { font-size: calc(.68 * var(--u)); font-variant-numeric: tabular-nums; font-weight: 800; }
-.lc-cell .dl { position: absolute; bottom: 2px; left: 0; right: 0; font-size: calc(.48 * var(--u)); font-weight: 800; }
+.lc-cell .value-pair { display: grid; gap: 1px; font-size: calc(.65 * var(--u)); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.lc-cell .value-pair .before { opacity: .78; text-decoration: line-through; text-decoration-thickness: 1px; }
+.lc-cell .value-pair .arrow { font-size: calc(.52 * var(--u)); opacity: .72; }
+.lc-cell .value-pair .after { font-weight: 900; }
+.lc-cell .value-pair .cell-delta { font-size: .86em; opacity: .85; }
+.value-legend {
+  margin: 0 auto calc(.35 * var(--u)); color: var(--ink-2); text-align: center;
+  font-size: max(12px, calc(.68 * var(--u))); font-variant-numeric: tabular-nums;
+}
+.lc-cell .dl { position: absolute; bottom: 2px; left: 0; right: 0; font-size: calc(.42 * var(--u)); font-weight: 800; }
 .lc-cell.up   { box-shadow: 0 0 0 2px var(--gold) inset; }
 .lc-cell.down { box-shadow: 0 0 0 2px var(--warm) inset; }
 .lc .delta { margin-top: calc(.55 * var(--u)); font-size: calc(.75 * var(--u)); line-height: 1.5; }
@@ -1155,6 +1183,12 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
   </header>
+  <nav id="lens-nav" aria-label="Explore models or learning methods">
+    <div class="seg" id="lens-seg" role="tablist" aria-label="Explore models or learning methods">
+      <button data-view="action" class="on" role="tab" aria-selected="true" aria-controls="stage-nav">Model types</button>
+      <button data-view="learn" role="tab" aria-selected="false" aria-controls="learning-overview">How they learn</button>
+    </div>
+  </nav>
   <nav id="stage-nav" aria-label="Strategy model examples">
     <div class="seg" id="mode-seg" role="tablist" aria-label="Strategy model examples">
       <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="stage-intro" aria-label="1a Symbolic AI, also called GOFAI"><span class="tab-code">1a</span><span class="tab-long">Symbolic AI (GOFAI)</span><span class="tab-short"><span>Symbolic AI</span><small>GOFAI</small></span></button>
@@ -1166,13 +1200,6 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
   </div>
 
   <main id="main">
-
-    <nav id="lens-nav" aria-label="Lesson view">
-      <div class="seg" id="lens-seg" role="tablist" aria-label="Lesson view">
-        <button data-view="action" class="on" role="tab" aria-selected="true" aria-controls="stage-intro">Model in action</button>
-        <button data-view="learn" role="tab" aria-selected="false" aria-controls="learning-overview">How they learn</button>
-      </div>
-    </nav>
 
     <section id="stage-intro" aria-labelledby="stage-title">
       <div class="intro-copy">
@@ -1318,6 +1345,15 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       <button class="btn ghost sm" id="btn-learned" hidden>What it learned last time</button>
     </section>
 
+    <section class="panel" id="learned-report" hidden aria-labelledby="learned-inline-title">
+      <div class="learned-inline-head">
+        <p class="panel-kicker">Selected-era learning record</p>
+        <h2 id="learned-inline-title">Era 0 — untrained baseline</h2>
+        <p id="learned-inline-sub"></p>
+      </div>
+      <div id="learned-inline-body"></div>
+    </section>
+
     <section class="panel" id="network-view" hidden aria-label="Current neural network weights"></section>
 
     </div><!-- /col-b -->
@@ -1364,10 +1400,10 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
-      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? The A–D row compares model representations. <b>How they learn</b> separately compares learning methods; the two axes can be combined.</p>
+      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? Start with <b>Model types</b>, then choose 1a–1d to compare representations. Switch to <b>How they learn</b> for learning methods; switching views keeps the selected model, game, and training state in place.</p>
       <ol class="howto-steps">
         <li><b>1a · Symbolic AI (GOFAI).</b> Play once and watch the highlighted rule explain each reply. Compare <b>First 2</b> with <b>All 8</b>. A person supplied every move priority; playing more games cannot change them.</li>
-        <li><b>1b · Value table.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the new era with Era 0. Reinforcement learning updates a stored value for each position from game outcomes.</li>
+        <li><b>1b · Value table.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the selected era with its predecessor in the panel below the training controls. Changing the era updates the panel. Reinforcement learning updates a stored value for each position from game outcomes.</li>
         <li><b>1c · Neural Network.</b> Choose <b>Create learning examples</b>, then train the network. Inspect its real weights and compare error on practiced and <b>held-out positions</b>—positions kept out of training.</li>
         <li><b>1d · Other model types.</b> Scan six other model families, then use <b>How they learn</b> to compare five common learning setups across models.</li>
       </ol>
@@ -1440,7 +1476,7 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 
 <section>
 <h2>The question for all 20 minutes</h2>
-<p><b>How is a strategy represented, and how did it get there?</b> A–C compare written rules, a value table, and shared neural-network weights on one game. D introduces other model families. The separate <b>How they learn</b> tab explains training methods.</p>
+<p><b>How is a strategy represented, and how did it get there?</b> Choose <b>Model types</b> to reveal A–D. A–C compare written rules, a value table, and shared neural-network weights on one game; D introduces other families. The top-level <b>How they learn</b> tab explains training methods.</p>
 <p class="say">“A model is how the strategy is represented. A learning method is how its adjustable parts change.”</p>
 </section>
 
@@ -1467,8 +1503,8 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 <h3>Activity</h3>
 <ol>
 <li>Open <b>1b Value table</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
-<li>Play one short game, then run a visible training burst. Select an earlier and a later era to compare their move scores.</li>
-<li>Use <b>Details</b> to inspect evidence for the selected era, then return to play.</li>
+<li>Play one short game, then run a training burst. Read the change report below the training controls for recorded scores before and after that burst.</li>
+<li>Select earlier and later eras: the report compares each selected era with its predecessor. Era 0 shows the untrained baseline. <b>Details</b> supplies the policy-check evidence.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>The model is a table; the learning method is reinforcement learning. Game outcomes and estimates of later replies update separate position scores. Practice can therefore change its choices.</p>
@@ -4317,12 +4353,19 @@ function selectedEra(state) {
   return state.eras[state.era];
 }
 
-function canOpenLearnedReport(state) {
-  if (state.mode === 'rules' || state.mode === 'net') return false;
+function selectedEraComparison(state) {
+  const era = selectedEra(state);
+  return {
+    era: era || null,
+    before: era && era.n > 0 ? (state.eras[era.n - 1] || null) : null
+  };
+}
+
+function canOpenUltimateLearnedReport(state) {
+  if (state.mode !== 'ult') return false;
   if (state.lastLearned === null || state.lastLearned !== state.era) return false;
   const era = selectedEra(state);
-  if (!era) return false;
-  return state.mode === 'ult' ? era.kind === 'ult' : era.kind !== 'ult';
+  return !!era && era.kind === 'ult';
 }
 
 function canShowMoveScores(state) {
@@ -4330,7 +4373,7 @@ function canShowMoveScores(state) {
   return state.mode !== 'net' || !!(state.neural && state.neural.model);
 }
 
-const api = { selectedEra, canOpenLearnedReport, canShowMoveScores };
+const api = { selectedEra, selectedEraComparison, canOpenUltimateLearnedReport, canShowMoveScores };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.UI_STATE = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
@@ -4650,8 +4693,8 @@ function renderStageIntro() {
   $('#details-sub').textContent = c.details;
 }
 
-function reportAvailable() {
-  return UI_STATE.canOpenLearnedReport(S);
+function ultimateReportAvailable() {
+  return UI_STATE.canOpenUltimateLearnedReport(S);
 }
 
 const fmt = n => n.toLocaleString('en-US');
@@ -5761,9 +5804,7 @@ async function train() {
   S.training = false;
   renderEraSelect(); renderTrain(); renderBanner();
   newGame(); renderScore();
-  buildLearned(era, S.eras[era.n - 1]);
-  $('#btn-learned').hidden = false;
-  openSheet('learned');
+  renderLearnedPanel();
 }
 
 /* The neural tab has two visible phases. Preparation is ordinary seeded
@@ -5941,10 +5982,13 @@ function landmarkCard(L, now, before) {
     }
     const v = nowBy[i], b = beforeBy[i];
     const d = b ? v.value - b.value : 0;
-    const cls = Math.abs(d) < 0.02 ? '' : (d > 0 ? ' up' : ' down');
+    const cls = !b || Math.abs(d) < 0.02 ? '' : (d > 0 ? ' up' : ' down');
     grid += `<div class="lc-cell${cls}" style="background:${heat(v.value)};color:${heatInk(v.value)}">` +
-      `<span class="lv">${sgn(v.value)}</span>` +
-      (Math.abs(d) >= 0.02 ? `<span class="dl">${sgn(d)}</span>` : '') +
+      (b
+        ? `<span class="value-pair"><span class="before">${sgn(b.value)}</span>` +
+          `<span class="arrow" aria-hidden="true">↓</span><span class="after">${sgn(v.value)}</span>` +
+          `<span class="cell-delta">Δ ${sgn(d)}</span></span>`
+        : `<span class="lv">${sgn(v.value)}</span>`) +
       `</div>`;
   }
 
@@ -5953,11 +5997,17 @@ function landmarkCard(L, now, before) {
   if (L.key === null) {
     const spread = Math.max.apply(null, now.values.map(v => v.value)) -
                    Math.min.apply(null, now.values.map(v => v.value));
-    line = spread < 0.05
-      ? `<span class="flat">Every opening square scores the same.</span> That is not a gap in its ` +
-        `knowledge — it is the knowledge. Played properly, tic-tac-toe is a draw from any first move.`
-      : `It still rates some openings above others. Give it more training and this row will flatten out, ` +
-        `because against a good opponent no first move is better than any other.`;
+    if (!before) {
+      line = `<span class="flat">Untrained baseline.</span> Every legal opening has its initialized ` +
+        `value of +0.00. The tie shows that no preference has been learned yet.`;
+    } else {
+      const beforeSpread = Math.max.apply(null, before.values.map(v => v.value)) -
+                           Math.min.apply(null, before.values.map(v => v.value));
+      line = `<span class="flat">Opening-score spread: ${beforeSpread.toFixed(2)} before, ` +
+        `${spread.toFixed(2)} now.</span> ` + (spread < 0.05
+          ? `Its recorded opening preferences are now nearly tied.`
+          : `It still rates some openings above others; later training may flatten this row.`);
+    }
   } else {
     const keys = [L.key].concat(L.keyAlso || []);
     /* "it knows this" means EVERY square it might now pick is a right one.
@@ -5976,7 +6026,10 @@ function landmarkCard(L, now, before) {
        losses. Early on nothing is negative yet, and "the squares that
        lose have fallen to +0.00" is nonsense on a projector. */
     const punished = worst.value < -0.05;
-    if (rightNow && !rightBefore) {
+    if (!before) {
+      line = `<span class="flat">Untrained baseline.</span> ${cap(L.learned)} is not distinguished ` +
+             `yet; every legal square shown starts at +0.00.`;
+    } else if (rightNow && !rightBefore) {
       line = `<span class="up">It learned this one.</span> ${cap(L.learned)}: ` +
              `was ${kb ? sgn(kb.value) : '+0.00'}, now ${sgn(kv.value)}.` +
              (punished ? ` The squares that lose have fallen to ${sgn(worst.value)}.`
@@ -5992,43 +6045,56 @@ function landmarkCard(L, now, before) {
   }
 
   return `<div class="lc"><h3>${L.title}</h3><div class="ask">${L.ask}</div>` +
+         (before ? `<div class="value-legend">Each open square: before ↓ now · Δ change</div>` :
+           `<div class="value-legend">Each open square: initialized value</div>`) +
          `<div class="lc-grid">${grid}</div><div class="delta">${line}</div></div>`;
 }
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
 
 function buildLearned(era, before) {
-  $('#learned-title').textContent = 'Era ' + era.n + ' — what changed';
-  $('#learned-sub').textContent =
-    fmt(era.games) + ' training games · exploration ' + era.eps.toFixed(2);
+  const baseline = !before;
+  const gamesAdded = baseline ? 0 : era.games - before.games;
+  const changed = baseline ? null
+    : (era.changed === null ? policyDiff(before.agent, era.agent) : era.changed);
+  $('#learned-inline-title').textContent = baseline
+    ? 'Era 0 · untrained baseline'
+    : `Era ${era.n} · changes from Era ${before.n}`;
+  $('#learned-inline-sub').textContent = baseline
+    ? '0 training games · every recorded table value starts at +0.00'
+    : `${fmt(gamesAdded)} new value-table games · ${fmt(era.games)} cumulative · exploration ${before.eps.toFixed(2)} → ${era.eps.toFixed(2)}`;
 
   const mix = era.mix
     ? `${fmt(era.mix.selfPlay)} against itself and ${fmt(era.mix.vsRandom)} against a random mover`
     : '';
-  const head =
-    `<div class="headline">` +
-    `It played <b>${mix}</b>. Its table now holds <b>${fmt(era.seen)}</b> positions ` +
-    (era.changed !== null
-      ? `and it would now play <b>${fmt(era.changed)}</b> of them differently than it did before this burst.`
-      : `.`) +
-    (era.verified.safe
-      ? ` <b>Every reachable line has been searched and it does not lose in any of them.</b>`
-      : ` A full search still finds lines where it loses.`) +
-    `</div>`;
+  const head = baseline
+    ? `<div class="headline"><b>This is the recorded starting snapshot.</b> The table has seen ` +
+      `<b>${fmt(era.seen)} positions</b> and all legal moves tie at +0.00. Those equal values are initialization, ` +
+      `not learned knowledge. A full policy search finds losing lines.</div>`
+    : `<div class="headline">` + (era.mix
+      ? `It played <b>${mix}</b> in this burst. `
+      : `No value-table games were played in this era; it records optional Ultimate training while retaining the table snapshot. `) +
+      `Recorded positions: ` +
+      `<b>${fmt(before.seen)} → ${fmt(era.seen)}</b>. Its preferred-move set changed on ` +
+      `<b>${fmt(changed)} of ${fmt(OG.OPEN_POSITIONS.length)} checked open positions</b> compared ` +
+      `with Era ${before.n}. ` + (era.verified.safe
+        ? `<b>A full search now finds no losing line.</b>`
+        : `A full search still finds losing lines.`) + `</div>`;
 
   const cards = OG.LANDMARKS.map(L => landmarkCard(
     L,
     era.landmarks.find(x => x.id === L.id),
     before ? before.landmarks.find(x => x.id === L.id) : null)).join('');
 
-  const tail = era.changed !== null && era.changed < 40 && !era.verified.safe
-    ? `<div class="lc"><div class="delta"><span class="flat">Notice how little moved this time.</span> ` +
-      `Learning curves flatten. The first burst changes almost everything; later ones argue about a ` +
-      `handful of rare positions. Those rare positions are the difference between very good and perfect.</div></div>`
-    : '';
+  $('#learned-inline-body').innerHTML = head + cards;
+}
 
-  $('#learned-body').innerHTML = head + cards + tail;
-  S.lastLearned = era.n;
+function renderLearnedPanel() {
+  const panel = $('#learned-report');
+  if (S.mode !== 'one') { panel.hidden = true; return; }
+  const selected = UI_STATE.selectedEraComparison(S);
+  panel.hidden = !selected.era;
+  if (selected.era) buildLearned(selected.era, selected.before);
 }
 
 /* The ultimate card shows no landmark positions, because what matters
@@ -6457,11 +6523,27 @@ function applyView() {
     button.setAttribute('aria-selected', String(on));
     button.tabIndex = on ? 0 : -1;
   });
+  $('#stage-nav').hidden = learning;
   $('#stage-intro').hidden = learning || other;
   $('#col-a').hidden = learning || other;
   $('#col-b').hidden = learning || other;
   $('#other-models').hidden = learning || !other;
   $('#learning-overview').hidden = !learning;
+}
+
+function scrollToViewStart() {
+  const target = S.view === 'learn' ? $('#learning-overview')
+    : (isOther() ? $('#other-models') : $('#stage-intro'));
+  const top = target.getBoundingClientRect().top + window.scrollY - $('#brandbar').offsetHeight - 12;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+}
+
+function selectView(view) {
+  if (S.view === view) return false;
+  S.view = view;
+  applyView();
+  scrollToViewStart();
+  return true;
 }
 
 function applyMode() {
@@ -6491,8 +6573,8 @@ function applyMode() {
   $('#opp-row').hidden = rules || isNet() || other;
   $('#depth-seg').hidden = !rules;
   $('#btn-brain').hidden = rules || other;
-  $('#btn-learned').hidden = other || !reportAvailable();
-  if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
+  $('#btn-learned').hidden = !ult || !ultimateReportAvailable();
+  if (ultimateReportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here
     S.brain = false;
     $('#btn-brain').setAttribute('aria-pressed', 'false');
@@ -6505,7 +6587,7 @@ function applyMode() {
      no rule commentary to draw, so leaving step 1 for step 3 used to
      strand the panel on screen, and on a phone that pushed TRAIN below
      the fold. One place decides what a step shows; this is it. */
-  renderStageIntro(); renderEraSelect(); renderTrain(); renderRulesPanel(); renderRuleFired();
+  renderStageIntro(); renderEraSelect(); renderTrain(); renderLearnedPanel(); renderRulesPanel(); renderRuleFired();
   renderBanner(); renderScore(); applyView();
   if (other) renderNetworkInspector();
   else newGame();
@@ -6537,9 +6619,7 @@ $$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
 }));
 
 $$('#lens-seg button').forEach(btn => btn.addEventListener('click', () => {
-  if (S.view === btn.dataset.view) return;
-  S.view = btn.dataset.view;
-  applyView();
+  selectView(btn.dataset.view);
 }));
 $$('#lens-seg button').forEach(btn => btn.addEventListener('keydown', e => {
   const tabs = $$('#lens-seg button');
@@ -6551,9 +6631,8 @@ $$('#lens-seg button').forEach(btn => btn.addEventListener('keydown', e => {
   else if (e.key === 'End') next = tabs.length - 1;
   if (next === null) return;
   e.preventDefault();
-  S.view = tabs[next].dataset.view;
-  applyView();
-  tabs[next].focus();
+  selectView(tabs[next].dataset.view);
+  tabs[next].focus({ preventScroll: true });
 }));
 
 $('#btn-train').addEventListener('click', () => {
@@ -6573,15 +6652,15 @@ $('#btn-brain').addEventListener('click', () => {
 $('#era-select').addEventListener('change', e => {
   S.era = +e.target.value;
   $('#selftest-out').textContent = '';
-  renderScore(); renderTrain(); renderBanner();
-  $('#btn-learned').hidden = !reportAvailable();
-  if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
+  renderScore(); renderTrain(); renderLearnedPanel(); renderBanner();
+  $('#btn-learned').hidden = !isUlt() || !ultimateReportAvailable();
+  if (ultimateReportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   newGame();
 });
 $('#btn-learned').addEventListener('click', e => {
-  if (!reportAvailable()) return;
+  if (!ultimateReportAvailable()) return;
   const era = currentEra(), prev = S.eras[S.era - 1];
-  if (era.kind === 'ult') buildLearnedUlt(era, prev); else buildLearned(era, prev);
+  buildLearnedUlt(era, prev);
   openSheet('learned', e.currentTarget);
 });
 $('#btn-settings').addEventListener('click', e => openSheet('settings', e.currentTarget));
