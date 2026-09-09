@@ -1,6 +1,7 @@
-# Takeoff
+# The Pace of AI Progress
 
-*Formerly "Undershoot" — renamed for presentation; internal module names keep the old word.*
+*"Takeoff" in the hub and in this folder's name; "Undershoot" in the internal
+module names, which are the original working title and are staying.*
 
 **Draw the curve, then see it.** A single-file, offline demo about what has
 happened to machine capability since ChatGPT — built around the fact that almost
@@ -125,11 +126,13 @@ and that the doubling time stated in Act III matches the points plotted in Act I
 ```
 open index.html                 # that is the whole thing
 
-node build.js                   # rebuild index.html from src/
-node build.js --check           # verify generated index.html without writing
-node src/playtest.test.js       # 112 dataset and engine checks
+node build.js                   # rebuild index.html from src/ and re-ship the guide
+node build.js --check           # verify index.html, the shipped guide, the in-app
+                                #   notes and the PDF all still derive from
+                                #   src/presenter-guide.html; writes nothing
+node src/playtest.test.js       # 136 dataset, engine and demo-contract checks
 node src/playtest.test.js -v    # ...listing every one
-node tools/integration.mjs      # 192 browser checks, headless
+node tools/integration.mjs      # browser checks, headless (needs playwright)
 node tools/integration.mjs --headed   # watch it play itself
 node tools/pdf.mjs              # re-render the presenter guide PDF
 node tools/pdf.mjs --check      # verify the canonical guide/PDF without writing
@@ -167,9 +170,10 @@ actually on the timeline.
 
 ```
 index.html                        the demo — one file, everything inlined
-presenter-guide.html              printable 25-minute session plan
-Takeoff-Presenter-Guide.pdf    the same, as a PDF
-build.js                          concatenates src/ into index.html
+presenter-guide.html              printable 25-minute session plan (a copy — edit src/)
+Takeoff-Presenter-Guide.pdf       the same, as a PDF (rendered from that copy)
+build.js                          concatenates src/ into index.html, and injects
+                                  the guide into the presenter-notes overlay
 SPEC.md                           the original brief, and where this departed from it
 src/
   data.js         every number, every source, every verification status
@@ -178,6 +182,10 @@ src/
   timeline.js     Act II
   app.js          the three acts, the self-test
   styles.css      Murray State palette; the fold rule
+  presenter-guide.html
+                  THE canonical presenter guide. One document, three surfaces:
+                  the notes overlay in the app, the printable file beside
+                  index.html, and the PDF. Edit only here.
   template.html   the shell build.js fills
   playtest.test.js
 tools/
@@ -193,16 +201,24 @@ tools/
 each round, where to pause, the questions you will get and how to answer them,
 the misconceptions to head off, and a twelve-minute cut if that is all you have.
 
-Settings (⚙, top right) → **Presenter mode** scales the interface for a
-projector, and **Presenter's notes** opens that same session plan on screen —
-distilled from the printable guide, laid out for reading standing up, with the
-beats flat and the reference material folded. It is the guide's content, not a
-second version of it: change the guide, re-distil the panel.
+Settings (⚙, top right) offers **Presentation mode**, which scales the interface
+for a projector; **Open Presenter Notes**, which puts that session plan on
+screen; and **Reset**, which returns the demo to its opening screen with every
+drawn line, verdict and timeline filter cleared, ready for the next room.
+Presentation mode deliberately survives a Reset — it describes the projector,
+not the talk.
 
-Every load opens a **How this works** panel explaining the drawing exercise and
-the controls. It is dismissed by tapping outside it, by <kbd>Esc</kbd>, or by
-its own button, and the **?** beside the settings cog reopens it at any point.
-Nothing is remembered between loads, because the app stores nothing at all.
+The notes overlay is not a summary of the printable guide. It **is** the guide:
+`build.js` lifts the body of `src/presenter-guide.html` and its scoped
+stylesheet straight into the page, so the three surfaces cannot disagree, and
+`node build.js --check` fails if they ever do. There used to be a second,
+hand-maintained copy in the template — 1961 words against the guide's 2072, and
+already disagreeing about the Act I framing and the ARC-AGI figures.
+
+Every load opens a **Guide** panel explaining the drawing exercise and the
+controls. It is dismissed by tapping outside it, by <kbd>Esc</kbd>, or by its own
+button, and the **?** beside the settings cog reopens it at any point. Nothing is
+remembered between loads, because the app stores nothing at all.
 
 The single most important instruction in the guide: **let people actually draw.**
 The demo dies if the presenter drives it and narrates. Hand the laptop round, or

@@ -377,58 +377,18 @@ p  { font-size: 0.94rem; }
 .ht-dismiss kbd { font: inherit; font-weight: 700; color: var(--ink); border: 1px solid var(--line);
   border-radius: 5px; padding: 1px 5px; }
 
-/* ---- presenter's notes ----------------------------------------------------
-   The printable guide, laid out for someone reading it standing up. The beats
-   are flat because they are needed in sequence; the reference material folds
-   because it is needed only when a question lands. */
+/* ---- presenter notes -----------------------------------------------------
+   The body of this overlay IS the printable guide: build.js injects the
+   .guide-scope div out of src/presenter-guide.html here, and that file's own
+   scoped stylesheet with it. So the app styles only the frame — how wide the
+   sheet is and how the text grows on a lectern — and everything inside is the
+   guide's business. There used to be forty lines of .pn-* rules here dressing a
+   hand-written second copy of the same document; both are gone.
+   -------------------------------------------------------------------------- */
 
 #notes .sheet-inner { max-width: 760px; }
-.pn > *:last-child { margin-bottom: 0; }
-.pn p { font-size: 0.89rem; line-height: 1.55; margin-bottom: var(--u); max-width: 70ch; }
-.pn-lede { color: var(--ink); opacity: 0.94; }
-.pn-h { font-size: 0.78rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold);
-  border-bottom: 1px solid rgba(236,172,0,0.3); padding-bottom: 5px;
-  margin: calc(var(--u)*3) 0 calc(var(--u)*1.25); }
-.pn-list { padding-left: calc(var(--u)*2.25); margin-bottom: calc(var(--u)*1.5); display: flex; flex-direction: column; gap: 7px; }
-.pn-list li { font-size: 0.88rem; line-height: 1.5; color: rgba(232,237,245,0.9); max-width: 68ch; }
-
-.pn-beat { border-left: 3px solid var(--cyan); background: rgba(0,164,227,0.06);
-  border-radius: 0 10px 10px 0; padding: calc(var(--u)*1.25) calc(var(--u)*1.75);
-  margin-bottom: calc(var(--u)*1.5); }
-.pn-beat > b { display: block; font-size: 0.92rem; margin-bottom: 6px; }
-.pn-beat p:last-child { margin-bottom: 0; }
-.pn-say { display: block; font-style: italic; color: var(--cyan); }
-
-/* Gold for the box that helps you, red-orange only for the finding that is
-   itself a failure — the same rule the rest of the app follows. */
-.pn-warn { border: 1px solid rgba(236,172,0,0.35); background: rgba(236,172,0,0.06);
-  border-radius: 11px; padding: calc(var(--u)*1.5); margin: calc(var(--u)*2) 0; }
-.pn-warn > b { color: var(--gold); }
-.pn-alert { border: 1px solid rgba(255,69,0,0.3); background: rgba(255,69,0,0.06);
-  border-radius: 11px; padding: calc(var(--u)*1.5); margin: calc(var(--u)*2) 0; }
-.pn-alert > b { color: var(--red); }
-.pn-warn p:last-child, .pn-alert p:last-child { margin-bottom: 0; margin-top: 5px; }
-
-.pn-fold { border: 1px solid var(--line); border-radius: 11px; background: rgba(0,20,43,0.4);
-  margin-bottom: var(--u); }
-.pn-fold summary { cursor: pointer; padding: calc(var(--u)*1.25) calc(var(--u)*1.5);
-  font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--cyan); list-style: none; min-height: 44px; display: flex; align-items: center; }
-.pn-fold summary::-webkit-details-marker { display: none; }
-.pn-fold summary::before { content: '▸'; margin-right: 9px; transition: transform 0.15s; }
-.pn-fold[open] summary::before { transform: rotate(90deg); }
-.pn-fold > *:not(summary) { margin-left: calc(var(--u)*1.5); margin-right: calc(var(--u)*1.5); }
-.pn-fold > *:last-child { margin-bottom: calc(var(--u)*1.5); }
-.pn-q { font-size: 0.88rem; color: var(--ink); margin: calc(var(--u)*1.5) 0 4px; }
-
-.pn-tablewrap { overflow-x: auto; margin-bottom: calc(var(--u)*1.5); }
-.pn-table { border-collapse: collapse; font-size: 0.76rem; min-width: 460px; }
-.pn-table th, .pn-table td { border: 1px solid var(--line); padding: 5px 8px; text-align: left; vertical-align: top; }
-.pn-table th { color: var(--gold); font-size: 0.66rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.pn-table td.n { font-variant-numeric: tabular-nums; color: rgba(232,237,245,0.9); }
-
-.pn-foot { border-top: 1px solid var(--line); padding-top: calc(var(--u)*1.5);
-  margin-top: calc(var(--u)*2.5); font-size: 0.74rem !important; color: var(--dim); }
+#notes .sheet-body { font-size: 0.89rem; line-height: 1.55; }
+#notes .guide-scope { max-width: 72ch; }
 
 /* ---- byline ---------------------------------------------------------------
    Settles to half opacity after nine seconds so it stops competing with the
@@ -602,7 +562,6 @@ body.modal-open .bh-credit { animation: none; opacity: 0; transition: opacity 0.
   .ht-foot { justify-content: stretch; }
   .ht-foot .btn { width: 100%; }
   .ht-dismiss { order: 2; width: 100%; text-align: center; }
-  .pn-fold > *:not(summary) { margin-left: var(--u); margin-right: var(--u); }
 }
 
 /* Landscape phones and other short-and-wide viewports: side by side. */
@@ -651,9 +610,7 @@ body.presenter .sheet-inner { max-width: 820px; }
 body.presenter #notes .sheet-inner { max-width: 900px; }
 body.presenter .switch, body.presenter .help { font-size: 1.02rem; }
 body.presenter .ht-steps li, body.presenter .ht-tip, body.presenter .ht-acts li { font-size: 1.02rem; }
-body.presenter .pn p, body.presenter .pn-list li { font-size: 1rem; }
-body.presenter .pn-beat > b { font-size: 1.05rem; }
-body.presenter .pn-table { font-size: 0.88rem; }
+body.presenter #notes .sheet-body { font-size: 1rem; }
 
 /* Presenter mode on a 720p projector: everything is 35% bigger, and the
    explanation plus the question no longer fit above the chart in 720px of
