@@ -23,6 +23,7 @@ const S = {
      right: a thing a person wrote, then a thing that wrote itself, then
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
+  view: 'action',       // reading lens: model in action or cross-cutting learning methods
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -58,31 +59,32 @@ const S = {
 const isUlt   = () => S.mode === 'ult';
 const isRules = () => S.mode === 'rules';
 const isNet   = () => S.mode === 'net';
+const isOther = () => S.mode === 'other';
 
 const STAGE_COPY = {
   rules: {
-    kicker: 'Stage 1a · written rules', title: 'Rules-based intelligence',
-    details: 'Stage 1a · Rules-based intelligence',
+    kicker: 'Model 1a · hand-written symbolic rules', title: 'Symbolic AI (GOFAI)',
+    details: 'Model 1a · Symbolic AI (GOFAI)',
     question: 'Can a program play well without learning?',
     try: 'Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.',
     observe: 'Changing the rules changes its play. Playing more games does not.',
     takeaway: 'A person supplied its strategy; this opponent never learns from experience.'
   },
   one: {
-    kicker: 'Stage 1b · learned scores', title: 'Machine learning',
-    details: 'Stage 1b · Machine learning',
+    kicker: 'Model 1b · tabular model', title: 'Value table',
+    details: 'Model 1b · Value table',
     question: 'Can experience improve its choices?',
     try: 'Show move scores in Era 0. Train 5,000 games, then compare the new era with Era 0.',
     observe: 'Game outcomes change the scores attached to board positions.',
-    takeaway: 'This learner stores experience as a separate score for each position.'
+    takeaway: 'Reinforcement learning stores experience as a separate value estimate for each position.'
   },
   net: {
-    kicker: 'Stage 1c · shared weights', title: 'Neural networks',
-    details: 'Stage 1c · Neural networks',
-    question: 'Can one set of learned numbers score many positions?',
-    try: 'Create learning examples, then train adjustable weights—numbers reused to score many board positions.',
-    observe: 'Held-out means positions kept out of training. Lower error is a closer match to the frozen table estimates.',
-    takeaway: 'Check playing results separately. A neural network is a kind of machine learning.'
+    kicker: 'Model 1c · shared weights', title: 'Neural Network',
+    details: 'Model 1c · Neural Network',
+    question: 'Can a feedforward network use shared weights to score many positions?',
+    try: 'Create learning examples. Inspect one weight, train, then compare Current, Initialized, and Change.',
+    observe: 'One update changes shared weights used across many boards. Held-out positions stay out of training.',
+    takeaway: 'Error measures fit to frozen table estimates; playing results are a separate check.'
   },
   ult: {
     kicker: 'Optional extension · missing information', title: 'Ultimate tic-tac-toe',
@@ -91,6 +93,14 @@ const STAGE_COPY = {
     try: 'Play a match, turn on move scores, and notice which global facts are absent.',
     observe: 'The learner sees each small board, but not its location or where a move sends the opponent.',
     takeaway: 'More training cannot recover information the representation leaves out.'
+  },
+  other: {
+    kicker: 'Model 1d · a wider map', title: 'Other model types',
+    details: 'Model 1d · Other model types',
+    question: 'What other forms can a learned model take?',
+    try: 'Compare what each family stores or calculates, then open How they learn.',
+    observe: 'A model family and a learning method answer different questions.',
+    takeaway: 'This list widens the map; it is not an exhaustive catalog of AI.'
   }
 };
 
@@ -223,6 +233,7 @@ function resetAll(resetStage) {
   $('#selftest-out').textContent = '';
   if (resetStage) {
     S.mode = 'rules';
+    S.view = 'action';
     history.replaceState(null, '', location.pathname + location.search + '#rules');
   }
   S.ruleRec = {};
@@ -456,6 +467,38 @@ for (let i = 0; i < 9; i++) {
   boardEl.appendChild(b);
 }
 
+function networkInputs(code) {
+  const cells = OG.cellsOf(code), labels = [], states = ['empty', 'X', 'O'];
+  for (let cell = 0; cell < 9; cell++) {
+    for (let state = 0; state < 3; state++) {
+      labels.push({ label: `${CELLNAME[cell]} = ${states[state]}`, active: cells[cell] === state });
+    }
+  }
+  const turn = OG.TOMOVE[code];
+  labels.push({ label: 'X to move', active: turn === 1 });
+  labels.push({ label: 'O to move', active: turn === 2 });
+  return labels;
+}
+
+function renderNetworkInspector() {
+  const el = $('#network-view');
+  el.hidden = !isNet();
+  if (!isNet()) return;
+  if (!S.neural || !S.neural.model) {
+    NETWORK_VIEW.render(el, { net: null });
+    return;
+  }
+  const code = S.game ? S.game.code : 0;
+  NET.predict(S.neural.model, code); // refreshes forward-pass activation buffers; weights stay unchanged
+  const marks = 9 - OG.NEMPTY[code];
+  NETWORK_VIEW.render(el, {
+    net: S.neural.model.net,
+    initial: S.neural.initial,
+    inputs: networkInputs(code),
+    boardLabel: marks ? `the current game board after ${marks} move${marks === 1 ? '' : 's'}` : 'the current empty game board'
+  });
+}
+
 function renderBoard() {
   const g = S.game, cells = OG.cellsOf(g.code);
   const agent = currentEra().agent;
@@ -508,6 +551,7 @@ function renderBoard() {
     }
   });
   renderBrainReadout();
+  renderNetworkInspector();
 }
 
 /* The meta-grid, plus the one board you are actually playing in.
@@ -783,7 +827,7 @@ function renderBrainReadout() {
   if (isNet()) {
     const n = S.neural, m = n && n.metrics;
     if (!m) { el.innerHTML = '<div>Create learning examples before there are network weights to inspect.</div>'; return; }
-    el.innerHTML = `<div>These values come from a forward pass through <b>${fmt(m.params)} shared weights</b>. The frozen learning examples are not queried while you play.</div>` +
+    el.innerHTML = `<div>These values come from a forward pass through <b>${fmt(m.params)} learned parameters</b>—connection weights and biases. The frozen learning examples are not queried while you play.</div>` +
       `<div style="margin-top:.5em">${fmt(m.updates)} updates · train MSE ${m.trainMse.toFixed(3)} · held-out MSE ${m.heldMse.toFixed(3)}.</div>` +
       `<div class="legend"><span>lower predicted value</span><span class="ramp"></span><span>higher predicted value</span></div>`;
     return;
@@ -909,7 +953,7 @@ function renderTrain() {
     $('#burst-seg').setAttribute('aria-label', 'Neural-network training updates');
     $('#train-stats').innerHTML = !m
       ? `<p class="help"><b>Preparation is explicit.</b> A fresh copy of the 1b algorithm plays 20,000 seeded games, freezes its current estimates, then keeps some board positions out of training to check the network later. No labels come from a solved-game oracle.</p>`
-      : `<div class="st"><span class="n">${fmt(m.params)}</span><span class="k">weights</span></div>` +
+      : `<div class="st"><span class="n">${fmt(m.params)}</span><span class="k">parameters</span></div>` +
         `<div class="st"><span class="n">${fmt(m.train)}</span><span class="k">train examples</span></div>` +
         `<div class="st"><span class="n">${fmt(m.held)}</span><span class="k">held-out examples</span></div>` +
         `<p class="help">${fmt(m.groups)} related board groups stay together. The network’s average error is ${m.trainMse.toFixed(3)} on examples it practiced and ${m.heldMse.toFixed(3)} on positions kept out of training. ${S.training ? 'Use Stop training or choose another tab to stop after this small batch.' : 'Those held-out positions are never used by an update.'}</p>`;
@@ -975,7 +1019,7 @@ function renderBanner() {
         `<p>Where the skill came from is the whole difference. Every bit of this one came out of a ` +
         `person's design and none of it out of training experience. Its policy stays fixed during play ` +
         `and would need to be redesigned for a different game. For this small game it is short, fast, and readable. ` +
-        `The next two tabs show two ways experience can shape a policy instead.</p>` +
+        `The Value table and Neural Network show two representations that this demo fits from experience.</p>` +
         `<div class="proof">Proof: ${fmt(r.lines)} complete game lines searched · ` +
         `${fmt(r.positions)} positions examined · 0 losses · both roles · ` +
         `re-run any time from Settings &rarr; Run the full self-test.</div>`;
@@ -1002,12 +1046,18 @@ function renderBanner() {
     return;
   }
 
+  if (isOther()) {
+    el.hidden = true;
+    el.innerHTML = '';
+    return;
+  }
+
   if (isNet()) {
     el.hidden = false; el.classList.add('quiet');
     if (!S.neural) {
-      el.innerHTML = `<h3>A neural network is a kind of machine learning.</h3>` +
-        `<p>First you will visibly create learning examples with a fresh copy of the 1b learning algorithm playing 20,000 seeded games. What that fresh run learned is frozen as examples. Then a much smaller set of shared weights learns to approximate those examples.</p>` +
-        `<p>1b stores one number for each position. 1c shares weights across positions. That can give it an answer for a position kept out of training, but it does not guarantee a good answer.</p>`;
+      el.innerHTML = `<h3>The Neural Network is a model fitted with supervised learning.</h3>` +
+        `<p>First, a fresh copy of 1b's tabular reinforcement learner plays 20,000 seeded games. Its current value estimates are frozen as target examples. Then a smaller set of shared weights is fitted to approximate them.</p>` +
+        `<p>The value table stores one number for each position. The Neural Network shares weights across positions. That gives it an answer for a position kept out of training, but does not guarantee a good answer.</p>`;
       return;
     }
     const m = S.neural.metrics;
@@ -1211,7 +1261,10 @@ async function trainNeural() {
     if (!S.cancelTraining && session.complete) {
       const teacher = NET.freezeTeacher(session);
       const model = NET.newSupervised(teacher, S.seed || 'demo');
-      S.neural = { teacher, model, metrics: NET.metrics(model), checkpoints: new Map(), cancelled: false };
+      S.neural = {
+        teacher, model, metrics: NET.metrics(model), checkpoints: new Map(), cancelled: false,
+        initial: NETWORK_VIEW.snapshot(model.net)
+      };
       recordNeuralCheckpoint();
     }
     S.teacherSession = null; S.training = false; ov.hidden = true;
@@ -1231,7 +1284,10 @@ async function trainNeural() {
     const n = Math.min(batch, target - done);
     const light = NET.trainBatch(neural.model, n, false);
     done += n;
-    if (done % 5120 === 0 || done === target) neural.metrics = NET.metrics(neural.model);
+    if (done % 5120 === 0 || done === target) {
+      neural.metrics = NET.metrics(neural.model);
+      renderNetworkInspector();
+    }
     $('#m-count').textContent = fmt(light.updates);
     $('#m-eps').textContent = light.epoch + ' passes';
     $('#m-wr').textContent = S.neural.metrics.heldMse.toFixed(3) + ' MSE';
@@ -1757,24 +1813,42 @@ $('#about-text').innerHTML =
   `Types of AI was built by Bryant Harrison, Murray State University. ` +
   `It runs entirely on this device: no network request is made, no account exists, ` +
   `nothing is stored, and no AI service is involved. Reloading the page returns it to Era 0. ` +
-  `1a is a hand-written ${RULES.LADDER.length}-rule ladder with nothing learned in it; ` +
-  `1b and 1c learn numeric priorities within a human-designed representation and learning procedure. In 1b, game outcomes supply rewards. In 1c, a frozen learned table supplies examples. The settings for 1b are: ` +
+  `1a is a hand-written ${RULES.LADDER.length}-rule symbolic model with nothing learned in it. ` +
+  `1b is a value table fitted by reinforcement learning; 1c is a Neural Network fitted by supervised learning to frozen table estimates. Models and learning methods are separate, combinable choices. The settings for 1b are: ` +
   `Learning rate ${OG.HP.alphaFloor}, discount ${OG.HP.gamma}, &epsilon; ${OG.HP.epsStart.toFixed(2)}→` +
   `${OG.HP.epsEnd.toFixed(2)} over ${fmt(OG.HP.epsTau)} games, ` +
   `${Math.round(OG.HP.mixSelfPlay * 100)}% self-play, ` +
   `${Math.round(OG.HP.exploringStarts * 100)}% dealt starts.`;
 
-/* The neural explanation is a separate reader-facing layer. The model and
-   measurements remain in net.js; this text names the visible experiment. */
+/* Reader-facing explanations keep model representation and learning method
+   separate. The algorithms and measurements remain in their model modules. */
+const SYMBOLIC_HOW = `
+<h4>What GOFAI means</h4>
+<p><b>Good Old-Fashioned Artificial Intelligence</b>, or GOFAI, is a historical name for
+the symbolic AI tradition: programs that work with human-defined symbols, relationships, and
+rules. This demo's short hand-written priority list is one simple example, not the whole tradition.</p>
+<h4>How this rule chain chooses</h4>
+<p>The ordered list acts like a chain of decision tests. If a test answers yes, it selects that
+action. If it answers no, the program continues to the next test. A person wrote every test and
+its priority, so playing games does not revise this policy.</p>
+<h4>Symbolic does not mean unlearned</h4>
+<p>Decision trees also route examples through tests, but their questions and branches can be
+learned from data. The representation and the way it was produced are separate facts: this
+particular chain was written by a person.</p>
+<h4>What the evidence says</h4>
+<p>The exhaustive policy check follows every reachable response, including tied choices. It can
+show that this fixed policy has no losing line on this small game; it does not claim that symbolic
+systems are always best or that later models inevitably replace them.</p>`;
+
 const TABLE_HOW = `
+<h4>What the model is</h4>
+<p>1b's model is a <b>value table</b>: one stored estimate for each board position. This demo learns
+those position values through <b>tabular reinforcement learning</b>. After actions lead to wins,
+losses, draws, and later replies, rewards move the relevant estimates.</p>
 <h4>What a person supplies</h4>
-<p>Even the learning tab has design choices made by people: the board representation, which game
+<p>Learning still has design choices made by people: the board representation, which game
 outcomes count as rewards, and the update rule. It is not given a rule that says “take the centre”
 or “block a row.”</p>
-<h4>What it learns from games</h4>
-<p>1b stores a score for each board created by a move. Wins, losses, draws, and later replies move
-those scores over time. When it chooses, it gives priority to the legal moves whose resulting boards
-have the strongest learned scores.</p>
 <h4>How to read a score</h4>
 <p>A positive score means the resulting board has tended to work out well for the player who just
 moved; a negative score means the opposite. It is a learned priority, not a spoken reason. <b>Show
@@ -1782,23 +1856,27 @@ move scores</b> makes those priorities visible square by square.</p>
 <h4>Why it explores</h4>
 <p>Early in training it sometimes tries a random legal move. That produces experience about choices
 it would otherwise ignore. As practice grows, it relies more often on its strongest current score.</p>
-<h4>Optional advanced extension</h4>
-<p>Ultimate tic-tac-toe adds global information: a small board’s place in the meta-grid and the board
-a square sends the opponent to. The inherited one-board representation leaves those facts out. A
-neural network with the same incomplete inputs would leave them out too; changing the model name is
-not a repair.</p>`;
+<h4>Model and learning method are different axes</h4>
+<p>A value table is a model representation; reinforcement learning is how this one changes. The
+Neural Network is another model, fitted here with supervised learning. Open <b>How they learn</b>
+for five common, overlapping learning setups. Self-play does not make this self-supervised: even
+when the table plays itself, game rewards still drive its updates.</p>`;
 const NEURAL_HOW = `
-<h4>What changes in the neural-network tab</h4>
-<p>Neural networks are a kind of machine learning. This tab first creates learning examples with a
-fresh copy of the 1b algorithm playing 20,000 seeded games. It then freezes that run’s current
-estimates and asks a smaller collection of shared weights to approximate them.</p>
-<p>Those example scores are not perfect-game answers. A board the fresh table never visited can
-still carry its initial score of zero, even when a solver would score it differently.</p>
-<h4>What the network sees</h4>
-<p>Each board square is represented as empty, X, or O. The network is not given a rule for rows,
-forks, or the centre. Its hidden layers combine those inputs and produce one predicted value for a
-possible next board. One weight can influence many boards, which is the compactness this tab tests.</p>
-<h4>How to read the results</h4>
+<h4>What the model is</h4>
+<p>This is a <b>feedforward multilayer perceptron</b>: information moves from 29 inputs through
+two hidden layers of 28 and 18 ReLU units to one linear score. The 29 inputs encode each of nine
+squares as empty, X, or O, plus whose turn it is. The displayed score is clamped to −1 through +1
+when read. It is not given rules for rows, forks, or the centre.</p>
+<h4>How it learns</h4>
+<p>A fresh 1b value table first learns through 20,000 seeded reinforcement-learning games. Those
+learned estimates are frozen as target examples. The network then uses <b>supervised learning</b>
+to fit them; targets can come from another model rather than a person. The targets are not
+perfect-game answers, and a position the fresh table never visits can remain at its initial value
+of zero even when a solver would value it differently.</p>
+<p>Backpropagation computes how small changes to each weight would affect squared prediction error.
+The optimizer adjusts the current weights along that gradient, normalized by the squared length of
+the output gradient. It aims to reduce error; it does not evolve a population of candidate networks.</p>
+<h4>How to read the evidence</h4>
 <p>One error is calculated from examples used for practice. The other is calculated from positions
 kept out of training. Related rotations and reflections stay together, so a near-copy cannot quietly
 turn the second number into a repeat of the first. Lower error is closer to the frozen learner; it
@@ -1807,8 +1885,26 @@ does not guarantee a good answer on every new board.</p>
 <p>For each legal move, the app forms the resulting board and runs a forward pass through the
 network weights. It chooses from the best predicted boards. The frozen table is not consulted while
 you play, and a good score against random play is reported separately from the two error readings.</p>
-<p><b>Optional advanced extension:</b> Ultimate tic-tac-toe remains available from this tab. It is a
-different representation-limit activity, not evidence that the neural network itself is unbeatable.</p>`;
+<p>The live inspector shows the current network's real weights, biases, and activations. A weight is
+a connection strength; an activation is a signal for the current board; neither is automatically
+the goodness of a move. <b>Show move scores</b> compares candidate afterstates separately.</p>`;
+
+const ULTIMATE_HOW = `
+<h4>A representation-limit extension</h4>
+<p>Ultimate tic-tac-toe adds global information: a small board's place in the meta-grid and the
+board a square sends the opponent to. The inherited one-board value table leaves those facts out.</p>
+<p>A Neural Network given the same incomplete inputs would omit those facts too. Changing the model
+family cannot recover information the representation never supplies.</p>`;
+
+const OTHER_HOW = `
+<h4>A wider map, not a complete catalog</h4>
+<p>Linear and logistic models, learned decision trees, ensembles, nearest neighbors,
+support-vector machines, and probabilistic models are other ways to represent patterns. The model
+cards summarize what each representation stores or computes.</p>
+<h4>Where search and planning fit</h4>
+<p>Search and planning explore possible actions or future states. They are AI problem-solving
+approaches rather than another statistical model family, and they can use models to evaluate the
+possibilities they explore.</p>`;
 
 /* ------------------------------------------------------------------ *
  * Wiring
@@ -1818,29 +1914,49 @@ different representation-limit activity, not evidence that the neural network it
    [hidden], so a step never pays for the panels of another step -- which
    is what keeps the TRAIN button above the fold in step 2 with a
    full-height rule ladder living in the same column. */
+function applyView() {
+  const learning = S.view === 'learn', other = isOther();
+  $$('#lens-seg button').forEach(button => {
+    const on = button.dataset.view === S.view;
+    button.classList.toggle('on', on);
+    button.setAttribute('aria-selected', String(on));
+    button.tabIndex = on ? 0 : -1;
+  });
+  $('#stage-intro').hidden = learning || other;
+  $('#col-a').hidden = learning || other;
+  $('#col-b').hidden = learning || other;
+  $('#other-models').hidden = learning || !other;
+  $('#learning-overview').hidden = !learning;
+}
+
 function applyMode() {
-  const ult = isUlt(), rules = isRules();
+  const ult = isUlt(), rules = isRules(), other = isOther();
+  const primaryMode = ult ? 'net' : S.mode;
   $$('#mode-seg button').forEach(x => {
-    const on = x.dataset.mode === S.mode;
+    const on = x.dataset.mode === primaryMode;
     x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); x.setAttribute('aria-selected', String(on));
     x.tabIndex = on ? 0 : -1;
   });
   document.body.classList.toggle('step-rules', rules);
   document.body.classList.toggle('step-ult', ult);
-  $('#how-title').textContent = rules ? 'How learning differs from written rules'
+  document.body.classList.toggle('step-other', other);
+  $('#how-title').textContent = rules ? 'How this symbolic model works'
     : isNet() ? 'How the neural network works'
     : ult ? 'How the representation works'
-    : 'How the learning works';
+    : other ? 'How other model families fit the map'
+    : 'How the value table learns';
   const howStart = $('.sheet-foot [data-close="howto"]', $('#howto'));
-  if (howStart) howStart.textContent = isNet() ? 'Explore neural networks' : rules ? 'Play the rules' : 'Explore machine learning';
-  $('#how-body').innerHTML = isNet() ? NEURAL_HOW : TABLE_HOW;
+  if (howStart) howStart.textContent = isNet() ? 'Explore the Neural Network'
+    : rules ? 'Play the symbolic rules' : other ? 'Explore other models' : 'Explore the value table';
+  $('#how-body').innerHTML = rules ? SYMBOLIC_HOW : isNet() ? NEURAL_HOW
+    : ult ? ULTIMATE_HOW : other ? OTHER_HOW : TABLE_HOW;
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
-  $('#era-select').hidden = rules || isNet();
-  $('#opp-row').hidden = rules || isNet();
+  $('#era-select').hidden = rules || isNet() || other;
+  $('#opp-row').hidden = rules || isNet() || other;
   $('#depth-seg').hidden = !rules;
-  $('#btn-brain').hidden = rules;
-  $('#btn-learned').hidden = !reportAvailable();
+  $('#btn-brain').hidden = rules || other;
+  $('#btn-learned').hidden = other || !reportAvailable();
   if (reportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here
     S.brain = false;
@@ -1855,8 +1971,9 @@ function applyMode() {
      strand the panel on screen, and on a phone that pushed TRAIN below
      the fold. One place decides what a step shows; this is it. */
   renderStageIntro(); renderEraSelect(); renderTrain(); renderRulesPanel(); renderRuleFired();
-  renderBanner(); renderScore();
-  newGame();
+  renderBanner(); renderScore(); applyView();
+  if (other) renderNetworkInspector();
+  else newGame();
 }
 
 $$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
@@ -1882,6 +1999,26 @@ $$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
   $('#selftest-out').textContent = '';
   applyMode();
   chosen.focus();
+}));
+
+$$('#lens-seg button').forEach(btn => btn.addEventListener('click', () => {
+  if (S.view === btn.dataset.view) return;
+  S.view = btn.dataset.view;
+  applyView();
+}));
+$$('#lens-seg button').forEach(btn => btn.addEventListener('keydown', e => {
+  const tabs = $$('#lens-seg button');
+  const i = tabs.indexOf(e.currentTarget);
+  let next = null;
+  if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+  else if (e.key === 'ArrowLeft') next = (i + tabs.length - 1) % tabs.length;
+  else if (e.key === 'Home') next = 0;
+  else if (e.key === 'End') next = tabs.length - 1;
+  if (next === null) return;
+  e.preventDefault();
+  S.view = tabs[next].dataset.view;
+  applyView();
+  tabs[next].focus();
 }));
 
 $('#btn-train').addEventListener('click', () => {
