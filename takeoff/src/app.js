@@ -1,12 +1,4 @@
-/* ==========================================================================
-   Undershoot — application.
-
-   Three acts. Act I explains what a benchmark is to people who have never
-   seen one, then asks the viewer to draw five of them and reveals the truth
-   over each guess. Act II shows the models those curves came out of. Act III
-   shows what these systems have actually done across six domains and a short Elsewhere round-up, with the
-   overclaims and the failures kept beside the results.
-   ========================================================================== */
+/* AI Progress: historical estimates, source context, transfer, and illustrative scenarios. */
 
 (() => {
 
@@ -30,7 +22,7 @@ const app = {
 
 function boot() {
   app.chart = Chart.create($('#chart'));
-  app.chart.setAxisEnd(D.AXIS_END);
+  // Each measurement keeps its own dated window; it is not a common scale.
   app.timeline = Timeline.create($('#tl'), D);
 
   app.chart.state().onDraw = () => {
@@ -46,6 +38,7 @@ function boot() {
   wireSettings();
   buildAct3();
   buildSources();
+  wireLearning();
 
   window.addEventListener('resize', () => { fitChart(); app.chart.resize(); app.timeline.resize(); });
   window.addEventListener('orientationchange', () => setTimeout(fitChart, 120));
@@ -83,6 +76,8 @@ function wireNav() {
 function goAct(n) {
   app.act = n;
   $$('#actnav button').forEach(b => b.classList.toggle('on', Number(b.dataset.act) === n));
+  $$('#actnav button').forEach(b => Number(b.dataset.act) === n ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current'));
+  if (n !== 2) stopPlay();
   $$('.act').forEach(s => s.hidden = Number(s.dataset.act) !== n);
   if (n === 1 && app.started) setTimeout(() => { fitChart(); app.chart.resize(); }, 20);
   if (n === 2) { setTimeout(() => app.timeline.resize(), 20); syncTimeline(); }
@@ -115,7 +110,7 @@ function fitChart() {
      chart to a 150px sliver to keep the button on screen serves nobody — so
      the floor rises and the page is allowed to scroll. */
   const open = $('#round-example').open;
-  const floor = open ? 240 : 120;
+  const floor = window.innerWidth < 850 ? 300 : 340;
   wrap.style.height = Math.round(E.clamp(avail, floor, max)) + 'px';
 }
 
@@ -141,6 +136,8 @@ function wireRound() {
 function loadRound(ix) {
   app.roundIx = ix;
   const r = D.ROUNDS[ix];
+  $('#round-select').value = String(ix);
+  $('#chart-unit').textContent = r.unit === 'min' ? 'Human task time · minutes' : r.unit === '$' ? 'USD / million tokens' : 'Test score · %';
 
   $('#round-num').textContent = `Test ${ix + 1} of ${D.ROUNDS.length}`;
   $('#round-name').textContent = r.name;
@@ -160,7 +157,7 @@ function loadRound(ix) {
   const ex = r.example;
   $('#example-label').textContent = ex.label;
   $('#example-body').innerHTML = renderExample(ex);
-  $('#round-example').open = false;
+  $('#round-example').open = true;
 
   $('#verdict').hidden = true;
   $('#twist-wrap').hidden = true;
@@ -171,13 +168,14 @@ function loadRound(ix) {
   $('#btn-redraw').hidden = false;
   $('#btn-next').hidden = true;
   $('#btn-next').textContent = 'Next test';
-  $('#draw-hint').textContent = 'Drag across the shaded region.';
+  $('#draw-hint').textContent = 'Drag across the shaded region, or use arrow keys on the chart.';
 
   app.chart.setRound(r);
   fitChart();
   app.chart.resize();
   app.chart.reset();
   $('#btn-reveal').disabled = true;
+  $('#twist-q').textContent = r.twist ? r.twist.question : '';
 }
 
 /* A concrete sample of the actual task. For a room that has never seen any of
@@ -256,19 +254,20 @@ function renderVerdict(r, res) {
   const missed = res.under;
 
   let ratioLine;
-  if (!isFinite(ratio)) ratioLine = 'You drew a flat line. The real answer moved.';
-  else if (ratio >= 1.08) ratioLine = `The real answer was <strong>${E.round(ratio, 1)}×</strong> what you drew.`;
-  else if (ratio <= 0.93) ratioLine = `You drew it <strong>${E.round(1 / ratio, 1)}×</strong> too high. That is rarer than you would think.`;
+  const directRatio = res.predicted > 0 ? res.truth / res.predicted : null;
+  if (directRatio == null) ratioLine = 'Your estimate was zero, so a ratio is not defined.';
+  else if (directRatio >= 1.08) ratioLine = `The published result was <strong>${E.round(directRatio, 1)}×</strong> your estimate.`;
+  else if (directRatio <= 0.93) ratioLine = `Your estimate was <strong>${E.round(1 / directRatio, 1)}×</strong> the published result.`;
   else ratioLine = 'You got that one close.';
 
   v.innerHTML = `
     <div class="v-head ${missed ? 'low' : 'high'}">
-      <span class="v-tag">${missed ? (res.falling ? 'You did not expect it to fall that far' : 'You guessed low') : 'You guessed high'}</span>
+      <span class="v-tag">${Math.abs(res.predicted - res.truth) < 0.05 ? 'Your estimate matched' : res.predicted < res.truth ? 'Your estimate was lower' : 'Your estimate was higher'}</span>
       <h3>${esc(r.reveal.headline)}</h3>
     </div>
     <div class="v-nums">
       <div class="v-num"><span class="k">You drew</span><span class="val">${E.fmtValue(res.predicted, r.unit)}</span></div>
-      <div class="v-num truth"><span class="k">It actually was</span><span class="val">${E.fmtValue(res.truth, r.unit)}</span></div>
+      <div class="v-num truth"><span class="k">Published result</span><span class="val">${E.fmtValue(res.truth, r.unit)}</span></div>
       ${res.points != null && isFinite(res.points) ? `<div class="v-num"><span class="k">Gap</span><span class="val">${E.round(Math.abs(res.points), 1)} pts</span></div>` : ''}
     </div>
     <p class="v-ratio">${ratioLine}</p>
@@ -285,11 +284,11 @@ function doTwist() {
   const tw = r.twist;
   $('#btn-twist').hidden = true;
   $('#twist-body').hidden = false;
-  app.chart.twist(() => {
+  (() => {
     const f = tw.finale;
     $('#twist-body').innerHTML = `
       <div class="v-head low">
-        <span class="v-tag">And the test turned over</span>
+        <span class="v-tag">Separate comparison · ARC-AGI-3 RHAE</span>
         <h3>${esc(f.headline)}</h3>
       </div>
       <p class="v-body what-is">${esc(f.what)}</p>
@@ -304,14 +303,14 @@ function doTwist() {
       </div>
       <p class="v-punch">${esc(f.punch)}</p>
       <details class="v-caveat" open>
-        <summary>Why these bars are not four measurements of one thing</summary>
+        <summary>What this comparison does and does not establish</summary>
         <p>${esc(f.caveat)}</p>
       </details>
       <p class="v-close">${esc(f.close)}</p>
-      <div class="v-src">${srcLinks(['arc-3-openai', 'arc-3', 'arc-3-human', 'arc-agi2', 'arc-2025'])}</div>`;
+      <div class="v-src">${srcLinks([f.src,'arc-3-openai'])}</div>`;
     $('#btn-next').hidden = false;
     $('#btn-next').textContent = 'See how you did';
-  });
+  })();
 }
 
 function showScorecard() {
@@ -324,8 +323,8 @@ function showScorecard() {
   const sc = $('#scorecard');
   sc.hidden = false;
   sc.innerHTML = `
-    <h2>You guessed low in ${lows} of ${app.results.filter(Boolean).length} tests.</h2>
-    ${med ? `<p class="big-stat">Median miss: <strong>${E.round(med, 1)}×</strong></p>` : ''}
+    <h2>What did your estimates reveal?</h2>
+    <p>You explored ${app.results.filter(Boolean).length} measurements. Compare each estimate with its result; the tests measure different things, so there is no combined capability score.</p>
     <div class="sc-rows">
       ${D.ROUNDS.map((r, i) => {
         const res = app.results[i];
@@ -339,14 +338,7 @@ function showScorecard() {
         </div>`;
       }).join('')}
     </div>
-    <p class="sc-note">
-      If you drew most of these too low, you are in good company — that is the usual
-      result, and it is the point. The surprise is rarely that the numbers went up; it
-      is by how much, and that even people who follow this closely tend to undershoot.
-      The one test that broke the pattern was the last: the same kind of model, in the
-      same months, went from nearly solving a puzzle to barely scoring on a harder
-      version of it. “How good is AI” was never a single rising line.
-    </p>
+    <p class="sc-note">Which result surprised you, and which caveat changes your interpretation most? An estimate can be high or low. Neither direction is the lesson: the skill is stating what each measurement supports.</p>
     <div class="sc-actions">
       <button class="btn primary" id="btn-toact2b">See the models behind these tests</button>
       <button class="btn ghost" id="btn-again2">Play again</button>
@@ -424,6 +416,7 @@ function syncTimeline() {
   $('#tl-total').textContent = s.total;
   $('#tl-year').textContent = s.year;
   $('#tl-open').textContent = s.open;
+  $('#model-list').innerHTML = app.timeline.visible().map(m=>`<article><b>${esc(m.name)}</b><p>${esc(m.d)} · ${esc(D.LABS[m.lab].name)} · ${m.open?'Downloadable weights':'Hosted only'}</p><p>${esc(m.lic || '')}</p>${m.src?srcLinks([m.src]):''}</article>`).join('') || '<p>No selected releases match this date and filter.</p>';
 
   const u = app.timeline.latestUnlock();
   const box = $('#tl-unlock');
@@ -451,8 +444,8 @@ function buildAct3() {
   $('#domain-nav').innerHTML = D.DOMAINS.map(d =>
     `<button data-d="${esc(d.id)}">${esc(d.name)}</button>`).join('');
   $$('#domain-nav button').forEach(b => b.addEventListener('click', () => {
-    const el = document.querySelector(`[data-domain="${b.dataset.d}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $$('#domain-nav button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-pressed', String(x === b)); });
+    $$('[data-domain]').forEach(x => x.hidden = x.dataset.domain !== b.dataset.d);
   }));
 
   $('#domains').innerHTML = D.DOMAINS.map(d => `
@@ -464,9 +457,9 @@ function buildAct3() {
       ${d.items.map(m => `
         <article class="mcard ${esc(m.verdict)}">
           <header>
-            <span class="verdict">${m.verdict === 'verified' ? 'Verified' : m.verdict === 'disputed' ? 'Disputed' : 'Overclaimed'}</span>
+            <span class="verdict">${m.verdict === 'verified' ? 'Published result' : m.verdict === 'disputed' ? 'Contested claim' : 'Claim exceeds evidence'}</span>
             <h3>${esc(m.title)}</h3>
-            <span class="mdate">${E.fmtDate(E.t(m.date))}</span>
+            <span class="mdate">${esc(m.dateLabel || E.fmtDate(E.t(m.date)))}</span>
           </header>
           <p class="what">${esc(m.what)}</p>
           <div class="split">
@@ -475,21 +468,51 @@ function buildAct3() {
           </div>
           ${m.quote ? `<blockquote>“${esc(m.quote)}”<cite>${esc(m.quoteBy)}</cite></blockquote>` : ''}
           ${m.caveat ? `<p class="caveat">${esc(m.caveat)}</p>` : ''}
-          <div class="v-src">${srcLinks([m.src].concat(m.src === 'erdos1196' ? ['erdos1196-tao'] : []))}</div>
+          <div class="v-src">${srcLinks([m.src].concat(m.extraSrc || []))}</div>
         </article>`).join('')}
     </section>`).join('');
 
   $('#cut-list').innerHTML = D.CUT.map(c => `
     <li><strong>${esc(c.claim)}</strong><span>${esc(c.why)}</span></li>`).join('');
 
-  $('#closer-gap').textContent = D.CLOSERS.gapMonths;
-  $('#closer-gap-note').textContent = D.CLOSERS.gapNote;
-  $('#closer-doubling').textContent = D.CLOSERS.doubling;
-  $('#closer-doubling-note').textContent = D.CLOSERS.doublingNote;
+  $('#domain-nav button')?.click();
+}
 
-  const metr = D.ROUNDS.find(r => r.id === 'metr');
-  const fit = E.doublingDays(E.allPoints(metr));
-  $('#closer-fit').textContent = fit ? Math.round(fit) : '—';
+/* Learning controls use the existing sheet and chart mechanisms. */
+function wireLearning() {
+  $('#round-select').innerHTML = D.ROUNDS.map((r,i) => `<option value="${i}">${i+1}. ${esc(r.name)}</option>`).join('');
+  $('#round-select').addEventListener('change', ev => loadRound(Number(ev.target.value)));
+  $('#btn-details').addEventListener('click', ev => {
+    const r = D.ROUNDS[app.roundIx];
+    const revealed = app.results[app.roundIx] != null && app.chart.state().phase === 'revealed';
+    $('#details-title').textContent = r.metric;
+    $('#details-metric').textContent = r.real;
+    $('#measurement-details').hidden = false;
+    $('#explanation-details').hidden = true;
+    $('#measurement-caveat').textContent = r.reveal.caveat;
+    if(r.limitations) $('#measurement-caveat').innerHTML += `<h3>${esc(r.limitations.title)}</h3><p>${esc(r.limitations.body)}</p>${srcLinks([r.limitations.src])}`;
+    $('#measurement-status').textContent = revealed ? 'Shown and revealed measurements. Lines connect selected results; they are not continuous observations.' : 'Only the initially shown measurements appear here. Reveal the chart to inspect the hidden results.';
+    const pts = revealed ? E.allPoints(r) : r.shown;
+    $('#measurement-table').innerHTML = `<thead><tr><th scope="col">Date / model</th><th scope="col">Value</th><th scope="col">Source / conditions</th></tr></thead><tbody>${pts.map(p=>`<tr><td>${esc(p.date)}<small>${esc(p.label)}</small></td><td>${E.fmtValue(p.value,r.unit)}${p.lo != null ? `<small>Interval: ${p.lo}–${p.hi} ${esc(r.unit)}</small>`:''}</td><td>${srcLinks([p.src].concat(p.extraSrc||[]))}${p.note ? `<small>${esc(p.note)}</small>`:''}</td></tr>`).join('')}</tbody>`;
+    openSheet('details',ev.currentTarget);
+  });
+  const explanations = {
+    context: ['A score belongs to a system and a protocol.', 'Read the full setup: model version, prompt, tools, number of attempts, reasoning budget, test subset, and evaluator. Two results labeled with the same benchmark can still use different conditions.', 'The timeline is a selected catalog of release dates. Its company lanes have no ordering by quality. Filters change the visible catalog and counters together. Use the accessible list to inspect each release and source.'],
+    transfer: ['A benchmark is evidence about its tasks.', 'Before transferring a result, compare the task, people, workflow, success criteria, and failure costs with your setting. A controlled study answers a narrower question than a claim about all workers.', 'Try a representative set of your own tasks. Compare quality, elapsed time, total cost, and corrections against a baseline. Record failures as well as successes.'],
+    forecast: ['These are three assumptions, not three predictions.', 'Let t be years after the second point. The linear rule is 30 + 10t. The compound rule is 30 × 1.5^t. The saturation rule is 75 − 45 × (9/11)^t. All give 20 at t = −1 and 30 at t = 0.', 'The first assumes a fixed yearly gain. The second assumes a fixed proportional gain. The third assumes progress slows toward a chosen ceiling of 75. The two invented observations cannot tell us which assumption will persist.', 'For this toy score, 100 is the measurement ceiling. An extrapolation above 100 is shown numerically as invalid for that scale. A straight line on a logarithmic axis indicates proportional change; it does not prove that change will continue.']
+  };
+  $$('[data-explain]').forEach(b=>b.addEventListener('click',()=>{
+    const [title,...paragraphs] = explanations[b.dataset.explain];
+    $('#details-title').textContent=title; $('#measurement-details').hidden=true; $('#explanation-details').hidden=false;
+    $('#explanation-details').innerHTML=paragraphs.map(p=>`<p>${esc(p)}</p>`).join(''); openSheet('details',b);
+  }));
+  $('#scenario-years').addEventListener('input',renderScenario); renderScenario();
+}
+
+function renderScenario() {
+  const t=Number($('#scenario-years').value);
+  $('#scenario-year').textContent=t;
+  $('#scenario-results').innerHTML=E.scenarios(t).map(r=>`<article><span>${esc(r.name)}</span><b>${r.value.toFixed(1)}</b><p>${r.value>100?'Above the score ceiling. This rule no longer gives a possible score.':esc(r.note)}</p></article>`).join('');
 }
 
 /* ---- sources ------------------------------------------------------------- */
@@ -521,6 +544,7 @@ function openSheet(id, opener) {
   const el = $('#' + id);
   if (!el || !el.hidden) return;
   el.hidden = false;
+  sheetStack.forEach(s => $('#' + s.id).inert = true);
   sheetStack.push({ id, from: opener || null });
   $('#brandbar').inert = true;
   document.querySelector('main').inert = true;
@@ -534,6 +558,8 @@ function closeSheet(id) {
   el.hidden = true;
   const ix = sheetStack.findIndex(s => s.id === id);
   const rec = ix < 0 ? null : sheetStack.splice(ix, 1)[0];
+  el.inert = false;
+  if (sheetStack.length) $('#' + sheetStack[sheetStack.length - 1].id).inert = false;
   if (!sheetStack.length) {
     $('#brandbar').inert = false;
     document.querySelector('main').inert = false;
@@ -559,6 +585,13 @@ function wireSheets() {
   }));
 
   document.addEventListener('keydown', ev => {
+    if (ev.key === 'Tab' && sheetStack.length) {
+      const el = $('#' + sheetStack[sheetStack.length - 1].id);
+      const focusable = Array.from(el.querySelectorAll('button,a[href],input,select,summary,[tabindex="0"]')).filter(x=>x.getClientRects().length && !x.disabled);
+      const first=focusable[0],last=focusable[focusable.length-1];
+      if (ev.shiftKey && (document.activeElement === first || document.activeElement === el.querySelector('.sheet-inner'))) { ev.preventDefault(); last?.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first?.focus(); }
+    }
     if (ev.key !== 'Escape' || !sheetStack.length) return;
     ev.preventDefault();
     closeSheet(sheetStack[sheetStack.length - 1].id);
@@ -630,6 +663,8 @@ function resetAll() {
 
   /* Proof panel, back to unrun. */
   $('#selftest-out').innerHTML = '';
+  $('#scenario-years').value = '3'; renderScenario();
+  $('#domain-nav button')?.click();
 
   goAct(1);
 }
@@ -642,89 +677,7 @@ function resetAll() {
 
 function runSelfTest() {
   const out = $('#selftest-out');
-  const checks = [];
-  const ok = (name, cond, detail) => checks.push({ name, pass: !!cond, detail: detail || '' });
-
-  const allItems = D.DOMAINS.reduce((a, d) => a.concat(d.items), []);
-
-  /* 1. every datum resolves to a source */
-  const orphans = [];
-  const walk = (arr, where) => (arr || []).forEach(p => {
-    if (!p.src) orphans.push(where + ': ' + (p.label || p.title || p.d || '?'));
-    else if (!D.SOURCES[p.src]) orphans.push(where + ': dangling src "' + p.src + '"');
-  });
-  D.ROUNDS.forEach(r => { walk(r.shown, r.id); walk(r.hidden, r.id); walk(r.markers, r.id); if (r.twist) walk(r.twist.series, r.id + '/twist'); });
-  walk(D.UNLOCKS, 'unlocks');
-  walk(allItems, 'act3');
-  ok('Every plotted point and result resolves to a source', orphans.length === 0, orphans.slice(0, 4).join('; '));
-
-  /* 2. no source is declared and never used */
-  const used = new Set();
-  const mark = arr => (arr || []).forEach(p => p.src && used.add(p.src));
-  D.ROUNDS.forEach(r => { mark(r.shown); mark(r.hidden); mark(r.markers); if (r.twist) mark(r.twist.series); });
-  mark(D.UNLOCKS); mark(allItems);
-  ['mittr-metr', 'erdos1196-tao', 'hle', 'nolima', 'kimi-k3', 'gemma', 'olmo', 'cursor', 'gpt-oss',
-   'arc-3', 'arc-3-human',
-   D.CLOSERS.gapSrc, D.CLOSERS.doublingSrc].forEach(k => used.add(k));
-  const unused = Object.keys(D.SOURCES).filter(k => !used.has(k));
-  ok('No source is declared and never used', unused.length === 0, unused.join(', '));
-
-  /* 3. series run forward in time */
-  const disorder = [];
-  D.ROUNDS.forEach(r => {
-    const pts = E.allPoints(r);
-    for (let i = 1; i < pts.length; i++) if (E.t(pts[i].date) < E.t(pts[i - 1].date)) disorder.push(r.id);
-  });
-  ok('Every series runs forward in time', disorder.length === 0, disorder.join(', '));
-
-  /* 4. the shown/hidden split is honest */
-  const bad = [];
-  D.ROUNDS.forEach(r => {
-    if (E.t(r.hidden[0].date) < E.t(r.shown[r.shown.length - 1].date)) bad.push(r.id);
-  });
-  ok('Hidden data always follows the shown data', bad.length === 0, bad.join(', '));
-
-  /* 5. every round is explained before it is asked */
-  const unexplained = D.ROUNDS.filter(r => !r.plain || !r.example || !r.human || !r.xLabel || !r.yLabel).map(r => r.id);
-  ok('Every test is explained, exemplified and has both axes labelled', unexplained.length === 0, unexplained.join(', '));
-
-  /* 6. every Act III result splits machine from human */
-  const nosplit = allItems.filter(m => !m.machine || !m.human).map(m => m.title);
-  ok('Every result says what the machine did AND what the humans did', nosplit.length === 0, nosplit.join(', '));
-
-  /* 7. Act III is not one domain wearing a hat */
-  ok('Act III covers at least five domains', D.DOMAINS.length >= 5, D.DOMAINS.length + ' domains');
-  ok('Act III includes results that did not work', allItems.some(m => m.verdict !== 'verified'));
-
-  /* 8. scoring behaves */
-  const r0 = D.ROUNDS[0];
-  ok('Scoring is monotone in the guess',
-     E.score(r0, E.emptyGuess(0.2)).ratio > E.score(r0, E.emptyGuess(0.6)).ratio);
-  const scale = E.makeScale(r0.scale, r0.yMin, r0.yMax);
-  const pr = E.score(r0, E.emptyGuess(scale.to(E.finalValue(r0)))).ratio;
-  ok('A perfect guess scores 1.0×', Math.abs(pr - 1) < 0.02, pr.toFixed(3));
-
-  /* 9. prose agrees with the plot */
-  const metr = D.ROUNDS.find(r => r.id === 'metr');
-  const fit = E.doublingDays(E.allPoints(metr));
-  ok('The plotted points imply the doubling time Act III quotes',
-     fit / D.CLOSERS.doubling > 0.5 && fit / D.CLOSERS.doubling < 2,
-     Math.round(fit) + ' days fitted vs ' + D.CLOSERS.doubling + ' published');
-
-  /* 10. nothing below 'reported' is on screen */
-  const weak = [];
-  const allow = new Set(['primary', 'reported', 'disputed']);
-  const grade = arr => (arr || []).forEach(p => { if (p.status && !allow.has(p.status)) weak.push(p.label || p.title); });
-  D.ROUNDS.forEach(r => { grade(r.shown); grade(r.hidden); grade(r.markers); });
-  grade(D.UNLOCKS); grade(allItems);
-  ok('Nothing rated below "reported" is displayed', weak.length === 0, weak.join(', '));
-
-  /* 11. the timeline actually covers the open-weight world */
-  const openCount = D.MODELS.filter(m => m.open).length;
-  const regions = new Set(D.MODELS.map(m => D.LABS[m.lab].region));
-  ok('The timeline is majority downloadable models', openCount > D.MODELS.length / 2,
-     openCount + ' of ' + D.MODELS.length);
-  ok('The timeline spans every region', regions.size >= 4, Array.from(regions).join(', '));
+  const checks = Validation.check(D,E);
 
   const pass = checks.filter(c => c.pass).length;
   out.innerHTML = `<div class="st-head ${pass === checks.length ? 'good' : 'bad'}">${pass} / ${checks.length} checks passed</div>` +
