@@ -19,6 +19,9 @@ tags: [design, teaching, tic-tac-toe, contract]
 
 # Completion — 2026-09-09
 
+Follow-up [[types-ai-terminology]] separates A–D model representations from the
+unlettered learning-method view and adds inspection of real neural weights.
+
 Follow-up [[types-ai-controls]] moves stage tabs to page-level navigation, explains
 rule-count controls above the rules list, and groups Era selection with training.
 Follow-up [[types-ai-details-drawer]] moves long evidence and explanations into a
