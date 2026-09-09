@@ -45,6 +45,13 @@
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
   </header>
+  <nav id="stage-nav" aria-label="Types of AI stages">
+    <div class="seg" id="mode-seg" role="tablist" aria-label="Types of AI stages">
+      <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="stage-intro" aria-label="1a Rules-based intelligence"><span class="tab-code">1a</span><span class="tab-long">Rules-based intelligence</span><span class="tab-short">Rules-based AI</span></button>
+      <button data-mode="one" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1b Machine learning"><span class="tab-code">1b</span><span class="tab-long">Machine learning</span><span class="tab-short">Machine learning</span></button>
+      <button data-mode="net" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1c Neural networks"><span class="tab-code">1c</span><span class="tab-long">Neural networks</span><span class="tab-short">Neural networks</span></button>
+    </div>
+  </nav>
   </div>
 
   <main id="main">
@@ -72,17 +79,6 @@
 
     <!-- ===================== OPPONENT / SCORE ===================== -->
     <section class="panel" id="opponent-panel">
-      <!-- The three things people call AI, in the order the demo walks
-           them. data-mode values for the existing two are unchanged. -->
-      <div class="seg" id="mode-seg" role="tablist" aria-label="Demo 1 stages">
-        <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="board-wrap">1a &middot; Rules-based intelligence</button>
-        <button data-mode="one" role="tab" aria-selected="false" aria-controls="board-wrap">1b &middot; Machine learning</button>
-        <button data-mode="net" role="tab" aria-selected="false" aria-controls="board-wrap">1c &middot; Neural networks</button>
-      </div>
-      <div id="opp-row">
-        <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
-        <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules are switched on" hidden></div>
-      </div>
       <div id="score-row"></div>
       <div id="era-strip" hidden></div>
     </section>
@@ -136,16 +132,24 @@
          cannot disagree — the panel is a rendering of the ladder, not a
          second copy of it. -->
     <section class="panel" id="rules-panel" hidden>
-      <div class="rp-head">
-        <span class="lbl">The rules, in order</span>
+      <div class="rule-control-head">
+        <div>
+          <h2>Rules the opponent can use</h2>
+          <p>Enable the first two, first four, or all eight rules in the list. The remaining rules are switched off.</p>
+        </div>
         <span class="rp-sub" id="rp-sub"></span>
       </div>
+      <div class="seg" id="depth-seg" role="group" aria-label="How many of the eight rules the opponent can use" hidden></div>
       <ol id="rule-list"></ol>
       <p class="rp-foot" id="rp-foot"></p>
     </section>
 
     <!-- ============================ TRAIN ========================= -->
     <section class="panel" id="train-panel">
+      <div id="opp-row">
+        <label class="control-label" for="era-select">Opponent era</label>
+        <select id="era-select" aria-label="Choose which era of the AI to play against"></select>
+      </div>
       <button class="btn primary big" id="btn-train">
         <span class="t-main">Train the AI</span>
         <span class="t-sub" id="train-sub">5,000 games</span>
