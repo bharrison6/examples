@@ -54,6 +54,47 @@ equivalent to policy-gradient reinforcement learning. No runtime external AI cal
 
 # Planned ownership
 
+## Active lanes — baseline 640eebb, after Demo 1 publication
+
+Native UI builder owns only `glass-box/src/{template.html,styles.css,app.js}`,
+`glass-box/index.html`, and necessary UI regression tests under `glass-box/src/`.
+Reuse the completed `zero-to-unbeatable` UI as the visual reference, not copied
+game mechanics. Preserve engine.js, text.js, arith.js, agent.js and worker.js
+unless a demonstrated correctness defect is reported to parent. Build.js changes
+only if essential and coordinated. Do not stage another lane's guide or docs.
+Checkpoint `.aia/.data/demo2-redesign/ui-progress.md` incrementally, commit logical
+units on this isolated branch, and coordinate the shared index before a commit.
+No descendants or browser work; parent handles Chrome. Return candidate-ready
+before final tests, then exact owned commits, tests, decisions and limitations.
+Return early if an impossible or unsound requirement needs reframing.
+
+Guide lane owns only `glass-box/src/demo-guide.html`, `glass-box/README.md`, and
+`.aia/.data/demo2-redesign/guide-progress.md`. No commits, generated files or PDF;
+parent commits this lane. Coordinate exact control labels with UI builder. Preserve
+the line-anchored guide-css and guide-scope markers. Inside guide-scope use a
+semantic `<div class="guide">` with header, sections and footer, like Demo 1, so
+the existing canonical-source ReportLab renderer can be reused without a second
+copy. Target a readable 2–3 page guide: question/activity/observation/limit, clear
+LLM/Reasoning/Agents boundaries and optional slow experiments. No independent
+presenter prose inside app. Parent owns PDF rendering/visual inspection, manifest,
+hub, ACC records and integration. No descendants; early return if misframed.
+
+Verified review findings to carry into both lanes: Act 2 models share core width,
+depth and heads but differ in context length, seed and training steps. Accepted-
+example self-training generates problems externally, checks worked chains AND
+the known generated answer, then performs supervised next-token updates; this
+is not policy-gradient reinforcement learning. The sampling/voting experiment
+uses frozen weights. Act 3 action selection is a scripted policy, including the
+deliberate calculator syntax mistake and retry; tools, context and truncation are
+real. State this next to the automatic control. Avoid attention-as-mind-reading,
+frontier parameter estimates, and claims that every frontier model is this recipe.
+
+Design decision for this pass: preserve three stages and all genuine activities;
+within LLM group training/sampling as the primary workbench and expose tokenizer,
+weights and attention through purposeful inspection controls or panels. Keep the
+page compact and progressive rather than merely recoloring its existing long
+sequence. Each stage must have a concrete first action and learning takeaway.
+
 Use a dedicated codex/glass-box-redesign worktree from the integrated latest
 examples main, after Demo 1 completion. Native UI builder owns glass-box UI source,
 generated index and necessary UI regressions, with core algorithm edits only for
