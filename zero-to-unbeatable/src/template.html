@@ -5,12 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <meta name="theme-color" content="#002144">
-<title>Types of AI — rules, learning, and neural networks</title>
+<title>Types of AI — models and learning methods</title>
 <!--
   Types of AI — a single-file, offline demonstration of three
   things people call AI, on one tic-tac-toe board.
 
-  1a: eight hand-written if/else rules, with no learning. 1b: a table of
+  1a: eight hand-written symbolic rules, with no learning. 1b: a table of
   values learned from games, with exhaustive policy checks. 1c: a neural
   network learns to approximate a fresh, frozen run of that table, with
   held-out measurements and no automatic unbeatable claim. Ultimate
@@ -45,22 +45,30 @@
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
   </header>
-  <nav id="stage-nav" aria-label="Types of AI stages">
-    <div class="seg" id="mode-seg" role="tablist" aria-label="Types of AI stages">
-      <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="stage-intro" aria-label="1a Rules-based intelligence"><span class="tab-code">1a</span><span class="tab-long">Rules-based intelligence</span><span class="tab-short">Rules-based AI</span></button>
-      <button data-mode="one" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1b Machine learning"><span class="tab-code">1b</span><span class="tab-long">Machine learning</span><span class="tab-short">Machine learning</span></button>
-      <button data-mode="net" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1c Neural networks"><span class="tab-code">1c</span><span class="tab-long">Neural networks</span><span class="tab-short">Neural networks</span></button>
+  <nav id="stage-nav" aria-label="Strategy model examples">
+    <div class="seg" id="mode-seg" role="tablist" aria-label="Strategy model examples">
+      <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="stage-intro" aria-label="1a Symbolic AI, also called GOFAI"><span class="tab-code">1a</span><span class="tab-long">Symbolic AI (GOFAI)</span><span class="tab-short"><span>Symbolic AI</span><small>GOFAI</small></span></button>
+      <button data-mode="one" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1b Value table, a tabular model"><span class="tab-code">1b</span><span class="tab-long">Value table</span><span class="tab-short"><span>Value table</span><small>Tabular model</small></span></button>
+      <button data-mode="net" role="tab" aria-selected="false" aria-controls="stage-intro" aria-label="1c Neural Network"><span class="tab-code">1c</span><span class="tab-long">Neural Network</span><span class="tab-short"><span>Neural Network</span><small>Feedforward MLP</small></span></button>
+      <button data-mode="other" role="tab" aria-selected="false" aria-controls="other-models" aria-label="1d Other model types"><span class="tab-code">1d</span><span class="tab-long">Other model types</span><span class="tab-short"><span>Other models</span><small>More families</small></span></button>
     </div>
   </nav>
   </div>
 
   <main id="main">
 
+    <nav id="lens-nav" aria-label="Lesson view">
+      <div class="seg" id="lens-seg" role="tablist" aria-label="Lesson view">
+        <button data-view="action" class="on" role="tab" aria-selected="true" aria-controls="stage-intro">Model in action</button>
+        <button data-view="learn" role="tab" aria-selected="false" aria-controls="learning-overview">How they learn</button>
+      </div>
+    </nav>
+
     <section id="stage-intro" aria-labelledby="stage-title">
       <div class="intro-copy">
-        <p class="eyebrow" id="stage-kicker">Stage 1a · written rules</p>
-        <h1 id="stage-title">Rules-based intelligence</h1>
-        <p class="frame-question">Where does an AI’s skill come from? Compare written rules, learned scores, and a neural network on the same game.</p>
+        <p class="eyebrow" id="stage-kicker">Model 1a · hand-written symbolic rules</p>
+        <h1 id="stage-title">Symbolic AI (GOFAI)</h1>
+        <p class="frame-question">Where does an AI’s skill come from? Compare ways to represent a strategy, then compare the different ways models can learn.</p>
         <p class="learning-question" id="stage-question">Can a program play well without learning?</p>
       </div>
       <div class="lesson-strip" aria-label="What to try and notice">
@@ -72,6 +80,42 @@
         <button class="btn details-trigger" id="btn-details" type="button" aria-label="Details" aria-haspopup="dialog" aria-controls="details">
           <span>Details</span><span class="details-hint">Evidence and explanation</span>
         </button>
+      </div>
+    </section>
+
+    <section id="other-models" hidden aria-labelledby="other-models-title">
+      <div class="other-models-head">
+        <p class="eyebrow">Model 1d · a wider map</p>
+        <h2 id="other-models-title">Other model types</h2>
+        <p>These are additional ways a system can represent a prediction or strategy. A learning method is a separate choice.</p>
+      </div>
+      <div class="model-family-grid">
+        <article><h3>Linear and logistic models</h3><p>Combine input features with learned coefficients to predict a number or probability.</p></article>
+        <article><h3>Decision trees</h3><p>Route an example through learned questions. A tree can be learned even though 1a's rule chain was written by a person.</p></article>
+        <article><h3>Ensembles</h3><p>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</p></article>
+        <article><h3>Nearest neighbors</h3><p>Predict from stored examples that are most similar under a chosen distance.</p></article>
+        <article><h3>Support-vector machines</h3><p>Learn a boundary that balances a wide margin between classes with classification errors.</p></article>
+        <article><h3>Probabilistic and Bayesian models</h3><p>Represent uncertainty with probabilities and update beliefs when evidence arrives.</p></article>
+      </div>
+      <aside class="search-note"><b>Search and planning are AI problem-solving approaches.</b> They explore possible actions or future states; they are not another statistical model family.</aside>
+    </section>
+
+    <section id="learning-overview" hidden aria-labelledby="learning-title">
+      <div class="learning-head">
+        <p class="eyebrow">Learning methods · a separate axis</p>
+        <h2 id="learning-title">How models learn</h2>
+        <p>A model is what holds a pattern or strategy. A learning method is how its adjustable parts change. The categories overlap, and one system can combine them.</p>
+      </div>
+      <div class="learning-grid">
+        <article><h3>Supervised learning</h3><p>Learns from inputs paired with target answers. Example: 1c fits frozen scores produced by another model, showing that targets need not be written by a person.</p></article>
+        <article><h3>Unsupervised learning</h3><p>Looks for structure without target labels. Example: grouping similar documents into clusters without predefined topics.</p></article>
+        <article><h3>Self-supervised learning</h3><p>Generates targets from the data itself. Example: hide a word in a sentence and train a model to predict it.</p></article>
+        <article class="featured"><h3>Reinforcement learning</h3><p>Learns from rewards that follow actions. Example: 1b updates position values after wins, losses, and draws—even during self-play.</p></article>
+        <article><h3>Semi-supervised learning</h3><p>Combines a smaller labeled set with a larger unlabeled set. Example: train an image classifier with a few labeled images and many unlabeled images.</p></article>
+      </div>
+      <div class="learning-clarifiers">
+        <p><b>Self-play is not self-supervised learning.</b> The value table can play against itself, but it still learns from game rewards, so its method is reinforcement learning.</p>
+        <p><b>Gradient training is not evolution.</b> Backpropagation computes how prediction error changes with each weight; the update rule uses those derivatives to adjust the current network. Evolutionary optimization instead evaluates variations across a population or set of candidates.</p>
       </div>
     </section>
 
@@ -164,6 +208,8 @@
       <button class="btn ghost sm" id="btn-learned" hidden>What it learned last time</button>
     </section>
 
+    <section class="panel" id="network-view" hidden aria-label="Current neural network weights"></section>
+
     </div><!-- /col-b -->
 
     <footer id="foot">
@@ -182,7 +228,7 @@
 <div class="overlay sheet" id="details" hidden role="dialog" aria-modal="true" aria-labelledby="details-title">
   <div class="sheet-inner details-drawer" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="details-title">Details</h2><div class="sub" id="details-sub">Stage 1a · Rules-based intelligence</div></div>
+      <div><h2 id="details-title">Details</h2><div class="sub" id="details-sub">Model 1a · Symbolic AI (GOFAI)</div></div>
       <button class="icon-btn" data-close="details" aria-label="Close Details">&times;</button>
     </div>
     <div class="sheet-body details-body" tabindex="0" role="region" aria-label="Details content">
@@ -208,11 +254,12 @@
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
-      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? The three tabs compare written instructions, experience stored as scores, and neural-network weights—adjustable numbers reused to score many board positions. They are different mechanisms, not difficulty levels.</p>
+      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? The A–D row compares model representations. <b>How they learn</b> separately compares learning methods; the two axes can be combined.</p>
       <ol class="howto-steps">
-        <li><b>1a · Rules-based intelligence.</b> Play once and watch the highlighted rule explain each reply. Compare <b>First 2</b> with <b>All 8</b>. A person supplied every move priority; playing more games cannot change them.</li>
-        <li><b>1b · Machine learning.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the new era with Era 0. Outcomes update a stored score for each board position.</li>
-        <li><b>1c · Neural networks.</b> Choose <b>Create learning examples</b>, then train the network. Compare error on practiced examples and <b>held-out positions</b>—positions kept out of training—then check playing results separately.</li>
+        <li><b>1a · Symbolic AI (GOFAI).</b> Play once and watch the highlighted rule explain each reply. Compare <b>First 2</b> with <b>All 8</b>. A person supplied every move priority; playing more games cannot change them.</li>
+        <li><b>1b · Value table.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the new era with Era 0. Reinforcement learning updates a stored value for each position from game outcomes.</li>
+        <li><b>1c · Neural Network.</b> Choose <b>Create learning examples</b>, then train the network. Inspect its real weights and compare error on practiced and <b>held-out positions</b>—positions kept out of training.</li>
+        <li><b>1d · Other model types.</b> Scan six other model families, then use <b>How they learn</b> to compare five common learning setups across models.</li>
       </ol>
       <p class="howto-note">The full rule set and a sufficiently trained table can both play
       unbeatable tic-tac-toe. People wrote the first opponent's move priorities directly;
@@ -269,7 +316,7 @@
 <div class="overlay sheet" id="notes" hidden role="dialog" aria-modal="true" aria-labelledby="notes-title">
   <div class="sheet-inner" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">Demo 1 &middot; 20 minutes &middot; rules, machine learning, neural networks</div></div>
+      <div><h2 id="notes-title">Presenter notes</h2><div class="sub">Demo 1 &middot; 20 minutes &middot; models and learning methods</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body" id="notes-body">
@@ -298,8 +345,8 @@
           <span>Presentation mode — larger type and controls for a projector</span>
         </label>
         <button class="btn" id="btn-notes">Open Presenter Notes</button>
-        <p class="help">The 20-minute session plan covers all three tabs, the optional
-        extension, and discussion prompts. It is built into this file and includes
+        <p class="help">The 20-minute session plan covers the model and learning-method tabs,
+        the optional extension, and discussion prompts. It is built into this file and includes
         a print button.</p>
       </div>
       <div class="field">

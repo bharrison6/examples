@@ -978,17 +978,19 @@ head('7. Step 1 — the hand-written rules');
   check('seven rules and eight rules are the same opponent — rule 8 is the list being tidy',
     sameAt7 && RULES.report(7).safe);
 
-  /* ---- current public documentation names the actual three stages ---- */
+  /* ---- current public documentation names the model and learning axes ---- */
   const docs = ['README.md', 'src/demo-guide.html', 'demo.json']
     .map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
-  const terms = ['1a', '1b', '1c', 'Neural networks', 'optional advanced extension'];
-  check('README, guide, and manifest describe the three real stages',
+  const terms = ['1a', '1b', '1c', '1d', 'Symbolic AI (GOFAI)', 'Value table',
+    'Neural Network', 'Other model types', 'How they learn'];
+  check('README, guide, and manifest describe the model examples and learning view',
     terms.every(t => docs.includes(t)), terms.filter(t => !docs.includes(t)).join(', '));
   check('public copy does not promise neural generalisation or unbeatability',
-    docs.includes('does not call this network unbeatable') && /not a\s+guarantee of generalisation/.test(docs));
+    docs.includes('no automatic unbeatable claim') && docs.includes('not guaranteed playing strength'));
   const guide = fs.readFileSync(path.join(__dirname, 'demo-guide.html'), 'utf8');
   check('the guide names visible neural actions in plain language',
-    guide.includes('Create learning examples') && guide.includes('Train network') && guide.includes('positions kept out of training'));
+    guide.includes('Create learning examples') && guide.includes('Train network') &&
+    guide.includes('held-out error') && guide.includes('network’s layers'));
 }
 
 /* ===================================================================== */
