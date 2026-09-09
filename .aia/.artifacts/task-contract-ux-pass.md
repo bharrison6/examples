@@ -126,6 +126,16 @@ From the fuel-golf and topping-out lanes (2026-09-09):
   two lines (about 34px) and can cover a bottom control bar or the notes overlay's foot; raise
   the reserved height or lift the pill at the narrow breakpoint and re-measure at several widths.
 
+From the should-have-known-that lane (2026-09-09):
+
+- **Anchor every marker to the start of a line and refuse a marker that matches twice**; that
+  rule holds where "name the block by id" alone did not (the header comment that documents the
+  id is itself a match). Comment-masking is the equivalent alternative.
+- **Re-measure a long-word retitle at 320, 360, 390 and 430px** before claiming `mobile: true`:
+  "Engineering Trivia" overflowed where "Should Have Known That" fit, because ENGINEERING has no
+  break opportunity. "PLC Ladder Logic Trainer" and "AI Winters: Boom and Bust" deserve the same
+  check. Fit by `clamp()`/`min()` so desktop sizes are unchanged.
+
 ## Orchestrator sweep after batch 3 (not lane work)
 
 - `inhibitor-investigation/build.js` still locates the guide stylesheet with `indexOf('<style>')`
