@@ -32,7 +32,7 @@ Every demo carries a `demo.json` manifest — identity, provenance (`built_with`
 ## Adding a new demo
 
 1. Create a folder named with the demo's kebab-case **title slug** (e.g. `bridge-works`). Folder names are public URLs on the hosted copy — never rename a shipped demo.
-2. Meet the [demo contract](CONTRACT.md): self-contained `index.html`, `README.md`, printable guide, how-to popup, settings + presentation mode, theme + attribution, mobile capable, offline.
+2. Meet the [demo contract](CONTRACT.md): self-contained `index.html`, `README.md`, printable guide, `?` Guide button, Settings with Open Presenter Notes + Presentation mode + Reset, presenter notes single-sourced with the printable guide, theme + attribution, mobile capable, offline.
 3. Write `demo.json` (copy a neighbor's; record `built_with` provenance honestly).
 4. Add the demo to a tour in `tours/` and drop a stub card `<a class="card" href="<slug>/index.html"></a>` where it belongs in `index.html`.
 5. Run `node tools/build-hub.js` — regenerates this table and the launcher cards, validates declared files, prints the compliance report.
