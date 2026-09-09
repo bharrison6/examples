@@ -4,18 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>How a Language Model Works — presenter guide</title>
-<!-- ONE SOURCE FOR THE NOTES. This file is canonical for three surfaces: this
-     printable page, Glass-Box-Demo-Guide.pdf, and the demo's Settings -> Open
-     Presenter Notes overlay. build.js lifts the second stylesheet and the
-     .guide-scope div out of here verbatim and injects them into index.html, and
-     `node build.js --check` fails the moment any of the three drifts. Edit only
-     this file; never hand-edit the notes inside the app.
-
-     The two stylesheets are split on purpose and the split is load-bearing:
-     the FIRST is page furniture (page box, reset, body) that must NOT travel
-     into the app, because a bare `body` or `*` rule inside a modal overlay
-     would restyle the whole demo. Only the SECOND travels, and every selector
-     in it starts with .guide-scope. -->
+<!-- This file is the one canonical source for the printable guide, PDF, and
+     Settings → Open Presenter Notes. build.js lifts guide-css and guide-scope
+     verbatim into the app; do not duplicate this prose in the application. -->
 <style id="guide-page">
   @page { size: A4 portrait; margin: 10mm 9mm; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,270 +15,121 @@
   @media print { body { padding: 0; max-width: none; margin: 0; } }
 </style>
 <style id="guide-css">
-  /* Murray State palette: navy #002144 and gold #ECAC00. Gold is a rule and a
-     fill, never small type — it does not carry on white paper. The custom
-     properties live on .guide-scope, not :root, so the injected copy carries
-     its own light palette into the demo's dark one.
-
-     The print units (pt, mm) are deliberate: this stylesheet is what renders
-     the A4 PDF. The app does not re-unit them — it scales the whole injected
-     block with `zoom`, so the shipped page and the PDF are laid out by exactly
-     the bytes below. */
   .guide-scope { --ink:#111820; --ink2:#41505f; --ink3:#71808f; --line:#c2cede;
                  --navy:#002144; --gold:#ECAC00; --hi:#FFF7E4;
-                 font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
-                 color: var(--ink); font-size: 7.4pt; line-height: 1.26; }
-  .guide-scope header { border-bottom: 2.4pt solid var(--navy); padding-bottom: 1.8mm; margin-bottom: 2.2mm;
-           display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; }
-  .guide-scope .eyebrow { font-size: 6.4pt; font-weight: 700; letter-spacing: 1.5pt; text-transform: uppercase;
-             color: var(--navy); border-bottom: 1.6pt solid var(--gold);
-             display: inline-block; padding-bottom: .5mm; margin-bottom: 1.2mm; }
-  .guide-scope h1 { font-size: 14pt; letter-spacing: .4pt; line-height: 1.04; color: var(--navy); }
-  .guide-scope h1 small { display: block; font-size: 6.9pt; font-weight: 600; letter-spacing: 1.4pt;
-             text-transform: uppercase; color: var(--ink2); margin-top: 1mm; }
-  .guide-scope .meta { text-align: right; font-size: 6.6pt; color: var(--ink2); line-height: 1.35; }
-  .guide-scope .cols { column-count: 2; column-gap: 5mm; column-rule: .4pt solid var(--line); }
-  .guide-scope section { break-inside: avoid; margin-bottom: 2mm; }
-  .guide-scope h2 { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .8pt; color: var(--navy);
-       border-bottom: 1.2pt solid var(--gold); padding-bottom: .5mm; margin-bottom: 1mm; }
-  .guide-scope p { margin-bottom: 1mm; }
-  .guide-scope ol { margin: 0 0 1mm 3.4mm; padding-left: 0; }
-  .guide-scope ul { margin: 0 0 1mm 3mm; padding-left: 0; }
-  .guide-scope li { margin-bottom: .6mm; }
-  .guide-scope .beat { display: grid; grid-template-columns: 10mm 1fr; gap: 1.2mm; margin-bottom: 1.2mm; break-inside: avoid; }
-  .guide-scope .beat .t { font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; font-size: 7pt; }
-  .guide-scope .beat > div > b:first-of-type { display: block; }
-  .guide-scope .say { background: var(--hi); border-left: 1.6pt solid var(--gold); padding: .9mm 1.3mm;
-         margin: .6mm 0; font-style: italic; break-inside: avoid; }
-  .guide-scope .mis { border: .5pt solid var(--line); border-radius: 1.4mm; padding: 1.1mm 1.4mm; margin-bottom: 1.2mm; break-inside: avoid; }
-  .guide-scope .mis .claim { font-weight: 700; color: var(--navy); }
-  .guide-scope .mis .claim::before { content: "“"; }
-  .guide-scope .mis .claim::after { content: "”"; }
-  .guide-scope .mis .ans { color: var(--ink2); margin-top: .3mm; }
-  .guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: 6.8pt; }
-  .guide-scope footer { margin-top: 2mm; padding-top: 1.2mm; border-top: .6pt solid var(--line);
-           font-size: 6.4pt; color: var(--ink3); display: flex; justify-content: space-between; gap: 4mm; }
-  .guide-scope .warn { color: #a3341f; font-weight: 600; }
-  .guide-scope .page2 { break-before: page; padding-top: 2mm; }
+                 font-family:"Segoe UI",-apple-system,system-ui,Roboto,Helvetica,Arial,sans-serif;
+                 color:var(--ink); font-size:10pt; line-height:1.38; }
+  .guide-scope header { border-bottom:3pt solid var(--navy); padding-bottom:3mm; margin-bottom:4mm;
+           display:flex; justify-content:space-between; align-items:flex-end; gap:6mm; }
+  .guide-scope .eyebrow { font-size:7.5pt; font-weight:700; letter-spacing:1.5pt; text-transform:uppercase;
+             color:var(--navy); border-bottom:1.6pt solid var(--gold); display:inline-block; padding-bottom:.7mm; margin-bottom:1.6mm; }
+  .guide-scope h1 { font-size:21pt; letter-spacing:.3pt; line-height:1.08; color:var(--navy); }
+  .guide-scope h1 small { display:block; font-size:9pt; font-weight:600; letter-spacing:1.1pt; text-transform:uppercase; color:var(--ink2); margin-top:1.2mm; }
+  .guide-scope .meta { text-align:right; font-size:8.5pt; color:var(--ink2); line-height:1.4; }
+  .guide-scope .cols { column-count:1; }
+  .guide-scope section { break-inside:avoid; margin-bottom:4mm; }
+  .guide-scope h2 { font-size:12.5pt; text-transform:uppercase; letter-spacing:.6pt; color:var(--navy); border-bottom:1.5pt solid var(--gold); padding-bottom:1mm; margin-bottom:1.6mm; }
+  .guide-scope h3 { font-size:10pt; color:var(--navy); margin:2mm 0 .7mm; }
+  .guide-scope p { margin-bottom:1.6mm; }
+  .guide-scope ol { margin:0 0 1.6mm 5mm; padding-left:0; }
+  .guide-scope ul { margin:0 0 1.6mm 4.5mm; padding-left:0; }
+  .guide-scope li { margin-bottom:1mm; }
+  .guide-scope .beat { display:grid; grid-template-columns:13mm 1fr; gap:2mm; margin-bottom:2.2mm; break-inside:avoid; }
+  .guide-scope .beat .t { font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums; font-size:8.5pt; }
+  .guide-scope .beat > div > b:first-of-type { display:block; }
+  .guide-scope .say { background:var(--hi); border-left:2.4pt solid var(--gold); padding:1.8mm 2.4mm; margin:1.5mm 0; font-style:italic; break-inside:avoid; }
+  .guide-scope .mis { border:.5pt solid var(--line); border-radius:1.4mm; padding:1.8mm 2.4mm; margin-bottom:2mm; break-inside:avoid; }
+  .guide-scope .mis .claim { font-weight:700; color:var(--navy); }
+  .guide-scope .mis .claim::before { content:"“"; }
+  .guide-scope .mis .claim::after { content:"”"; }
+  .guide-scope .mis .ans { color:var(--ink2); margin-top:.3mm; }
+  .guide-scope code { font-family:ui-monospace,Consolas,monospace; font-size:8.7pt; }
+  .guide-scope footer { margin-top:4mm; padding-top:2mm; border-top:.6pt solid var(--line); font-size:8pt; color:var(--ink3); display:flex; justify-content:space-between; gap:4mm; }
+  .guide-scope .warn { color:#a3341f; font-weight:600; }
+  .guide-scope .page-break { break-before:page; padding-top:2mm; }
 </style>
 </head>
 <body>
 <div class="guide-scope">
-
+<div class="guide">
 <header>
   <div>
     <div class="eyebrow">Murray State University</div>
-    <h1>How a Language Model Works<small>Glass Box &middot; three 10-minute acts &middot; for educators</small></h1>
+    <h1>How a Language Model Works<small>Language models · reasoning · agents · 20 minutes</small></h1>
   </div>
-  <div class="meta">
-    <b>You need:</b> one phone, tablet or laptop. Open <code>index.html</code>.<br>
-    No install, no login, no network. Projecting? <b>&#9881; Settings &rarr; Presentation mode</b>.<br>
-    <b class="warn">Do not train before the session</b> — the untrained model is the opening act.<br>
-    Acts stand alone: teach one, two, or all three.
-  </div>
+  <p class="meta"><b>You need:</b> one browser and <code>index.html</code>.
+    It runs offline. For projection use Settings → Presentation mode.
+    Start fresh: the untrained model is useful evidence.</p>
 </header>
 
 <div class="cols">
-
 <section>
-  <h2>What this is</h2>
-  <p>A complete, working language model — 42,458 parameters of real transformer, the same
-  architecture as the frontier models — that trains from scratch on the device in front of your
-  audience. Act 1 shows what a language model <i>is</i>. Act 2 shows how <b>reasoning models</b> are
-  made from one. Act 3 shows how a reasoning model plus tools becomes an <b>agent</b>. Nothing is
-  faked: every number on screen is computed live, and each act ends with a "What is real here" box
-  you can read aloud.</p>
+  <h2>One question for the session</h2>
+  <p><b>What changes when a text predictor is given more structure, more checking, or tools?</b> This page shows three bounded mechanisms: a tiny language model learning next-character prediction, arithmetic experiments with written work and checking, and a tool loop with a scripted action selector. Use Details for the deeper architecture and implementation notes.</p>
+  <p class="say">“Keep asking what the program learned, what it is calculating now, and what part is a teaching fixture.”</p>
 </section>
 
 <section>
-  <h2>Act 1 — the predictor (10 min)</h2>
-
-  <div class="beat"><div class="t">0:00</div><div>
-    <b>§1.1 — type a sentence, watch it become numbered tokens.</b>
-    <div class="say">"A model never sees words. It sees a list of numbers. Everything a chatbot has
-    ever 'read' entered as a list like this one."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">1:30</div><div>
-    <b>§1.2 — tap a row of the parameter map.</b> The pixels are the actual weights, currently
-    random noise. Show the scale bars below it.
-    <div class="say">"These 42,458 numbers are the entire machine. A frontier model is this exact
-    picture with about fifty million times more pixels — and until it is trained, it is all static."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">3:00</div><div>
-    <b>§1.3 — read the untrained sample aloud.</b> Let it be ridiculous. Then press
-    <b>Train</b> and narrate the loss falling while live samples stream.
-    <div class="say">"Its only teacher: guess character 41 from the last 40, be told the truth,
-    nudge all 42,458 numbers a hair. Repeat."</div>
-    Press train through each era — babble, words, phrases, sentences — reading one sample per era.
-    The era comparison grid fills as you go. This is the demo's spine; give it time.
-    When someone asks what it is reading, open <b>"Read its entire textbook"</b>: an original
-    4,701-character story written for this demo, 252 distinct words — its whole universe. Everything
-    it writes is a recombination of that page.
-  </div></div>
-
-  <div class="beat"><div class="t">7:00</div><div>
-    <b>§1.4 — the probability table.</b> Type a prompt, show the ranked guesses. Play with
-    temperature at 0 (repetitive), 0.8, then 1.6 (unhinged). Switch back to the <b>newborn</b> era
-    chip: same machine, useless numbers.
-    <div class="say">"This table is the only thing it ever does. Chat is this, ten thousand times
-    in a row."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">8:30</div><div>
-    <b>§1.5 — tap characters in the attention view.</b> Gold = where it is looking. Try tapping the
-    second "the" — heads often glance back at earlier occurrences and at the word after them.
-    <div class="say">"Attention is the invention that let each position rummage through everything
-    before it. It is the T in GPT."</div>
-  </div></div>
+  <h2>LLM · Language model — 6 minutes</h2>
+  <h3>Question</h3>
+  <p>How can adjustable numbers turn recent text into a next-character prediction?</p>
+  <h3>Activity</h3>
+  <div class="beat"><div class="t">0:00</div><div><b>Open LLM.</b> Use Tokenize text and Inspect parameters on an untrained prompt. The numbers begin as random values.</div></div>
+  <div class="beat"><div class="t">1:30</div><div><b>Choose Train the model.</b> Read one untrained sample, then narrate the loss and samples as the first era completes. Use Try next-token prediction to compare likely next characters; change Temperature only after the audience sees the ranked choices.</div></div>
+  <div class="beat"><div class="t">4:30</div><div><b>Choose Trace attention.</b> Select a character and show which earlier positions receive weight for that prediction. It is a live intermediate value, not evidence that the model has a mind or intent.</div></div>
+  <h3>Expected observation</h3>
+  <p>Training changes the weights, loss declines, and the model’s next-character distribution changes. Its samples can become more patterned while still being limited by one short, original story.</p>
+  <h3>Teaching limit</h3>
+  <p>This is a character-level transformer trained from scratch on a tiny corpus. It demonstrates a transformer learning mechanism, not general language ability or a claim about every frontier system.</p>
 </section>
 
 <section>
-  <h2>Act 2 — the reasoner (10 min)</h2>
-
-  <div class="beat"><div class="t">0:00</div><div>
-    <b>Frame it before pressing anything:</b> two identical brains, equal training time; one sees
-    only <code>347+285=632.</code>, the other sees the carries written out. Ask the room to predict
-    the two exam scores. <b>Then press "Run the experiment"</b> and talk over the two minutes of
-    training — there are live attempts and spot-checks to point at.
-  </div></div>
-
-  <div class="beat"><div class="t">4:00</div><div>
-    <b>The reveal:</b> typically around half right versus nearly all right. Scroll to §2.2 and read
-    a red row from each side — Model D's misses are "close, right shape" (it learned the vibe of an
-    answer); Model S's rare miss is one bad written step.
-    <div class="say">"Chain-of-thought isn't a trick prompt. It changes what is learnable: each
-    small step is easy, the leap is not. 'Thinking' models are models trained to take the steps."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">6:30</div><div>
-    <b>§2.3 — press Run.</b> A deliberately under-trained sibling of Model S climbs as it gets more attempts,
-    because a verifier checks the written steps — never the answer key. Show the accepted/rejected
-    chains under the bars.
-    <div class="say">"Same frozen model on every row. We bought accuracy with compute at answer
-    time. That is the 'thinking time' dial on every frontier reasoning model."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">8:00</div><div>
-    <b>§2.4 — press Self-improvement three times.</b> Watch accuracy climb round over round, and
-    point out it now keeps far <i>more of its own work</i> than when it started (82 of 120 in round 1, over 100 by round 3).
-    <div class="say">"No new human data entered. It posed problems, kept what its verifier
-    certified, and studied its own best work. Reinforcement learning — the essence of how reasoning
-    models are actually trained."</div>
-  </div></div>
+  <h2>Reasoning · Worked steps — 8 minutes</h2>
+  <h3>Question</h3>
+  <p>How do written intermediate steps and checking change a small model’s behavior on addition?</p>
+  <h3>Activity</h3>
+  <div class="beat"><div class="t">6:00</div><div><b>Open Reasoning and choose Train and compare.</b> Compare direct-answer training with worked column arithmetic. The models share core width, depth, and heads, but their contexts, seeds, and update counts differ to fit their different text formats.</div></div>
+  <div class="beat"><div class="t">8:30</div><div><b>Choose Compare exam answers.</b> Read a live attempt and an exam row. The useful comparison is the presence of written intermediate work, not a universal performance promise.</div></div>
+  <div class="beat"><div class="t">10:30</div><div><b>Optional slow extension: Try more attempts.</b> Run 1, 2, 4, and 8 attempts with the same frozen under-trained model. The arithmetic checker rejects malformed work and accepted chains vote. More attempts add inference-time computation, not training.</div></div>
+  <h3>Expected observation</h3>
+  <p>Written steps provide smaller targets for the model to predict. Sampling plus checking can improve the chosen answer even when weights stay fixed.</p>
+  <h3>Teaching limit</h3>
+  <p>The checker validates column arithmetic from the addends. The optional accepted-example round also retains chains matching the generated answer, then uses ordinary next-token updates on those examples. That is rejection-selected supervised fine-tuning, not a policy-gradient reinforcement-learning update.</p>
 </section>
 
 <section>
-  <h2>Act 3 — the agent (10 min)</h2>
-
-  <div class="beat"><div class="t">0:00</div><div>
-    <b>§3.1 — read the loop out loud once</b> (context → model → tool → observation), then open the
-    tool definitions fold.
-    <div class="say">"An agent is not a new kind of AI. It is the same predictor, in a loop, where
-    some of its text makes things happen."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">1:30</div><div>
-    <b>§3.2 — "you are the model" first.</b> Hand the device to a volunteer and let the room argue
-    over each choice. The tempting wrong choices really execute — picking the cheapest pizzeria
-    without reading its hours is the lesson, not a mistake.
-  </div></div>
-
-  <div class="beat"><div class="t">5:30</div><div>
-    <b>Press §3.2's <code>restart run</code>, then "watch it run".</b> Two beats to point at: the calculator error
-    (<code>9 x $13.00</code>) and the recovery on the next turn — errors are just observations; and
-    the context meter growing — every turn, the whole transcript is re-read.
-  </div></div>
-
-  <div class="beat"><div class="t">8:00</div><div>
-    <b>The closer: set the window to "tiny", <code>restart run</code>, watch it run.</b> Mid-task, the goal falls out
-    of the visible window and the agent stops dead, telling you why. Open "what the model sees" and
-    show the red truncation line.
-    <div class="say">"The model remembers nothing between turns. The context window is its entire
-    working memory — most of real agent engineering is a fight with exactly this."</div>
-  </div></div>
-</section>
-
-<section class="page2">
-  <h2>Misconceptions to draw out</h2>
-
-  <div class="mis"><div class="claim">It's understanding the story.</div>
-  <div class="ans">It is predicting the next character of one children's story. The interesting
-  question — raise it, don't resolve it — is whether "understanding" at frontier scale is different
-  in kind or only in degree. The demo gives both sides ammunition.</div></div>
-
-  <div class="mis"><div class="claim">It memorized the text.</div>
-  <div class="ans">42,458 parameters cannot hold 4,700 characters of text verbatim plus grammar; and
-  its samples are recombinations, not quotes. (Frontier models <i>can</i> memorize; that is a real
-  issue — different regime.)</div></div>
-
-  <div class="mis"><div class="claim">Reasoning models are just prompted to "think step by step."</div>
-  <div class="ans">Prompting only elicits it. Act 2 shows the training version: the steps are in the
-  data (§2.1), and reinforcement selects for chains that verify (§2.4). That is the difference
-  between a chat model and a reasoning model.</div></div>
-
-  <div class="mis"><div class="claim">The agent decided to check the hours — so it wanted the right answer.</div>
-  <div class="ans">In this demo the decision rules are scripted (the page says so on screen). What is
-  genuinely shown: the loop, real tools, real errors, and total dependence on context. Goals-talk is
-  a description of behavior, not evidence of desire.</div></div>
-
-  <div class="mis"><div class="claim">Bigger context windows will fix agents.</div>
-  <div class="ans">They help, and real windows are ~200k+ tokens. But cost grows with context,
-  attention gets diluted, and tasks can outlive any window — hence summarizing, note-taking (watch
-  the agent's <code>note</code> tool), and retrieval.</div></div>
-
-  <div class="mis"><div class="claim">This is too small to say anything about ChatGPT/Claude.</div>
-  <div class="ans">Fair challenge — answer it honestly: what transfers is the mechanism (same
-  architecture, same training rule, same loop), not the capability. Every "what is real here" box
-  states exactly where the toy ends and scale begins.</div></div>
+  <h2>Agents · Tool-using loop — 5 minutes</h2>
+  <h3>Question</h3>
+  <p>What does a system need in addition to text prediction to take actions and use results?</p>
+  <h3>Activity</h3>
+  <div class="beat"><div class="t">14:00</div><div><b>Open Agents, then choose You choose the actions.</b> The calculator, search, reading, notebook, observations, and distractor consequences all run locally.</div></div>
+  <div class="beat"><div class="t">16:00</div><div><b>Choose Watch the scripted policy.</b> Point out the calculator’s deliberate bad syntax and its genuine error message, then the later corrected call. Open the raw context to see what the action selector can read.</div></div>
+  <div class="beat"><div class="t">18:00</div><div><b>Choose Tiny · last 450 characters, Restart run, and Watch the scripted policy again.</b> The goal leaves the visible context and the automatic run stops.</div></div>
+  <h3>Expected observation</h3>
+  <p>Tool results become new text in the context. The small window changes what the selector can use, so the same task can fail when its goal is no longer visible.</p>
+  <h3>Teaching limit</h3>
+  <p>The action selector in this activity is a scripted policy, including the calculator mistake and retry; it is not a learned model. The loop, local tools, observations, and context truncation are the genuine mechanisms on display.</p>
 </section>
 
 <section>
-  <h2>Timing &amp; logistics</h2>
+  <h2>Optional slow experiments and close</h2>
+  <p>Let Train the model and Train and compare continue while you discuss their live displays; each can take a few minutes. Try more attempts and Fine-tune on accepted examples are optional extensions. Do not promise a particular score or curve: the page uses seeded, bounded demonstrations.</p>
+  <p class="say">“A language model predicts. Reasoning experiments add written work, checking, or extra attempts. An agent adds a loop and tools; in this activity, its action choice is deliberately scripted.”</p>
   <ul>
-    <li>Act 1 training totals ~2–3 minutes of compute across four presses; each burst streams live
-    samples, so narrate over it. Act 2's experiment is one ~2–3 minute press; §2.3 ≈ 40s; each §2.4
-    round ≈ 20–30s.</li>
-    <li>Training happens live but is <b>seeded and deterministic</b> — the engine computes its own
-    math so the same run reproduces exactly, on every device (the shipped run: Model D ~54%, Model S
-    ~96%, §2.3 climbs 60→78%, §2.4 rounds 49→77→83→84→85%). You can rehearse to the digit. The README
-    documents the honest spread across other seeds.</li>
-    <li>Phone works; a projected laptop is better for rooms. <b>Presentation mode</b> (&#9881; Settings)
-    enlarges everything one notch.</li>
-    <li><b>Controls:</b> <b>?</b> opens the <b>Guide</b> overlay — it also opens on every load, so a
-    late arrival can read it themselves. <b>&#9881; Settings</b> holds <b>Open Presenter Notes</b>
-    (this document, on screen), <b>Presentation mode</b> and <b>Reset</b>.</li>
-    <li>Refreshing the page forgets everything — which is itself a teachable moment, but not one you
-    want at minute 25. <b>Settings &rarr; Reset</b> does the same on purpose, for a clean start between
-    rooms; it leaves Presentation mode as you set it.</li>
+    <li>Which claim came from a learned model, a fixed calculation, or a scripted policy?</li>
+    <li>Why can extra attempts help without changing weights?</li>
+    <li>What would need to change before this agent activity used a learned action selector?</li>
   </ul>
 </section>
 
 <section>
-  <h2>Questions you will get</h2>
-  <ul>
-    <li><b>"How long would a frontier model take to train this way?"</b> This page does ~15 updates/s
-    on ~43k parameters. Frontier training is ~10²⁵ floating-point operations — months on tens of
-    thousands of GPUs. Same rule, different budget.</li>
-    <li><b>"Where do the words come from at temperature 0?"</b> Deterministic: always the top of the
-    probability table. All variety in AI output is controlled dice-rolling over that table.</li>
-    <li><b>"Is the verifier cheating?"</b> It never sees the true answer — only whether the written
-    steps are internally valid arithmetic that assembles into the stated answer. That is why it can
-    reject a right answer with wrong work.</li>
-    <li><b>"What would make Act 3's agent 'real'?"</b> Replace the scripted rulebook with Act 2's
-    model at scale — that is literally the architecture of Claude, ChatGPT agents, and coding
-    assistants.</li>
-  </ul>
+  <h2>Presenter controls</h2>
+  <p>Guide opens from the header and on entry. Settings contains Open Presenter Notes, Presentation mode, and Reset. Reset returns the complete demonstration to its fresh state. Open printable guide opens the rendered copy of this same guide.</p>
 </section>
-
 </div>
 
-<footer>
-  <span>How a Language Model Works (Glass Box) &middot; examples repo &middot; runs entirely offline, on the device</span>
-  <span>Companion file: <code>index.html</code> &middot; this guide: <code>demo-guide.html</code></span>
-</footer>
-
+<footer>Bryant Harrison · Murray State University · How a Language Model Works · Offline, single-file demonstration · no account or runtime network</footer>
+</div>
 </div><!-- /guide -->
 </body>
 </html>
