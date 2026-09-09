@@ -19,10 +19,12 @@
   "compliance": {
     "readme": true,
     "guide": true,
-    "howto_popup": true,
+    "guide_button": true,
     "settings_menu": true,
     "presentation_mode": true,
     "presenter_notes": true,
+    "settings_reset": "unverified",
+    "notes_match_guide": false,
     "msu_theme": true,
     "attribution_visible": true,
     "mobile": true,
