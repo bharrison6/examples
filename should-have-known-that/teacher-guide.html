@@ -2,59 +2,124 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Should Have Known That — Teacher Guide</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Engineering Trivia — Teacher Guide</title>
+<!--
+  Canonical, printable teacher guide for Engineering Trivia (folder: should-have-known-that).
+
+  This file is the SINGLE SOURCE for the presenter notes. tools/guide-sync.js lifts the
+  <style id="guide-css"> block and the .guide-scope div out of here verbatim and writes
+  them into index.html between the __GUIDE_CSS__ / __GUIDE__ markers, so Settings ->
+  Open Presenter Notes shows exactly this text with no sibling file to fetch. Edit here;
+  never edit the copy inside index.html. tools/pdf.mjs renders the PDF from this same
+  file. `node tools/guide-sync.js --check` fails when the two have drifted.
+
+  Everything in the <style id="guide-css"> block MUST be scoped to .guide-scope, because
+  it is injected into an app that has its own stylesheet — no bare element or body rules,
+  and no at-rules (guide-sync refuses both). Its colours come from custom properties whose
+  defaults suit white paper; the app overrides them on `#ov-notes .guide-scope` so the same
+  stylesheet reads on navy. Page-level styles for this printable file — the @page box, the
+  two-column print layout and the point sizes — live in the SECOND <style> block, which is
+  not extracted.
+-->
+<style id="guide-css">
+.guide-scope {
+  --guide-accent: #002144;
+  --guide-rule: #ECAC00;
+  --guide-strong: #0e1622;
+  --guide-muted: #4a5a72;
+  --guide-line: #b9c4d6;
+  --guide-line-soft: #d5dde8;
+  --guide-box-bg: #f4f7fc;
+  --guide-hook: #00A4E3;
+  --guide-hook-ink: #00679b;
+  --guide-warn: #FF4500;
+  --guide-warn-ink: #c33600;
+  --guide-th-bg: #002144;
+  --guide-th-ink: #ffffff;
+  --guide-code-bg: #eef2f8;
+  color: inherit;
+}
+.guide-scope .g-head { border-bottom: 3px solid var(--guide-rule); padding-bottom: 6px; margin-bottom: 10px; }
+.guide-scope .brandline { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .78em;
+  letter-spacing: .16em; font-weight: 700; color: var(--guide-accent); text-transform: uppercase; }
+.guide-scope h1 { font-size: 1.5em; line-height: 1.15; color: var(--guide-accent); }
+.guide-scope .g-sub { font-size: .92em; color: var(--guide-muted); font-style: italic; }
+.guide-scope h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 1.02em;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--guide-accent);
+  margin: 1.15em 0 .4em; break-after: avoid; border-left: 3px solid var(--guide-rule); padding-left: 6px; }
+.guide-scope h2:first-child { margin-top: 0; }
+.guide-scope p { margin: .45em 0; }
+.guide-scope ul, .guide-scope ol { margin: .3em 0 .7em 1.2em; }
+.guide-scope li { margin: .24em 0; }
+.guide-scope b { color: var(--guide-strong); }
+.guide-scope .time { display: inline-block; min-width: 5.4em; font-weight: 700;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .95em; color: var(--guide-accent); }
+.guide-scope .box { border: 1px solid var(--guide-line); border-left: 3px solid var(--guide-accent);
+  background: var(--guide-box-bg); padding: .5em .75em; margin: .6em 0; border-radius: 3px; break-inside: avoid; }
+.guide-scope .box.hook { border-left-color: var(--guide-hook); }
+.guide-scope .box.hook b.tag { color: var(--guide-hook-ink); }
+.guide-scope .box.warn { border-left-color: var(--guide-warn); }
+.guide-scope .box.warn b.tag { color: var(--guide-warn-ink); }
+.guide-scope table.bands { width: 100%; border-collapse: collapse; margin: .5em 0 .6em;
+  font-size: .94em; break-inside: avoid; }
+.guide-scope table.bands th { background: var(--guide-th-bg); color: var(--guide-th-ink); text-align: left;
+  padding: .25em .4em; font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .88em;
+  letter-spacing: .05em; text-transform: uppercase; }
+.guide-scope table.bands td { border-bottom: 1px solid var(--guide-line-soft); padding: .25em .4em; vertical-align: top; }
+.guide-scope table.bands td.b { font-weight: 700; font-family: "Segoe UI", Helvetica, Arial, sans-serif; white-space: nowrap; }
+.guide-scope .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+  margin-right: 4px; vertical-align: baseline; }
+.guide-scope code { font-family: Consolas, "Courier New", monospace; font-size: .92em;
+  background: var(--guide-code-bg); border: 1px solid var(--guide-line-soft); border-radius: 2px; padding: 0 3px; }
+.guide-scope .g-foot { margin-top: .9em; border-top: 1px solid var(--guide-line);
+  padding-top: .4em; font-size: .92em; color: var(--guide-muted); }
+</style>
 <style>
-  @page { size: letter; margin: 0.45in; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Georgia, "Times New Roman", serif;
-    color: #16202e; font-size: 8.5pt; line-height: 1.25;
-    max-width: 7.6in; margin: 0 auto; padding: 12px;
-  }
-  header { border-bottom: 3px solid #ECAC00; padding-bottom: 6px; margin-bottom: 10px;
-           display: flex; justify-content: space-between; align-items: baseline; }
-  header .brandline {
-    font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 7.4pt;
-    letter-spacing: 1.6px; font-weight: 700; color: #002144; text-transform: uppercase;
-  }
-  h1 { font-size: 17pt; color: #002144; }
-  header .sub { font-size: 9pt; color: #4a5a72; font-style: italic; }
-  .cols { column-count: 2; column-gap: 0.28in; }
-  h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 9.6pt; text-transform: uppercase;
-       letter-spacing: 0.8px; color: #002144; margin: 9px 0 4px; break-after: avoid;
-       border-left: 3px solid #ECAC00; padding-left: 5px; }
-  h2:first-child { margin-top: 0; }
-  p { margin: 4px 0; }
-  ul, ol { margin: 3px 0 5px 15px; }
-  li { margin: 2.5px 0; }
-  b { color: #0e1622; }
-  .time { display: inline-block; min-width: 52px; font-weight: bold; font-family: "Segoe UI", Arial, sans-serif; font-size: 8.6pt; color: #002144; }
-  .box { border: 1px solid #b9c4d6; border-left: 3px solid #002144; background: #f4f7fc;
-         padding: 6px 9px; margin: 6px 0; border-radius: 3px; break-inside: avoid; }
-  .hook { border-left-color: #00A4E3; }
-  .hook b.tag { color: #00679b; }
-  .warn { border-left-color: #FF4500; }
-  .warn b.tag { color: #c33600; }
-  table.bands { width: 100%; border-collapse: collapse; margin: 5px 0 6px; font-size: 8pt; break-inside: avoid; }
-  table.bands th { background: #002144; color: #fff; text-align: left; padding: 3px 5px;
-    font-family: "Segoe UI", Arial, sans-serif; font-size: 7.4pt; letter-spacing: .5px; text-transform: uppercase; }
-  table.bands td { border-bottom: 1px solid #d5dde8; padding: 3px 5px; vertical-align: top; }
-  table.bands td.b { font-weight: bold; font-family: "Segoe UI", Arial, sans-serif; white-space: nowrap; }
-  .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: baseline; }
-  code { font-family: Consolas, "Courier New", monospace; font-size: .92em;
-         background: #eef2f8; border: 1px solid #d5dde8; border-radius: 2px; padding: 0 3px; }
-  footer { margin-top: 8px; border-top: 1px solid #b9c4d6; padding-top: 4px; font-size: 8pt; color: #4a5a72; }
-  @media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); margin: 20px auto; } }
+/* Printable page only — not extracted into the app. Page chrome, the two-column
+   print layout, and the point sizes that keep this on two letter pages. */
+@page { size: letter; margin: 0.45in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #16202e; font-size: 8.5pt; line-height: 1.25;
+  max-width: 7.6in; margin: 0 auto; padding: 12px;
+}
+.guide-scope .cols { column-count: 2; column-gap: 0.28in; }
+.guide-scope .g-head { display: flex; justify-content: space-between; align-items: baseline; }
+.guide-scope .brandline { font-size: 7.4pt; letter-spacing: 1.6px; }
+.guide-scope h1 { font-size: 17pt; }
+.guide-scope .g-sub { font-size: 9pt; }
+.guide-scope h2 { font-size: 9.6pt; letter-spacing: 0.8px; margin: 9px 0 4px; padding-left: 5px; }
+.guide-scope p { margin: 4px 0; }
+.guide-scope ul, .guide-scope ol { margin: 3px 0 5px 15px; }
+.guide-scope li { margin: 2.5px 0; }
+.guide-scope .time { min-width: 52px; font-size: 8.6pt; }
+.guide-scope .box { padding: 6px 9px; margin: 6px 0; }
+.guide-scope table.bands { font-size: 8pt; margin: 5px 0 6px; }
+.guide-scope table.bands th { font-size: 7.4pt; padding: 3px 5px; letter-spacing: .5px; }
+.guide-scope table.bands td { padding: 3px 5px; }
+.guide-scope .g-foot { margin-top: 8px; padding-top: 4px; font-size: 8pt; }
+@media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); margin: 20px auto; } }
+@media screen and (max-width: 600px) {
+  body { width: 100%; max-width: none; margin: 0; padding: 16px 12px 28px; font-size: 10.5pt; overflow-wrap: anywhere; box-shadow: none; }
+  .guide-scope .g-head { display: block; }
+  .guide-scope .g-sub { display: block; margin-top: 4px; }
+  .guide-scope .cols { column-count: 1; }
+  .guide-scope h2 { font-size: 10.5pt; margin-top: 14px; }
+  .guide-scope table.bands { display: block; max-width: 100%; overflow-x: auto; }
+}
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <div class="brandline">Murray State University &middot; Bryant Harrison</div>
-    <h1>&#127919; Should Have Known That &mdash; Teacher Guide</h1>
+<div class="guide-scope">
+  <div class="g-head">
+    <div>
+      <div class="brandline">Murray State University &middot; Bryant Harrison</div>
+      <h1>&#127919; Engineering Trivia &mdash; Teacher Guide</h1>
+    </div>
+    <div class="g-sub">Should Have Known That &middot; number sense, taught by a slider</div>
   </div>
-  <div class="sub">Engineering number sense, taught by a slider</div>
-</header>
 
 <div class="cols">
   <h2>What this teaches</h2>
@@ -79,7 +144,7 @@
     <li><span class="time">2&ndash;5 min</span><b>Poll before every lock-in.</b> Hands up for higher, hands up for lower, then press LOCK IT IN. Public commitment before the reveal is the whole mechanism; a guess nobody said out loud costs nothing to be wrong about.</li>
     <li><span class="time">5&ndash;14 min</span>Switch to <b>teams</b> (2&ndash;4, pass-and-play on one device, or one device per team) and run <b>10 questions</b> each. Read the "because&hellip;" line aloud after every reveal &mdash; do not narrate over the animation, it only takes about two seconds.</li>
     <li><span class="time">14&ndash;18 min</span>Debrief from the end screen's <b>"Should have known that"</b> card, which names the game's biggest miss. Ask that team to say what number they <i>thought</i> it was and why. The wrong mental model is more useful to the room than the right answer.</li>
-    <li><span class="time">18&ndash;20 min</span>Replay one category. Scores jump, and that jump is the point: one exposure with a reason attached is most of what it takes to keep a number.</li>
+    <li><span class="time">18&ndash;20 min</span>Replay one category &mdash; <b>PLAY AGAIN</b> from the end screen, or <b>&#9881; &rarr; Reset</b> for a clean start screen. Scores jump, and that jump is the point: one exposure with a reason attached is most of what it takes to keep a number.</li>
   </ul>
 
   <h2>Solo vs team mode</h2>
@@ -103,23 +168,25 @@
   <div class="box hook"><b class="tag">Reading a Way Off:</b> a Way Off on a <b>linear</b> question is a fact the student does not have. A Way Off on a <b>log</b> question is a bigger problem &mdash; they do not know what <i>size</i> the answer is. Say the difference out loud; it is the single most transferable idea in the game.</div>
 
   <h2>Editing the question bank</h2>
-  <p>Every question is one object in a commented array at the top of <code>index.html</code> &mdash; search for <b>QUESTION BANK</b>. The fields are <code>id</code>, <code>category</code>, <code>prompt</code>, <code>units</code>, <code>value</code> (the true answer), <code>min</code>/<code>max</code> (slider endpoints), <code>scale</code> (<code>"linear"</code> or <code>"log"</code>) and <code>factoid</code> (the "because&hellip;" line). Edit in place with any text editor; there is no build step.</p>
+  <p>Every question is one object in a commented array at the top of <code>index.html</code> &mdash; search for <b>QUESTION BANK</b>. The fields are <code>id</code>, <code>category</code>, <code>prompt</code>, <code>units</code>, <code>value</code> (the true answer), <code>min</code>/<code>max</code> (slider endpoints), <code>scale</code> (<code>"linear"</code> or <code>"log"</code>) and <code>factoid</code> (the "because&hellip;" line). Edit in place with any text editor; the game itself has no build step.</p>
   <ul>
     <li>New categories appear on the start screen and get a color <b>automatically</b> &mdash; just type a new <code>category</code> string.</li>
     <li>Keep the true value <b>off-center</b> in [min, max], and keep the range wide enough that the endpoints don't give the answer away.</li>
     <li>Use <code>"log"</code> whenever plausible student guesses span orders of magnitude. Both <code>min</code> and <code>max</code> must be greater than zero on a log slider.</li>
     <li>Always write the <code>factoid</code>. A number without a reason is trivia, and trivia does not survive the week.</li>
   </ul>
+  <p>One region of <code>index.html</code> is generated: the presenter notes, between the <code>__GUIDE__</code> markers. They are this guide, injected by <code>tools/guide-sync.js</code>, so the on-screen notes and the printed page cannot disagree. Edit <code>teacher-guide.html</code>, then run <code>node tools/guide-sync.js</code> and <code>node tools/pdf.mjs</code>.</p>
 
   <h2>Classroom logistics</h2>
   <ul>
-    <li><b>Nothing to install and nothing to reset.</b> One file, no network, no accounts, no saved state &mdash; reloading the page is a clean slate between class periods.</li>
-    <li><b>&#9881; Settings</b> holds Presentation mode and an on-screen copy of the presenter's notes. <b>?</b> reopens the how-to popup at any time; it also appears on every load, so students who arrive late can read the rules themselves.</li>
+    <li><b>Nothing to install and nothing saved.</b> One file, no network, no accounts, no stored state &mdash; and <b>&#9881; &rarr; Reset</b> puts the game back to a fresh load between class periods without reloading the page.</li>
+    <li><b>&#9881; Settings</b> holds <b>Open Presenter Notes</b> (this guide, on screen), <b>Presentation mode</b> and <b>Reset</b>. <b>?</b> is the <b>Guide</b> button: the same overlay opens on every load, so students who arrive late can read the rules themselves, and <b>?</b> reopens it any time.</li>
     <li><b>Keys:</b> <b>Enter</b> or <b>Space</b> locks in a guess and advances the reveal. <b>Esc</b> closes any popup. Everything else is touch.</li>
     <li>The reveal runs about <b>two seconds</b>: the truth marker slides out from under the guess, the band lands, then the "because&hellip;" line fades in and NEXT appears. Budget roughly 30&ndash;45 seconds per question with discussion.</li>
   </ul>
 </div>
 
-<footer><b>Murray State University &middot; Bryant Harrison</b> &middot; Should Have Known That is an offline single-file web game &mdash; open <code>index.html</code> to play, <code>teacher-guide.html</code> to reprint this page. 40 questions, 8 per category; 5 logarithmic sliders; bands at 5/15/35/60% linear and 1.26/2.1/5/16&times; log.</footer>
+  <div class="g-foot"><b>Murray State University &middot; Bryant Harrison</b> &middot; Engineering Trivia (Should Have Known That) is an offline single-file web game &mdash; open <code>index.html</code> to play, <code>teacher-guide.html</code> to reprint this page. 40 questions, 8 per category; 5 logarithmic sliders; bands at 5/15/35/60% linear and 1.26/2.1/5/16&times; log.</div>
+</div><!-- /guide -->
 </body>
 </html>

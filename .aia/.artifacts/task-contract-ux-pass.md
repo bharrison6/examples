@@ -89,6 +89,62 @@ Lessons from the ion-flight and takeoff lanes (2026-09-09):
   route is headless Chrome over the DevTools protocol with Node builtins (no installs), as the
   inhibitor-investigation and takeoff lanes did.
 
+From the bridge-works lane (2026-09-09):
+
+- **The shared `.bh-credit` attribution pill is clipped off-screen at 390px** (measured
+  `left = -110px` on a 492px pill) in every demo that carries it: fuel-golf, glass-box,
+  ladder-lab, should-have-known-that, takeoff, the-stranger, topping-out, bridge-works,
+  zero-to-unbeatable. If your demo has it, add `max-width:calc(100vw - 16px); white-space:normal`
+  to the pill's rule and confirm "Bryant Harrison" is readable at 390px before setting
+  `attribution_visible` and `mobile` to `true`. The orchestrator patches the already-committed
+  bridge-works and takeoff copies; Astra owns zero-to-unbeatable's.
+- **Single-sourcing a stale guide exposes stale prose**: if the guide names controls that no
+  longer exist (old labels, removed modes), correct them to the real labels in the source as
+  back-propagation. Report what you changed.
+- **A guide that has outgrown its PDF** may legitimately become two pages; do not shrink type
+  below readability to force one page. Correct the README if it promised one page.
+
+From the missing-time and what-the-survey-missed lanes (2026-09-09):
+
+- **Use a lane-private scratch directory**: the session scratchpad is shared by every lane and
+  files named `probe.mjs`, `cdp.mjs`, `guide.png` were overwritten mid-run. Write your harness
+  and screenshots under `<scratchpad>\<slug>-lane\` and re-read nothing you did not just write.
+- **Label assertions must be scoped to the Settings block**, not the whole document: once the
+  guide is injected, its prose names "Open Presenter Notes" and the others, so a document-wide
+  search matches its own answer key. Extract the menu block first and guard that it contains no
+  `guide-scope`.
+- **No `src/` copy step is needed when the root guide is the source**: lifting the scoped
+  stylesheet and `.guide-scope` body straight from the root `teacher-guide.html` gives one file,
+  no copy, and the same `--check` (missing-time's `build.js` is the worked example).
+
+From the fuel-golf and topping-out lanes (2026-09-09):
+
+- **Any marker you document in a comment will be matched inside that comment first**, including
+  `<style id="guide-css">`. Mask every `<!-- -->` region to same-length spaces before searching,
+  and assert each marker occurs exactly once in the masked text.
+- **After the pill fix, re-measure what the wrapped pill lands on.** At 320 to 480px it wraps to
+  two lines (about 34px) and can cover a bottom control bar or the notes overlay's foot; raise
+  the reserved height or lift the pill at the narrow breakpoint and re-measure at several widths.
+
+From the should-have-known-that lane (2026-09-09):
+
+- **Anchor every marker to the start of a line and refuse a marker that matches twice**; that
+  rule holds where "name the block by id" alone did not (the header comment that documents the
+  id is itself a match). Comment-masking is the equivalent alternative.
+- **Re-measure a long-word retitle at 320, 360, 390 and 430px** before claiming `mobile: true`:
+  "Engineering Trivia" overflowed where "Should Have Known That" fit, because ENGINEERING has no
+  break opportunity. "PLC Ladder Logic Trainer" and "AI Winters: Boom and Bust" deserve the same
+  check. Fit by `clamp()`/`min()` so desktop sizes are unchanged.
+
+## Orchestrator sweep after batch 3 (not lane work)
+
+- `inhibitor-investigation/build.js` still locates the guide stylesheet with `indexOf('<style>')`
+  and its `src/teacher-guide.html` head comment contains that literal, so the first
+  `.guide-scope` rule is swallowed (notes render at 16px). Fix with a comment-masked search or an
+  explicit `<style id="guide-css">` marker, rebuild, and scope its `test-build.js` label
+  assertions (lines ~34-36) to the menu block.
+- Regenerate the hub (`node tools/build-hub.js`) once, push, and record the completion episode.
+
 ## Folded in (operator answers of 2026-09-09, before the pass started)
 
 - **Retitle, Path A** ([[demo-titles-descriptive-retitle]], [[demo-titles-retitle]]): each lane
@@ -143,7 +199,7 @@ audit (in-app notes words vs guide words; controls seen in a `<button>` scan):
 | two-winters/ | single-sourced already | **no** | build.js + src/ + tools/pdf.mjs | only Guide label + Reset |
 | wavelet-lab/ | 97 / 816 | **no** | build.js (template + core injection) + tools/pdf.mjs | extend build.js |
 | what-the-survey-missed/ | 29 / 620 | partial (responses only) | build.js | Reset must reset the whole demo |
-| zero-to-unbeatable/ | 3336 / 2385 fork | yes | build.js + tools/pdf.mjs | **HELD** — Codex session 01a08159 owns it; do not dispatch until released |
+| zero-to-unbeatable/ | 3336 / 2385 fork | yes | build.js + tools/pdf.mjs | **FULFILLED by Codex session 01a08159**, not by a lane here: integrated on main at `aaf3da6` (2026-09-09T04:15Z) with Guide, exact Settings actions, source-generated notes, 2-page PDF and the "Types of AI" title; evidence in `episode-types-ai-redesign`; hub regenerated by that session. No builder dispatched. |
 
 ## Rules for every lane
 

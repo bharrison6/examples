@@ -3,58 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bridge Works — Teacher Guide</title>
+<title>Truss Bridge Builder — Teacher Guide</title>
+<!--
+  Canonical, printable teacher guide for Truss Bridge Builder (folder: bridge-works).
+
+  This file is the SINGLE SOURCE for the presenter notes. tools/guide-sync.js lifts
+  the first <style> block and the .guide-scope div out of here verbatim and writes them
+  into index.html between the __GUIDE_CSS__ / __GUIDE__ markers, so Settings ->
+  Open Presenter Notes shows exactly this text with no sibling file to fetch.
+  Edit here; never edit the copy inside index.html. tools/pdf.mjs renders the PDF
+  from this same file. `node tools/guide-sync.js --check` fails when they drift.
+
+  Everything in the FIRST <style> block MUST be scoped to .guide-scope, because it is
+  injected into an app with its own stylesheet — no bare element or body rules. Its
+  colours come from custom properties whose defaults suit white paper; the app
+  overrides them on `#mNotes .guide-scope` so the same stylesheet reads on navy.
+  Page-level styles for this printable file (and the two-column print layout) live in
+  the SECOND <style> block, which is not extracted.
+-->
 <style>
-  @page { size: letter; margin: 0.45in; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Georgia, "Times New Roman", serif;
-    color: #16202e; font-size: 7.6pt; line-height: 1.24;
-    max-width: 7.6in; margin: 0 auto; padding: 0;
-  }
-  header { border-bottom: 2.5px solid #16202e; padding-bottom: 4px; margin-bottom: 7px;
-           display: flex; justify-content: space-between; align-items: baseline; }
-  h1 { font-size: 15pt; }
-  header .sub { font-size: 8.4pt; color: #4a5a72; font-style: italic; }
-  .cols { column-count: 2; column-gap: 0.26in; }
-  h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 8.6pt; text-transform: uppercase;
-       letter-spacing: 0.7px; color: #1d4ed8; margin: 7px 0 3px; break-after: avoid; }
-  h2:first-child { margin-top: 0; }
-  p { margin: 3px 0; }
-  ul, ol { margin: 2px 0 4px 14px; }
-  li { margin: 1.5px 0; }
-  b { color: #0e1622; }
-  .eq { text-align: center; font-size: 10pt; margin: 4px 0; font-style: italic; }
-  .box { border: 1px solid #b9c4d6; border-left: 3px solid #b91c1c; background: #fbf5f5;
-         padding: 4px 7px; margin: 4px 0; border-radius: 3px; break-inside: avoid; }
-  .box b.tag { color: #b91c1c; }
-  .time { display: inline-block; min-width: 46px; font-weight: bold;
-          font-family: "Segoe UI", Arial, sans-serif; font-size: 8pt; color: #1d4ed8; }
-  table { width: 100%; border-collapse: collapse; font-size: 7.7pt; margin: 3px 0; break-inside: avoid; }
-  th { text-align: left; border-bottom: 1px solid #16202e; padding: 1px 3px;
-       font-family: "Segoe UI", Arial, sans-serif; font-size: 7.2pt; text-transform: uppercase; letter-spacing: .3px; }
-  td { padding: 1px 3px; border-bottom: 1px solid #dde3ec; }
-  td.n { text-align: right; font-variant-numeric: tabular-nums; }
-  th.n { text-align: right; text-transform: none; font-size: 7.7pt; }
-  footer { margin-top: 6px; border-top: 1px solid #b9c4d6; padding-top: 3px; font-size: 7.4pt; color: #4a5a72; }
-  @media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); padding: 0.45in; margin: 20px auto; } }
-  @media screen and (max-width: 600px) {
-    body { width: 100%; max-width: none; margin: 0; padding: 16px 12px 28px; font-size: 10pt; overflow-wrap: anywhere; box-shadow: none; }
-    header { display: block; }
-    header .sub { display: block; margin-top: 4px; }
-    .cols { column-count: 1; }
-    h2 { font-size: 10pt; margin-top: 14px; }
-    table { display: block; max-width: 100%; overflow-x: auto; font-size: 9pt; }
-  }
+.guide-scope {
+  --guide-accent: #1d4ed8;
+  --guide-flag: #b91c1c;
+  --guide-flag-bg: rgba(185, 28, 28, 0.05);
+  --guide-rule: #16202e;
+  --guide-rule-soft: #dde3ec;
+  --guide-muted: #4a5a72;
+  color: inherit;
+}
+.guide-scope .g-head { border-bottom: 2.5px solid var(--guide-rule); padding-bottom: 4px; margin-bottom: 7px; }
+.guide-scope h1 { font-size: 1.45em; line-height: 1.2; }
+.guide-scope .g-sub { font-size: .92em; color: var(--guide-muted); font-style: italic; }
+.guide-scope h2 { font-size: 1.02em; text-transform: uppercase; letter-spacing: .07em;
+                  color: var(--guide-accent); margin: 1.15em 0 .35em; break-after: avoid; }
+.guide-scope h2:first-child { margin-top: 0; }
+.guide-scope p { margin: .45em 0; }
+.guide-scope ul, .guide-scope ol { margin: .3em 0 .7em 1.2em; }
+.guide-scope li { margin: .22em 0; }
+.guide-scope b { color: inherit; }
+.guide-scope .eq { text-align: center; font-size: 1.2em; margin: .5em 0; font-style: italic; }
+.guide-scope .time { display: inline-block; min-width: 4.4em; font-weight: 700; color: var(--guide-accent); }
+.guide-scope .box { border: 1px solid var(--guide-rule-soft); border-left: 3px solid var(--guide-flag);
+                    background: var(--guide-flag-bg); padding: .45em .7em; margin: .55em 0;
+                    border-radius: 3px; break-inside: avoid; }
+.guide-scope .box b.tag { color: var(--guide-flag); }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .9em; margin: .4em 0; break-inside: avoid; }
+.guide-scope th { text-align: left; border-bottom: 1px solid var(--guide-rule); padding: .15em .35em;
+                  font-size: .92em; text-transform: uppercase; letter-spacing: .03em; }
+.guide-scope td { padding: .15em .35em; border-bottom: 1px solid var(--guide-rule-soft); }
+.guide-scope td.n { text-align: right; font-variant-numeric: tabular-nums; }
+.guide-scope th.n { text-align: right; text-transform: none; font-size: 1em; }
+.guide-scope .g-foot { margin-top: .9em; border-top: 1px solid var(--guide-rule-soft);
+                       padding-top: .4em; font-size: .85em; color: var(--guide-muted); }
+</style>
+<style>
+/* Printable page only — not extracted into the app. Page chrome, the two-column
+   print layout, and the point sizes that keep this dense (two letter pages). */
+@page { size: letter; margin: 0.45in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #16202e; font-size: 7.6pt; line-height: 1.24;
+  max-width: 7.6in; margin: 0 auto; padding: 0;
+}
+.guide-scope .cols { column-count: 2; column-gap: 0.26in; }
+.guide-scope .g-head { display: flex; justify-content: space-between; align-items: baseline; }
+.guide-scope h1 { font-size: 15pt; }
+.guide-scope .g-sub { font-size: 8.4pt; }
+.guide-scope h2, .guide-scope .time, .guide-scope th {
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif;
+}
+.guide-scope h2 { font-size: 8.6pt; letter-spacing: 0.7px; margin: 7px 0 3px; }
+.guide-scope p { margin: 3px 0; }
+.guide-scope ul, .guide-scope ol { margin: 2px 0 4px 14px; }
+.guide-scope li { margin: 1.5px 0; }
+.guide-scope b { color: #0e1622; }
+.guide-scope .eq { font-size: 10pt; margin: 4px 0; }
+.guide-scope .time { min-width: 46px; font-size: 8pt; }
+.guide-scope .box { padding: 4px 7px; margin: 4px 0; }
+.guide-scope table { font-size: 7.7pt; margin: 3px 0; }
+.guide-scope th { font-size: 7.2pt; padding: 1px 3px; letter-spacing: .3px; }
+.guide-scope th.n { font-size: 7.7pt; }
+.guide-scope td { padding: 1px 3px; }
+.guide-scope .g-foot { margin-top: 6px; padding-top: 3px; font-size: 7.4pt; }
+@media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); padding: 0.45in; margin: 20px auto; } }
+@media screen and (max-width: 600px) {
+  body { width: 100%; max-width: none; margin: 0; padding: 16px 12px 28px; font-size: 10pt; overflow-wrap: anywhere; box-shadow: none; }
+  .guide-scope .g-head { display: block; }
+  .guide-scope .g-sub { display: block; margin-top: 4px; }
+  .guide-scope .cols { column-count: 1; }
+  .guide-scope h2 { font-size: 10pt; margin-top: 14px; }
+  .guide-scope table { display: block; max-width: 100%; overflow-x: auto; font-size: 9pt; }
+}
 </style>
 </head>
 <body>
-<header>
-  <h1>Bridge Works — Teacher Guide</h1>
-  <div class="sub">Murray State University &middot; Statics you can watch fail</div>
-</header>
+<div class="guide-scope">
+  <div class="g-head">
+    <h1>Truss Bridge Builder — Teacher Guide</h1>
+    <div class="g-sub">Murray State University &middot; Bridge Works &middot; Statics you can watch fail</div>
+  </div>
 
-<div class="cols">
+  <div class="cols">
   <h2>What students do</h2>
   <p>Drag members between grid joints and drive a vehicle across. Costing follows a fabricator's bill:
   <b>steel by weight</b> (9.4 kg/m at $4.80/kg &asymp; $45/m) plus <b>$180 per joint</b> for the gusset, bolts and
@@ -67,12 +117,12 @@
 
   <h2>30-minute session plan</h2>
   <ul>
-    <li><span class="time">0–4</span>Project it (⚙ → <b>Projector mode</b>). On Level 1 build <i>only</i> the flat
+    <li><span class="time">0–4</span>Project it (⚙ → <b>Presentation mode</b>). On Level 1 build <i>only</i> the flat
       roadway and press <b>Load test</b>. It folds. Name what they just saw: joint, member, tension, compression,
       support. Add a post and two struts; run it again.</li>
     <li><span class="time">4–10</span>Students play <b>Level 1</b> in pairs with <b>X-ray</b> on. Have them use the
-      <b>Joint</b> tool: tap a joint, see every force meeting there and their sum. It is always zero. That panel
-      <i>is</i> the method of joints.</li>
+      <b>Check a joint</b> tool: tap a joint, see every force meeting there and their sum. It is always zero. That
+      panel <i>is</i> the method of joints.</li>
     <li><span class="time">10–18</span><b>Level 2 — the lesson.</b> It opens with a rectangular frame already built.
       Test it first: it folds into a parallelogram and the debrief reports a <b>mechanism</b>, naming the joints that
       ran away. Take predictions, then let them add diagonals. Par forces a second pass: which members do nothing?</li>
@@ -93,7 +143,7 @@
   <p>Every joint is a pin, so it carries no bending moment. A straight member pinned at both ends is therefore a
   <b>two-force member</b>: its only possible force is along its own axis — a pull (<b>tension</b>) or a push
   (<b>compression</b>). One number describes it completely. Each joint satisfies <b>ΣF<sub>x</sub> = ΣF<sub>y</sub> = 0</b>;
-  the Joint tool draws exactly that and prints the residual.</p>
+  the Check a joint tool draws exactly that and prints the residual.</p>
 
   <h2>Tension vs. compression</h2>
   <p>Same steel section throughout (E = 200 GPa, A = 12 cm²). Pulled, it yields at
@@ -164,7 +214,7 @@
       would you add, and what would it cost?</li>
     <li>Level 5's pier drops par sharply. Halving a span does much more than halve the forces — why? Where do real
       bridges use this, and when can't they?</li>
-    <li>Turn on <b>Self-weight</b> and retest a design that just made par. What happens, and why does it matter
+    <li>Turn on <b>Dead load</b> and retest a design that just made par. What happens, and why does it matter
       more as spans grow?</li>
   </ol>
 
@@ -179,15 +229,22 @@
     <tr><td>6</td><td>Sandbox</td><td>18 m · your choice</td><td class="n">—</td><td>Free build</td></tr>
   </table>
   <ul>
-    <li><b>⚙ Teacher mode</b>: projector large-UI toggle, leaderboard resets, and an option to <b>pick the test
-      vehicle on any level</b> — for showing what happens when a bridge that carried a car meets a 12 tonne tipper.
-      Demo runs stay off the leaderboard.</li>
+    <li><b>⚙ Settings</b> carries the presenter controls: <b>Open Presenter Notes</b> (this guide, on screen),
+      <b>Presentation mode</b> (large UI for the back of the room, plus a 🗒 Notes button in the top bar) and
+      <b>Reset</b> (everything back to a first run). Alongside them: leaderboard resets and an option to
+      <b>pick the test vehicle on any level</b> — for showing what happens when a bridge that carried a car meets
+      a 12 tonne tipper. Demo runs stay off the leaderboard.</li>
     <li>Boards and saved designs live in each machine's browser storage; reset between periods.</li>
     <li>Keys: <b>1 2 3</b> build / erase / joint · <b>Ctrl+Z</b> undo · <b>Space</b> test · <b>X</b> X-ray ·
       <b>F</b> force numbers.</li>
   </ul>
-</div>
+  </div>
 
-<footer>Bridge Works · offline single-folder web game · open index.html to play, teacher-guide.html to reprint this page. Physics: 2D pin-jointed truss by the direct stiffness method; mechanisms detected as rank deficiency and animated along the null-space mode; Euler buckling governs compression; overloaded members are removed and the structure re-solved. Pars verified beatable by test-physics.js.</footer>
+  <div class="g-foot">Truss Bridge Builder (Bridge Works) · Bryant Harrison · Murray State University ·
+  offline single-folder web game · open index.html to play, teacher-guide.html to reprint this page.
+  Physics: 2D pin-jointed truss by the direct stiffness method; mechanisms detected as rank deficiency and
+  animated along the null-space mode; Euler buckling governs compression; overloaded members are removed and the
+  structure re-solved. Pars verified beatable by test-physics.js.</div>
+</div><!-- /guide -->
 </body>
 </html>

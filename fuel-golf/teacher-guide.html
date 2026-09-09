@@ -2,58 +2,109 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Fuel Golf — Teacher Guide</title>
+<title>Orbital Mechanics Golf — Teacher Guide</title>
+<!--
+  This file is the SINGLE SOURCE for the presenter notes.
+
+  tools/guide-sync.js lifts the <style id="guide-css"> block and the .guide-scope
+  div out of here verbatim and writes them into index.html between the
+  __GUIDE_CSS__ and __GUIDE__ markers, so Settings -> Open Presenter Notes shows
+  exactly this page with nothing fetched at runtime. tools/pdf.mjs renders
+  teacher-guide.pdf from this same file. `node tools/guide-sync.js --check` fails
+  when the two have drifted.
+
+  Everything in the <style id="guide-css"> block MUST be scoped to .guide-scope,
+  because it is injected into a running game; an unscoped selector would restyle
+  the whole app. It is also colour-neutral: it paints from --guide-* variables and
+  inherits its text colour, and index.html re-points those variables on
+  `#notesModal .guide-scope` so the same stylesheet reads on navy.
+
+  Page chrome for the printable copy — @page, body type, the two-column print
+  layout — lives in the SECOND <style> block, which is not extracted.
+
+  Class names are prefixed g- where the app already uses the bare name (.box is
+  the modal sheet in index.html), so the injected block cannot collide with it.
+-->
+<style id="guide-css">
+.guide-scope {
+  --guide-ink: #16202e;
+  --guide-navy: #002144;
+  --guide-gold: #ECAC00;
+  --guide-muted: #4a5a72;
+  --guide-rule: #b9c4d6;
+  --guide-box-bg: #f4f7fc;
+  --guide-flag: #b91c1c;
+  color: inherit;
+  line-height: 1.45;
+}
+.guide-scope .g-head {
+  border-bottom: 3px solid var(--guide-gold); padding-bottom: 0.5em; margin-bottom: 0.75em;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 0.9em; flex-wrap: wrap;
+}
+.guide-scope .g-brand {
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 0.72em;
+  letter-spacing: 0.19em; font-weight: 700; color: var(--guide-navy); text-transform: uppercase;
+}
+.guide-scope h1 { font-size: 1.72em; line-height: 1.15; color: var(--guide-navy); }
+.guide-scope .g-sub { font-size: 0.95em; color: var(--guide-muted); font-style: italic; }
+.guide-scope h2 {
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 1em; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--guide-navy); margin: 0.95em 0 0.4em; break-after: avoid;
+  border-left: 3px solid var(--guide-gold); padding-left: 0.5em;
+}
+.guide-scope h2:first-child { margin-top: 0; }
+.guide-scope p { margin: 0.4em 0; }
+.guide-scope ul, .guide-scope ol { margin: 0.3em 0 0.55em 1.35em; }
+.guide-scope li { margin: 0.25em 0; }
+.guide-scope b { color: var(--guide-ink); }
+.guide-scope .eq { text-align: center; font-size: 1.28em; margin: 0.55em 0; font-style: italic; }
+.guide-scope .g-box {
+  border: 1px solid var(--guide-rule); border-left: 3px solid var(--guide-navy);
+  background: var(--guide-box-bg); padding: 0.55em 0.85em; margin: 0.55em 0;
+  border-radius: 3px; break-inside: avoid;
+}
+.guide-scope .mis { border-left-color: var(--guide-flag); }
+.guide-scope .mis b.tag { color: var(--guide-flag); }
+.guide-scope .time {
+  display: inline-block; min-width: 4.7em; font-weight: 700;
+  font-family: "Segoe UI", Arial, sans-serif; font-size: 0.98em; color: var(--guide-navy);
+}
+.guide-scope .g-foot {
+  margin-top: 0.85em; border-top: 1px solid var(--guide-rule); padding-top: 0.45em;
+  font-size: 0.95em; color: var(--guide-muted);
+}
+</style>
 <style>
-  @page { size: letter; margin: 0.45in; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: Georgia, "Times New Roman", serif;
-    color: #16202e; font-size: 8.5pt; line-height: 1.25;
-    max-width: 7.6in; margin: 0 auto; padding: 12px;
-  }
-  header { border-bottom: 3px solid #ECAC00; padding-bottom: 6px; margin-bottom: 10px;
-           display: flex; justify-content: space-between; align-items: baseline; }
-  header .brandline {
-    font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 7.4pt;
-    letter-spacing: 1.6px; font-weight: 700; color: #002144; text-transform: uppercase;
-  }
-  h1 { font-size: 17pt; color: #002144; }
-  header .sub { font-size: 9pt; color: #4a5a72; font-style: italic; }
-  .cols { column-count: 2; column-gap: 0.28in; }
-  h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 9.6pt; text-transform: uppercase;
-       letter-spacing: 0.8px; color: #002144; margin: 9px 0 4px; break-after: avoid;
-       border-left: 3px solid #ECAC00; padding-left: 5px; }
-  h2:first-child { margin-top: 0; }
-  p { margin: 4px 0; }
-  ul, ol { margin: 3px 0 5px 15px; }
-  li { margin: 2.5px 0; }
-  b { color: #0e1622; }
-  .eq { text-align: center; font-size: 11pt; margin: 6px 0; font-style: italic; }
-  .box { border: 1px solid #b9c4d6; border-left: 3px solid #002144; background: #f4f7fc;
-         padding: 6px 9px; margin: 6px 0; border-radius: 3px; break-inside: avoid; }
-  .mis { border-left-color: #b91c1c; }
-  .mis b.tag { color: #b91c1c; }
-  .time { display: inline-block; min-width: 52px; font-weight: bold; font-family: "Segoe UI", Arial, sans-serif; font-size: 8.6pt; color: #002144; }
-  footer { margin-top: 8px; border-top: 1px solid #b9c4d6; padding-top: 4px; font-size: 8pt; color: #4a5a72; }
-  @media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); margin: 20px auto; } }
+/* Page chrome for the printable copy only — never injected into the game. */
+@page { size: letter; margin: 0.45in; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Georgia, "Times New Roman", serif;
+  color: #16202e; font-size: 8.5pt; line-height: 1.25;
+  max-width: 7.6in; margin: 0 auto; padding: 12px;
+}
+/* two columns on paper; the in-app copy flows in one column down the sheet */
+.guide-scope .g-cols { column-count: 2; column-gap: 0.28in; }
+@media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); margin: 20px auto; } }
 </style>
 </head>
 <body>
-<header>
-  <div>
-    <div class="brandline">Murray State University · Racers Flight Lab</div>
-    <h1>⛳ Fuel Golf — Teacher Guide</h1>
+<div class="guide-scope">
+  <div class="g-head">
+    <div>
+      <div class="g-brand">Murray State University · Racers Flight Lab</div>
+      <h1>⛳ Orbital Mechanics Golf — Teacher Guide</h1>
+    </div>
+    <div class="g-sub">Fuel Golf: orbital mechanics &amp; the Oberth effect, taught by a fuel gauge</div>
   </div>
-  <div class="sub">Orbital mechanics &amp; the Oberth effect, taught by a fuel gauge</div>
-</header>
 
-<div class="cols">
+  <div class="g-cols">
   <h2>What students do</h2>
   <p>Each mission gives a spacecraft, a goal (circularize, raise an orbit, escape, transfer, moon flyby) and a <b>par Δv budget</b>. Real Newtonian gravity is integrated live, and <b>the planet is Earth at true scale</b> (μ = 398,600 km³/s², R = 6,371 km): speeds in km/s, Δv in m/s, altitudes in km — every number transfers to real missions. Students time-warp, aim a burn, preview the dotted trajectory, commit. Lowest total Δv wins. Runs offline in any browser — open <b>index.html</b> (Chromebook-friendly). The moon is fictional (closer/heavier than Luna) so an assist fits one class.</p>
 
   <h2>20-minute session plan</h2>
   <ul>
-    <li><span class="time">0–3 min</span>Project the game (⚙ Settings → Presentation mode). Fly Level 1 together: show time-warp, the burn planner, and the dotted preview. Vocabulary: periapsis (low, fast), apoapsis (high, slow), prograde.</li>
+    <li><span class="time">0–3 min</span>Project the game (⚙ Settings → Presentation mode). The <b>Guide</b> overlay opens on first load and explains the controls; dismiss it with <b>Fly</b> and reopen it any time from <b>❓ Guide</b>. Fly Level 1 together: show time-warp, the burn planner, and the dotted preview. Vocabulary: periapsis (low, fast), apoapsis (high, slow), prograde.</li>
     <li><span class="time">3–8 min</span>Students play Levels 1–2 in pairs. Ask them to open the <b>Physics HUD</b> and watch “energy gained per 1 Δv” as the ship swings around.</li>
     <li><span class="time">8–15 min</span>The main event: <b>Level 3, “Escape Artist.”</b> Par is 791 m/s, but the tank holds 2,057 — escaping Earth from apoapsis costs ≈1,835 m/s, while the same escape from periapsis costs ≈661. Let them discover this. When someone makes par, have them explain <i>where</i> they burned and what the HUD showed.</li>
     <li><span class="time">15–19 min</span>Debrief on the projector using a student’s energy-vs-time plot and the <b>“show the math” panel</b> below it, which evaluates Δε = v·Δv + ½Δv² with that student’s actual numbers and checks it against the simulation. The burn is a vertical jump in ε — taller when v was larger, for the <i>same</i> Δv.</li>
@@ -66,13 +117,13 @@
   <p>The <b>v·Δv</b> term dominates: the same Δv buys energy in proportion to how fast you are already moving. On an orbit, speed peaks at periapsis — so a burn there buys the most orbital energy ε = ½v² − μ/r. Gravitational potential is unchanged at the instant of the burn; only the KE jump differs. In the game, the HUD’s “energy per unit Δv” readout is exactly v, and students can verify the ≈2.8× escape-cost gap on Level 3 themselves.</p>
   <p><b>Where does the extra energy come from?</b> Rocket fuel’s energy is fixed, but the useful energy delivered to the <i>ship</i> is force × distance. At high speed the engine acts over a longer distance per second, so more of the propellant’s energy ends up in the ship and less in the exhaust left behind.</p>
 
-  <div class="box mis">
+  <div class="g-box mis">
     <b class="tag">Misconception 1:</b> “The burn is better at periapsis because you’re <i>closer</i> to the planet.” Proximity is not the mechanism — <b>speed</b> is. ΔKE = v·Δv + ½Δv² contains v, not r. Being deep in the well matters only because falling there is what made the ship fast. A ship moving equally fast far from the planet would gain just as much energy from the same burn.
   </div>
-  <div class="box mis">
+  <div class="g-box mis">
     <b class="tag">Misconception 2:</b> “The Oberth effect is the same as a gravity assist.” An <b>unpowered gravity assist</b> (Level 5’s moon) steals energy from the <i>moon’s orbital motion</i> — no fuel needed, and the moon slows imperceptibly. An <b>Oberth burn</b> spends fuel and merely spends it at the most profitable moment. A “powered flyby” combines both.
   </div>
-  <div class="box mis">
+  <div class="g-box mis">
     <b class="tag">Misconception 3:</b> “Δv is like distance — it costs the same anywhere.” Δv <i>spent</i> is the same anywhere; the <i>energy it buys</i> is not. That is the whole game.
   </div>
 
@@ -91,14 +142,16 @@
 
   <h2>Classroom logistics</h2>
   <ul>
-    <li><b>Leaderboards</b> persist per level on each machine; reset them between class periods via ⚙ Settings → Reset.</li>
-    <li><b>Presenter's notes</b> (⚙ Settings → Presenter's notes, or press <b>N</b>) condense this page to one podium-sized screen: run of show, the numbers above, and the misconceptions to catch.</li>
+    <li><b>⚙ Settings</b> holds the presenter controls: <b>Open Presenter Notes</b> (this page, on screen), <b>Presentation mode</b> (large UI for the back row, plus a 🎤 Notes button in the top bar) and <b>Reset</b> (the whole demo back to a first run — Level 1, scores, saved name and badges cleared; Presentation mode stays as you set it). Narrower controls sit alongside them: <i>Clear scores</i> and <i>Clear badges</i>.</li>
+    <li><b>Leaderboards</b> persist per level on each machine; clear them between class periods with ⚙ Settings → <i>Clear scores</i>, or reset everything with ⚙ Settings → <b>Reset</b>.</li>
+    <li><b>Presenter Notes</b> (⚙ Settings → <b>Open Presenter Notes</b>, or press <b>N</b> while presenting) show this exact page on screen — same words, one source, nothing fetched.</li>
     <li>Pars (m/s): L1 712 · L2 1,107 · L3 791 · L4 1,819 · L5 1,424 · L6 838 · L7 823. Verified minimums: L3 escape ≈ 661 m/s from periapsis vs ≈ 1,835 m/s from apoapsis.</li>
-    <li>Keys: <b>Space</b> pause · <b>B</b> burn · <b>Enter</b> commit · <b>Z</b> undo · <b>X</b> cut engine · <b>P</b>/<b>A</b> warp to Pe/Ap · <b>H</b> HUD · <b>M</b> briefing · <b>R</b> restart. <b>Undo</b> rewinds the last burn (also offered after a crash) — students should iterate, not restart.</li>
+    <li>Keys: <b>Space</b> pause · <b>B</b> burn · <b>Enter</b> commit · <b>Z</b> undo · <b>X</b> cut engine · <b>P</b>/<b>A</b> warp to Pe/Ap · <b>H</b> HUD · <b>M</b> briefing · <b>R</b> restart level · <b>?</b> Guide · <b>N</b> Presenter Notes. <b>Undo</b> rewinds the last burn (also offered after a crash) — students should iterate, not restart.</li>
     <li>For L6–L7, point students at the HUD <b>time-to-periapsis</b>, the planner's <b>burn duration</b>, and the <b>lead</b> box beside → Pe: those three let them compute an ignition point instead of guessing.</li>
   </ul>
-</div>
+  </div>
 
-<footer><b>Murray State University · Racers Flight Lab</b> · Fuel Golf is an offline single-folder web game — open index.html to play, teacher-guide.html to reprint this page. Physics: velocity-Verlet coasts with RK4 powered arcs; all level pars verified against the shipped physics by test-physics.js and the interface by ui-smoke.js.</footer>
+  <div class="g-foot"><b>Murray State University · Racers Flight Lab</b> · Orbital Mechanics Golf (the <b>fuel-golf</b> demo) is an offline single-folder web game — open index.html to play, teacher-guide.html to reprint this page. Physics: velocity-Verlet coasts with RK4 powered arcs; all level pars verified against the shipped physics by test-physics.js and the interface by ui-smoke.js.</div>
+</div><!-- /guide -->
 </body>
 </html>
