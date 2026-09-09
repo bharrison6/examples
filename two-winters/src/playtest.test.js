@@ -121,7 +121,7 @@ ok('A "true, but far too late" card marks "it didn\'t" as correct',
   const a = E.tally(D.CARDS, perfect);
   ok('Perfect play scores every scorable card', a.verdictRight === a.scored && a.scored > 0);
   ok('Perfect play has zero average miss', a.medianMiss === 0);
-  ok('Perfect play leaves the open forecast and three assessments unscored', a.open === 4);
+  ok('Perfect play leaves two open forecasts and four assessments unscored', a.open === 6);
 
   const wrong = {};
   D.CARDS.forEach(c => { wrong[c.id] = { year: 1950, verdict: c.verdict === 'yes' ? 'no' : 'yes' }; });
@@ -230,14 +230,14 @@ ok('Both historical paths have multiple comparison lenses represented',
 /* ================= 6. prose agrees with the data ========================= */
 
 const kindCount = k => D.CARDS.filter(c => c.kind === k).length;
-ok('Six time-bounded promises, as the scorecard says', kindCount('promise') === 6, String(kindCount('promise')));
-ok('Three dated assessments are shown without outcome scoring', kindCount('assessment') === 3, String(kindCount('assessment')));
+ok('Five time-bounded promises, as the scorecard says', kindCount('promise') === 5, String(kindCount('promise')));
+ok('Four dated or untimed assessments are shown without outcome scoring', kindCount('assessment') === 4, String(kindCount('assessment')));
 ok('One warning, as the scorecard says', kindCount('warning') === 1, String(kindCount('warning')));
 ok('The three kinds account for the whole deck',
    kindCount('promise') + kindCount('assessment') + kindCount('warning') === D.CARDS.length);
 ok('The activity contains ten dated claims', D.CARDS.length === 10);
 
-ok('Exactly one card is left open', D.CARDS.filter(c => c.verdict === 'open').length === 1);
+ok('Exactly two forecasts are left open', D.CARDS.filter(c => c.verdict === 'open').length === 2);
 ok('Every assessment is explicitly marked as context, not a prediction',
    D.CARDS.filter(c => c.kind === 'assessment').every(c => c.verdict === 'context'));
 ok('No promise in the deck arrived inside its own window',
@@ -284,7 +284,7 @@ ok('The cut list is not empty and every entry says why', D.CUT.length > 0 &&
 
 /* The money panel promises four sourced commitments; count them. */
 const moneyEvents = D.EVENTS.filter(e => e.money);
-ok('The money panel shows exactly the four commitments its caption claims',
+ok('The money panel shows exactly four funding examples',
    moneyEvents.length === 4, String(moneyEvents.length));
 ok('Every money figure carries its own note and unit',
    moneyEvents.every(e => e.money.note && e.money.unit && typeof e.money.amount === 'number'));
