@@ -4,16 +4,25 @@
   "emoji": "📈",
   "topic": "The pace of AI progress",
   "discipline": "AI literacy",
-  "tagline": "Takeoff — draw your forecast of machine capability, then watch the real curves land",
-  "hub_blurb": "Draw your own capability forecasts, reveal the measured curves, and inspect the successes, failures, and sources behind them.",
-  "card_blurb": "Five benchmarks: draw where you think machine capability went, then see the truth animate over your line. A timeline of 124 model releases, six domains of real-world evidence plus an Elsewhere round-up — with the failures and overclaims kept in frame — and every number backed by a source.",
-  "description": "**The Pace of AI Progress** (folder `takeoff/`; \"Takeoff\" in the hub, \"Undershoot\" in the internal module names) — a phone-first, single-file presentation about machine capability since ChatGPT. The audience draws five benchmark forecasts before the real curves are revealed, explores a timeline of 124 model releases, and examines evidence across biology, medicine, weather, materials, mathematics, and software — with failures and overclaims kept beside the results. Every number resolves to a local source. A Guide overlay opens on every load; Settings offers Open Presenter Notes, Presentation mode and Reset; and the presenter notes are not a summary of the printable guide but the guide itself, injected at build time from one canonical file that also produces the shipped HTML and the PDF, with a --check that fails on drift.",
+  "tagline": "What has changed? Estimate the evidence, inspect its limits, and test a forecast.",
+  "hub_blurb": "Estimate published AI measurements, inspect how the tests were run, and explore where results transfer to work.",
+  "card_blurb": "Five historical measurements, a source-backed release timeline, and contrasting workplace evidence. Draw an estimate, reveal the results, then see why several forecasts can fit the same past.",
+  "description": "The Pace of AI Progress teaches careful reading of AI evidence through five historical measurement activities, a selected source-backed release timeline, and bounded work/science cases. Side Details provides examples, source-linked tables, and limitations. A separate invented scenario shows linear, proportional, and saturation rules that fit the same two points. Benchmarks, protocols, human task duration, prices, and forecasts keep distinct meanings. Runs offline with Guide, Settings, presentation mode, Reset, canonical presenter notes and a four-page printable PDF.",
   "entry": "index.html",
-  "guide": { "html": "presenter-guide.html", "pdf": "Takeoff-Presenter-Guide.pdf" },
+  "guide": {
+    "html": "presenter-guide.html",
+    "pdf": "Takeoff-Presenter-Guide.pdf"
+  },
   "theme": "murray-state",
   "built_for": "murray-state",
-  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
-  "built_with": ["claude-code"],
+  "attribution": {
+    "author": "Bryant Harrison",
+    "institution": "Murray State University"
+  },
+  "built_with": [
+    "claude-code",
+    "codex"
+  ],
   "status": "active",
   "added": "2026-08-06",
   "compliance": {

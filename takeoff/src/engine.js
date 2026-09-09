@@ -243,17 +243,9 @@ function clamp(v, lo, hi) { return v < lo ? lo : v > hi ? hi : v; }
 
 /* ---- scoring ------------------------------------------------------------- */
 
-/**
- * Compare the drawn curve to the truth at the ask date.
- *
- * The headline number is a RATIO, not a percentage-point difference, because
- * the whole point is that people are wrong multiplicatively. Being told you
- * were "40 points low" on SWE-bench does not land; being told the real answer
- * was 2.4x your guess does.
- *
- * For a percentage metric the ratio is taken on the value itself. For the
- * price round — where the truth falls — the ratio is inverted so that
- * "undershot the change" still reads as a number greater than one.
+/** Compare the drawn endpoint with the final selected measurement.
+ * The legacy direction-adjusted ratio remains available to numerical tests;
+ * UI copy compares actual values directly so a falling price stays clear.
  */
 function score(round_, guess) {
   const truth = finalValue(round_);
@@ -342,7 +334,17 @@ function cadence(models, windowDays) {
   });
 }
 
+/** Deliberately invented score rules; no relationship to benchmark data. */
+function scenarios(years) {
+  return [
+    { name:'Fixed yearly gain',value:30+10*years,note:'Add 10 points each year.' },
+    { name:'Fixed proportional gain',value:30*Math.pow(1.5,years),note:'Multiply by 1.5 each year.' },
+    { name:'Slowing toward a limit',value:75-45*Math.pow(9/11,years),note:'Approach an assumed ceiling of 75.' }
+  ];
+}
+
 return {
+  scenarios,
   t, isoOf, fmtDate, fmtValue, fmtMinutes, round, clamp,
   makeScale, ticks, niceStep, timeTicks, tickLabel, durationTicks, fmtDurationTick,
   GUESS_N, emptyGuess, paint, guessDrawn, guessComplete, guessAt,

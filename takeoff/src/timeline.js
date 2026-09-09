@@ -1,12 +1,4 @@
-/* ==========================================================================
-   Undershoot — Act II, the cadence.
-
-   A time axis from ChatGPT to now. Drag the scrubber and the releases land
-   as they actually landed. The vertical axis is deliberately NOT a benchmark
-   score — it is a coarse generation band, and the UI says so, because a
-   single "intelligence" number across labs and years would be the exact kind
-   of confident nonsense this demo is arguing against.
-   ========================================================================== */
+/* A selected release catalog. Dates are horizontal; company lanes have no capability ordering. */
 
 const Timeline = (() => {
 
@@ -27,7 +19,8 @@ function create(canvas, data) {
     pad: { l: 58, r: 16, t: 26, b: 50 }
   };
   st.t0 = E.t('2022-11-01');
-  st.t1 = E.t('2026-08-15');
+  st.t1 = Math.max(...st.models.map(m => m.at)) + 20 * E.DAY;
+  st.lanes = [...new Set(st.models.map(m=>m.lab))].sort();
   bind(st);
   return {
     resize: () => resize(st),
@@ -47,7 +40,7 @@ function create(canvas, data) {
     onHover: cb => { st.onHover = cb; },
     select: m => setHover(st, m && visible(st).includes(m) ? m : null),
     selected: () => st.hover,
-    pointFor: m => m ? { x:px(st, m.at), y:py(st, m.tier) } : null
+    pointFor: m => m ? { x:px(st, m.at), y:py(st, m) } : null
   };
 }
 
@@ -102,7 +95,7 @@ function resize(st) {
 const px = (st, ms) => st.pad.l + (ms - st.t0) / (st.t1 - st.t0) * pw(st);
 const pw = st => Math.max(1, st.w - st.pad.l - st.pad.r);
 const ph = st => Math.max(1, st.h - st.pad.t - st.pad.b);
-const py = (st, tier) => st.pad.t + ph(st) * (1 - (tier - 0.5) / 8.5);
+const py = (st, model) => st.pad.t + ph(st) * ((st.lanes.indexOf(model.lab) + .5) / st.lanes.length);
 
 function bind(st) {
   st.canvas.addEventListener('pointermove', ev => {
@@ -110,7 +103,7 @@ function bind(st) {
     const x = ev.clientX - r.left, y = ev.clientY - r.top;
     let best = null, bd = 1e9;
     for (const m of visible(st)) {
-      const d = Math.hypot(px(st, m.at) - x, py(st, m.tier) - y);
+      const d = Math.hypot(px(st, m.at) - x, py(st, m) - y);
       if (d < bd) { bd = d; best = m; }
     }
     const hit = bd < (st.big ? 22 : 16) ? best : null;
@@ -124,7 +117,7 @@ function bind(st) {
     const x = ev.clientX - r.left, y = ev.clientY - r.top;
     let best = null, bd = Infinity;
     for (const m of visible(st)) {
-      const d = Math.hypot(px(st, m.at) - x, py(st, m.tier) - y);
+      const d = Math.hypot(px(st, m.at) - x, py(st, m) - y);
       if (d < bd) { bd = d; best = m; }
     }
     setHover(st, bd < (st.big ? 26 : 22) ? best : null);
@@ -137,8 +130,8 @@ function bind(st) {
    photographs the screen, or glances up mid-sentence. The wording is
    deliberately hedged, because the height IS a coarse band and calling it a
    score would be the exact overclaim this demo argues against. */
-const AXIS_Y = 'Roughly how capable';
-const AXIS_Y_SUB = 'a generation band, not a score';
+const AXIS_Y = 'Company lanes';
+const AXIS_Y_SUB = 'height is not capability';
 const AXIS_X = 'When it was released';
 
 function axisTitles(st) {
@@ -172,10 +165,10 @@ function axisTitles(st) {
   ctx.fillStyle = 'rgba(143,163,192,0.55)';
   ctx.textAlign = 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText('newer generations', st.pad.l + 8, st.pad.t + 2);
+
   ctx.textAlign = 'right';
   ctx.textBaseline = 'bottom';
-  ctx.fillText('earlier generations', st.w - st.pad.r - 8, st.pad.t + ph(st) - 3);
+
 }
 
 function render(st) {
@@ -210,7 +203,7 @@ function render(st) {
   for (const m of st.models) {
     if (m.at > at) continue;
     const on = passes(st, m);
-    const x = px(st, m.at), y = py(st, m.tier);
+    const x = px(st, m.at), y = py(st, m);
     const age = E.clamp((at - m.at) / (200 * E.DAY), 0, 1);
     const fresh = 1 - age;
     const lab = st.labs[m.lab] || st.labs.other;

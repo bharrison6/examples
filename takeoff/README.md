@@ -1,236 +1,62 @@
 # The Pace of AI Progress
 
-*"Takeoff" in the hub and in this folder's name; "Undershoot" in the internal
-module names, which are the original working title and are staying.*
+An offline classroom activity for reading AI evidence: estimate missing historical results, inspect test conditions, and separate measurement from extrapolation. The public folder remains `takeoff/`.
 
-**Draw the curve, then see it.** A single-file, offline demo about what has
-happened to machine capability since ChatGPT — built around the fact that almost
-nobody draws the curve steeply enough, and that the one time they finally do, it
-turns out to be the wrong curve.
+The cream teaching canvas, navy measurement workspace, gold reveal, side Details, and question-led stages follow the collection's **Types of AI** and **Neural Network Training** demos. Bryant Harrison · Murray State University.
 
-Open `index.html` in any browser. No install, no build step, no network.
+## Run and present
 
----
+Open `index.html` directly in a browser. No server, network connection, dependency download, AI inference, or storage is needed at runtime. The entry Guide explains the activity and reopens from `?`. Settings contains Open Presenter Notes, Presentation mode, Reset, and data integrity checks.
 
-## What it is
+1. **Measure:** estimate a missing piece of five historical charts. Draw with a pointer, or focus the chart and press Up/Down; Home/End set the low/high endpoint. Reveal the selected reports. The selector permits any order.
+2. **Context:** explore eleven selected, source-backed release events. Company lanes are not capability ranks. Filters and date scrubber update the counters and accessible release list together.
+3. **Transfer:** compare two work studies and two scientific systems. Change the illustrative forecast horizon to see three rules that agree at two invented observations but diverge afterward.
 
-Three acts, in the order that makes them land.
+Details gives a concrete example, interpretation limits, and a source-linked measurement table. Hidden rows become visible after Reveal. A later non-robust METR estimate stays outside the trend, in Details. ARC-AGI-3 comparisons stay separate from the ARC-AGI-1 chart.
 
-It assumes the audience knows nothing — not what a benchmark is, not what any
-of these models are called, not that any of this is measured at all.
+A 20–25 minute session and short route are in [the printable guide](presenter-guide.html). The four-page [PDF](Takeoff-Presenter-Guide.pdf) and the in-app notes derive from `src/presenter-guide.html`.
 
-**Act I — Draw it.** An opening screen explains the exercise in plain words.
-Then five tests. Each one first explains what it actually measures, shows a
-concrete example of a single task from it, and gives a human reference point —
-*then* shows the real scores up to a cutoff and asks you to drag a forecast
-across the rest. The truth animates over your line and you find out how far out
-you were, as a multiple rather than a difference, because that is how people are
-wrong about this. Both axes are labelled on every chart, and the time axis picks
-a month step from the span so it always carries enough marks to read a scale
-off — a year-only axis left the sixteen-month round with a single tick. Time
-values are drawn from a ladder of round durations, so the task-length chart
-reads 1 min · 5 min · 30 min · 2 hr · 8 hr · 2 days rather than 1.7 hr and
-33.3 hr.
+## What the evidence says
 
-| Test | What it measures | Shown | Revealed |
-|---|---|---|---|
-| 1 | Fixing real bugs in real software | 33.4% → 49.0% | **80.8%** — a plateau, then the labs stopped leading with it (contamination) |
-| 2 | Science questions PhDs get wrong | GPT-4 at 39% | **94.1%**, past the 69.7% PhD line since Sept 2024 |
-| 3 | How long a job it finishes alone | 3.5 min → 60 min | **11.3 hours**, doubling every 89 days lately |
-| 4 | What a fixed ability costs | $37.50 → $7.50 per million | **$0.18** — 208× cheaper in 23 months |
-| 5 | Grid puzzles a child can solve | five years near zero | **87.5%** in one announcement… |
+The snapshot was audited on **September 9, 2026**. These are selected reports, not a census, live leaderboard, or common-budget comparison. The primary-source status refers to the original reporting organization; it does not establish independent replication.
 
-Test 5 ships the puzzle itself, playable, so the room can solve it in two
-seconds before finding out that machines could not.
+| Measurement | What is plotted | Main boundary |
+|---|---|---|
+| SWE-bench Verified | Four 2025 vendor-reported system scores, 63.7–77.2% | Task subsets, prompts, agents, and budgets vary. |
+| GPQA Diamond | 198-question set, 50.6–94.3% across selected reports | Release and evaluation dates are distinguished; human markers from mismatched subsets removed. |
+| METR Time Horizon 1.1 | Human-expert task minutes at 50% predicted success, with 95% intervals | Six points from one report; non-robust Sol result excluded; no claim of reliable autonomy. |
+| Epoch price threshold | Listed USD per million tokens at MMLU ≥86% | Input/output blended 3:1; February 2025 historical endpoint, not full workflow cost. |
+| ARC-AGI-1 | Historical puzzle results and two o3 compute configurations | ARC-AGI-3 uses RHAE and appears only in a separate comparison. |
 
-Round five then turns. Three months after that 87.5%, the same model scored 4%
-on ARC-AGI-2. Then ARC-AGI-3 — 135 interactive games with no rules and no stated
-goal — where the honest picture is stranger than a single number: an average
-human tester scores 48%, GPT-5.6 Sol scored **13.3%** through the standard
-harness and **38.3%** with two settings changed so it could keep its own
-reasoning between turns, and bare models on ARC Prize's own private run scored
-**0.51%**. Same month, same systems, beating PhDs on science questions. Rounds
-one to four teach the room to guess high; round five is why that is not the
-lesson, and why a startling share of any headline number is decided by how
-somebody wired the system up.
+The real-work cases are the revised Generative AI at Work support-agent study, METR's randomized early-2025 developer study with its February 2026 update, GenCast's retrospective comparison, and AlphaFold 3's bounded structure-prediction result. No broad claim about all professions follows from them.
 
-Every chart's time axis runs to August 2026. Where a series genuinely stops
-earlier — OpenAI stopped evaluating SWE-bench Verified in February 2026 and Anthropic
-stopped headlining it, and Epoch
-stopped publishing the cost curve in February 2025 — the line ends there and the
-chart says which of those happened.
+The scenario is **invented**, not measured data or a forecast endorsed by the demo. At years `t` after the second point, its rules are `30 + 10t`, `30 * 1.5^t`, and `75 - 45 * (9/11)^t`. All equal 20 at `t=-1` and 30 at `t=0`. Values above the toy score's ceiling of 100 remain visible and are labeled invalid for that scale.
 
-**Act II — The cadence.** 124 model releases since ChatGPT on a scrubbable
-timeline, filterable by openness and by region. The height axis is labelled
-*roughly how capable — a generation band, not a score*, which is the most it can
-honestly claim. Hollow rings are models anyone
-can download and run; solid dots you can only rent. Press play and watch the
-gaps shrink from months to weeks. Covers Gemma and MedGemma, Phi, OLMo,
-Nemotron, Granite, Falcon, Mistral and Devstral, EuroLLM and Poro, the Cursor
-and Windsurf coding models, gpt-oss — and the full Chinese field: DeepSeek,
-Qwen, Kimi, GLM, Hunyuan, MiniMax, Ernie, Yi, InternLM, Seed, LongCat, MiMo and
-more. Capability-unlock cards fire at their dates, including the ones later
-walked back.
+## Modify and verify
 
-**Act III — What it can actually do.** Six domains, not one, plus a short *Elsewhere* round-up:
+Use Node.js for the build and checks:
 
-- **Proteins** — AlphaFold and the 2024 Nobel Prize; a fluorescent protein evolution never made; a whole fruit-fly brain wired, after 33 person-years of human proofreading.
-- **Medicine** — an AI-discovered drug through a randomised Phase 2a trial; an AI reading mammograms with fewer false negatives than six radiologists; and, on real patient records rather than exam questions, models scoring 16–25 points *worse* than clinicians.
-- **Weather** — beating the European Centre's own forecast on 97.2% of targets, in eight minutes, now running operationally.
-- **Materials** — 2.2 million candidate crystals, and a flagship "new" compound that was first reported in 1972 and sat in the model's own training data.
-- **Mathematics** — where the potential showed earliest, because a proof is checkable. Erdős #1196, the unit distance conjecture disproved after eighty years, AlphaEvolve beating a 1969 record — and the month someone announced ten solved open problems that were ten literature citations.
-- **Software** — 30-hour autonomous sessions, and the randomised trial that found experienced developers **19% slower** with AI tools while believing they were 20% faster.
-
-Every entry separates **what the machine did** from **what the humans did**,
-because that distinction is where nearly all the overclaiming lives.
-
----
-
-## Sourcing
-
-Every number on screen resolves to a source in `src/data.js`, and each carries a
-verification status. The sources are the labs' own model cards, the benchmark
-maintainers' own leaderboards, the papers, and the mathematicians' own blogs —
-checked against those primaries while this was built, not taken from aggregators.
-
-Seven widely-repeated claims were **cut** for failing that bar, and the app
-displays them, with reasons, under *Cut from this demo*:
-
-- A claimed counterexample to the Jacobian conjecture — traced only to a hobbyist
-  site, no arXiv listing, and the attribution contradicted itself between sources.
-- Erdős Problem #793 — a tweet from a credible mathematician, but no paper.
-- Perfect 42/42 AI scores at IMO 2026 — one secondary source, no corroboration.
-- "Claude Fable 5 scores 95% on SWE-bench" and "Claude Opus 5 scores 64.7% on
-  Humanity's Last Exam" — neither appears on the benchmarks' own leaderboards;
-  the actual HLE leader is Gemini 3.1 Pro at 46.44%.
-- A 2026 point on the cost-of-capability curve — Epoch has not published one
-  since March 2025, so the line stops where the data stops.
-- A widely-repeated critique that a robotic lab's 41 "new" materials were
-  already known — could not be located or verified, so it was replaced with two
-  things that could be: a peer-reviewed critique in *Chemistry of Materials*,
-  and the fact that the original paper's abstract and main text disagree with
-  each other.
-- Gemma 4 and MiniMax M3 — both appeared in a first research pass; neither
-  exists. Removed before shipping.
-
-Settings → **Run the self-test** proves the dataset's integrity live, in front
-of whoever is asking: that every plotted point resolves to a declared source,
-that no source is cited and never used, that the hidden data genuinely postdates
-the shown data, that the scoring is monotone and scores a perfect guess at 1.0×,
-and that the doubling time stated in Act III matches the points plotted in Act I.
-
----
-
-## Running it
-
-```
-open index.html                 # that is the whole thing
-
-node build.js                   # rebuild index.html from src/ and re-ship the guide
-node build.js --check           # verify index.html, the shipped guide, the in-app
-                                #   notes and the PDF all still derive from
-                                #   src/presenter-guide.html; writes nothing
-node src/playtest.test.js       # 136 dataset, engine and demo-contract checks
-node src/playtest.test.js -v    # ...listing every one
-node tools/integration.mjs      # browser checks, headless (needs playwright)
-node tools/integration.mjs --headed   # watch it play itself
-node tools/pdf.mjs              # re-render the presenter guide PDF
-node tools/pdf.mjs --check      # verify the canonical guide/PDF without writing
+```sh
+node build.js
+node src/playtest.test.js
+node tools/integration.mjs
+node tools/pdf.mjs
+node build.js --check
 ```
 
-The integration suite drives the built file in Chromium (or an installed Chrome or
-Edge when managed Chromium is unavailable): it dismisses the how-to panel and the
-intro, drags a forecast, reveals it, plays all five tests, opens every worked
-example, solves the grid puzzle, triggers the twist, exercises both timeline
-filters across all four regions, walks the three acts, opens and closes all three
-sheets by button, backdrop and <kbd>Esc</kbd>, checks the presenter's notes still
-carry the guide's figures, and asserts no horizontal overflow, 40px tap targets,
-a how-to sheet whose dismiss button is on screen, and the Reveal button above the
-fold at eight viewports from 320×568 up — plus presenter mode at 720p and 1080p.
-It also asserts the page makes zero network requests and never touches
-`localStorage`.
+Run from this folder. Browser integration and optional PDF rendering need Playwright plus Chrome/Chromium; these are development tools only. `CHROME_PATH` can select the browser. The PDF renderer also supports a system Chrome/Edge without Playwright.
 
-**Five of those 192 currently fail, and have since the suite was committed.** They
-assert an accessibility revision that was never built: a keyboard-and-screenreader
-forecast control (`#forecast-end`), roving-focus act tabs (`#act-tab-1`), a
-release list beside the timeline canvas (`#tl-list`), and `aria-pressed` on the
-timeline filters. The suite records them as failures rather than crashing on them,
-so the other 187 still report. They are a real gap, left visible on purpose.
+- `src/data.js`: canonical historical snapshot, source registry, examples and evidence conditions.
+- `src/engine.js`: scales, interpolation, scoring and illustrative rules.
+- `src/validation.js`: structural checks shared by Node and Settings; tests cannot establish that source claims are true.
+- `src/chart.js` / `src/timeline.js`: canvas rendering and pointer interaction.
+- `src/app.js`: activities, Details, keyboard controls and modal focus management.
+- `src/template.html` / `src/styles.css`: application structure and responsive theme.
+- `src/presenter-guide.html`: canonical notes and printable guide.
+- `build.js`: self-contained build, guide injection and parity checks.
 
-The node suite checks the data rather than the pixels: that every plotted point
-resolves to a source, that no plain-language explanation leans on jargon, that
-the grid puzzle's examples and its answer obey one consistent rule, that Act III
-spans at least five domains with mathematics as a minority of them, that every
-open model declares a licence, and that every family the brief called out is
-actually on the timeline.
+Regenerate app/HTML after changes and re-render PDF whenever the canonical guide changes. The mathematical tests retain scale round trips, clamp/edge handling, interpolation, scoring, uncertainty and source-graph validation. Negative controls verify that broken source references are rejected. Browser checks cover desktop and phone layouts, pointer/keyboard estimates, modal focus, stage navigation, reset, and zero runtime requests.
 
----
+## Content decisions
 
-## Files
-
-```
-index.html                        the demo — one file, everything inlined
-presenter-guide.html              printable 25-minute session plan (a copy — edit src/)
-Takeoff-Presenter-Guide.pdf       the same, as a PDF (rendered from that copy)
-build.js                          concatenates src/ into index.html, and injects
-                                  the guide into the presenter-notes overlay
-SPEC.md                           the original brief, and where this departed from it
-src/
-  data.js         every number, every source, every verification status
-  engine.js       scales, the guess curve, scoring, the doubling-time fit
-  chart.js        the canvas: draws the data, takes the drag, animates the reveal
-  timeline.js     Act II
-  app.js          the three acts, the self-test
-  styles.css      Murray State palette; the fold rule
-  presenter-guide.html
-                  THE canonical presenter guide. One document, three surfaces:
-                  the notes overlay in the app, the printable file beside
-                  index.html, and the PDF. Edit only here.
-  template.html   the shell build.js fills
-  playtest.test.js
-tools/
-  integration.mjs browser checks
-  pdf.mjs         guide → PDF
-```
-
----
-
-## Presenting it
-
-`presenter-guide.html` (and the PDF) is a 25-minute session plan: what to say at
-each round, where to pause, the questions you will get and how to answer them,
-the misconceptions to head off, and a twelve-minute cut if that is all you have.
-
-Settings (⚙, top right) offers **Presentation mode**, which scales the interface
-for a projector; **Open Presenter Notes**, which puts that session plan on
-screen; and **Reset**, which returns the demo to its opening screen with every
-drawn line, verdict and timeline filter cleared, ready for the next room.
-Presentation mode deliberately survives a Reset — it describes the projector,
-not the talk.
-
-The notes overlay is not a summary of the printable guide. It **is** the guide:
-`build.js` lifts the body of `src/presenter-guide.html` and its scoped
-stylesheet straight into the page, so the three surfaces cannot disagree, and
-`node build.js --check` fails if they ever do. There used to be a second,
-hand-maintained copy in the template — 1961 words against the guide's 2072, and
-already disagreeing about the Act I framing and the ARC-AGI figures.
-
-Every load opens a **Guide** panel explaining the drawing exercise and the
-controls. It is dismissed by tapping outside it, by <kbd>Esc</kbd>, or by its own
-button, and the **?** beside the settings cog reopens it at any point. Nothing is
-remembered between loads, because the app stores nothing at all.
-
-The single most important instruction in the guide: **let people actually draw.**
-The demo dies if the presenter drives it and narrates. Hand the laptop round, or
-put it on a screen and have the room follow on their phones — it is built
-phone-first for exactly that.
-
----
-
-## A note on shelf life
-
-This is a dataset about a fast-moving field, verified against primary sources in
-August 2026. Several figures are already moving, and the app says so. Editing
-`src/data.js` and re-running both suites is the maintenance path; the tests check
-internal consistency, so a number updated in one place and not another fails
-rather than ships.
+The redesign removes the previous presumption that viewers should underestimate progress, an unsourced capability ranking, the broad 124-release catalog, unsupported headline rows, a mixed GPQA baseline, the mixed METR appendix row, and forced exponential conclusions. The selected releases intentionally omit many important models. AlphaFold 3's qualitative limitations were corroborated from publisher-indexed text in the source audit; no newly verified numeric accuracy claim is made.

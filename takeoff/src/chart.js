@@ -54,7 +54,7 @@ function create(canvas) {
     render:   () => render(st),
     reveal:   cb => reveal(st, cb),
     twist:    cb => twist(st, cb),
-    reset:    () => { st.guess = E.emptyGuess(baselineY(st)); st.phase = 'idle'; st.revealT = 0;
+    reset:    () => { cancelAnimationFrame(st._raf); st.guess = E.emptyGuess(baselineY(st)); st.phase = 'idle'; st.revealT = 0;
                       st.twistOn = false; st.twistT = 0; st.t1 = st.tBase; render(st); },
     setBig:   b => { st.big = b; resize(st); },
     /* The shared right-hand edge every chart runs to, as epoch ms. Injected
@@ -73,6 +73,7 @@ function create(canvas) {
 function splitOf(r) { return E.t(r.shown[r.shown.length - 1].date); }
 
 function setRound(st, r) {
+  cancelAnimationFrame(st._raf);
   st.round = r;
   st.scale = E.makeScale(r.scale, r.yMin, r.yMax);
   const pts = E.allPoints(r);
@@ -89,7 +90,7 @@ function setRound(st, r) {
      to be drawn. Collapsing these into one variable stretched the drawn guess
      sideways when the axis grew, and clipped the twist's labels off-screen
      when it did not. */
-  st.tGuess = st.t1;
+  st.tGuess = E.t(r.askDate);
   st.tEnd = st.t1;
 
   /* Every chart should cover the same window, so a series that stops in 2025
@@ -245,7 +246,7 @@ function setForecastEnd(st, y) {
 function reveal(st, done) {
   if (st.phase === 'revealing') return;
   st.phase = 'revealing';
-  const dur = 1500;
+  const dur = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 1 : 1500;
   const t0 = performance.now();
   cancelAnimationFrame(st._raf);
   const step = now => {
