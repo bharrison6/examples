@@ -131,7 +131,7 @@ const BAND_TEXT = {
  *  either way — they are shown, not marked, because marking an unresolved
  *  claim would be exactly the error this demo is about. */
 function verdictCorrect(guess, actual) {
-  if (actual === 'open') return null;
+  if (actual === 'open' || actual === 'context') return null;
   if (actual === 'late') return guess === 'no';   /* "did it come true in the window it named?" -> no */
   return guess === actual;
 }

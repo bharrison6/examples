@@ -5,9 +5,9 @@
 
 `takeoff` ends with the room having watched capability curves go nearly vertical. The
 honest next question, and you will get it, is *"is this another bubble?"* This demo
-answers it with evidence rather than reassurance: AI has boomed and collapsed twice, both
-collapses followed the same five-stage mechanism, and knowing that sequence is how you
-judge a claim without either swallowing it or dismissing it.
+answers with evidence rather than reassurance. It compares two AI contractions that had
+overlapping pressures but different causes, and asks which historical analogies survive
+contact with evidence.
 
 One HTML file. Runs offline. No AI at runtime, no network requests, nothing stored on the
 device.
@@ -16,9 +16,10 @@ device.
 
 ## The one thing the room should leave with
 
-Confident predictions that AI was nearly here have a bad track record — **and so do
-confident predictions that it would never work.** Most people only believe the first half
-until they get scored on the second, which is what Act I is for.
+Before calling a historical claim right or wrong, ask what sort of claim it is. A forecast
+needs an outcome and a time window. A contemporary assessment needs evidence about its own
+conditions. The activity is a curated teaching selection, not a representative accuracy
+sample of optimists, pessimists, or the field.
 
 ---
 
@@ -26,24 +27,21 @@ until they get scored on the second, which is what Act I is for.
 
 | Act | What it is | Time |
 |-----|-----------|------|
-| **I — Guess the year** | Ten real predictions, 1950–2024, speaker and date hidden. Guess the year on a slider, guess whether it came true, then reveal. Scorecard splits promises from dismissals. | 7–9 min |
-| **II — The two winters** | A scrubbable 1950–2026 timeline in six rows: landmark results on top, then one row per stage of the mechanism. Drag forward and the rows fire in order — twice. | 3–4 min |
-| **III — Anatomy** | The first winter, the second winter and now, side by side on those same five stages. Two cells in the "now" column are marked open rather than filled in. | 2–3 min |
+| **I — Guess the year** | Ten curated, sourced claims, 1950–2024, speaker and date hidden. Score six time-bounded forecasts; classify three assessments without grading them against the future. | 7–9 min |
+| **II — The two winters** | A scrubbable 1950–2026 timeline in six rows: landmark results plus five comparison lenses. It shows different pathways, not a fixed sequence. | 3–4 min |
+| **III — Anatomy** | The first winter, second winter, and current conditions side by side under the same lenses. Two present questions remain openly unresolved. | 2–3 min |
 | **IV — Now** | What rhymes against what is genuinely different, then the cut list and every source. | 2–3 min |
 
-### The five stages
+### The five comparison lenses
 
-The lanes in Act II, and the rows in Act III, are the same five things in the same order:
+The lanes in Act II and rows in Act III make causes comparable. They do **not** assert that
+every contraction follows this order or that the present is completing a third cycle:
 
-1. **A promise** — someone with standing says the thing is close.
-2. **Money against it** — a government or an industry commits real budget.
-3. **A hard limit** — an obstacle nobody had measured turns out to be load-bearing.
-4. **Someone names it** — a report, or a market, states the gap out loud.
-5. **The money leaves** — funding stops. The field calls it a winter.
-
-It ran 1955→1974 and again 1982→1992. A third run is under way and has reached stage
-three. Whether it reaches stages four and five is exactly what the demo refuses to
-predict.
+1. **Claims and ambitions** — what people said the technology could soon do.
+2. **Institutional bets** — public or private commitments made under uncertainty.
+3. **Constraints** — technical or economic limits that became salient.
+4. **Reassessment** — reports, researchers, or markets revising expectations.
+5. **Withdrawal** — funding, markets, or institutional attention pulling back.
 
 ---
 
@@ -62,9 +60,9 @@ window. It is the same file, injected at build time, not a summary of it. Short 
   hands on the year *before* dragging the slider. The room being wrong together is the
   experience.
 - **Short of time?** Keep four cards: Simon & Newell 1957, ALPAC 1966, Schank & Minsky
-  1984, Amodei 2024. Then skip to Act III and close.
-- **In Act II, do not narrate.** Drag slowly and let the room watch the rows fire. Say the
-  stage names as each lane lights.
+  1984, Amodei 2024. Use ALPAC to explain assessment versus forecast, then skip to Act III.
+- **In Act II, do not narrate a cycle.** Drag slowly and ask what differs between the two
+  historical pathways under each comparison lens.
 - **If someone asks where this came from**, open **Settings → Run the self-test** in front
   of them. It re-derives live that every claim resolves to a declared source, that no
   source is cited and never used, and that the counts quoted on screen match the data.
@@ -124,7 +122,8 @@ resource-loading tag, so a stray CDN reference fails the build rather than shipp
 
 | File | What it is |
 |------|-----------|
-| `src/data.js` | Every claim, every source, the cut list. The only file with facts in it. |
+| `src/data.js` | Every claim, source, comparison lens, and cut-list entry. The only file with facts in it. |
+| `SPEC.md` | Teaching objective, historical guardrails, interaction model, and verification contract. |
 | `src/engine.js` | Pure functions: dates, the year scale, the scoring. No DOM. |
 | `src/timeline.js` | The Act II canvas — lanes, winter bands, scrubber. Hand-rolled 2d context. |
 | `src/app.js` | Controller: the four acts, the overlays, the live self-test. |
@@ -149,8 +148,9 @@ somewhere unusual; nothing is hardcoded to one machine.
 **Adding or changing a claim** means editing `src/data.js` and nothing else.
 
 - A prediction card needs `id, quote, who, role, where, year, kind, verdict, verdictLine,
-  what, status, src`. `kind` is what it *claimed* (`promise` / `dismiss` / `warning`);
-  `verdict` is what *happened* (`no` / `yes` / `late` / `open`).
+  what, status, src`. `kind` is what it *is* (`promise` / `assessment` / `warning`);
+  `verdict` is the forecast outcome (`no` / `yes` / `late` / `open`) or `context` for a
+  dated assessment that must not be graded against the future.
 - A timeline event needs `d, p, stage, era, label, text, status, src`, plus an optional
   `money` block if it is one of the funding commitments. `p` is how much of the date you
   actually verified — `'y'`, `'m'` or `'d'` — and the app prints only that much. An event
@@ -160,10 +160,10 @@ somewhere unusual; nothing is hardcoded to one machine.
   fails in both directions, so a dangling reference and an orphaned source are both build
   breaks.
 
-The tests also enforce the prose. If you add a card, the counts quoted on the scorecard
-("six confident promises", "three confident dismissals") will fail until you update them
-— which is the point. The same is true of the money panel's "four commitments" caption and
-the "ten predictions" line in the how-to.
+The tests also enforce the teaching model. If you add a card, update the forecast,
+assessment, and warning counts that the scorecard uses; assessments must remain unscored as
+future forecasts. The same is true of the money panel's "four commitments" caption and the
+"ten claims" line in the guide.
 
 Then: `node src/playtest.test.js && node build.js && node src/contract.test.js`.
 
