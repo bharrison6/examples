@@ -1,17 +1,16 @@
 ---
 id: wavelet-lab-part-3-live
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: task
+memory_class: episodic
+lifecycle: complete
 schema_version: 2
-title: Rework Wavelet Lab Part 3 into a live prediction mechanic
+title: Completed — Wavelet Lab Part 3 reworked into a live prediction mechanic
 created: 2026-09-09T03:24:00Z
-updated: 2026-09-09T03:24:00Z
+updated: 2026-09-09T05:40:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: executing
-sanctioned_by: 16a888bbe48a4407aaf594599ad81d9a
+status: active
 decided_choice: "Replace with the live predict-your-next-toggle mechanic and a Portrait preset (operator, console, 2026-09-09)"
 folded_into: contract-ux-pass
 priority: normal
@@ -21,6 +20,21 @@ sensitivity: normal
 tags: [wavelets, demos, teaching, ai-fellows]
 aliases: [wavelet part 3 task]
 ---
+
+# Completion — 2026-09-09
+
+Sanction, preserved as historical provenance: operator console answer event
+`16a888bbe48a4407aaf594599ad81d9a` on [[wavelet-lab-part-3-rework]] (replace with the live mechanic).
+
+Done in the wavelet-lab lane of [[contract-ux-pass]] (`0f26955`): clicking a retained
+coefficient card names it, quotes the current squared error and asks for the predicted rise
+before dropping it, then grades the prediction against the readout; Part 2 has a one-click
+"Portrait at 64" preset; the fixed multiple-choice question and its reveal are gone and its
+content moved to the guide's assessment prompts. `src/wavelet.js` is unchanged; three new
+tests pin the live check and the test summary derives its count. Verified in a real browser
+by the lane and by the orchestrator's re-run of all suites.
+
+## Original brief (preserved)
 
 # Wavelet Lab Part 3 rework
 
