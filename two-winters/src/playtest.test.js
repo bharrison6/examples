@@ -107,6 +107,8 @@ ok('Every miss band has text', ['close','near','out','far'].every(b => !!E.BAND_
 
 ok('An unresolved claim is never marked', E.verdictCorrect('yes', 'open') === null &&
    E.verdictCorrect('no', 'open') === null);
+ok('A dated assessment is not marked as a future forecast',
+   E.verdictCorrect('context', 'context') === null && E.verdictCorrect('no', 'context') === null);
 ok('A straight yes/no verdict scores normally',
    E.verdictCorrect('yes', 'yes') === true && E.verdictCorrect('no', 'yes') === false);
 ok('A "true, but far too late" card marks "it didn\'t" as correct',
@@ -119,7 +121,7 @@ ok('A "true, but far too late" card marks "it didn\'t" as correct',
   const a = E.tally(D.CARDS, perfect);
   ok('Perfect play scores every scorable card', a.verdictRight === a.scored && a.scored > 0);
   ok('Perfect play has zero average miss', a.medianMiss === 0);
-  ok('Perfect play still leaves the open card unscored', a.open === 1);
+  ok('Perfect play leaves the open forecast and three assessments unscored', a.open === 4);
 
   const wrong = {};
   D.CARDS.forEach(c => { wrong[c.id] = { year: 1950, verdict: c.verdict === 'yes' ? 'no' : 'yes' }; });
@@ -208,16 +210,10 @@ ok('An event with month precision prints month and year',
 ok('An event with day precision prints the day',
    E.fmtEventDate(E.t('1958-07-08'), 'd') === '8 Jul 1958');
 
-/* The structural claim the whole demo rests on: in each winter, the five
-   stages fired in order beforehand. Test it rather than asserting it. */
+/* Each band is a bounded historical contraction. The lenses help compare
+   causes; they do not assert a universal ordered mechanism. */
 D.WINTERS.forEach(w => {
   const start = E.t(w.from), end = E.t(w.to);
-  ok(`${w.label}: a promise precedes it`,
-     D.EVENTS.some(e => e.stage === 'promise' && E.t(e.d) < start));
-  ok(`${w.label}: a limit is visible before or during it`,
-     D.EVENTS.some(e => e.stage === 'limit' && E.t(e.d) < end));
-  ok(`${w.label}: something names the gap before or during it`,
-     D.EVENTS.some(e => e.stage === 'naming' && E.t(e.d) < end));
   ok(`${w.label}: at least one withdrawal falls inside it`,
      D.EVENTS.some(e => e.stage === 'withdrawal' && E.t(e.d) >= start && E.t(e.d) <= end));
   ok(`${w.label}: starts before it ends`, start < end);
@@ -228,23 +224,22 @@ D.WINTERS.forEach(w => {
 ok('The second winter starts after the first one ends',
    E.t(D.WINTERS[1].from) > E.t(D.WINTERS[0].to));
 
-ok('Both winters have money committed before them',
-   D.WINTERS.every(w => D.EVENTS.some(e =>
-     (e.stage === 'money' || e.stage === 'promise') && E.t(e.d) < E.t(w.from))));
+ok('Both historical paths have multiple comparison lenses represented',
+   D.WINTERS.every(w => new Set(D.EVENTS.filter(e => E.t(e.d) <= E.t(w.to)).map(e => e.stage)).size >= 4));
 
 /* ================= 6. prose agrees with the data ========================= */
 
 const kindCount = k => D.CARDS.filter(c => c.kind === k).length;
-ok('Six confident promises, as the scorecard says', kindCount('promise') === 6, String(kindCount('promise')));
-ok('Three confident dismissals, as the scorecard says', kindCount('dismiss') === 3, String(kindCount('dismiss')));
+ok('Six time-bounded promises, as the scorecard says', kindCount('promise') === 6, String(kindCount('promise')));
+ok('Three dated assessments are shown without outcome scoring', kindCount('assessment') === 3, String(kindCount('assessment')));
 ok('One warning, as the scorecard says', kindCount('warning') === 1, String(kindCount('warning')));
 ok('The three kinds account for the whole deck',
-   kindCount('promise') + kindCount('dismiss') + kindCount('warning') === D.CARDS.length);
-ok('The how-to panel says ten predictions and there are ten', D.CARDS.length === 10);
+   kindCount('promise') + kindCount('assessment') + kindCount('warning') === D.CARDS.length);
+ok('The activity contains ten dated claims', D.CARDS.length === 10);
 
 ok('Exactly one card is left open', D.CARDS.filter(c => c.verdict === 'open').length === 1);
-ok('Every dismissal in the deck was in fact overturned',
-   D.CARDS.filter(c => c.kind === 'dismiss').every(c => c.verdict === 'no'));
+ok('Every assessment is explicitly marked as context, not a prediction',
+   D.CARDS.filter(c => c.kind === 'assessment').every(c => c.verdict === 'context'));
 ok('No promise in the deck arrived inside its own window',
    D.CARDS.filter(c => c.kind === 'promise').every(c => c.verdict !== 'yes'));
 
