@@ -1,6 +1,6 @@
-# Bridge Works
+# Truss Bridge Builder
 
-Murray State University · School of Engineering
+Murray State University · School of Engineering · folder `bridge-works`
 
 A browser-based truss bridge builder for physics class. Students design a bridge, drive a
 vehicle across it, and compete to build the **cheapest bridge that survives** — and they learn
@@ -9,13 +9,15 @@ statics because the solver is real, not because the game says so.
 ## Play
 
 Open `index.html` in any browser. Fully offline, no install, no build step, mouse + touch
-(Chromebook-friendly, phone-sized screens included). A **How to play** card opens on every
-load — dismiss it with ✕, Escape, a tap outside or **Start building**, and reopen it any time
-with the **?** button in the top bar.
+(Chromebook-friendly, phone-sized screens included). The **Guide** opens on every load —
+dismiss it with ✕, Escape, a tap outside or **Start building**, and reopen it any time with
+the **?** button in the top bar, whose accessible name is *Guide*.
 
-Teachers: open `teacher-guide.html` for a printable one-page session plan (also included
-pre-rendered as `teacher-guide.pdf`). `bridge-works-standalone.html` is the same game as a
-single file, for handing out on a stick or a locked-down machine.
+Teachers: `teacher-guide.html` is the printable session plan (two letter pages, also included
+pre-rendered as `teacher-guide.pdf`), and it is the *same document* the app shows under
+**⚙ → Open Presenter Notes** — see [Presenter notes are the guide](#presenter-notes-are-the-guide).
+`bridge-works-standalone.html` is the same game as a single file, for handing out on a stick
+or a locked-down machine.
 
 ## What's real
 
@@ -84,22 +86,44 @@ Nothing may exceed 4 m. Par is golf-style: survive the crossing for less than pa
   them into the current level and compare where each sends the load.
 - **Leaderboard** per level, stored in the browser, so each machine keeps its own class list.
 - **Settings (⚙)** holds everything a presenter needs:
+  - **Open Presenter Notes** — the teacher guide itself, on screen. Not a summary of it: the same
+    document, generated from the same file (below).
   - **Presentation mode** — large UI for the back of the room, and it parks a **🗒 Notes** button
-    in the top bar so the stage notes stay one tap away mid-demo.
-  - **Presenter's notes** — a 30-minute run of show distilled from the teacher guide: the beat for
-    each block of the session, the numbers to have ready (300 kN pulled at any length; 180/180/80/45 kN
-    pushed at 1/2/3/4 m; $45/m of steel plus $180 a joint), the determinacy count, the three
-    misconceptions with the move that kills each, and the discussion questions. The full guide is one
-    button away from there.
-  - Leaderboard resets, projector display options, keyboard editing, and an option to pick the test
-    vehicle on any level — for showing a class what happens when a bridge that comfortably carried a
-    car meets a 20 tonne crane. Demo runs stay off the leaderboard.
+    in the top bar so the guide stays one tap away mid-demo.
+  - **Reset** — the demo back to a first run on this machine: Level 1, default toggles, no saved
+    designs, no progress, empty leaderboard. Two taps to confirm. It does not reopen the Guide.
+  - Alongside those: per-level and whole-board leaderboard resets, display options, keyboard
+    editing, and an option to pick the test vehicle on any level — for showing a class what happens
+    when a bridge that comfortably carried a car meets a 20 tonne crane. Demo runs stay off the
+    leaderboard.
+
+## Presenter notes are the guide
+
+`teacher-guide.html` is the single source. It carries two `<style>` blocks: the first is scoped
+entirely to `.guide-scope` and is safe to inject into the app; the second is page chrome for the
+printable file (letter `@page`, the two-column print layout, the point sizes) and never leaves it.
+The body lives in `<div class="guide-scope"> … </div><!-- /guide -->`.
+
+```
+node tools/guide-sync.js           # write that block into index.html between its __GUIDE__ markers
+node tools/guide-sync.js --check   # fail if the copy in index.html has drifted
+node tools/pdf.mjs                 # re-render teacher-guide.pdf from the same file
+node sync-standalone.js            # then refresh the single-file edition
+```
+
+`guide-sync.js` refuses to inject a stylesheet with an unscoped selector or an at-rule, and
+refuses a guide body carrying anything fetchable, so the app cannot be restyled or taken online
+by an edit to the guide. The guide's colours come from custom properties whose defaults suit
+white paper; `index.html` overrides them on `#mNotes .guide-scope` so one stylesheet reads
+correctly on paper and on the app's navy sheet. **Edit the guide, never the copy in `index.html`.**
 
 ## Verifying the physics
 
 ```
-node test-physics.js   # shipped solver and level-definition regression suite
-node ui-smoke.js       # headless Playwright playthrough (test-only setup below)
+node test-physics.js             # shipped solver and level-definition regression suite
+node ui-smoke.js                 # headless Playwright playthrough (test-only setup below)
+node tools/guide-sync.js --check # in-app presenter notes still equal teacher-guide.html
+node sync-standalone.js --check  # single-file edition still equals the shipped sources
 ```
 
 `test-physics.js` imports the exact files the browser loads (`physics.js`, `levels.js`) and
@@ -118,18 +142,22 @@ debrief, saves to the leaderboard, overloads the same bridge with a crane and co
 collapse, watches the level-2 frame fold, braces it and confirms it then survives, and loads a
 Warren from the gallery and reads the alternating colour pattern off the live analysis.
 
-It also holds the demo to the repo's UX contract: the how-to opens on load and is dismissible four
-ways and reopenable from **?**; ⚙ opens a settings menu offering presentation mode; the presenter's
-notes open from settings and from the top-bar shortcut presentation mode adds; the attribution names
-author and institution; the how-to and the notes fit a 390 × 844 phone and the canvas still draws
-there; and **not one request leaves the folder** — the offline claim is asserted, not assumed.
+It also holds the demo to the repo's UX contract: the Guide opens on load, is dismissible four ways
+and reopens from **?** (whose accessible name is *Guide*); ⚙ opens a settings menu offering
+**Open Presenter Notes**, **Presentation mode** and **Reset**; Reset returns the demo to its
+fresh-load state without reopening the Guide; the notes open from settings and from the top-bar
+shortcut presentation mode adds, and carry the guide's own text; the attribution names author and
+institution; the Guide and the notes fit a 390 × 844 phone and the canvas still draws there; and
+**not one request leaves the folder** — the offline claim is asserted, not assumed.
 
 With dead load enabled, every live member contributes its lumped load before the solver's
 zero-force-stub cleanup. A loose vertical hanger therefore retains its 900 N/m dead-load share; if its
 geometry cannot route that load through axial members, the solver reports the resulting mechanism
 instead of silently deleting the member.
 
-The demo itself is build-free and offline. Browser smoke coverage is optional and needs the
-test-only Playwright setup (`npm install --save-dev playwright`, then `npx playwright install
-chromium`); the smoke script exits loudly when it is unavailable. Keep the offline standalone
-edition exact with `node sync-standalone.js --check` (or regenerate it with `node sync-standalone.js`).
+The demo itself is build-free and offline: `index.html` is the shipped source, not build output.
+The two scripts under `tools/` and `sync-standalone.js` are maintenance tools — you run them after
+editing the guide or the sources, never to play the game. Browser smoke coverage is optional and
+needs the test-only Playwright setup (`npm install --save-dev playwright`, then `npx playwright
+install chromium`); the smoke script exits loudly when it is unavailable. `tools/pdf.mjs` drives an
+installed Chrome or Edge headless, so it needs no dependency either.

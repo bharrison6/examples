@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   ============================================================
-  SHOULD HAVE KNOWN THAT: Engineering Edition
+  ENGINEERING TRIVIA — "Should Have Known That"
   A single-file, offline, slider-based estimation trivia game
   for engineering students. No libraries, no network calls.
 
@@ -11,10 +11,16 @@
   automatically. Scoring thresholds live in the SCORING
   object in the main script at the bottom of the file.
 
-  PRESENTING: the "?" button (top right, every screen) reopens
-  the how-to popup; the gear beside it has Presentation mode
-  and the presenter's notes. Printable version of the notes:
-  teacher-guide.html, in this folder.
+  PRESENTING: the "?" Guide button (top right, every screen)
+  reopens the Guide overlay; the gear beside it offers Open
+  Presenter Notes, Presentation mode and Reset.
+
+  THE PRESENTER NOTES ARE GENERATED. teacher-guide.html is the
+  single source; tools/guide-sync.js lifts it into the blocks
+  marked __GUIDE_CSS__ and __GUIDE__ below. Edit the guide, not
+  the copy here, then run:
+      node tools/guide-sync.js && node tools/pdf.mjs
+  "node tools/guide-sync.js --check" fails if the two drift.
 
   Murray State theme: MSU Blue #002144, MSU Gold #ECAC00,
   Lite Blue #00A4E3. Red Orange #FF4500 appears in exactly one
@@ -25,7 +31,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Should Have Known That: Engineering Edition</title>
+<title>Engineering Trivia — Should Have Known That</title>
 <style>
   /* ---------- Murray State palette ----------
      MSU Blue #002144 · MSU Gold #ECAC00 · Lite Blue #00A4E3.
@@ -73,14 +79,20 @@
   }
   .game-title{
     margin:0; text-align:center; line-height:.95; font-weight:900;
-    font-size:clamp(2.4rem, 6vh + 2vw, 5.2rem); letter-spacing:.02em;
+    /* The 13vw cap is what keeps ENGINEERING — eleven letters with no break
+       opportunity — inside a 320px phone. Above ~640px min() picks the 6vh+2vw
+       term, so wide screens are unaffected. */
+    font-size:clamp(2.4rem, min(6vh + 2vw, 13vw), 5.2rem); letter-spacing:.02em;
     background:linear-gradient(100deg,var(--gold) 18%, var(--gold-lt) 46%, var(--cyan) 88%);
     -webkit-background-clip:text; background-clip:text; color:transparent;
     filter:drop-shadow(0 0 22px rgba(236,172,0,.35));
   }
   .subtitle{
-    margin-top:6px; font-weight:800; letter-spacing:.45em; text-indent:.45em;
-    color:var(--cyan); font-size:clamp(.8rem, 1.8vh, 1.2rem); text-align:center;
+    /* SHOULD HAVE KNOWN THAT is long for a tracked-out line: the vw terms pull the
+       tracking and the type in far enough to keep it on ONE line down to 320px. */
+    margin-top:6px; font-weight:800;
+    letter-spacing:min(.45em, 1.05vw); text-indent:min(.45em, 1.05vw);
+    color:var(--cyan); font-size:clamp(.72rem, min(1.8vh, 4vw), 1.2rem); text-align:center;
   }
   .tagline{color:var(--dim); font-size:clamp(.8rem,1.7vh,1rem); margin-top:8px; text-align:center;}
   .setup{width:100%; max-width:640px; margin-top:2.5vh; display:flex; flex-direction:column; gap:2vh;}
@@ -357,22 +369,6 @@
   }
   .bandrow .bd{color:var(--dim);}
   .bandrow .bd b{color:var(--ink);}
-  /* stage-note beats in the presenter notes */
-  .beat{display:flex; gap:10px; margin:7px 0;}
-  .beat .t{
-    min-width:66px; font-weight:900; color:var(--gold); font-size:clamp(.74rem,1.7vh,.86rem);
-    letter-spacing:.05em; padding-top:2px;
-  }
-  .beat .d{font-size:clamp(.86rem,1.95vh,1rem); line-height:1.45;}
-  .say{
-    margin-top:4px; padding-left:9px; border-left:2px solid var(--cyan);
-    color:var(--cyan-lt); font-style:italic;
-  }
-  .callout{
-    border:1px solid rgba(255,255,255,.16); border-left:3px solid var(--cyan);
-    background:rgba(0,0,0,.22); border-radius:8px; padding:8px 11px; margin:9px 0;
-    font-size:clamp(.84rem,1.9vh,.97rem); line-height:1.45;
-  }
   .sheet-foot{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
   .sheet-foot .big-btn{margin:0; flex:1; min-height:56px; max-width:none;}
   .switch{
@@ -389,6 +385,11 @@
     font-weight:800; font-size:clamp(.95rem,2.2vh,1.1rem); letter-spacing:.04em;
   }
   .ghost-btn:active{transform:scale(.98);}
+  /* Reset is deliberately NOT red: Red Orange belongs to the WAY OFF band and
+     nothing else in this demo. A quiet outline reads as "different from the
+     cyan actions" without borrowing the failure colour. */
+  .ghost-btn.quiet{border-color:rgba(255,255,255,.3); background:rgba(255,255,255,.06);}
+  .sheet a{color:var(--cyan-lt); text-underline-offset:2px;}
   .tap-hint{
     text-align:center; color:var(--dim); font-size:clamp(.74rem,1.7vh,.85rem);
     margin-top:12px; letter-spacing:.08em;
@@ -420,10 +421,89 @@
   body.presentation .end-card{font-size:clamp(.95rem,2.3vh,1.2rem);}
   body.presentation .end-kicker{font-size:clamp(1rem,2.4vh,1.4rem);}
 
+  /* ---------- presenter notes = the teacher guide ----------
+     The block below the __GUIDE_CSS__ marker is GENERATED from teacher-guide.html
+     by tools/guide-sync.js — do not edit it here. The guide's own stylesheet is
+     written for white paper and takes its colours from custom properties, so the
+     same rules can read on the app's navy sheet; these are the app's values.
+     Specificity (#ov-notes .guide-scope) beats the injected defaults. */
+  #ov-notes .guide-scope{
+    --guide-accent:var(--gold);
+    --guide-rule:var(--gold);
+    --guide-strong:var(--gold-lt);
+    --guide-muted:var(--dim);
+    --guide-line:rgba(255,255,255,.22);
+    --guide-line-soft:rgba(255,255,255,.14);
+    --guide-box-bg:rgba(0,0,0,.22);
+    --guide-hook:var(--cyan);
+    --guide-hook-ink:var(--cyan-lt);
+    --guide-warn:var(--alert);
+    --guide-warn-ink:#FF8A5C;
+    --guide-th-bg:rgba(0,0,0,.35);
+    --guide-th-ink:var(--cyan-lt);
+    --guide-code-bg:rgba(0,0,0,.35);
+    font-size:clamp(.88rem,2vh,1rem); line-height:1.5;
+  }
+  /* wide tables get their own scroll lane rather than stretching the sheet */
+  #ov-notes .guide-scope table.bands{display:block; overflow-x:auto; max-width:100%;}
+
   /* ---------- animations ---------- */
   @keyframes popIn{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.12);opacity:1}100%{transform:scale(1);opacity:1}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
   .confetti{position:fixed; width:12px; height:12px; top:38%; left:50%; z-index:50; pointer-events:none; border-radius:2px;}
+/* __GUIDE_CSS__ start — generated by tools/guide-sync.js from teacher-guide.html; do not edit */
+.guide-scope {
+  --guide-accent: #002144;
+  --guide-rule: #ECAC00;
+  --guide-strong: #0e1622;
+  --guide-muted: #4a5a72;
+  --guide-line: #b9c4d6;
+  --guide-line-soft: #d5dde8;
+  --guide-box-bg: #f4f7fc;
+  --guide-hook: #00A4E3;
+  --guide-hook-ink: #00679b;
+  --guide-warn: #FF4500;
+  --guide-warn-ink: #c33600;
+  --guide-th-bg: #002144;
+  --guide-th-ink: #ffffff;
+  --guide-code-bg: #eef2f8;
+  color: inherit;
+}
+.guide-scope .g-head { border-bottom: 3px solid var(--guide-rule); padding-bottom: 6px; margin-bottom: 10px; }
+.guide-scope .brandline { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .78em;
+  letter-spacing: .16em; font-weight: 700; color: var(--guide-accent); text-transform: uppercase; }
+.guide-scope h1 { font-size: 1.5em; line-height: 1.15; color: var(--guide-accent); }
+.guide-scope .g-sub { font-size: .92em; color: var(--guide-muted); font-style: italic; }
+.guide-scope h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 1.02em;
+  text-transform: uppercase; letter-spacing: .08em; color: var(--guide-accent);
+  margin: 1.15em 0 .4em; break-after: avoid; border-left: 3px solid var(--guide-rule); padding-left: 6px; }
+.guide-scope h2:first-child { margin-top: 0; }
+.guide-scope p { margin: .45em 0; }
+.guide-scope ul, .guide-scope ol { margin: .3em 0 .7em 1.2em; }
+.guide-scope li { margin: .24em 0; }
+.guide-scope b { color: var(--guide-strong); }
+.guide-scope .time { display: inline-block; min-width: 5.4em; font-weight: 700;
+  font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .95em; color: var(--guide-accent); }
+.guide-scope .box { border: 1px solid var(--guide-line); border-left: 3px solid var(--guide-accent);
+  background: var(--guide-box-bg); padding: .5em .75em; margin: .6em 0; border-radius: 3px; break-inside: avoid; }
+.guide-scope .box.hook { border-left-color: var(--guide-hook); }
+.guide-scope .box.hook b.tag { color: var(--guide-hook-ink); }
+.guide-scope .box.warn { border-left-color: var(--guide-warn); }
+.guide-scope .box.warn b.tag { color: var(--guide-warn-ink); }
+.guide-scope table.bands { width: 100%; border-collapse: collapse; margin: .5em 0 .6em;
+  font-size: .94em; break-inside: avoid; }
+.guide-scope table.bands th { background: var(--guide-th-bg); color: var(--guide-th-ink); text-align: left;
+  padding: .25em .4em; font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .88em;
+  letter-spacing: .05em; text-transform: uppercase; }
+.guide-scope table.bands td { border-bottom: 1px solid var(--guide-line-soft); padding: .25em .4em; vertical-align: top; }
+.guide-scope table.bands td.b { font-weight: 700; font-family: "Segoe UI", Helvetica, Arial, sans-serif; white-space: nowrap; }
+.guide-scope .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+  margin-right: 4px; vertical-align: baseline; }
+.guide-scope code { font-family: Consolas, "Courier New", monospace; font-size: .92em;
+  background: var(--guide-code-bg); border: 1px solid var(--guide-line-soft); border-radius: 2px; padding: 0 3px; }
+.guide-scope .g-foot { margin-top: .9em; border-top: 1px solid var(--guide-line);
+  padding-top: .4em; font-size: .92em; color: var(--guide-muted); }
+/* __GUIDE_CSS__ end */
 </style>
 
 <script>
@@ -657,15 +737,15 @@ const QUESTIONS = [
 
   <!-- ================= ALWAYS-VISIBLE UTILITY RAIL ================= -->
   <div class="rail">
-    <button id="btn-help" aria-label="How to play" title="How to play (?)">?</button>
+    <button id="btn-help" aria-label="Guide" title="Guide">?</button>
     <button id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
   </div>
 
   <!-- ================= START SCREEN ================= -->
   <section id="screen-start" class="screen scrolly active">
     <div class="msu-eyebrow">Murray State University</div>
-    <h1 class="game-title">SHOULD HAVE<br>KNOWN THAT</h1>
-    <div class="subtitle">ENGINEERING EDITION</div>
+    <h1 class="game-title">ENGINEERING<br>TRIVIA</h1>
+    <div class="subtitle">SHOULD HAVE KNOWN THAT</div>
     <div class="tagline">Drag the slider. Trust your gut. Own the consequences.</div>
     <div class="setup">
       <div>
@@ -762,11 +842,11 @@ const QUESTIONS = [
     </div>
   </section>
 
-  <!-- ================= HOW-TO POPUP (shown on every load) ================= -->
+  <!-- ============= GUIDE OVERLAY (the ? button; shown on every load) ============= -->
   <div class="ov" id="ov-help" role="dialog" aria-modal="true" aria-labelledby="help-title">
     <div class="sheet" id="help-sheet">
       <div class="sheet-head">
-        <h2 id="help-title"><span class="kick">Should Have Known That</span>How to play</h2>
+        <h2 id="help-title"><span class="kick">Engineering Trivia</span>Guide</h2>
         <button class="x-btn" data-close="ov-help" aria-label="Close">&times;</button>
       </div>
 
@@ -810,8 +890,8 @@ const QUESTIONS = [
       the biggest <b>should-have-known</b> miss — that second one is the debrief.</p>
 
       <p class="dimp"><kbd>Enter</kbd> or <kbd>Space</kbd> locks in and advances.
-      Reopen this anytime with <b>?</b> up in the corner; <b>&#9881;</b> beside it has
-      presentation mode and the presenter's notes.</p>
+      Reopen this Guide anytime with <b>?</b> up in the corner; <b>&#9881;</b> beside it
+      offers <b>Open Presenter Notes</b>, <b>Presentation mode</b> and <b>Reset</b>.</p>
 
       <div class="sheet-foot">
         <button class="big-btn" data-close="ov-help">GOT IT</button>
@@ -824,30 +904,35 @@ const QUESTIONS = [
   <div class="ov" id="ov-settings" role="dialog" aria-modal="true" aria-labelledby="set-title">
     <div class="sheet" data-keep-open>
       <div class="sheet-head">
-        <h2 id="set-title"><span class="kick">Should Have Known That</span>Settings</h2>
+        <h2 id="set-title"><span class="kick">Engineering Trivia</span>Settings</h2>
         <button class="x-btn" data-close="ov-settings" aria-label="Close">&times;</button>
       </div>
 
-      <h3>Presentation mode</h3>
+      <h3>Presenting</h3>
+      <button class="ghost-btn" id="btn-notes">Open Presenter Notes</button>
+      <p class="dimp">The presenter notes <i>are</i> the teacher guide &mdash; one
+      document from one source, built into this file. The same text prints from
+      <code>teacher-guide.html</code> and <code>teacher-guide.pdf</code>;
+      <a href="teacher-guide.html" target="_blank" rel="noopener">open the printable copy</a>.</p>
+
       <label class="switch" id="pres-switch">
         <input type="checkbox" id="chk-presentation">
-        <span>Presentation mode &mdash; projector-sized type</span>
+        <span>Presentation mode</span>
       </label>
-      <p class="dimp">Scales the prompt, the running value, the band badge and the
-      "because&hellip;" line up for a room, and lifts the greyed-out text so the back
-      row can read it. The layout doesn't change, so a rehearsal on your laptop still
-      matches what the class sees.</p>
+      <p class="dimp">Projector-sized type: the prompt, the running value, the band
+      badge and the "because&hellip;" line scale up for a room, and the greyed-out text
+      lifts so the back row can read it. The layout doesn't change, so a rehearsal on
+      your laptop still matches what the class sees.</p>
 
-      <button class="ghost-btn" id="btn-notes">Open the presenter's notes</button>
-      <p class="dimp">Stage notes for running this with a class: pacing, where to stop
-      the room before a reveal, and the discussion hooks worth chasing. Built into this
-      file &mdash; no network, nothing to download.</p>
+      <button class="ghost-btn quiet" id="btn-reset">Reset</button>
+      <p class="dimp">Back to a fresh load, without reloading the page: no game in
+      progress, and the start screen at its defaults &mdash; 10 questions, solo, every
+      category on, default team names. It leaves <b>Presentation mode</b> as you set it
+      and does not reopen the Guide.</p>
 
-      <h3>Also</h3>
-      <button class="ghost-btn" id="btn-help-from-settings">Show "How to play" again</button>
+      <h3>About</h3>
       <p class="dimp">Runs offline out of one file. Nothing is uploaded, nothing is
-      stored, no AI at runtime. The printable teacher guide is
-      <code>teacher-guide.html</code> next to this file.</p>
+      stored, no AI at runtime &mdash; closing the tab is the only other reset there is.</p>
 
       <div class="sheet-foot">
         <button class="big-btn cyan" data-close="ov-settings">DONE</button>
@@ -855,98 +940,95 @@ const QUESTIONS = [
     </div>
   </div>
 
-  <!-- ================= PRESENTER'S NOTES ================= -->
+  <!-- ================= PRESENTER NOTES = THE TEACHER GUIDE =================
+       The block between the __GUIDE__ markers is GENERATED from teacher-guide.html
+       by tools/guide-sync.js. Do not edit it here: edit the guide, re-run the script,
+       and "node tools/guide-sync.js --check" will confirm the two have not drifted. -->
   <div class="ov" id="ov-notes" role="dialog" aria-modal="true" aria-labelledby="notes-title">
     <div class="sheet wide" data-keep-open>
       <div class="sheet-head">
-        <h2 id="notes-title"><span class="kick">Stage notes &middot; 10&ndash;20 minutes</span>Presenter's notes</h2>
+        <h2 id="notes-title"><span class="kick">the printable guide, on screen</span>Presenter notes</h2>
         <button class="x-btn" data-close="ov-notes" aria-label="Close">&times;</button>
       </div>
 
-      <h3>Before you start</h3>
-      <p>Turn on <b>Presentation mode</b> if you're projecting. Pick the length on the
-      start screen: <b>5</b> questions is a warm-up, <b>10</b> is a class block,
-      <b>15</b> is the full set. Categories are toggles — switch off the ones you
-      haven't taught and the pool shrinks accordingly (the note under the buttons tells
-      you how many questions are actually in play, and caps the count if you've asked
-      for more than the pool holds).</p>
-      <p>For teams, the pool is split evenly: with 4 teams and every category on,
-      that's 40 &divide; 4 = 10 questions each. Ask the teams to name themselves —
-      it costs 20 seconds and buys you the whole hour.</p>
+<!-- __GUIDE__ start — generated by tools/guide-sync.js from teacher-guide.html; do not edit -->
+<div class="guide-scope">
+  <div class="g-head">
+    <div>
+      <div class="brandline">Murray State University &middot; Bryant Harrison</div>
+      <h1>&#127919; Engineering Trivia &mdash; Teacher Guide</h1>
+    </div>
+    <div class="g-sub">Should Have Known That &middot; number sense, taught by a slider</div>
+  </div>
 
-      <h3>Running it</h3>
-      <div class="beat"><div class="t">0:00</div><div class="d">
-        <b>Project question one and say nothing.</b> Let someone drag the slider while
-        the room watches the number move. The dragging is the lesson — they are
-        being asked to commit to a magnitude, out loud, in front of people.
-        <div class="say">"Nobody is asking you to be right. You're being asked to be
-        in the right neighborhood."</div>
-      </div></div>
-      <div class="beat"><div class="t">before<br>each lock</div><div class="d">
-        <b>Freeze it.</b> Before anyone presses LOCK IT IN, poll the room: hands up for
-        higher, hands up for lower. Commitment before the reveal is what makes the miss
-        memorable — a guess nobody said out loud costs nothing to be wrong about.
-      </div></div>
-      <div class="beat"><div class="t">reveal</div><div class="d">
-        The truth marker slides for about a second, the band lands, then the
-        "because&hellip;" line fades in and <b>NEXT</b> appears — roughly two seconds
-        end to end. <b>Do not narrate over it.</b> Read the anchor line aloud after it
-        appears, then move.
-      </div></div>
-      <div class="beat"><div class="t">after<br>a WAY OFF</div><div class="d">
-        Distinguish the two failures out loud. Way off on a <b>linear</b> question is a
-        fact you don't have. Way off on a <b>log</b> question is a much bigger problem:
-        you don't know what size the answer is. That's the one worth stopping for.
-      </div></div>
-      <div class="beat"><div class="t">end</div><div class="d">
-        The end screen names the <b>sharpest guess</b> and the biggest
-        <b>should-have-known</b> miss. Debrief from the miss card, not the score.
-      </div></div>
+<div class="cols">
+  <h2>What this teaches</h2>
+  <p>Forty verified numbers an engineer is expected to carry without looking up &mdash; <b>8 each</b> across Statics &amp; Mechanics, Materials, Electrical, Fluids &amp; Thermo, and Everyday Engineering. Students never type an answer; they <b>drag a slider</b> and commit. That single design choice is the pedagogy: a slider forces a magnitude out of someone who would otherwise say "I don't know," and a committed wrong answer is what makes the correction stick. Every reveal ends with a one-line <b>"you should have known that because&hellip;"</b> anchor, so the number leaves with a reason attached rather than as trivia. Runs offline in any browser &mdash; open <b>index.html</b>, phone or projector, nothing to install.</p>
 
-      <h3>Discussion hooks that are actually in the bank</h3>
-      <ul>
-        <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Both are in the
-        bank (Statics, Fluids). Run them in the same game and ask the room to derive one
-        from the other — 62.4 &divide; 144 in&sup2;/ft&sup2; = 0.433. One number they
-        already knew was two numbers they thought they didn't.</li>
-        <li><b>Voltage doesn't kill; current does.</b> The Electrical set has ~100 mA
-        across the chest causing fibrillation, and ~3,000 V as the floor for feeling a
-        static shock — a doorknob zap is 5&ndash;25 kV and harmless. Ask which of the
-        two numbers is the dangerous one, then show both.</li>
-        <li><b>Steel vs aluminum.</b> Young's modulus 200 vs 70 GPa, density 7,850 vs
-        2,700 kg/m&sup3;. Both ratios are about 2.9. Ask why we don't just build
-        everything out of aluminum — the answer is that stiffness-to-weight is nearly
-        identical, so the choice is made on cost, buckling and joining, not stiffness.</li>
-        <li><b>Steel and concrete expand at the same rate</b> (~12 &micro;m/m&middot;&deg;C).
-        Ask the room what would happen to reinforced concrete if they didn't. Every
-        summer would crack the building.</li>
-        <li><b>Steel doesn't melt in a building fire.</b> Carbon steel melts near
-        1,500 &deg;C — but it softens enough to fail long before that. Good for
-        separating "melted" from "failed" in students' vocabulary.</li>
-        <li><b>The log questions are the real diagnostic.</b> Copper resistivity
-        1.7&times;10&#8315;&#8312; &Omega;&middot;m and the speed of light are not
-        recall questions — they are "do you know how big this kind of thing is"
-        questions. Expect the class to do badly and say so in advance; it lowers the
-        cost of guessing.</li>
-        <li><b>A36's name is its answer.</b> The 36 is the yield strength in ksi
-        (&asymp;250 MPa). Worth pointing out that half the materials numbers engineers
-        "memorize" are printed on the spec sheet name.</li>
-        <li><b>One gallon of gasoline is 33.7 kWh</b> — about a full day of an average
-        US home's electricity. The best single number in the bank for an energy
-        conversation.</li>
-      </ul>
+  <h2>How it is scored</h2>
+  <p>Thirty-five questions use a <b>linear</b> slider scored on <b>percent error</b>. Five use a <b>logarithmic</b> slider, marked <code>LOG SCALE</code> on screen, scored on <b>how many times off</b> you are: copper resistivity, the speed of light, the current that stops a heart, the voltage you can feel as a static shock, and the energy in an AA battery. Those five span orders of magnitude, so percent error would be meaningless &mdash; getting the right power of ten is the skill being tested.</p>
 
-      <h3>If you have five more minutes</h3>
-      <p>Replay the same category in <b>teams</b>. The second pass scores far better,
-      and that jump is the point: these are not facts anyone is born with, and one
-      exposure with a reason attached is most of what it takes to keep one.</p>
+  <table class="bands">
+    <tr><th>Band</th><th>Linear</th><th>Log</th><th>Pts</th></tr>
+    <tr><td class="b"><span class="sw" style="background:#ECAC00"></span>Bullseye</td><td>within 5%</td><td>1.26&times;</td><td>100</td></tr>
+    <tr><td class="b"><span class="sw" style="background:#F6D77A"></span>Close</td><td>within 15%</td><td>2.1&times;</td><td>75</td></tr>
+    <tr><td class="b"><span class="sw" style="background:#00A4E3"></span>Warm</td><td>within 35%</td><td>5&times;</td><td>40</td></tr>
+    <tr><td class="b"><span class="sw" style="background:#8CC9E6"></span>Cold</td><td>within 60%</td><td>16&times;</td><td>10</td></tr>
+    <tr><td class="b"><span class="sw" style="background:#FF4500"></span>Way Off</td><td>past that</td><td>past that</td><td>0</td></tr>
+  </table>
+  <p>Gold bands mean the student had the number, blue means they didn't, red means they weren't in the neighborhood. Thresholds live in the <code>SCORING</code> object at the bottom of <code>index.html</code> if you want a harsher or gentler curve.</p>
 
-      <div class="callout"><b>Editing the bank:</b> every question lives in a commented
-      array at the top of <code>index.html</code> — id, category, prompt, units, value,
-      slider min/max, <code>linear</code> or <code>log</code>, and the
-      "because&hellip;" line. Add your own and new categories appear on the start
-      screen by themselves. Band thresholds are in the <code>SCORING</code> object at
-      the bottom of the file.</div>
+  <h2>20-minute session plan</h2>
+  <ul>
+    <li><span class="time">0&ndash;2 min</span>Project the game (&#9881; &rarr; <b>Presentation mode</b> for projector-sized type). Pick one category and <b>5 questions</b>. Play the first one yourself, out loud, and be wrong on purpose &mdash; it sets the tone that guessing is the assignment.</li>
+    <li><span class="time">2&ndash;5 min</span><b>Poll before every lock-in.</b> Hands up for higher, hands up for lower, then press LOCK IT IN. Public commitment before the reveal is the whole mechanism; a guess nobody said out loud costs nothing to be wrong about.</li>
+    <li><span class="time">5&ndash;14 min</span>Switch to <b>teams</b> (2&ndash;4, pass-and-play on one device, or one device per team) and run <b>10 questions</b> each. Read the "because&hellip;" line aloud after every reveal &mdash; do not narrate over the animation, it only takes about two seconds.</li>
+    <li><span class="time">14&ndash;18 min</span>Debrief from the end screen's <b>"Should have known that"</b> card, which names the game's biggest miss. Ask that team to say what number they <i>thought</i> it was and why. The wrong mental model is more useful to the room than the right answer.</li>
+    <li><span class="time">18&ndash;20 min</span>Replay one category &mdash; <b>PLAY AGAIN</b> from the end screen, or <b>&#9881; &rarr; Reset</b> for a clean start screen. Scores jump, and that jump is the point: one exposure with a reason attached is most of what it takes to keep a number.</li>
+  </ul>
+
+  <h2>Solo vs team mode</h2>
+  <p><b>Solo</b> is the homework and self-quiz mode: one player, a final score out of 100 per question, and the same two end cards. <b>Teams</b> (2&ndash;4) is the classroom mode. Name the teams on the start screen &mdash; it costs twenty seconds and buys you the hour. The game then hands the device around: a turn card names who is up, a strip across the top carries the running score, and every team answers the same number of questions.</p>
+  <p>The pool is split evenly, so the question count per team is capped at pool &divide; teams. With all five categories on and four teams, that is 40 &divide; 4 = <b>10 questions each</b>. The note under the start button tells you the real number before you commit &mdash; if you switch categories off, watch it shrink.</p>
+
+  <div class="box warn"><b class="tag">One device or many?</b> Pass-and-play on a single phone keeps the room together and is the intended mode. If each team has its own device, run the same category and length on all of them and compare end screens &mdash; but the question order is shuffled per device, so the scores are comparable only in aggregate, not question by question.</div>
+
+  <h2>Discussion prompts</h2>
+  <ol>
+    <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Both are in the bank. Ask the room to derive one from the other (62.4 &divide; 144 in&sup2;/ft&sup2;). One number they already had was two numbers they thought they didn't.</li>
+    <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it takes to feel a static shock? A doorknob zap is 5&ndash;25 kV and harmless. It is the current, not the voltage, that kills.</li>
+    <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs 70 GPa; density 7,850 vs 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical &mdash; the real choice is cost, buckling and joining.</li>
+    <li><b>What if steel and concrete expanded at different rates?</b> They both run near 12 &micro;m/m&middot;&deg;C. Every summer would crack the building. Reinforced concrete works on a coincidence.</li>
+    <li><b>Did the steel melt?</b> Carbon steel melts near 1,500 &deg;C, but it softens enough to fail far below that. Good for separating "melted" from "failed" in students' vocabulary.</li>
+    <li><b>A36 is named after its own answer</b> &mdash; the 36 is the yield strength in ksi (&asymp;250 MPa). How many other "memorized" numbers are printed on the spec sheet name?</li>
+    <li><b>One gallon of gasoline is 33.7 kWh</b> &mdash; roughly a full day of an average US home's electricity. Best single number in the bank for an energy conversation.</li>
+    <li><b>Why did the log questions go so badly?</b> Because they are not recall questions. Tell the class this in advance; it lowers the cost of guessing and makes the failure informative instead of embarrassing.</li>
+  </ol>
+
+  <div class="box hook"><b class="tag">Reading a Way Off:</b> a Way Off on a <b>linear</b> question is a fact the student does not have. A Way Off on a <b>log</b> question is a bigger problem &mdash; they do not know what <i>size</i> the answer is. Say the difference out loud; it is the single most transferable idea in the game.</div>
+
+  <h2>Editing the question bank</h2>
+  <p>Every question is one object in a commented array at the top of <code>index.html</code> &mdash; search for <b>QUESTION BANK</b>. The fields are <code>id</code>, <code>category</code>, <code>prompt</code>, <code>units</code>, <code>value</code> (the true answer), <code>min</code>/<code>max</code> (slider endpoints), <code>scale</code> (<code>"linear"</code> or <code>"log"</code>) and <code>factoid</code> (the "because&hellip;" line). Edit in place with any text editor; the game itself has no build step.</p>
+  <ul>
+    <li>New categories appear on the start screen and get a color <b>automatically</b> &mdash; just type a new <code>category</code> string.</li>
+    <li>Keep the true value <b>off-center</b> in [min, max], and keep the range wide enough that the endpoints don't give the answer away.</li>
+    <li>Use <code>"log"</code> whenever plausible student guesses span orders of magnitude. Both <code>min</code> and <code>max</code> must be greater than zero on a log slider.</li>
+    <li>Always write the <code>factoid</code>. A number without a reason is trivia, and trivia does not survive the week.</li>
+  </ul>
+  <p>One region of <code>index.html</code> is generated: the presenter notes, between the <code>__GUIDE__</code> markers. They are this guide, injected by <code>tools/guide-sync.js</code>, so the on-screen notes and the printed page cannot disagree. Edit <code>teacher-guide.html</code>, then run <code>node tools/guide-sync.js</code> and <code>node tools/pdf.mjs</code>.</p>
+
+  <h2>Classroom logistics</h2>
+  <ul>
+    <li><b>Nothing to install and nothing saved.</b> One file, no network, no accounts, no stored state &mdash; and <b>&#9881; &rarr; Reset</b> puts the game back to a fresh load between class periods without reloading the page.</li>
+    <li><b>&#9881; Settings</b> holds <b>Open Presenter Notes</b> (this guide, on screen), <b>Presentation mode</b> and <b>Reset</b>. <b>?</b> is the <b>Guide</b> button: the same overlay opens on every load, so students who arrive late can read the rules themselves, and <b>?</b> reopens it any time.</li>
+    <li><b>Keys:</b> <b>Enter</b> or <b>Space</b> locks in a guess and advances the reveal. <b>Esc</b> closes any popup. Everything else is touch.</li>
+    <li>The reveal runs about <b>two seconds</b>: the truth marker slides out from under the guess, the band lands, then the "because&hellip;" line fades in and NEXT appears. Budget roughly 30&ndash;45 seconds per question with discussion.</li>
+  </ul>
+</div>
+
+  <div class="g-foot"><b>Murray State University &middot; Bryant Harrison</b> &middot; Engineering Trivia (Should Have Known That) is an offline single-file web game &mdash; open <code>index.html</code> to play, <code>teacher-guide.html</code> to reprint this page. 40 questions, 8 per category; 5 logarithmic sliders; bands at 5/15/35/60% linear and 1.26/2.1/5/16&times; log.</div>
+</div>
+<!-- __GUIDE__ end -->
 
       <div class="sheet-foot">
         <button class="big-btn cyan" data-close="ov-notes">CLOSE NOTES</button>
@@ -1430,7 +1512,7 @@ $("again-btn").addEventListener("click", startGame);
 $("setup-btn").addEventListener("click", () => { buildStartScreen(); showScreen("screen-start"); });
 
 /* =====================================================================
-   OVERLAYS — how-to, settings, presenter's notes
+   OVERLAYS — Guide, Settings, Presenter notes
    One controller for all three. Any open overlay swallows the game's
    Enter/Space keys so a dismiss never also locks in a guess.
 ===================================================================== */
@@ -1458,7 +1540,28 @@ OVERLAYS.forEach(id => {
 $("btn-help").addEventListener("click", () => openOverlay("ov-help"));
 $("btn-settings").addEventListener("click", () => openOverlay("ov-settings"));
 $("btn-notes").addEventListener("click", () => openOverlay("ov-notes"));
-$("btn-help-from-settings").addEventListener("click", () => openOverlay("ov-help"));
+/* ---------- Reset: back to a fresh load, without reloading the page ----------
+   There is no persisted state in this demo (no localStorage, no cookies), so a
+   fresh load is exactly: no game in progress, the setup selections at their
+   defaults, and the start screen showing. Presentation mode is a presenter
+   display preference, not demo state, so Reset leaves it alone; the Guide
+   overlay stays closed. */
+function resetDemo(){
+  clearTimers();
+  G = null;
+  sel.len = 10;
+  sel.mode = "solo";
+  sel.teamCount = 2;
+  sel.cats = new Set(CATS);
+  teamNameDefaults.splice(0, teamNameDefaults.length, "Team 1", "Team 2", "Team 3", "Team 4");
+  $("team-strip").classList.add("hidden");
+  $("team-strip").innerHTML = "";
+  buildStartScreen();
+  showScreen("screen-start");
+  $("screen-start").scrollTop = 0;
+  OVERLAYS.forEach(closeOverlay);
+}
+$("btn-reset").addEventListener("click", resetDemo);
 
 /* presentation mode */
 const presChk = $("chk-presentation");
@@ -1505,6 +1608,6 @@ document.addEventListener("keydown", e => {
 
 buildStartScreen();
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:normal;max-width:calc(100vw - 16px);animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
 </body>
 </html>
