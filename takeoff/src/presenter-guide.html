@@ -3,43 +3,96 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Takeoff — presenter guide</title>
+<title>The Pace of AI Progress — presenter guide</title>
+<!--
+  Canonical, printable presenter guide for The Pace of AI Progress (folder:
+  takeoff).
+
+  This file is the SINGLE SOURCE OF TRUTH for the presenter's notes. build.js
+  lifts the first <style> block and the .guide-scope div out of here verbatim
+  and injects them into index.html, so Settings -> Open Presenter Notes shows
+  exactly this text with no sibling file to fetch. tools/pdf.mjs renders the
+  shipped copy of this same file. Edit here; never edit a copy.
+
+  Everything in the FIRST <style> block MUST be scoped to .guide-scope, because
+  it is injected into an app that has its own dark stylesheet — build.js refuses
+  to ship any selector in this block that is not. Page-level styling for the
+  standalone printable version lives in the SECOND <style> block, which is not
+  extracted; it comes later in the cascade, so it is where the print typography
+  (serif, light ground, @page) overrides the neutral scoped rules.
+-->
 <style>
-  @page { size: letter; margin: 0.6in; }
-  * { box-sizing: border-box; }
-  body { font-family: Georgia, "Times New Roman", serif; color: #12202f; max-width: 7.3in; margin: 0 auto; padding: 0.5in 0.4in; line-height: 1.42; font-size: 10.6pt; }
-  h1 { font-family: system-ui, sans-serif; font-size: 20pt; margin: 0 0 2px; letter-spacing: -0.01em; }
-  .sub { font-family: system-ui, sans-serif; font-size: 9pt; letter-spacing: 0.12em; text-transform: uppercase; color: #6b7c91; margin-bottom: 14px; }
-  h2 { font-family: system-ui, sans-serif; font-size: 12pt; margin: 20px 0 6px; padding-bottom: 3px; border-bottom: 1.5px solid #ECAC00; }
-  h3 { font-family: system-ui, sans-serif; font-size: 10.5pt; margin: 13px 0 3px; }
-  p, li { margin: 0 0 7px; }
-  ul, ol { padding-left: 19px; margin: 0 0 9px; }
-  .rule { height: 3px; background: linear-gradient(90deg, #ECAC00, #00A4E3 60%, transparent); margin-bottom: 12px; }
-  .beat { border-left: 3px solid #00A4E3; padding: 7px 0 7px 12px; margin: 9px 0; background: #f5f9fd; }
-  .beat b { font-family: system-ui, sans-serif; font-size: 9.6pt; }
-  .say { font-style: italic; color: #2b3f57; }
-  .warn { border-left: 3px solid #FF4500; background: #fff6f2; padding: 8px 12px; margin: 10px 0; }
-  table { border-collapse: collapse; width: 100%; font-size: 9.3pt; margin: 8px 0 12px; font-family: system-ui, sans-serif; }
-  th, td { border: 1px solid #d3dbe5; padding: 4px 7px; text-align: left; vertical-align: top; }
-  th { background: #eef3f8; font-size: 8.6pt; letter-spacing: 0.05em; text-transform: uppercase; }
-  td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .foot { margin-top: 22px; padding-top: 8px; border-top: 1px solid #ccd6e2; font-size: 8.6pt; color: #6b7c91; font-family: system-ui, sans-serif; }
-  .pb { page-break-before: always; }
-  @media print { body { padding: 0; } .beat, .warn { background: none; } }
-  @media screen and (max-width: 600px) {
-    body { width: 100%; max-width: none; margin: 0; padding: 18px 12px 30px; font-size: 11pt; overflow-wrap: anywhere; }
-    h1 { font-size: 22pt; }
-    table { display: block; max-width: 100%; overflow-x: auto; }
-    code { white-space: normal; overflow-wrap: anywhere; }
-    .beat, .warn { max-width: 100%; }
-  }
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 14px; }
+.guide-scope h1 { font-size: 1.5rem; margin: 0 0 3px; letter-spacing: -0.01em; }
+.guide-scope .sub { font-size: 0.76rem; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.66; }
+.guide-scope .rule { height: 3px; border-radius: 2px; margin: 11px 0 14px; background: linear-gradient(90deg, #ECAC00, #00A4E3 60%, transparent); }
+.guide-scope h2 { font-size: 1.08rem; margin: 22px 0 7px; padding-bottom: 4px; border-bottom: 1.5px solid #ECAC00; }
+.guide-scope h3 { font-size: 0.96rem; margin: 15px 0 4px; }
+.guide-scope p { margin: 0 0 0.8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 0.9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.88em; }
+.guide-scope .beat { border-left: 3px solid #00A4E3; padding: 6px 0 6px 12px; margin: 10px 0; }
+.guide-scope .beat b { font-size: 0.95rem; }
+.guide-scope .say { font-style: italic; color: #00A4E3; }
+.guide-scope .warn { border-left: 3px solid #FF4500; padding: 7px 0 7px 12px; margin: 11px 0; }
+.guide-scope .scroll { overflow-x: auto; margin: 8px 0 12px; -webkit-overflow-scrolling: touch; }
+.guide-scope table { border-collapse: collapse; width: 100%; min-width: 400px; font-size: 0.8rem; }
+.guide-scope th, .guide-scope td { border: 1px solid rgba(143,163,192,0.3); padding: 5px 7px; text-align: left; vertical-align: top; }
+.guide-scope th { font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase; color: #ECAC00; }
+.guide-scope td.n { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.guide-scope .foot { margin-top: 22px; padding-top: 9px; border-top: 1px solid rgba(143,163,192,0.3); font-size: 0.8rem; opacity: 0.7; }
+.guide-scope .pb { height: 0; }
+.guide-scope > *:last-child { margin-bottom: 0; }
+</style>
+<style>
+/* Standalone printable page only — not extracted into the app. */
+@page { size: letter; margin: 0.6in; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #fff; color: #12202f; font-family: Georgia, "Times New Roman", serif; font-size: 10.6pt; line-height: 1.42; }
+.page { max-width: 7.3in; margin: 0 auto; padding: 0.5in 0.4in; }
+.guide-scope h1, .guide-scope h2, .guide-scope h3, .guide-scope .sub,
+.guide-scope table, .guide-scope .foot, .guide-scope .beat b { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.guide-scope h1 { font-size: 20pt; }
+.guide-scope h2 { font-size: 12pt; }
+.guide-scope h3 { font-size: 10.5pt; }
+.guide-scope .sub { font-size: 9pt; color: #6b7c91; opacity: 1; }
+.guide-scope p, .guide-scope li { margin-bottom: 7px; }
+.guide-scope .beat { background: #f5f9fd; padding: 7px 12px; }
+.guide-scope .beat b { font-size: 9.6pt; }
+.guide-scope .say { color: #1c5f7f; }
+.guide-scope .warn { background: #fff6f2; padding: 8px 12px; }
+.guide-scope .scroll { overflow-x: visible; }
+.guide-scope table { font-size: 9.3pt; min-width: 0; }
+.guide-scope th, .guide-scope td { border-color: #d3dbe5; padding: 4px 7px; }
+.guide-scope th { background: #eef3f8; color: #3f4d5e; font-size: 8.6pt; }
+.guide-scope .foot { font-size: 8.6pt; color: #6b7c91; opacity: 1; border-top-color: #ccd6e2; }
+.guide-scope .pb { height: auto; page-break-before: always; }
+@media print {
+  .page { max-width: none; padding: 0; }
+  .guide-scope .beat, .guide-scope .warn { background: none; }
+  .guide-scope h2 { break-after: avoid; }
+  .guide-scope tr { break-inside: avoid; }
+}
+@media screen and (max-width: 600px) {
+  body { font-size: 11pt; }
+  .page { max-width: none; padding: 18px 12px 30px; overflow-wrap: anywhere; }
+  .guide-scope h1 { font-size: 22pt; }
+  .guide-scope .scroll { overflow-x: auto; }
+  .guide-scope code { white-space: normal; overflow-wrap: anywhere; }
+}
 </style>
 </head>
 <body>
+<div class="page">
+<div class="guide-scope">
 
-<h1>Takeoff</h1>
-<div class="sub">Presenter guide &middot; 25 minutes &middot; Murray State University</div>
-<div class="rule"></div>
+<div class="g-head">
+  <h1>The Pace of AI Progress</h1>
+  <div class="sub">Takeoff &middot; presenter guide &middot; 25 minutes &middot; Murray State University</div>
+  <div class="rule"></div>
+</div>
 
 <p>
   <b>Assume the room knows nothing.</b> Not what a benchmark is, not what any of these
@@ -56,7 +109,7 @@
 <h2>Before you start</h2>
 <ul>
   <li>Open <code>index.html</code> in any browser. One file, no install, no network. If the venue wifi is broken it does not matter.</li>
-  <li>Settings (&#9881;) &rarr; <b>Presenter mode</b> for a projector. Do it before the room fills.</li>
+  <li>Settings (&#9881;) &rarr; <b>Presentation mode</b> for a projector. Do it before the room fills. The same menu holds <b>Open Presenter Notes</b> &mdash; this document, on screen &mdash; and <b>Reset</b>, which clears everything for the next room without touching presentation mode.</li>
   <li><b>Get people to actually draw.</b> The demo dies if you drive it and narrate. Hand the laptop round, or put the file on a screen and have people follow on their phones — it is built phone-first for exactly this.</li>
   <li>Each test has a <b>“see an example”</b> panel. Open it. For an audience new to this, one concrete task is worth more than any number you will say.</li>
   <li>Short on time: tests 1, 3 and 5. Test 5 is not optional — it is the point.</li>
@@ -185,6 +238,7 @@
 
 <div class="pb"></div>
 <h2>The numbers, for answering questions</h2>
+<div class="scroll">
 <table>
   <tr><th>Test</th><th>From</th><th>To</th><th>Source</th></tr>
   <tr><td>Fixing real bugs</td><td class="n">33.4% · Jun 2024</td><td class="n">82.0% · Sep 2025</td><td>Anthropic, OpenAI model cards</td></tr>
@@ -195,6 +249,7 @@
   <tr><td>Grid puzzles, v3</td><td class="n">average person 48%</td><td class="n">best AI 38.3% with memory, 0.51% bare</td><td>ARC Prize / METR, 2026</td></tr>
   <tr><td>Developers with AI tools</td><td class="n">expected 24% faster</td><td class="n">measured 19% slower</td><td>METR randomised trial</td></tr>
 </table>
+</div>
 
 <h2>Questions you will get</h2>
 
@@ -253,10 +308,12 @@
 </ol>
 
 <div class="foot">
-  Murray State University &middot; Takeoff &middot; Bryant Harrison &middot; a single offline HTML file.
+  Murray State University &middot; The Pace of AI Progress (Takeoff) &middot; Bryant Harrison &middot; a single offline HTML file.
   Figures verified against primary sources in August 2026; several are already moving.
   Every source is listed and linked at the foot of Act III.
 </div>
 
+</div><!-- /guide -->
+</div>
 </body>
 </html>

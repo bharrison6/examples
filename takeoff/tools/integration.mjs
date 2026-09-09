@@ -191,6 +191,10 @@ await guard('How-to, settings and notes', async () => {
      await page.locator('#chk-presenter').isVisible());
   ok('Presentation mode offers openable presenter notes',
      await page.locator('#btn-notes').isVisible());
+  const menu = await page.locator('#settings .sheet-body').innerText();
+  for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
+    ok('Settings offers "' + label + '", labelled exactly', menu.includes(label), menu.slice(0, 120));
+  }
 
   await page.locator('#btn-notes').click();
   await page.waitForTimeout(180);
@@ -201,8 +205,9 @@ await guard('How-to, settings and notes', async () => {
      /19% slower/.test(notes) && /38\.3/.test(notes) && /13\.3/.test(notes) &&
      /69\.7/.test(notes) && /208/.test(notes), 'guide figures');
   ok('The notes carry the twelve-minute cut', /twelve minutes/i.test(notes));
-  ok('The notes point at the printable guide they were distilled from',
-     /presenter-guide\.html/.test(notes));
+  ok('The notes ARE the printable guide rather than a retelling of it',
+     /The Pace of AI Progress/.test(notes) && /presenter guide/i.test(notes),
+     "the guide's own heading is missing from the notes overlay");
 
   await page.keyboard.press('Escape');
   await page.waitForTimeout(140);
@@ -228,6 +233,56 @@ await guard('How-to, settings and notes', async () => {
        document.querySelector('#settings [data-close]').click();
        return Number(o) < 0.1;
      }));
+
+  await page.context().close();
+});
+
+/* ---- 2a2. Settings -> Reset -------------------------------------------- */
+/* CONTRACT.md -> Required UX: Reset returns the demo to its fresh-load state,
+   with the Guide overlay staying closed. Presentation mode is the deliberate
+   exception — it describes the projector, not the talk — so it is asserted to
+   SURVIVE a reset rather than to be cleared by one. */
+await guard('Settings reset', async () => {
+  const page = await (await browser.newContext()).newPage();
+  await open_(page);
+  await drawGuess(page);
+  await page.locator('#btn-reveal').click();
+  await page.waitForTimeout(700);
+
+  await page.locator('#btn-settings').click();
+  await page.waitForTimeout(140);
+  await page.locator('#chk-presenter').check();
+  await page.waitForTimeout(140);
+  await page.locator('#btn-reset').click();
+  await page.waitForTimeout(300);
+
+  ok('Reset closes the settings sheet it was pressed in',
+     !(await page.locator('#settings').isVisible()));
+  ok('Reset returns to the opening screen', await page.locator('#intro').isVisible());
+  ok('Reset leaves the Guide overlay closed', !(await page.locator('#howto').isVisible()));
+  ok('Reset hides the round and the scorecard',
+     !(await page.locator('#round-body').isVisible()) &&
+     !(await page.locator('#scorecard').isVisible()));
+
+  const st = await page.evaluate(() => ({
+    results: window.__undershoot.app.results.length,
+    round: window.__undershoot.app.roundIx,
+    started: window.__undershoot.app.started,
+    act: window.__undershoot.app.act,
+    slider: Number(document.querySelector('#tl-slider').value),
+    filter: document.querySelector('#tl-filter button.on').dataset.filter,
+    region: document.querySelector('#tl-region button.on').dataset.region,
+    selftest: document.querySelector('#selftest-out').innerHTML.length
+  }));
+  ok('Reset clears the five results and rewinds to test 1',
+     st.results === 0 && st.round === 0 && st.started === false, JSON.stringify(st));
+  ok('Reset returns to Act I', st.act === 1, String(st.act));
+  ok('Reset rewinds the timeline and drops its filters',
+     st.slider === 1000 && st.filter === 'all' && st.region === 'all', JSON.stringify(st));
+  ok('Reset clears the self-test output', st.selftest === 0, String(st.selftest));
+
+  ok('Reset does NOT switch presentation mode off',
+     await page.evaluate(() => document.body.classList.contains('presenter')));
 
   await page.context().close();
 });

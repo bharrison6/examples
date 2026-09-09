@@ -1,18 +1,24 @@
-# Ion Flight
+# Time-of-Flight Mass Spectrometer
 
 Murray State University · Instrumental Analysis
 
-**Ion Flight** is a self-contained, guided linear time-of-flight (TOF)
-mass-spectrometry investigation. Students predict and run three linked two-ion
+**Time-of-Flight Mass Spectrometer** (folder `ion-flight/`) is a self-contained,
+guided linear time-of-flight (TOF) mass-spectrometry investigation. Students predict and run three linked two-ion
 experiments: change mass, change positive charge, then match mass-to-charge ratio.
 The instrument animation, detector arrival cues, and trace produce the evidence used
 to explain each prediction.
 
 Open `index.html` in a browser. It is offline, needs no installation, and works with
-mouse or touch. The how-to overlay opens on load and the `?` control reopens it. The
-⚙ menu provides presentation mode and concise on-screen presenter’s notes. Open
-`teacher-guide.html` to print the guide; `teacher-guide.pdf` is the two-page
-copy declared in the manifest and rendered from that canonical HTML.
+mouse or touch. The Guide overlay opens on load and the `?` control reopens it. The
+⚙ Settings menu offers **Open Presenter Notes**, **Presentation mode** and **Reset**
+(back to the fresh-load state). Open `teacher-guide.html` to print the guide;
+`teacher-guide.pdf` is the copy declared in the manifest, rendered from that same
+canonical HTML by `tools/pdf.mjs`.
+
+The presenter notes shown in the app are not a summary of the guide — they are the
+guide. `build.js` injects the body and stylesheet of `teacher-guide.html` into
+`index.html` at build time, and `node build.js --check` fails if the two have
+drifted, so the notes cannot quietly fall behind the printed document.
 
 ## Core investigation
 
@@ -69,11 +75,12 @@ promise that a longer tube universally improves resolution.
 | --- | --- |
 | `model.js` | Tested SI physics, lesson state/evidence, timing scale, and resolution comparison. |
 | `app.template.html` | UI source containing the bundle marker. |
-| `build.js` | Bundles `model.js` into the offline `index.html`. |
+| `build.js` | Bundles `model.js` and the teacher guide into the offline `index.html`. |
 | `test-model.js` | Independent numeric fixtures plus lesson-state, evidence, timing, and resolution invariants. |
 | `test-build.js` | Verbatim bundle, actual inline-script syntax, lesson markers, cancellation, and read-only build checks. |
-| `teacher-guide.html` | Printable instructor guide. |
-| `tools/render_guide.py` | Renders the canonical HTML guide to PDF with ReportLab. |
+| `teacher-guide.html` | Canonical printable instructor guide, and the single source of the in-app presenter notes. |
+| `tools/pdf.mjs` | Renders that guide to `teacher-guide.pdf` with an installed headless Chrome or Edge. No dependencies. |
+| `tools/render_guide.py` | Superseded. The earlier ReportLab renderer; it predates the guide restructure, no longer matches the document shape, and needs a Python environment with ReportLab. Use `tools/pdf.mjs`. |
 
 Run with the repository’s available Node runtime:
 
@@ -81,19 +88,30 @@ Run with the repository’s available Node runtime:
 node test-model.js
 node test-build.js
 node build.js --check
-# Run this only after changing app.template.html or model.js:
+node tools/pdf.mjs --check
+# Run these after changing app.template.html, model.js or teacher-guide.html:
 node build.js
+node tools/pdf.mjs
 ```
 
 `node build.js --check` is read-only and fails if `index.html` is not the exact bundle
-of the checked-in template and production model. `node build.js` writes that bundle.
+of the checked-in template, production model and teacher guide — which is also what
+proves the in-app presenter notes still match the printable guide. `node build.js`
+writes that bundle. `test-build.js` runs the check both ways: clean sources pass, and
+a copy of the demo whose guide was edited without a rebuild fails.
 Scripts and styles are embedded; the page loads no external fonts, images, analytics,
-or AI services. Direct-file/disconnected-network behavior remains unverified; the
-corresponding manifest field records that limit.
+or AI services. Verified in a browser over a local static server: loading and then
+exercising the page — Guide, Settings, Open Presenter Notes, Presentation mode, Reset —
+produced exactly one network request, the document itself. The built file contains no
+`fetch`, `XMLHttpRequest`, `WebSocket`, `@import` or `url(http`, and its only absolute
+links are the outbound `<a>` reading sources in the guide. Opening the file directly
+from disk (`file://`) with the network switched off was not exercised in that pass.
 
-After editing the guide, regenerate its PDF with a Python environment containing
-ReportLab: `python tools/render_guide.py`. Inspect both rendered pages before sharing
-the updated guide. The renderer resolves files relative to its own location.
+After editing `teacher-guide.html`, run `node build.js` to refresh the in-app notes and
+`node tools/pdf.mjs` to re-render the PDF. The renderer drives an installed headless
+Chrome or Edge (set `CHROME_PATH` to point at one elsewhere), needs no packages, and
+resolves files relative to its own location. Inspect the rendered pages before sharing
+the updated guide.
 
 ## Scope and sources
 
@@ -109,6 +127,9 @@ MALDI overview for classroom context; neither source endorses this demo.
 
 - Murray State navy, gold, and lite-blue theme, with visible Bryant Harrison and
   Murray State University attribution.
-- Reopenable how-to, settings, presentation mode, and presenter’s notes.
+- Guide overlay on the `?` control, and a Settings menu offering Open Presenter Notes,
+  Presentation mode, and Reset.
+- Presenter notes generated from the printable guide at build time, with a `--check`
+  that fails on drift.
 - Responsive controls and canvas traces for phone-sized layouts.
 - Printable [HTML teacher guide](teacher-guide.html) and [PDF](teacher-guide.pdf).

@@ -32,7 +32,7 @@ if (!fs.existsSync(guide)) {
   throw new Error(`Presenter guide is missing: ${guide}. Run: node build.js`);
 }
 const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>Takeoff — presenter guide<\/title>/.test(html)) {
+if (!/<title>The Pace of AI Progress — presenter guide<\/title>/.test(html)) {
   throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
 }
 
