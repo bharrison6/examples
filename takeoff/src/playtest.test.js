@@ -506,12 +506,18 @@ ok('Every cut entry gives a reason', D.CUT.every(c => c.why && c.why.length > 20
 
   /* The release count is quoted in five documents and was pinned only as a
      floor, so the timeline could grow and every one of them could go stale
-     without a single check going red. It did. Pin the exact number. */
+     without a single check going red. It did. Pin the exact number.
+
+     'presenter-guide.html' is the shipped copy the PDF is rendered from;
+     checking only src/ is what let the printed guide keep a stale count.
+     'index.html' replaced 'src/template.html' in this list when the in-app
+     presenter notes stopped being a hand-written second copy: the template no
+     longer quotes the count at all, because the count now reaches the app
+     inside the injected guide. Pinning the built page is the stronger check
+     anyway — it is the file people actually open. */
   {
     const n = String(D.MODELS.length);
-    /* 'presenter-guide.html' is the shipped copy the PDF is rendered from.
-       Checking only src/ is what let the printed guide keep a stale count. */
-    for (const f of ['src/template.html', 'src/presenter-guide.html',
+    for (const f of ['index.html', 'src/presenter-guide.html',
                      'presenter-guide.html', 'README.md', 'demo.json']) {
       const txt = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
       ok(`${f} quotes the real release count (${n})`,
@@ -555,6 +561,59 @@ ok('Every cut entry gives a reason', D.CUT.every(c => c.why && c.why.length > 20
      D.UNLOCKS.some(u => u.flag === 'counterweight'));
   ok('The last unlock is the one that goes down, not up',
      /ARC-AGI-3/.test(D.UNLOCKS[D.UNLOCKS.length - 1].body));
+}
+
+/* ===================== 9. the demo contract's UX ======================== */
+/* CONTRACT.md -> Required UX. Cheap string checks against the BUILT page,
+   because the built page is the artefact the contract is about. They exist so
+   a later edit cannot quietly rename a control that demo.json's compliance
+   block claims is there. build.js --check is the other half of the pair: it
+   proves the notes overlay is the guide rather than a retelling of it. */
+
+{
+  const idx = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  const guide = fs.readFileSync(path.join(__dirname, 'presenter-guide.html'), 'utf8');
+  const tplSrc = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
+
+  ok('The ? button is named exactly "Guide"',
+     /id="btn-howto" aria-label="Guide" title="Guide">\?</.test(idx),
+     'aria-label/title on #btn-howto');
+  ok('The Guide overlay heading reads "Guide"', idx.includes('<h2 id="howto-title">Guide</h2>'));
+  ok('A Settings button sits beside it', idx.includes('id="btn-settings"'));
+
+  for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
+    ok('Settings offers "' + label + '", labelled exactly',
+       idx.includes('>' + label + '<'), 'not found in index.html');
+  }
+  ok('Reset is wired to a handler',
+     idx.includes('id="btn-reset"') && /#btn-reset'\)\.addEventListener/.test(idx));
+
+  /* The property this whole single-source change exists to create. A substring
+     test suffices because the injection is verbatim; build.js --check is what
+     proves it arrived from the guide rather than being pasted in by hand. */
+  const g0 = guide.indexOf('<div class="guide-scope">');
+  const g1 = guide.indexOf('</div><!-- /guide -->');
+  ok('The in-app presenter notes are the printable guide, verbatim',
+     g0 > 0 && g1 > g0 && idx.includes(guide.slice(g0, g1) + '</div>'),
+     'index.html does not contain the guide body');
+  ok('The template keeps no second copy of the guide',
+     !tplSrc.includes('<div class="guide-scope">'));
+
+  /* Offline. Outbound <a href> reading links are the one allowed external URL
+     and are deliberately not matched here. */
+  const netTags = idx.match(/<(script|link|img|iframe|source|video|audio)\b[^>]*\b(src|href)\s*=\s*["']?https?:/gi) || [];
+  ok('No subresource is loaded over the network', netTags.length === 0, netTags.join(' | '));
+  for (const api of ['fetch(', 'XMLHttpRequest', 'WebSocket', '@import', 'url(http']) {
+    ok('The built page contains no ' + api, !idx.includes(api));
+  }
+
+  /* The retitle, Path A: the display title is the new one everywhere it shows,
+     and "Takeoff" survives as the subtitle, because the hub is named for it. */
+  ok('The built page is titled "The Pace of AI Progress"',
+     idx.includes('<title>The Pace of AI Progress '));
+  ok('The header carries the new title', idx.includes('THE PACE OF AI PROGRESS'));
+  ok('"Takeoff" survives in the header tagline', idx.includes('<em>Takeoff '));
+  ok('The guide is titled to match', guide.includes('<h1>The Pace of AI Progress</h1>'));
 }
 
 /* ============================= report =================================== */
