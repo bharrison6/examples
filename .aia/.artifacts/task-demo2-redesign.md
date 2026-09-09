@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Give Demo 2 the complete visual and teaching redesign used for Demo 1
 created: 2026-09-09T05:35:00Z
-updated: 2026-09-09T05:35:00Z
+updated: 2026-09-09T12:05:41Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -24,6 +24,15 @@ Follow-up authorized 2026-09-09: after the Demo 1 navigation and era-report item
 fix the invisible but clickable LLM training-text disclosure. Verify the control
 and expanded story visually in Chrome at desktop and phone widths. The user
 confirmed the text still opens in its documented location; visibility is broken.
+
+Follow-up completed 2026-09-09: Chrome reproduced exact navy text on the navy
+workbench (both rgb(0,33,68)). Scoped disclosure styling restores a visible label,
+gold marker/open/hover states, keyboard focus outline and container boundary.
+Parent verified closed/open states and the unchanged 4,701-character story at
+desktop, 390px and 320px, Tab focus and Enter activation, no horizontal overflow,
+and zero console errors. Only CSS and generated app changed; build parity passed.
+This completes the bounded visibility repair; the broader outstanding verification
+listed elsewhere in this record is not implicitly marked complete.
 
 The bounded follow-up builder owns glass-box/src/styles.css, src/template.html
 only if semantic markup needs correction, and regenerated glass-box/index.html.
