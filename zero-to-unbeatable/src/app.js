@@ -767,10 +767,10 @@ function renderRulesPanel() {
     ? `${fmt(total)} move${total === 1 ? '' : 's'} decided so far. ` +
       (S.depth === 8
         ? `None of them came from experience: this fixed policy has had no training.`
-        : `Rules ${S.depth + 1}–8 are switched off, and the panel below shows the game that costs it.`)
+        : `Rules ${S.depth + 1}–8 are switched off. Open Details to see the game that costs it.`)
     : (S.depth === 8
         ? `Eight rules, written out in advance by a person. This is a fixed policy with no training process. ` +
-          `The panel below searches all ${fmt(r.lines)} games playable against it.`
+          `Open Details for the search across all ${fmt(r.lines)} games playable against it.`
         : `A shortened ladder. Rules ${S.depth + 1}–8 are switched off, which opens up ` +
           `${fmt(r.lines)} playable games instead of ${fmt(RULES.report(8).lines)}.`);
 }
@@ -1053,10 +1053,10 @@ function renderBanner() {
       `<p>The opponent here does not run that strategy, and this app does not claim the published proof for its different rules. Its results are sampled measurements of this learner.</p>` +
       `<div class="proof">${SV.title} · ${SV.ref} · ` +
       `Worth reading before quoting: the paper proves this for the variant in which ` +
-      `${SV.variant}. The squares above use the commoner convention, where a won board frees ` +
-      `you too — and the published strategy leans on sending the second player back into a board ` +
+      `${SV.variant}. The playable game uses the commoner convention, where a won board frees ` +
+      `you too. The published strategy leans on sending the second player back into a board ` +
       `the first has already won, which this page would not allow. Near neighbours, not the same ` +
-      `game, so the result is quoted rather than claimed for the squares above.</div>` +
+      `game, so the result is quoted rather than claimed for the playable game.</div>` +
       `<div class="proof">` +
       (S.liveU.seeded
         ? `Handed over from 1b: ${fmt(S.liveU.seeded)} of the ${fmt(SP.slots)} entries this ` +
@@ -1088,7 +1088,7 @@ function renderBanner() {
  * ------------------------------------------------------------------ */
 
 const MONTAGE_MS = 2400;         /* the maths takes ~30ms; see the note in
-                                    the explainer panel. This is a paced
+                                    the Details drawer. This is a paced
                                     visualisation, honestly labelled. */
 
 function raf() { return new Promise(r => requestAnimationFrame(r)); }
