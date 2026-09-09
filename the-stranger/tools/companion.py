@@ -1,186 +1,32 @@
 #!/usr/bin/env python3
-"""Build the printable presenter companion: one page of script + one cut-out card sheet."""
-import json, os, asyncio, html
-from playwright.async_api import async_playwright
+"""RETIRED. The presenter sheet is hand-authored now, not generated.
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SPEC = json.load(open(f"{ROOT}/src/scenarios.json", encoding="utf-8"))
-CARDS = SPEC["cards"]
+This script used to write presenter-sheet.html and a PDF from a copy of the sheet
+embedded in its own source. That made it a SECOND source for a file people also edit
+by hand: running it would have silently reverted any edit made to presenter-sheet.html
+-- including the guide-scope structure the app now depends on. It also needed
+Playwright, which this repository does not install.
 
-# which scenario each card can turn up in, for the presenter's reference
-where = {}
-for sc in SPEC["scenarios"]:
-    for c in sc["cards"]:
-        where.setdefault(c, []).append(sc["tab"].replace("The ", ""))
+Where each half of it went:
 
-card_cells = "".join(
-    f"""<div class="card">
-  <div class="ci">{c['icon']}</div>
-  <div class="cl">{html.escape(c['label'])}</div>
-  <div class="cs">{html.escape(c['sub'])}</div>
-  <div class="cw">turns up in: {' · '.join(where.get(cid, []))}</div>
-</div>"""
-    for cid, c in CARDS.items()
-)
+  the printable sheet   presenter-sheet.html is canonical and is edited directly. It is
+                        also the source of the in-app presenter notes: build.js lifts its
+                        scoped stylesheet and its .guide-scope body into index.html, and
+                        `node build.js --check` fails if the two drift.
 
-DOC = f"""<!doctype html><html><head><meta charset="utf-8"><title>The Stranger — presenter sheet</title>
-<style>
-@page {{ size: letter; margin: 0.45in; }}
-* {{ box-sizing: border-box; }}
-body {{ margin:0; font: 9.1pt/1.34 "Helvetica Neue", Helvetica, Arial, sans-serif; color:#111; }}
-h1 {{ font-size:19pt; margin:0; letter-spacing:-.01em; }}
-h1 span {{ font-weight:400; color:#777; font-size:10pt; letter-spacing:.08em; text-transform:uppercase; margin-left:.6em; }}
-.rule {{ border-bottom:2px solid #111; margin:.28em 0 .7em; }}
-h2 {{ font-size:8pt; letter-spacing:.16em; text-transform:uppercase; color:#555; margin:0 0 .35em;
-     border-bottom:1px solid #ccc; padding-bottom:.18em; }}
-.cols {{ display:grid; grid-template-columns:1fr 1fr; gap:0 16pt; }}
-.act {{ break-inside:avoid; margin-bottom:.7em; }}
-.act h3 {{ font-size:9.6pt; margin:0 0 .2em; }}
-.act h3 b {{ display:inline-block; min-width:3.4em; }}
-.act .t {{ float:right; font-weight:400; color:#777; font-size:8pt; }}
-.act p {{ margin:.18em 0; }}
-.act .setup {{ font-style:italic; color:#333; }}
-.beat {{ padding-left:1.15em; text-indent:-1.15em; }}
-.beat b {{ font-weight:700; }}
-.land {{ margin-top:.28em; padding:.28em .45em; background:#f2f2f2; border-left:3px solid #111; font-weight:600; }}
-ol, ul {{ margin:.15em 0 .5em; padding-left:1.15em; }}
-li {{ margin:.14em 0; }}
-table {{ width:100%; border-collapse:collapse; font-size:8.4pt; }}
-td {{ padding:.16em .3em; border-bottom:1px solid #e3e3e3; vertical-align:top; }}
-td.k {{ width:3.1em; color:#666; font-variant-numeric:tabular-nums; white-space:nowrap; }}
-.lev {{ display:inline-block; padding:0 .3em; border-radius:2px; font-weight:700; }}
-.l1 {{ background:#ffe6bf; }} .l2 {{ background:#c8f2e0; }} .l3 {{ background:#e2d9ff; }}
-.foot {{ margin-top:.5em; font-size:7.6pt; color:#777; border-top:1px solid #ddd; padding-top:.3em; }}
+  the PDF               `node tools/pdf.mjs` renders The-Stranger-Presenter-Sheet.pdf from
+                        that same file, using a system Chrome. Node builtins only.
 
-.page2 {{ page-break-before:always; }}
-.sheet-title {{ font-size:11pt; font-weight:700; margin:0 0 .1em; }}
-.sheet-sub {{ font-size:8pt; color:#777; margin:0 0 .5em; }}
-.grid {{ display:grid; grid-template-columns:1fr 1fr; gap:0; }}
-.card {{ border:1px dashed #999; padding:.5in .34in; height:2.32in; display:flex; flex-direction:column; }}
-.ci {{ font-size:15pt; color:#888; line-height:1; }}
-.cl {{ font-size:13pt; font-weight:800; line-height:1.12; margin-top:.18em; }}
-.cs {{ font-size:9pt; color:#333; margin-top:.28em; line-height:1.35; }}
-.cw {{ margin-top:auto; font-size:7pt; color:#999; letter-spacing:.06em; text-transform:uppercase; }}
-</style></head><body>
+  the card derivation   the one piece of real logic here -- deriving the eight cut-out
+                        target cards, and which scenario each turns up in, from
+                        src/scenarios.json -- now lives in build.js as a PARITY GATE. It
+                        verifies the printed cards against the deck the app actually deals
+                        and fails the build on a mismatch, instead of regenerating them.
 
-<h1>THE STRANGER <span>presenter sheet &middot; 12 minutes</span></h1>
-<div class="rule"></div>
+Nothing here is worth running; it is kept as a signpost, not as a tool.
+"""
+import sys
 
-<div class="cols">
-<div>
-
-<h2>The roleplay &mdash; three acts</h2>
-<p style="margin:0 0 .5em">You are the Stranger. A volunteer is the Asker. The app is on the projector
-behind you; run the same states on it as you say them out loud.</p>
-
-<div class="act">
-  <h3><span class="t">~3 min</span><b>ACT I</b> &mdash; <span class="lev l1">CONTEXT</span></h3>
-  <p class="setup">&ldquo;I am a stranger on a street corner. I am not stupid. I know a great
-  deal about almost everything. I have never met you.&rdquo;</p>
-  <p class="beat"><b>1.</b> The Asker says only: <i>&ldquo;Help me get ready for my test.&rdquo;</i>
-  Answer out loud, as blandly and generally as you honestly can. Cover every case. Do not clown it &mdash;
-  a real assistant is competent here, just aimed at nobody.</p>
-  <p class="beat"><b>2.</b> Ask the room: what would I have needed to know? Take three answers, put them
-  on the board.</p>
-  <p class="beat"><b>3.</b> The Asker reads the context block. Answer again, aimed at that kid.</p>
-  <p class="land">&ldquo;I didn't get smarter. You got specific.&rdquo;</p>
-</div>
-
-<div class="act">
-  <h3><span class="t">~4 min</span><b>ACT II</b> &mdash; <span class="lev l2">THE TARGET DECK</span></h3>
-  <p class="setup">Hold the eight cards from page two face down. &ldquo;Somebody has to decide what a
-  good answer looks like. If you don't decide, I do. And I never tell you what I picked.&rdquo;</p>
-  <p class="beat"><b>1.</b> Same question, context on, no success spec. <b>Draw a card and do not show
-  it.</b> Answer to the card &mdash; if it says exhaustive, talk for forty-five seconds without stopping.</p>
-  <p class="beat"><b>2.</b> Now show the card. Wait for the room.</p>
-  <p class="beat"><b>3.</b> Draw a different card. Same question, answer again. Same asker, same words,
-  different answer &mdash; and the difference was never theirs.</p>
-  <p class="beat"><b>4.</b> The Asker reads the success spec. Put the deck down and slide it across the
-  table, away from you. On the app, the deck lives <i>inside</i> lever 2: flip it on and the three card
-  names get struck out where they sit. Same gesture, same panel.</p>
-  <p class="land">&ldquo;You just took the deck out of my hands.&rdquo;</p>
-</div>
-
-</div>
-<div>
-
-<div class="act">
-  <h3><span class="t">~4 min</span><b>ACT III</b> &mdash; <span class="lev l3">THE FOLDERS</span></h3>
-  <p class="setup">Three labelled folders or sheets: <b>BIOLOGY</b>, <b>BRIDGES</b>,
-  <b>WRITING AT WORK</b>. &ldquo;I have a folder on nearly everything. The words you use decide which
-  one I open.&rdquo;</p>
-  <p class="beat"><b>1.</b> The Asker: <i>&ldquo;Why do bridges stay up?&rdquo;</i> Open nothing. Answer in
-  plain words: the bottom gets stretched, the top gets squished. All true. All unusable.</p>
-  <p class="beat"><b>2.</b> The Asker adds the keyword block. Open BRIDGES and answer in the real
-  vocabulary &mdash; load path, bending moment, neutral axis, section depth.</p>
-  <p class="beat"><b>3.</b> On the app, press <b>H</b>. Count aloud the expert words in the answer that
-  the Asker never typed.</p>
-  <p class="land">&ldquo;You didn't know those words. You didn't have to. You only had to point at the
-  folder.&rdquo;</p>
-</div>
-
-<h2>House rules</h2>
-<ol>
-  <li><b>The Stranger is never stupid.</b> The honest failure of a bare prompt is blandness, not garbage.
-  The demo dies the moment the bad answer looks rigged.</li>
-  <li><b>No trick answers.</b> If the prompt supports a good answer, give a good answer.</li>
-  <li><b>Every answer gets a number.</b> 1&ndash;10, from the room, out loud, on the board before the next one.</li>
-  <li><b>Nobody says &ldquo;the AI is bad at this&rdquo;</b> without naming which lever is off.</li>
-  <li><b>The Asker types nothing they wouldn't really type.</b> No fair inventing a great prompt to prove
-  a point.</li>
-</ol>
-
-<h2>Running order</h2>
-<table><tbody>
-  <tr><td class="k">0:00</td><td>Cold open. Act I, live, no screen.</td></tr>
-  <tr><td class="k">3:00</td><td>App, scenario 1, all levers off. Draw the card. Score it.</td></tr>
-  <tr><td class="k">4:30</td><td>One lever at a time. Score each. The curve argues for you.</td></tr>
-  <tr><td class="k">7:00</td><td>Act III on the bridge scenario. Highlighter on, count the words.</td></tr>
-  <tr><td class="k">9:30</td><td>&ldquo;Which lever would fix this?&rdquo; &mdash; two rounds, hands up.</td></tr>
-  <tr><td class="k">11:00</td><td>Closing screen. Read the line. Stop talking.</td></tr>
-</tbody></table>
-
-<h2>Discussion questions</h2>
-<ol>
-  <li>The first answer was accurate. Why was it useless?</li>
-  <li>Who decided what a good answer looked like, and when?</li>
-  <li>The expert answer used words you never typed. Where did they come from, and how did asking in
-  plain words keep them hidden?</li>
-  <li>Which of the three levers is hardest to pull for a subject you know nothing about? What do you do then?</li>
-  <li>Name a time you blamed a tool for an answer you had underspecified.</li>
-  <li>Success spec means saying what &ldquo;done&rdquo; looks like. When is that hard to say &mdash; and what does
-  that tell you about the task itself?</li>
-</ol>
-
-<div class="foot">The app is one HTML file and touches no network. Every answer in it was written by hand
-before the file was saved: there is no model behind the glass. Keys: <b>1 2 3</b> levers &middot;
-<b>Enter</b> ask &middot; <b>Space</b> skip typing &middot; <b>H</b> highlight &middot; <b>R</b> replay card &middot;
-<b>P</b> pin to compare &middot; <b>S</b> scoreboard &middot; <b>M</b> student mode.</div>
-
-</div>
-</div>
-
-<div class="page2">
-  <p class="sheet-title">The target deck &mdash; cut along the dashed lines</p>
-  <p class="sheet-sub">Eight editorial choices somebody has to make. When the Asker doesn't make them,
-  the machine does, silently. Hold these face down; draw one whenever the success-spec lever is off.</p>
-  <div class="grid">{card_cells}</div>
-</div>
-
-</body></html>"""
-
-open(f"{ROOT}/build/companion.html", "w", encoding="utf-8").write(DOC)
-
-
-async def render():
-    async with async_playwright() as pw:
-        b = await pw.chromium.launch()
-        p = await b.new_page()
-        await p.goto("file://" + ROOT + "/build/companion.html")
-        await p.pdf(path=f"{ROOT}/the-stranger-presenter-sheet.pdf",
-                    format="Letter", print_background=True)
-        await b.close()
-
-asyncio.run(render())
-print("cards on the sheet:", len(CARDS))
-print("wrote", f"{ROOT}/the-stranger-presenter-sheet.pdf")
+print(__doc__)
+print("Nothing was written. Use:  node build.js   and   node tools/pdf.mjs")
+sys.exit(1)

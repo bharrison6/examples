@@ -31,8 +31,12 @@ const CHECK = process.argv.includes('--check');
 if (!fs.existsSync(guide)) {
   throw new Error(`Presenter guide is missing: ${guide}. Run: node build.js`);
 }
+/* Sanity guard: render the presenter guide, never some other file that happens
+   to sit at that path. The display title is "AI Winters: Boom and Bust"; the
+   PDF filename stays Two-Winters-*.pdf because demo.json -> guide declares it
+   and the hub links to it. */
 const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>Two Winters — presenter guide<\/title>/.test(html)) {
+if (!/<title>AI Winters: Boom and Bust — presenter guide<\/title>/.test(html)) {
   throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
 }
 

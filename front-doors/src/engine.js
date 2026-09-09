@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Front Doors — the engine.
+   AI Tool Guide (folder: front-doors) — the engine.
 
    Every fact this demo DERIVES rather than states lives here, once. Three
    consumers share it: the screen (app.js), the build-time test suite

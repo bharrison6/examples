@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="dark">
 <meta name="theme-color" content="#00142B">
-<title>Front Doors — what to ask it with</title>
+<title>AI Tool Guide — what to ask it with</title>
 <!--
-  Front Doors — a single-file, offline teaching module about the four surfaces
-  through which a person can use AI, and why the surface decides what the tool
-  can reach.
+  AI Tool Guide (folder: front-doors) — a single-file, offline teaching module
+  about the four surfaces through which a person can use AI, and why the
+  surface decides what the tool can reach.
 
   Three acts: the four doors against four axes as a grid the room can read in
   one look; seven realistic faculty jobs against those same four doors, with
@@ -40,10 +40,10 @@
   <header id="topbar">
     <div id="brand">
       <span class="b0">Murray State University</span>
-      <span class="b1">FRONT DOORS <em>what to ask it with</em></span>
+      <span class="b1">AI TOOL GUIDE <em>what to ask it with</em></span>
     </div>
     <div id="topbar-tools">
-      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide">?</button>
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
     </div>
   </header>
@@ -147,11 +147,11 @@
   <span>One HTML file &middot; runs offline &middot; product claims checked <span class="js-date"></span></span>
 </footer>
 
-<!-- ========================== HOW TO USE ============================ -->
+<!-- ============================= GUIDE ============================== -->
 <div class="overlay" id="howto" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="howto-title">How to use this</h2><div class="sub">Three acts &middot; about 12 minutes</div></div>
+      <div><h2 id="howto-title">Guide</h2><div class="sub">Three acts &middot; about 12 minutes</div></div>
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
@@ -198,9 +198,10 @@
       <div class="field">
         <span class="lbl">The two buttons, top right</span>
         <ul class="ht-acts">
-          <li><b>?</b> &mdash; reopens this panel at any point.</li>
-          <li><b>&#9881;</b> &mdash; presentation mode, the presenter&rsquo;s notes, and a self-test that
-            checks every claim against its declared source live, in front of whoever is asking.</li>
+          <li><b>?</b> &mdash; the Guide. Reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; Settings: <b>Open Presenter Notes</b>, <b>Presentation mode</b>,
+            <b>Reset</b>, and a self-test that checks every claim against its declared source live,
+            in front of whoever is asking.</li>
         </ul>
       </div>
 
@@ -228,22 +229,23 @@
     <div class="sheet-body">
       <div class="field">
         <span class="lbl">Presentation</span>
+        <button class="btn" id="btn-notes">Open Presenter Notes</button>
+        <p class="help">
+          The session plan: what to say at each act, which cells to open if you have four
+          minutes, the questions you will get, and what to do when a product name on the
+          screen has changed since it was checked. This is the printable guide that ships
+          beside this file, shown on screen &mdash; one document, not a summary of one.
+        </p>
         <label class="switch">
           <input type="checkbox" id="chk-presenter">
           <span>Presentation mode &mdash; oversized UI for a projector</span>
         </label>
-        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <button class="btn" id="btn-reset">Reset</button>
         <p class="help">
-          The session plan: what to say at each act, which cells to open if you have four
-          minutes, the questions you will get, and what to do when a product name on the
-          screen has changed since it was checked. Distilled from the printable guide that
-          ships beside this file.
+          Puts the demo back to how it opened: Act I, no job picked, no self-test on screen.
+          Presentation mode is a setting for the room rather than part of the demo, so Reset
+          leaves it exactly as you had it.
         </p>
-      </div>
-      <div class="field">
-        <span class="lbl">Help</span>
-        <button class="btn" id="btn-howto-2">How to use this</button>
-        <p class="help">Reopens the panel that explains the three acts and the honesty labels.</p>
       </div>
       <div class="field">
         <span class="lbl">Proof</span>
@@ -267,8 +269,8 @@
           Built for Murray State University by Bryant Harrison. Product claims were checked on
           <span class="js-date"></span> against first-party sources. All content is embedded;
           the page makes no network requests, runs no AI, and stores nothing on your device.
-          Reloading resets it. The only URLs here are outbound links to sources, which you may
-          choose to follow.
+          Reloading resets it, and so does <b>Reset</b> above. The only URLs here are outbound
+          links to sources, which you may choose to follow.
         </p>
       </div>
     </div>
@@ -276,14 +278,14 @@
   </div>
 </div>
 
-<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- ======================== PRESENTER NOTES ========================== -->
 <!-- Lifted verbatim from presenter-guide.html, which stays canonical and
      printable. One source of truth: the guide's own stylesheet and its own
      markup, both scoped to .guide-scope, are injected by build.js. -->
 <div class="overlay" id="notes" hidden>
   <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
     <div class="sheet-head">
-      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <div><h2 id="notes-title">Presenter Notes</h2><div class="sub">The printable guide, on screen</div></div>
       <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
