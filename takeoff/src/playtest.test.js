@@ -1,16 +1,5 @@
 #!/usr/bin/env node
-/* ==========================================================================
-   Undershoot — dataset and engine checks.
-
-   Run: node src/playtest.test.js
-
-   Two jobs. The first is ordinary unit testing of the scales, the guess
-   curve and the scoring. The second matters more: the dataset is the demo's
-   entire claim to credibility, so these checks assert that every number on
-   screen resolves to a declared source, that no series has been quietly
-   reordered to look better, and that the figures stated in prose agree with
-   the figures actually plotted.
-   ========================================================================== */
+/* Numerical regressions, source-graph controls, and offline/guide contract checks. Source truth requires a separate audit. */
 
 const fs = require('fs');
 const path = require('path');
@@ -223,405 +212,40 @@ ok('Linear ticks are round numbers',
 ok('Median ignores infinities', E.medianRatio([{ratio: 2}, {ratio: 4}, {ratio: Infinity}]) === 3);
 ok('Median of an empty set is null', E.medianRatio([]) === null);
 
-/* ======================== 5. dataset integrity =========================== */
-
-{
-  /* Every plotted datum must resolve to a declared source. This is the check
-     the whole demo's credibility rests on. */
-  const orphans = [];
-  const walk = (arr, where) => (arr || []).forEach(p => {
-    const id = p.label || p.title || p.d || '?';
-    if (!p.src) orphans.push(`${where}: ${id} has no src`);
-    else if (!D.SOURCES[p.src]) orphans.push(`${where}: ${id} -> unknown src "${p.src}"`);
-  });
-  D.ROUNDS.forEach(r => {
-    walk(r.shown, r.id); walk(r.hidden, r.id); walk(r.markers, r.id);
-    if (r.twist) walk(r.twist.series, r.id + '/twist');
-  });
-  walk(D.UNLOCKS, 'unlocks');
-  D.DOMAINS.forEach(d => walk(d.items, 'act3/' + d.id));
-  ok('Every plotted point resolves to a declared source',
-     orphans.length === 0, orphans.slice(0, 5).join(' | '));
-}
-
-{
-  /* And the reverse: a source listed but never used is either a citation for
-     a claim that got cut, or a claim whose citation got detached. */
-  const used = new Set();
-  const mark = arr => (arr || []).forEach(p => p.src && used.add(p.src));
-  D.ROUNDS.forEach(r => { mark(r.shown); mark(r.hidden); mark(r.markers); if (r.twist) mark(r.twist.series); });
-  mark(D.UNLOCKS); D.DOMAINS.forEach(d => mark(d.items));
-  /* Cited in prose or on the timeline rather than attached to a plotted datum. */
-  ['mittr-metr', 'erdos1196-tao', 'hle', 'nolima', 'kimi-k3', 'gemma', 'olmo', 'cursor', 'gpt-oss',
-   'arc-3', 'arc-3-human', 'vals-swebench', 'arc-astra',
-   D.CLOSERS.gapSrc, D.CLOSERS.doublingSrc].forEach(k => used.add(k));
-  const unused = Object.keys(D.SOURCES).filter(k => !used.has(k));
-  ok('No source is declared and never used', unused.length === 0, unused.join(', '));
-}
-
-{
-  const bad = [];
-  D.ROUNDS.forEach(r => {
-    const pts = E.allPoints(r);
-    for (let i = 1; i < pts.length; i++) {
-      if (E.t(pts[i].date) < E.t(pts[i - 1].date)) bad.push(`${r.id} at ${pts[i].label}`);
-    }
-  });
-  ok('Every series runs forward in time', bad.length === 0, bad.join(', '));
-}
-
-{
-  /* The game is only fair if the hidden data genuinely postdates the shown
-     data — otherwise the room is being asked to predict the past. */
-  const bad = [];
-  D.ROUNDS.forEach(r => {
-    const lastShown = E.t(r.shown[r.shown.length - 1].date);
-    if (E.t(r.hidden[0].date) < lastShown) bad.push(r.id);
-    if (E.t(r.askDate) < lastShown) bad.push(r.id + ' (ask date precedes cutoff)');
-  });
-  ok('Hidden data always follows the shown cutoff', bad.length === 0, bad.join(', '));
-}
-
-{
-  const bad = D.ROUNDS.filter(r => {
-    const pts = E.allPoints(r);
-    return pts.some(p => p.value < r.yMin - 1e-9 || p.value > r.yMax + 1e-9);
-  }).map(r => r.id);
-  ok('Every point falls inside its own axis range', bad.length === 0, bad.join(', '));
-}
-
-{
-  const weak = [];
-  const allow = new Set(['primary', 'reported', 'disputed']);
-  const grade = arr => (arr || []).forEach(p => {
-    if (p.status && !allow.has(p.status)) weak.push(p.label || p.title);
-  });
-  D.ROUNDS.forEach(r => { grade(r.shown); grade(r.hidden); grade(r.markers); if (r.twist) grade(r.twist.series); });
-  grade(D.UNLOCKS); D.DOMAINS.forEach(d => grade(d.items));
-  ok('Nothing rated below "reported" is displayed', weak.length === 0, weak.join(', '));
-}
-
-/* ============== 5b. Act I is explained, not just plotted ================= */
-
-{
-  const bare = D.ROUNDS.filter(r => !r.plain || !r.human || !r.example).map(r => r.id);
-  ok('Every test explains itself in plain language, with an example and a human anchor',
-     bare.length === 0, bare.join(', '));
-
-  const unlabelled = D.ROUNDS.filter(r => !r.xLabel || !r.yLabel).map(r => r.id);
-  ok('Both axes are labelled on every chart', unlabelled.length === 0, unlabelled.join(', '));
-
-  const noShort = D.ROUNDS.filter(r => !r.yLabelShort).map(r => r.id);
-  ok('Every round has a short y label for tight plots', noShort.length === 0, noShort.join(', '));
-
-  /* Each test surfaces the benchmark's real name, so a curious viewer can look
-     it up — added after review asked "should we name the test". */
-  const unnamed = D.ROUNDS.filter(r => !r.real).map(r => r.id);
-  ok('Every test names the real benchmark behind it', unnamed.length === 0, unnamed.join(', '));
-
-  /* The plain-language explanations must be complete sentences, not the noun
-     fragments an earlier draft shipped ("A few hundred questions..."). A crude
-     but effective proxy: the text ends in a full stop and its first sentence
-     contains a verb-ish word. */
-  const VERB = /\b(is|are|was|were|be|has|have|measures?|shows?|gives?|takes?|finds?|files?|asks?|works?|scores?|means?|lets?|sees?|gets?|holds?|picks?|reads?|comes?|goes?|makes?|solves?|fixes?|try|draw|read|take|watch|imagine|picture|note|remember|prices)\b/i;
-  const fragmentary = [];
-  const checkProse = (text, where) => {
-    if (!text) return;
-    const first = text.split(/(?<=[.!?])\s/)[0];
-    if (!VERB.test(first)) fragmentary.push(where + ': ' + first.slice(0, 48));
-  };
-  D.ROUNDS.forEach(r => { checkProse(r.plain, r.id + '.plain'); checkProse(r.human, r.id + '.human'); });
-  D.DOMAINS.forEach(d => checkProse(d.lede, d.id + '.lede'));
-  ok('Every explanation and domain intro opens with a complete sentence',
-     fragmentary.length === 0, fragmentary.slice(0, 4).join(' | '));
-  const tooLong = D.ROUNDS.filter(r => r.yLabelShort.length > 26).map(r => r.id);
-  ok('The short y labels are actually short', tooLong.length === 0, tooLong.join(', '));
-
-  const jargon = D.ROUNDS.filter(r => /benchmark|eval\b|SOTA|token/i.test(r.plain)).map(r => r.id);
-  ok('No plain-language explanation leans on jargon', jargon.length === 0, jargon.join(', '));
-
-  ok('The opening screen exists and says what the exercise is',
-     D.INTRO && D.INTRO.body.length >= 3 && D.INTRO.cta);
-
-  const arc = D.ROUNDS.find(r => r.id === 'arc');
-  ok('The grid puzzle ships a worked example and its answer',
-     arc.example.kind === 'arc' && arc.example.pairs.length >= 2 && arc.example.answer);
-  /* The example must actually be the rule it claims: everything falls to the
-     bottom row, keeping its column. A wrong worked example in front of a room
-     is worse than no example. */
-  const fall = g => {
-    const h = g.length, w = g[0].length;
-    const out = Array.from({ length: h }, () => Array(w).fill(0));
-    for (let c = 0; c < w; c++) {
-      const vals = [];
-      for (let r2 = 0; r2 < h; r2++) if (g[r2][c]) vals.push(g[r2][c]);
-      for (let k = 0; k < vals.length; k++) out[h - vals.length + k][c] = vals[k];
-    }
-    return out;
-  };
-  const consistent = arc.example.pairs.every(p => JSON.stringify(fall(p.in)) === JSON.stringify(p.out))
-                  && JSON.stringify(fall(arc.example.test)) === JSON.stringify(arc.example.answer);
-  ok('The grid puzzle\u2019s examples and answer obey one consistent rule', consistent);
-}
-
-/* ================= 5c. Act III covers more than mathematics ============== */
-
-{
-  const items = D.DOMAINS.reduce((a, d) => a.concat(d.items), []);
-  ok('Act III covers all seven domains', D.DOMAINS.length === 7, D.DOMAINS.length + ' domains');
-  ok('Mathematics is one domain among several, not the whole act',
-     items.filter(m => true).length > 0 &&
-     D.DOMAINS.find(d => d.id === 'math').items.length < items.length / 2,
-     D.DOMAINS.find(d => d.id === 'math').items.length + ' of ' + items.length + ' results');
-  ok('Biology, medicine, weather, materials and software are all present',
-     ['bio','med','weather','materials','software'].every(id => D.DOMAINS.some(d => d.id === id)));
-
-  const missing = items.filter(m => !m.machine || !m.human).map(m => m.title);
-  ok('Every result says what the machine did AND what the humans did',
-     missing.length === 0, missing.join(', '));
-
-  ok('Act III shows results that did not hold up',
-     items.some(m => m.verdict === 'overclaimed') && items.some(m => m.verdict === 'disputed'));
-
-  ok('Every domain has a one-line framing', D.DOMAINS.every(d => d.lede && d.lede.length > 30));
-
-  const dates = items.map(m => E.t(m.date));
-  ok('Every Act III result carries a parseable date', dates.every(d => isFinite(d)));
-}
-
-ok('The cut list is not empty', D.CUT.length >= 5, String(D.CUT.length) + ' entries');
-ok('Every cut entry gives a reason', D.CUT.every(c => c.why && c.why.length > 20));
-
-/* ==================== 6. prose agrees with the plot ====================== */
-
-{
-  const metr = D.ROUNDS.find(r => r.id === 'metr');
-  const fit = E.doublingDays(E.allPoints(metr));
-  ok('METR points imply a doubling time in a sane range',
-     fit > 60 && fit < 260, Math.round(fit) + ' days');
-  /* Act III prints both the published figure and this fit, and says they will
-     not match. The test asserts they are at least the same order. */
-  ok('Fitted doubling time is within 2x of the published post-2024 figure',
-     fit / D.CLOSERS.doubling > 0.5 && fit / D.CLOSERS.doubling < 2,
-     `fit ${Math.round(fit)}d vs published ${D.CLOSERS.doubling}d`);
-}
-
-{
-  /* The SWE-bench reveal prose says "a third to four in five, then it stopped
-     moving". Assert the data says so too, because prose and data drifting apart
-     is exactly how a demo starts lying. The line is single-attempt figures end to
-     end so the comparison is like with like. */
-  const r = D.ROUNDS.find(x => x.id === 'swebench');
-  const first = E.allPoints(r)[0].value;
-  const last = E.finalValue(r);
-  ok('The bug-fixing prose matches the plotted endpoints',
-     Math.round(first) === 33 && Math.round(last) === 81, `${first} -> ${last}`);
-}
-
-{
-  const r = D.ROUNDS.find(x => x.id === 'price');
-  const first = E.allPoints(r)[0].value, last = E.finalValue(r);
-  const factor = first / last;
-  ok('The price round really is a ~208x fall', near(factor, 208, 2), factor.toFixed(1) + 'x');
-}
-
-{
-  const r = D.ROUNDS.find(x => x.id === 'gpqa');
-  const phd = r.markers.find(m => /PhD/.test(m.label)).value;
-  const o1 = r.hidden.find(p => /o1/.test(p.label)).value;
-  ok('o1 really is the first plotted point above the PhD baseline',
-     o1 > phd && r.shown.every(p => p.value < phd), `${o1} vs ${phd}`);
-}
-
-{
-  const arc = D.ROUNDS.find(x => x.id === 'arc');
-  const f = arc.twist.finale;
-
-  ok('ARC-AGI-2 scores really are far below the ARC-AGI-1 peak',
-     Math.max(...arc.twist.series.map(s => s.value)) < E.finalValue(arc),
-     `${Math.max(...arc.twist.series.map(s => s.value))} vs ${E.finalValue(arc)}`);
-
-  /* The finale used to show "people 100%, AI 0.51%". Both halves were wrong in
-     spirit: 100% is the scoring baseline by construction, not humans acing it,
-     and 0.51% is one harness on one game set. These checks pin the honest
-     version in place. */
-  ok('The finale explains what ARC-AGI-3 actually is', f.what && f.what.length > 200);
-  ok('The finale no longer claims humans score 100%',
-     !f.bars.some(b => b.value === 100), JSON.stringify(f.bars.map(b => b.value)));
-  const human = f.bars.find(b => b.kind === 'human');
-  ok('The human bar is the measured average tester, 48%', human && human.value === 48,
-     human && String(human.value));
-  const withMem = f.bars.find(b => /remember/i.test(b.label));
-  const without = f.bars.find(b => /standard wiring/i.test(b.label));
-  ok('Both harness conditions for the same model are shown',
-     withMem && without && withMem.value === 38.3 && without.value === 13.3,
-     `${without && without.value} -> ${withMem && withMem.value}`);
-  ok('The harness result really is about 3x',
-     Math.abs(withMem.value / without.value - 2.9) < 0.4,
-     (withMem.value / without.value).toFixed(2) + 'x');
-  ok('The bare-model figure is kept, and marked as a different run',
-     f.bars.some(b => b.value === 0.51 && /different game set/i.test(b.note)));
-  /* The caveat states how many bars there are. Pinning the literal word "four"
-     broke the moment a sixth bar arrived, which is the drift this suite exists
-     to catch -- so pin it to the data instead. */
-  {
-    const WORD = { 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine' };
-    const want = WORD[f.bars.length];
-    ok('The finale warns that the bars are not comparable, and counts them correctly',
-       !!want && new RegExp('not ' + want + ' measurements of one thing', 'i').test(f.caveat),
-       `${f.bars.length} bars; caveat should say "not ${want} measurements of one thing"`);
-  }
-  ok('The finale cites the source for the harness result',
-     !!D.SOURCES['arc-3-openai']);
-}
-
-/* ======================== 7. timeline dataset =========================== */
-
-{
-  const bad = D.MODELS.filter(m => !D.LABS[m.lab]).map(m => m.name);
-  ok('Every model names a known lab', bad.length === 0, bad.join(', '));
-
-  const badTier = D.MODELS.filter(m => !(m.tier >= 1 && m.tier <= 8)).map(m => m.name);
-  ok('Every model has a tier in range', badTier.length === 0, badTier.join(', '));
-
-  const sorted = D.MODELS.map(m => E.t(m.d));
-  ok('The model list is in date order',
-     sorted.every((v, i) => i === 0 || v >= sorted[i - 1]));
-
-  ok('The timeline starts at ChatGPT', D.MODELS[0].d === '2022-11-30', D.MODELS[0].name);
-  ok('Both open and closed weights are represented',
-     D.MODELS.some(m => m.open) && D.MODELS.some(m => !m.open));
-  ok('Chinese open-weight labs are represented',
-     ['deepseek', 'alibaba', 'moonshot', 'zhipu', 'cnother'].every(k => D.MODELS.some(m => m.lab === k)));
-  ok('Every lab declared is actually used',
-     Object.keys(D.LABS).every(k => D.MODELS.some(m => m.lab === k)),
-     Object.keys(D.LABS).filter(k => !D.MODELS.some(m => m.lab === k)).join(', '));
-
-  /* The revision this suite exists to protect: the first version of the
-     timeline had 52 models and almost no small or specialist open ones. */
-  const open = D.MODELS.filter(m => m.open);
-  ok('The timeline is majority downloadable models', open.length > D.MODELS.length / 2,
-     open.length + ' of ' + D.MODELS.length);
-  ok('The timeline carries at least 100 releases', D.MODELS.length >= 100, String(D.MODELS.length));
-
-  /* The release count is quoted in five documents and was pinned only as a
-     floor, so the timeline could grow and every one of them could go stale
-     without a single check going red. It did. Pin the exact number.
-
-     'presenter-guide.html' is the shipped copy the PDF is rendered from;
-     checking only src/ is what let the printed guide keep a stale count.
-     'index.html' replaced 'src/template.html' in this list when the in-app
-     presenter notes stopped being a hand-written second copy: the template no
-     longer quotes the count at all, because the count now reaches the app
-     inside the injected guide. Pinning the built page is the stronger check
-     anyway — it is the file people actually open. */
-  {
-    const n = String(D.MODELS.length);
-    for (const f of ['index.html', 'src/presenter-guide.html',
-                     'presenter-guide.html', 'README.md', 'demo.json']) {
-      const txt = fs.readFileSync(path.join(__dirname, '..', f), 'utf8');
-      ok(`${f} quotes the real release count (${n})`,
-         txt.includes(n + ' model releases') || txt.includes(n + ' releases arrive'),
-         'does not contain the count ' + n);
-    }
-  }
-
-  const named = s => D.MODELS.some(m => new RegExp(s, 'i').test(m.name));
-  const wanted = ['Gemma', 'MedGemma', 'Phi', 'OLMo', 'Nemotron', 'Granite', 'Falcon',
-                  'Composer', 'Devstral', 'Qwen', 'Kimi', 'GLM', 'DeepSeek', 'Yi-34B',
-                  'Hunyuan', 'MiniMax', 'Ernie', 'gpt-oss', 'Mistral', 'EuroLLM', 'Poro'];
-  const absent = wanted.filter(w => !named(w));
-  ok('Every family the brief called out is on the timeline', absent.length === 0, absent.join(', '));
-
-  const regions = {};
-  D.MODELS.forEach(m => { const r = D.LABS[m.lab].region; regions[r] = (regions[r] || 0) + 1; });
-  ok('All four regions are represented', Object.keys(regions).length >= 4, JSON.stringify(regions));
-  ok('Europe has more than one lab represented',
-     new Set(D.MODELS.filter(m => D.LABS[m.lab].region === 'Europe').map(m => m.lab)).size >= 2);
-  ok('Every open model declares a licence',
-     open.every(m => m.lic), open.filter(m => !m.lic).map(m => m.name).join(', '));
-}
-
-{
-  const c = E.cadence(D.MODELS.map(m => ({ ...m })), 365);
-  const early = c.find(x => x.date === '2023-03-14');
-  const late = c[c.length - 1];
-  ok('Release cadence is higher now than in early 2023',
-     late.count > early.count, `${early.count} -> ${late.count} per year`);
-}
-
-/* ========================= 8. unlock dataset ============================ */
-
-{
-  const sorted = D.UNLOCKS.map(u => E.t(u.d));
-  ok('Unlocks are in date order', sorted.every((v, i) => i === 0 || v >= sorted[i - 1]));
-  ok('The walked-back bar exam claim is present and flagged',
-     D.UNLOCKS.some(u => u.flag === 'walked back'));
-  ok('The unlock list includes one where AI made people slower',
-     D.UNLOCKS.some(u => u.flag === 'counterweight'));
-  ok('The last unlock is the one that goes down, not up',
-     /ARC-AGI-3/.test(D.UNLOCKS[D.UNLOCKS.length - 1].body));
-}
-
-/* ===================== 9. the demo contract's UX ======================== */
-/* CONTRACT.md -> Required UX. Cheap string checks against the BUILT page,
-   because the built page is the artefact the contract is about. They exist so
-   a later edit cannot quietly rename a control that demo.json's compliance
-   block claims is there. build.js --check is the other half of the pair: it
-   proves the notes overlay is the guide rather than a retelling of it. */
-
-{
-  const idx = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
-  const guide = fs.readFileSync(path.join(__dirname, 'presenter-guide.html'), 'utf8');
-  const tplSrc = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
-
-  ok('The ? button is named exactly "Guide"',
-     /id="btn-howto" aria-label="Guide" title="Guide">\?</.test(idx),
-     'aria-label/title on #btn-howto');
-  ok('The Guide overlay heading reads "Guide"', idx.includes('<h2 id="howto-title">Guide</h2>'));
-  ok('A Settings button sits beside it', idx.includes('id="btn-settings"'));
-
-  for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
-    ok('Settings offers "' + label + '", labelled exactly',
-       idx.includes('>' + label + '<'), 'not found in index.html');
-  }
-  ok('Reset is wired to a handler',
-     idx.includes('id="btn-reset"') && /#btn-reset'\)\.addEventListener/.test(idx));
-
-  /* The property this whole single-source change exists to create. A substring
-     test suffices because the injection is verbatim; build.js --check is what
-     proves it arrived from the guide rather than being pasted in by hand. */
-  const g0 = guide.indexOf('<div class="guide-scope">');
-  const g1 = guide.indexOf('</div><!-- /guide -->');
-  ok('The in-app presenter notes are the printable guide, verbatim',
-     g0 > 0 && g1 > g0 && idx.includes(guide.slice(g0, g1) + '</div>'),
-     'index.html does not contain the guide body');
-  ok('The template keeps no second copy of the guide',
-     !tplSrc.includes('<div class="guide-scope">'));
-
-  /* Offline. Outbound <a href> reading links are the one allowed external URL
-     and are deliberately not matched here. */
-  const netTags = idx.match(/<(script|link|img|iframe|source|video|audio)\b[^>]*\b(src|href)\s*=\s*["']?https?:/gi) || [];
-  ok('No subresource is loaded over the network', netTags.length === 0, netTags.join(' | '));
-  for (const api of ['fetch(', 'XMLHttpRequest', 'WebSocket', '@import', 'url(http']) {
-    ok('The built page contains no ' + api, !idx.includes(api));
-  }
-
-  /* The retitle, Path A: the display title is the new one everywhere it shows,
-     and "Takeoff" survives as the subtitle, because the hub is named for it. */
-  ok('The built page is titled "The Pace of AI Progress"',
-     idx.includes('<title>The Pace of AI Progress '));
-  ok('The header carries the new title', idx.includes('THE PACE OF AI PROGRESS'));
-  ok('"Takeoff" survives in the header tagline', idx.includes('<em>Takeoff '));
-  ok('The guide is titled to match', guide.includes('<h1>The Pace of AI Progress</h1>'));
-}
-
-/* ============================= report =================================== */
-
-for (const [state, name, detail] of results) {
-  if (state === 'FAIL' || process.argv.includes('-v')) {
-    console.log(`${state}  ${name}${detail ? '  — ' + detail : ''}`);
-  }
-}
-console.log(`\n${pass} passed, ${fail} failed, ${pass + fail} checks.`);
-process.exit(fail ? 1 : 0);
+/* Dataset checks are shared with the in-app integrity panel. */
+const Validation=require('./validation.js');
+for(const c of Validation.check(D,E)) ok(c.name,c.pass,c.detail);
+const invalid=JSON.parse(JSON.stringify(D)); invalid.ROUNDS[0].hidden[0].src='missing-source';
+ok('Integrity validator rejects a dangling source (negative control)',Validation.check(invalid,E).some(c=>!c.pass));
+ok('Integrity validator accepts the known source graph (positive control)',Validation.check(D,E).every(c=>c.pass));
+for(const years of [-1,0]) ok('All scenarios fit the anchor at '+years,E.scenarios(years).every(r=>near(r.value,years===-1?20:30,1e-9)));
+ok('Scenarios diverge outside the observed anchors',new Set(E.scenarios(3).map(r=>r.value)).size===3);
+ok('Compound scenario exposes a score above the ceiling',E.scenarios(8)[1].value>100);
+ok('Saturation scenario stays below its stated ceiling',E.scenarios(100)[2].value<=75);
+const metr=D.ROUNDS.find(r=>r.id==='metr');
+ok('Non-robust Sol estimate is excluded from plotted points',!E.allPoints(metr).some(p=>p.src==='metr-sol')&&metr.limitations.src==='metr-sol');
+ok('METR main series excludes the mismatched GPT-4o appendix row',!E.allPoints(metr).some(p=>p.label==='GPT-4o'));
+ok('METR intervals are retained',E.allPoints(metr).every(p=>p.lo!=null&&p.hi!=null));
+const price=D.ROUNDS.find(r=>r.id==='price');
+ok('Price uses the MMLU threshold and blended token units',price.real.includes('86%')&&price.human.includes('3:1')&&price.yLabel.includes('tokens'));
+const gpqa=D.ROUNDS.find(r=>r.id==='gpqa');
+ok('GPQA uses the Diamond baseline without mismatched human markers',gpqa.shown[0].value===50.6&&gpqa.markers.length===0);
+ok('Every timeline point carries a release source, no capability tier',D.MODELS.every(m=>m.src&&!('tier' in m)));
+const arc=D.ROUNDS.find(r=>r.id==='arc');
+ok('ARC3 comparison holds high reasoning effort fixed',arc.twist.finale.bars.every(b=>b.note.startsWith('High effort')));
+ok('ARC3 RHAE is named separately from puzzles solved',arc.twist.finale.what.includes('Relative Human Action Efficiency'));
+const fall=g=>{const out=g.map(row=>row.map(()=>0));for(let c=0;c<g[0].length;c++){const vals=g.map(row=>row[c]).filter(Boolean);vals.forEach((v,i)=>out[g.length-vals.length+i][c]=v);}return out;};
+ok('Illustrative ARC puzzle examples and answer obey one rule',arc.example.pairs.every(p=>JSON.stringify(fall(p.in))===JSON.stringify(p.out))&&JSON.stringify(fall(arc.example.test))===JSON.stringify(arc.example.answer));
+const app=fs.readFileSync(path.join(__dirname,'app.js'),'utf8');
+ok('Different ARC versions are not connected on the chart',!app.includes('app.chart.twist('));
+const idx=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+for(const id of ['btn-howto','btn-settings','btn-reset','btn-notes','chk-presenter','btn-details','round-select','scenario-years'])ok('Required control '+id,idx.includes('id="'+id+'"'));
+for(const label of ['Open Presenter Notes','Presentation mode','Reset'])ok('Required visible label '+label,idx.includes('>'+label+'<'));
+ok('Guide accessible name',idx.includes('aria-label="Guide"'));
+const guide=fs.readFileSync(path.join(__dirname,'presenter-guide.html'),'utf8');
+const body=guide.slice(guide.indexOf('<div class="guide-scope">'),guide.indexOf('</div><!-- /guide -->'))+'</div>';
+ok('Canonical guide body is embedded verbatim',idx.includes(body));
+ok('No external subresources',!(idx.match(/<(script|link|img|iframe|source|video|audio)\b[^>]*\b(src|href)\s*=\s*["']?https?:/gi)||[]).length);
+for(const api of ['fetch(','XMLHttpRequest','WebSocket','@import','url(http'])ok('No runtime network API '+api,!idx.includes(api));
+for(const [state,name,detail]of results)if(state==='FAIL'||process.argv.includes('-v'))console.log(state+' '+name+' '+detail);
+console.log('\n'+pass+' passed, '+fail+' failed, '+(pass+fail)+' checks.');process.exit(fail?1:0);
