@@ -165,6 +165,13 @@ canvas.chart { display:block; width:100%; height:128px; margin-top:10px; border:
 .acc-d { color:#7ecfee; } .acc-s { color:#ffd76a; } .bignum.dim { color:#b8cbd8; }
 .exam-card summary, details.fold summary { color:var(--navy); font-weight:850; cursor:pointer; }
 .exam-card[open] summary { margin-bottom:12px; }
+.textbook-fold { margin-top:12px; border:1px solid rgba(255,255,255,.34); border-radius:10px; background:rgba(255,255,255,.06); }
+details.fold.textbook-fold > summary { border-radius:9px; padding:9px 11px; color:#f6fbff; }
+details.fold.textbook-fold > summary::marker { color:var(--gold); }
+details.fold.textbook-fold > summary:hover, details.fold.textbook-fold > summary:focus-visible { background:rgba(255,255,255,.1); color:#ffd76a; }
+details.fold.textbook-fold[open] > summary { margin-bottom:10px; border-bottom:1px solid rgba(255,255,255,.2); border-radius:9px 9px 0 0; background:rgba(255,255,255,.1); color:#ffd76a; }
+.textbook-fold > .note { margin:0 11px 8px; }
+.textbook-fold > .rawctx { margin:0 10px 10px; }
 .exlist { display:flex; flex-direction:column; gap:5px; max-height:250px; overflow:auto; }
 .exrow { border:1px solid var(--line); border-radius:7px; padding:5px 7px; background:#fff; font-family:ui-monospace, Consolas, monospace; font-size:calc(var(--u) * .74); word-break:break-all; }
 .exrow.wrong { border-color:var(--bad); background:var(--bad-soft); }
