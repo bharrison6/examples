@@ -8,9 +8,10 @@ no account, network request, AI service, or installation is needed.
 
 ## Teaching sequence
 
-The top row contains three working models and **1d Other model types**. The
-unlettered **Model in action / How they learn** row beneath it separates the
-model view from learning methods. These are examples, not an exhaustive AI
+The top row offers **Model types / How they learn**. **Model types** reveals a
+second row containing three working models and **1d Other model types**;
+**How they learn** hides that row and explains learning methods. Switching these
+views preserves the selected model and its state. These are examples, not an exhaustive AI
 taxonomy or difficulty levels. **Details** opens the
 current stage's evidence and technical explanation in a right-side drawer, so
 the main activity keeps the question, Try/Observe/Takeaway cues, board, and
@@ -30,7 +31,10 @@ button, backdrop, or Escape, and returns focus to the Details button.
   training bursts. `Show move scores` exposes those estimates. Human play does
   not train the table; only the app’s training burst updates it. The opponent
   era selector sits directly above **Train the AI** so comparing Era 0 with a
-  trained era is part of the same action.
+  trained era is part of the same action. The inline change report below the
+  training controls follows that selection: each trained era shows its recorded
+  scores and changes from the preceding era. Era 0 explains the untrained baseline.
+  Completing a burst displays the new report without opening a popup.
 - **1c · Neural Network** first uses a fresh 20,000-game seeded table learner
   to create frozen learning examples, then trains reusable adjustable weights to
   approximate them. People still designed the board inputs and learning
