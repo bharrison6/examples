@@ -5,10 +5,20 @@
    `node build.js`         writes index.html and presenter-guide.html
    `node build.js --check` verifies both match the canonical build, writes nothing
 
-   The guide is canonical in src/presenter-guide.html. Its first <style> block
-   and its .guide-scope div are lifted into the app verbatim, so Settings ->
-   Presenter's notes works from the single file with no sibling to fetch. One
-   source of truth: edit src/presenter-guide.html, never the copies. */
+   The guide is canonical in src/presenter-guide.html. Its scoped stylesheet and
+   its .guide-scope div are lifted into the app verbatim, so Settings ->
+   Open Presenter Notes works from the single file with no sibling to fetch. One
+   source of truth: edit src/presenter-guide.html, never the copies.
+
+   Marker rule (do not soften it). Every marker below is found by a regex
+   anchored to the start of a line, searched over a copy of the guide in which
+   every <!-- ... --> region has been blanked to same-length spaces, and refused
+   unless it matches EXACTLY ONCE. Both halves are load-bearing: this file used
+   to say indexOf('<style>'), and the guide's own head comment contains that
+   literal while describing the mechanism, so extraction silently began inside
+   the comment and the browser dropped the first scoped rule. Naming the block
+   by id is not enough on its own -- a comment that documents the id matches it
+   too. */
 const fs = require('fs');
 const path = require('path');
 const SRC = path.join(__dirname, 'src');
@@ -29,26 +39,79 @@ let js    = JS_FILES.map(f => `/* ==== ${f} ==== */\n` + read(f)).join('\n\n');
    script early, so neutralise those. */
 js = js.replace(/<\/script/gi, '<\\/script');
 
-/* Pull the guide apart. The FIRST <style> block is the one scoped to
-   .guide-scope and safe to inject; the second is page chrome for the
-   standalone printable file and must not leak into the app. */
-const guideSrc = read('presenter-guide.html');
-const sOpen = guideSrc.indexOf('<style>');
-const sClose = guideSrc.indexOf('</style>');
-const gStart = guideSrc.indexOf('<div class="guide-scope">');
-const gEnd = guideSrc.indexOf('</div><!-- /guide -->');
-if (sOpen < 0 || sClose < 0 || gStart < 0 || gEnd < 0) {
-  console.error('guide markers missing in src/presenter-guide.html'); process.exit(1);
+const die = msg => { console.error(msg); process.exit(1); };
+
+/** Blank every HTML comment to same-length spaces (newlines kept, so line
+ *  anchors and offsets both survive). Searching this copy means no marker can
+ *  ever be matched inside prose that merely talks about the marker. */
+function maskComments(s) {
+  return s.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
 }
-const guideCss = guideSrc.slice(sOpen + '<style>'.length, sClose);
+
+/** Index of the one line that starts with `marker`. Exactly once, or die. */
+function onceAtLineStart(masked, marker, what) {
+  const re = new RegExp('^' + marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gm');
+  const hits = [];
+  for (let m; (m = re.exec(masked)) !== null; ) hits.push(m.index);
+  if (hits.length !== 1) {
+    die(`guide marker ${what} must appear exactly once at the start of a line in `
+      + `src/presenter-guide.html; found ${hits.length}`);
+  }
+  return hits[0];
+}
+
+/* Pull the guide apart. <style id="guide-css"> is the block scoped to
+   .guide-scope and safe to inject; the unnamed block after it is page chrome
+   for the standalone printable file and must not leak into the app. */
+const guideSrc = read('presenter-guide.html');
+const guideMasked = maskComments(guideSrc);
+
+const CSS_OPEN = '<style id="guide-css">';
+const G_OPEN = '<div class="guide-scope">';
+const G_CLOSE = '</div><!-- /guide -->';
+
+const sOpen = onceAtLineStart(guideMasked, CSS_OPEN, CSS_OPEN);
+const sClose = guideMasked.indexOf('</style>', sOpen);
+if (sClose < 0) die('guide marker </style> missing after ' + CSS_OPEN);
+const gStart = onceAtLineStart(guideMasked, G_OPEN, G_OPEN);
+/* The end marker carries its own comment terminator, so it cannot itself sit
+   inside a comment; it is matched on the raw text, still exactly once. */
+const gEnd = onceAtLineStart(guideSrc, G_CLOSE, G_CLOSE);
+if (!(sOpen < sClose && sClose < gStart && gStart < gEnd)) {
+  die('guide markers are out of order in src/presenter-guide.html');
+}
+
+const guideCss = guideSrc.slice(sOpen + CSS_OPEN.length, sClose);
 const guideHtml = guideSrc.slice(gStart, gEnd) + '</div>';
 if (/^\s*body\s*[,{]/m.test(guideCss)) {
-  console.error('guide stylesheet leaks a page-level rule into the app'); process.exit(1);
+  die('guide stylesheet leaks a page-level rule into the app');
+}
+/* Canaries for the failure this build used to ship: if extraction ever begins
+   or ends in the wrong place, comment syntax or a nested tag comes with it. */
+for (const [needle, where] of [['<!--', 'CSS'], ['-->', 'CSS'], ['<style', 'CSS']]) {
+  if (guideCss.includes(needle)) die(`extracted guide ${where} contains "${needle}" — marker search went wrong`);
+}
+if (!/^\s*\.guide-scope\b/m.test(guideCss)) {
+  die('extracted guide CSS does not start with a .guide-scope rule — marker search went wrong');
+}
+if (!guideHtml.startsWith(G_OPEN) || !guideHtml.endsWith('</div>')) {
+  die('extracted guide body is not the .guide-scope div');
 }
 
 const tpl = read('template.html');
-for (const ph of ['/*__CSS__*/', '/*__JS__*/', '/*__GUIDE_CSS__*/', '<!--__GUIDE__-->']) {
-  if (!tpl.includes(ph)) { console.error('template placeholder missing: ' + ph); process.exit(1); }
+const tplMasked = maskComments(tpl);
+for (const ph of ['/*__CSS__*/', '/*__JS__*/', '/*__GUIDE_CSS__*/']) {
+  /* String.replace substitutes the FIRST occurrence, so a second copy of a
+     placeholder — in a head comment, say — would silently take the payload. */
+  const n = tpl.split(ph).length - 1;
+  if (n !== 1) die(`template placeholder ${ph} must appear exactly once; found ${n}`);
+}
+/* <!--__GUIDE__--> is itself a comment, so count it before masking and require
+   that masking removes every copy (i.e. no stray literal outside a comment). */
+{
+  const n = tpl.split('<!--__GUIDE__-->').length - 1;
+  if (n !== 1) die(`template placeholder <!--__GUIDE__--> must appear exactly once; found ${n}`);
+  if (tplMasked.includes('__GUIDE__')) die('template has a stray __GUIDE__ outside a comment');
 }
 const html = tpl
   .replace('/*__CSS__*/', () => css)

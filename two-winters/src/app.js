@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Two Winters — the application.
+   AI Winters: Boom and Bust — the application.
 
    Four acts:
      I   Guess the year — ten sourced predictions, date and speaker hidden.
@@ -514,15 +514,66 @@ function wireOverlays() {
     if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
   });
   $('#btn-howto').addEventListener('click', () => open('howto'));
-  $('#btn-howto-2').addEventListener('click', () => { close('settings'); open('howto'); });
   $('#btn-settings').addEventListener('click', () => open('settings'));
   $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
+  $('#btn-reset').addEventListener('click', resetDemo);
   $('#chk-presenter').addEventListener('change', ev => {
     S.presenter = ev.target.checked;
     document.body.classList.toggle('presenting', S.presenter);
     if (S.tl) { S.tl.setBig(S.presenter); }
   });
   $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ================================ reset =================================
+   Settings -> Reset. Whole-demo, not per-act: every piece of session state
+   goes back to the value it has on a fresh load, without a reload. Nothing
+   here is persisted (no storage of any kind), so restoring S and the few
+   pieces of DOM that render from it IS a fresh load.
+
+   Two deliberate exceptions, both from the contract:
+     - Presentation mode stays as the presenter set it. It is a projector
+       preference, not demo state; a presenter who reset mid-talk would not
+       want the type to shrink on the projector.
+     - The Guide overlay stays closed. It opens on first load as onboarding;
+       Reset is not re-onboarding, and reopening it would hide the demo the
+       presenter just reset in front of a room.
+   ---------------------------------------------------------------------- */
+
+function resetDemo() {
+  S.i = 0;
+  S.answers = {};
+  S.pending = { year: 1985, verdict: null };
+  S.revealed = false;
+
+  /* Act I, back before the first card. renderCard() re-initialises every
+     control inside #card-body when Begin is pressed again, so hiding the
+     block is enough to undo a half-answered card. */
+  renderIntro();
+  $('#intro').hidden = false;
+  $('#card-body').hidden = true;
+  $('#scorecard').hidden = true;
+
+  /* Act II is built lazily and owns a canvas plus a window resize listener,
+     so rewind it in place; rebuilding would attach a second listener. Its
+     fresh-load cursor is 1 — the whole 1950-2026 span shown. */
+  if (S.tl) {
+    S.tl.select(null);
+    S.tl.setCursor(1);
+    $('#tl-slider').value = '1000';
+    syncTimelineChrome();
+  }
+  showEvent(null);
+
+  /* The self-test panel is output, not state: a fresh load has none. */
+  $('#selftest-out').innerHTML = '';
+
+  /* Close the Settings sheet the button was pressed in, and anything else
+     left open, then release the scroll lock those sheets took. */
+  $$('.overlay').forEach(o => { o.hidden = true; });
+  lockScroll();
+
+  setAct(1);
 }
 
 /* ============================== self-test ===============================
@@ -603,7 +654,7 @@ function runSelfTest() {
   }
   box.appendChild(ul);
   /* eslint-disable no-console */
-  console.log('Two Winters self-test:', fails ? fails + ' FAILED' : 'all pass');
+  console.log('AI Winters: Boom and Bust self-test:', fails ? fails + ' FAILED' : 'all pass');
   out.forEach(r => console.log(r[0] ? 'PASS' : 'FAIL', r[1], r[2]));
 }
 

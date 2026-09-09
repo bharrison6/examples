@@ -86,11 +86,30 @@ a  { color: var(--sky); }
   font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
   color: var(--gold); font-weight: 700;
 }
+/* The display title is long and has no break opportunity inside a word, so it
+   is FITTED rather than ellipsised on a phone. Measured in headless Chrome at
+   320/360/390/430px: the wordmark alone wants 244px at .96rem, and the line
+   available beside the two 44px buttons is only 190px at 320px, so the
+   committed .96rem sliced it mid-word. The clamp reaches .96rem at ~452px
+   viewport and above, which is every desktop width — desktop is unchanged. */
 #brand .b1 {
-  font-size: .96rem; font-weight: 800; letter-spacing: .02em;
+  font-size: clamp(.7rem, 3.4vw, .96rem);
+  font-weight: 800; letter-spacing: .02em;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 #brand .b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: .8em; }
+
+/* Wordmark plus trailing question needs a 521px viewport at full size, so
+   below that the question is dropped whole rather than sliced — it is still in
+   <title>, in the Guide overlay and on the Act I intro. 560px, not 521px,
+   leaves room for a system font wider than the ones this was measured against.
+   Wrapping replaces the ellipsis at those widths for the same reason: if a
+   platform runs wide, a second line loses nothing, a truncation loses letters
+   (and Presentation mode's 52px buttons take another 16px off this line). */
+@media (max-width: 559px) {
+  #brand .b1 { white-space: normal; overflow: visible; }
+  #brand .b1 em { display: none; }
+}
 
 #topbar-tools { display: flex; gap: 8px; flex: none; }
 
