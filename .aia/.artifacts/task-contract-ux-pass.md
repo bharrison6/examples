@@ -59,6 +59,18 @@ about any demo changes.
 - Everything else in CONTRACT.md stays as is (theme, attribution, mobile, offline: zero
   network at runtime).
 
+Standardizations from the first completed lane (inhibitor-investigation, 2026-09-09):
+
+- **Reset leaves Presentation mode alone.** Presentation mode is a presenter display
+  preference, not demo state; Reset restores demo state and closes overlays and menus.
+- **Provenance:** add `"claude-code"` to `demo.json` → `built_with` if it is not already
+  there (CONTRACT.md asks for honest provenance; this pass is a real build step).
+- **Guide prose may change only as back-propagation** (for example, a first-load step that
+  now says the Guide overlay opens, or a step naming the three Settings items); no rewrite.
+- **`offline_no_inference` may become `true` only from an in-browser network probe with a
+  positive control** (for example, CDP `Network.requestWillBeSent` while exercising every
+  control, with a control page that makes external requests and is seen to do so).
+
 ## Folded in (operator answers of 2026-09-09, before the pass started)
 
 - **Retitle, Path A** ([[demo-titles-descriptive-retitle]], [[demo-titles-retitle]]): each lane
