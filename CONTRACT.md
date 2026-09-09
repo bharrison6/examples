@@ -19,17 +19,26 @@ block with the new key so the gap is visible, not silent.
 | `index.html` | The runnable demo. Self-contained at runtime; if built, the committed file is the built output. |
 | `README.md` | What it is, how to run/present it, how to modify it. |
 | `demo.json` | Manifest: identity, metadata, `built_with` provenance, compliance state. |
-| Printable guide (`*.html` + `*.pdf`) | Teacher/presenter guide, declared in `demo.json` → `guide`. |
+| Printable guide (`*.html` + `*.pdf`) | The presenter notes in printable form, declared in `demo.json` → `guide`. One source with the in-app notes (see Required UX). |
 
 Demos with a build step keep `src/`, `build.js`, `tools/` in the folder; the build must
 be reproducible from the committed sources.
 
 ## Required UX (every demo)
 
-- **How-to popup** — a "how to play / how to use" overlay shown on load, dismissible,
-  reopenable anytime from a visible control.
-- **Settings menu** — a settings button; at minimum it offers **presentation mode**,
-  which includes openable **presenter's notes**.
+- **Guide (`?`)** — a `?` button in the header, beside Settings, whose accessible name is
+  **Guide**. It opens the Guide overlay (how to use or play this demo) on first load;
+  dismissible; reopenable anytime from that button. (Operator ruling 2026-09-09; this
+  supersedes the earlier "how-to popup" wording — same overlay, now named.)
+- **Settings (`⚙`)** — a settings button beside the Guide button. Its menu always contains
+  **Open Presenter Notes**, **Presentation mode** (projector-sized type and controls) and
+  **Reset** (return the demo to its initial state). It may also carry demo-specific options.
+- **Presenter Notes are the printable guide** — the notes opened from Settings and the
+  printable guide (`*.html` + `*.pdf`) are one document with one canonical source. The
+  in-app notes are generated from that source at build time (no runtime fetch) and the
+  PDF is rendered from it; a build check fails when they drift. Editing one copy is a fork.
+  Reference implementation: `two-winters/build.js` lifts the guide's `.guide-scope` body
+  and its scoped stylesheet into the app.
 - **Theme** — Murray State demos use the Murray State theme (MSU Blue `#002144`,
   MSU Gold `#ECAC00`, Lite Blue `#00A4E3`; alert Red Orange `#FF4500` reserved for
   genuine failure states).
@@ -54,7 +63,11 @@ Copy a neighbor's and edit. Field notes:
   until filled. Record honestly — provenance is part of what this repo demonstrates.
 - `compliance` — one key per contract item above; values `true`, `false`, or
   `"unverified"` (evidence suggests yes but nobody has confirmed in-browser).
-  Update when retrofitting; never delete a key to hide a gap.
+  Update when retrofitting; never delete a key to hide a gap. Current keys: `readme`,
+  `guide`, `guide_button`, `settings_menu`, `presenter_notes`, `presentation_mode`,
+  `settings_reset`, `notes_match_guide`, `msu_theme`, `attribution_visible`, `mobile`,
+  `offline_no_inference`. (`guide_button` replaced `howto_popup` on 2026-09-09;
+  `settings_reset` and `notes_match_guide` were added the same day.)
 
 ## Hub generation
 
