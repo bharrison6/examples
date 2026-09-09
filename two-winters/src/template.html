@@ -78,7 +78,7 @@
         <label class="lbl" for="year-slider">What year was this said?</label>
         <span id="year-read" aria-hidden="true">1985</span>
         <input type="range" id="year-slider" min="1950" max="2026" step="1" value="1985"
-               aria-label="Guess the year this prediction was made">
+               aria-label="Guess the year this claim was made">
         <div id="year-ticks"><span>1950</span><span>1988</span><span>2026</span></div>
       </div>
 
@@ -92,7 +92,7 @@
 
     <div class="row">
       <button class="btn primary big" id="btn-lock">Lock it in</button>
-      <button class="btn primary big" id="btn-next-card" hidden>Next prediction</button>
+      <button class="btn primary big" id="btn-next-card" hidden>Next claim</button>
     </div>
   </div>
 
@@ -166,9 +166,9 @@
   <h1>Compare the conditions; do not force a cycle.</h1>
   <p>
     Reading across a row compares a historical condition with another and with the present.
-    Two cells in the present column remain <b>open</b>: no single binding constraint has been
-    established, and no withdrawal has occurred. Those absences do not forecast what happens
-    next; they keep the question honest.
+    Two cells in the present column remain <b>open</b>: no single binding constraint is
+    established here, and this snapshot does not establish a comparable broad contraction.
+    Those limits do not forecast what happens next; they keep the question honest.
   </p>
 
   <div id="anatomy"></div>
@@ -210,23 +210,24 @@
     <div class="sheet-body">
       <ol class="ht-steps">
         <li>
-          <b>Read the prediction.</b> Ten of them, all real, all sourced. The speaker and the
-          date are hidden.
+          <b>Read the claim.</b> Ten sourced claims, with the speaker and date hidden: five
+          time-bounded forecasts, four assessments or untimed ambitions, and one warning.
         </li>
         <li>
-          <b>Guess two things.</b> Drag the slider to the year you think it was said, then
-          say whether it came true. Then press <em>Lock it in</em> and find out.
+          <b>Guess the year, then classify.</b> Drag the slider to the year you think it was
+          said. For a time-bounded forecast, call its outcome; for an assessment or untimed
+          ambition, identify the kind of claim. Then press <em>Lock it in</em> and find out.
         </li>
         <li>
-          <b>Watch the split.</b> Some of these are people promising AI was nearly here.
-          Some are people saying it would never work. At the end you get scored on both
-          separately, and that comparison is the whole point.
+          <b>Watch the split.</b> Forecasts receive an outcome score only when they name a
+          time window. Assessments and untimed ambitions stay unscored context, because later
+          events do not turn them into failed prophecies.
         </li>
       </ol>
 
       <p class="ht-tip">
-        There is nothing to beat. Most rooms do well on one kind of prediction and badly on
-        the other, and which one is which is usually a surprise.
+        There is nothing to beat. The point is to notice which claims have an outcome and a
+        deadline, and which need evidence about their own historical setting.
       </p>
 
       <div class="field">
@@ -257,7 +258,7 @@
     </div>
     <div class="sheet-foot ht-foot">
       <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
-      <button class="btn primary" data-close="howto">Got it &mdash; first prediction</button>
+      <button class="btn primary" data-close="howto">Got it &mdash; first claim</button>
     </div>
   </div>
 </div>

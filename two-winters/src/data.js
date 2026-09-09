@@ -39,7 +39,7 @@ const DATA = (() => {
 const INTRO = {
   title: 'AI has contracted twice before. The histories rhyme, but they do not repeat as a script.',
   body: [
-    'You have just watched capability curves go almost straight up. The fair question from anyone who has been in a technical field for thirty years is: is this another bubble?',
+    'You have just considered AI gains alongside their limits and measurement conditions. The fair question from anyone who has been in a technical field for thirty years is: is this another bubble?',
     'That question has an evidence base. Artificial intelligence has had two funding contractions severe enough that people inside the field named the weather — the AI winters. The first involved research expectations, machine translation, and UK policy; the second involved expert systems, specialised hardware, and shifting defence priorities. They share pressures, but neither supplies a template for the next one.',
     'This is not a demo about hype being bad. It separates time-bounded forecasts from contemporary assessments, then asks what evidence supports each present-day analogy. You will score forecasts. You will inspect assessments without pretending they were prophecies.'
   ],
@@ -136,7 +136,7 @@ const CARDS = [
   kind: 'assessment',
   verdict: 'context',
   verdictLine: 'A 1966 assessment, not a forecast to grade against the future.',
-  what: 'ALPAC questioned the near-term economics of fully automatic translation while recommending $2.5–3 million annually for computational-linguistics research and tools for human translators. Its recommendations, its later funding effects, and the eventual success of machine translation are different claims. This card keeps them separate.',
+  what: 'ALPAC questioned the near-term economics of fully automatic translation while recommending $2.5–3 million annually for computational-linguistics research. It separately endorsed tools that could assist human translators. Its recommendations, its later funding effects, and the eventual success of machine translation are different claims. This card keeps them separate.',
   note: 'Paraphrased from the original report. It is included to practice distinguishing an assessment from a prediction.',
   status: 'primary', src: 'alpac'
 },
@@ -257,7 +257,7 @@ const EVENTS = [
 
 { d: '1958-07-08', p: 'd', stage: 'promise', era: 1, label: 'The perceptron, in the press',
   text: 'A Navy press conference and a New York Times story promise a machine that will “walk, talk, see, write, reproduce itself and be conscious of its existence.” The demonstration was an IBM 704 learning left from right in fifty trials.',
-  status: 'primary', src: 'cornell-perceptron' },
+  status: 'reported', src: 'cornell-perceptron' },
 
 { d: '1960-01-01', p: 'y', stage: 'promise', era: 1, label: 'Twenty years to any work a man can do',
   text: 'Simon, in The New Science of Management Decision. Reprinted in 1965, which is the date it is usually given.',
@@ -508,7 +508,7 @@ const CUT = [
   { claim: 'Minsky’s “three to eight years” prediction from Life magazine, 1970',
     why: 'The article contains errors and Minsky denied at least one quotation attributed to him in it. His 1967 textbook says something equally strong and he wrote it himself, so that is used instead.' },
   { claim: 'A continuous series of AI funding from 1950 to 2026',
-    why: 'It does not exist in any sourceable form, particularly for US spending before 1980. Four discrete commitments are shown instead, in their original currencies and un-adjusted for inflation, and the app says that is what they are.' },
+    why: 'It does not exist in any sourceable form, particularly for US spending before 1980. Four discrete funding examples are shown instead, with different bases: programme budgets, programme expenditure, and a private funding round. Their three currencies and different price years cannot be combined into one series.' },
   { claim: 'A dollar figure for DARPA’s Speech Understanding Research programme',
     why: 'The programme ran 1971–1976 and did not meet its goals, which is well attested; the funding number repeated alongside it was not verifiable, so the event is left off the timeline entirely rather than shown with a soft number.' }
 ];
