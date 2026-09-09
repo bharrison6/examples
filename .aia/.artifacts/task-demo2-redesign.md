@@ -20,6 +20,21 @@ tags: [design, teaching, language-models, ai-fellows]
 
 # Operator authorization and sequence
 
+Follow-up authorized 2026-09-09: after the Demo 1 navigation and era-report items,
+fix the invisible but clickable LLM training-text disclosure. Verify the control
+and expanded story visually in Chrome at desktop and phone widths. The user
+confirmed the text still opens in its documented location; visibility is broken.
+
+The bounded follow-up builder owns glass-box/src/styles.css, src/template.html
+only if semantic markup needs correction, and regenerated glass-box/index.html.
+Do not change training data or model algorithms. Reuse the existing disclosure;
+diagnose why it is invisible, repair its closed/open/focus states, and return
+changed paths, checks and a logical commit. Parent owns browser verification and
+ACC updates. Use no descendants; record incremental progress in
+.aia/.data/types-ai-era-report/demo2-disclosure-progress.md and return early if
+the apparent bug has a different cause or cannot be safely reproduced. Coordinate
+owned surfaces and exclusive index before committing. Start after Demo 1 items.
+
 Operator on 2026-09-09 instructed: finish Demo 1 final changes, then give Demo 2
 the same complete overhaul and UI pattern. Keep working until Demo 2 is complete.
 Make reasonable temporary decisions and report them at the end for later override.

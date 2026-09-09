@@ -2,8 +2,10 @@
 
 The model row exposes 1a Symbolic AI (GOFAI), 1b Value table, 1c Neural Network,
 and 1d Other model types. A-C compare strategy representations on one game;
-D is a model-family overview. A separate unlettered Model in action / How they
-learn row distinguishes the model view from cross-cutting learning methods.
+D is a model-family overview. The top-level Model types / How they learn row
+distinguishes representations from cross-cutting learning methods. The model row
+appears below it only while Model types is selected. Switching these reading views
+preserves the selected model and its state.
 The tabs are not an exhaustive AI taxonomy or a progression of difficulty.
 `#rules`, `#learning`, and `#neural` select them directly.
 
@@ -14,7 +16,12 @@ to Good Old-Fashioned Artificial Intelligence. 1b uses tabular reinforcement
 learning. Its
 table records the value for the player who just made a complete afterstate;
 visible training bursts create eras, and Show move scores exposes legal-move
-estimates. Human play does not update the table.
+estimates. Human play does not update the table. An inline report below the
+training controls uses the selected era's immutable snapshot and compares it
+with the immediately preceding snapshot. Era 0 describes the initial baseline.
+Selecting an older era updates the report; completing a burst selects its new era
+and displays the report without a popup. Example score changes are observed
+estimates, not guaranteed perfect-game values.
 
 1c uses a fresh copy of the 1b learner as a frozen supervised teacher, never as
 a runtime game oracle. `NET.makeTeacher` runs 20,000 seeded tabular games and

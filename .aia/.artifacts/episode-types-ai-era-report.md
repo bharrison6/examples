@@ -1,24 +1,43 @@
 ---
 id: types-ai-era-report
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: task
+memory_class: episodic
+lifecycle: complete
 schema_version: 2
 title: Put model navigation above the activities and show selected-era learning changes inline
 created: 2026-09-09T11:41:00Z
-updated: 2026-09-09T11:41:00Z
+updated: 2026-09-09T12:02:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
-status: executing
+status: active
 scope: examples
 source_basis: conversation
 sensitivity: normal
-sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T11:37:00Z
 tags: [design, teaching, ai-fellows]
 ---
 
-## Expected outcome
+## Completed result
+
+Implemented in bea9534, with the following guide/packaging commit carrying the
+canonical documentation and PDF. The two reading tabs now precede the four model
+tabs, which hide in How they learn. The inline 1b report displays the selected
+snapshot against its immediate predecessor, including before/now/delta values for
+all 25 displayed legal moves. Era 0 states initialization; optional Ultimate eras
+are handled without inventing tabular practice. Reading switches scroll to the
+new view below the sticky header while preserving game and training state.
+
+Parent Chrome observed two 5,000-game bursts without report popups, equality of
+all Era 1 after values with Era 2 before values, exact restoration of the older
+report, model-row hiding, board/report preservation, C inspector isolation,
+canonical Presenter Notes and PDF links, Reset to A/All 8/Era 0, zero console
+errors, and no horizontal overflow at 320px and 390px. Desktop and phone layouts
+were inspected. Both updated PDF pages were rendered and visually inspected.
+Parent reran 15 UI/lifecycle/network checks and build parity successfully on the
+committed implementation. Builder additionally reports 102 playtest checks and
+the neural suite passing. No learning-engine algorithms were changed.
+
+## Original authorized outcome
 
 Demo 1 (zero-to-unbeatable) places Model types / How they learn above 1a–1d.
 Only Model types shows those four model choices. Reading-view switches preserve
@@ -34,9 +53,11 @@ Preserve algorithms and the existing guide, settings, notes and printable contra
 
 ## Builder lane
 
-Worktree: C:/Users/Champion/AppData/Local/acc/worktrees/examples-types-ai-redesign.
+Worktree: isolated examples checkout on branch codex/types-ai-redesign (local
+checkout location is supplied in the native dispatch message).
 Owned writes: zero-to-unbeatable/src/template.html, src/styles.css, src/app.js,
-appropriate UI regression tests in src, and generated zero-to-unbeatable/index.html.
+src/ui-state.js when selector reuse benefits the report, appropriate UI regression
+tests in src, and generated zero-to-unbeatable/index.html.
 Parent owns canonical guide, README, SPEC, PDF, manifest, hub and ACC records.
 Do not change other demos or learning engines. Reuse existing report rendering and
 recorded snapshots. Preserve optional Ultimate behavior if it shares modal helpers.
