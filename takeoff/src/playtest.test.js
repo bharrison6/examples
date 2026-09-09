@@ -253,7 +253,7 @@ ok('Median of an empty set is null', E.medianRatio([]) === null);
   mark(D.UNLOCKS); D.DOMAINS.forEach(d => mark(d.items));
   /* Cited in prose or on the timeline rather than attached to a plotted datum. */
   ['mittr-metr', 'erdos1196-tao', 'hle', 'nolima', 'kimi-k3', 'gemma', 'olmo', 'cursor', 'gpt-oss',
-   'arc-3', 'arc-3-human', 'vals-swebench',
+   'arc-3', 'arc-3-human', 'vals-swebench', 'arc-astra',
    D.CLOSERS.gapSrc, D.CLOSERS.doublingSrc].forEach(k => used.add(k));
   const unused = Object.keys(D.SOURCES).filter(k => !used.has(k));
   ok('No source is declared and never used', unused.length === 0, unused.join(', '));
@@ -461,8 +461,16 @@ ok('Every cut entry gives a reason', D.CUT.every(c => c.why && c.why.length > 20
      (withMem.value / without.value).toFixed(2) + 'x');
   ok('The bare-model figure is kept, and marked as a different run',
      f.bars.some(b => b.value === 0.51 && /different game set/i.test(b.note)));
-  ok('The finale warns that the bars are not comparable',
-     /not four measurements of one thing/i.test(f.caveat));
+  /* The caveat states how many bars there are. Pinning the literal word "four"
+     broke the moment a sixth bar arrived, which is the drift this suite exists
+     to catch -- so pin it to the data instead. */
+  {
+    const WORD = { 4: 'four', 5: 'five', 6: 'six', 7: 'seven', 8: 'eight', 9: 'nine' };
+    const want = WORD[f.bars.length];
+    ok('The finale warns that the bars are not comparable, and counts them correctly',
+       !!want && new RegExp('not ' + want + ' measurements of one thing', 'i').test(f.caveat),
+       `${f.bars.length} bars; caveat should say "not ${want} measurements of one thing"`);
+  }
   ok('The finale cites the source for the harness result',
      !!D.SOURCES['arc-3-openai']);
 }
