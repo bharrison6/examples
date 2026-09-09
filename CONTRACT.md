@@ -10,7 +10,9 @@ block with the new key so the gap is visible, not silent.
   `fuel-golf`). The folder name is the demo's public URL on the hosted copy
   (`bharrison6.github.io/examples/<slug>/`) — **never rename a shipped demo**.
 - The descriptive layer lives in `demo.json` (topic, discipline, tagline), not the
-  folder name.
+  folder name. Display titles are descriptive, not cryptic (operator direction
+  2026-09-09): a reader should know what the demo is from the title alone; an evocative
+  name can survive as the tagline. Folder slugs are unaffected by a retitle.
 
 ## Required files
 
@@ -43,7 +45,11 @@ be reproducible from the committed sources.
   MSU Gold `#ECAC00`, Lite Blue `#00A4E3`; alert Red Orange `#FF4500` reserved for
   genuine failure states).
 - **Attribution** — Bryant Harrison visible on every demo; plus Murray State
-  University when built for Murray State.
+  University when built for Murray State. **No other person's name is attached to a
+  demo** as author, reviewer, faculty fit, or acknowledgement (operator ruling
+  2026-09-09: a demo may say it was built for faculty, never for whom; they did not
+  approve their names in this content). Public figures cited inside a demo's own
+  material, such as a researcher named in a sample essay, are content, not attribution.
 - **Mobile capable** — phone-first or fully responsive; touch works.
 - **Offline / no runtime inference** — the page must load and run with **zero network
   requests**: no external scripts, stylesheets, fonts, images or data, and no AI service

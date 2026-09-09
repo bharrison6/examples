@@ -10,11 +10,13 @@ updated: 2026-09-09T03:21:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: open
+status: executing
 scope: examples
 source_basis: conversation
 sensitivity: normal
-sanctioned_by: operator prose 2026-09-09, session 79d3584e ("Make that in the contract and fix everything that doesn't meet the contract standard.")
+sanctioned_by: prose:79d3584e-dc82-4b90-84ba-ee7b6491e5fd@2026-09-09T03:10:51Z
+priority: high
+priority_by: human
 tags: [demo-contract, presenter-notes, guide, settings, ai-fellows]
 aliases: [contract pass, guide settings reset pass, notes equal guide]
 ---
@@ -23,6 +25,17 @@ aliases: [contract pass, guide settings reset pass, notes equal guide]
 
 Orchestrator: Claude session `79d3584e`. One builder per demo lane; builders read this
 artifact first. The standard is `CONTRACT.md` → **Required UX** (already rewritten).
+Sanction: the operator's prose of 2026-09-09 ("Make that in the contract and fix
+everything that doesn't meet the contract standard") covers the fifteen lanes listed
+below; the `zero-to-unbeatable/` lane fires on a released note from Codex session
+01a08159 (or the operator saying it is free).
+
+**Expected outcome.** Every demo's built `index.html` has a `?` button named Guide beside
+a Settings button whose menu offers Open Presenter Notes, Presentation mode and Reset;
+the presenter notes shown in-app are generated from the same source file as the printable
+guide and its PDF, with a `--check` that fails on drift; each `demo.json` compliance block
+reports these keys honestly; the hub table regenerates from the manifests. Nothing else
+about any demo changes.
 
 ## The standard, in one screen
 
