@@ -36,4 +36,4 @@ The runtime is self-contained, with no external assets or AI calls. Chrome check
 ## Sources
 
 - NIH Assay Guidance Manual: [Mechanism of Action Assays for Enzymes](https://www.ncbi.nlm.nih.gov/books/NBK92001/), for idealized initial-rate inhibition context and assay-design caveats.
-- J. Cox: [SciComm: Biochem](https://campus.murraystate.edu/faculty/jcox/scicomm_biochem.html), for reviewed course fit only; it is neither current scheduling information nor an endorsement.
+- A Murray State biochemistry course, used for reviewed course fit only; it is not named here, and it is neither current scheduling information nor an endorsement.
