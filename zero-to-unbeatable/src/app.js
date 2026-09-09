@@ -29,6 +29,12 @@ const S = {
   lastRule: null,      // the decision behind the move it just made
   live: null,          // the one-board agent that keeps training
   liveU: null,         // step 3's brain: one number per board picture and turn
+  neural: null,        // frozen table teacher plus a separate shared-weight model
+  teacherSession: null,
+  neuralRun: 0,        // reset invalidates asynchronous work from an older lesson
+  neuralRec: { w: 0, l: 0, d: 0 },
+  neuralBurst: 50000,
+  cancelTraining: false,
   eras: [],            // frozen snapshots, index === era number
   era: 0,              // which one you are playing
   game: null,          // one-board game in progress
@@ -51,6 +57,7 @@ const S = {
 };
 const isUlt   = () => S.mode === 'ult';
 const isRules = () => S.mode === 'rules';
+const isNet   = () => S.mode === 'net';
 
 const fmt = n => n.toLocaleString('en-US');
 /* compact so an era label still fits a projector-sized dropdown */
@@ -131,6 +138,9 @@ function makeEra(n, agent, prevAgent, mix, kind, ultStats) {
 function currentEra() { return S.eras[S.era]; }
 
 function resetAll() {
+  S.neuralRun++;
+  S.training = false;
+  $('#montage').hidden = true;
   S.rng = OG.makeRng(S.seed || null);
   /* Keep one-board and ultimate play in distinct streams.  Switching
      modes must not make a prior one-board move alter a rehearsed ultimate
@@ -146,6 +156,10 @@ function resetAll() {
   S.measureSalt = S.seed ? 'measure:' + S.seed : 'measure:' + Math.random().toString(36).slice(2);
   S.live = OG.newAgent();
   S.liveU = ULT.newBrain();
+  S.neural = null;
+  S.teacherSession = null;
+  S.neuralRec = { w: 0, l: 0, d: 0 };
+  S.cancelTraining = true;
   S.eras = [makeEra(0, OG.cloneAgent(S.live), null, null, 'one')];
   S.era = 0;
   S.humanFirstNext = true;
@@ -192,6 +206,7 @@ function resetRuleTally(depth) {
 
 function currentRec() {
   if (isRules()) return S.ruleRec[S.depth] || (resetRuleTally(S.depth), S.ruleRec[S.depth]);
+  if (isNet()) return S.neuralRec;
   return isUlt() ? currentEra().recU : currentEra().rec;
 }
 
@@ -217,7 +232,7 @@ function newGame() {
   renderBoard();
   renderStatus();
   renderRuleFired();
-  if (!humanFirst) aiTurn(420);
+  if (!humanFirst && (!isNet() || (S.neural && S.neural.model))) aiTurn(420);
 }
 
 function winningLine(code) {
@@ -355,6 +370,10 @@ function aiTurn(delay) {
       S.lastRule = d;
       S.ruleCounts[S.depth][d.ruleId]++;
       cell = d.move;
+    } else if (isNet() && S.neural && S.neural.model) {
+      /* This is the crucial boundary: the player consults the network's
+         weights through NET.greedyMove, never the frozen teacher table. */
+      cell = NET.greedyMove(S.neural.model, g.code, S.liveRng.one);
     } else {
       cell = OG.greedyMove(currentEra().agent, g.code, S.liveRng.one);
     }
@@ -381,8 +400,11 @@ function renderBoard() {
   const g = S.game, cells = OG.cellsOf(g.code);
   const agent = currentEra().agent;
   const showHeat = S.brain && !isRules() && !g.over;
-  const vals = showHeat ? OG.moveValues(agent, g.code) : [];
-  const picks = showHeat ? OG.argmaxMoves(agent, g.code) : [];
+  const vals = showHeat && isNet() && S.neural && S.neural.model
+    ? OG.legalList(g.code).map(cell => ({ cell, value: NET.predict(S.neural.model, OG.child(g.code, cell, OG.TOMOVE[g.code])), visits: 0 }))
+    : showHeat ? OG.moveValues(agent, g.code) : [];
+  const picks = showHeat && isNet() && S.neural && S.neural.model
+    ? NET.policyMoves(S.neural.model, g.code) : showHeat ? OG.argmaxMoves(agent, g.code) : [];
   const byCell = {}; vals.forEach(v => byCell[v.cell] = v);
   /* The squares that set the rule off — the two you already had in a row,
      the corner it answered. Marking them on the board is what turns
@@ -393,6 +415,7 @@ function renderBoard() {
                     g.lastCell >= 0 && cells[g.lastCell] === g.aiMark;
   const trig = freshRule ? S.lastRule.cells : [];
 
+  const neuralReady = !isNet() || (S.neural && S.neural.model);
   $$('.cell', boardEl).forEach((el, i) => {
     const m = cells[i];
     el.className = 'cell' + (m ? ' mk' + m : ' open') +
@@ -401,7 +424,7 @@ function renderBoard() {
       (trig.includes(i) ? ' trig' : '') +
       (showHeat && !m ? ' heat' : '') +
       (showHeat && picks.includes(i) ? ' pick' : '');
-    el.disabled = !!m || g.over || g.thinking || OG.TOMOVE[g.code] !== g.humanMark;
+    el.disabled = !!m || g.over || g.thinking || !neuralReady || OG.TOMOVE[g.code] !== g.humanMark;
     el.style.background = '';
     el.style.color = '';
     if (m) {
@@ -574,6 +597,10 @@ function renderStatus() {
   if (isUlt()) return renderUltStatus();
   const g = S.game, el = $('#status');
   el.className = '';
+  if (isNet() && (!S.neural || !S.neural.model)) {
+    el.innerHTML = `<div><span class="big">Create learning examples first</span><br><span class="sub">This board stays inactive until the earlier learner has created the examples this network will practice from.</span></div>`;
+    return;
+  }
   if (g.over) {
     const rules = isRules();
     const t = g.result === 'win'
@@ -691,6 +718,14 @@ function renderBrainReadout() {
   el.hidden = !S.brain;
   if (!S.brain) return;
   if (isUlt()) return renderUltReadout();
+  if (isNet()) {
+    const n = S.neural, m = n && n.metrics;
+    if (!m) { el.innerHTML = '<div>Create learning examples before there are network weights to inspect.</div>'; return; }
+    el.innerHTML = `<div>These values come from a forward pass through <b>${fmt(m.params)} shared weights</b>. The frozen learning examples are not queried while you play.</div>` +
+      `<div style="margin-top:.5em">${fmt(m.updates)} updates · train MSE ${m.trainMse.toFixed(3)} · held-out MSE ${m.heldMse.toFixed(3)}.</div>` +
+      `<div class="legend"><span>lower predicted value</span><span class="ramp"></span><span>higher predicted value</span></div>`;
+    return;
+  }
   const e = currentEra(), g = S.game;
   const yours = !g.over && OG.TOMOVE[g.code] === g.humanMark;
   const whose = g.over ? 'The game is over, so there is nothing left to score.'
@@ -717,7 +752,7 @@ function renderUltReadout() {
     `you pick would send it next.</div>` +
     `<div style="margin-top:.5em">Era ${e.n}'s table: <b>${fmt(brain.seen)}</b> of the ` +
     `<b>${fmt(slots)}</b> entries this game can use have a number in them` +
-    (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from step 2`
+    (brain.seeded ? `, <b>${fmt(brain.seeded)}</b> of them handed straight over from 1b`
                   : '') + '.</div>' +
     (m && !m.over && blind > 0
       ? `<div style="margin-top:.5em">Right now <b>${Math.round(blind * 100)}%</b> of the squares it ` +
@@ -787,6 +822,7 @@ function renderEraStrip() {
     }).join('');
     return;
   }
+  if (isNet()) { el.hidden = true; return; }
   const key = isUlt() ? 'recU' : 'rec';
   const played = S.eras.filter(e => e[key].w + e[key].l + e[key].d > 0);
   el.hidden = played.length === 0;
@@ -800,9 +836,26 @@ function renderTrain() {
   /* Step 1 has nothing to train: the skill is already in the file. */
   $('#train-panel').hidden = isRules();
   if (isRules()) return;
+  if (isNet()) {
+    const n = S.neural, m = n && n.metrics;
+    $('.t-main', $('#btn-train')).textContent = !n ? 'Create learning examples' : (S.training ? 'Training — stop' : 'Train network');
+    $('#train-sub').textContent = !n ? '20,000 seeded games, then freeze what it learned' : fmt(S.neuralBurst) + ' training updates';
+    const sizes = [25000, 50000, 100000];
+    $('#burst-seg').innerHTML = sizes.map(b => `<button data-b="${b}" class="${b === S.neuralBurst ? 'on' : ''}" aria-pressed="${b === S.neuralBurst}">${fmt(b)}</button>`).join('');
+    $$('#burst-seg button').forEach(b => b.addEventListener('click', () => { S.neuralBurst = +b.dataset.b; renderTrain(); }));
+    $('#burst-seg').setAttribute('aria-label', 'Neural-network training updates');
+    $('#train-stats').innerHTML = !m
+      ? `<p class="help"><b>Preparation is explicit.</b> A fresh copy of the 1b algorithm plays 20,000 seeded games, freezes its current estimates, then keeps some board positions out of training to check the network later. No labels come from a solved-game oracle.</p>`
+      : `<div class="st"><span class="n">${fmt(m.params)}</span><span class="k">weights</span></div>` +
+        `<div class="st"><span class="n">${fmt(m.train)}</span><span class="k">train examples</span></div>` +
+        `<div class="st"><span class="n">${fmt(m.held)}</span><span class="k">held-out examples</span></div>` +
+        `<p class="help">${fmt(m.groups)} related board groups stay together. The network’s average error is ${m.trainMse.toFixed(3)} on examples it practiced and ${m.heldMse.toFixed(3)} on positions kept out of training. ${S.training ? 'Use Stop training or choose another tab to stop after this small batch.' : 'Those held-out positions are never used by an update.'}</p>`;
+    return;
+  }
   const e = S.eras[S.eras.length - 1];
   const ult = isUlt();
   $('.t-main', $('#btn-train')).textContent = ult ? 'Train on ultimate' : 'Train the AI';
+  $('#burst-seg').setAttribute('aria-label', ult ? 'Ultimate training matches' : 'Training games');
   $('#train-sub').textContent = ult ? fmt(S.burstU) + ' matches' : fmt(S.burst) + ' games';
   const sizes = ult ? ULT.HPU.bursts : OG.HP.bursts;
   const cur = ult ? S.burstU : S.burst;
@@ -855,12 +908,12 @@ function renderBanner() {
         `<h3>You cannot beat this one either — and it has never played a game.</h3>` +
         `<p>Every game that can still be played against these eight rules was searched, with the ` +
         `rules moving first and moving second, and in none of them do they lose. That is the same ` +
-        `exhaustive search that ends step 2, run on a completely different kind of opponent.</p>` +
+        `exhaustive search used in 1b, run on a rule-based opponent.</p>` +
         `<p>Where the skill came from is the whole difference. Every bit of this one came out of a ` +
         `person's head and none of it out of experience. It played zero games, it cannot improve, ` +
-        `and on a 4×4 board it is worthless. For a game this small that is the <b>better</b> piece ` +
+        `and would need to be redesigned for a different game. For a game this small that is the <b>better</b> piece ` +
         `of engineering — shorter, faster, and checkable by reading it. Step 2 does the same job ` +
-        `the other way round, and step 3 is where writing the rules stops being possible.</p>` +
+        `the other way round. The neural tab then asks what changes when shared weights approximate the learned table.</p>` +
         `<div class="proof">Proof: ${fmt(r.lines)} complete game lines searched · ` +
         `${fmt(r.positions)} positions examined · 0 losses · both roles · ` +
         `re-run any time from Settings &rarr; Run the full self-test.</div>`;
@@ -887,7 +940,27 @@ function renderBanner() {
     return;
   }
 
-  /* ---- Step 3: the three-layer lesson, where the banner would be ---- */
+  if (isNet()) {
+    el.hidden = false; el.classList.add('quiet');
+    if (!S.neural) {
+      el.innerHTML = `<h3>A neural network is a kind of machine learning.</h3>` +
+        `<p>First you will visibly create learning examples with a fresh copy of the 1b learning algorithm playing 20,000 seeded games. What that fresh run learned is frozen as examples. Then a much smaller set of shared weights learns to approximate those examples.</p>` +
+        `<p>1b stores one number for each position. 1c shares weights across positions. That can give it an answer for a position kept out of training, but it does not guarantee a good answer.</p>`;
+      return;
+    }
+    const m = S.neural.metrics;
+    const baseline = S.neural.checkpoints.get(0);
+    const point = S.neural.checkpoints.get(m.updates);
+    el.innerHTML = `<h3>Shared weights now approximate a frozen learned table.</h3>` +
+      `<p><b>Prediction error:</b> MSE is the average squared difference between a predicted score and the frozen example’s score; zero means an exact match. On practiced examples it went from ${baseline.metrics.trainMse.toFixed(3)} before training to ${m.trainMse.toFixed(3)} now. On positions kept out of training it went from ${baseline.metrics.heldMse.toFixed(3)} to ${m.heldMse.toFixed(3)}. Related rotations and reflections stay together.</p>` +
+      `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} wins, ${baseline.play.draws} draws, ${baseline.play.losses} losses; now: ${point.play.wins} wins, ${point.play.draws} draws, ${point.play.losses} losses. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
+      `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
+      `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
+    setTimeout(() => { const b = $('#btn-ultimate'); if (b) b.addEventListener('click', () => { S.mode = 'ult'; applyMode(); }); }, 0);
+    return;
+  }
+
+  /* Optional advanced extension: ultimate tic-tac-toe. */
   if (isUlt()) {
     const SP = ULT.SPACE, SV = ULT.SOLVED;
     const e38 = v => (v / 1e38).toFixed(1) + ' × 10³⁸';
@@ -895,20 +968,15 @@ function renderBanner() {
     el.classList.add('quiet');
     el.innerHTML =
       `<h3>This game is solved. This app still cannot prove anything about it.</h3>` +
-      `<p>Those are two different statements and holding both at once is the whole of step 3.</p>` +
+      `<p>A proof about the game does not prove that this particular learner plays it well. This extension shows why its limited view of the board matters.</p>` +
       `<p><b>Ordinary tic-tac-toe: ${fmt(ULT.SMALLGAMES)} complete games.</b> Steps 1 and 2 end in a ` +
       `banner because the app can walk every one of them and come back. Proof by exhaustion — you ` +
       `check all the cases, and there is nothing clever about it.</p>` +
-      `<p><b>Ultimate tic-tac-toe: about ${e38(SP.bound)} positions.</b> Not a slow search — an ` +
-      `impossible one. Counting a billion a second, starting at the big bang, you would be about ` +
-      `${Math.round(SP.timesCountable / 1e10) * 10} billion times short. And the two tricks that ` +
-      `usually cut a number like that down are both unavailable here. You cannot treat the boards ` +
-      `as interchangeable, because you win three <i>in a row</i> and where a board sits is the ` +
-      `whole question. You cannot turn one board on its own either, because that would move its ` +
-      `squares, and its squares are what name the next board. Exactly one symmetry survives — ` +
-      `turn the whole 9×9 grid at once, ${SP.symmetry} ways — and after spending it you are still ` +
-      `at ${SP.boundOverRaw.toFixed(2)} of the naive ${e38(SP.raw81)} you get by ignoring the ` +
-      `rules altogether. The tidying buys nothing.</p>` +
+      `<p><b>Ultimate tic-tac-toe: an upper bound of about ${e38(SP.bound)} board descriptions.</b> ` +
+      `This is not a count of legal game states, so it cannot by itself prove that enumeration is ` +
+      `impossible. The meaningful limitation here is representational: the inherited one-board ` +
+      `learner omits where a board sits on the meta-grid and where a square sends the opponent. ` +
+      `An ordinary neural network given the same incomplete inputs omits those facts too.</p>` +
       `<p><b>And it is solved anyway.</b> ${SV.authors} proved in ${SV.year} that the first player ` +
       `has a forced win — <b>in at most ${SV.atMost} moves</b>, with the second player able to hold ` +
       `out <b>at least ${SV.atLeast}</b>. Nobody visited ${e38(SP.bound)} positions to do it. They ` +
@@ -928,7 +996,7 @@ function renderBanner() {
       `game, so the result is quoted rather than claimed for the squares above.</div>` +
       `<div class="proof">` +
       (S.liveU.seeded
-        ? `Handed over from step 2: ${fmt(S.liveU.seeded)} of the ${fmt(SP.slots)} entries this ` +
+        ? `Handed over from 1b: ${fmt(S.liveU.seeded)} of the ${fmt(SP.slots)} entries this ` +
           `game can use`
         : `Step 2 has not trained yet, so there was nothing to hand over — this table started at ` +
           `zero, of ${fmt(SP.slots)} entries the game can use`) +
@@ -970,8 +1038,23 @@ function miniHTML(code) {
     `<i class="${v ? 'm' + v : ''}">${MARK[v] || ''}</i>`).join('') + '</div>';
 }
 
+/* Evaluation has one fixed independent stream per prepared model. A checkpoint
+   is measured once and cached, so merely opening a panel cannot change or
+   repeatedly resample the comparison. */
+function recordNeuralCheckpoint() {
+  const n = S.neural, m = n.metrics;
+  if (n.checkpoints.has(m.updates)) return n.checkpoints.get(m.updates);
+  const play = NET.scoreVs(n.model, OG.randomMove, 100,
+    OG.makeRng('neural-fixed-evaluation:' + n.model.seed));
+  const policy = OG.verifyPolicy(code => NET.policyMoves(n.model, code));
+  const point = { metrics: m, play, policy };
+  n.checkpoints.set(m.updates, point);
+  return point;
+}
+
 async function train() {
   if (S.training) return;
+  if (isNet()) return trainNeural();
   if (isUlt()) return trainUlt();
   S.training = true;
   const size = S.burst;
@@ -979,7 +1062,11 @@ async function train() {
   const ov = $('#montage'); ov.hidden = false;
   $('#m-count').classList.add('blur');
   $('#m-count-sub').textContent = 'games played against itself and against chance';
+  $('#m-left-label').textContent = 'exploration ε'; $('#m-left-note').textContent = 'how often it tries a random square instead of its best one';
   $('#m-wr-label').textContent = 'wins vs a random player';
+  $('#m-wr-note').textContent = 'measured live, 200 fresh games each sample';
+  $('#m-wr-fill').parentElement.parentElement.hidden = false;
+  $('#btn-stop-training').hidden = true;
   $('#m-boards').classList.remove('ult');
   $('#m-boards').innerHTML = Array.from({ length: 6 }, () => miniHTML(0)).join('');
 
@@ -1032,6 +1119,72 @@ async function train() {
   openSheet('learned');
 }
 
+/* The neural tab has two visible phases. Preparation is ordinary seeded
+   reinforcement learning, and fitting is supervised learning from the frozen
+   result. Neither phase is an oracle or a hidden lookup during play. */
+async function trainNeural() {
+  const run = ++S.neuralRun;
+  const current = () => run === S.neuralRun;
+  if (!S.neural) {
+    S.training = true; S.cancelTraining = false;
+    const ov = $('#montage'); ov.hidden = false;
+    $('#m-count').classList.remove('blur');
+    $('#m-count-sub').textContent = 'seeded tic-tac-toe games creating learning examples';
+    $('#m-wr-label').textContent = 'preparation'; $('#m-wr').textContent = 'working';
+    $('#m-left-label').textContent = 'games prepared'; $('#m-left-note').textContent = 'a fresh copy of the 1b algorithm is playing these seeded games';
+    $('#m-wr-note').textContent = 'the values are frozen only after all 20,000 games finish';
+    $('#btn-stop-training').hidden = false; $('#m-wr-fill').parentElement.parentElement.hidden = false;
+    const session = NET.startTeacher(S.seed || 'demo', 20000);
+    S.teacherSession = session;
+    while (!session.complete && !S.cancelTraining) {
+      const r = NET.trainTeacherBatch(session, 500);
+      $('#m-count').textContent = fmt(r.games) + ' / ' + fmt(r.total);
+      $('#m-eps').textContent = r.complete ? 'complete' : 'preparing';
+      $('#m-eps-fill').style.width = (100 * r.games / r.total).toFixed(1) + '%';
+      $('#m-prog').style.width = (100 * r.games / r.total).toFixed(1) + '%';
+      await raf();
+      if (!current()) return;
+    }
+    if (!current()) return;
+    if (!S.cancelTraining && session.complete) {
+      const teacher = NET.freezeTeacher(session);
+      const model = NET.newSupervised(teacher, S.seed || 'demo');
+      S.neural = { teacher, model, metrics: NET.metrics(model), checkpoints: new Map(), cancelled: false };
+      recordNeuralCheckpoint();
+    }
+    S.teacherSession = null; S.training = false; ov.hidden = true;
+    renderTrain(); renderBanner(); newGame();
+    return;
+  }
+  const neural = S.neural;
+  S.training = true; S.cancelTraining = false;
+  const target = S.neuralBurst, batch = 512, ov = $('#montage'); ov.hidden = false;
+  $('#m-count').classList.remove('blur'); $('#m-count-sub').textContent = 'labelled afterstates fitted by shared neural-network weights';
+  $('#m-left-label').textContent = 'full passes'; $('#m-left-note').textContent = 'one pass means each training example has been used once';
+  $('#m-wr-label').textContent = 'positions kept out'; $('#m-wr-note').textContent = 'average squared score error, recalculated every 5,120 updates; lower is closer';
+  $('#btn-stop-training').hidden = false;
+  $('#m-wr-fill').parentElement.parentElement.hidden = true;
+  let done = 0;
+  while (done < target && !S.cancelTraining) {
+    const n = Math.min(batch, target - done);
+    const light = NET.trainBatch(neural.model, n, false);
+    done += n;
+    if (done % 5120 === 0 || done === target) neural.metrics = NET.metrics(neural.model);
+    $('#m-count').textContent = fmt(light.updates);
+    $('#m-eps').textContent = light.epoch + ' passes';
+    $('#m-wr').textContent = S.neural.metrics.heldMse.toFixed(3) + ' MSE';
+    $('#m-prog').style.width = (100 * done / target).toFixed(1) + '%';
+    await raf();
+    if (!current()) return;
+  }
+  if (!current()) return;
+  neural.cancelled = S.cancelTraining;
+  neural.metrics = NET.metrics(neural.model);
+  recordNeuralCheckpoint();
+  S.training = false; ov.hidden = true;
+  renderTrain(); renderBanner(); newGame();
+}
+
 function miniUHTML(m) {
   let h = '<div class="miniu">';
   for (let b = 0; b < 9; b++) {
@@ -1055,9 +1208,13 @@ async function trainUlt() {
   const ov = $('#montage'); ov.hidden = false;
   $('#m-count').classList.add('blur');
   $('#m-count-sub').textContent = 'matches played against itself and against chance';
+  $('#m-left-label').textContent = 'exploration ε'; $('#m-left-note').textContent = 'how often it tries a random square instead of its best one';
   $('#m-boards').classList.add('ult');
   $('#m-boards').innerHTML = miniUHTML(ULT.newMatch()).repeat(3);
   $('#m-wr-label').textContent = 'holds or beats the board-local player';
+  $('#m-wr-note').textContent = 'measured live against the stated comparison player';
+  $('#btn-stop-training').hidden = true;
+  $('#m-wr-fill').parentElement.parentElement.hidden = false;
 
   const STEPS = 30, per = Math.ceil(size / STEPS);
   const t0 = performance.now();
@@ -1353,7 +1510,7 @@ function buildLearnedUlt(era, before) {
         `<b>${fmt(SP.slots)}</b>, so <b>${Math.round(100 - 100 * era.seededU / SP.slots)}%</b> of ` +
         `what it needed had to be learned from nothing.`
       : `Step 2 has not trained yet, so nothing came across at all and every one of the ` +
-        `<b>${fmt(SP.slots)}</b> entries started at zero. Train step 2 first and come back: it ` +
+        `<b>${fmt(SP.slots)}</b> entries started at zero. Train 1b first and come back: it ` +
         `hands over what it can, and it is a small fraction.`) +
     ` Turn the inspector on during a match and it will tell you how many of the squares it is ` +
     `weighing up right now sit on a picture it has never seen.</div></div>`
@@ -1439,6 +1596,33 @@ function selfTest() {
     return;
   }
 
+  if (isNet()) {
+    if (!S.neural) {
+      check(true, 'no network snapshot exists yet — create learning examples first');
+      out.push('<span class="ok">This screen did not run a gradient check or make a playing claim.</span>');
+    } else {
+      const point = S.neural.checkpoints.get(S.neural.metrics.updates);
+      const base = S.neural.checkpoints.get(0);
+      check(!!point, 'the current neural checkpoint has a cached independent evaluation');
+      check(point && point.metrics.updates === S.neural.model.updates,
+        `the cached snapshot matches ${fmt(S.neural.model.updates)} weight updates`);
+      check(point && point.play.games === 100,
+        'reproducible sampled comparison contains 100 fixed-seed random games');
+      check(point && typeof point.policy.safe === 'boolean',
+        `the exact current network policy ${point && point.policy.safe ? 'has no losing line' : 'has a losing line'}`);
+      if (point && base) {
+        out.push('');
+        out.push(`        baseline ${base.play.wins} won, ${base.play.draws} drawn, ${base.play.losses} lost`);
+        out.push(`        current  ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost`);
+        out.push(`        prediction error: practiced ${point.metrics.trainMse.toFixed(3)}, kept out ${point.metrics.heldMse.toFixed(3)}`);
+      }
+      out.push('<span class="ok">This checks the actual displayed network snapshot. Gradient validation belongs to src/neural.test.js.</span>');
+    }
+    $('#selftest-out').innerHTML = out.join('\n');
+    console.log('[Zero to Unbeatable] neural snapshot self-test\n' + out.join('\n').replace(/<[^>]+>/g, ''));
+    return;
+  }
+
   /* Step 3 gets sampled benchmarks and structural checks, never a
      proof — the space cannot be searched, and printing "all checks
      passed" here would read as one. */
@@ -1501,159 +1685,63 @@ function selfTest() {
  * Explainer copy
  * ------------------------------------------------------------------ */
 
-$('#how-body').innerHTML = `
-<h4>Three different things, all called AI</h4>
-<p><b>Step 1 is rules.</b> Eight if/else tests, checked in order, written out by a person before it
-ever ran. It has played zero games. Ask it why it moved and it can tell you exactly, because the
-reason is a line someone typed. Most people would call that AI, and for decades that is what the
-word meant.</p>
-<p><b>Step 2 is learning.</b> No rules at all — a list of numbers, one per board position, all of
-them starting at zero. Nothing in it knows what a row is. It plays twenty thousand games, is told
-only won, lost or drew, and ends up playing the same unbeatable game as the rule ladder. Ask it why
-it moved and the honest answer is "that square scored +0.87", which is not a reason in the way rule
-2 is a reason.</p>
-<p><b>Both are proven, the same way.</b> The app searches every game that can still be played
-against each of them and reports that no losing line exists. Same search, same words, two opposite
-kinds of opponent.</p>
-
-<h4>Be honest: here, the rules win</h4>
-<p>It would be easy to run this demo as "learning beat the hand-written rules", and it would be
-wrong. For a board with 5,478 positions the rules are the better piece of engineering by almost
-every measure that matters: they are a couple of hundred lines instead of a table of 19,683 numbers,
-they answer instantly with no training run, they can be read and checked by a person, and they were
-finished before the learner had played its first game. Nothing about step 2 is an improvement on
-step 1 <i>at tic-tac-toe</i>.</p>
-<p>What the rules cannot do is exist for a problem nobody can write down. Change the board to 4×4
-and the eight rules are worthless — somebody has to sit down and work out the new ones. Chess has more
-possible games than there are atoms in the observable universe and language has no fixed number at
-all; no one has ever written the ladder for either, and it is not for want of trying. Learning is what you reach for
-when the rules cannot be written, not when they can. Step 3 is what the edge of that looks like.</p>
-<p>There is one measurable crack in the ladder, and it is fair to say so. It is unbeatable in a
-<i>game</i>, but it is not right in every <i>position</i>: hand it one of the 4,520 legal boards it
-would never have played itself into and there are 12 where a rule picks a losing square, because
-nobody writes rules for boards that cannot happen. The learner practises from positions dealt at
-random, so it is right in all 4,520. That difference costs neither of them a game — you cannot beat
-either from the start — but it is the shape of the thing: written knowledge covers what the author
-thought of, and experience covers what was met.</p>
-
-<h4>What it actually is</h4>
-<p>The opponent you are playing is a list. On one side of the list is a board position; on the
-other is a single number saying how good that position turned out to be for whoever just moved.
-Nothing else. No rules of thumb, no strategy, no notion of a "row". You can read the numbers
-yourself with <b>Show its brain</b>.</p>
-
-<h4>Where the numbers come from</h4>
-<p>It plays a game. At the end it gets one piece of feedback: <b>+1</b> if it won, <b>0</b> for a
-draw, <b>−1</b> if it lost. That number is written against the last position, and then walked
-back down the game — a position is worth whatever the best thing your opponent can do from it
-is worth to them, with the sign flipped. Repeat a few thousand times and the numbers stop moving.</p>
-
-<h4>How a move with no outcome gets a score</h4>
-<p>Most moves neither win nor lose, so there is nothing to grade them on. The trick is that such a
-move is not graded on its own merit at all &mdash; it <b>borrows</b> its score from wherever it
-leads. Three cases, and that is the whole rule:<br>
-&bull; the move just won &rarr; <b>+1</b><br>
-&bull; the board is now full &rarr; <b>0</b><br>
-&bull; anything else &rarr; look at every reply your opponent could make, take the one <i>they</i>
-would like best, and <b>flip the sign</b>. What is good for them is bad for you.</p>
-
-<p>So at the beginning nothing means anything. Every number is 0.00, so every move scores
-&ldquo;zero, because the best my opponent can reach from here is also zero&rdquo;. What breaks the
-deadlock is a game actually <i>ending</i>: that position gets a real <b>+1</b>, and the next time a
-move leads there, it finally has something real to borrow. Scores seep backwards out of the ends of
-games, one link per update &mdash; which is why each game is walked <i>back to front</i> rather than
-front to back.</p>
-
-<p>Two details that matter. It takes the best reply your opponent <i>could</i> make rather than the
-one they actually made, so its own deliberate random exploring does not poison what it settles on.
-And this borrowing is exactly what fails in <b>ultimate</b>: asking &ldquo;what can my opponent
-reach from here?&rdquo; is useless when every one of those positions still reads 0.00 because it has
-never seen them.</p>
-
-<h4>Why it plays stupid moves early</h4>
-<p>A player that always picks its current best move only ever finds out about the moves it already
-likes. So a fraction of the time — shown in training as <b>&epsilon;</b> — it deliberately
-plays a random square just to see what happens. &epsilon; starts at 1.00, meaning a newborn is pure
-coin-flipping, and decays as it gains experience. This is the explore-versus-exploit trade: try new
-things, or cash in on what you know. When it plays <i>you</i>, &epsilon; is zero — it always
-plays its best.</p>
-
-<h4>Why it also plays a random opponent</h4>
-<p>An agent trained only against itself gets very good at the lines it likes to play and can stay
-blind to a line no sensible player would choose — which is exactly the sort of thing a student
-tries in a demo. So about 40% of its training games are against an opponent playing at random,
-first and second, and one game in five starts from a position dealt at random rather than an empty
-board, so odd corners of the board get practised too.</p>
-
-<h4>What happens when the game gets bigger</h4>
-<p>Switch to <b>Ultimate</b>: nine small boards in a 3&times;3 grid, and one extra rule.
-<b>The square you play in decides which board your opponent must play in next.</b> Play the middle
-square of any board and they are sent to the middle board. If they are sent to a board that is
-already finished &mdash; won or full &mdash; they may play anywhere. Win a small board by three in
-a row inside it; win the <b>match</b> by winning three small boards in a row on the big grid. A
-small board that fills up with nobody winning it is a draw and counts for neither side.</p>
-<p>One sentence of extra rule, and the approach behind step 2 comes apart in two specific places,
-both of them measured on the card after a burst rather than asserted here:</p>
-<p>&bull; <b>A board is worth different amounts depending on where it is.</b> The middle board sits
-on four lines of three; an edge board sits on two. The agent scores a board by the picture inside
-it, and those pictures are identical. So a move that wins it the <i>match</i> scores exactly the
-same to it as any other board win &mdash; measured, and it is why it will happily take a different
-board and let the match go.</p>
-<p>&bull; <b>Your move also decides where your opponent plays.</b> Two moves can leave a board
-looking the same and send the opponent somewhere they win instantly, or somewhere they have
-nothing. A table that only looks at the board that changed scores them the same, so it hands over
-a free win at about the rate you would get by not looking &mdash; because it is not looking.</p>
-<p>Both of those come from the same shortcut: <b>look at one board at a time and add up</b>. A
-person chose that, back when the boards really were independent, and it is now simply the wrong
-description of the game. Finding a better one without being told is what the next kind of learner is
-for. Two more things worth watching: about half the board pictures you meet cannot occur in ordinary
-tic-tac-toe at all (you can play twice in the same board while your opponent is busy elsewhere), so
-most of what step 2 learned does not transfer; and a position comes round about ten times in a
-training burst on one board, and about once here.</p>
-
-<h4>Be honest: this is a lookup table, not a brain</h4>
-<p>This agent is a <b>tabular</b> learner. Its knowledge is one number per position and it can hold
-every position tic-tac-toe has. That is why it can become perfect and why you can read its whole
-mind on the screen. Real systems — a chess engine, a language model — face a space far too
-large to list, so they replace the table with a neural network that <i>approximates</i> the same
-numbers and generalises to positions it has never seen. The learning idea in this demo is the real
-one. The storage is a toy.</p>
-
-<h4>This was a box of matchboxes in 1961</h4>
-<p>Donald Michie and Roger Chambers built <b>MENACE</b> — the Matchbox Educable Noughts And
-Crosses Engine — from 304 matchboxes, one per board position it can face once rotations and
-mirrors are folded together, each holding coloured beads, one colour per square. To
-move, you shook the box for the current position and drew a bead. If MENACE won the game, you added
-three beads of each colour it had played; if it drew, you added one; if it lost, you took one
-away. That is a physical
-implementation of exactly what is running on this page: a table of positions, a number per move,
-adjusted by whether the game was won or lost. Michie and the machine began to draw
-consistently after about twenty games &mdash; by hand, with no computer at all. It was never shown
-to be unbeatable, which is the honest version of the story and still a remarkable one.</p>
-
-<h4>Where the presenter notes are</h4>
-<p>Settings &rarr; <b>Presenter notes</b> opens the whole session plan — the timed script, the
-questions to ask, the misconceptions worth drawing out, and the second act — with a print button.
-It is built into this file rather than linked to another one, so it still works with no network and
-nothing else downloaded.</p>
-
-<h4>About the training animation</h4>
-<p>The arithmetic for ${fmt(OG.HP.burst)} games finishes in a few hundredths of a second. The
-montage is deliberately stretched to about two and a half seconds so there is something to watch.
-The counter, the &epsilon; reading and the win rate are all real numbers from the run in progress
-— only the pacing is for your benefit.</p>
-`;
 
 $('#about-text').innerHTML =
   `Zero to Unbeatable was built by Bryant Harrison, Murray State University. ` +
   `It runs entirely on this device: no network request is made, no account exists, ` +
   `nothing is stored, and no AI service is involved. Reloading the page returns it to Era 0. ` +
-  `Step 1 is a hand-written ${RULES.LADDER.length}-rule ladder with nothing learned in it; ` +
-  `steps 2 and 3 learn and have no rules in them. Step 2's settings: ` +
+  `1a is a hand-written ${RULES.LADDER.length}-rule ladder with nothing learned in it; ` +
+  `1b and 1c learn numeric priorities within a human-designed representation and learning procedure. In 1b, game outcomes supply rewards. In 1c, a frozen learned table supplies examples. The settings for 1b are: ` +
   `Learning rate ${OG.HP.alphaFloor}, discount ${OG.HP.gamma}, &epsilon; ${OG.HP.epsStart.toFixed(2)}→` +
   `${OG.HP.epsEnd.toFixed(2)} over ${fmt(OG.HP.epsTau)} games, ` +
   `${Math.round(OG.HP.mixSelfPlay * 100)}% self-play, ` +
   `${Math.round(OG.HP.exploringStarts * 100)}% dealt starts.`;
+
+/* The neural explanation is a separate reader-facing layer. The model and
+   measurements remain in net.js; this text names the visible experiment. */
+const TABLE_HOW = `
+<h4>What a person supplies</h4>
+<p>Even the learning tab has design choices made by people: the board representation, which game
+outcomes count as rewards, and the update rule. It is not given a rule that says “take the centre”
+or “block a row.”</p>
+<h4>What it learns from games</h4>
+<p>1b stores a score for each board created by a move. Wins, losses, draws, and later replies move
+those scores over time. When it chooses, it gives priority to the legal moves whose resulting boards
+have the strongest learned scores.</p>
+<h4>How to read a score</h4>
+<p>A positive score means the resulting board has tended to work out well for the player who just
+moved; a negative score means the opposite. It is a learned priority, not a spoken reason. Show its
+brain makes those priorities visible square by square.</p>
+<h4>Why it explores</h4>
+<p>Early in training it sometimes tries a random legal move. That produces experience about choices
+it would otherwise ignore. As practice grows, it relies more often on its strongest current score.</p>
+<h4>Optional advanced extension</h4>
+<p>Ultimate tic-tac-toe adds global information: a small board’s place in the meta-grid and the board
+a square sends the opponent to. The inherited one-board representation leaves those facts out. A
+neural network with the same incomplete inputs would leave them out too; changing the model name is
+not a repair.</p>`;
+const NEURAL_HOW = `
+<h4>What changes in the neural-network tab</h4>
+<p>Neural networks are a kind of machine learning. This tab first creates learning examples with a
+fresh copy of the 1b algorithm playing 20,000 seeded games. It then freezes that run’s current
+estimates and asks a smaller collection of shared weights to approximate them.</p>
+<p>Those example scores are not perfect-game answers. A board the fresh table never visited can
+still carry its initial score of zero, even when a solver would score it differently.</p>
+<h4>What the network sees</h4>
+<p>Each board square is represented as empty, X, or O. The network is not given a rule for rows,
+forks, or the centre. Its hidden layers combine those inputs and produce one predicted value for a
+possible next board. One weight can influence many boards, which is the compactness this tab tests.</p>
+<h4>How to read the results</h4>
+<p>One error is calculated from examples used for practice. The other is calculated from positions
+kept out of training. Related rotations and reflections stay together, so a near-copy cannot quietly
+turn the second number into a repeat of the first. Lower error is closer to the frozen learner; it
+does not guarantee a good answer on every new board.</p>
+<h4>What is playing</h4>
+<p>For each legal move, the app forms the resulting board and runs a forward pass through the
+network weights. It chooses from the best predicted boards. The frozen table is not consulted while
+you play, and a good score against random play is reported separately from the two error readings.</p>
+<p><b>Optional advanced extension:</b> Ultimate tic-tac-toe remains available from this tab. It is a
+different representation-limit activity, not evidence that the neural network itself is unbeatable.</p>`;
 
 /* ------------------------------------------------------------------ *
  * Wiring
@@ -1667,15 +1755,19 @@ function applyMode() {
   const ult = isUlt(), rules = isRules();
   $$('#mode-seg button').forEach(x => {
     const on = x.dataset.mode === S.mode;
-    x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on));
+    x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); x.setAttribute('aria-selected', String(on));
+    x.tabIndex = on ? 0 : -1;
   });
   document.body.classList.toggle('step-rules', rules);
   document.body.classList.toggle('step-ult', ult);
   $('#how-head span').textContent = rules ? 'Rules, learning, and which is better'
                                           : 'How is it learning?';
+  const howStart = $('.sheet-foot [data-close="howto"]', $('#howto'));
+  if (howStart) howStart.textContent = isNet() ? 'Explore neural networks' : rules ? 'Play the rules' : 'Explore machine learning';
+  $('#how-body').innerHTML = isNet() ? NEURAL_HOW : TABLE_HOW;
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
-  $('#era-select').hidden = rules;
+  $('#era-select').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
   $('#btn-brain').hidden = rules;
   $('#btn-learned').hidden = rules || S.lastLearned === null;
@@ -1697,12 +1789,33 @@ function applyMode() {
 }
 
 $$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
-  if (S.training || S.mode === btn.dataset.mode) return;
+  if (S.mode === btn.dataset.mode) return;
+  if (S.training) S.cancelTraining = true;
   S.mode = btn.dataset.mode;
   applyMode();
 }));
+$$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
+  const tabs = $$('#mode-seg button');
+  const i = tabs.indexOf(e.currentTarget);
+  let next = null;
+  if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
+  else if (e.key === 'ArrowLeft') next = (i + tabs.length - 1) % tabs.length;
+  else if (e.key === 'Home') next = 0;
+  else if (e.key === 'End') next = tabs.length - 1;
+  if (next === null) return;
+  e.preventDefault();
+  const chosen = tabs[next];
+  if (S.training) S.cancelTraining = true;
+  S.mode = chosen.dataset.mode;
+  applyMode();
+  chosen.focus();
+}));
 
-$('#btn-train').addEventListener('click', train);
+$('#btn-train').addEventListener('click', () => {
+  if (isNet() && S.training) { S.cancelTraining = true; return; }
+  train();
+});
+$('#btn-stop-training').addEventListener('click', () => { S.cancelTraining = true; });
 $('#btn-newgame').addEventListener('click', newGame);
 function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }
 
@@ -1740,6 +1853,7 @@ $('#chk-presenter').addEventListener('change', e =>
 $('#chk-first').addEventListener('change', e => { S.alwaysFirst = e.target.checked; });
 $('#in-seed').addEventListener('change', e => { S.seed = e.target.value.trim(); });
 $('#btn-reset').addEventListener('click', () => {
+  S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   resetAll();
   closeSheet('settings');
@@ -1752,8 +1866,25 @@ howHead.addEventListener('click', () => {
   $('#how-body').hidden = open;
 });
 
+/* Deep links keep the public one-page URL while selecting a real stage. */
+function modeFromHash() {
+  const h = location.hash.toLowerCase();
+  if (h === '#rules') return 'rules';
+  if (h === '#learning') return 'one';
+  if (h === '#neural') return 'net';
+  return null;
+}
+window.addEventListener('hashchange', () => {
+  const mode = modeFromHash();
+  if (!mode || mode === S.mode) return;
+  if (S.training) S.cancelTraining = true;
+  S.mode = mode; applyMode();
+});
+
 /* ------------------------------------------------------------------ */
 
+const hashMode = modeFromHash();
+if (hashMode) S.mode = hashMode;
 resetAll();
 renderScore();
 /* Shown on every load, not once per browser: this thing is handed to a

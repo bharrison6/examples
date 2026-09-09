@@ -5,6 +5,7 @@
   "topic": "Construction Management · Scheduling",
   "discipline": "Construction Management",
   "tagline": "Competitive construction scheduling on a real CPM engine",
+  "hub_blurb": "Build a construction schedule while a real CPM engine shifts the critical path and shared events test every team fairly.",
   "card_blurb": "Competitive construction scheduling on a real CPM engine: a critical path that moves under you, cure times nothing can shorten, and a seeded event deck — same bad luck for every team.",
   "description": "**Topping Out** — competitive construction scheduling for CM class. Real precedence-diagram CPM recomputed every turn (forward/backward pass, total and free float, FS/SS/FF with lags), a computed critical path that shifts and announces itself, non-compressible cure and inspection holds, trade stacking, a sourced overtime decay curve, and a seeded event deck so every team faces the identical run of bad luck. 4D cutaway, Gantt and network views, week-by-week debrief. Includes a printable instructor guide.",
   "entry": "index.html",

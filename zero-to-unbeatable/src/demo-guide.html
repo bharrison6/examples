@@ -5,361 +5,89 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Zero to Unbeatable — demo guide</title>
 <style>
-  /* --------------------------------------------------------------
-     Everything is scoped to .guide and sized in em off one base, so
-     this same stylesheet and markup can be dropped straight into the
-     app's Presenter notes sheet and simply scaled up for a screen.
-     Print keeps the base at 7.4pt, which is what fits the page.
-     Murray State palette: navy is the ink, gold is a rule and a fill
-     — never small type, it does not carry on white paper.
-     -------------------------------------------------------------- */
-  @page { size: A4 portrait; margin: 10mm 9mm; }
-
-  .guide {
-    --g-ink:#111820; --g-ink2:#41505f; --g-ink3:#71808f; --g-line:#c2cede;
-    --g-navy:#002144; --g-gold:#ECAC00; --g-hi:#FFF7E4;
-    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
-    color: var(--g-ink); background: #fff; font-size: 7.4pt; line-height: 1.26;
-    max-width: 210mm; margin: 0 auto; padding: 3.8em 3.45em;
-  }
-  .guide * { box-sizing: border-box; margin: 0; padding: 0; }
-  .guide header { border-bottom: .32em solid var(--g-navy); padding-bottom: .69em; margin-bottom: .84em;
-           display: flex; justify-content: space-between; align-items: flex-end; gap: 2.3em; }
-  .guide .eyebrow { font-size: .865em; font-weight: 700; letter-spacing: .2em; text-transform: uppercase;
-             color: var(--g-navy); border-bottom: .22em solid var(--g-gold);
-             display: inline-block; padding-bottom: .22em; margin-bottom: .53em; }
-  .guide h1 { font-size: 1.89em; letter-spacing: .03em; line-height: 1; color: var(--g-navy); }
-  .guide h1 small { display: block; font-size: .493em; font-weight: 600; letter-spacing: .2em;
-             text-transform: uppercase; color: var(--g-ink2); margin-top: .72em; }
-  .guide .meta { text-align: right; font-size: .892em; color: var(--g-ink2); line-height: 1.35; }
-  .guide .cols { column-count: 2; column-gap: 1.92em; column-rule: .06em solid var(--g-line); }
-  .guide section { break-inside: avoid; margin-bottom: .77em; }
-  .guide h2 { font-size: 1.027em; text-transform: uppercase; letter-spacing: .1em; color: var(--g-navy);
-       border-bottom: .16em solid var(--g-gold); padding-bottom: .19em; margin-bottom: .38em; }
-  .guide p { margin-bottom: .38em; }
-  .guide ol { margin: 0 0 .38em 1.3em; }
-  .guide ul { margin: 0 0 .38em 1.15em; }
-  .guide li { margin-bottom: .23em; }
-  .guide .beat { display: grid; grid-template-columns: 3.64em 1fr; gap: .46em; margin-bottom: .46em; break-inside: avoid; }
-  .guide .beat .t { font-weight: 800; color: var(--g-navy); font-variant-numeric: tabular-nums; font-size: .946em; }
-  .guide .beat > div > b:first-of-type { display: block; }
-  .guide .say { background: var(--g-hi); border-left: .22em solid var(--g-gold); padding: .35em .5em;
-         margin: .23em 0; font-style: italic; break-inside: avoid; }
-  .guide .mis { border: .07em solid var(--g-line); border-radius: .54em; padding: .42em .54em;
-         margin-bottom: .46em; break-inside: avoid; }
-  .guide .mis .claim { font-weight: 700; color: var(--g-navy); }
-  .guide .mis .claim::before { content: "\201C"; } .guide .mis .claim::after { content: "\201D"; }
-  .guide .mis .ans { color: var(--g-ink2); margin-top: .12em; }
-  .guide .kv { font-size: .919em; color: var(--g-ink2); }
-  .guide .kv b { color: var(--g-navy); }
-  .guide code { font-family: ui-monospace, Consolas, monospace; font-size: .93em; }
-  .guide footer { margin-top: .77em; padding-top: .46em; border-top: .08em solid var(--g-line);
-           font-size: .865em; color: var(--g-ink3); display: flex; justify-content: space-between; gap: 1.5em; }
-  .guide .warn { color: #a3341f; font-weight: 600; }
-  .guide .act2 { break-before: page; padding-top: .77em; }
-  .guide .act2 > h2 { font-size: 1.216em; }
-
-  /* On a screen the print size is unreadable, so the base grows and the
-     two columns collapse when there is not room for them. */
-  @media screen {
-    body { background: #eef1f6; margin: 0; }
-    .guide { font-size: 12pt; box-shadow: 0 0 0 1px #dfe5ee; margin: 16px auto; }
-  }
-  @media screen and (max-width: 900px) {
-    .guide { font-size: 13pt; padding: 1.6em 1.3em; }
-    .guide .cols { column-count: 1; }
-    .guide .act2 { break-before: auto; }
-    .guide header, .guide footer { flex-wrap: wrap; }
-    .guide .meta { text-align: left; }
-  }
-  @media print { .guide { font-size: 7.4pt; padding: 0; max-width: none; margin: 0; box-shadow: none; } }
+@page { size:A4 portrait; margin:12mm; }
+.guide { --navy:#002144; --gold:#ECAC00; --ink:#172433; --muted:#526577; font:10.4pt/1.42 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#fff; max-width:190mm; margin:16px auto; padding:8mm 10mm; }
+.guide * { box-sizing:border-box; }
+.guide header { border-bottom:4px solid var(--navy); padding-bottom:10px; margin-bottom:16px; }
+.guide .eyebrow { color:var(--navy); font-size:.78em; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
+.guide h1 { color:var(--navy); margin:.2em 0; font-size:2em; }
+.guide h1 small { display:block; color:var(--muted); font-size:.48em; letter-spacing:.08em; text-transform:uppercase; }
+.guide h2 { color:var(--navy); border-bottom:2px solid var(--gold); padding-bottom:3px; margin:1.2em 0 .5em; font-size:1.15em; }
+.guide h3 { color:var(--navy); margin:1em 0 .3em; font-size:1em; }
+.guide p,.guide li { margin:.35em 0; }
+.guide ol,.guide ul { padding-left:1.35em; }
+.guide .say { background:#fff7e4; border-left:4px solid var(--gold); padding:.55em .75em; font-style:italic; }
+.guide .note { border:1px solid #c8d3df; border-radius:6px; padding:.6em .75em; color:var(--muted); }
+.guide .meta { color:var(--muted); }
+.guide footer { border-top:1px solid #c8d3df; color:var(--muted); font-size:.82em; margin-top:1.4em; padding-top:.6em; }
+@media print { .guide { margin:0; max-width:none; padding:0; font-size:9.5pt; } .guide .page-break { break-before:page; } }
 </style>
 </head>
 <body>
-
 <div class="guide">
-
 <header>
-  <div>
-    <div class="eyebrow">Murray State University</div>
-    <h1>Zero to Unbeatable<small>three steps &middot; 20 minutes &middot; rules, learning, and where both run out</small></h1>
-  </div>
-  <div class="meta">
-    <b>You need:</b> one phone, tablet or laptop. Open <code>index.html</code>.<br>
-    No install, no login, no network. Projecting? Settings &rarr; <b>Presenter mode</b>.<br>
-    <b class="warn">Do not train before the session</b>, and do not refresh mid-demo.
-  </div>
+  <div class="eyebrow">Murray State University</div>
+  <h1>Zero to Unbeatable<small>Demo 1 · rules, machine learning, neural networks · 20 minutes</small></h1>
+  <p class="meta"><b>You need:</b> one browser and the demo’s `index.html`. It works offline. For projection, use Settings → Presentation mode. Start with a fresh page so the group sees the learning take place.</p>
 </header>
 
-<div class="cols">
-
 <section>
-  <h2>Setup (60 seconds)</h2>
-  <p>Open the file. Turn on <b>Presenter mode</b> if projecting. To reproduce a rehearsed run exactly,
-  type your seed into <b>Rehearsal seed</b> and press <b>Reset to Era 0</b>. Leave the burst on
-  <b>5,000</b> — the arc is tuned for it and takes three to five presses.</p>
-  <p class="kv"><b>The shape of it.</b> Three opponents on one board, and they are not three difficulty
-  levels. Step 1 got all of its skill from a person and none from experience. Step 2 got all of it from
-  experience and none from a person. They end up playing identically, and the app proves both with the
-  same search. Step 3 is where the shortcut behind step 2 stops describing the game, and where the space stops being searchable at all.</p>
+<h2>Purpose</h2>
+<p>This is not a race from “simple AI” to “better AI.” It puts three different sources of a program’s skill beside the same small game: a person’s written instructions, experience stored in a table, and shared weights that learn to approximate that table.</p>
+<p class="say">“Watch where the skill comes from. The board stays the same; the mechanism changes.”</p>
 </section>
 
 <section>
-  <h2>Step 1 — rules (5 minutes)</h2>
-
-  <div class="beat"><div class="t">0:00</div><div>
-    <b>Hand it to a student. "Beat it."</b>
-    They cannot. Let two or three people try. It answers instantly and it never slips.
-    <div class="say">"This has played zero games too. But it is not going to lose."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">1:30</div><div>
-    <b>Read the line under the board, then the list beside it.</b>
-    After every move it prints the rule that fired and why — "Rule 2 &middot; Block — you had two
-    in the top row" — and outlines the squares that set it off. The eight rules are listed in the
-    order they are checked, and the one that fired is lit up.
-    <div class="say">"A person sat down and wrote every line of that. There is no mystery in this one
-    at all. You can read the whole mind of it, and it fits in eight lines."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">3:00</div><div>
-    <b>Switch the ladder to "First 2".</b>
-    Win and block only — what almost everybody writes first. Now the room beats it, and the panel
-    shows why: rules 3 to 8 are struck through, and the app draws the exact game it loses. The move
-    that kills it makes two threats at once, which is <b>rule 3</b>, the first one switched off.
-    <div class="say">"It did not play badly. Nobody wrote it a rule for this."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">4:00</div><div>
-    <b>Back to "All 8", read the proof line, then say the honest thing.</b>
-    Every game playable against the full ladder was searched — 1,384 of them — and it loses
-    none. Then: for a board this small the rules are the <em>better</em> engineering. Shorter, faster,
-    finished before the learner had played a game, and checkable by reading them.
-    <div class="say">"So why would anybody bother with the other thing?"</div>
-    That is the bridge into step 2, and it is the right question.
-  </div></div>
+<h2>1a · Rules-based intelligence — 5 minutes</h2>
+<p>Open <b>1a Rules-based intelligence</b>. Ask a volunteer to play the full eight-rule opponent. Point to the highlighted rule after each reply. It can say why it moved because a person wrote its decision process down in advance.</p>
+<ol>
+<li>Switch to First 2 and invite the room to find a fork.</li>
+<li>Return to All 8. Explain that the app checks every reachable game line against this policy. The full rule set has no losing line.</li>
+<li>Ask: “If it is skilled but never learned, should we call it AI?”</li>
+</ol>
+<p class="note">The useful distinction is not whether the program is impressive. It is whether its competence came from a person’s rules or from experience.</p>
 </section>
 
 <section>
-  <h2>Step 2 — learning (10 minutes)</h2>
+<h2>1b · Machine learning — 7 minutes</h2>
+<p>Open <b>1b Machine learning</b>. Era 0 begins with a table full of zeroes. Let someone beat it, then run a visible training burst and play the new era. The program changes only the numeric values it has learned from completed games.</p>
+<ol>
+<li>Use the era selector to compare an earlier and later opponent.</li>
+<li>Turn on Show its brain. Each empty square displays the learned score for the position created by that move.</li>
+<li>When a later era is checked, distinguish a search-based proof from a good-looking win streak.</li>
+</ol>
+<p class="say">“This is machine learning, but its memory is a filing cabinet: one number for each position it has room to store.”</p>
+</section>
 
-  <div class="beat"><div class="t">5:00</div><div>
-    <b>Switch to "2 &middot; Learning" and hand it over again.</b>
-    Era 0 has never played a game and has no rules in it either. It loses fast and stupidly — it will
-    ignore a row you have almost finished. Let two or three people beat it. Let the room laugh at it.
-    <div class="say">"This one has no rules in it at all. It does not know what winning is. It knows
-    how to put a mark in an empty square, and that is all."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">6:30</div><div>
-    <b>Press "Show its brain".</b>
-    Every square reads <code>+0.00</code>, seen 0 times.
-    <div class="say">"That is the entire mind of your opponent. Nine numbers, all zero. No strategy, no
-    line of code that says 'block the row'. When every number ties it flips a coin — which is exactly
-    what you just watched."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">7:30</div><div>
-    <b>Press "Train the AI". Say nothing for three seconds.</b>
-    Let them watch the counter blur past five thousand games. Point at the two live readings:
-    <b>&epsilon;</b> falling — how often it still tries a random square — and its <b>win rate against
-    random play</b> climbing. Then read the card: it now takes a free win and blocks your row.
-  </div></div>
-
-  <div class="beat"><div class="t">9:00</div><div>
-    <b>Play Era 1. Two or three games.</b>
-    It blocks now. It is annoying. You can still beat it — about one game in six — and when somebody
-    does, that is your line:
-    <div class="say">"Five thousand games of experience and you still got it. So what is it missing?"</div>
-  </div></div>
-
-  <div class="beat"><div class="t">11:00</div><div>
-    <b>Train again. Play Era 2.</b>
-    This is the turn. Wins dry up, draws start, somebody loses and is annoyed about it. Let that land
-    before moving on — the frustration <em>is</em> the lesson.
-  </div></div>
-
-  <div class="beat"><div class="t">13:00</div><div>
-    <b>Train twice more. Play the newest era.</b>
-    Between the third and fifth press the gold banner appears. Every game is a draw now. Invite the
-    best player in the room to try. They will draw.
-  </div></div>
-
-  <div class="beat"><div class="t">14:30</div><div>
-    <b>The beat that makes it stick: go back.</b>
-    Choose <b>Era 0</b> from the dropdown and stomp it again. Then switch to the newest era and draw
-    again. Same program, same code, different numbers.
-    <div class="say">"Nobody rewrote this. The only thing that changed is a list of numbers, and the
-    only thing that changed the numbers was playing games and being told won, lost or drew."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">16:00</div><div>
-    <b>Read the banner aloud, then put the two side by side.</b>
-    Step 1 and step 2 now play exactly the same game and neither can be beaten, and the same search
-    proved both. One got there from a person's head in an afternoon; the other from twenty thousand
-    games and no author. On this board the rules were the cheaper answer — say so plainly. What the
-    rules cannot do is exist for a game nobody can write down: tic-tac-toe has five and a half thousand
-    positions, chess and language cannot be listed at all.
-    <div class="say">"Nobody has ever written the eight rules for chess. That is the whole reason the
-    other thing exists."</div>
-  </div></div>
+<section class="page-break">
+<h2>1c · Neural networks — 7 minutes</h2>
+<p>Open <b>1c Neural networks</b>. The first button says <b>Create learning examples</b>. It visibly lets a fresh copy of the 1b algorithm play 20,000 seeded games, then freezes the values it learned. Those frozen examples are the teacher for a new small network of shared weights.</p>
+<ol>
+<li>Press Create learning examples. Explain that these are learned examples, not answers copied from a perfect-game solver.</li>
+<li>Press Train network. The live display shows how closely the weights match examples used for training and positions kept out of training.</li>
+<li>After a run, read the separate playing score. Each 100-game check uses the same random seed and scoring procedure, though game paths can change as the network changes. MSE means average squared prediction-score error; zero is an exact match. A lower error and a better score are observations, not a promise that the network will handle every unseen position well.</li>
+<li>Turn on Show its brain. Its squares now come from a network calculation. The frozen table is not consulted while it chooses a move.</li>
+</ol>
+<p class="note">The examples are the fresh table’s current estimates. A position it never visited can still have its initial score of zero, even where a perfect-game solver would give a different answer.</p>
+<p class="note">Technical detail for interested students: rotations and reflections of the same board are kept together when examples are split, preventing an obvious near-copy from appearing in both the practice and check sets. The app’s source test also compares its hand-written gradient with a finite-difference estimate away from ReLU corners.</p>
+<p class="say">“A neural network is a kind of machine learning. Here it is learning a compact approximation of another learner’s experience, not receiving tic-tac-toe strategy by hand.”</p>
 </section>
 
 <section>
-  <h2>Discussion questions</h2>
-  <ol>
-    <li>Both opponents end up unbeatable. If you had to ship one, which, and why? Does your answer
-    change if the board becomes 4&times;4? If it becomes chess?</li>
-    <li>Step 1 can tell you exactly why it moved; step 2 can only say "that square scored +0.87".
-    Is the first one an explanation and the second one not? What would you need from step 2 before
-    you would call it one?</li>
-    <li>It played 5,000 games in three seconds. How many had you played before you stopped losing at
-    this? What does that comparison tell us — and what does it hide?</li>
-    <li>Why does it deliberately play a bad square during training? What breaks if it always plays the
-    move it currently rates best?</li>
-    <li>Forty per cent of its training is against an opponent playing at random. Why not train it only
-    against itself, which is far stronger?</li>
-    <li>The last thing it learns is that answering two opposite corners in a corner loses. Why would
-    that arrive after "block the row"?</li>
-    <li>Once trained, every opening square scores the same. Has it failed to learn something, or
-    learned something?</li>
-    <li>It can never lose now. Is it <em>good at</em> tic-tac-toe, or has it memorised tic-tac-toe? Is
-    there a difference, and does the difference matter?</li>
-  </ol>
+<h2>Optional advanced extension</h2>
+<p>The Neural networks tab links to Ultimate tic-tac-toe as an optional representation-limit activity. It changes the game and adds global information: a board’s place in the meta-grid and where a square sends the opponent. A one-board table leaves those facts out, and a neural network with the same inputs would too. It is deliberately separate from the neural-network lesson.</p>
 </section>
 
 <section>
-  <h2>Misconceptions to draw out</h2>
-
-  <div class="mis">
-    <div class="claim">It was secretly programmed with strategy and just pretends to start dumb.</div>
-    <div class="ans">Meet this head on, and use step 1 to do it: that one <em>was</em> programmed with
-    strategy, you showed them the eight rules, and it looks nothing like step 2 from the outside.
-    Then show the brain at Era 0 — every value exactly zero. Then run
-    <b>Settings &rarr; Run the full self-test</b> in front of them: it chi-squared tests 9,000 moves by
-    a newborn and reports it indistinguishable from a coin flip. The code also measures that a newborn
-    takes a free win no more often than chance. A hidden rule would show in both.</div>
-  </div>
-
-  <div class="mis">
-    <div class="claim">It understands tic-tac-toe now.</div>
-    <div class="ans">It has a number attached to each of about five thousand board pictures. It cannot
-    say what a row is, cannot play on a 4&times;4 board, cannot explain one choice. Ask the room what
-    "understands" would have to mean and whether anything on screen meets it. Best argument you can
-    have in the last two minutes.</div>
-  </div>
-
-  <div class="mis">
-    <div class="claim">More training always keeps making it visibly better.</div>
-    <div class="ans">Watch the card across bursts. The first changes almost everything; by the third
-    the landmark positions stop moving at all and only "positions it would now play differently" keeps
-    falling. Improvement goes invisible, then stops — it has hit the ceiling of the game, and nothing
-    goes past a draw.</div>
-  </div>
-
-  <p class="kv"><b>And if someone says it is unbeatable only because it has won a lot:</b> it is not a
-  win record. After every burst the app searches <em>every</em> game still playable against it, in
-  both roles, following every square you could pick and every coin flip it could make — about 15,000
-  complete games in some 20 milliseconds — and finds no line where it loses. That is a proof, not a
-  sample.</p>
+<h2>Discussion prompts</h2>
+<ul>
+<li>Which opponent is easiest to explain? Which is easiest to update?</li>
+<li>Why is a held-out score more useful than reporting only the examples used to train?</li>
+<li>What would have to be checked before calling a trained network unbeatable?</li>
+</ul>
 </section>
 
-<section>
-  <h2>What is actually running</h2>
-  <p class="kv">Tabular <b>afterstate value learning</b>: one number per board position meaning "how did
-  this turn out for whoever just moved". Update is <code>+1</code> for a win, <code>0</code> for a
-  draw, otherwise the best thing the opponent can do to you, negated and discounted. Learning rate
-  <b>0.8</b>, discount <b>0.95</b>, &epsilon; from <b>1.00</b> to <b>0.25</b> over 14,000 games,
-  <b>60%</b> self-play and <b>40%</b> versus random play in both roles, <b>20%</b> of games started
-  from a dealt position so rare endgames get practised. No minimax, no heuristics, no opening book
-  anywhere in the agent. Sources and the full test suite sit beside this file.</p>
-</section>
-
-<section>
-  <h2>Notes for the presenter</h2>
-  <ul>
-    <li><b>Short of time?</b> Press train twice in a row and skip Era 2. It always lands by the fifth
-    press.</li>
-    <li><b>A student beats Era 3?</b> They cannot beat a <em>verified</em> era, but they can beat one
-    before the banner. That is real and it is a gift — say so, then train again.</li>
-    <li><b>500 and 2,000</b> exist to show the wobble in slow motion; they need many more presses.
-    Keep 5,000 for a timed session.</li>
-    <li>The maths for 5,000 games finishes in well under a tenth of a second. The montage is stretched
-    to about two and a half seconds so there is something to watch — the app admits this itself, and
-    so should you.</li>
-  </ul>
-</section>
-
-</div><!-- /cols -->
-
-<section class="act2">
-  <h2>Step 3: ultimate tic-tac-toe (5 minutes)</h2>
-  <p>The third segment switches to <b>ultimate tic-tac-toe</b>: nine small boards in a 3&times;3 grid,
-  and one extra rule &mdash; <b>the square you play in decides which board your opponent must play in
-  next</b>. Sent to a board that is already finished, won or full? Play anywhere. Win a small board by
-  three in a row inside it; win the <b>match</b> by winning three small boards in a row. A small board
-  that fills with no winner counts for neither side. Run this after the banner, when the room has just
-  watched something become perfect. One sentence of extra rule, and the method that got them there
-  stops describing the game.</p>
-
-  <div class="beat"><div class="t">0:00</div><div>
-    <b>Switch to "3 &middot; Ultimate" and play four or five moves.</b>
-    Do not explain the rule &mdash; the line under the two panes explains it on every single turn, and
-    the gold ring shows the board you are stuck in. Let them notice that it moves because of the
-    square they just played.
-    <div class="say">"Same opponent. Same table. One extra sentence in the rules."</div>
-  </div></div>
-
-  <div class="beat"><div class="t">1:30</div><div>
-    <b>Train once, then read the first card &mdash; the control row first.</b>
-    It takes a free win inside a board about four times in five: <b>81%</b> over a thousand measured
-    matches. That row is there so the next one means something. The next one is a move that wins the
-    whole <b>match</b>, and it is taken at <b>79%</b> &mdash; no more often.
-    <div class="say">"It cannot see the game it is playing. Winning three boards <em>in a row</em> is
-    about where boards sit. It only ever looks inside one board."</div>
-    When the match-winning move is the only board win going, it takes it at the control rate. When
-    another board win ties with it, it flips a coin.
-  </div></div>
-
-  <div class="beat"><div class="t">3:00</div><div>
-    <b>Second card: where it sends you.</b>
-    It hands over an immediate win on <b>36%</b> of the turns where that was a choice, against
-    <b>41%</b> for choosing blind &mdash; and <b>45%</b> of those giveaways had an equally
-    top-scoring square right beside them.
-    <div class="say">"It is giving the game away at the rate you get by not looking, because it is not
-    looking."</div>
-    Then the third card: two hand-written opponents, the same player apart from three clauses about
-    the new rule. It learns against the one that shares its blind spot &mdash; <b>122</b> losses down
-    to <b>54</b> of 200 &mdash; and flatlines against the other, <b>167</b> down to <b>137</b> and no
-    further.
-  </div></div>
-
-  <div class="beat"><div class="t">4:00</div><div>
-    <b>Close on the banner, which is the best thing in the act.</b>
-    Ordinary tic-tac-toe: <b>255,168</b> complete games, so steps 1 and 2 could walk every one and
-    print a proof. Ultimate: about <b>3.6 &times; 10<sup>38</sup></b> positions &mdash; counting a
-    billion a second since the big bang leaves you <b>820 billion</b> times short. <b>And it is
-    solved anyway.</b> Bertholon and colleagues proved in 2020 that the first player has a forced win
-    in <b>at most 43 moves</b>, second player holding out <b>at least 29</b> (arXiv:2006.02353).
-    <div class="say">"Nobody visited those positions. They wrote down a strategy and proved it. A
-    proof does not require checking every case."</div>
-    And still nobody has proved anything about the opponent on the screen: it is not running that
-    strategy and this app cannot search its tree. Good, measured, never proven &mdash; which is where
-    chess engines, self-driving cars and language models all live.
-  </div></div>
-
-  <p class="kv"><b>Two more questions for this act.</b> (1) The agent scores a move by how much it
-  improves the one board it is played in, and ignores the other eight and where the move sends its
-  opponent. What would a memory need to be able to represent for those to matter to it? (2) The game
-  is solved and the space cannot be searched. How can both be true at once?</p>
-</section>
-
-<footer>
-  <span>Murray State University &middot; Zero to Unbeatable &middot; rules, learning, ultimate &middot; single-file offline demo &middot; no network, no accounts, no AI service</span>
-  <span>Donald Michie's MENACE (1961) did this with 304 matchboxes and coloured beads.</span>
-</footer>
-
+<footer>Bryant Harrison · Murray State University · Zero to Unbeatable · single-file offline demo · no accounts or runtime network requests</footer>
 </div><!-- /guide -->
-
 </body>
 </html>

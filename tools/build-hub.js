@@ -114,7 +114,7 @@ const nextIdx = idx.replace(
       `${indent}<a class="card" href="${slug}/index.html">`,
       `${indent}  <div class="topic">${m.topic}</div>`,
       `${indent}  <h2><span class="emoji">${m.emoji}</span>${m.title}</h2>`,
-      `${indent}  <p>${m.card_blurb}</p>`,
+      `${indent}  <p>${m.hub_blurb || m.card_blurb}</p>`,
       `${indent}  <div class="go">Open demo →</div>`,
       `${indent}</a>`,
     ].join('\n');
