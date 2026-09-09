@@ -692,7 +692,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
         <label class="lbl" for="year-slider">What year was this said?</label>
         <span id="year-read" aria-hidden="true">1985</span>
         <input type="range" id="year-slider" min="1950" max="2026" step="1" value="1985"
-               aria-label="Guess the year this prediction was made">
+               aria-label="Guess the year this claim was made">
         <div id="year-ticks"><span>1950</span><span>1988</span><span>2026</span></div>
       </div>
 
@@ -706,7 +706,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 
     <div class="row">
       <button class="btn primary big" id="btn-lock">Lock it in</button>
-      <button class="btn primary big" id="btn-next-card" hidden>Next prediction</button>
+      <button class="btn primary big" id="btn-next-card" hidden>Next claim</button>
     </div>
   </div>
 
@@ -780,9 +780,9 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <h1>Compare the conditions; do not force a cycle.</h1>
   <p>
     Reading across a row compares a historical condition with another and with the present.
-    Two cells in the present column remain <b>open</b>: no single binding constraint has been
-    established, and no withdrawal has occurred. Those absences do not forecast what happens
-    next; they keep the question honest.
+    Two cells in the present column remain <b>open</b>: no single binding constraint is
+    established here, and this snapshot does not establish a comparable broad contraction.
+    Those limits do not forecast what happens next; they keep the question honest.
   </p>
 
   <div id="anatomy"></div>
@@ -824,23 +824,24 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
     <div class="sheet-body">
       <ol class="ht-steps">
         <li>
-          <b>Read the prediction.</b> Ten of them, all real, all sourced. The speaker and the
-          date are hidden.
+          <b>Read the claim.</b> Ten sourced claims, with the speaker and date hidden: five
+          time-bounded forecasts, four assessments or untimed ambitions, and one warning.
         </li>
         <li>
-          <b>Guess two things.</b> Drag the slider to the year you think it was said, then
-          say whether it came true. Then press <em>Lock it in</em> and find out.
+          <b>Guess the year, then classify.</b> Drag the slider to the year you think it was
+          said. For a time-bounded forecast, call its outcome; for an assessment or untimed
+          ambition, identify the kind of claim. Then press <em>Lock it in</em> and find out.
         </li>
         <li>
-          <b>Watch the split.</b> Some of these are people promising AI was nearly here.
-          Some are people saying it would never work. At the end you get scored on both
-          separately, and that comparison is the whole point.
+          <b>Watch the split.</b> Forecasts receive an outcome score only when they name a
+          time window. Assessments and untimed ambitions stay unscored context, because later
+          events do not turn them into failed prophecies.
         </li>
       </ol>
 
       <p class="ht-tip">
-        There is nothing to beat. Most rooms do well on one kind of prediction and badly on
-        the other, and which one is which is usually a surprise.
+        There is nothing to beat. The point is to notice which claims have an outcome and a
+        deadline, and which need evidence about their own historical setting.
       </p>
 
       <div class="field">
@@ -871,7 +872,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
     </div>
     <div class="sheet-foot ht-foot">
       <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
-      <button class="btn primary" data-close="howto">Got it &mdash; first prediction</button>
+      <button class="btn primary" data-close="howto">Got it &mdash; first claim</button>
     </div>
   </div>
 </div>
@@ -983,7 +984,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <div class="scroll">
   <table>
     <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
-    <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced claims with the speaker and date hidden. Score forecasts; classify assessments instead of pretending they are forecasts.</td><td>7&ndash;9 min</td></tr>
+    <tr><td><b>I &mdash; Guess the year</b></td><td>Five time-bounded forecasts, four assessments or untimed ambitions, and one warning, with the speaker and date hidden. Score forecasts; classify the unscored context.</td><td>7&ndash;9 min</td></tr>
     <tr><td><b>II &mdash; The two winters</b></td><td>Scrub the timeline. Five lenses compare historical pathways without forcing a sequence.</td><td>3&ndash;4 min</td></tr>
     <tr><td><b>III &mdash; Anatomy</b></td><td>Compare the two winters and the present under the same lenses. Two current questions stay open.</td><td>2&ndash;3 min</td></tr>
     <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
@@ -1060,7 +1061,8 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <h2>Act III &mdash; anatomy</h2>
   <p>
     Compare the columns by cause, not by step number. Two cells in the &ldquo;Now&rdquo; column remain
-    open: no single binding technical constraint is established, and no withdrawal has occurred.
+    open: no single binding technical constraint is established here, and this snapshot does not
+    establish a comparable broad contraction.
   </p>
   <p class="say">
     &ldquo;Hindsight makes old constraints easier to see. It does not prove that today has the
@@ -1191,7 +1193,7 @@ const DATA = (() => {
 const INTRO = {
   title: 'AI has contracted twice before. The histories rhyme, but they do not repeat as a script.',
   body: [
-    'You have just watched capability curves go almost straight up. The fair question from anyone who has been in a technical field for thirty years is: is this another bubble?',
+    'You have just considered AI gains alongside their limits and measurement conditions. The fair question from anyone who has been in a technical field for thirty years is: is this another bubble?',
     'That question has an evidence base. Artificial intelligence has had two funding contractions severe enough that people inside the field named the weather — the AI winters. The first involved research expectations, machine translation, and UK policy; the second involved expert systems, specialised hardware, and shifting defence priorities. They share pressures, but neither supplies a template for the next one.',
     'This is not a demo about hype being bad. It separates time-bounded forecasts from contemporary assessments, then asks what evidence supports each present-day analogy. You will score forecasts. You will inspect assessments without pretending they were prophecies.'
   ],
@@ -1288,7 +1290,7 @@ const CARDS = [
   kind: 'assessment',
   verdict: 'context',
   verdictLine: 'A 1966 assessment, not a forecast to grade against the future.',
-  what: 'ALPAC questioned the near-term economics of fully automatic translation while recommending $2.5–3 million annually for computational-linguistics research and tools for human translators. Its recommendations, its later funding effects, and the eventual success of machine translation are different claims. This card keeps them separate.',
+  what: 'ALPAC questioned the near-term economics of fully automatic translation while recommending $2.5–3 million annually for computational-linguistics research. It separately endorsed tools that could assist human translators. Its recommendations, its later funding effects, and the eventual success of machine translation are different claims. This card keeps them separate.',
   note: 'Paraphrased from the original report. It is included to practice distinguishing an assessment from a prediction.',
   status: 'primary', src: 'alpac'
 },
@@ -1409,7 +1411,7 @@ const EVENTS = [
 
 { d: '1958-07-08', p: 'd', stage: 'promise', era: 1, label: 'The perceptron, in the press',
   text: 'A Navy press conference and a New York Times story promise a machine that will “walk, talk, see, write, reproduce itself and be conscious of its existence.” The demonstration was an IBM 704 learning left from right in fifty trials.',
-  status: 'primary', src: 'cornell-perceptron' },
+  status: 'reported', src: 'cornell-perceptron' },
 
 { d: '1960-01-01', p: 'y', stage: 'promise', era: 1, label: 'Twenty years to any work a man can do',
   text: 'Simon, in The New Science of Management Decision. Reprinted in 1965, which is the date it is usually given.',
@@ -1660,7 +1662,7 @@ const CUT = [
   { claim: 'Minsky’s “three to eight years” prediction from Life magazine, 1970',
     why: 'The article contains errors and Minsky denied at least one quotation attributed to him in it. His 1967 textbook says something equally strong and he wrote it himself, so that is used instead.' },
   { claim: 'A continuous series of AI funding from 1950 to 2026',
-    why: 'It does not exist in any sourceable form, particularly for US spending before 1980. Four discrete commitments are shown instead, in their original currencies and un-adjusted for inflation, and the app says that is what they are.' },
+    why: 'It does not exist in any sourceable form, particularly for US spending before 1980. Four discrete funding examples are shown instead, with different bases: programme budgets, programme expenditure, and a private funding round. Their three currencies and different price years cannot be combined into one series.' },
   { claim: 'A dollar figure for DARPA’s Speech Understanding Research programme',
     why: 'The programme ran 1971–1976 and did not meet its goals, which is well attested; the funding number repeated alongside it was not verifiable, so the event is left off the timeline entirely rather than shown with a soft number.' }
 ];
@@ -2353,12 +2355,13 @@ function renderReveal() {
   const miss = E.yearMiss(a.year, c.year);
   const band = E.missBand(miss);
   const assessment = c.verdict === 'context';
+  const untimedAmbition = c.id === 'nyt-1958';
   const right = assessment ? a.verdict === 'context' : E.verdictCorrect(a.verdict, c.verdict);
 
   $('#guess-wrap').hidden = true;
   $('#btn-lock').hidden = true;
   $('#btn-next-card').hidden = false;
-  $('#btn-next-card').textContent = S.i === D.CARDS.length - 1 ? 'See how you did' : 'Next prediction';
+  $('#btn-next-card').textContent = S.i === D.CARDS.length - 1 ? 'See how you did' : 'Next claim';
 
   const w = $('#reveal-wrap'); w.innerHTML = ''; w.hidden = false;
 
@@ -2381,7 +2384,9 @@ function renderReveal() {
   const m2 = el('div', 'mark ' + (right === null ? 'openv' : right ? 'good' : 'bad'));
   m2.appendChild(el('b', null, assessment ? (right ? 'Classified correctly' : 'Read the distinction') : right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
   m2.appendChild(el('span', null, assessment
-    ? (right ? 'It diagnoses conditions at a date; it is not a future forecast.' : 'Read the reveal: this evaluates conditions at a date rather than predicting what must happen next.')
+    ? (untimedAmbition
+      ? (right ? 'It is an untimed ambition to classify, not a forecast with a scoreable deadline.' : 'Read the reveal: this is an untimed ambition without a scoreable deadline. Future-facing language alone does not create a forecast window.')
+      : (right ? 'It diagnoses conditions at a date; it is not a future forecast.' : 'Read the reveal: this evaluates conditions at a date rather than predicting what must happen next.'))
     : right === null
     ? 'This one has not resolved. Nobody is marked on it.'
     : 'You said ' + VERDICT_WORD[a.verdict].toLowerCase() + '.'));
@@ -2839,8 +2844,8 @@ function runSelfTest() {
 
   ok('Every card year falls inside the timeline window',
      D.CARDS.every(c => c.year >= Timeline.Y0 && c.year <= Timeline.Y1));
-  ok('Exactly one card is left unresolved',
-     D.CARDS.filter(c => c.verdict === 'open').length === 1);
+  ok('Exactly two cards are left unresolved',
+     D.CARDS.filter(c => c.verdict === 'open').length === 2);
 
   ok('Both winters start after their own first promise',
      D.WINTERS.every(w => D.EVENTS.some(e => e.stage === 'promise' && E.t(e.d) < E.t(w.from))));
