@@ -1,19 +1,19 @@
 {
   "slug": "ion-flight",
-  "title": "Ion Flight",
+  "title": "Time-of-Flight Mass Spectrometer",
   "emoji": "⚡",
   "topic": "Chemistry · Instrumental Analysis",
   "discipline": "Chemistry",
   "tagline": "Predict, time, and explain what a flight-time detector can reveal",
   "hub_blurb": "Predict and time ion flights, then use detector evidence to separate mass and charge effects without claiming more than the trace shows.",
   "card_blurb": "Run three linked ion comparisons, use detector evidence to separate mass and charge effects, and discover why different ions can share one flight-time peak.",
-  "description": "**Ion Flight** — an offline guided linear TOF investigation. Predict and run mass, charge, and equal-ratio comparisons; watch the fixed-scale flight; then explain what the summed detector trace can and cannot establish. Includes an optional peak-width extension and printable teacher guide.",
+  "description": "**Time-of-Flight Mass Spectrometer** (Ion Flight) — an offline guided linear TOF investigation. Predict and run mass, charge, and equal-ratio comparisons; watch the fixed-scale flight; then explain what the summed detector trace can and cannot establish. Includes an optional peak-width extension and printable teacher guide.",
   "entry": "index.html",
   "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
   "theme": "murray-state",
   "built_for": "murray-state",
   "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
-  "built_with": ["codex", "gpt-5.6-terra", "gpt-6-astra", "gpt-5.6-sol"],
+  "built_with": ["codex", "gpt-5.6-terra", "gpt-6-astra", "gpt-5.6-sol", "claude-code"],
   "status": "active",
   "added": "2026-09-08",
   "compliance": {
@@ -23,11 +23,11 @@
     "settings_menu": true,
     "presentation_mode": true,
     "presenter_notes": true,
-    "settings_reset": false,
-    "notes_match_guide": false,
+    "settings_reset": true,
+    "notes_match_guide": true,
     "msu_theme": true,
     "attribution_visible": true,
     "mobile": true,
-    "offline_no_inference": "unverified"
+    "offline_no_inference": true
   }
 }
