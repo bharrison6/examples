@@ -9,7 +9,11 @@ no account, network request, AI service, or installation is needed.
 ## Teaching sequence
 
 The three top-level tabs sit below the branded header because they change the
-whole lesson; they are mechanisms, not difficulty levels.
+whole lesson; they are mechanisms, not difficulty levels. **Details** opens the
+current stage's evidence and technical explanation in a right-side drawer, so
+the main activity keeps the question, Try/Observe/Takeaway cues, board, and
+stage controls together. The drawer follows the selected era, closes with its
+button, backdrop, or Escape, and returns focus to the Details button.
 
 - **1a · Rules-based intelligence** follows a hand-written eight-rule ladder.
   It learns nothing from play; the policy check examines every reachable game
