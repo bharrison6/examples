@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front Doors — presenter guide</title>
+<!--
+  Canonical, printable presenter guide for the Front Doors demo.
+
+  This file is the single source of truth for the presenter's notes. build.js
+  lifts the first <style> block and the .guide-scope div out of here verbatim
+  and injects them into index.html, so Settings -> Presenter's notes shows
+  exactly this text with no sibling file to go looking for. Edit here; never
+  edit the copy inside index.html.
+
+  Everything in the first <style> block MUST be scoped to .guide-scope, because
+  it is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the second <style> block, which is not
+  extracted.
+-->
+<style>
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say {
+  border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px;
+  margin: 0 0 .9em; font-style: italic; opacity: .95;
+}
+.guide-scope .warn { border-left-color: #FF4500; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .tag {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.guide-scope .tag.p { background: rgba(236,172,0,.18); color: #ECAC00; }
+.guide-scope .tag.d { background: rgba(0,164,227,.18); color: #00A4E3; }
+.guide-scope .tag.w { background: rgba(185,140,255,.18); color: #B98CFF; }
+.guide-scope .tag.o { background: rgba(126,217,87,.18); color: #7ED957; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+</style>
+<style>
+/* Standalone printable page only — not extracted into the app. */
+body {
+  margin: 0; background: #fff; color: #14181f;
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.page { max-width: 46rem; margin: 0 auto; padding: 32px 22px 56px; }
+@media print {
+  body { font-size: 11.5pt; }
+  .page { max-width: none; padding: 0; }
+  h2 { break-after: avoid; }
+  table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="guide-scope">
+
+  <div class="g-head">
+    <div class="g-kicker">AI: From Zero to Takeoff &middot; Part three</div>
+    <h1>Front Doors &mdash; presenter guide</h1>
+    <div class="g-sub">
+      What to ask it with. Runs after The Stranger, which covered how to phrase the request.
+      About 12 minutes, or 4 if you are behind. Product claims checked 8 September 2026.
+    </div>
+  </div>
+
+  <h2>The one sentence</h2>
+  <p class="say">
+    The surface you use decides what the tool can reach &mdash; and the further it reaches, the
+    more of its work you have to check.
+  </p>
+  <p>
+    Everything on the page serves that sentence. If you only get one thing across, get that,
+    and specifically the second half, because the first half is intuitive and the second is not.
+  </p>
+
+  <h2>Why this follows The Stranger</h2>
+  <p>
+    The Stranger taught the room that how you ask changes what you get. The obvious next
+    conclusion &mdash; and the wrong one &mdash; is that prompting is the whole skill. This module
+    is the correction: a perfectly phrased request to a browser tab still cannot rename a file on
+    your laptop. Phrasing is one variable; the door is the other.
+  </p>
+
+  <h2>Running it &mdash; the 12-minute version</h2>
+
+  <h3>Act I &middot; the four doors <span class="tag d">4 min</span></h3>
+  <p>
+    Put the grid up and say nothing for a beat. Let them see four columns and read the four
+    questions down the left. Then:
+  </p>
+  <ul>
+    <li>
+      <b>Open one cell, not six.</b> The best single cell in the module is
+      <b>door 1, row 2</b> &mdash; a chat window answers in the conversation. Then jump straight
+      to <b>door 1 on the &ldquo;rename four hundred files&rdquo; job</b> in Act II if you want the
+      laugh, or stay for row 4.
+    </li>
+    <li>
+      <b>Then open door 2, row 4</b> &mdash; accept or reject, you get a diff. This is the cell
+      that surprises people, because it is the least glamorous door and it has the best review
+      story in the table.
+    </li>
+    <li>
+      <b>Name the bars honestly.</b> If somebody says the staircase looks suspiciously neat, agree
+      with them: rows 1 to 3 rise because the doors were chosen as a ladder. Point at row 4 and
+      say that is the row that was not chosen, it came out that way.
+    </li>
+  </ul>
+  <p class="say">
+    &ldquo;Same model behind all four of these. What changes is how far it can reach &mdash; and
+    every step of reach you hand it, you get back as review.&rdquo;
+  </p>
+
+  <h3>Act II &middot; pick a job <span class="tag p">6 min</span></h3>
+  <p>
+    This is the act that lands. Do not walk all 7 jobs. Ask the room to pick, or pick two
+    yourself:
+  </p>
+  <ul>
+    <li>
+      <b>&ldquo;Rename four hundred scanned files&rdquo;</b> &mdash; the clearest floor in the module.
+      Two doors say <em>wrong door</em> outright. Nobody argues with it, and it makes the point
+      that better prompting cannot buy reach.
+    </li>
+    <li>
+      <b>&ldquo;Reformat a syllabus into the department&rsquo;s template&rdquo;</b> &mdash; the one where
+      the answer is the boring door, the agent already inside Word. Most useful answer of the day
+      for most of the room.
+    </li>
+    <li>
+      <b>Read the last line of every card out loud.</b> &ldquo;You hand over&rdquo;. That line is the
+      whole argument. A capability chart never has it.
+    </li>
+  </ul>
+  <p>
+    The green box at the top is computed, not written: it is the smallest-numbered door whose
+    verdict is <em>does the whole job</em>. Say &ldquo;smallest&rdquo; deliberately &mdash; the module
+    is not asking what the most capable tool is.
+  </p>
+  <p class="say">
+    &ldquo;Notice what I did not ask. Not which is best. Which is smallest and still finishes
+    the job.&rdquo;
+  </p>
+
+  <h3>Act III &middot; the receipts <span class="tag w">2 min</span></h3>
+  <p>
+    Do not read this act. Show two things and move on:
+  </p>
+  <ul>
+    <li>
+      <b>&ldquo;Agent Mode&rdquo; &rarr; &ldquo;Edit with Copilot&rdquo;</b>, with Microsoft&rsquo;s own
+      sentence under it. Same capability, new name, inside six months.
+    </li>
+    <li>
+      <b>&ldquo;ChatGPT agent&rdquo; &rarr; retired.</b> Point out that OpenAI&rsquo;s help page still
+      explains how to use the thing it opens by telling you is gone. That is the state of the
+      landscape, from the vendor.
+    </li>
+  </ul>
+  <p>
+    If the room is engaged, the third entry is worth ten seconds: the brief this module was built
+    from called the product &ldquo;GPT Work&rdquo;, which has never existed. Somebody who does this
+    for a living got it wrong six weeks out of date. That is the argument for the date at the top
+    of the page, and it is more persuasive as a confession than as advice.
+  </p>
+
+  <h2>The 4-minute cut</h2>
+  <ol>
+    <li>Grid up. Read the four questions down the left. <b>40 seconds.</b></li>
+    <li>Open <b>door 2, row 4</b> &mdash; accept or reject, you get a diff. <b>50 seconds.</b></li>
+    <li>Act II, the file-renaming job. Two doors say <em>wrong door</em>. <b>90 seconds.</b></li>
+    <li>Act III, the two renames. <b>40 seconds.</b> Then the one sentence, and stop.</li>
+  </ol>
+
+  <h2>Questions you will get</h2>
+
+  <h3>&ldquo;So which one should I buy?&rdquo;</h3>
+  <p>
+    The module deliberately does not answer this and neither should you. The honest reply is:
+    almost certainly none, because your institution already licenses one or two of these and that
+    decides it. Send them to IT. It is not a dodge &mdash; the institutional answer genuinely
+    dominates the vendor comparison here.
+  </p>
+
+  <h3>&ldquo;Is the expensive one better?&rdquo;</h3>
+  <p>
+    No, and row 4 is why. More reach is more review. For most of what a faculty member does in a
+    week, doors 1 and 2 are the right answer &mdash; and of the 7 jobs in Act II, 3 are finished
+    completely by a chat window or by the agent inside the word processor.
+  </p>
+
+  <h3>&ldquo;Can it see my students&rsquo; work?&rdquo;</h3>
+  <p>
+    Only if you give it access, and whether you may give it access is a question for your
+    registrar and your IT department rather than for a vendor page. Two of the jobs in Act II carry
+    that caution on screen for exactly this moment; open one and read it rather than
+    improvising a policy answer.
+  </p>
+
+  <h3>&ldquo;That product changed &mdash; your page is wrong&rdquo;</h3>
+  <p class="say">
+    &ldquo;Good &mdash; that is the module working. Which door was it? Because the door is still
+    there.&rdquo;
+  </p>
+  <p>
+    Then open Act III and show that the page predicted exactly this, and lists what it expects to
+    rot first. Do not defend the name. This is the strongest moment available to you and it only
+    works if you take the correction gratefully.
+  </p>
+
+  <h3>&ldquo;How do you know any of this?&rdquo;</h3>
+  <p>
+    Open <b>Settings &rarr; Run the self-test</b> in front of them. It checks that every claim
+    resolves to a declared source, that no source is cited and never used, that no price and no
+    vendor ranking leaked into anything the page can display, and that the review row genuinely
+    does not rise the way the other three do. Then tap any cell and follow the link.
+  </p>
+
+  <h2>What the numbers on the page mean</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>Figure</th><th>What it is</th></tr>
+    <tr><td>16 cells</td><td>4 doors &times; 4 axes. Every one opens a reason, a label and a source.</td></tr>
+    <tr><td>13 verified</td><td>Cells where a page belonging to the company that makes the product was opened on the check date and says it.</td></tr>
+    <tr><td>3 reasoned</td><td>The ordering judgements. Labelled, because no vendor states them.</td></tr>
+    <tr><td>28 judgements</td><td>7 jobs &times; 4 doors in Act II. All reasoned from Act I, and each names the axis that decided it.</td></tr>
+    <tr><td>15 sources</td><td>All first-party. Two of them are OpenAI pages that refuse automated retrieval and were read in an ordinary browser.</td></tr>
+    <tr><td>9 things cut</td><td>Researched during the build and deliberately left off, each with the reason.</td></tr>
+  </table>
+  </div>
+  <p>
+    The shipped test suite fails the build if any of those figures disagrees with the code, this
+    guide, README.md or the manifest. If you edit a number here, run
+    <b>node src/playtest.test.js</b> before you present.
+  </p>
+
+  <h2>What is deliberately not on the page</h2>
+  <ul>
+    <li>
+      <b>No prices.</b> Not one figure. They moved more than once in the last year on all four
+      doors and a wrong number in front of faculty costs more than a missing one. Figures that
+      sources did state are in README.md with the date they were read &mdash; read them there,
+      do not put them on the screen.
+    </li>
+    <li>
+      <b>No recommendation and no ranking.</b> Faculty in the room have institutional constraints
+      you do not know about. The self-test enforces this one mechanically.
+    </li>
+    <li>
+      <b>No claim that going inward is better.</b> If your delivery accidentally implies it, row 4
+      is the correction and you should let the page make it.
+    </li>
+    <li>
+      <b>No screenshots.</b> They would break the offline rule and they rot faster than anything
+      else available.
+    </li>
+  </ul>
+
+  <h2>Before you present</h2>
+  <ul>
+    <li>Open <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
+    <li>Run the self-test once so you know it is green before anyone asks.</li>
+    <li>
+      <b>Re-read Act III the morning of.</b> This is the one demo in the collection with a real
+      shelf life. If a name on screen has changed, say so from the stage &mdash; it is a better
+      moment than a correct page would have been.
+    </li>
+    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>No network is needed at any point. The source links need one, but only if somebody
+      asks you to follow one, and you can promise to send it instead.</li>
+  </ul>
+
+  <div class="g-foot">
+    Front Doors &mdash; Bryant Harrison, Murray State University.
+    Product claims checked 8 September 2026 against first-party sources. Every claim on screen
+    carries a confidence label and links to its origin; everything researched and left off is
+    listed in Act III under &ldquo;Researched, and deliberately not on the page&rdquo;.
+  </div>
+
+</div><!-- /guide -->
+</div>
+</body>
+</html>

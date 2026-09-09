@@ -1,0 +1,2683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#00142B">
+<title>Front Doors — what to ask it with</title>
+<!--
+  Front Doors — a single-file, offline teaching module about the four surfaces
+  through which a person can use AI, and why the surface decides what the tool
+  can reach.
+
+  Three acts: the four doors against four axes as a grid the room can read in
+  one look; seven realistic faculty jobs against those same four doors, with
+  the smallest sufficient door computed from the verdicts rather than typed;
+  then the receipts — two product names that already moved, what to expect to
+  rot, every source, and everything researched and left off.
+
+  Every product claim resolves to a page belonging to the company that makes
+  the product, and carries a confidence label: verified, reasoned, or
+  unconfirmed. Settings -> Run the self-test proves that live, along with the
+  two rules the module holds itself to: no prices, no rankings.
+
+  Nothing is fetched at runtime and nothing is stored on the device. The only
+  URLs are in outbound source links the reader may choose to follow.
+
+  Companion: presenter-guide.html. Sources live in src/ and are concatenated
+  by build.js.
+-->
+<style>
+/* ==== styles.css ==== */
+/* ==========================================================================
+   Front Doors — styles.
+
+   Phone first, and the four-by-four grid in Act I is the reason this file
+   exists. A capability table is the classic thing that ships as a horizontal
+   scroller nobody reads on a phone. This one does not scroll sideways at any
+   width. It is ONE piece of markup rendered two ways:
+
+     narrow  — four stacked door cards, each carrying its four axis rows with
+               their own labels. Reads top to bottom, thumb-sized.
+     wide    — a real five-column CSS grid: an axis rail plus four door
+               columns, rows aligned by the grid itself.
+
+   The switch is `display: contents` on the two wrapper divs, plus explicit
+   --col/--row custom properties that app.js stamps on every grid child. The
+   wrappers are plain divs carrying no semantics, so collapsing them out of
+   the box tree takes nothing out of the accessibility tree with them; the
+   labels and the roles live on the cells.
+
+   Murray State palette. Red-orange (#FF4500) appears in exactly three
+   places, all of them genuine failure states: a "wrong door" verdict in
+   Act II, a source chip that failed to resolve, and a failing self-test row.
+   ========================================================================== */
+
+:root {
+  --navy:       #002144;
+  --navy-deep:  #00142B;
+  --navy-soft:  #062E56;
+  --gold:       #ECAC00;
+  --sky:        #00A4E3;
+  --red:        #FF4500;
+  --ink:        #E8EDF5;
+  --dim:        #8FA3C0;
+  --faint:      rgba(143,163,192,0.20);
+  --line:       rgba(143,163,192,0.16);
+  --panel:      rgba(255,255,255,0.035);
+  --panel-2:    rgba(255,255,255,0.055);
+  --green:      #7ED957;
+  --violet:     #B98CFF;
+  --r:          14px;
+  --fs:         16px;
+  --maxw:       1240px;
+}
+
+* { box-sizing: border-box; }
+
+/* The app hides with the `hidden` attribute, and several hidden things carry
+   a `display` of their own below. A bare `display:flex` beats the user-agent
+   `[hidden]{display:none}` and renders every overlay at once on load. */
+[hidden] { display: none !important; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(1100px 620px at 78% -12%, rgba(0,164,227,0.13), transparent 62%),
+    radial-gradient(900px 520px at 8% 108%, rgba(236,172,0,0.09), transparent 60%),
+    var(--navy-deep);
+  color: var(--ink);
+  font: var(--fs)/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* `clip`, not `hidden`: overflow-x:hidden makes body a scroll container and
+     the sticky header then scrolls away with the page. */
+  overflow-x: clip;
+}
+
+h1, h2, h3 { line-height: 1.22; margin: 0 0 .5em; letter-spacing: -0.011em; }
+h1 { font-size: clamp(1.35rem, 4.6vw, 2.15rem); font-weight: 800; }
+h2 { font-size: clamp(1.15rem, 3.6vw, 1.6rem); font-weight: 800; }
+h3 { font-size: clamp(1.02rem, 3vw, 1.22rem); font-weight: 800; }
+p  { margin: 0 0 1em; text-wrap: pretty; }
+a  { color: var(--sky); }
+
+/* --------------------------------------------------------------- chrome */
+
+#brandbar {
+  position: sticky; top: 0; z-index: 40;
+  background: linear-gradient(180deg, rgba(0,20,43,0.98), rgba(0,20,43,0.94));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+
+#topbar {
+  display: flex; align-items: center; gap: 10px;
+  max-width: var(--maxw); margin: 0 auto; padding: 8px 12px;
+}
+
+#brand { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+#brand .b0 {
+  font-size: .62rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--gold); font-weight: 700;
+}
+#brand .b1 {
+  font-size: .96rem; font-weight: 800; letter-spacing: .02em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#brand .b1 em { font-style: normal; font-weight: 500; color: var(--dim); font-size: .8em; }
+
+#topbar-tools { display: flex; gap: 8px; flex: none; }
+
+.icon-btn {
+  width: 44px; height: 44px; flex: none;
+  border-radius: 11px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink);
+  font-size: 1.12rem; line-height: 1; cursor: pointer;
+  display: grid; place-items: center;
+}
+.icon-btn:hover { background: var(--panel-2); border-color: var(--faint); }
+
+#actnav {
+  display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+  max-width: var(--maxw); margin: 0 auto; padding: 0 8px 8px;
+}
+#actnav::-webkit-scrollbar { display: none; }
+#actnav button {
+  flex: none; min-height: 44px; padding: 6px 13px;
+  border-radius: 10px; border: 1px solid transparent;
+  background: transparent; color: var(--dim);
+  font: 700 .82rem/1.15 inherit; cursor: pointer;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px;
+}
+#actnav button span { font-weight: 500; font-size: .64rem; letter-spacing: .1em; text-transform: uppercase; opacity: .72; }
+#actnav button.on { color: var(--navy-deep); background: var(--gold); border-color: var(--gold); }
+#actnav button:not(.on):hover { color: var(--ink); background: var(--panel); }
+
+main { max-width: var(--maxw); margin: 0 auto; padding: 18px 14px 64px; }
+
+/* --------------------------------------------------------------- pieces */
+
+.panel {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 16px; margin: 0 0 18px;
+}
+.panel.warn { border-left: 3px solid var(--gold); }
+.help { color: var(--dim); font-size: .88rem; }
+.lead { font-size: 1.05rem; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.hr { height: 1px; background: var(--line); margin: 16px 0; border: 0; }
+
+.btn {
+  min-height: 44px; padding: 10px 17px;
+  border-radius: 11px; border: 1px solid var(--faint);
+  background: var(--panel-2); color: var(--ink);
+  font: 700 .94rem/1.2 inherit; cursor: pointer;
+}
+.btn:hover { border-color: var(--sky); }
+.btn.primary { background: var(--gold); border-color: var(--gold); color: var(--navy-deep); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.big { font-size: 1.03rem; padding: 13px 22px; }
+.btn:disabled { opacity: .42; cursor: not-allowed; }
+
+/* The date stamp. The most important thing on the page after the grid. */
+.stamp {
+  display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  border: 1px solid rgba(236,172,0,0.45); background: rgba(236,172,0,0.09);
+  border-radius: 999px; padding: 7px 14px; margin: 0 0 16px;
+  font-size: .84rem; font-weight: 700; color: var(--gold);
+}
+.stamp em { font-style: normal; font-weight: 500; color: var(--dim); }
+
+/* Source chips. 36px is this repository's tap-target floor and a source chip
+   is a real target — on a phone it is what the sceptic reaches for first. */
+.src {
+  display: inline-block; min-height: 36px; line-height: 34px;
+  padding: 0 12px; border-radius: 8px;
+  border: 1px solid rgba(0,164,227,0.4);
+  color: var(--sky); background: rgba(0,164,227,0.08);
+  font-size: .72rem; font-weight: 700; text-decoration: none;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.src:hover { background: rgba(0,164,227,0.18); }
+.src.bad { color: var(--red); border-color: var(--red); background: rgba(255,69,0,0.1); }
+.src-row { display: flex; gap: 9px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+.src-title { color: var(--dim); font-size: .76rem; line-height: 1.35; flex: 1 1 220px; min-width: 0; }
+
+/* Confidence labels. These carry the whole honesty claim, so they are legible
+   rather than decorative. */
+.conf {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: .64rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase;
+  cursor: help; white-space: nowrap;
+}
+.conf.verified    { background: rgba(126,217,87,0.15); color: var(--green); }
+.conf.reasoned    { background: rgba(185,140,255,0.16); color: var(--violet); }
+.conf.unconfirmed { background: rgba(236,172,0,0.15); color: var(--gold); }
+
+.quote {
+  border-left: 3px solid var(--sky); padding: 2px 0 2px 12px; margin: 12px 0;
+  color: var(--ink); font-size: .9rem; font-style: italic; opacity: .93;
+}
+
+/* ===================================================================== */
+/* ACT I — the four doors against the four axes                          */
+/* ===================================================================== */
+
+#grid {
+  /* narrow default: four stacked cards */
+  display: flex; flex-direction: column; gap: 16px; margin: 0 0 18px;
+}
+
+.g-rail { display: none; }
+
+.g-group {
+  border: 1px solid var(--line); border-radius: var(--r);
+  background: var(--panel); overflow: hidden;
+  display: flex; flex-direction: column;
+}
+
+/* --- door header ------------------------------------------------------- */
+
+.g-door {
+  text-align: left; width: 100%;
+  padding: 13px 14px; border: 0; border-bottom: 1px solid var(--line);
+  background: linear-gradient(160deg, rgba(0,164,227,0.10), rgba(255,255,255,0.02));
+  color: var(--ink); font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; gap: 3px; min-height: 56px;
+}
+.g-door:hover { background: linear-gradient(160deg, rgba(0,164,227,0.18), rgba(255,255,255,0.04)); }
+.g-door .d-n {
+  font-size: .62rem; font-weight: 800; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--gold);
+}
+.g-door .d-name { font-size: 1rem; font-weight: 800; line-height: 1.22; }
+.g-door .d-prod { font-size: .76rem; color: var(--dim); line-height: 1.4; }
+.g-door .d-more {
+  font-size: .68rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--sky); margin-top: 2px;
+}
+
+/* --- a cell ----------------------------------------------------------- */
+
+.g-cell {
+  text-align: left; width: 100%;
+  padding: 11px 14px; border: 0; border-top: 1px solid var(--line);
+  background: transparent; color: var(--ink); font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px; min-height: 56px;
+}
+.g-group .g-cell:first-of-type { border-top: 0; }
+.g-cell:hover { background: var(--panel-2); }
+.g-cell:focus-visible { outline: 2px solid var(--sky); outline-offset: -2px; }
+
+/* The axis name inside a cell. Shown on a phone, where there is no rail to
+   carry it; hidden at wide, where the rail says it once for the whole row. */
+.g-cell .c-axis {
+  font-size: .64rem; font-weight: 800; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--dim);
+}
+.g-cell .c-head { font-size: .94rem; font-weight: 700; line-height: 1.32; }
+.g-cell .c-foot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* the four-segment meter */
+.bar { display: flex; gap: 3px; flex: none; }
+.bar i {
+  display: block; width: 15px; height: 7px; border-radius: 2px;
+  background: rgba(143,163,192,0.20);
+}
+.bar i.on { background: var(--sky); }
+.g-cell[data-axis="check"] .bar i.on { background: var(--gold); }
+.g-cell .c-tap {
+  font-size: .64rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--sky); opacity: .8;
+}
+
+/* the check row reads differently and is allowed to look different */
+.g-cell[data-axis="check"] { background: rgba(236,172,0,0.045); }
+.g-cell[data-axis="check"]:hover { background: rgba(236,172,0,0.10); }
+
+/* --- wide: become a real grid ----------------------------------------- */
+
+@media (min-width: 940px) {
+  #grid {
+    display: grid;
+    grid-template-columns: 168px repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    align-items: stretch;
+  }
+  /* the wrappers stop being boxes and their children join the grid */
+  .g-rail, .g-group { display: contents; }
+
+  .g-corner, .g-axis, .g-door, .g-cell {
+    grid-column: var(--col); grid-row: var(--row);
+  }
+
+  .g-corner {
+    display: flex; align-items: flex-end;
+    font-size: .68rem; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--dim); padding-bottom: 8px;
+  }
+  .g-axis {
+    display: flex; flex-direction: column; justify-content: center; gap: 3px;
+    padding: 10px 12px 10px 0;
+    border-right: 1px solid var(--line);
+  }
+  .g-axis .a-n {
+    font-size: .6rem; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--gold);
+  }
+  .g-axis .a-q { font-size: .88rem; font-weight: 800; line-height: 1.26; }
+  .g-axis .a-lead { font-size: .72rem; color: var(--dim); line-height: 1.35; }
+  .g-axis[data-axis="check"] .a-n { color: var(--sky); }
+
+  .g-door {
+    border: 1px solid var(--line); border-radius: 12px 12px 0 0;
+    border-bottom: 0; min-height: 0; padding: 12px;
+  }
+  .g-cell {
+    border: 1px solid var(--line); border-top: 0;
+    background: var(--panel); min-height: 104px; padding: 12px;
+  }
+  .g-group .g-cell:first-of-type { border-top: 0; }
+  .g-cell[data-axis="check"] {
+    border-radius: 0 0 12px 12px;
+    background: rgba(236,172,0,0.06);
+    border-top: 1px solid rgba(236,172,0,0.3);
+  }
+  .g-cell .c-axis { display: none; }
+  .g-cell .c-head { font-size: .9rem; }
+}
+
+/* --- the exception badge --------------------------------------------- */
+
+.g-cell .c-flag {
+  font-size: .6rem; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--gold);
+  border: 1px solid rgba(236,172,0,0.45); border-radius: 999px; padding: 1px 7px;
+}
+
+/* ===================================================================== */
+/* ACT II — pick a job                                                   */
+/* ===================================================================== */
+
+#job-picker { display: grid; grid-template-columns: 1fr; gap: 8px; margin: 0 0 18px; }
+@media (min-width: 700px)  { #job-picker { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1040px) { #job-picker { grid-template-columns: 1fr 1fr 1fr; } }
+
+.job-btn {
+  text-align: left; min-height: 56px; padding: 12px 14px;
+  border-radius: 12px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); font: inherit; cursor: pointer;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.job-btn:hover { border-color: var(--sky); background: var(--panel-2); }
+.job-btn.on { border-color: var(--gold); background: rgba(236,172,0,0.10); }
+.job-btn .j-n {
+  font-size: .6rem; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim);
+}
+.job-btn.on .j-n { color: var(--gold); }
+.job-btn .j-name { font-size: .92rem; font-weight: 700; line-height: 1.3; }
+
+#job-out { margin: 0 0 18px; }
+#job-out.empty { display: none; }
+
+.j-head { margin: 0 0 14px; }
+.j-head h2 { margin: 0 0 6px; }
+.j-detail { color: var(--dim); font-size: .92rem; margin: 0; }
+
+.j-caution {
+  border: 1px solid rgba(236,172,0,0.45); background: rgba(236,172,0,0.08);
+  border-radius: 12px; padding: 12px 14px; margin: 14px 0 0;
+  font-size: .88rem;
+}
+.j-caution b { color: var(--gold); }
+
+/* the verdict for the smallest door that does the job */
+.j-best {
+  display: flex; flex-direction: column; gap: 4px;
+  border: 1px solid rgba(126,217,87,0.4); background: rgba(126,217,87,0.08);
+  border-radius: 12px; padding: 13px 15px; margin: 16px 0;
+}
+.j-best .b-lbl {
+  font-size: .62rem; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--green);
+}
+.j-best .b-door { font-size: 1.04rem; font-weight: 800; }
+.j-best .b-note { font-size: .86rem; color: var(--dim); }
+
+#job-doors { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 780px)  { #job-doors { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 1120px) { #job-doors { grid-template-columns: repeat(4, 1fr); } }
+
+.jd {
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); padding: 13px 14px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+.jd.v-yes    { border-left: 3px solid var(--green); }
+.jd.v-partly { border-left: 3px solid var(--gold); }
+.jd.v-no     { border-left: 3px solid var(--red); }
+.jd.is-best  { box-shadow: 0 0 0 1px rgba(126,217,87,0.45); }
+
+.jd .jd-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.jd .jd-n {
+  font-size: .6rem; font-weight: 800; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--dim);
+}
+.jd .jd-name { font-size: .9rem; font-weight: 800; line-height: 1.24; flex: 1 1 100%; }
+.jd .jd-v {
+  display: inline-block; padding: 3px 9px; border-radius: 999px;
+  font-size: .66rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.jd.v-yes    .jd-v { background: rgba(126,217,87,0.16); color: var(--green); }
+.jd.v-partly .jd-v { background: rgba(236,172,0,0.16);  color: var(--gold); }
+.jd.v-no     .jd-v { background: rgba(255,69,0,0.14);   color: var(--red); }
+.jd .jd-why { font-size: .86rem; line-height: 1.5; margin: 0; }
+.jd .jd-hand {
+  font-size: .8rem; color: var(--dim); border-top: 1px solid var(--line);
+  padding-top: 7px; margin: 0;
+}
+.jd .jd-hand b { color: var(--ink); font-weight: 700; }
+.jd .jd-axis {
+  font-size: .62rem; font-weight: 700; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--sky);
+}
+
+/* ===================================================================== */
+/* ACT III — receipts                                                    */
+/* ===================================================================== */
+
+.cols2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 840px) { .cols2 { grid-template-columns: 1fr 1fr; } }
+
+.chg {
+  border: 1px solid var(--line); border-radius: 12px;
+  background: var(--panel); padding: 14px; margin: 0 0 12px;
+}
+.chg .c-move {
+  display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+  font-size: 1rem; font-weight: 800; margin-bottom: 4px;
+}
+.chg .c-was { color: var(--dim); text-decoration: line-through; }
+.chg .c-arrow { color: var(--gold); }
+.chg .c-now { color: var(--ink); }
+.chg .c-what {
+  font-size: .64rem; font-weight: 800; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--sky); margin-bottom: 8px;
+}
+.chg .c-body { font-size: .9rem; margin: 0; }
+
+.slist { list-style: none; margin: 0; padding: 0; }
+.slist li {
+  padding: 8px 0 8px 20px; position: relative;
+  font-size: .9rem; border-top: 1px solid var(--line);
+}
+.slist li:first-child { border-top: 0; }
+.slist li::before {
+  content: ""; position: absolute; left: 3px; top: 17px;
+  width: 7px; height: 7px; border-radius: 2px;
+}
+.slist.rot li::before  { background: var(--gold); }
+.slist.keep li::before { background: var(--sky); }
+
+.cut-item { padding: 11px 0; border-top: 1px solid var(--line); }
+.cut-item:first-child { border-top: 0; }
+.cut-item b { display: block; font-size: .92rem; margin-bottom: 3px; }
+.cut-item span { font-size: .86rem; color: var(--dim); }
+
+.source-item {
+  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  padding: 10px 0; border-top: 1px solid var(--line);
+}
+.source-item:first-child { border-top: 0; }
+
+/* ---------------------------------------------------------- overlays */
+
+.overlay {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(0,10,22,0.78); backdrop-filter: blur(4px);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding: 0; overscroll-behavior: contain;
+}
+@media (min-width: 700px) { .overlay { align-items: center; padding: 24px; } }
+.sheet-inner {
+  width: 100%; max-width: 680px; max-height: 92vh;
+  display: flex; flex-direction: column;
+  background: var(--navy); border: 1px solid var(--faint);
+  border-radius: var(--r) var(--r) 0 0;
+  animation: sheet .24s ease both;
+}
+@media (min-width: 700px) { .sheet-inner { border-radius: var(--r); } }
+@keyframes sheet { from { transform: translateY(22px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sheet-inner:focus { outline: none; }
+.sheet-head {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 15px 15px 11px; border-bottom: 1px solid var(--line);
+}
+.sheet-head h2 { margin: 0; }
+.sheet-head .sub { color: var(--dim); font-size: .82rem; }
+.sheet-head .icon-btn { margin-left: auto; }
+.sheet-body { padding: 15px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.sheet-foot {
+  padding: 12px 15px calc(12px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.ht-foot { justify-content: space-between; }
+.ht-dismiss { color: var(--dim); font-size: .8rem; }
+kbd {
+  background: var(--panel-2); border: 1px solid var(--faint);
+  border-radius: 5px; padding: 1px 5px; font-size: .78em; font-family: inherit;
+}
+.ht-steps { margin: 0 0 16px; padding-left: 20px; }
+.ht-steps li { margin-bottom: 11px; }
+.ht-acts { margin: 0; padding-left: 20px; }
+.ht-acts li { margin-bottom: 6px; font-size: .92rem; }
+.ht-tip {
+  border-left: 3px solid var(--gold); padding-left: 12px;
+  font-size: .92rem; opacity: .92;
+}
+.field { margin: 0 0 18px; }
+.lbl {
+  display: block; font: 800 .72rem/1 inherit; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim); margin-bottom: 9px;
+}
+.switch { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.switch input { width: 22px; height: 22px; accent-color: var(--gold); flex: none; }
+.field .btn { margin-bottom: 6px; }
+
+/* the detail sheet a cell opens */
+#detail-body .d-axis {
+  font-size: .64rem; font-weight: 800; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+}
+#detail-body .d-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0; }
+#detail-body .d-bar-text { font-size: .86rem; color: var(--dim); flex: 1 1 200px; }
+
+#selftest-out:empty { display: none; }
+.st-head {
+  margin-top: 10px; padding: 8px 11px; border-radius: 9px;
+  font-weight: 800; font-size: .88rem;
+}
+.st-head.good { background: rgba(126,217,87,0.13); color: var(--green); }
+.st-head.bad  { background: rgba(255,69,0,0.13);  color: var(--red); }
+.st-list { list-style: none; margin: 8px 0 0; padding: 0; max-height: 240px; overflow-y: auto; }
+.st-list li { display: flex; gap: 8px; padding: 4px 0; font-size: .8rem; border-top: 1px solid var(--line); }
+.st-list li b { flex: none; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .74rem; }
+.st-list li.ok b { color: var(--green); }
+.st-list li.no b { color: var(--red); }
+.st-list li span { color: var(--dim); }
+
+/* presenter's notes, injected from the printable guide */
+.guide-scope { font-size: .95rem; }
+.guide-scope h2 { font-size: 1.1rem; margin-top: 18px; }
+.guide-scope h3 { font-size: .98rem; margin-top: 14px; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.guide-scope .say {
+  border-left: 3px solid var(--gold); padding-left: 12px;
+  opacity: .92; font-style: italic;
+}
+.guide-scope .scroll { overflow-x: auto; }
+
+/* ----------------------------------------------------------- footer */
+
+#foot {
+  max-width: var(--maxw); margin: 0 auto;
+  padding: 22px 14px calc(28px + env(safe-area-inset-bottom, 0px));
+  color: var(--dim); font-size: .82rem;
+  border-top: 1px solid var(--line);
+  display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
+}
+#foot .msu { color: var(--gold); font-weight: 800; }
+#foot .who { color: var(--ink); font-weight: 700; }
+
+/* ------------------------------------------------- presentation mode */
+
+body.presenting { --fs: 19px; }
+body.presenting .btn { min-height: 52px; font-size: 1.02rem; }
+body.presenting .icon-btn { width: 52px; height: 52px; }
+body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
+body.presenting .g-cell { min-height: 64px; }
+body.presenting .g-cell .c-head { font-size: 1.04rem; }
+body.presenting .g-door .d-name { font-size: 1.12rem; }
+body.presenting .job-btn .j-name { font-size: 1.02rem; }
+body.presenting .bar i { width: 19px; height: 9px; }
+@media (min-width: 940px) {
+  body.presenting .g-cell { min-height: 124px; }
+  body.presenting .g-cell .c-head { font-size: 1rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: .001ms !important; transition-duration: .001ms !important; }
+}
+
+@media print {
+  #brandbar, #actnav, .overlay, .btn, .icon-btn, #job-picker { display: none !important; }
+  body { background: #fff; color: #000; }
+  .panel, .g-group, .jd, .chg { border-color: #999; }
+}
+
+/* ==== presenter guide (scoped to .guide-scope) ==== */
+ block and the .guide-scope div out of here verbatim
+  and injects them into index.html, so Settings -> Presenter's notes shows
+  exactly this text with no sibling file to go looking for. Edit here; never
+  edit the copy inside index.html.
+
+  Everything in the first <style> block MUST be scoped to .guide-scope, because
+  it is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the second <style> block, which is not
+  extracted.
+-->
+<style>
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say {
+  border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px;
+  margin: 0 0 .9em; font-style: italic; opacity: .95;
+}
+.guide-scope .warn { border-left-color: #FF4500; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .tag {
+  display: inline-block; padding: 1px 7px; border-radius: 999px;
+  font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.guide-scope .tag.p { background: rgba(236,172,0,.18); color: #ECAC00; }
+.guide-scope .tag.d { background: rgba(0,164,227,.18); color: #00A4E3; }
+.guide-scope .tag.w { background: rgba(185,140,255,.18); color: #B98CFF; }
+.guide-scope .tag.o { background: rgba(126,217,87,.18); color: #7ED957; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+
+</style>
+</head>
+<body>
+
+<div id="brandbar">
+  <header id="topbar">
+    <div id="brand">
+      <span class="b0">Murray State University</span>
+      <span class="b1">FRONT DOORS <em>what to ask it with</em></span>
+    </div>
+    <div id="topbar-tools">
+      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+    </div>
+  </header>
+  <nav id="actnav" role="tablist" aria-label="Acts">
+    <button data-act="1" class="on" role="tab" aria-selected="true">The four doors<span>Act I</span></button>
+    <button data-act="2" role="tab" aria-selected="false">Pick a job<span>Act II</span></button>
+    <button data-act="3" role="tab" aria-selected="false">The receipts<span>Act III</span></button>
+  </nav>
+</div>
+
+<main>
+
+<!-- =========================== ACT I ================================== -->
+<section class="act" data-act="1">
+
+  <p class="stamp">
+    <span>Checked on <span class="js-date"></span></span>
+    <em>&mdash; and written to go stale on purpose</em>
+  </p>
+
+  <h1 id="intro-title"></h1>
+  <div id="intro-body" class="lead"></div>
+  <p id="intro-note" class="help"></p>
+
+  <p class="help">
+    Four doors across, four questions down. Tap any cell for the reason and the source;
+    tap a door&rsquo;s name for what it is, where it runs and what it costs you to get in.
+    On a phone the grid becomes four cards &mdash; same sixteen cells, no sideways scrolling.
+  </p>
+
+  <div id="grid"></div>
+
+  <div class="panel" id="axis-note"></div>
+  <div class="panel warn" id="check-note"></div>
+
+  <div class="row">
+    <button class="btn primary big" id="btn-to-jobs">Now pick a job &rarr;</button>
+  </div>
+</section>
+
+<!-- =========================== ACT II ================================= -->
+<section class="act" data-act="2" hidden>
+  <h1>&ldquo;Which one is best&rdquo; is the wrong question. &ldquo;Which one fits this job&rdquo; has an answer.</h1>
+  <p class="lead">
+    Seven things a faculty member actually asks for. Choose one and the page says which doors
+    can do the whole job, which can do part of it, which cannot &mdash; and, for each,
+    what you would have to hand over to make it work.
+  </p>
+  <p class="help">
+    Watch the last line of each card. Access is the price, and it is the part that does not
+    appear on a feature comparison.
+  </p>
+
+  <div id="job-picker"></div>
+  <div id="job-out" class="empty"></div>
+  <div class="panel" id="jobs-note"></div>
+
+  <div class="row">
+    <button class="btn primary big" id="btn-to-receipts">Show me the receipts &rarr;</button>
+  </div>
+</section>
+
+<!-- =========================== ACT III ================================ -->
+<section class="act" data-act="3" hidden>
+  <h1>The names on this page have a shelf life. The doors do not.</h1>
+  <p class="lead">
+    This is the fastest-rotting page in the collection, so rather than hedge about it, here is
+    the evidence. Two of these four doors had a product renamed or retired in the six months
+    before <span class="js-date"></span>, and one of the three entries below is a mistake this
+    module made about itself.
+  </p>
+
+  <div id="changed"></div>
+  <div class="panel" id="stale"></div>
+  <div class="panel warn" id="uneven"></div>
+
+  <div class="panel">
+    <h3>The one thing to take away</h3>
+    <p>
+      Going inward is not an upgrade. Every door you move down gives the tool more reach and
+      takes away a little of your ability to check its work cheaply &mdash; and the cheapest
+      review in the whole table belongs to the agent inside the word processor you already own,
+      because it hands you a change to accept or reject instead of a finished thing to judge.
+    </p>
+    <p class="help">
+      Which is why the right question is not &ldquo;what is the most capable tool&rdquo; but
+      &ldquo;what is the smallest door that does this job&rdquo;. Act II answers that seven times.
+    </p>
+  </div>
+
+  <div class="panel" id="counts"></div>
+  <div class="panel" id="cut"></div>
+  <div class="panel" id="sources"></div>
+</section>
+
+</main>
+
+<footer id="foot">
+  <span class="msu">Murray State University</span>
+  <span class="who">Bryant Harrison</span>
+  <span>One HTML file &middot; runs offline &middot; product claims checked <span class="js-date"></span></span>
+</footer>
+
+<!-- ========================== HOW TO USE ============================ -->
+<div class="overlay" id="howto" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="howto-title">How to use this</h2><div class="sub">Three acts &middot; about 12 minutes</div></div>
+      <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <ol class="ht-steps">
+        <li>
+          <b>Read the grid.</b> Four ways of getting at AI across the top, four questions down
+          the side. The bars are a rough reading, not a measurement &mdash; the words in the
+          cells are the content.
+        </li>
+        <li>
+          <b>Tap a cell.</b> Every one of the sixteen opens the reason, the vendor&rsquo;s own
+          wording where there is any, an honesty label, and a link to the page it came from.
+          Nothing here asks you to take its word.
+        </li>
+        <li>
+          <b>Then pick a job.</b> Act II is the one that matters: seven real faculty tasks,
+          and for each one which doors can actually do it and what you would have to hand over.
+        </li>
+      </ol>
+
+      <p class="ht-tip">
+        The thing to leave with is not a product name. It is that the surface decides the reach,
+        and that the more a tool can reach, the more of its work you have to check.
+      </p>
+
+      <div class="field">
+        <span class="lbl">The three acts</span>
+        <ul class="ht-acts">
+          <li><b>The four doors</b> &mdash; a chat window, an agent inside Word or Docs, a desktop coworker, a coding agent &mdash; against four questions.</li>
+          <li><b>Pick a job</b> &mdash; seven faculty tasks, and the smallest door that does each one.</li>
+          <li><b>The receipts</b> &mdash; the names that already changed, what will rot next, every source, and everything researched and left off the page.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Three honesty labels, used throughout</span>
+        <ul class="ht-acts">
+          <li><b>verified</b> &mdash; a page belonging to the company that makes the product was opened on the date at the top, and says this.</li>
+          <li><b>reasoned</b> &mdash; it follows from the verified facts, but nobody states it in these words. Every ordering judgement here is reasoned.</li>
+          <li><b>unconfirmed</b> &mdash; we looked and could not confirm it. Shown anyway, labelled, because a blank cell is a claim too.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <span class="lbl">The two buttons, top right</span>
+        <ul class="ht-acts">
+          <li><b>?</b> &mdash; reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; presentation mode, the presenter&rsquo;s notes, and a self-test that
+            checks every claim against its declared source live, in front of whoever is asking.</li>
+        </ul>
+      </div>
+
+      <p class="help">
+        No prices appear anywhere on this page, on purpose: they changed more than once in the
+        last year on all four doors, and a wrong figure in front of a room of faculty is worse
+        than no figure. What your institution already licenses is a better question, and your IT
+        department is the only place that answer lives.
+      </p>
+    </div>
+    <div class="sheet-foot ht-foot">
+      <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
+      <button class="btn primary" data-close="howto">Got it &mdash; show me the grid</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================== SETTINGS ============================== -->
+<div class="overlay" id="settings" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <span class="lbl">Presentation</span>
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presentation mode &mdash; oversized UI for a projector</span>
+        </label>
+        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <p class="help">
+          The session plan: what to say at each act, which cells to open if you have four
+          minutes, the questions you will get, and what to do when a product name on the
+          screen has changed since it was checked. Distilled from the printable guide that
+          ships beside this file.
+        </p>
+      </div>
+      <div class="field">
+        <span class="lbl">Help</span>
+        <button class="btn" id="btn-howto-2">How to use this</button>
+        <p class="help">Reopens the panel that explains the three acts and the honesty labels.</p>
+      </div>
+      <div class="field">
+        <span class="lbl">Proof</span>
+        <button class="btn" id="btn-selftest">Run the self-test</button>
+        <p class="help">
+          Checks that every claim resolves to a declared source and that no source is cited
+          and never used; that every source URL names a page rather than a bare host and
+          belongs to the company whose product it describes; that no cell claims to be
+          verified without citing something and no quotation floats free of its page; that
+          not one price and not one vendor ranking has leaked into any string the page can
+          display; that the three reach rows rise across the four doors while the review row
+          does not, which is the module&rsquo;s actual argument; and that every job carries a
+          verdict for every door, each naming the axis that decided it. Results appear here
+          and in the browser console.
+        </p>
+        <div id="selftest-out"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">About</span>
+        <p class="help">
+          Built for Murray State University by Bryant Harrison. Product claims were checked on
+          <span class="js-date"></span> against first-party sources. All content is embedded;
+          the page makes no network requests, runs no AI, and stores nothing on your device.
+          Reloading resets it. The only URLs here are outbound links to sources, which you may
+          choose to follow.
+        </p>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="settings">Done</button></div>
+  </div>
+</div>
+
+<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- Lifted verbatim from presenter-guide.html, which stays canonical and
+     printable. One source of truth: the guide's own stylesheet and its own
+     markup, both scoped to .guide-scope, are injected by build.js. -->
+<div class="overlay" id="notes" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+<div class="guide-scope">
+
+  <div class="g-head">
+    <div class="g-kicker">AI: From Zero to Takeoff &middot; Part three</div>
+    <h1>Front Doors &mdash; presenter guide</h1>
+    <div class="g-sub">
+      What to ask it with. Runs after The Stranger, which covered how to phrase the request.
+      About 12 minutes, or 4 if you are behind. Product claims checked 8 September 2026.
+    </div>
+  </div>
+
+  <h2>The one sentence</h2>
+  <p class="say">
+    The surface you use decides what the tool can reach &mdash; and the further it reaches, the
+    more of its work you have to check.
+  </p>
+  <p>
+    Everything on the page serves that sentence. If you only get one thing across, get that,
+    and specifically the second half, because the first half is intuitive and the second is not.
+  </p>
+
+  <h2>Why this follows The Stranger</h2>
+  <p>
+    The Stranger taught the room that how you ask changes what you get. The obvious next
+    conclusion &mdash; and the wrong one &mdash; is that prompting is the whole skill. This module
+    is the correction: a perfectly phrased request to a browser tab still cannot rename a file on
+    your laptop. Phrasing is one variable; the door is the other.
+  </p>
+
+  <h2>Running it &mdash; the 12-minute version</h2>
+
+  <h3>Act I &middot; the four doors <span class="tag d">4 min</span></h3>
+  <p>
+    Put the grid up and say nothing for a beat. Let them see four columns and read the four
+    questions down the left. Then:
+  </p>
+  <ul>
+    <li>
+      <b>Open one cell, not six.</b> The best single cell in the module is
+      <b>door 1, row 2</b> &mdash; a chat window answers in the conversation. Then jump straight
+      to <b>door 1 on the &ldquo;rename four hundred files&rdquo; job</b> in Act II if you want the
+      laugh, or stay for row 4.
+    </li>
+    <li>
+      <b>Then open door 2, row 4</b> &mdash; accept or reject, you get a diff. This is the cell
+      that surprises people, because it is the least glamorous door and it has the best review
+      story in the table.
+    </li>
+    <li>
+      <b>Name the bars honestly.</b> If somebody says the staircase looks suspiciously neat, agree
+      with them: rows 1 to 3 rise because the doors were chosen as a ladder. Point at row 4 and
+      say that is the row that was not chosen, it came out that way.
+    </li>
+  </ul>
+  <p class="say">
+    &ldquo;Same model behind all four of these. What changes is how far it can reach &mdash; and
+    every step of reach you hand it, you get back as review.&rdquo;
+  </p>
+
+  <h3>Act II &middot; pick a job <span class="tag p">6 min</span></h3>
+  <p>
+    This is the act that lands. Do not walk all 7 jobs. Ask the room to pick, or pick two
+    yourself:
+  </p>
+  <ul>
+    <li>
+      <b>&ldquo;Rename four hundred scanned files&rdquo;</b> &mdash; the clearest floor in the module.
+      Two doors say <em>wrong door</em> outright. Nobody argues with it, and it makes the point
+      that better prompting cannot buy reach.
+    </li>
+    <li>
+      <b>&ldquo;Reformat a syllabus into the department&rsquo;s template&rdquo;</b> &mdash; the one where
+      the answer is the boring door, the agent already inside Word. Most useful answer of the day
+      for most of the room.
+    </li>
+    <li>
+      <b>Read the last line of every card out loud.</b> &ldquo;You hand over&rdquo;. That line is the
+      whole argument. A capability chart never has it.
+    </li>
+  </ul>
+  <p>
+    The green box at the top is computed, not written: it is the smallest-numbered door whose
+    verdict is <em>does the whole job</em>. Say &ldquo;smallest&rdquo; deliberately &mdash; the module
+    is not asking what the most capable tool is.
+  </p>
+  <p class="say">
+    &ldquo;Notice what I did not ask. Not which is best. Which is smallest and still finishes
+    the job.&rdquo;
+  </p>
+
+  <h3>Act III &middot; the receipts <span class="tag w">2 min</span></h3>
+  <p>
+    Do not read this act. Show two things and move on:
+  </p>
+  <ul>
+    <li>
+      <b>&ldquo;Agent Mode&rdquo; &rarr; &ldquo;Edit with Copilot&rdquo;</b>, with Microsoft&rsquo;s own
+      sentence under it. Same capability, new name, inside six months.
+    </li>
+    <li>
+      <b>&ldquo;ChatGPT agent&rdquo; &rarr; retired.</b> Point out that OpenAI&rsquo;s help page still
+      explains how to use the thing it opens by telling you is gone. That is the state of the
+      landscape, from the vendor.
+    </li>
+  </ul>
+  <p>
+    If the room is engaged, the third entry is worth ten seconds: the brief this module was built
+    from called the product &ldquo;GPT Work&rdquo;, which has never existed. Somebody who does this
+    for a living got it wrong six weeks out of date. That is the argument for the date at the top
+    of the page, and it is more persuasive as a confession than as advice.
+  </p>
+
+  <h2>The 4-minute cut</h2>
+  <ol>
+    <li>Grid up. Read the four questions down the left. <b>40 seconds.</b></li>
+    <li>Open <b>door 2, row 4</b> &mdash; accept or reject, you get a diff. <b>50 seconds.</b></li>
+    <li>Act II, the file-renaming job. Two doors say <em>wrong door</em>. <b>90 seconds.</b></li>
+    <li>Act III, the two renames. <b>40 seconds.</b> Then the one sentence, and stop.</li>
+  </ol>
+
+  <h2>Questions you will get</h2>
+
+  <h3>&ldquo;So which one should I buy?&rdquo;</h3>
+  <p>
+    The module deliberately does not answer this and neither should you. The honest reply is:
+    almost certainly none, because your institution already licenses one or two of these and that
+    decides it. Send them to IT. It is not a dodge &mdash; the institutional answer genuinely
+    dominates the vendor comparison here.
+  </p>
+
+  <h3>&ldquo;Is the expensive one better?&rdquo;</h3>
+  <p>
+    No, and row 4 is why. More reach is more review. For most of what a faculty member does in a
+    week, doors 1 and 2 are the right answer &mdash; and of the 7 jobs in Act II, 3 are finished
+    completely by a chat window or by the agent inside the word processor.
+  </p>
+
+  <h3>&ldquo;Can it see my students&rsquo; work?&rdquo;</h3>
+  <p>
+    Only if you give it access, and whether you may give it access is a question for your
+    registrar and your IT department rather than for a vendor page. Two of the jobs in Act II carry
+    that caution on screen for exactly this moment; open one and read it rather than
+    improvising a policy answer.
+  </p>
+
+  <h3>&ldquo;That product changed &mdash; your page is wrong&rdquo;</h3>
+  <p class="say">
+    &ldquo;Good &mdash; that is the module working. Which door was it? Because the door is still
+    there.&rdquo;
+  </p>
+  <p>
+    Then open Act III and show that the page predicted exactly this, and lists what it expects to
+    rot first. Do not defend the name. This is the strongest moment available to you and it only
+    works if you take the correction gratefully.
+  </p>
+
+  <h3>&ldquo;How do you know any of this?&rdquo;</h3>
+  <p>
+    Open <b>Settings &rarr; Run the self-test</b> in front of them. It checks that every claim
+    resolves to a declared source, that no source is cited and never used, that no price and no
+    vendor ranking leaked into anything the page can display, and that the review row genuinely
+    does not rise the way the other three do. Then tap any cell and follow the link.
+  </p>
+
+  <h2>What the numbers on the page mean</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>Figure</th><th>What it is</th></tr>
+    <tr><td>16 cells</td><td>4 doors &times; 4 axes. Every one opens a reason, a label and a source.</td></tr>
+    <tr><td>13 verified</td><td>Cells where a page belonging to the company that makes the product was opened on the check date and says it.</td></tr>
+    <tr><td>3 reasoned</td><td>The ordering judgements. Labelled, because no vendor states them.</td></tr>
+    <tr><td>28 judgements</td><td>7 jobs &times; 4 doors in Act II. All reasoned from Act I, and each names the axis that decided it.</td></tr>
+    <tr><td>15 sources</td><td>All first-party. Two of them are OpenAI pages that refuse automated retrieval and were read in an ordinary browser.</td></tr>
+    <tr><td>9 things cut</td><td>Researched during the build and deliberately left off, each with the reason.</td></tr>
+  </table>
+  </div>
+  <p>
+    The shipped test suite fails the build if any of those figures disagrees with the code, this
+    guide, README.md or the manifest. If you edit a number here, run
+    <b>node src/playtest.test.js</b> before you present.
+  </p>
+
+  <h2>What is deliberately not on the page</h2>
+  <ul>
+    <li>
+      <b>No prices.</b> Not one figure. They moved more than once in the last year on all four
+      doors and a wrong number in front of faculty costs more than a missing one. Figures that
+      sources did state are in README.md with the date they were read &mdash; read them there,
+      do not put them on the screen.
+    </li>
+    <li>
+      <b>No recommendation and no ranking.</b> Faculty in the room have institutional constraints
+      you do not know about. The self-test enforces this one mechanically.
+    </li>
+    <li>
+      <b>No claim that going inward is better.</b> If your delivery accidentally implies it, row 4
+      is the correction and you should let the page make it.
+    </li>
+    <li>
+      <b>No screenshots.</b> They would break the offline rule and they rot faster than anything
+      else available.
+    </li>
+  </ul>
+
+  <h2>Before you present</h2>
+  <ul>
+    <li>Open <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
+    <li>Run the self-test once so you know it is green before anyone asks.</li>
+    <li>
+      <b>Re-read Act III the morning of.</b> This is the one demo in the collection with a real
+      shelf life. If a name on screen has changed, say so from the stage &mdash; it is a better
+      moment than a correct page would have been.
+    </li>
+    <li>Reloading resets everything; the app saves nothing anywhere.</li>
+    <li>No network is needed at any point. The source links need one, but only if somebody
+      asks you to follow one, and you can promise to send it instead.</li>
+  </ul>
+
+  <div class="g-foot">
+    Front Doors &mdash; Bryant Harrison, Murray State University.
+    Product claims checked 8 September 2026 against first-party sources. Every claim on screen
+    carries a confidence label and links to its origin; everything researched and left off is
+    listed in Act III under &ldquo;Researched, and deliberately not on the page&rdquo;.
+  </div>
+
+</div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="notes">Close</button></div>
+  </div>
+</div>
+
+<!-- ======================= CELL / DOOR DETAIL ======================== -->
+<div class="overlay" id="detail" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="detail-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="detail-title"></h2><div class="sub" id="detail-sub"></div></div>
+      <button class="icon-btn" data-close="detail" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body" id="detail-body"></div>
+    <div class="sheet-foot"><button class="btn primary" data-close="detail">Close</button></div>
+  </div>
+</div>
+
+<script>
+/* ==== data.js ==== */
+/* ==========================================================================
+   Front Doors — the dataset.
+
+   Every sentence on screen comes from this file, and every product claim in
+   this file carries a `conf` label and, where the label is `verified`, one or
+   more `src` ids that resolve to a real page in SOURCES.
+
+   `conf` is one of:
+
+     'verified'    — a page belonging to the company that makes the product
+                     was loaded during the build, on the CHECKED_ON date
+                     below, and says this. The wording on the page is usually
+                     quoted in `quote`.
+     'reasoned'    — follows from facts that ARE verified, but no page states
+                     it in these words. Every ordering judgement on this page
+                     is reasoned, and says so.
+     'unconfirmed' — we looked and could not confirm it. These ship, visibly
+                     labelled, because a blank cell is a claim too. What we
+                     could not confirm at all is in CUT.
+
+   Two standing rules this file obeys.
+
+     1. NO PRICES. Not one dollar figure reaches the screen. Prices on all
+        four of these surfaces changed more than once in the last year and a
+        wrong number in front of faculty is worse than no number. The screen
+        says only what KIND of thing it is: free tier / paid personal plan /
+        institutional licence. Figures that a source did state are in
+        README.md with the date they were read.
+
+     2. NO RANKING. No vendor is recommended and no door is called better.
+        The `check` row exists precisely because going inward is not an
+        upgrade.
+   ========================================================================== */
+
+const DATA = (() => {
+
+/* --------------------------------------------------------------------------
+   When this was checked. The single most important number on the page.
+   -------------------------------------------------------------------------- */
+
+const CHECKED_ON = '8 September 2026';
+const CHECKED_ISO = '2026-09-08';
+
+const INTRO = {
+  title: 'Every one of these is the same model. What changes is how far it can reach.',
+  body: [
+    'Most people meet AI through a chat box in a browser tab, and reasonably conclude that a chat box is what AI is. It is one door out of four, and it is the one that can reach the least.',
+    'The four doors below are not four levels of intelligence. Much of the time they are literally the same model behind the glass. What differs is what the thing can see, what it is allowed to do, whether it keeps working when you close the laptop — and, the part nobody puts on a slide, how much of its work you now have to check.'
+  ],
+  note: 'Product names on this page were checked on ' + CHECKED_ON + '. They will go stale. The four doors will not — see “What already changed” in Act III for two names that moved in the last six months, including one that was retired outright while this module was being written.'
+};
+
+/* --------------------------------------------------------------------------
+   The four axes. Every verdict on the page traces to one of these.
+
+   `bars` names the four rungs of that axis so a bar of length 2 means
+   something stated rather than something felt. The names are descriptions of
+   the four doors, which is circular if you pretend otherwise — so the page
+   says it out loud in AXIS_NOTE.
+   -------------------------------------------------------------------------- */
+
+const AXES = [
+  { id: 'see', n: 1, q: 'Can it see your work?', short: 'Sees',
+    lead: 'What the thing has access to before you start typing.',
+    bars: [
+      'Only what you put into the conversation, plus apps you connect to it',
+      'The one document or workbook you have open, plus what you attach',
+      'Folders you point it at, and the apps and browser you connect',
+      'A whole project tree, plus anything a command on your machine can read'
+    ] },
+  { id: 'do', n: 2, q: 'Can it do things?', short: 'Does',
+    lead: 'What it is able to change, as opposed to describe.',
+    bars: [
+      'Writes back into the conversation; you carry the result somewhere',
+      'Edits the open document in place, using that app’s own features',
+      'Produces finished deliverables, and operates apps and a browser for you',
+      'Runs commands on your machine and changes files across a project'
+    ] },
+  { id: 'keep', n: 3, q: 'Does it keep going when you are not watching?', short: 'Keeps going',
+    lead: 'Whether the work stops when your attention does.',
+    bars: [
+      'One turn. It answers and stops.',
+      'A multi-step request, but only while you are sitting there',
+      'Keeps working with the laptop shut; runs on a schedule or a trigger',
+      'Long autonomous loops, several agents at once, scheduled or event-driven'
+    ] },
+  { id: 'check', n: 4, q: 'How much must you check?', short: 'You check',
+    lead: 'The cost nobody quotes. Read this row on its own — it is the only row that is not a staircase.',
+    bars: [
+      'Read the answer. If it is wrong you have lost a minute.',
+      'Accept or reject a proposed edit, inside a document that has undo and version history',
+      'Read a diff you can follow, and take on faith the commands you did not watch run',
+      'Judge a finished deliverable that was assembled while you were away, with no diff to read'
+    ] }
+];
+
+const AXIS_NOTE = 'The bars are a reading of the four rows, not a measurement of anything. Rows 1 to 3 rise neatly because the four doors were CHOSEN as a ladder of reach — a tidy staircase there is an artefact of the selection, not a discovery. Row 4 is the one worth your attention, because it does not follow.';
+
+/* --------------------------------------------------------------------------
+   The four doors.
+   -------------------------------------------------------------------------- */
+
+const DOORS = [
+  {
+    id: 'chat', n: 1, name: 'A chat window',
+    tag: 'The one everybody means by “using AI”',
+    products: 'ChatGPT (Chat) · Claude · the Gemini app',
+    where: 'A browser tab, or the phone app.',
+    whereSrc: ['gemini-app', 'claude-pricing'],
+    cost: 'free',
+    costText: 'All three have a free tier; paid personal plans raise the limits.',
+    costSrc: ['openai-plus', 'claude-pricing', 'gemini-app'],
+    blurb: 'You describe something and it answers. It has no idea what is on your desktop unless you show it.'
+  },
+  {
+    id: 'inapp', n: 2, name: 'Inside the tools you already have',
+    tag: 'The door you are most likely to meet first',
+    products: 'Word · Excel · PowerPoint (Microsoft) · Docs · Sheets (Google)',
+    where: 'A pane inside the app, acting on the file that is already open.',
+    whereSrc: ['ms-word-edit', 'gdocs-gemini'],
+    confusable: 'Microsoft ships two different things with almost the same name, and it is worth five seconds to tell them apart. The one described here lives inside Word or Excel and edits the document you have open. Separately, there are Word, Excel and PowerPoint “Agents” inside the Copilot app, which generate a NEW file from a description and save it to your OneDrive. Same words, different door — the second is closer to door 1 with a file attached.',
+    confusableSrc: ['ms-wxp-agents'],
+    cost: 'institutional',
+    costText: 'Needs a licence your institution buys or enables — this is the door your IT department controls, not you.',
+    costSrc: ['ms-word-edit', 'gdocs-gemini'],
+    blurb: 'It edits the thing in front of you, in place, using that application’s own styles and features — and it shows you the edit before it lands.'
+  },
+  {
+    id: 'coworker', n: 3, name: 'A desktop coworker',
+    tag: 'You assign an outcome, not a sentence',
+    products: 'Claude Cowork (Anthropic) · ChatGPT Work (OpenAI)',
+    where: 'Its own app on your computer, plus the web and the phone.',
+    whereSrc: ['cowork', 'openai-work-codex'],
+    confusable: 'Anthropic’s runs on the web, on desktop — macOS, Windows including arm64, ChromeOS and Linux — and on mobile in beta. OpenAI’s runs on the web and mobile in the cloud, and in the desktop app, where it is the only version that can open a folder on your computer. Which surface you use decides what it can see, which is the whole thesis of this page appearing inside a single product.',
+    confusableSrc: ['cowork', 'openai-work-codex'],
+    cost: 'paid',
+    costText: 'Needs a paid plan. Anthropic’s page says so in as many words; OpenAI’s says eligible paid plans, and on an institutional workspace an administrator decides.',
+    costSrc: ['cowork', 'openai-work-codex'],
+    blurb: 'You hand it a goal and go away. It works across folders you point it at and apps you connect, and hands back something finished.'
+  },
+  {
+    id: 'coding', n: 4, name: 'A coding agent',
+    tag: 'The whole machine, and a very long leash',
+    products: 'Codex (OpenAI) · Claude Code (Anthropic) · Antigravity (Google)',
+    where: 'A terminal, an IDE, a desktop app, and in two of the three the cloud.',
+    whereSrc: ['openai-codex-cli', 'claude-code', 'antigravity'],
+    confusable: 'All three arrive as several surfaces rather than as one program. OpenAI’s Codex is a terminal command, an IDE extension and a view inside the ChatGPT desktop app — and notably it is NOT selectable on the web or on a phone, which is the reverse of every other door here. Anthropic’s spans a terminal command, a desktop app, the web, and VS Code and JetBrains extensions. Google’s is an app, a CLI, an SDK, IDE extensions and a remote-control mode. “Which one is it” has no single answer, and that is normal at this door.',
+    confusableSrc: ['openai-work-codex', 'openai-codex-cli', 'claude-code', 'antigravity'],
+    cost: 'mixed',
+    costText: 'Two need a paid plan; Google’s has a free individual tier.',
+    costSrc: ['claude-pricing', 'openai-work-codex', 'antigravity-pricing'],
+    blurb: 'It reads a whole project, edits many files, and runs commands. It is not only for code — but everything it does, it does by writing and running some.'
+  }
+];
+
+/* --------------------------------------------------------------------------
+   The grid. Sixteen cells: four doors against four axes.
+
+   `bar` indexes into that axis's `bars` array (1-4) and is what the visual
+   meter draws. `head` is the phrase the cell shows. `why` is what a tap
+   reveals. `quote` is the source's own wording where there is one worth
+   reading. `conf` and `src` are the honesty machinery.
+   -------------------------------------------------------------------------- */
+
+const CELLS = {
+
+  /* ---------------------------------------------------------- door 1 ----- */
+  'chat.see': {
+    bar: 1, conf: 'verified', src: ['openai-work-codex', 'claude-pricing', 'gemini-app'],
+    head: 'Only what you hand it',
+    why: 'A chat window starts blind. It sees what you type, paste or upload, and nothing else on your machine. The exception, and it is a growing one, is connectors: signed in, all three can be given reach into some connected apps — Drive, Gmail, Slack — but that is you granting an app, not the model finding your files.',
+    quote: 'Work on web and mobile cannot directly access files on your computer.',
+    quoteSrc: 'openai-work-codex'
+  },
+  'chat.do': {
+    bar: 1, conf: 'verified', src: ['openai-work-codex', 'claude-pricing'],
+    head: 'Answers, in the conversation',
+    why: 'It produces text, and increasingly files and charts, inside its own window. Getting the result into your syllabus is a copy and a paste that you perform. Nothing on your computer changes because you asked it to.',
+    quote: 'Chat is for fast, conversational assistance and everyday questions.',
+    quoteSrc: 'openai-work-codex'
+  },
+  'chat.keep': {
+    bar: 1, conf: 'verified', src: ['openai-work-codex'],
+    head: 'One turn, then it stops',
+    why: 'You ask, it answers, it waits. There is no version of this door that is still working on your question tomorrow morning. That is a limit, and it is also why it is the cheapest door to use badly.',
+    quote: 'Chat is for fast, conversational assistance and everyday questions.',
+    quoteSrc: 'openai-work-codex'
+  },
+  'chat.check': {
+    bar: 1, conf: 'reasoned', src: ['gemini-app'],
+    head: 'Read it. That is the whole job.',
+    why: 'The answer is right there in front of you and nothing has happened yet. This is the cheapest review in the whole table: if it is wrong, you have lost a minute and nothing else. Every vendor still tells you to do it — Google’s help page puts the instruction in the imperative.',
+    quote: 'Gemini Apps can make mistakes. When using Gemini Apps, double-check responses and don’t rely on responses from Gemini Apps for professional advice.',
+    quoteSrc: 'gemini-app'
+  },
+
+  /* ---------------------------------------------------------- door 2 ----- */
+  'inapp.see': {
+    bar: 2, conf: 'verified', src: ['ms-word-edit', 'gdocs-gemini'],
+    head: 'The document you have open',
+    why: 'It reads the file you are working in, which sounds small until you notice that the file is the thing you actually wanted help with. Google’s version goes further: in Docs it can pull material out of your Drive and Gmail into the document you are writing.',
+    quote: 'pull stats, evidence, and citations directly from your Google Drive, Gmail, or the web into your document',
+    quoteSrc: 'gdocs-gemini'
+  },
+  'inapp.do': {
+    bar: 2, conf: 'verified', src: ['ms-word-edit', 'ms-excel-edit'],
+    head: 'Edits it in place, with the app’s own tools',
+    why: 'This is the difference that matters. It does not describe the change, it makes it — using Word’s real styles, Excel’s real formulas, the app’s own features — so the result is a document that behaves like one you made, not text pasted into one.',
+    quote: 'create, edit, refine, and format content in place',
+    quoteSrc: 'ms-word-edit'
+  },
+  'inapp.keep': {
+    bar: 2, conf: 'verified', src: ['ms-excel-edit'],
+    head: 'Multi-step, but only while you are there',
+    why: 'It will work through several steps on one request and you can watch it happen and stop it mid-way. It does not run tonight while you are asleep, and there is nothing to schedule.',
+    quote: 'You can watch Copilot’s reasoning in the pane and see it make changes live in your workbook.',
+    quoteSrc: 'ms-excel-edit'
+  },
+  'inapp.check': {
+    bar: 2, conf: 'verified', src: ['ms-word-edit', 'gdocs-gemini'],
+    head: 'Accept or reject — you get a diff',
+    why: 'The quietly best-designed thing on this page. Both vendors show the change as a proposal you approve, inside an application that already has undo and version history. You are reviewing a difference, in a document you know, with a way back. Nothing further down this row gives you that.',
+    quote: 'You must review and confirm these changes before anything is applied.',
+    quoteSrc: 'ms-word-edit'
+  },
+
+  /* ---------------------------------------------------------- door 3 ----- */
+  'coworker.see': {
+    bar: 3, conf: 'verified', src: ['cowork', 'openai-work-codex'],
+    head: 'Folders you point it at, plus connected apps',
+    why: 'You choose the folders and the apps; it works inside that. Anthropic’s page names Microsoft 365, Google Drive and Slack among the connectors and describes a browser built into the app. OpenAI’s desktop version can open a local folder with your permission, and its web and mobile versions deliberately cannot.',
+    quote: 'Works directly in folders and tools you choose',
+    quoteSrc: 'cowork'
+  },
+  'coworker.do': {
+    bar: 3, conf: 'verified', src: ['openai-work-codex', 'cowork'],
+    head: 'Hands back a finished thing',
+    why: 'The unit of work stops being a reply and becomes a deliverable. OpenAI lists the shapes explicitly. Anthropic’s version will also drive a browser — open sites, fill forms, finish the task — which is a meaningfully different kind of permission from reading a file.',
+    quote: 'Research a topic, analyze information, or create a document, spreadsheet, presentation, report, or Site.',
+    quoteSrc: 'openai-work-codex'
+  },
+  'coworker.keep': {
+    bar: 3, conf: 'verified', src: ['cowork', 'openai-work-codex'],
+    head: 'Yes — shut the laptop; schedule it; trigger it',
+    why: 'This is the line the previous two doors do not cross. Anthropic states it plainly. OpenAI’s equivalent can run once, repeat on a schedule, or start itself when something happens in Gmail, Slack or GitHub. Work now happens at times you are not present for.',
+    quote: 'Claude works when you don’t. Close your laptop, it keeps going. Schedule a task for any cadence, and it runs unattended.',
+    quoteSrc: 'cowork'
+  },
+  'coworker.check': {
+    bar: 4, conf: 'reasoned', src: ['cowork', 'openai-work-codex'],
+    head: 'Hardest of the four — no diff, and you were not there',
+    why: 'Both products show you their steps, and both ask before the consequential ones, and that genuinely helps. But the thing you are handed is finished, not proposed: there is no accept-or-reject, no track changes, and it was assembled across several files and apps while you were doing something else. Anthropic’s own sentence is the honest description of the burden — polished work, for your review. Deciding whether a finished report is right is a bigger job than deciding whether one suggested edit is right.',
+    quote: 'You come back to polished work for your review.',
+    quoteSrc: 'cowork'
+  },
+
+  /* ---------------------------------------------------------- door 4 ----- */
+  'coding.see': {
+    bar: 4, conf: 'verified', src: ['openai-work-codex', 'claude-code', 'antigravity'],
+    head: 'A whole project, and the terminal',
+    why: 'Not one file and not a folder of documents — a repository, its history, and whatever a command it runs can reach from there. Anthropic’s page claims a whole codebase read in seconds; Google’s describes shell execution outright.',
+    quote: 'Codex can work with local folders, repositories, terminals, and developer tools.',
+    quoteSrc: 'openai-work-codex'
+  },
+  'coding.do': {
+    bar: 4, conf: 'verified', src: ['openai-codex-cli', 'claude-code', 'antigravity'],
+    head: 'Runs commands on your machine',
+    why: 'The ceiling of the whole table, and the reason it is last. Anything a command line can do to your computer is inside its reach — not a sandbox, your machine, using the software already installed on it. All three put a permissions control in front of that, and Anthropic’s page describes a prompt before each change. That prompt is the entire safety story, and it only works if you read it.',
+    quote: 'Let Codex inspect files, make edits, and run the tools already installed on your machine.',
+    quoteSrc: 'openai-codex-cli'
+  },
+  'coding.keep': {
+    bar: 4, conf: 'verified', src: ['claude-code', 'antigravity'],
+    head: 'Long loops, many at once, on a schedule',
+    why: 'Not merely unattended — plural and unattended. Anthropic describes routines on a schedule or fired by an event and work fanned out across many parallel subagents; Google describes managing multiple local agents at once and scheduled messages. This is the door where “I will check on it later” starts to mean something.',
+    quote: 'Configure a routine once, and it can run on a schedule',
+    quoteSrc: 'claude-code'
+  },
+  'coding.check': {
+    bar: 3, conf: 'reasoned', src: ['claude-code', 'openai-work-codex'],
+    head: 'A diff you can read — if you can read code',
+    why: 'Counter-intuitively this is easier to check than the door above it, and the reason is instrumentation. Code comes with a diff, a version history and tests, so the review has a shape: here is every line that changed, here is what still passes. Two costs. You must be able to read the diff, which for most faculty rules the door out. And the commands it ran are not in the diff — a file it deleted, a package it installed, an API it called leave no line for you to review.',
+    quote: 'it also asks for permission before making changes to your files or running commands',
+    quoteSrc: 'claude-code'
+  }
+};
+
+/* The claim the `check` row makes, stated once, where the room can argue with it. */
+const CHECK_NOTE = {
+  head: 'Why row 4 is not a staircase',
+  body: [
+    'Rows 1 to 3 rise from left to right. Row 4 does not: the hardest work to check is the desktop coworker at door 3, not the coding agent at door 4.',
+    'The reason is instrumentation, not intelligence. Doors 2 and 4 hand you a difference — a suggested edit you accept or reject, a diff you can read line by line — inside something that has a history and a way back. Door 3 hands you a finished artefact, made across several files and apps while you were elsewhere, with nothing to compare it against.',
+    'This ordering is the one judgement on this page that no vendor states, so it is labelled reasoned rather than verified. It is also the point of the module: what you give up as you go inward is the ability to check the work cheaply. If you disagree with the ordering, the axis is still the right axis.'
+  ]
+};
+
+/* --------------------------------------------------------------------------
+   Act II — pick a job.
+
+   Verdicts are 'yes' (does the whole job), 'partly' (does part; you finish
+   it by hand) or 'no' (wrong door). `hand` is what you would have to hand
+   over to make it work, and it is the price of the verdict. `axis` is which
+   of the four rows decides the answer, so nothing here floats free.
+
+   These verdicts are REASONED. They are inferences from the verified cells
+   above, not claims any vendor makes about student reflections. The page
+   says so.
+   -------------------------------------------------------------------------- */
+
+const JOBS = [
+  {
+    id: 'questions',
+    name: 'Draft ten multiple-choice questions on this week’s reading',
+    detail: 'You have the chapter. You want a first pass at a quiz, which you will then rewrite about half of.',
+    doors: {
+      chat:     { v: 'yes',    axis: 'do',   hand: '', why: 'Everything the job needs fits in the conversation. Paste the chapter, say what you want, edit the result. This is the door, and reaching for a bigger one buys you nothing.' },
+      inapp:    { v: 'yes',    axis: 'do',   hand: 'the document open in front of you', why: 'Same job, and it lands formatted in the document instead of on your clipboard.' },
+      coworker: { v: 'yes',    axis: 'check', hand: 'folder and app access the job never uses', why: 'It will do it. You have granted a standing coworker access to your files in order to write ten questions.' },
+      coding:   { v: 'partly', axis: 'do',   hand: 'a terminal, and command execution', why: 'It can write prose perfectly well. You would be doing it in a terminal, reviewing a diff, for a result the chat window produced in one turn.' }
+    }
+  },
+  {
+    id: 'rubric',
+    name: 'Turn an assignment sheet into a grading rubric',
+    detail: 'One page in, one table out, with criteria and levels you will argue with.',
+    doors: {
+      chat:     { v: 'yes',    axis: 'do',   hand: '', why: 'One document in, one table out. The classic tier-one job: the whole input fits in the window and the whole output is text.' },
+      inapp:    { v: 'yes',    axis: 'do',   hand: 'the document open in front of you', why: 'Better, if the rubric has to live in the assignment document — it builds the table with the document’s real styles rather than pasted text.' },
+      coworker: { v: 'yes',    axis: 'check', hand: 'folder access, and a job it cannot show you a diff of', why: 'Worth it only if you are doing this for every assignment in a folder at once. For one sheet, you have taken on the hardest review in the table to save a paste.' },
+      coding:   { v: 'no',     axis: 'do',   hand: '', why: 'Nothing here needs a command run or a file tree read. Wrong instrument.' }
+    }
+  },
+  {
+    id: 'syllabus',
+    name: 'Reformat a syllabus into the department’s template',
+    detail: 'The words are fine. The headings, the order and the styles are not.',
+    doors: {
+      chat:     { v: 'partly', axis: 'do',   hand: 'the text, and then all of the formatting by hand', why: 'It will restructure the words and hand them back as text. It cannot apply your template, because it has never seen your template and cannot touch the file.' },
+      inapp:    { v: 'yes',    axis: 'do',   hand: 'the document open in front of you', why: 'Exactly the door. The file is open, the template’s styles are in it, and the agent edits in place using those styles. Formatting is the job it is actually built for.' },
+      coworker: { v: 'yes',    axis: 'see',  hand: 'read and write access to a folder of syllabi', why: 'Worth the trade only in the plural — all eleven syllabi in the folder, to one template, while you are at lunch.' },
+      coding:   { v: 'partly', axis: 'do',   hand: 'a terminal, command execution, and a diff to read', why: 'It would script something against the file format. Possible, fragile, and the app you already own does it properly.' }
+    }
+  },
+  {
+    id: 'reflections',
+    name: 'Summarise eighty student reflections and pull out the three themes',
+    detail: 'Eighty short pieces of writing. You want the pattern, not eighty summaries.',
+    caution: 'Student work is protected record. Before any of these doors touches it, ask your institution what is permitted with which tool — that answer comes from your registrar and IT, not from a vendor page and not from this demo.',
+    doors: {
+      chat:     { v: 'partly', axis: 'see',  hand: 'all eighty, pasted in by you, inside one conversation’s limit', why: 'It can summarise what it is given. Getting eighty files into one window, and staying inside the length limit, is your afternoon.' },
+      inapp:    { v: 'partly', axis: 'see',  hand: 'the reflections already in one file', why: 'The shape of your data decides this one. An LMS export is usually a single spreadsheet, and then the answer is yes. Eighty separate documents are not one open document, and then it is no.' },
+      coworker: { v: 'yes',    axis: 'see',  hand: 'read access to a folder of student work', why: 'Point it at the folder and it reads all eighty. This is the smallest door that does the whole job — and it is also the moment the access question above stops being theoretical.' },
+      coding:   { v: 'yes',    axis: 'check', hand: 'a folder, command execution, and a script you must now also check', why: 'It will do it, probably by writing a script. You are now reviewing two things: the summary, and the code that produced it.' }
+    }
+  },
+  {
+    id: 'contradictions',
+    name: 'Find where your lecture notes disagree with the textbook chapter',
+    detail: 'Two documents. You want the places they do not match, not a summary of either.',
+    caution: 'You need the right to use the textbook text in the tool you choose. That is a licensing question about your copy, and it is not the same answer for every door.',
+    doors: {
+      chat:     { v: 'partly', axis: 'see',  hand: 'both texts, pasted, within one window', why: 'It compares whatever is in front of it. Both documents have to fit, and you have to be allowed to put them there.' },
+      inapp:    { v: 'partly', axis: 'see',  hand: 'both documents reachable from the one you have open', why: 'Uneven between vendors. Google’s Docs agent can pull a second file out of your Drive into the document you are in, which is most of this job. The Microsoft version is aimed at the open file.' },
+      coworker: { v: 'yes',    axis: 'see',  hand: 'read access to both documents, wherever they live', why: 'Two files in two places, cross-referenced, reported. Sitting across several files at once is the thing this door is for.' },
+      coding:   { v: 'yes',    axis: 'check', hand: 'the files, and command execution', why: 'It will do it, and it will want the documents as plain text first, and it will write something to do the comparing.' }
+    }
+  },
+  {
+    id: 'rename',
+    name: 'Rename four hundred scanned files from what is inside them',
+    detail: 'A folder of scan0001.pdf. You want surname-year-topic, and you are not doing four hundred by hand.',
+    doors: {
+      chat:     { v: 'no',     axis: 'do',   hand: '', why: 'It cannot touch your file system. This is the clearest floor in the table: no amount of better prompting gets a browser tab to rename a file on your disk. It will happily write you instructions for doing it yourself.' },
+      inapp:    { v: 'no',     axis: 'do',   hand: '', why: 'The agent lives inside one document. Renaming files is not something Word does, so it is not something the agent inside Word does.' },
+      coworker: { v: 'yes',    axis: 'do',   hand: 'read and write access to the folder', why: 'The smallest door that does this. It opens the files, reads them, renames them. Note what you handed over: write access to four hundred files, and no diff to check afterwards.' },
+      coding:   { v: 'yes',    axis: 'do',   hand: 'a folder, and permission to run commands on it', why: 'Four lines of script and it is done, including the four hundredth. Also the door where a mistake renames four hundred files wrongly in one go.' }
+    }
+  },
+  {
+    id: 'activity',
+    name: 'Build a small interactive activity like the ones in this collection',
+    detail: 'A single page a student can open, that does something when they click it.',
+    doors: {
+      chat:     { v: 'partly', axis: 'do',   hand: 'saving, testing and hosting it yourself', why: 'It will write you the file. You then have to save it somewhere, open it, find what is broken, and describe the breakage back — a loop you run by hand, once per bug.' },
+      inapp:    { v: 'no',     axis: 'do',   hand: '', why: 'PowerPoint is not a web page. There is nothing here for a document agent to edit.' },
+      coworker: { v: 'yes',    axis: 'do',   hand: 'a working folder, and a deliverable with no diff', why: 'A finished small thing is exactly this door’s unit of work — OpenAI lists a Site among the deliverables it produces.' },
+      coding:   { v: 'yes',    axis: 'check', hand: 'a project folder, command execution, and a diff to review', why: 'The door this demo came through, and the reason it can say so: every demo in this collection records which tool built it. It runs the page, sees its own error, and fixes it without asking you — which is the whole advantage and the whole review problem.' }
+    }
+  }
+];
+
+const JOBS_NOTE = 'These seven were chosen to span the four doors, which makes the higher doors look more necessary than your week actually will. Two of the seven are done best by a chat window and one by the agent already inside Word — and that ratio is closer to a real semester than this list is.';
+
+const VERDICT_LABEL = {
+  yes:    'Does the whole job',
+  partly: 'Does part; you finish it',
+  no:     'Wrong door'
+};
+
+/* --------------------------------------------------------------------------
+   Act III — the receipts.
+
+   What already changed, since the module's whole claim about its own
+   staleness needs evidence rather than a hedge.
+   -------------------------------------------------------------------------- */
+
+const CHANGED = [
+  {
+    was: 'Agent Mode',
+    now: 'Edit with Copilot',
+    what: 'The agent inside Word — door 2',
+    body: 'Microsoft’s own support page for the feature is now titled “Edit with Copilot in Word” and disposes of the old name in one line. The capability did not change. The name did, and every slide that said “agent mode” is now wrong.',
+    quote: 'In earlier releases, this was referred to as Agent Mode.',
+    conf: 'verified', src: ['ms-word-edit']
+  },
+  {
+    was: 'ChatGPT agent',
+    now: 'ChatGPT Work',
+    what: 'OpenAI’s answer at door 3',
+    body: 'Not a rename — a retirement. OpenAI’s help centre article for ChatGPT agent still exists, still describes how to use agent mode further down the page, and opens by telling you the product is gone and naming its replacement. If you are going to teach this landscape, that page is the single best illustration of why you date your slides.',
+    quote: 'ChatGPT agent is no longer available. Use ChatGPT Work for longer, multi-step tasks and finished deliverables.',
+    conf: 'verified', src: ['openai-agent-retired']
+  },
+  {
+    was: 'GPT Work',
+    now: 'ChatGPT Work',
+    what: 'This module’s own first draft',
+    body: 'The brief this page was built from named the product “GPT Work”, which has never existed. It was caught by loading OpenAI’s page rather than trusting a recollection six weeks old. Nobody in this room is going to be more careful than that by accident, which is the argument for the date at the top of the page.',
+    conf: 'verified', src: ['openai-work-codex']
+  }
+];
+
+const CHANGED_NOTE = 'Three changes, all inside about six months, two of them first-party and dated. This is the evidence for the sentence at the top: the doors will outlast the names on them.';
+
+/* What will rot, and what will not. Stated as a prediction so it can be checked. */
+const STALE = {
+  head: 'What to expect to be wrong, and when',
+  rot: [
+    'Product names. Two of the four doors have had one in the last six months.',
+    'Which plan includes which feature. This changes without announcement and differs by institution.',
+    'Model names inside each product. Fastest-moving thing on the page, which is why none are on it.',
+    'Whether a given feature has finished rolling out. Several here were mid-rollout on the check date.'
+  ],
+  keep: [
+    'That the surface determines the reach. It has been true through every rename so far.',
+    'That reach and review burden rise together, and that the diff is what makes review cheap.',
+    'That the smallest door which does the job is usually the right one.',
+    'That an institution’s licence, not the vendor’s pricing page, decides what you can actually use.'
+  ]
+};
+
+/* --------------------------------------------------------------------------
+   The uneven row. Do not invent symmetry.
+   -------------------------------------------------------------------------- */
+
+const UNEVEN = {
+  head: 'One row is uneven, and it stays uneven',
+  body: 'Doors 1, 2 and 4 have a product from each of the three big vendors. Door 3 does not. Anthropic has Cowork and OpenAI has ChatGPT Work; searching Google’s own product and admin documentation on the check date turned up no consumer-plan equivalent — what Google offers instead is Gemini Enterprise, which is purchased separately from Workspace and switched on by an administrator, not by you.',
+  quote: 'Gemini Enterprise isn’t included with your Google Workspace subscription.',
+  conf: 'unconfirmed', src: ['gemini-enterprise-admin'],
+  note: 'Marked unconfirmed rather than verified on purpose. “No such product exists” is a claim about the whole world and a search cannot establish it — all we can honestly report is that we looked at Google’s own pages and did not find one. If your campus has Gemini Enterprise, door 3 is open to you through an administrator.'
+};
+
+/* --------------------------------------------------------------------------
+   Researched and deliberately left off the screen.
+   -------------------------------------------------------------------------- */
+
+const CUT = [
+  { claim: 'Every price, on every product',
+    why: 'Prices on all four doors moved more than once in the last year and a wrong figure in front of faculty is worse than no figure. The screen says free tier / paid plan / institutional licence and stops. The figures the sources did state are in README.md with the date they were read.' },
+  { claim: '“Microsoft 365 Copilot agent mode reached general availability in April 2026”',
+    why: 'This was in the brief for this module. Microsoft’s own page for the feature says on the check date that it is “still rolling out worldwide to general availability”, so the GA claim is dropped and the feature is described as rolling out. The brief was also using the retired name.' },
+  { claim: 'A named Google product that is a direct peer to Cowork or ChatGPT Work',
+    why: 'Searched Google’s product pages and Workspace admin documentation and found only the enterprise, administrator-purchased route. Rather than inventing symmetry, door 3 ships with a visibly uneven row and the reason on it.' },
+  { claim: 'The specific model names available in each product',
+    why: 'Verifiable — Antigravity’s pricing page lists its models by version, including non-Google ones — and the shortest-lived fact on the page. It is in README.md with a date instead. The screen says only that Google’s free tier includes models that are not Google’s.' },
+  { claim: 'Whether any specific door is available to Murray State faculty',
+    why: 'Genuinely not knowable from a vendor page. OpenAI’s documentation shows Work being switched on per role by a workspace administrator, and Gemini Enterprise the same. The page tells you to ask your own IT department, which is the only correct answer.' },
+  { claim: 'Message caps and usage limits per plan',
+    why: 'These are published and were read during the build. They are per-plan, they change silently, and quoting them would date the page faster than anything else on it.' },
+  { claim: 'Whether Claude Cowork can be enabled under a university-wide education plan',
+    why: 'Anthropic’s pricing page shows both an education plan and Cowork as a paid-plan feature, but no first-party page loaded during the build states that the two combine. Left off rather than guessed.' },
+  { claim: 'Screenshots of any of these four surfaces',
+    why: 'Two reasons, both fatal. Fetching an image would break the offline rule this collection holds every demo to, and a screenshot of a shipping product interface is the single fastest-rotting artefact available.' },
+  { claim: 'Any claim sourced only to a technology news article',
+    why: 'This module is about products, so the temptation to fill in plausible detail from coverage was high. Every product claim on the screen resolves to a page belonging to the company that makes the product. Where that was not possible, the cell says unconfirmed.' }
+];
+
+/* --------------------------------------------------------------------------
+   Sources. All fifteen are first-party: a page belonging to the company that
+   makes the product. Every one was loaded during the build on CHECKED_ISO.
+   The self-test enforces that every `src` resolves and that no source is
+   declared and never used.
+   -------------------------------------------------------------------------- */
+
+const SOURCES = {
+  'cowork': {
+    t: 'Anthropic — Claude Cowork product page',
+    u: 'https://claude.com/product/cowork', kind: 'primary' },
+  'claude-code': {
+    t: 'Anthropic — Claude Code product page',
+    u: 'https://claude.com/product/claude-code', kind: 'primary' },
+  'claude-pricing': {
+    t: 'Anthropic — Claude pricing, including the free plan and which plans include Cowork and Claude Code',
+    u: 'https://claude.com/pricing', kind: 'primary' },
+  'openai-agent-retired': {
+    t: 'OpenAI Help Centre — ChatGPT agent: “no longer available”, with ChatGPT Work named as the replacement',
+    u: 'https://help.openai.com/en/articles/11752874-chatgpt-agent', kind: 'primary' },
+  'openai-work-codex': {
+    t: 'OpenAI Help Centre — ChatGPT Work and Codex: what Chat, Work and Codex each are, where each runs, what each can reach',
+    u: 'https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex', kind: 'primary' },
+  'openai-plus': {
+    t: 'OpenAI Help Centre — What is ChatGPT Plus? (states that a Free plan exists alongside it)',
+    u: 'https://help.openai.com/en/articles/6950777-what-is-chatgpt-plus', kind: 'primary' },
+  'openai-codex-cli': {
+    t: 'OpenAI — Codex CLI: inspecting files, editing, running the tools installed on your machine, and the /permissions command',
+    u: 'https://learn.chatgpt.com/docs/codex/cli', kind: 'primary' },
+  'ms-word-edit': {
+    t: 'Microsoft — Edit with Copilot in Word (“In earlier releases, this was referred to as Agent Mode”)',
+    u: 'https://support.microsoft.com/en-us/office/agent-mode-in-word-647d5d14-eaec-4e8a-a574-7cefffa7f8f0', kind: 'primary' },
+  'ms-excel-edit': {
+    t: 'Microsoft — Edit with Copilot in Excel: watching its reasoning, live changes to the workbook, Plan mode, Stop',
+    u: 'https://support.microsoft.com/en-us/office/edit-with-copilot-in-excel-a2fd6fe4-97ac-416b-b89a-22f4d1357c7a', kind: 'primary' },
+  'ms-wxp-agents': {
+    t: 'Microsoft — Word, Excel and PowerPoint Agents in Microsoft 365 Copilot (the separate, file-producing agents in the Copilot app)',
+    u: 'https://support.microsoft.com/en-us/office/365-copilot-app/get-started-with-word-excel-and-powerpoint-agents-in-microsoft-365-copilot', kind: 'primary' },
+  'gdocs-gemini': {
+    t: 'Google — Collaborate with Gemini in Google Docs: refine in place, Accept all / Reject all, pulling from Drive and Gmail',
+    u: 'https://support.google.com/docs/answer/14206696', kind: 'primary' },
+  'gemini-app': {
+    t: 'Google — Gemini Apps help: where it runs, what an account gives you, and the instruction to double-check responses',
+    u: 'https://support.google.com/gemini/answer/13275745', kind: 'primary' },
+  'gemini-enterprise-admin': {
+    t: 'Google Workspace admin help — Turn Gemini Enterprise on or off for users: administrator-controlled, licensed separately from Workspace',
+    u: 'https://knowledge.workspace.google.com/admin/generative-ai/gemini-enterprise/turn-gemini-enterprise-on-or-off-for-users', kind: 'primary' },
+  'antigravity': {
+    t: 'Google — Antigravity documentation: the app, the CLI, the SDK, IDE extensions, remote control, subagents, browser control and Review Changes',
+    u: 'https://antigravity.google/docs/getting-started', kind: 'primary' },
+  'antigravity-pricing': {
+    t: 'Google — Antigravity pricing: a free individual tier, whose model list includes models that are not Google’s',
+    u: 'https://antigravity.google/pricing', kind: 'primary' }
+};
+
+const SOURCE_NOTE = 'Every source here is first-party — a page belonging to the company that makes the product — and every one was opened on ' + CHECKED_ON + '. One caution worth passing on: openai.com and its help centre refuse automated retrieval and return 403 to a script. The OpenAI facts on this page were read in an ordinary browser, from help.openai.com and learn.chatgpt.com, which is why they are marked verified; they open normally for you too. Nothing on this page rests on a news article, a blog post, or a recollection.';
+
+const CONF_LABEL = {
+  verified:    'A page belonging to the company that makes the product was loaded on ' + CHECKED_ON + ' and says this.',
+  reasoned:    'Follows from the verified facts on this page, but no vendor states it in these words. Every ordering judgement here is reasoned.',
+  unconfirmed: 'We looked and could not confirm it. Shown anyway, labelled, because a blank cell is a claim too.'
+};
+
+return {
+  CHECKED_ON, CHECKED_ISO, INTRO, AXES, AXIS_NOTE, DOORS, CELLS, CHECK_NOTE,
+  JOBS, JOBS_NOTE, VERDICT_LABEL, CHANGED, CHANGED_NOTE, STALE, UNEVEN,
+  CUT, SOURCES, SOURCE_NOTE, CONF_LABEL
+};
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = DATA;
+
+
+/* ==== engine.js ==== */
+/* ==========================================================================
+   Front Doors — the engine.
+
+   Every fact this demo DERIVES rather than states lives here, once. Three
+   consumers share it: the screen (app.js), the build-time test suite
+   (playtest.test.js) and the self-test button inside Settings. If a number
+   in the prose disagrees with a number on the screen, that is because one of
+   them stopped calling this file.
+
+   No DOM, no globals beyond the export. Pure functions of DATA.
+   ========================================================================== */
+
+const ENGINE = (() => {
+
+/* --------------------------------------------------------------------------
+   Grid access.
+   -------------------------------------------------------------------------- */
+
+/** Key a cell the one way, everywhere. */
+const cellKey = (doorId, axisId) => doorId + '.' + axisId;
+
+/** The cell for a door and axis, or null. Never invents one. */
+function cell(D, doorId, axisId) {
+  return D.CELLS[cellKey(doorId, axisId)] || null;
+}
+
+/** Every cell, flattened, in reading order: door by door, axis by axis. */
+function cells(D) {
+  const out = [];
+  for (const door of D.DOORS) {
+    for (const axis of D.AXES) {
+      const c = cell(D, door.id, axis.id);
+      out.push({ door, axis, c, key: cellKey(door.id, axis.id) });
+    }
+  }
+  return out;
+}
+
+/** The wording for a bar value, from the axis that owns the scale. */
+function barText(D, axisId, bar) {
+  const axis = D.AXES.find(a => a.id === axisId);
+  if (!axis || !(bar >= 1 && bar <= axis.bars.length)) return null;
+  return axis.bars[bar - 1];
+}
+
+/* --------------------------------------------------------------------------
+   The thesis, computed rather than asserted.
+
+   `reach` is the highest of the three reach rows for a door. The module
+   claims review burden rises with reach; where a door's `check` bar is lower
+   than its reach, that is a genuine exception and the page has to own it
+   rather than hide it. Both the test suite and the self-test read this.
+   -------------------------------------------------------------------------- */
+
+function reachOf(D, doorId) {
+  const rows = ['see', 'do', 'keep'].map(a => {
+    const c = cell(D, doorId, a);
+    return c ? c.bar : 0;
+  });
+  return Math.max.apply(null, rows);
+}
+
+function checkOf(D, doorId) {
+  const c = cell(D, doorId, 'check');
+  return c ? c.bar : 0;
+}
+
+/** Doors whose review burden does not track their reach, with the gap. */
+function checkExceptions(D) {
+  return D.DOORS
+    .map(d => ({ id: d.id, n: d.n, reach: reachOf(D, d.id), check: checkOf(D, d.id) }))
+    .filter(r => r.check !== r.reach);
+}
+
+/** Is the `check` row monotonic left to right? The module says it is not. */
+function checkIsStaircase(D) {
+  const bars = D.DOORS.map(d => checkOf(D, d.id));
+  return bars.every((v, i) => i === 0 || bars[i - 1] <= v);
+}
+
+/** Are the three reach rows each monotonic left to right? The module says yes. */
+function reachRowsAreStaircases(D) {
+  return ['see', 'do', 'keep'].every(a => {
+    const bars = D.DOORS.map(d => { const c = cell(D, d.id, a); return c ? c.bar : 0; });
+    return bars.every((v, i) => i === 0 || bars[i - 1] < v);
+  });
+}
+
+/* --------------------------------------------------------------------------
+   Act II — which door fits a job.
+
+   `bestDoor` is the whole teaching payload and it is COMPUTED, so it cannot
+   drift away from the verdicts underneath it: the smallest-numbered door
+   whose verdict is 'yes'. "Smallest" is deliberate. It is the door that does
+   the whole job while handing over the least.
+   -------------------------------------------------------------------------- */
+
+function jobById(D, id) { return D.JOBS.find(j => j.id === id) || null; }
+
+function verdict(D, job, doorId) {
+  return (job && job.doors && job.doors[doorId]) || null;
+}
+
+function bestDoor(D, job) {
+  for (const door of D.DOORS) {
+    const v = verdict(D, job, door.id);
+    if (v && v.v === 'yes') return door;
+  }
+  return null;
+}
+
+/** How many doors can do the whole job, do part of it, or cannot. */
+function tally(D, job) {
+  const t = { yes: 0, partly: 0, no: 0 };
+  for (const door of D.DOORS) {
+    const v = verdict(D, job, door.id);
+    if (v && t[v.v] !== undefined) t[v.v]++;
+  }
+  return t;
+}
+
+/** Distribution of best-fit doors across every job, keyed by door number. */
+function bestDoorSpread(D) {
+  const spread = {};
+  for (const door of D.DOORS) spread[door.n] = 0;
+  for (const job of D.JOBS) {
+    const b = bestDoor(D, job);
+    if (b) spread[b.n]++;
+  }
+  return spread;
+}
+
+/** Jobs whose smallest sufficient door is 1 or 2 — the module's closing claim. */
+function jobsSolvedLow(D) {
+  return D.JOBS.filter(j => { const b = bestDoor(D, j); return b && b.n <= 2; });
+}
+
+/* --------------------------------------------------------------------------
+   Sources and confidence. The honesty machinery, in one place.
+   -------------------------------------------------------------------------- */
+
+/** Every src id referenced anywhere in the dataset, with where it was used. */
+function sourceUses(D) {
+  const uses = {};
+  const note = (id, where) => {
+    if (!id) return;
+    (uses[id] = uses[id] || []).push(where);
+  };
+  const many = (list, where) => { (list || []).forEach(id => note(id, where)); };
+
+  for (const door of D.DOORS) {
+    many(door.costSrc, 'door ' + door.n + ' cost');
+    many(door.whereSrc, 'door ' + door.n + ' surfaces');
+    many(door.confusableSrc, 'door ' + door.n + ' note');
+  }
+  for (const { c, key } of cells(D)) {
+    if (!c) continue;
+    many(c.src, 'cell ' + key);
+    note(c.quoteSrc, 'quote in ' + key);
+  }
+  many(D.CHECK_NOTE.src, 'check note');
+  for (const ch of D.CHANGED) many(ch.src, 'changed: ' + ch.was);
+  many(D.UNEVEN.src, 'uneven row');
+  note(D.UNEVEN.quoteSrc, 'uneven row quote');
+  return uses;
+}
+
+/** Source ids referenced but not declared. Must be empty. */
+function danglingSources(D) {
+  return Object.keys(sourceUses(D)).filter(id => !D.SOURCES[id]);
+}
+
+/** Sources declared but never referenced. Must be empty. */
+function unusedSources(D) {
+  const uses = sourceUses(D);
+  return Object.keys(D.SOURCES).filter(id => !uses[id]);
+}
+
+/** A source URL must name a page, not just a host. */
+function isSpecificUrl(u) {
+  const after = (String(u).split('://')[1] || '');
+  const slash = after.indexOf('/');
+  return slash > 0 && after.slice(slash + 1).length > 0;
+}
+
+function vagueSourceUrls(D) {
+  return Object.keys(D.SOURCES).filter(id => !isSpecificUrl(D.SOURCES[id].u));
+}
+
+/** Confidence tally across the sixteen grid cells. */
+function confTally(D) {
+  const t = { verified: 0, reasoned: 0, unconfirmed: 0 };
+  for (const { c } of cells(D)) if (c && t[c.conf] !== undefined) t[c.conf]++;
+  return t;
+}
+
+/** Any cell claiming `verified` must actually cite something. */
+function verifiedWithoutSource(D) {
+  return cells(D)
+    .filter(({ c }) => c && c.conf === 'verified' && !(c.src && c.src.length))
+    .map(x => x.key);
+}
+
+/** A quote must name the source it came out of, and that source must exist. */
+function quotesWithoutSource(D) {
+  return cells(D)
+    .filter(({ c }) => c && c.quote && !(c.quoteSrc && D.SOURCES[c.quoteSrc]))
+    .map(x => x.key);
+}
+
+/* --------------------------------------------------------------------------
+   The no-prices rule, enforced rather than remembered.
+
+   Anything that looks like money in any of the currencies these vendors
+   quote. Run across every string the screen can show.
+   -------------------------------------------------------------------------- */
+
+const MONEY = /(?:[$£€¥]\s?\d)|(?:\d+\s?(?:dollars|USD|GBP|EUR))|(?:\bper\s+seat\b)|(?:\/\s?month\b)|(?:\bper\s+month\b)/i;
+
+/** Every string the dataset can put on screen, with a path for the failure. */
+function screenStrings(D) {
+  const out = [];
+  const walk = (v, path) => {
+    if (typeof v === 'string') { out.push([path, v]); return; }
+    if (Array.isArray(v)) { v.forEach((x, i) => walk(x, path + '[' + i + ']')); return; }
+    if (v && typeof v === 'object') {
+      for (const k of Object.keys(v)) {
+        /* Source URLs and ids are not prose and are exempt from the prose rules. */
+        if (k === 'u' || k === 'src' || k === 'quoteSrc' || k === 'costSrc' ||
+            k === 'whereSrc' || k === 'confusableSrc') continue;
+        walk(v[k], path + '.' + k);
+      }
+    }
+  };
+  for (const k of ['INTRO', 'AXES', 'AXIS_NOTE', 'DOORS', 'CELLS', 'CHECK_NOTE',
+                   'JOBS', 'JOBS_NOTE', 'VERDICT_LABEL', 'CHANGED', 'CHANGED_NOTE',
+                   'STALE', 'UNEVEN', 'CUT', 'CONF_LABEL', 'SOURCE_NOTE']) {
+    walk(D[k], k);
+  }
+  return out;
+}
+
+function priceLeaks(D) {
+  return screenStrings(D).filter(([, s]) => MONEY.test(s)).map(([p, s]) => p + ': ' + s);
+}
+
+/* --------------------------------------------------------------------------
+   The no-ranking rule. The module describes capability; it must not tell a
+   faculty member which vendor to buy.
+   -------------------------------------------------------------------------- */
+
+const RANKING = /\b(?:the best (?:tool|choice|option|product|vendor)|we recommend|you should (?:buy|choose|use instead)|superior to|better than (?:Claude|ChatGPT|Gemini|Copilot|Codex|Antigravity))\b/i;
+
+function rankingLeaks(D) {
+  return screenStrings(D).filter(([, s]) => RANKING.test(s)).map(([p]) => p);
+}
+
+/* --------------------------------------------------------------------------
+   Counts quoted in prose. The test suite cross-checks these against
+   README.md, the presenter guide and demo.json, so a number cannot be
+   edited into a document without the code that produces it.
+   -------------------------------------------------------------------------- */
+
+function counts(D) {
+  return {
+    doors: D.DOORS.length,
+    axes: D.AXES.length,
+    gridCells: cells(D).length,
+    jobs: D.JOBS.length,
+    jobCells: D.JOBS.length * D.DOORS.length,
+    sources: Object.keys(D.SOURCES).length,
+    cut: D.CUT.length,
+    changed: D.CHANGED.length,
+    verifiedCells: confTally(D).verified,
+    reasonedCells: confTally(D).reasoned,
+    lowFitJobs: jobsSolvedLow(D).length
+  };
+}
+
+return {
+  cellKey, cell, cells, barText,
+  reachOf, checkOf, checkExceptions, checkIsStaircase, reachRowsAreStaircases,
+  jobById, verdict, bestDoor, tally, bestDoorSpread, jobsSolvedLow,
+  sourceUses, danglingSources, unusedSources, isSpecificUrl, vagueSourceUrls,
+  confTally, verifiedWithoutSource, quotesWithoutSource,
+  screenStrings, priceLeaks, rankingLeaks, MONEY, RANKING, counts
+};
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = ENGINE;
+
+
+/* ==== app.js ==== */
+/* ==========================================================================
+   Front Doors — the application.
+
+   Three acts:
+     I   The four doors — four surfaces against four axes, sixteen cells.
+     II  Pick a job — seven realistic faculty tasks against the same four
+         doors, with the smallest sufficient door computed rather than typed.
+     III The receipts — what already changed, what will rot, the uneven row,
+         the cut list and every source.
+
+   No framework and no network. Every derived number comes from engine.js, so
+   the screen, the shipped test suite and the self-test button cannot disagree
+   about what the data says.
+   ========================================================================== */
+
+(() => {
+
+const D = DATA, E = ENGINE;
+const $  = s => document.querySelector(s);
+const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
+
+const S = { act: 1, job: null, presenter: false };
+
+/* ---------------------------------------------------------------- helpers */
+
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+
+/** A source chip. Every claim on screen gets at least one; the self-test
+ *  proves the id resolves, and a broken id is loud rather than silent. */
+function srcChip(id, label) {
+  const s = D.SOURCES[id];
+  const a = el('a', 'src');
+  if (!s) { a.textContent = 'source missing: ' + id; a.classList.add('bad'); return a; }
+  a.href = s.u; a.target = '_blank'; a.rel = 'noopener noreferrer';
+  a.textContent = label || 'source';
+  a.title = s.t;
+  return a;
+}
+
+function confChip(conf) {
+  const b = el('span', 'conf ' + conf, conf);
+  b.title = D.CONF_LABEL[conf] || conf;
+  return b;
+}
+
+/** A four-segment meter. Decorative — the words are in the cell and in the
+ *  button's accessible name, so this is aria-hidden. */
+function meter(bar) {
+  const w = el('span', 'bar');
+  w.setAttribute('aria-hidden', 'true');
+  for (let i = 1; i <= 4; i++) w.appendChild(el('i', i <= bar ? 'on' : null));
+  return w;
+}
+
+function sourceRow(ids, extraText) {
+  const row = el('div', 'src-row');
+  if (extraText) row.appendChild(el('span', 'src-title', extraText));
+  (ids || []).forEach(id => {
+    const s = D.SOURCES[id];
+    row.appendChild(srcChip(id, s ? shortHost(s.u) : undefined));
+  });
+  return row;
+}
+
+/** The host, trimmed, so a chip says where it goes without a wall of URL. */
+function shortHost(u) {
+  const h = (String(u).split('://')[1] || '').split('/')[0];
+  return h.replace(/^www\./, '');
+}
+
+function paras(parent, list) {
+  (list || []).forEach(p => parent.appendChild(el('p', null, p)));
+}
+
+/* ================================ ACT I =================================
+   One piece of markup, two layouts. app.js stamps --col and --row on every
+   grid child; the stylesheet uses them only above 940px, where the two
+   wrapper divs collapse with `display: contents` and the children become
+   items of a real five-column grid. Below that the wrappers are cards and
+   the custom properties are simply ignored.
+   ---------------------------------------------------------------------- */
+
+function place(node, col, row) {
+  node.style.setProperty('--col', String(col));
+  node.style.setProperty('--row', String(row));
+  return node;
+}
+
+function renderGrid() {
+  const g = $('#grid');
+  g.innerHTML = '';
+
+  /* the axis rail: a corner plus one label per axis */
+  const rail = el('div', 'g-rail');
+  rail.appendChild(place(el('div', 'g-corner', 'The four doors'), 1, 1));
+  D.AXES.forEach((axis, i) => {
+    const a = place(el('div', 'g-axis'), 1, i + 2);
+    a.dataset.axis = axis.id;
+    a.appendChild(el('span', 'a-n', 'Axis ' + axis.n));
+    a.appendChild(el('span', 'a-q', axis.q));
+    a.appendChild(el('span', 'a-lead', axis.lead));
+    rail.appendChild(a);
+  });
+  g.appendChild(rail);
+
+  /* one group per door: its header, then its four cells */
+  D.DOORS.forEach((door, j) => {
+    const group = el('div', 'g-group');
+    group.dataset.door = door.id;
+
+    const h = place(el('button', 'g-door'), j + 2, 1);
+    h.type = 'button';
+    h.dataset.door = door.id;
+    h.appendChild(el('span', 'd-n', 'Door ' + door.n));
+    h.appendChild(el('span', 'd-name', door.name));
+    h.appendChild(el('span', 'd-prod', door.products));
+    h.appendChild(el('span', 'd-more', 'What it is →'));
+    h.setAttribute('aria-label',
+      'Door ' + door.n + ', ' + door.name + '. ' + door.products + '. Open the details.');
+    h.addEventListener('click', () => openDoor(door));
+    group.appendChild(h);
+
+    D.AXES.forEach((axis, i) => {
+      const c = E.cell(D, door.id, axis.id);
+      const b = place(el('button', 'g-cell'), j + 2, i + 2);
+      b.type = 'button';
+      b.dataset.door = door.id;
+      b.dataset.axis = axis.id;
+      b.appendChild(el('span', 'c-axis', axis.short));
+      b.appendChild(el('span', 'c-head', c ? c.head : 'no cell'));
+      const foot = el('div', 'c-foot');
+      foot.appendChild(meter(c ? c.bar : 0));
+      if (c && c.conf !== 'verified') foot.appendChild(confChip(c.conf));
+      else foot.appendChild(el('span', 'c-tap', 'why'));
+      b.appendChild(foot);
+      b.setAttribute('aria-label',
+        axis.q + ' Door ' + door.n + ', ' + door.name + ': ' + (c ? c.head : '') +
+        '. Level ' + (c ? c.bar : 0) + ' of 4. Open the explanation.');
+      b.addEventListener('click', () => openCell(door, axis));
+      group.appendChild(b);
+    });
+
+    g.appendChild(group);
+  });
+}
+
+/** The exception panel. Its content is COMPUTED from the bars, so it cannot
+ *  describe an ordering the data no longer has. */
+function renderCheckNote() {
+  const box = $('#check-note');
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, D.CHECK_NOTE.head));
+  paras(box, D.CHECK_NOTE.body);
+
+  const ex = E.checkExceptions(D);
+  const line = el('p', 'help');
+  if (!ex.length) {
+    line.textContent = 'As the data currently stands there is no exception: every door’s review burden matches its reach. If you are reading this, the dataset changed and the paragraphs above are stale.';
+  } else {
+    line.textContent = 'Computed from the bars above, not typed here: ' +
+      ex.map(r => {
+        const door = D.DOORS.find(d => d.id === r.id);
+        return 'door ' + r.n + ' (' + door.name.toLowerCase() + ') reaches at level ' +
+               r.reach + ' but is checked at level ' + r.check;
+      }).join('; ') + '.';
+  }
+  box.appendChild(line);
+  box.appendChild(sourceRow(D.CHECK_NOTE.src, 'The verified facts this ordering rests on:'));
+}
+
+function renderAxisNote() {
+  const box = $('#axis-note');
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, 'How to read the bars'));
+  box.appendChild(el('p', null, D.AXIS_NOTE));
+  const ul = el('ul', 'ht-acts');
+  D.AXES.forEach(axis => {
+    const li = el('li');
+    li.appendChild(el('b', null, axis.short + ' — '));
+    li.appendChild(document.createTextNode(axis.bars.map((b, i) => (i + 1) + ': ' + b).join(' · ')));
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+}
+
+/* ---------------------------------------------------- the detail sheets */
+
+function openSheetWith(title, sub, build) {
+  $('#detail-title').textContent = title;
+  $('#detail-sub').textContent = sub;
+  const body = $('#detail-body');
+  body.innerHTML = '';
+  build(body);
+  open('detail');
+}
+
+function openCell(door, axis) {
+  const c = E.cell(D, door.id, axis.id);
+  openSheetWith(door.name, 'Door ' + door.n + ' · ' + axis.q, body => {
+    body.appendChild(el('div', 'd-axis', 'Axis ' + axis.n + ' — ' + axis.short));
+    const h = el('h3', null, c ? c.head : 'No cell');
+    body.appendChild(h);
+
+    if (c) {
+      const bar = el('div', 'd-bar');
+      bar.appendChild(meter(c.bar));
+      bar.appendChild(el('span', 'd-bar-text',
+        'Level ' + c.bar + ' of 4 — ' + (E.barText(D, axis.id, c.bar) || '')));
+      body.appendChild(bar);
+
+      body.appendChild(el('p', null, c.why));
+
+      if (c.quote) {
+        const q = el('blockquote', 'quote', '“' + c.quote + '”');
+        body.appendChild(q);
+        const attrib = D.SOURCES[c.quoteSrc];
+        if (attrib) body.appendChild(el('p', 'help', '— ' + attrib.t));
+      }
+
+      const cr = el('div', 'src-row');
+      cr.appendChild(confChip(c.conf));
+      cr.appendChild(el('span', 'src-title', D.CONF_LABEL[c.conf] || ''));
+      body.appendChild(cr);
+      body.appendChild(sourceRow(c.src, 'Checked against:'));
+    }
+  });
+}
+
+function openDoor(door) {
+  openSheetWith(door.name, 'Door ' + door.n + ' · ' + door.tag, body => {
+    body.appendChild(el('p', 'lead', door.blurb));
+
+    body.appendChild(el('div', 'd-axis', 'Where it lives'));
+    body.appendChild(el('p', null, door.where));
+    if (door.whereSrc) body.appendChild(sourceRow(door.whereSrc));
+
+    body.appendChild(el('div', 'd-axis', 'Products, on the check date'));
+    body.appendChild(el('p', null, door.products));
+
+    body.appendChild(el('div', 'd-axis', 'What it costs you to get in'));
+    body.appendChild(el('p', null, door.costText));
+    body.appendChild(el('p', 'help', 'No figures on this page on purpose — prices on all four doors moved more than once in the last year. Ask your own IT department what your institution already has; that answer beats any vendor page.'));
+    if (door.costSrc) body.appendChild(sourceRow(door.costSrc));
+
+    if (door.confusable) {
+      body.appendChild(el('hr', 'hr'));
+      body.appendChild(el('div', 'd-axis', 'Easy to mix up'));
+      body.appendChild(el('p', null, door.confusable));
+      if (door.confusableSrc) body.appendChild(sourceRow(door.confusableSrc));
+    }
+
+    body.appendChild(el('hr', 'hr'));
+    body.appendChild(el('div', 'd-axis', 'This door on the four axes'));
+    D.AXES.forEach(axis => {
+      const c = E.cell(D, door.id, axis.id);
+      if (!c) return;
+      const item = el('div', 'source-item');
+      const t = el('span', 'src-title');
+      t.textContent = axis.short + ': ' + c.head;
+      item.appendChild(meter(c.bar));
+      item.appendChild(t);
+      body.appendChild(item);
+    });
+  });
+}
+
+/* ================================ ACT II ================================ */
+
+function renderJobPicker() {
+  const box = $('#job-picker');
+  box.innerHTML = '';
+  D.JOBS.forEach((job, i) => {
+    const b = el('button', 'job-btn');
+    b.type = 'button';
+    b.dataset.job = job.id;
+    b.appendChild(el('span', 'j-n', 'Job ' + (i + 1)));
+    b.appendChild(el('span', 'j-name', job.name));
+    b.addEventListener('click', () => pickJob(job.id));
+    box.appendChild(b);
+  });
+}
+
+function pickJob(id) {
+  S.job = id;
+  $$('#job-picker .job-btn').forEach(b => b.classList.toggle('on', b.dataset.job === id));
+  renderJob();
+}
+
+function renderJob() {
+  const out = $('#job-out');
+  out.innerHTML = '';
+  const job = E.jobById(D, S.job);
+  if (!job) { out.classList.add('empty'); return; }
+  out.classList.remove('empty');
+
+  const head = el('div', 'j-head');
+  head.appendChild(el('h2', null, job.name));
+  head.appendChild(el('p', 'j-detail', job.detail));
+  out.appendChild(head);
+
+  if (job.caution) {
+    const c = el('div', 'j-caution');
+    c.appendChild(el('b', null, 'Before you pick a door: '));
+    c.appendChild(document.createTextNode(job.caution));
+    out.appendChild(c);
+  }
+
+  const best = E.bestDoor(D, job);
+  const t = E.tally(D, job);
+  const bb = el('div', 'j-best');
+  bb.appendChild(el('span', 'b-lbl', 'Smallest door that does the whole job'));
+  if (best) {
+    bb.appendChild(el('span', 'b-door', 'Door ' + best.n + ' — ' + best.name));
+    const hand = job.doors[best.id].hand;
+    bb.appendChild(el('span', 'b-note',
+      (hand ? 'And what it costs you: ' + hand + '.' : 'And it costs you nothing beyond the text itself.') +
+      ' ' + t.yes + ' of ' + D.DOORS.length + ' doors can do the whole job; ' +
+      t.partly + ' can do part of it; ' + t.no + ' cannot.'));
+  } else {
+    bb.appendChild(el('span', 'b-door', 'None of the four'));
+    bb.appendChild(el('span', 'b-note', 'No door on this page does the whole job on its own.'));
+  }
+  out.appendChild(bb);
+
+  const doors = el('div');
+  doors.id = 'job-doors';
+  D.DOORS.forEach(door => {
+    const v = E.verdict(D, job, door.id);
+    if (!v) return;
+    const card = el('div', 'jd v-' + v.v + (best && best.id === door.id ? ' is-best' : ''));
+    const top = el('div', 'jd-top');
+    top.appendChild(el('span', 'jd-n', 'Door ' + door.n));
+    top.appendChild(el('span', 'jd-v', D.VERDICT_LABEL[v.v]));
+    top.appendChild(el('span', 'jd-name', door.name));
+    card.appendChild(top);
+    card.appendChild(el('p', 'jd-why', v.why));
+    const axis = D.AXES.find(a => a.id === v.axis);
+    card.appendChild(el('span', 'jd-axis', 'Decided by axis ' + (axis ? axis.n + ' — ' + axis.short : v.axis)));
+    /* "You hand over: nothing" is true of a door that does the job for free and
+       also, misleadingly, of one that cannot do it at all. Only the first is
+       worth saying, so a "wrong door" card states the cost differently. */
+    const hand = el('p', 'jd-hand');
+    if (v.v === 'no') {
+      hand.appendChild(el('b', null, 'Nothing to hand over — '));
+      hand.appendChild(document.createTextNode('there is no amount of access that makes this door do this job.'));
+    } else {
+      hand.appendChild(el('b', null, 'You hand over: '));
+      hand.appendChild(document.createTextNode(v.hand || 'nothing beyond the text itself.'));
+    }
+    card.appendChild(hand);
+    doors.appendChild(card);
+  });
+  out.appendChild(doors);
+
+  const note = el('div', 'panel warn');
+  note.appendChild(el('h3', null, 'These verdicts are reasoned, not quoted'));
+  note.appendChild(el('p', null, 'No vendor page says anything about eighty student reflections. Every verdict above is an inference from the sourced capabilities in Act I — which is why each one names the axis that decided it, so you can check the reasoning rather than trust the answer.'));
+  const cr = el('div', 'src-row');
+  cr.appendChild(confChip('reasoned'));
+  cr.appendChild(el('span', 'src-title', D.CONF_LABEL.reasoned));
+  note.appendChild(cr);
+  out.appendChild(note);
+}
+
+function renderJobsNote() {
+  const box = $('#jobs-note');
+  box.innerHTML = '';
+  const spread = E.bestDoorSpread(D);
+  const low = E.jobsSolvedLow(D);
+  box.appendChild(el('h3', null, 'What this list is not'));
+  box.appendChild(el('p', null, D.JOBS_NOTE));
+  box.appendChild(el('p', 'help',
+    'Counted from the verdicts, not asserted: of ' + D.JOBS.length + ' jobs, the smallest sufficient door is ' +
+    D.DOORS.map(d => 'door ' + d.n + ' for ' + spread[d.n]).join(', ') + '. ' +
+    low.length + ' of the ' + D.JOBS.length + ' are done completely by a chat window or by the agent already inside your word processor.'));
+}
+
+/* =============================== ACT III =============================== */
+
+function renderChanged() {
+  const box = $('#changed');
+  box.innerHTML = '';
+  D.CHANGED.forEach(ch => {
+    const c = el('div', 'chg');
+    const move = el('div', 'c-move');
+    move.appendChild(el('span', 'c-was', ch.was));
+    move.appendChild(el('span', 'c-arrow', '→'));
+    move.appendChild(el('span', 'c-now', ch.now));
+    c.appendChild(move);
+    c.appendChild(el('div', 'c-what', ch.what));
+    c.appendChild(el('p', 'c-body', ch.body));
+    if (ch.quote) {
+      c.appendChild(el('blockquote', 'quote', '“' + ch.quote + '”'));
+    }
+    const row = sourceRow(ch.src);
+    row.insertBefore(confChip(ch.conf), row.firstChild);
+    c.appendChild(row);
+    box.appendChild(c);
+  });
+  box.appendChild(el('p', 'help', D.CHANGED_NOTE));
+}
+
+function renderStale() {
+  const box = $('#stale');
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, D.STALE.head));
+  const cols = el('div', 'cols2');
+
+  const rot = el('div');
+  rot.appendChild(el('div', 'lbl', 'Expect these to be wrong'));
+  const ul1 = el('ul', 'slist rot');
+  D.STALE.rot.forEach(s => ul1.appendChild(el('li', null, s)));
+  rot.appendChild(ul1);
+
+  const keep = el('div');
+  keep.appendChild(el('div', 'lbl', 'Expect these to hold'));
+  const ul2 = el('ul', 'slist keep');
+  D.STALE.keep.forEach(s => ul2.appendChild(el('li', null, s)));
+  keep.appendChild(ul2);
+
+  cols.appendChild(rot);
+  cols.appendChild(keep);
+  box.appendChild(cols);
+}
+
+function renderUneven() {
+  const box = $('#uneven');
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, D.UNEVEN.head));
+  box.appendChild(el('p', null, D.UNEVEN.body));
+  if (D.UNEVEN.quote) box.appendChild(el('blockquote', 'quote', '“' + D.UNEVEN.quote + '”'));
+  box.appendChild(el('p', 'help', D.UNEVEN.note));
+  const row = sourceRow(D.UNEVEN.src);
+  row.insertBefore(confChip(D.UNEVEN.conf), row.firstChild);
+  box.appendChild(row);
+}
+
+function renderCut() {
+  const box = $('#cut');
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, 'Researched, and deliberately not on the page (' + D.CUT.length + ')'));
+  box.appendChild(el('p', 'help', 'What a page refuses to say is part of what it is claiming. Each of these was looked into during the build and left off, with the reason.'));
+  D.CUT.forEach(c => {
+    const item = el('div', 'cut-item');
+    item.appendChild(el('b', null, c.claim));
+    item.appendChild(el('span', null, c.why));
+    box.appendChild(item);
+  });
+}
+
+function renderSources() {
+  const box = $('#sources');
+  box.innerHTML = '';
+  const ids = Object.keys(D.SOURCES);
+  box.appendChild(el('h3', null, 'Every source (' + ids.length + ')'));
+  box.appendChild(el('p', 'help', D.SOURCE_NOTE));
+  ids.forEach(id => {
+    const s = D.SOURCES[id];
+    const item = el('div', 'source-item');
+    item.appendChild(srcChip(id, shortHost(s.u)));
+    item.appendChild(el('span', 'src-title', s.t));
+    box.appendChild(item);
+  });
+}
+
+function renderCounts() {
+  const c = E.counts(D);
+  const box = $('#counts');
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, 'This page, in numbers'));
+  box.appendChild(el('p', null,
+    c.doors + ' doors against ' + c.axes + ' axes is ' + c.gridCells + ' cells, of which ' +
+    c.verifiedCells + ' are verified against a first-party page and ' + c.reasonedCells +
+    ' are labelled as reasoning. ' + c.jobs + ' jobs against the same ' + c.doors +
+    ' doors is another ' + c.jobCells + ' judgements, all of them reasoned from those cells. ' +
+    c.sources + ' sources, ' + c.changed + ' product names that already moved, and ' +
+    c.cut + ' things researched and left off.'));
+  box.appendChild(el('p', 'help', 'Every number in that paragraph is read out of the dataset at page load, and the shipped test suite fails the build if any of them disagrees with README.md, the presenter guide or the manifest.'));
+}
+
+/* =============================== acts ================================== */
+
+function setAct(n) {
+  S.act = n;
+  $$('.act').forEach(a => { a.hidden = +a.dataset.act !== n; });
+  $$('#actnav button').forEach(b => {
+    const on = +b.dataset.act === n;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-selected', String(on));
+  });
+  window.scrollTo({ top: 0, behavior: 'auto' });
+}
+
+/* ============================== overlays =============================== */
+
+function lockScroll() {
+  document.body.style.overflowY = $$('.overlay').some(o => !o.hidden) ? 'hidden' : '';
+}
+function open(id) {
+  const o = document.getElementById(id);
+  o.hidden = false;
+  lockScroll();
+  const inner = o.querySelector('.sheet-inner');
+  if (inner) inner.focus();
+}
+function close(id) { document.getElementById(id).hidden = true; lockScroll(); }
+
+function wireOverlays() {
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => close(b.dataset.close)));
+  $$('.overlay').forEach(o => o.addEventListener('click', ev => {
+    if (ev.target === o) { o.hidden = true; lockScroll(); }
+  }));
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
+  });
+  $('#btn-howto').addEventListener('click', () => open('howto'));
+  $('#btn-howto-2').addEventListener('click', () => { close('settings'); open('howto'); });
+  $('#btn-settings').addEventListener('click', () => open('settings'));
+  $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
+  $('#chk-presenter').addEventListener('change', ev => {
+    S.presenter = ev.target.checked;
+    document.body.classList.toggle('presenting', S.presenter);
+  });
+  $('#btn-selftest').addEventListener('click', runSelfTest);
+}
+
+/* ============================== self-test ===============================
+   The proof button. It re-derives, in front of whoever is asking, the
+   properties the shipped test file asserts at build time — including the
+   two rules this module holds itself to: no prices, no ranking.
+   ---------------------------------------------------------------------- */
+
+function runSelfTest() {
+  const out = [];
+  const ok = (name, cond, detail) => out.push([!!cond, name, detail || '']);
+
+  /* ---- sources resolve, in both directions ---- */
+  const dangling = E.danglingSources(D);
+  ok('Every claim resolves to a declared source', dangling.length === 0, dangling.join(', '));
+  const unused = E.unusedSources(D);
+  ok('No source is declared and never used', unused.length === 0, unused.join(', '));
+  const vague = E.vagueSourceUrls(D);
+  ok('Every source URL names a page, not just a host', vague.length === 0, vague.join(', '));
+  ok('Every source is first-party',
+     Object.keys(D.SOURCES).every(id => D.SOURCES[id].kind === 'primary'));
+
+  /* ---- the grid is complete and honestly labelled ---- */
+  ok('All sixteen cells exist', E.cells(D).every(x => !!x.c),
+     E.cells(D).filter(x => !x.c).map(x => x.key).join(', '));
+  const noSrc = E.verifiedWithoutSource(D);
+  ok('No cell claims "verified" without citing a source', noSrc.length === 0, noSrc.join(', '));
+  const badQuote = E.quotesWithoutSource(D);
+  ok('Every quotation names the source it came from', badQuote.length === 0, badQuote.join(', '));
+  ok('Every bar is a level the axis actually defines',
+     E.cells(D).every(({ c, axis }) => c && E.barText(D, axis.id, c.bar) !== null));
+
+  /* ---- the module's two self-imposed rules ---- */
+  const money = E.priceLeaks(D);
+  ok('No price reaches the screen', money.length === 0, money.join(' | '));
+  const rank = E.rankingLeaks(D);
+  ok('No vendor is recommended or ranked', rank.length === 0, rank.join(', '));
+
+  /* ---- the thesis, as a property of the data ---- */
+  ok('The three reach rows rise across the four doors', E.reachRowsAreStaircases(D));
+  ok('The review row does NOT simply rise — that is the point',
+     !E.checkIsStaircase(D),
+     'check bars: ' + D.DOORS.map(d => E.checkOf(D, d.id)).join(' '));
+  const ex = E.checkExceptions(D);
+  ok('The page names every door whose review burden departs from its reach',
+     ex.length > 0, ex.map(r => 'door ' + r.n + ' reach ' + r.reach + ' check ' + r.check).join('; '));
+
+  /* ---- act II ---- */
+  ok('Every job has a verdict for every door',
+     D.JOBS.every(j => D.DOORS.every(d => !!E.verdict(D, j, d.id))));
+  ok('Every verdict names one of the four axes',
+     D.JOBS.every(j => D.DOORS.every(d => D.AXES.some(a => a.id === E.verdict(D, j, d.id).axis))));
+  ok('Every verdict explains itself in a sentence',
+     D.JOBS.every(j => D.DOORS.every(d => E.verdict(D, j, d.id).why.length > 40)));
+  ok('A door that does the whole job says what it costs you, unless it costs nothing',
+     D.JOBS.every(j => D.DOORS.every(d => {
+       const v = E.verdict(D, j, d.id);
+       return v.v !== 'yes' || typeof v.hand === 'string';
+     })));
+  ok('At least one job is best served by door 1 or door 2',
+     E.jobsSolvedLow(D).length > 0, E.jobsSolvedLow(D).map(j => j.id).join(', '));
+  ok('No job is impossible at every door',
+     D.JOBS.every(j => !!E.bestDoor(D, j)),
+     D.JOBS.filter(j => !E.bestDoor(D, j)).map(j => j.id).join(', '));
+
+  /* ---- receipts ---- */
+  ok('The cut list is not empty and every entry says why',
+     D.CUT.length > 0 && D.CUT.every(c => c.claim && c.why && c.why.length > 40));
+  ok('At least two product names are shown as already changed',
+     D.CHANGED.length >= 2, String(D.CHANGED.length));
+  ok('The uneven row is labelled unconfirmed rather than asserted',
+     D.UNEVEN.conf === 'unconfirmed', D.UNEVEN.conf);
+  ok('The page carries the date it was checked',
+     /\d{4}/.test(D.CHECKED_ON) && D.CHECKED_ISO.length === 10, D.CHECKED_ON);
+
+  const box = $('#selftest-out');
+  box.innerHTML = '';
+  const fails = out.filter(r => !r[0]).length;
+  const head = el('div', 'st-head ' + (fails ? 'bad' : 'good'));
+  head.textContent = fails ? fails + ' of ' + out.length + ' checks FAILED'
+                           : 'all ' + out.length + ' checks pass';
+  box.appendChild(head);
+  const ul = el('ul', 'st-list');
+  out.forEach(([pass, name, detail]) => {
+    const li = el('li', pass ? 'ok' : 'no');
+    li.appendChild(el('b', null, pass ? 'PASS' : 'FAIL'));
+    li.appendChild(el('span', null, name + (detail ? ' — ' + detail : '')));
+    ul.appendChild(li);
+  });
+  box.appendChild(ul);
+  /* eslint-disable no-console */
+  console.log('Front Doors self-test:', fails ? fails + ' FAILED' : 'all pass');
+  out.forEach(r => console.log(r[0] ? 'PASS' : 'FAIL', r[1], r[2]));
+}
+
+/* ================================ boot ================================== */
+
+function boot() {
+  /* the date, in the three places that state it */
+  $$('.js-date').forEach(n => { n.textContent = D.CHECKED_ON; });
+  $('#intro-title').textContent = D.INTRO.title;
+  paras($('#intro-body'), D.INTRO.body);
+  $('#intro-note').textContent = D.INTRO.note;
+
+  renderGrid();
+  renderAxisNote();
+  renderCheckNote();
+  renderJobPicker();
+  renderJobsNote();
+  renderJob();
+  renderChanged();
+  renderStale();
+  renderUneven();
+  renderCounts();
+  renderCut();
+  renderSources();
+  wireOverlays();
+
+  $$('#actnav button').forEach(b => b.addEventListener('click', () => setAct(+b.dataset.act)));
+  $('#btn-to-jobs').addEventListener('click', () => setAct(2));
+  $('#btn-to-receipts').addEventListener('click', () => setAct(3));
+
+  open('howto');
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+})();
+
+</script>
+</body>
+</html>
