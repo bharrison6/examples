@@ -5,6 +5,7 @@
   "topic": "Ecology · Wildlife Survey Design",
   "discipline": "Ecology",
   "tagline": "Survey fixed synthetic sites and separate detection from occupancy",
+  "hub_blurb": "Survey fixed synthetic sites across repeated rounds and discover why fewer sightings do not by themselves prove lower occupancy.",
   "card_blurb": "Run a reproducible wildlife-survey scenario, inspect detection histories, and learn why fewer sightings do not by themselves prove lower occupancy.",
   "description": "**What the Survey Missed** — an offline synthetic occupancy investigation. Students survey two fixed groups of 24 sites across up to three rounds, distinguish observations from occupancy, inspect a transparent likelihood view, and reveal the generating model only after explaining the evidence.",
   "entry": "index.html",

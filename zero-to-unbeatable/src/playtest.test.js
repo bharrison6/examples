@@ -978,46 +978,17 @@ head('7. Step 1 — the hand-written rules');
   check('seven rules and eight rules are the same opponent — rule 8 is the list being tidy',
     sameAt7 && RULES.report(7).safe);
 
-  /* ---- the numbers quoted in the prose are the numbers in the code ----
-
-     Step 3 fills QUOTED as it measures, so every figure the ultimate act
-     prints is checked here too, against the same three documents the
-     reader actually sees. A number cannot be edited into the prose
-     without the code that produces it, and it cannot be changed in the
-     code without the prose going red. */
+  /* ---- current public documentation names the actual three stages ---- */
   const docs = ['README.md', 'src/demo-guide.html', 'demo.json']
     .map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
-  const quoted = [
-    [fmt(r8.lines), 'complete game lines against the full ladder'],
-    [fmt(r2.lines), 'complete game lines against the two-rule ladder'],
-    [(r2.beatsSecond * 100).toFixed(0) + '%', 'how often best play beats two rules']
-  ].concat(QUOTED);
-  const missing = quoted.filter(([n]) => !docs.includes(n)).map(([n, what]) => `${n} (${what})`);
-  check('every number quoted in README.md, the guide and the manifest matches the code',
-    missing.length === 0, 'not found in the prose: ' + missing.join(', '));
-  console.log(`        ${quoted.length} figures cross-checked against the three documents`);
-
-  /* ---- the burst arc agrees across the three files that state it ----
-
-     This figure is a measurement written into a comment, not a value the
-     code returns, so the cross-check above cannot see it. README.md said
-     "mean 4.08 over 12 seeds" and SPEC.md said "mean 3.8" while engine.js
-     said "mean 3.9 over 24 seeds" — three numbers for one measurement.
-     Take engine.js as canonical and make any disagreement fail. */
-  const hp = fs.readFileSync(path.join(__dirname, 'engine.js'), 'utf8');
-  const arc = hp.match(/over (\d+) seeds[\s\S]{0,240}?mean (\d+(?:\.\d+)?)/);
-  check('src/engine.js states the burst arc it is the canonical copy of', !!arc);
-  if (arc) {
-    const [, seeds, mean] = arc;
-    for (const f of ['../README.md', '../SPEC.md']) {
-      const txt = fs.readFileSync(path.join(__dirname, f), 'utf8');
-      const hasSeeds = txt.includes(seeds + ' seeds');
-      const hasMean = txt.includes('mean ' + mean) || txt.includes('mean **' + mean + '**');
-      check(`${f.replace('../', '')} quotes the same burst arc as engine.js (${seeds} seeds, mean ${mean})`,
-        hasSeeds && hasMean,
-        `seeds ${hasSeeds ? 'ok' : 'MISSING'}, mean ${hasMean ? 'ok' : 'MISSING'}`);
-    }
-  }
+  const terms = ['1a', '1b', '1c', 'Neural networks', 'optional advanced extension'];
+  check('README, guide, and manifest describe the three real stages',
+    terms.every(t => docs.includes(t)), terms.filter(t => !docs.includes(t)).join(', '));
+  check('public copy does not promise neural generalisation or unbeatability',
+    docs.includes('does not call this network unbeatable') && /not a\s+guarantee of generalisation/.test(docs));
+  const guide = fs.readFileSync(path.join(__dirname, 'demo-guide.html'), 'utf8');
+  check('the guide names visible neural actions in plain language',
+    guide.includes('Create learning examples') && guide.includes('Train network') && guide.includes('positions kept out of training'));
 }
 
 /* ===================================================================== */

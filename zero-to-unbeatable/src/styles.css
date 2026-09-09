@@ -275,8 +275,9 @@ select {
 }
 .seg button.on { background: var(--lite); border-color: #6FD4FF; color: var(--navy); }
 #train-stats {
-  margin-top: calc(.5 * var(--u)); display: flex; gap: calc(.35 * var(--u));
+  margin-top: calc(.5 * var(--u)); display: flex; flex-wrap: wrap; gap: calc(.35 * var(--u));
 }
+#train-stats > p { flex-basis: 100%; margin: calc(.4 * var(--u)) 0 0; }
 #train-stats .st { flex: 1; background: var(--bg-2); border: 1px solid var(--line); border-radius: 8px;
   padding: calc(.32 * var(--u)) calc(.2 * var(--u)); text-align: center; }
 #train-stats .st .n { display: block; font-size: calc(.9 * var(--u)); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--gold); line-height: 1.15; }
@@ -461,15 +462,9 @@ input[type=text]::placeholder { color: var(--ink-3); }
  * sits above everything added below.
  * ================================================================== */
 
-/* Three steps where there were two modes. The labels must not wrap: the
-   board is already at its 11u floor on a 320x568 screen, so an extra
-   line here would come straight off the bottom of the page and push
-   step 2's TRAIN button below the fold. Content-width buttons instead
-   of three equal thirds — "1 · Rules" does not need the room that
-   "3 · Nine boards" does — which fits all three on one line at 320px
-   with room to spare. */
+/* Full lesson names wrap within equal-width tabs on narrow screens. */
 #mode-seg button {
-  flex: 1 1 auto; white-space: nowrap;
+  flex: 1 1 0; min-width: 0; white-space: normal; line-height: 1.3;
   font-size: calc(.72 * var(--u)); padding-inline: calc(.25 * var(--u));
 }
 

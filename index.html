@@ -3,575 +3,550 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AI: From Zero to Takeoff &mdash; live demos &middot; Bryant Harrison &middot; Murray State University</title>
+<meta name="theme-color" content="#002144">
+<title>AI: From Zero to Takeoff — live demos · Bryant Harrison · Murray State University</title>
 <style>
   :root {
-    --navy: #002144; --navy-2: #04304f; --card: #0a2c50; --card-hover: #0f3a66;
-    --edge: #1d4570; --text: #eef3fa; --muted: #9fb2ca;
-    --gold: #ECAC00; --blue: #00A4E3; --alert: #FF4500;
+    --navy: #002144;
+    --gold: #ecac00;
+    --gold-pale: #fff3cc;
+    --blue: #006b9a;
+    --ink: #132238;
+    --muted: #536174;
+    --paper: #fffdf8;
+    --wash: #f3f5f7;
+    --line: #d9dee5;
+    --white: #ffffff;
+    --shadow: 0 18px 55px rgba(0, 33, 68, .10);
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  /* Solid colour on the root so the canvas is always painted; a fixed-attachment
-     background here leaves everything below the first viewport black on some
-     mobile browsers and in headless capture. */
-  html { scroll-behavior: smooth; background: #001730; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; background: var(--paper); }
   body {
-    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    background:
-      radial-gradient(1100px 560px at 50% -8%, #07395f 0%, rgba(7,57,95,0) 62%),
-      linear-gradient(180deg, #001730 0%, var(--navy) 42%, #00294f 100%);
-    background-repeat: no-repeat, no-repeat;
-    color: var(--text); min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center;
-    padding: 40px 18px 60px;
+    margin: 0;
+    color: var(--ink);
+    background: var(--paper);
+    font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.55;
   }
-  .wrap { width: 100%; max-width: 900px; }
+  a { color: inherit; }
+  a:focus-visible, summary:focus-visible { outline: 3px solid var(--gold); outline-offset: 4px; }
+  .shell { width: min(1160px, calc(100% - 40px)); margin-inline: auto; }
 
-  header { text-align: center; margin-bottom: 10px; }
-  .eyebrow { color: var(--gold); font-weight: 700; letter-spacing: .18em;
-             font-size: .72rem; text-transform: uppercase; margin-bottom: 10px; }
-  h1 { font-size: clamp(1.8rem, 6.6vw, 2.8rem); line-height: 1.1; letter-spacing: -.01em; }
-  h1 .lift { color: var(--gold); }
-  .presenter { margin-top: 12px; font-size: .98rem; font-weight: 600; }
-  .presenter span { color: var(--muted); font-weight: 400; }
-  p.sub { color: var(--muted); margin: 14px auto 0; max-width: 640px; font-size: .95rem; line-height: 1.55; }
-  p.sub b { color: var(--text); font-weight: 650; }
+  .masthead {
+    color: var(--white);
+    background:
+      linear-gradient(120deg, rgba(255,255,255,.055) 0 1px, transparent 1px 100%) 0 0 / 34px 34px,
+      var(--navy);
+    padding: 22px 0 76px;
+  }
+  .topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    padding-bottom: 56px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--white);
+    text-decoration: none;
+    font-weight: 760;
+    letter-spacing: .01em;
+  }
+  .brand-mark {
+    width: 36px;
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    color: var(--navy);
+    background: var(--gold);
+    border-radius: 50%;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 1.12rem;
+  }
+  nav { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
+  nav a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 999px;
+    color: #e6edf5;
+    text-decoration: none;
+    font-size: .84rem;
+    font-weight: 700;
+  }
+  nav a:hover { background: rgba(255,255,255,.09); }
+  .hero { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, .65fr); gap: 72px; align-items: end; }
+  .eyebrow, .part-num, .feature-number, .catalog-label {
+    margin: 0 0 12px;
+    color: var(--gold);
+    font-size: .73rem;
+    font-weight: 850;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  h1, h2, h3 { font-family: Georgia, "Times New Roman", serif; }
+  h1 {
+    max-width: 760px;
+    margin: 0;
+    font-size: clamp(2.65rem, 7.5vw, 5.8rem);
+    line-height: .96;
+    letter-spacing: -.045em;
+    text-wrap: balance;
+  }
+  h1 span { color: var(--gold); }
+  .hero-copy {
+    max-width: 690px;
+    margin: 26px 0 0;
+    color: #dce5ee;
+    font-size: clamp(1rem, 2vw, 1.18rem);
+  }
+  .hero-note { padding: 24px 0 4px 24px; border-left: 1px solid rgba(255,255,255,.25); }
+  .hero-note strong { display: block; margin-bottom: 8px; color: var(--white); font-size: 1rem; }
+  .hero-note p { margin: 0; color: #b9c7d5; font-size: .9rem; }
 
-  .explainer { margin-top: 30px; background: var(--navy-2); border: 1px solid var(--edge);
-               border-radius: 16px; padding: 22px 20px 18px; }
-  .explainer h2 { font-size: 1.15rem; text-align: center; margin-bottom: 4px; }
-  .explainer h2 b { color: var(--gold); }
-  .explainer .lede { color: var(--muted); font-size: .88rem; text-align: center; line-height: 1.5;
-                     max-width: 560px; margin: 0 auto 14px; }
-  .explainer svg { display: block; width: 100%; height: auto; }
-  .explainer .caption { color: var(--muted); font-size: .82rem; line-height: 1.5; text-align: center;
-                        margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--edge); }
-  .explainer .caption b { color: var(--text); }
-  .explainer .hint { color: var(--blue); font-size: .76rem; text-align: center; margin-top: 10px;
-                     font-weight: 700; letter-spacing: .04em; }
-  .ring { cursor: pointer; }
-  .ring rect.band { transition: filter .12s ease; }
-  .ring:hover rect.band { filter: brightness(1.35); }
-  .ring:focus { outline: none; }
-  .ring:focus-visible rect.band, .ring.on rect.band { stroke: var(--gold); stroke-width: 3; }
-  .explainer.picked .ring:not(.on) { opacity: .45; }
-  #ring-note { margin-top: 12px; padding: 12px 14px; border-radius: 10px;
-               background: rgba(236,172,0,.10); border-left: 3px solid var(--gold);
-               font-size: .88rem; line-height: 1.5; }
-  #ring-note[hidden] { display: none; }
-  #ring-note b { color: var(--gold); }
-  #ring-note a { color: var(--blue); font-weight: 700; text-decoration: none; white-space: nowrap; }
-  .sec-lead { color: var(--muted); font-size: .86rem; font-style: italic; margin-bottom: 16px;
-              padding-left: 12px; border-left: 2px solid var(--edge); }
+  main { padding: 82px 0 34px; }
+  .part { scroll-margin-top: 24px; margin-bottom: 112px; }
+  .part-head {
+    display: grid;
+    grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr);
+    gap: 48px;
+    align-items: end;
+    margin-bottom: 34px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--line);
+  }
+  .part-num { color: var(--blue); margin-bottom: 8px; }
+  .part-head h2 {
+    margin: 0;
+    color: var(--navy);
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    line-height: 1.03;
+    letter-spacing: -.025em;
+  }
+  .part-intro { margin: 0; color: var(--muted); font-size: 1rem; }
 
-  .part { margin-top: 46px; }
-  .part-head { border-left: 3px solid var(--gold); padding-left: 16px; margin-bottom: 6px; }
-  .part.b .part-head { border-left-color: var(--blue); }
-  .part-num { display: block; color: var(--gold); font-weight: 800; font-size: .72rem;
-              letter-spacing: .2em; text-transform: uppercase; margin-bottom: 4px; }
-  .part.b .part-num { color: var(--blue); }
-  .part-head h2 { font-size: clamp(1.35rem, 4.4vw, 1.75rem); line-height: 1.15; }
-  .part-q { color: var(--muted); font-size: .95rem; margin-top: 6px; line-height: 1.5; }
+  .start-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+  .start-card {
+    display: flex;
+    flex-direction: column;
+    padding: 28px;
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    background: var(--white);
+    box-shadow: var(--shadow);
+  }
+  .start-card:first-child { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .start-card:first-child .feature-number { color: var(--gold); }
+  .feature-number { color: var(--blue); }
+  .stage-list { display: grid; gap: 0; margin: 0 0 22px; padding: 0; list-style: none; }
+  .stage-list li {
+    display: grid;
+    grid-template-columns: 2.6rem 1fr;
+    gap: 12px;
+    padding: 13px 0;
+    border-top: 1px solid var(--line);
+    font-size: .9rem;
+  }
+  .start-card:first-child .stage-list li { border-color: rgba(255,255,255,.18); }
+  .stage-list b { color: var(--blue); font-size: .78rem; letter-spacing: .04em; }
+  .start-card:first-child .stage-list b { color: var(--gold); }
+  .stage-list span { color: var(--muted); }
+  .start-card:first-child .stage-list span { color: #c9d4df; }
+  .stage-list strong { display: block; color: inherit; font-size: .92rem; }
 
-  .take { margin: 14px 0 20px; padding: 12px 16px; border-radius: 10px;
-          background: linear-gradient(90deg, rgba(236,172,0,.14), rgba(236,172,0,.03));
-          border-left: 3px solid var(--gold); font-size: .92rem; line-height: 1.5; }
-  .part.b .take { background: linear-gradient(90deg, rgba(0,164,227,.14), rgba(0,164,227,.03));
-                  border-left-color: var(--blue); }
-  .take b { color: var(--gold); }
-  .part.b .take b { color: var(--blue); }
+  a.card {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 188px;
+    padding: 22px;
+    overflow: hidden;
+    color: var(--ink);
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    text-decoration: none;
+    transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+  }
+  a.card::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 4px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .16s ease;
+  }
+  a.card:hover { transform: translateY(-3px); border-color: #aeb9c6; box-shadow: 0 14px 30px rgba(0,33,68,.10); }
+  a.card:hover::after, a.card:focus-visible::after { transform: scaleX(1); }
+  .card .topic {
+    margin-bottom: 10px;
+    color: var(--blue);
+    font-size: .7rem;
+    font-weight: 850;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+  }
+  .card h2 { margin: 0 0 9px; color: var(--navy); font-size: 1.42rem; line-height: 1.12; }
+  .card .emoji { margin-right: 9px; font-family: "Segoe UI Emoji", sans-serif; }
+  .card p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.48; }
+  .card .go { margin-top: auto; padding-top: 18px; color: var(--navy); font-size: .79rem; font-weight: 850; }
+  .start-card > .card {
+    flex: none;
+    min-height: 0;
+    margin: 0 0 8px;
+    padding: 0 0 18px;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+  }
+  .start-card > .card::after, .start-card > .card .topic, .start-card > .card p { display: none; }
+  .start-card > .card:hover { transform: none; box-shadow: none; }
+  .start-card > .card h2 { margin: 0; font-size: clamp(1.65rem, 4vw, 2.25rem); }
+  .start-card > .card .go { padding-top: 9px; color: var(--blue); }
+  .start-card:first-child > .card { border-bottom-color: rgba(255,255,255,.18); }
+  .start-card:first-child > .card h2 { color: var(--white); }
+  .start-card:first-child > .card .go { color: var(--gold); }
+  .start-card > .stage-list { margin-bottom: 0; }
 
-  .motif { margin: 4px 0 18px; }
-  .motif svg { display: block; width: 100%; height: auto; }
-  .motif .cap { color: var(--muted); font-size: .78rem; text-align: center; margin-top: 6px; }
+  .concept-note { margin-top: 24px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .concept-note summary {
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    cursor: pointer;
+    color: var(--navy);
+    font-weight: 800;
+    list-style: none;
+  }
+  .concept-note summary::-webkit-details-marker { display: none; }
+  .concept-note summary::after { content: "+"; color: var(--blue); font-size: 1.5rem; font-weight: 400; }
+  .concept-note[open] summary::after { content: "−"; }
+  .concept-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; padding-bottom: 22px; background: var(--line); }
+  .concept-grid div { padding: 18px; background: var(--wash); }
+  .concept-grid b { display: block; margin-bottom: 6px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; }
+  .concept-grid p { margin: 0; color: var(--muted); font-size: .84rem; }
+  .concept-caveat { grid-column: 1 / -1; background: var(--gold-pale) !important; }
 
-  .sec { margin-top: 26px; }
-  .sec-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 5px; flex-wrap: wrap; }
-  .sec-num { color: var(--gold); font-weight: 800; font-size: .95rem; letter-spacing: .06em; white-space: nowrap; }
-  .part.b .sec-num { color: var(--blue); }
-  .sec-title { font-size: 1.16rem; font-weight: 750; }
-  .sec-sub { color: var(--muted); font-size: .9rem; line-height: 1.55; margin-bottom: 12px; }
-  .sec-take { font-size: .84rem; color: var(--gold); font-weight: 650;
-              margin: -6px 0 12px; display: flex; gap: 8px; align-items: flex-start; line-height: 1.45; }
-  .part.b .sec-take { color: var(--blue); }
-  .sec-take::before { content: "\2192"; opacity: .8; }
-  .sec-note { color: var(--muted); font-size: .82rem; font-style: italic; margin: -4px 0 10px; }
-  .eg { font-size: .83rem; line-height: 1.5; color: var(--muted); margin: -2px 0 12px;
-        padding: 9px 12px; border-radius: 8px; background: rgba(255,255,255,.035);
-        border: 1px solid var(--edge); }
-  .eg b { color: var(--text); font-weight: 650; }
-  .eg .lbl { color: var(--blue); font-weight: 800; font-size: .7rem; letter-spacing: .12em;
-             text-transform: uppercase; display: block; margin-bottom: 3px; }
-  .rung { border-top: 1px dashed var(--edge); padding-top: 14px; margin-top: 14px; }
+  .paired-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; }
+  .paired-grid .card { min-height: 240px; }
+  .pair-note { margin: 22px 0 0; padding: 18px 20px; color: var(--muted); background: var(--wash); border-left: 4px solid var(--gold); font-size: .9rem; }
+  .pair-note strong { color: var(--navy); }
 
-  a.card { display: block; background: var(--card); border: 1px solid var(--edge);
-           border-left: 3px solid var(--gold); border-radius: 14px; padding: 18px 20px;
-           text-decoration: none; color: var(--text); margin-bottom: 12px;
-           transition: transform .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease; }
-  .part.b a.card { border-left-color: var(--blue); }
-  a.card:hover, a.card:focus-visible { background: var(--card-hover); border-color: #2c5c92;
-           transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.32); }
-  .card .topic { color: var(--blue); font-size: .7rem; font-weight: 800; letter-spacing: .14em;
-                 text-transform: uppercase; margin-bottom: 6px; }
-  .card h2 { font-size: 1.16rem; margin-bottom: 6px; color: var(--gold); }
-  .card h2 .emoji { margin-right: 8px; }
-  .card p { color: var(--muted); font-size: .89rem; line-height: 1.55; }
-  .card .go { margin-top: 10px; font-size: .8rem; color: var(--blue); font-weight: 700; }
+  .practical-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-bottom: 44px; }
+  .practical-grid .card { min-height: 216px; background: var(--navy); border-color: var(--navy); }
+  .practical-grid .card .topic { color: var(--gold); }
+  .practical-grid .card h2, .practical-grid .card .go { color: var(--white); }
+  .practical-grid .card p { color: #c9d4df; }
+  .catalog-head { display: flex; align-items: end; justify-content: space-between; gap: 28px; margin: 0 0 18px; }
+  .catalog-head h3 { margin: 0; color: var(--navy); font-size: clamp(1.6rem, 4vw, 2.3rem); }
+  .catalog-head p { max-width: 570px; margin: 0; color: var(--muted); font-size: .9rem; }
+  .catalog { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .catalog .card { min-height: 220px; padding: 20px; }
+  .catalog .card h2 { font-size: 1.2rem; }
+  .closing {
+    display: grid;
+    grid-template-columns: minmax(0, .7fr) minmax(0, 1.3fr);
+    gap: 48px;
+    padding: 44px;
+    color: var(--white);
+    background: var(--navy);
+    border-radius: 24px;
+  }
+  .closing h2 { margin: 0; color: var(--gold); font-size: clamp(1.9rem, 4vw, 3rem); line-height: 1.05; }
+  .closing ol { display: grid; gap: 20px; margin: 0; padding-left: 1.3rem; }
+  .closing li { padding-left: 8px; color: #dce5ee; }
+  .closing strong { color: var(--white); }
 
-  .takeaways { background: var(--navy-2); border: 1px solid var(--edge); border-radius: 16px;
-               padding: 24px 24px 18px; margin-top: 14px; }
-  .takeaways ol { list-style: none; counter-reset: t; }
-  .takeaways li { counter-increment: t; position: relative; padding: 0 0 16px 44px;
-                  font-size: .95rem; line-height: 1.55; }
-  .takeaways li::before { content: counter(t); position: absolute; left: 0; top: 1px;
-    width: 28px; height: 28px; border-radius: 50%; background: var(--gold); color: var(--navy);
-    font-weight: 800; font-size: .95rem; display: flex; align-items: center; justify-content: center; }
-  .takeaways li b { color: var(--gold); }
-  .contact { margin-top: 6px; padding-top: 16px; border-top: 1px solid var(--edge);
-             display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between; }
-  .contact .who { font-size: 1rem; font-weight: 750; }
-  .contact .who small { display: block; color: var(--muted); font-weight: 400; margin-top: 3px; }
-  .qr { text-align: center; }
-  .qr img { width: 132px; height: 132px; border-radius: 10px; background: #fff; padding: 4px; display: block; }
-  .qr .cap { color: var(--muted); font-size: .72rem; margin-top: 6px; letter-spacing: .04em; }
-  footer { margin-top: 40px; color: var(--muted); font-size: .8rem; text-align: center; line-height: 1.6; }
-  footer b { color: var(--gold); }
+  footer { padding: 34px 0 48px; color: var(--muted); border-top: 1px solid var(--line); font-size: .84rem; }
+  footer .shell { display: flex; justify-content: space-between; gap: 24px; }
+  footer strong { color: var(--navy); }
+  .phone-link { position: relative; text-align: right; }
+  .phone-link summary {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    color: var(--navy);
+    font-weight: 800;
+  }
+  .phone-link[open] summary { color: var(--blue); }
+  .phone-link img {
+    width: 132px;
+    height: 132px;
+    display: block;
+    margin: 8px 0 6px auto;
+    padding: 4px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  .phone-link small { display: block; }
+
+  @media (max-width: 860px) {
+    .hero, .part-head, .closing { grid-template-columns: 1fr; gap: 24px; }
+    .topline { align-items: flex-start; padding-bottom: 44px; }
+    .hero-note { max-width: 580px; padding: 18px 0 0; border-left: 0; border-top: 1px solid rgba(255,255,255,.25); }
+    .start-grid, .paired-grid, .practical-grid { grid-template-columns: 1fr; }
+    .catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .concept-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 580px) {
+    .shell { width: min(100% - 28px, 1160px); }
+    .masthead { padding: 16px 0 58px; }
+    .topline { display: block; padding-bottom: 42px; }
+    nav { justify-content: flex-start; margin-top: 20px; gap: 6px; }
+    nav a { padding-inline: 12px; }
+    h1 { font-size: clamp(2.75rem, 15vw, 4.3rem); }
+    main { padding-top: 58px; }
+    .part { margin-bottom: 80px; }
+    .part-head { margin-bottom: 24px; }
+    .start-card { padding: 18px; border-radius: 18px; }
+    .stage-list li { grid-template-columns: 2.35rem 1fr; }
+    .concept-grid, .catalog { grid-template-columns: 1fr; }
+    .concept-caveat { grid-column: auto; }
+    .catalog-head, footer .shell { display: block; }
+    .catalog-head p { margin-top: 10px; }
+    .closing { padding: 28px 24px; }
+    footer .shell > :last-child { margin-top: 8px; }
+    .phone-link { text-align: left; }
+    .phone-link img { margin-left: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-
-  <header>
-    <div class="eyebrow">Live demos &middot; scan &amp; play along on your phone</div>
-    <h1>AI: From Zero to <span class="lift">Takeoff</span></h1>
-    <div class="presenter">Bryant Harrison <span>&middot; Murray State University</span></div>
-    <p class="sub">
-      Three questions, in order: <b>what AI actually is</b>, <b>where it is heading</b>, and
-      <b>what it can do in your discipline</b>. Every demo below runs right here in your
-      browser &mdash; no install, no account, nothing sent anywhere.
-    </p>
+  <header class="masthead">
+    <div class="shell">
+      <div class="topline">
+        <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">AI</span> Murray State University</a>
+        <nav aria-label="Launcher sections">
+          <a href="#part-one">What AI is</a>
+          <a href="#part-two">Where it is going</a>
+          <a href="#part-three">For your discipline</a>
+        </nav>
+      </div>
+      <div class="hero" id="top">
+        <div>
+          <p class="eyebrow">A live, hands-on collection</p>
+          <h1>AI: From Zero to <span>Takeoff</span></h1>
+          <p class="hero-copy">Start with a game small enough to inspect completely. Then train a language model, test forecasts against evidence, and open classroom activities built for specific disciplines.</p>
+        </div>
+        <aside class="hero-note" aria-label="About the demos">
+          <strong>Open any demo on this device.</strong>
+          <p>Each activity runs in the browser with no account and no data sent away. Presenter and teaching guides live inside the demos.</p>
+        </aside>
+      </div>
+    </div>
   </header>
 
-  <section class="explainer">
-    <h2>Start here: <b>&ldquo;AI&rdquo; is not one thing</b></h2>
-    <p class="lede">
-      Most arguments about AI are two people using the word for two different things.
-      This picture is the shape of the whole session.
-    </p>
-    <svg viewBox="0 0 440 378" role="img" aria-label="Nested rings. Artificial intelligence contains machine learning, which contains neural networks, which contains generative AI. Inside that, large language models lead to reasoning models, which lead to agents.">
-      <defs>
-        <marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-          <path d="M 0 1 L 8 5 L 0 9 z" fill="#ECAC00"/>
-        </marker>
-      </defs>
-
-      <g class="ring" data-ring="ai" role="button" tabindex="0" aria-label="ARTIFICIAL INTELLIGENCE"><rect class="band" x="8"   y="8"   width="424" height="354" rx="18" fill="#062d54" stroke="#2c5c92" stroke-width="1.5"/></g>
-      <g class="ring" data-ring="ml" role="button" tabindex="0" aria-label="MACHINE LEARNING"><rect class="band" x="40"  y="46"  width="360" height="288" rx="16" fill="#0a3a69" stroke="#3a72ad" stroke-width="1.5"/></g>
-      <g class="ring" data-ring="nn" role="button" tabindex="0" aria-label="NEURAL NETWORKS"><rect class="band" x="72"  y="84"  width="296" height="222" rx="14" fill="#0f4a83" stroke="#4785c4" stroke-width="1.5"/></g>
-      <g class="ring" data-ring="gen" role="button" tabindex="0" aria-label="GENERATIVE AI"><rect class="band" x="104" y="122" width="232" height="156" rx="12" fill="#155a9c" stroke="#5b9bd8" stroke-width="1.5"/></g>
-
-      <rect x="20"  y="20"  width="7" height="7" rx="1.5" fill="#7ea8d6"/>
-      <rect x="52"  y="58"  width="7" height="7" rx="1.5" fill="#8fbbe4"/>
-      <rect x="84"  y="96"  width="7" height="7" rx="1.5" fill="#a3cbee"/>
-      <rect x="116" y="134" width="7" height="7" rx="1.5" fill="#c3e0f7"/>
-      <text x="34"  y="27"  fill="#eef3fa" font-size="13.5" font-weight="700" letter-spacing="1.5">ARTIFICIAL INTELLIGENCE</text>
-      <text x="66"  y="65"  fill="#d6e6f6" font-size="12.5" font-weight="700" letter-spacing="1.3">MACHINE LEARNING</text>
-      <text x="98"  y="103" fill="#d6e6f6" font-size="12.5" font-weight="700" letter-spacing="1.3">NEURAL NETWORKS</text>
-      <text x="130" y="141" fill="#eaf4fd" font-size="12.5" font-weight="700" letter-spacing="1.3">GENERATIVE AI</text>
-
-      <rect x="118" y="150" width="204" height="26" rx="13" fill="#ECAC00"/>
-      <text x="220" y="167" fill="#002144" font-size="12.5" font-weight="800" text-anchor="middle">LLM</text>
-      <line x1="220" y1="180" x2="220" y2="190" stroke="#ECAC00" stroke-width="2.4" marker-end="url(#ar)"/>
-
-      <rect x="118" y="194" width="204" height="26" rx="13" fill="#ECAC00"/>
-      <text x="220" y="211" fill="#002144" font-size="12.5" font-weight="800" text-anchor="middle">REASONING MODELS</text>
-      <line x1="220" y1="224" x2="220" y2="234" stroke="#ECAC00" stroke-width="2.4" marker-end="url(#ar)"/>
-
-      <rect x="118" y="238" width="204" height="26" rx="13" fill="#ECAC00"/>
-      <text x="220" y="255" fill="#002144" font-size="12.5" font-weight="800" text-anchor="middle">AGENTS</text>
-
-      <text x="220" y="272" fill="#ECAC00" font-size="11.5" font-weight="700" text-anchor="middle">Demo 4 builds all three, in this order</text>
-      <text x="98"  y="298" fill="#ECAC00" font-size="13" font-weight="700">Demo 3 &mdash; where lookup runs out</text>
-      <text x="66"  y="326" fill="#ECAC00" font-size="13" font-weight="700">Demo 2 &mdash; one board, and it learns</text>
-      <text x="34"  y="354" fill="#ECAC00" font-size="13" font-weight="700">Demo 1 &mdash; rules a person wrote by hand</text>
-    </svg>
-    <p class="hint">Tap a ring &mdash; or Tab to it and press Enter &mdash; to see what lives in it</p>
-    <div id="ring-note" hidden></div>
-    <p class="caption">
-      <b>When something is labelled &ldquo;AI&rdquo;, ask which ring.</b> Demos 1, 2 and 3 are the
-      same game, moving inward one ring at a time: rules a person wrote, then a learner taught by
-      nothing but won-lost-drew, then the wall that learner hits. Most of the AI already running in
-      industry is nowhere near the gold chips in the middle &mdash; and the outer rings did not stop
-      working when the inner ones arrived.
-    </p>
-  </section>
-
-  <section class="part" id="part-one">
-    <div class="part-head">
-      <span class="part-num">Part one</span>
-      <h2>What AI is</h2>
-      <p class="part-q">Four rungs, working outside-in through those rings. The first three are one
-      game &mdash; tic-tac-toe &mdash; with the machinery swapped underneath it: rules a person wrote
-      by hand, then a learner told nothing but won, lost or drew, and then the wall that learner runs
-      into &mdash; which is the problem neural networks were invented to solve. Then the one inside
-      the chatbot.</p>
-    </div>
-    <div class="take"><b>Leave with:</b> AI is a family of methods. Each ring solves the problem the
-    ring outside it could not, and each one is still in production somewhere today &mdash; the outer
-    rings did not go away when the inner ones arrived.</div>
-
-    <div class="sec" id="rung-ttt">
-      <p class="sec-lead">Demos 1, 2 and 3 are one demo &mdash; the same game with the machinery
-      swapped underneath it, switched at the top of the page. Demo 4 works the same way, walking its
-      three layers.</p>
-
-      <div class="sec-head"><span class="sec-num">DEMO 1</span><span class="sec-title">Rules &mdash; the outermost ring</span></div>
-      <p class="sec-sub">A hand-written ladder of if-statements: take the win, block the row, take
-      the fork. The rule that fired is highlighted on every move, so you can read the whole mind of
-      it. Most people would call this AI.</p>
-      <p class="sec-take">A person wrote every line of that. The machine worked nothing out.</p>
-      <div class="eg"><span class="lbl">the same idea, in the wild</span>
-      <b>Deep Blue</b> beat Garry Kasparov 3&frac12;&ndash;2&frac12; in 1997 on hand-tuned rules and
-      search. <b>R1/XCON</b> configured VAX orders at Digital from 1980 and kicked off the
-      expert-systems boom. And the <b>traffic signals</b> outside &mdash; and the PLC in part three
-      &mdash; still run exactly this way.</div>
-
-      <div class="rung">
-        <div class="sec-head"><span class="sec-num">DEMO 2</span><span class="sec-title">Machine learning &mdash; one ring in</span></div>
-        <p class="sec-sub">Same board. An opponent that has played zero games and holds no rules at
-        all, learning only from won, lost or drew. Train it in three-second bursts until you cannot
-        win &mdash; then the app proves it, playing out every one of about <b>15,000</b> games still reachable
-        against it. Tic-tac-toe has <b>255,168</b> games in total across <b>5,478</b> positions, so a
-        laptop really can check every one. That is why this is a proof and not a win record.</p>
-        <p class="sec-take">Same result as the rules. Nobody wrote a single one of them.</p>
-        <div class="eg"><span class="lbl">the same idea, in the wild</span>
-        Your <b>spam filter</b>, <b>card-fraud detection</b>, and the recommendation engines behind
-        most of what gets shown to you. None of it is a neural network, and none of it writes.</div>
+  <main class="shell">
+    <section class="part" id="part-one">
+      <div class="part-head">
+        <div>
+          <p class="part-num">Part one</p>
+          <h2>What AI is</h2>
+        </div>
+        <p class="part-intro">Two demonstrations make the machinery visible. The first compares three ways to choose a move on the same tic-tac-toe board. The second builds from a small language model to reasoning and tool use.</p>
       </div>
 
-      <div class="rung">
-        <div class="sec-head"><span class="sec-num">DEMO 3</span><span class="sec-title">Neural networks &mdash; and the wall that made them necessary</span></div>
-        <p class="sec-sub">Ultimate tic-tac-toe, in the same app: nine boards, and the square you
-        play decides which board your opponent must play in next. The same learner comes apart here,
-        because the shortcut it relied on &mdash; score each board on its own and add up &mdash; is
-        simply wrong once the boards are coupled.</p>
-        <p class="sec-take">A table can only look up what it has already stored. This is the wall
-        neural networks exist to get over: computing a value for a position you have never seen.</p>
-        <p class="sec-sub">The proof goes with it. If the nine boards were independent you could
-        shrink this space enormously &mdash; they would be interchangeable, and each could be rotated
-        on its own. Coupling them kills both shortcuts. A <i>crude</i> upper bound is
-        <b>3.6&times;10<sup>38</sup></b> &mdash; <b>820 billion times</b> more than you could count
-        at a billion a second since the Big Bang. Apply the constraints that bound ignores and it
-        drops by an order of magnitude, which changes nothing: no honest bound here is small enough
-        to count &mdash; and yet the game <i>was</i>
-        solved, in 2020, by cleverness rather than by counting.</p>
-        <div class="eg"><span class="lbl">the same idea, in the wild</span>
-        <b>AlexNet</b> won ImageNet in 2012 and restarted the whole field. <b>AlphaGo</b> beat Lee
-        Sedol four games to one in 2016. <b>AlphaFold</b> predicts protein structures &mdash; see part
-        two. Also: your phone finding photos of your dog, and every voice-to-text you have used.</div>
+      <div class="start-grid">
+        <article class="start-card">
+          <p class="feature-number">Demo 1 · one board, three stages</p>
+          <a class="card" href="zero-to-unbeatable/index.html">
+            <div class="topic">Machine learning · not generative AI</div>
+            <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
+            <p>One tic-tac-toe board, three real mechanisms. 1a exposes eight hand-written rules and checks the resulting policy. 1b learns a value table in visible game bursts. 1c visibly runs a fresh copy of the 1b algorithm for 20,000 seeded games, freezes its current estimates as examples, then trains shared neural-network weights. It reports positions kept out of training separately from a reproducible play comparison. Ultimate tic-tac-toe remains an optional advanced extension.</p>
+            <div class="go">Open demo →</div>
+          </a>
+          <ol class="stage-list" aria-label="Zero to Unbeatable stages">
+            <li><b>1a</b><span><strong>Rules-based intelligence</strong>A person writes the priorities the computer follows.</span></li>
+            <li><b>1b</b><span><strong>Machine learning</strong>A value table improves from the outcomes of played games.</span></li>
+            <li><b>1c</b><span><strong>Neural networks</strong>A network learns to approximate the frozen table, then chooses moves on its own.</span></li>
+          </ol>
+        </article>
+
+        <article class="start-card">
+          <p class="feature-number">Demo 2 · from prediction to action</p>
+          <a class="card" href="glass-box/index.html">
+            <div class="topic">Base model → reasoning model → agent</div>
+            <h2><span class="emoji">🔍</span>Glass Box</h2>
+            <p>Train a small transformer live, compare direct and reasoned answers, then steer a tool-using agent and test its memory.</p>
+            <div class="go">Open demo →</div>
+          </a>
+          <ol class="stage-list" aria-label="Glass Box stages">
+            <li><b>2a</b><span><strong>Language model</strong>Train a small transformer and inspect what its attention tracks.</span></li>
+            <li><b>2b</b><span><strong>Reasoning model</strong>Compare direct answers with extra computation on the same problems.</span></li>
+            <li><b>2c</b><span><strong>Agent</strong>Give a model tools, a loop, and limited memory; then test where it breaks.</span></li>
+          </ol>
+        </article>
       </div>
-      <a class="card" href="zero-to-unbeatable/index.html">
-        <div class="topic">Machine learning · not generative AI</div>
-        <h2><span class="emoji">🧠</span>Zero to Unbeatable</h2>
-        <p>Three opponents on one tic-tac-toe board. First, eight if/else rules a person wrote out — it has played zero games, it tells you which rule it just used, and you cannot beat it. Then a learner that starts from nothing and reaches the same unbeatable play after ~20,000 games. Then ultimate tic-tac-toe, where the square you play decides which board your opponent plays in next, and the shortcut behind the learner stops describing the game — measured, not asserted. Same exhaustive search proves both of the first two.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
 
-    <div class="sec" id="rung-glass">
-      <div class="sec-head"><span class="sec-num">DEMO 4</span><span class="sec-title">Generative AI &mdash; the innermost ring</span></div>
-      <p class="sec-sub">A real transformer trains from scratch in front of the room &mdash; gibberish
-      to words to sentences. Then a reasoning model is built out of it, and an agent out of that:
-      the three gold chips in the picture above, in that order.</p>
-      <p class="sec-take">A base model predicts. Reasoning and agents are layers bolted on top.</p>
-      <div class="eg"><span class="lbl">the same idea, in the wild</span>
-      <b>ChatGPT, Claude and Gemini</b> are the LLM chip. The &ldquo;thinking&rdquo; modes are the
-      reasoning chip. Coding assistants that run commands and read files are the agent chip &mdash;
-      and the demos you are reading about were built with them.</div>
-      <a class="card" href="glass-box/index.html">
-        <div class="topic">Base model → reasoning model → agent</div>
-        <h2><span class="emoji">🔍</span>Glass Box</h2>
-        <p>Watch a real transformer train from scratch in your browser — gibberish to words to sentences — and tap its attention maps. Then see chain-of-thought beat direct answers in a fair fight, buy accuracy with thinking time, and drive a tool-using agent yourself — then break it by shrinking its memory.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
+      <details class="concept-note">
+        <summary>How the terms relate</summary>
+        <div class="concept-grid">
+          <div><b>Artificial intelligence</b><p>A broad label for machines performing tasks that call for judgment, prediction, planning, perception, or language.</p></div>
+          <div><b>Machine learning</b><p>A part of AI in which behavior improves from data or experience. Neural networks are one family of machine-learning models.</p></div>
+          <div><b>Generative AI</b><p>Systems that produce new text, images, audio, or other content. Modern examples often use neural networks, but “generative” describes what a system does.</p></div>
+          <div><b>Models and agents</b><p>A language model predicts sequences. Reasoning training can improve multi-step work; an agent adds tools, memory, and a loop around a model.</p></div>
+          <div class="concept-caveat"><b>These labels overlap; they are not one universal ladder.</b><p>Rules-based systems, learned tables, neural networks, generative systems, reasoning methods, and agents describe different mechanisms or behaviors. Ask what was learned, what was written by people, and what the system can actually do.</p></div>
+        </div>
+      </details>
+    </section>
 
-  </section>
+    <section class="part" id="part-two">
+      <div class="part-head">
+        <div>
+          <p class="part-num">Part two</p>
+          <h2>Where it is going</h2>
+        </div>
+        <p class="part-intro">One demo tests your intuition against measured progress. The other tests confident predictions against seventy years of history. Read together, they support urgency with skepticism.</p>
+      </div>
+      <div class="paired-grid">
+        <a class="card" href="takeoff/index.html">
+          <div class="topic">The pace of AI progress</div>
+          <h2><span class="emoji">📈</span>Takeoff</h2>
+          <p>Draw your own capability forecasts, reveal the measured curves, and inspect the successes, failures, and sources behind them.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="two-winters/index.html">
+          <div class="topic">Has this happened before?</div>
+          <h2><span class="emoji">❄️</span>Two Winters</h2>
+          <p>Date ten sourced predictions, judge whether they came true, and trace two cycles of promise, limits, and withdrawal.</p>
+          <div class="go">Open demo →</div>
+        </a>
+      </div>
+      <p class="pair-note"><strong>Hold both findings at once:</strong> capability can move faster than intuition, while forecasts about timing and impact still fail in both optimistic and dismissive directions.</p>
+    </section>
 
-  <section class="part b" id="part-two">
-    <div class="part-head">
-      <span class="part-num">Part two</span>
-      <h2>Where it is going</h2>
-      <p class="part-q">Two demos that argue with each other on purpose: the curve really is steep,
-      and this field has collapsed twice before after saying exactly that.</p>
-    </div>
-    <div class="motif">
-      <svg viewBox="-28 0 468 132" role="img" aria-label="A schematic line of funding and interest in AI against time, with two shaded troughs marking the AI winters of the mid-1970s and the late 1980s.">
-        <text x="-15" y="62" fill="#9fb2ca" font-size="11.5" text-anchor="middle" transform="rotate(-90 -15 62)">funding &amp; interest</text>
-        <rect x="96"  y="14" width="52" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
-        <rect x="196" y="14" width="46" height="96" fill="rgba(255,69,0,.10)" stroke="rgba(255,69,0,.35)" stroke-dasharray="3 3"/>
-        <line x1="18" y1="110" x2="424" y2="110" stroke="#2c5c92" stroke-width="1"/>
-        <polyline points="18,102 60,88 96,74 122,96 148,98 176,80 200,72 222,94 242,96 276,84 308,66 340,44 372,28 408,16"
-                  fill="none" stroke="#ECAC00" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-        <text x="122" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="middle">winter</text>
-        <text x="219" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="middle">winter</text>
-        <text x="18"  y="126" fill="#9fb2ca" font-size="11.5">1950</text>
-        <text x="424" y="126" fill="#9fb2ca" font-size="11.5" text-anchor="end">today</text>
-      </svg>
-      <p class="cap"><b>Shape, not data</b> &mdash; no continuous funding series exists, and Demo 7 refuses to invent one.<br>An &ldquo;AI winter&rdquo; is defined as a drop in funding and interest, not in capability: the research never stopped.</p>
-    </div>
-    <div class="take"><b>Leave with:</b> plan for the trend, not the snapshot &mdash; and know the
-    shape of a bust well enough to tell a real capability jump from a press release.</div>
+    <section class="part" id="part-three">
+      <div class="part-head">
+        <div>
+          <p class="part-num">Part three</p>
+          <h2>What it can do for your discipline</h2>
+        </div>
+        <p class="part-intro">Begin with the request and the tool. Then browse classroom activities that turn a model, a prediction, or a body of evidence into something students can inspect and challenge.</p>
+      </div>
 
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">DEMO 5</span><span class="sec-title">Almost nobody draws the curve steeply enough</span></div>
-      <p class="sec-sub">Draw your own forecast on five benchmarks, then watch the real numbers
-      animate over your line. Then the evidence &mdash; with the failures and overclaims kept in frame.</p>
-      <p class="sec-take">Where you would have guessed, against where it actually went.</p>
-      <a class="card" href="takeoff/index.html">
-        <div class="topic">The pace of AI progress</div>
-        <h2><span class="emoji">📈</span>Takeoff</h2>
-        <p>Five benchmarks: draw where you think machine capability went, then see the truth animate over your line. A timeline of 124 model releases, six domains of real-world evidence plus an Elsewhere round-up — with the failures and overclaims kept in frame — and every number backed by a source.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
+      <div class="practical-grid" aria-label="Practical starting points">
+        <a class="card" href="the-stranger/index.html">
+          <div class="topic">Prompting techniques</div>
+          <h2><span class="emoji">💬</span>The Stranger</h2>
+          <p>Change one prompt lever at a time—context, a success specification, or expert vocabulary—and see exactly what each contributes.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="front-doors/index.html">
+          <div class="topic">What to ask it with</div>
+          <h2><span class="emoji">🚪</span>Front Doors</h2>
+          <p>Compare four ways to use AI across seven faculty tasks, then choose the smallest tool that can finish each job.</p>
+          <div class="go">Open demo →</div>
+        </a>
+      </div>
 
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">DEMO 6</span><span class="sec-title">This has happened before &mdash; twice</span></div>
-      <p class="sec-sub">Seventy years of promises, money and collapse. Guess the year a famous
-      prediction was made and whether it came true &mdash; then watch the funding go over a cliff, twice.</p>
-      <p class="sec-take">Confident predictions have a bad record in both directions.</p>
-      <a class="card" href="two-winters/index.html">
-        <div class="topic">Has this happened before?</div>
-        <h2><span class="emoji">❄️</span>Two Winters</h2>
-        <p>Ten real, sourced predictions with the speaker and the date hidden: guess the year and guess whether it came true. Six confident promises — five have resolved and not one arrived inside the window it named — three confident dismissals that aged worse, and one warning that was right. Then a scrubbable 1950–2026 timeline whose lanes are the five stages of an AI winter — promise, money, limit, naming, withdrawal — firing in order, twice.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
+      <div class="catalog-head">
+        <div>
+          <p class="catalog-label">Classroom activity catalog</p>
+          <h3>Choose a discipline</h3>
+        </div>
+        <p>Each activity is self-contained and includes a guide to its model, assumptions, and teaching use. Start from your learning goal and inspect the evidence before adapting it for class.</p>
+      </div>
 
-  </section>
+      <div class="catalog">
+        <a class="card" href="fuel-golf/index.html">
+          <div class="topic">Physics · Oberth Effect</div>
+          <h2><span class="emoji">⛳</span>Fuel Golf</h2>
+          <p>Fly seven orbital missions with real Newtonian gravity and discover why the same burn buys more energy near periapsis.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="bridge-works/index.html">
+          <div class="topic">Engineering · Statics</div>
+          <h2><span class="emoji">🌉</span>Bridge Works</h2>
+          <p>Build a truss, watch the real solver expose tension, buckling, and collapse, then compete for the cheapest bridge that survives.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="ladder-lab/index.html">
+          <div class="topic">Applied Engineering · PLC</div>
+          <h2><span class="emoji">🚦</span>Ladder Lab</h2>
+          <p>Step through a real PLC scan cycle, edit ladder logic, and diagnose injected faults on an animated four-way intersection.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="topping-out/index.html">
+          <div class="topic">Construction Management · Scheduling</div>
+          <h2><span class="emoji">🏗️</span>Topping Out</h2>
+          <p>Build a construction schedule while a real CPM engine shifts the critical path and shared events test every team fairly.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="should-have-known-that/index.html">
+          <div class="topic">Engineering · Estimation & Number Sense</div>
+          <h2><span class="emoji">🎯</span>Should Have Known That</h2>
+          <p>Estimate forty engineering quantities on linear and logarithmic scales, then see how well your numerical intuition is calibrated.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="wavelet-lab/index.html">
+          <div class="topic">Applied Mathematics · Signals & Images</div>
+          <h2><span class="emoji">〰</span>Wavelet Lab</h2>
+          <p>Keep or remove Haar coefficients, reconstruct signals and images, and compare visual quality with measured numerical error.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="ion-flight/index.html">
+          <div class="topic">Chemistry · Instrumental Analysis</div>
+          <h2><span class="emoji">⚡</span>Ion Flight</h2>
+          <p>Predict and time ion flights, then use detector evidence to separate mass and charge effects without claiming more than the trace shows.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="inhibitor-investigation/index.html">
+          <div class="topic">Biochemistry · Enzyme Kinetics</div>
+          <h2><span class="emoji">🧪</span>Inhibitor Investigation</h2>
+          <p>Choose up to four enzyme assays, compare three candidate inhibition patterns, and learn when exact measurements still leave a tie.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="missing-time/index.html">
+          <div class="topic">Geology · Paleontology</div>
+          <h2><span class="emoji">🪨</span>Missing Time</h2>
+          <p>Read synthetic rock layers, find evidence for missing intervals, and practice claims that stop where the local record stops.</p>
+          <div class="go">Open demo →</div>
+        </a>
+        <a class="card" href="what-the-survey-missed/index.html">
+          <div class="topic">Ecology · Wildlife Survey Design</div>
+          <h2><span class="emoji">🦉</span>What the Survey Missed</h2>
+          <p>Survey fixed synthetic sites across repeated rounds and discover why fewer sightings do not by themselves prove lower occupancy.</p>
+          <div class="go">Open demo →</div>
+        </a>
+      </div>
+    </section>
 
-  <section class="part" id="part-three">
-    <div class="part-head">
-      <span class="part-num">Part three</span>
-      <h2>What AI can do for your discipline</h2>
-      <p class="part-q">Two practical things first &mdash; how to ask for what you want, and
-      which of today&rsquo;s tools to ask it with &mdash; and then working examples of course
-      content: explore a model, make a prediction, and inspect the result. Each activity includes a
-      guide to its assumptions and teaching use.</p>
-    </div>
-    <div class="take"><b>Leave with:</b> a way of asking that works, a clear idea of which tool
-    fits which job, and activities that were <i>built</i> with AI and run <i>without</i> it. Start with a learning goal, inspect the model and
-    evidence, and adapt the activity to the students you teach.</div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">HOW TO ASK</span><span class="sec-title">Getting a good answer out</span></div>
-      <p class="sec-sub">One question, three toggleable levers &mdash; context, a spec for what
-      &ldquo;finished&rdquo; means, and the domain&rsquo;s vocabulary. Each fixes a different kind of bad answer.</p>
-      <p class="sec-take">A bad answer is usually a lever you left unpulled.</p>
-      <a class="card" href="the-stranger/index.html">
-        <div class="topic">Prompting techniques</div>
-        <h2><span class="emoji">💬</span>The Stranger</h2>
-        <p>A question sits beside three toggleable levers, and the answer changes in exactly one dimension per lever. Sixty-four hand-written answers, a deck that decides your answer&rsquo;s shape whenever you don&rsquo;t, and a meter counting the expert vocabulary you got for free.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">WHAT TO USE</span><span class="sec-title">Four ways in, and how far each one reaches</span></div>
-      <p class="sec-sub">Most people have only met the chat box. It is one of four doors into the
-      same models &mdash; alongside the assistant already sitting inside Docs or Word, a desktop
-      coworker that keeps going after you close the laptop, and a coding agent that runs commands on
-      your machine. Each door is set against what it can see, what it can do, whether it works
-      unwatched, and how much you have to check. Then seven real faculty jobs, and for each one the
-      smallest door that actually finishes it.</p>
-      <p class="sec-take">Reach and review burden rise together. The right answer is usually the
-      smallest door that finishes the job, not the most powerful one.</p>
-      <a class="card" href="front-doors/index.html">
-        <div class="topic">What to ask it with</div>
-        <h2><span class="emoji">🚪</span>Front Doors</h2>
-        <p>The audience thinks &ldquo;using AI&rdquo; means a chat box. It is one surface out of four, and the least capable. A chat window, the agent already inside Docs or Word, a desktop coworker, a coding agent — set against 4 axes: what it can see, what it can do, whether it keeps going unwatched, and how much you must check. Then 7 real faculty jobs, and for each one the smallest door that finishes it and exactly what you hand over to get there.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">PHYSICS</span><span class="sec-title">Orbital mechanics you can feel</span></div>
-      <p class="sec-sub">Real integrated gravity, impulsive and finite-thrust burns, and missions
-      that teach why burning deep in a gravity well buys more energy than burning far from it.</p>
-      <p class="sec-take">Students argue with the physics instead of memorising it.</p>
-      <a class="card" href="fuel-golf/index.html">
-        <div class="topic">Physics · Oberth Effect</div>
-        <h2><span class="emoji">⛳</span>Fuel Golf</h2>
-        <p>Orbital-mechanics golf with real Newtonian gravity. Seven missions and a sandbox teach why burning fuel deep in a gravity well buys more energy — lowest &Delta;v wins.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">STATICS</span><span class="sec-title">A truss that actually solves</span></div>
-      <p class="sec-sub">A genuine direct-stiffness solver underneath: live tension and compression,
-      Euler buckling, progressive collapse. Cheapest bridge that survives wins.</p>
-      <p class="sec-take">Failure is visible, and the failure is the lesson.</p>
-      <a class="card" href="bridge-works/index.html">
-        <div class="topic">Engineering · Statics</div>
-        <h2><span class="emoji">🌉</span>Bridge Works</h2>
-        <p>Truss bridge builder on a real direct-stiffness solver: live tension and compression, Euler buckling, progressive collapse. Cheapest bridge that survives wins.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">APPLIED &middot; PLC</span><span class="sec-title">A controller that scans like the real thing</span></div>
-      <p class="sec-sub">Genuine input-scan, solve-rungs, output-scan &mdash; single-scan step mode,
-      live image tables, an AB-style instruction set, and eleven faults to troubleshoot.</p>
-      <p class="sec-take">Lab-bench intuition without the lab bench.</p>
-      <a class="card" href="ladder-lab/index.html">
-        <div class="topic">Applied Engineering · PLC</div>
-        <h2><span class="emoji">🚦</span>Ladder Lab</h2>
-        <p>A PLC trainer on the classic stoplight program: genuine scan-cycle engine, single-scan step mode, a ladder editor with auto-graded challenges, and injectable faults to troubleshoot.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">CONSTRUCTION</span><span class="sec-title">A schedule that fights back</span></div>
-      <p class="sec-sub">Real CPM recomputed every turn, a critical path that shifts under you, cure
-      times nothing can shorten, and a seeded event deck so every team meets the same bad luck.</p>
-      <p class="sec-take">Float stops being an abstraction the first time it runs out.</p>
-      <a class="card" href="topping-out/index.html">
-        <div class="topic">Construction Management · Scheduling</div>
-        <h2><span class="emoji">🏗️</span>Topping Out</h2>
-        <p>Competitive construction scheduling on a real CPM engine: a critical path that moves under you, cure times nothing can shorten, and a seeded event deck — same bad luck for every team.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">NUMBER SENSE</span><span class="sec-title">Forty numbers every engineer should carry</span></div>
-      <p class="sec-sub">Slider-based estimation scored by percent error &mdash; and by orders of
-      magnitude where that is the honest scale. Solo, or pass-and-play in teams.</p>
-      <p class="sec-take">Gut-feel calibration, made competitive.</p>
-      <a class="card" href="should-have-known-that/index.html">
-        <div class="topic">Engineering · Estimation & Number Sense</div>
-        <h2><span class="emoji">🎯</span>Should Have Known That</h2>
-        <p>Game-show estimation trivia: drag a slider to guess 40 numbers every engineer should carry — yield strengths, ampacities, psi per foot — scored by how close your gut gets, with log-scale sliders for the order-of-magnitude questions. Solo or pass-and-play teams.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">MATHEMATICS</span><span class="sec-title">Rebuild an image from its wavelet pieces</span></div>
-      <p class="sec-sub">Keep or remove coefficients, reconstruct the signal, and connect
-      visible changes to measured error. Then apply the same idea to an image.</p>
-      <p class="sec-take">A small numerical error and a convincing image are different judgments.</p>
-      <a class="card" href="wavelet-lab/index.html">
-        <div class="topic">Applied Mathematics · Signals & Images</div>
-        <h2><span class="emoji">〰</span>Wavelet Lab</h2>
-        <p>An interactive Haar-wavelet workspace: choose coefficients for an eight-value signal, then retain a counted budget for a grayscale reconstruction and inspect raw numerical error.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">CHEMISTRY</span><span class="sec-title">What can a particle's flight time tell us?</span></div>
-      <p class="sec-sub">Compare mass, then charge, and watch which ion groups reach the
-      detector together. The clock gives useful evidence with a specific limit.</p>
-      <p class="sec-take">Different ions can share the same arrival time.</p>
-      <a class="card" href="ion-flight/index.html">
-        <div class="topic">Chemistry · Instrumental Analysis</div>
-        <h2><span class="emoji">⚡</span>Ion Flight</h2>
-        <p>Run three linked ion comparisons, use detector evidence to separate mass and charge effects, and discover why different ions can share one flight-time peak.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-
-    <div class="sec">
-      <div class="sec-head"><span class="sec-num">BIOCHEMISTRY</span><span class="sec-title">Choose an experiment that separates explanations</span></div>
-      <p class="sec-sub">A virtual enzyme assay starts with three possible rate patterns.
-      Choose a substrate concentration and decide which candidates the result can rule out.</p>
-      <p class="sec-take">An exact measurement can still leave more than one explanation.</p>
-      <a class="card" href="inhibitor-investigation/index.html">
-        <div class="topic">Biochemistry · Enzyme Kinetics</div>
-        <h2><span class="emoji">🧪</span>Inhibitor Investigation</h2>
-        <p>Run up to four exact initial-rate assays, compare a mystery sample with three finite inhibition patterns, and learn when the evidence still leaves candidates tied.</p>
-        <div class="go">Open demo →</div>
-      </a>
-    </div>
-  </section>
-
-  <section class="part" id="finale">
-    <div class="part-head">
-      <span class="part-num">Finale</span>
-      <h2>Five things to take back</h2>
-    </div>
-    <div class="takeaways">
+    <section class="part closing" aria-labelledby="carry-heading">
+      <h2 id="carry-heading">Three ideas to carry forward</h2>
       <ol>
-        <li><b>&ldquo;AI&rdquo; is a set of rings, not a synonym for ChatGPT.</b> The tic-tac-toe
-        learner is real AI with no language in it at all. When something is labelled AI, ask which ring.</li>
-        <li><b>Generative AI is not magic.</b> It is a predictor trained on data; reasoning models
-        and agents are layers built on top. You watched every layer get built in Glass Box.</li>
-        <li><b>The answer is only as good as the ask.</b> Context, a success spec and the
-        domain&rsquo;s own vocabulary are free performance. Bad answer? Ask which lever you left unpulled.</li>
-        <li><b>The curve is steeper than you drew it &mdash; and this field has crashed before.</b>
-        Both are true at once, and holding both is what separates a judgement from a guess.</li>
-        <li><b>The opportunity is in your discipline.</b> Pair AI with your subject expertise and you
-        get tools like the activities in part three &mdash; tailored to a lesson, with models
-        and evidence you can inspect.</li>
+        <li><strong>Ask what kind of system you are looking at.</strong> Human-written rules, learned values, neural networks, language models, and agents behave differently.</li>
+        <li><strong>Match the tool to the job and the review you can provide.</strong> Choose a workflow whose results you can inspect.</li>
+        <li><strong>Bring your discipline’s standards.</strong> A useful classroom tool starts from the learning goal, exposes its assumptions, and makes evidence available for challenge.</li>
       </ol>
-      <div class="contact">
-        <div class="who">
-          Want these for your class &mdash; or want to build your own?
-          <small>Talk to Bryant Harrison &middot; Murray State University</small>
-        </div>
-        <div class="qr">
-          <img alt="QR code linking to this page" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAE+ElEQVR4nO3dQWpkNxRA0Tj0SrKXrDp7yVYqgx4FrhoEEpLa5wwbu/zd5Yvgv9LX1+fz+QP4vz9PXwDcSBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAHhx+w3fP31947rWO7z7z/576Prn/363T93ld0/9/W/hxErBgRhQBAGBGFAEAYEYUAQBoTpOcbI7vvxI6vuo6+ab6x6nd3zkFXzmVVfv8qqvwcrBgRhQBAGBGFAEAYEYUAQBoRlc4yRVfeVT90XH9k9Nzi1f2O3V/4erBgQhAFBGBCEAUEYEIQBQRgQts8xbrPq+VG7n6e0+zlX/JoVA4IwIAgDgjAgCAOCMCAIA8K3m2Pcdj7GKb/rfo9VrBgQhAFBGBCEAUEYEIQBQRgQts8xbrsvbp/DT6fOI3/l/82KAUEYEIQBQRgQhAFBGBCEAWHZHOO2/QYju/dj7H79kVNziZFX/h5GrBgQhAFBGBCEAUEYEIQBQRgQvj6fz+lruMKq+cPuecLu1xl5ZR/FKlYMCMKAIAwIwoAgDAjCgCAMCNP7MU7dR7/Nbff1Z9+X2+Ynp/arjFgxIAgDgjAgCAOCMCAIA4IwIGw/H+PUvoXZ65n9+lPX88q+i1NzqlXXb8WAIAwIwoAgDAjCgCAMCMKAMD3HmL1PvPu5TKvM/txV843bft/dXjkv3IoBQRgQhAFBGBCEAUEYEIQB4dhzpVZZtT/hld9r1XzjlX0ap55/ZcWAIAwIwoAgDAjCgCAMCMKAsH0/xqnnMu2eP7zye+3e13Hb/GcVKwYEYUAQBgRhQBAGBGFAEAaEr8/nM/cNm89dXvV5/dueQ3Wb18/BmGU/BiwgDAjCgCAMCMKAIAwIwoCw/ZzvVXafs/HKPOT1rx+57f2yYkAQBgRhQBAGBGFAEAYEYUBY9lyp3fs0Tn39rFPnWJ+aw9w2F1rFigFBGBCEAUEYEIQBQRgQhAFh+3OlVn3OfvZ6Xjmf4bbzPUZ2vy+3vY9WDAjCgCAMCMKAIAwIwoAgDAjHzscYOXVuw6n79LN2n/N929xp9/s4YsWAIAwIwoAgDAjCgCAMCMKAcGw/xqrXn3Xqem673/+KU/tzrBgQhAFBGBCEAUEYEIQBQRgQntmP8d3Opb7tuVi3za92//9YMSAIA4IwIAgDgjAgCAOCMCBcdz7GbrufW/XK72v/xq9ZMSAIA4IwIAgDgjAgCAOCMCBMzzFed2pfx6l9IKu8cm7JKlYMCMKAIAwIwoAgDAjCgCAMCD9mv+GVz/Hvfq7Rbc+DOnXux23/D6tYMSAIA4IwIAgDgjAgCAOCMCBMzzFGTt23vu28jtt+7uh1dr/+rNvmHlYMCMKAIAwIwoAgDAjCgCAMCMvmGCOr7vffNie5bb4xsnvfxSqr9nWseh0rBgRhQBAGBGFAEAYEYUAQBoTtc4xX7N5XcNs8ZGTV9b/OigFBGBCEAUEYEIQBQRgQhAHh280xdn++/7bnTb2yf+O2eY4VA4IwIAgDgjAgCAOCMCAIA8L2OcYrn9dfNa84de7Eqf0ks68zctvcw4oBQRgQhAFBGBCEAUEYEIQB4evz+cx9w6HPx8/afZ/7lfnGyG1zg9vmXVYMCMKAIAwIwoAgDAjCgCAMCNNzDPgOrBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAFBGBD+A2jRLxsHDAPFAAAAAElFTkSuQmCC">
-          <div class="cap">bharrison6.github.io/examples</div>
-        </div>
-      </div>
-    </div>
-  </section>
+    </section>
+  </main>
 
   <footer>
-    <b>Bryant Harrison</b> &middot; Murray State University<br>
-    Built with the three amigos &mdash; Claude, Codex &amp; Gemini.<br>
-    Every demo is plain HTML/CSS/JS, runs entirely in your browser, and makes no network requests once loaded.
+    <div class="shell">
+      <div><strong>Bryant Harrison</strong> · Murray State University</div>
+      <details class="phone-link">
+        <summary>Open on your phone</summary>
+        <img alt="QR code linking to this page" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAAEICAIAAAAslP2oAAAE+ElEQVR4nO3dQWpkNxRA0Tj0SrKXrDp7yVYqgx4FrhoEEpLa5wwbu/zd5Yvgv9LX1+fz+QP4vz9PXwDcSBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAHhx+w3fP31947rWO7z7z/576Prn/363T93ld0/9/W/hxErBgRhQBAGBGFAEAYEYUAQBoTpOcbI7vvxI6vuo6+ab6x6nd3zkFXzmVVfv8qqvwcrBgRhQBAGBGFAEAYEYUAQBoRlc4yRVfeVT90XH9k9Nzi1f2O3V/4erBgQhAFBGBCEAUEYEIQBQRgQts8xbrPq+VG7n6e0+zlX/JoVA4IwIAgDgjAgCAOCMCAIA8K3m2Pcdj7GKb/rfo9VrBgQhAFBGBCEAUEYEIQBQRgQts8xbrsvbp/DT6fOI3/l/82KAUEYEIQBQRgQhAFBGBCEAWHZHOO2/QYju/dj7H79kVNziZFX/h5GrBgQhAFBGBCEAUEYEIQBQRgQvj6fz+lruMKq+cPuecLu1xl5ZR/FKlYMCMKAIAwIwoAgDAjCgCAMCNP7MU7dR7/Nbff1Z9+X2+Ynp/arjFgxIAgDgjAgCAOCMCAIA4IwIGw/H+PUvoXZ65n9+lPX88q+i1NzqlXXb8WAIAwIwoAgDAjCgCAMCMKAMD3HmL1PvPu5TKvM/txV843bft/dXjkv3IoBQRgQhAFBGBCEAUEYEIQB4dhzpVZZtT/hld9r1XzjlX0ap55/ZcWAIAwIwoAgDAjCgCAMCMKAsH0/xqnnMu2eP7zye+3e13Hb/GcVKwYEYUAQBgRhQBAGBGFAEAaEr8/nM/cNm89dXvV5/dueQ3Wb18/BmGU/BiwgDAjCgCAMCMKAIAwIwoCw/ZzvVXafs/HKPOT1rx+57f2yYkAQBgRhQBAGBGFAEAYEYUBY9lyp3fs0Tn39rFPnWJ+aw9w2F1rFigFBGBCEAUEYEIQBQRgQhAFh+3OlVn3OfvZ6Xjmf4bbzPUZ2vy+3vY9WDAjCgCAMCMKAIAwIwoAgDAjHzscYOXVuw6n79LN2n/N929xp9/s4YsWAIAwIwoAgDAjCgCAMCMKAcGw/xqrXn3Xqem673/+KU/tzrBgQhAFBGBCEAUEYEIQBQRgQntmP8d3Opb7tuVi3za92//9YMSAIA4IwIAgDgjAgCAOCMCBcdz7GbrufW/XK72v/xq9ZMSAIA4IwIAgDgjAgCAOCMCBMzzFed2pfx6l9IKu8cm7JKlYMCMKAIAwIwoAgDAjCgCAMCD9mv+GVz/Hvfq7Rbc+DOnXux23/D6tYMSAIA4IwIAgDgjAgCAOCMCBMzzFGTt23vu28jtt+7uh1dr/+rNvmHlYMCMKAIAwIwoAgDAjCgCAMCMvmGCOr7vffNie5bb4xsnvfxSqr9nWseh0rBgRhQBAGBGFAEAYEYUAQBoTtc4xX7N5XcNs8ZGTV9b/OigFBGBCEAUEYEIQBQRgQhAHh280xdn++/7bnTb2yf+O2eY4VA4IwIAgDgjAgCAOCMCAIA8L2OcYrn9dfNa84de7Eqf0ks68zctvcw4oBQRgQhAFBGBCEAUEYEIQB4evz+cx9w6HPx8/afZ/7lfnGyG1zg9vmXVYMCMKAIAwIwoAgDAjCgCAMCNNzDPgOrBgQhAFBGBCEAUEYEIQBQRgQhAFBGBCEAUEYEIQBQRgQhAFBGBD+A2jRLxsHDAPFAAAAAElFTkSuQmCC">
+        <small>bharrison6.github.io/examples</small>
+      </details>
+    </div>
   </footer>
-</div>
-<script>
-(function () {
-  var NOTE = {
-    ai:  ['Artificial intelligence',
-          'Anything that makes a machine act smart &mdash; including a great deal that is nothing like ChatGPT. Every inner ring is also this ring. <b>Demo 1</b> lives out here: a ladder of if-statements a person wrote by hand.', '#rung-ttt'],
-    ml:  ['Machine learning',
-          'Programs that improve from data or experience instead of being told what to do. No language, no writing, no neural network required. <b>Demo 2</b>: an opponent that starts knowing nothing and learns only from won, lost or drew.', '#rung-ttt'],
-    nn:  ['Neural networks',
-          'Learners that compute an answer for a situation they have never seen, instead of looking one up. <b>Demo 3</b>: ultimate tic-tac-toe, where looking things up stops working.', '#rung-ttt'],
-    gen: ['Generative AI',
-          'Neural networks that produce new text, images or audio. The three gold chips are layers, each built on the one above: a predictor, then one trained to work things out, then one given tools and a loop. <b>Demo 4</b> builds all three.', '#rung-glass']
-  };
-  var wrap = document.querySelector('.explainer');
-  var note = document.getElementById('ring-note');
-  if (!wrap || !note) return;
-  var rings = [].slice.call(wrap.querySelectorAll('.ring'));
-  function pick(g) {
-    var d = NOTE[g.getAttribute('data-ring')];
-    var already = g.classList.contains('on');
-    rings.forEach(function (r) { r.classList.remove('on'); r.setAttribute('aria-pressed', 'false'); });
-    if (already || !d) { wrap.classList.remove('picked'); note.hidden = true; return; }
-    g.classList.add('on'); g.setAttribute('aria-pressed', 'true');
-    wrap.classList.add('picked');
-    note.innerHTML = '<b>' + d[0] + '.</b> ' + d[1] + ' <a href="' + d[2] + '">Go to it &rarr;</a>';
-    note.hidden = false;
-  }
-  rings.forEach(function (g) {
-    g.setAttribute('aria-pressed', 'false');
-    g.addEventListener('click', function (e) { e.stopPropagation(); pick(g); });
-    g.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(g); }
-    });
-  });
-})();
-</script>
 </body>
 </html>

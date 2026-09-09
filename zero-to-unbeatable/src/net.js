@@ -587,12 +587,170 @@ function now() {
 
 /* ------------------------------------------------------------------ */
 
+/*
+ * The public neural-network lesson
+ * ---------------------------------
+ *
+ * The old experiment above is retained as low-level machinery, but it was
+ * written for the retired nine-board value convention.  This small adapter
+ * uses the same MLP primitives for the current one-board afterstate table.
+ * It is deliberately supervised: first a tabular learner plays seeded games;
+ * its frozen values become labels; then shared weights fit those labels.
+ * During play `policyMoves` reads only `model.net`.  It never reaches back
+ * into `teacher`, `examples`, or a minimax answer key.
+ */
+
+const SYM = [
+  [0,1,2,3,4,5,6,7,8], [6,3,0,7,4,1,8,5,2],
+  [8,7,6,5,4,3,2,1,0], [2,5,8,1,4,7,0,3,6],
+  [2,1,0,5,4,3,8,7,6], [6,7,8,3,4,5,0,1,2],
+  [0,3,6,1,4,7,2,5,8], [8,5,2,7,4,1,6,3,0]
+];
+
+function transform(code, map) {
+  let out = 0, off = code * 9;
+  for (let i = 0; i < 9; i++) out += CELLS[off + i] * OG.POW3[map[i]];
+  return out;
+}
+function symmetryKey(code) {
+  let best = code;
+  for (let i = 1; i < SYM.length; i++) best = Math.min(best, transform(code, SYM[i]));
+  return best;
+}
+
+function startTeacher(seed, games) {
+  return { agent: OG.newAgent(), rng: OG.makeRng('neural-teacher:' + (seed || 'demo')),
+    games: 0, total: games == null ? 20000 : games };
+}
+function trainTeacherBatch(session, count) {
+  const n = Math.min(count, session.total - session.games);
+  if (n > 0) OG.trainGames(session.agent, n, session.rng);
+  session.games += n;
+  session.complete = session.games === session.total;
+  return { games: session.games, total: session.total, complete: session.complete };
+}
+function freezeTeacher(session) { return OG.cloneAgent(session.agent); }
+function makeTeacher(seed, games) {
+  const session = startTeacher(seed, games);
+  while (session.games < session.total) trainTeacherBatch(session, Math.min(500, session.total - session.games));
+  return freezeTeacher(session);              /* labels cannot keep changing */
+}
+
+function makeDataset(teacher, seed) {
+  const examples = [], group = new Map(), seen = new Uint8Array(NCODE);
+  for (const before of OG.OPEN_POSITIONS) {
+    const mover = OG.TOMOVE[before];
+    for (const cell of OG.legalList(before)) {
+      const code = OG.child(before, cell, mover);
+      /* A reachable afterstate can be reached from several legal parents
+         when we enumerate exploring starts. It is one position and gets
+         one label, not a silently overweighted transition example. */
+      if (seen[code]) continue;
+      seen[code] = 1;
+      const key = symmetryKey(code);
+      let g = group.get(key);
+      if (!g) { g = { key, held: (OG.hashSeed('neural-split:' + (seed || 'demo') + ':' + key) % 5) === 0 }; group.set(key, g); }
+      examples.push({ code, turn: OG.TOMOVE[code], target: teacher.V[code], group: key, held: g.held });
+    }
+  }
+  const train = examples.filter(x => !x.held), held = examples.filter(x => x.held);
+  return { examples, train, held, groups: group.size };
+}
+
+function newSupervised(teacher, seed) {
+  const data = makeDataset(teacher, seed);
+  const model = {
+    net: newNet({ seed: 'neural-weights:' + (seed || 'demo'), hidden: 28, hidden2: 18 }),
+    data, seed: seed || 'demo', updates: 0, epoch: 0, at: 0,
+    params: 0
+  };
+  model.params = paramCount(model.net);
+  return model;
+}
+
+/* One bounded batch. The caller schedules the next batch, so tab changes,
+   reset, and cancel can interrupt training between batches. */
+function trainBatch(model, count, measure) {
+  const train = model.data.train;
+  for (let i = 0; i < count; i++) {
+    const ex = train[model.at++ % train.length];
+    update(model.net, ex.code, ex.turn, ex.target, 0.14);
+    model.updates++;
+    if (model.at % train.length === 0) model.epoch++;
+  }
+  return measure === false ? { updates: model.updates, epoch: model.epoch } : metrics(model);
+}
+
+function predict(model, code) { return Math.max(-1, Math.min(1, forward(model.net, code, OG.TOMOVE[code]))); }
+function mse(model, set) {
+  let total = 0;
+  for (const ex of set) { const d = predict(model, ex.code) - ex.target; total += d * d; }
+  return set.length ? total / set.length : 0;
+}
+function metrics(model) {
+  return { trainMse: mse(model, model.data.train), heldMse: mse(model, model.data.held),
+    updates: model.updates, epoch: model.epoch, train: model.data.train.length,
+    held: model.data.held.length, groups: model.data.groups, params: model.params };
+}
+
+function policyMoves(model, code) {
+  const mover = OG.TOMOVE[code], legal = OG.legalList(code);
+  let best = -Infinity, moves = [];
+  for (const cell of legal) {
+    const v = predict(model, OG.child(code, cell, mover));
+    if (v > best + 1e-7) { best = v; moves = [cell]; }
+    else if (Math.abs(v - best) <= 1e-7) moves.push(cell);
+  }
+  return moves;
+}
+function greedyMove(model, code, rnd) {
+  const moves = policyMoves(model, code); return moves[(rnd() * moves.length) | 0];
+}
+function scoreVs(model, opponent, games, rnd, mark) {
+  let wins = 0, losses = 0, draws = 0;
+  for (let i = 0; i < games; i++) {
+    const ai = mark || (i % 2 ? 1 : 2); let code = 0;
+    while (!OG.isTerminal(code)) {
+      const mover = OG.TOMOVE[code];
+      const cell = mover === ai ? greedyMove(model, code, rnd) : opponent(code, rnd);
+      code = OG.child(code, cell, mover);
+    }
+    const w = OG.WINNER[code];
+    if (!w) draws++; else if (w === ai) wins++; else losses++;
+  }
+  return { wins, losses, draws, games };
+}
+
+/* Independent finite difference for d(output)/d(one weight).  The chosen
+   test point is checked away from ReLU kinks before its derivative is used. */
+function finiteDifferenceCheck(model) {
+  const net = model.net, code = OG.child(0, 0, 1), turn = OG.TOMOVE[code];
+  forward(net, code, turn);
+  if (net.z1.some(z => Math.abs(z) < 1e-3) || net.z2.some(z => Math.abs(z) < 1e-3)) return { skipped: true };
+  let unit = -1, analytic = 0;
+  for (let j = 0; j < net.H1; j++) {
+    if (net.z1[j] <= 0) continue;
+    let d = 0;
+    for (let k = 0; k < net.H2; k++) if (net.z2[k] > 0) d += net.W2[j * net.H2 + k] * net.W3[k];
+    if (Math.abs(d) > 1e-5) { unit = j; analytic = d; break; }
+  }
+  if (unit < 0) return { skipped: true };
+  const idx = FEAT[code * 9] * net.H1 + unit, old = net.W1[idx], h = 1e-3;
+  net.W1[idx] = old + h; const plus = forward(net, code, turn);
+  net.W1[idx] = old - h; const minus = forward(net, code, turn);
+  net.W1[idx] = old; forward(net, code, turn);
+  const numeric = (plus - minus) / (2 * h);
+  return { numeric, analytic, error: Math.abs(numeric - analytic), skipped: false };
+}
+
 return {
   NIN, ACTIVE, HPN, USIZE, ui, HOLD_FRACTION, experiment,
   encode, FEAT,
   newNet, cloneNet, forward, update, paramCount,
   newBrain, cloneBrain,
-  truth, hasImmediateWin, makeHoldout, generalisation
+  truth, hasImmediateWin, makeHoldout, generalisation,
+  startTeacher, trainTeacherBatch, freezeTeacher, makeTeacher, makeDataset, newSupervised, trainBatch, predict, metrics,
+  policyMoves, greedyMove, scoreVs, finiteDifferenceCheck, symmetryKey
 };
 })(typeof OG !== 'undefined' ? OG : require('./engine.js'));
 
