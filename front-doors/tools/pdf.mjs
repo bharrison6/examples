@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* Render the presenter guide to PDF.
 
-   `node tools/pdf.mjs`         writes Glass-Box-Demo-Guide.pdf
+   `node tools/pdf.mjs`         writes Front-Doors-Presenter-Guide.pdf
    `node tools/pdf.mjs --check` verifies the guide loads and the PDF exists
 
    The canonical guide is src/presenter-guide.html; the copy at the demo root
@@ -24,15 +24,15 @@ import { fileURLToPath, pathToFileURL } from 'url';
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
-const guide = path.join(ROOT, 'demo-guide.html');
-const out = path.join(ROOT, 'Glass-Box-Demo-Guide.pdf');
+const guide = path.join(ROOT, 'presenter-guide.html');
+const out = path.join(ROOT, 'Front-Doors-Presenter-Guide.pdf');
 const CHECK = process.argv.includes('--check');
 
 if (!fs.existsSync(guide)) {
   throw new Error(`Presenter guide is missing: ${guide}. Run: node build.js`);
 }
 const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>Glass Box — presenter guide<\/title>/.test(html)) {
+if (!/<title>Front Doors — presenter guide<\/title>/.test(html)) {
   throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
 }
 
@@ -89,7 +89,7 @@ if (!done) {
   /* --print-to-pdf needs a writable profile directory or it will contend with
      the user's running browser. A throwaway one under the OS temp dir keeps
      this off the user's real profile. */
-  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'glass-box-pdf-'));
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'front-doors-pdf-'));
   const r = spawnSync(exe, [
     '--headless=new', '--disable-gpu', '--no-first-run', '--no-default-browser-check',
     `--user-data-dir=${profile}`,

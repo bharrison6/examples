@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#00142B">
+<title>Front Doors — what to ask it with</title>
+<!--
+  Front Doors — a single-file, offline teaching module about the four surfaces
+  through which a person can use AI, and why the surface decides what the tool
+  can reach.
+
+  Three acts: the four doors against four axes as a grid the room can read in
+  one look; seven realistic faculty jobs against those same four doors, with
+  the smallest sufficient door computed from the verdicts rather than typed;
+  then the receipts — two product names that already moved, what to expect to
+  rot, every source, and everything researched and left off.
+
+  Every product claim resolves to a page belonging to the company that makes
+  the product, and carries a confidence label: verified, reasoned, or
+  unconfirmed. Settings -> Run the self-test proves that live, along with the
+  two rules the module holds itself to: no prices, no rankings.
+
+  Nothing is fetched at runtime and nothing is stored on the device. The only
+  URLs are in outbound source links the reader may choose to follow.
+
+  Companion: presenter-guide.html. Sources live in src/ and are concatenated
+  by build.js.
+-->
+<style>
+/*__CSS__*/
+/* ==== presenter guide (scoped to .guide-scope) ==== */
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<div id="brandbar">
+  <header id="topbar">
+    <div id="brand">
+      <span class="b0">Murray State University</span>
+      <span class="b1">FRONT DOORS <em>what to ask it with</em></span>
+    </div>
+    <div id="topbar-tools">
+      <button class="icon-btn" id="btn-howto" aria-label="How to use this" title="How to use this">?</button>
+      <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings">&#9881;</button>
+    </div>
+  </header>
+  <nav id="actnav" role="tablist" aria-label="Acts">
+    <button data-act="1" class="on" role="tab" aria-selected="true">The four doors<span>Act I</span></button>
+    <button data-act="2" role="tab" aria-selected="false">Pick a job<span>Act II</span></button>
+    <button data-act="3" role="tab" aria-selected="false">The receipts<span>Act III</span></button>
+  </nav>
+</div>
+
+<main>
+
+<!-- =========================== ACT I ================================== -->
+<section class="act" data-act="1">
+
+  <p class="stamp">
+    <span>Checked on <span class="js-date"></span></span>
+    <em>&mdash; and written to go stale on purpose</em>
+  </p>
+
+  <h1 id="intro-title"></h1>
+  <div id="intro-body" class="lead"></div>
+  <p id="intro-note" class="help"></p>
+
+  <p class="help">
+    Four doors across, four questions down. Tap any cell for the reason and the source;
+    tap a door&rsquo;s name for what it is, where it runs and what it costs you to get in.
+    On a phone the grid becomes four cards &mdash; same sixteen cells, no sideways scrolling.
+  </p>
+
+  <div id="grid"></div>
+
+  <div class="panel" id="axis-note"></div>
+  <div class="panel warn" id="check-note"></div>
+
+  <div class="row">
+    <button class="btn primary big" id="btn-to-jobs">Now pick a job &rarr;</button>
+  </div>
+</section>
+
+<!-- =========================== ACT II ================================= -->
+<section class="act" data-act="2" hidden>
+  <h1>&ldquo;Which one is best&rdquo; is the wrong question. &ldquo;Which one fits this job&rdquo; has an answer.</h1>
+  <p class="lead">
+    Seven things a faculty member actually asks for. Choose one and the page says which doors
+    can do the whole job, which can do part of it, which cannot &mdash; and, for each,
+    what you would have to hand over to make it work.
+  </p>
+  <p class="help">
+    Watch the last line of each card. Access is the price, and it is the part that does not
+    appear on a feature comparison.
+  </p>
+
+  <div id="job-picker"></div>
+  <div id="job-out" class="empty"></div>
+  <div class="panel" id="jobs-note"></div>
+
+  <div class="row">
+    <button class="btn primary big" id="btn-to-receipts">Show me the receipts &rarr;</button>
+  </div>
+</section>
+
+<!-- =========================== ACT III ================================ -->
+<section class="act" data-act="3" hidden>
+  <h1>The names on this page have a shelf life. The doors do not.</h1>
+  <p class="lead">
+    This is the fastest-rotting page in the collection, so rather than hedge about it, here is
+    the evidence. Two of these four doors had a product renamed or retired in the six months
+    before <span class="js-date"></span>, and one of the three entries below is a mistake this
+    module made about itself.
+  </p>
+
+  <div id="changed"></div>
+  <div class="panel" id="stale"></div>
+  <div class="panel warn" id="uneven"></div>
+
+  <div class="panel">
+    <h3>The one thing to take away</h3>
+    <p>
+      Going inward is not an upgrade. Every door you move down gives the tool more reach and
+      takes away a little of your ability to check its work cheaply &mdash; and the cheapest
+      review in the whole table belongs to the agent inside the word processor you already own,
+      because it hands you a change to accept or reject instead of a finished thing to judge.
+    </p>
+    <p class="help">
+      Which is why the right question is not &ldquo;what is the most capable tool&rdquo; but
+      &ldquo;what is the smallest door that does this job&rdquo;. Act II answers that seven times.
+    </p>
+  </div>
+
+  <div class="panel" id="counts"></div>
+  <div class="panel" id="cut"></div>
+  <div class="panel" id="sources"></div>
+</section>
+
+</main>
+
+<footer id="foot">
+  <span class="msu">Murray State University</span>
+  <span class="who">Bryant Harrison</span>
+  <span>One HTML file &middot; runs offline &middot; product claims checked <span class="js-date"></span></span>
+</footer>
+
+<!-- ========================== HOW TO USE ============================ -->
+<div class="overlay" id="howto" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="howto-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="howto-title">How to use this</h2><div class="sub">Three acts &middot; about 12 minutes</div></div>
+      <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <ol class="ht-steps">
+        <li>
+          <b>Read the grid.</b> Four ways of getting at AI across the top, four questions down
+          the side. The bars are a rough reading, not a measurement &mdash; the words in the
+          cells are the content.
+        </li>
+        <li>
+          <b>Tap a cell.</b> Every one of the sixteen opens the reason, the vendor&rsquo;s own
+          wording where there is any, an honesty label, and a link to the page it came from.
+          Nothing here asks you to take its word.
+        </li>
+        <li>
+          <b>Then pick a job.</b> Act II is the one that matters: seven real faculty tasks,
+          and for each one which doors can actually do it and what you would have to hand over.
+        </li>
+      </ol>
+
+      <p class="ht-tip">
+        The thing to leave with is not a product name. It is that the surface decides the reach,
+        and that the more a tool can reach, the more of its work you have to check.
+      </p>
+
+      <div class="field">
+        <span class="lbl">The three acts</span>
+        <ul class="ht-acts">
+          <li><b>The four doors</b> &mdash; a chat window, an agent inside Word or Docs, a desktop coworker, a coding agent &mdash; against four questions.</li>
+          <li><b>Pick a job</b> &mdash; seven faculty tasks, and the smallest door that does each one.</li>
+          <li><b>The receipts</b> &mdash; the names that already changed, what will rot next, every source, and everything researched and left off the page.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <span class="lbl">Three honesty labels, used throughout</span>
+        <ul class="ht-acts">
+          <li><b>verified</b> &mdash; a page belonging to the company that makes the product was opened on the date at the top, and says this.</li>
+          <li><b>reasoned</b> &mdash; it follows from the verified facts, but nobody states it in these words. Every ordering judgement here is reasoned.</li>
+          <li><b>unconfirmed</b> &mdash; we looked and could not confirm it. Shown anyway, labelled, because a blank cell is a claim too.</li>
+        </ul>
+      </div>
+
+      <div class="field">
+        <span class="lbl">The two buttons, top right</span>
+        <ul class="ht-acts">
+          <li><b>?</b> &mdash; reopens this panel at any point.</li>
+          <li><b>&#9881;</b> &mdash; presentation mode, the presenter&rsquo;s notes, and a self-test that
+            checks every claim against its declared source live, in front of whoever is asking.</li>
+        </ul>
+      </div>
+
+      <p class="help">
+        No prices appear anywhere on this page, on purpose: they changed more than once in the
+        last year on all four doors, and a wrong figure in front of a room of faculty is worse
+        than no figure. What your institution already licenses is a better question, and your IT
+        department is the only place that answer lives.
+      </p>
+    </div>
+    <div class="sheet-foot ht-foot">
+      <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
+      <button class="btn primary" data-close="howto">Got it &mdash; show me the grid</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================== SETTINGS ============================== -->
+<div class="overlay" id="settings" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="settings-title">Settings</h2><div class="sub">Presentation &middot; Proof</div></div>
+      <button class="icon-btn" data-close="settings" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+      <div class="field">
+        <span class="lbl">Presentation</span>
+        <label class="switch">
+          <input type="checkbox" id="chk-presenter">
+          <span>Presentation mode &mdash; oversized UI for a projector</span>
+        </label>
+        <button class="btn" id="btn-notes">Presenter&rsquo;s notes</button>
+        <p class="help">
+          The session plan: what to say at each act, which cells to open if you have four
+          minutes, the questions you will get, and what to do when a product name on the
+          screen has changed since it was checked. Distilled from the printable guide that
+          ships beside this file.
+        </p>
+      </div>
+      <div class="field">
+        <span class="lbl">Help</span>
+        <button class="btn" id="btn-howto-2">How to use this</button>
+        <p class="help">Reopens the panel that explains the three acts and the honesty labels.</p>
+      </div>
+      <div class="field">
+        <span class="lbl">Proof</span>
+        <button class="btn" id="btn-selftest">Run the self-test</button>
+        <p class="help">
+          Checks that every claim resolves to a declared source and that no source is cited
+          and never used; that every source URL names a page rather than a bare host and
+          belongs to the company whose product it describes; that no cell claims to be
+          verified without citing something and no quotation floats free of its page; that
+          not one price and not one vendor ranking has leaked into any string the page can
+          display; that the three reach rows rise across the four doors while the review row
+          does not, which is the module&rsquo;s actual argument; and that every job carries a
+          verdict for every door, each naming the axis that decided it. Results appear here
+          and in the browser console.
+        </p>
+        <div id="selftest-out"></div>
+      </div>
+      <div class="field">
+        <span class="lbl">About</span>
+        <p class="help">
+          Built for Murray State University by Bryant Harrison. Product claims were checked on
+          <span class="js-date"></span> against first-party sources. All content is embedded;
+          the page makes no network requests, runs no AI, and stores nothing on your device.
+          Reloading resets it. The only URLs here are outbound links to sources, which you may
+          choose to follow.
+        </p>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="settings">Done</button></div>
+  </div>
+</div>
+
+<!-- ====================== PRESENTER'S NOTES ========================== -->
+<!-- Lifted verbatim from presenter-guide.html, which stays canonical and
+     printable. One source of truth: the guide's own stylesheet and its own
+     markup, both scoped to .guide-scope, are injected by build.js. -->
+<div class="overlay" id="notes" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="notes-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="notes-title">Presenter&rsquo;s notes</h2><div class="sub">The printable guide, on screen</div></div>
+      <button class="icon-btn" data-close="notes" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body">
+<!--__GUIDE__-->
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="notes">Close</button></div>
+  </div>
+</div>
+
+<!-- ======================= CELL / DOOR DETAIL ======================== -->
+<div class="overlay" id="detail" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="detail-title" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="detail-title"></h2><div class="sub" id="detail-sub"></div></div>
+      <button class="icon-btn" data-close="detail" aria-label="Close">&times;</button>
+    </div>
+    <div class="sheet-body" id="detail-body"></div>
+    <div class="sheet-foot"><button class="btn primary" data-close="detail">Close</button></div>
+  </div>
+</div>
+
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>
