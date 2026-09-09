@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Ion Flight is an offline guided investigation of what a time-of-flight detector measures.">
-  <title>Ion Flight · Guided TOF Investigation</title>
+  <meta name="description" content="An offline guided time-of-flight mass spectrometer investigation of what a flight-time detector measures.">
+  <title>Time-of-Flight Mass Spectrometer · Guided Investigation</title>
   <style>
     :root {
       --navy: #002144;
@@ -101,6 +101,7 @@
       box-shadow: var(--shadow);
     }
     .settings strong { display: block; color: var(--navy); margin-bottom: 7px; }
+    .settings button.active { color: white; background: var(--navy); }
     .settings button {
       width: 100%;
       padding: 9px 10px;
@@ -413,7 +414,15 @@
     .modal h2 { margin: 5px 0 10px; }
     .modal li { margin: 8px 0; }
     .modal-close { margin-top: 14px; }
-    .presenter-notes { white-space: pre-line; color: #34526a; }
+    .modal-sub { margin: 0 0 12px; color: var(--muted); font-size: .97rem; }
+
+    /* The presenter notes sheet holds the printable teacher guide, injected by
+       build.js from teacher-guide.html. The guide ships its own .guide-scope
+       stylesheet (added after this one, so it wins ties); the app only sets how
+       big that document renders on a screen instead of on paper. */
+    .notes-modal { width: min(880px, 100%); }
+    #notesOverlay .guide-scope { font-size: 14px; line-height: 1.5; }
+    .presentation #notesOverlay .guide-scope { font-size: 16px; }
 
     .presentation { font-size: 18px; }
     .presentation .shell { width: min(1580px, 100%); }
@@ -462,21 +471,26 @@
       .workspace { display: block; border: 0; box-shadow: none; }
     }
   </style>
+  <!-- Injected by build.js from the first <style> block of teacher-guide.html.
+       Last in the head so .guide-scope rules win ties against the app chrome. -->
+  <style>
+/*__GUIDE_CSS__*/
+  </style>
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">+</div>
-      <div><small>Murray State University · Instrument analysis</small><strong>Ion Flight</strong></div>
+      <div><small>Murray State University · Instrument analysis</small><strong>Time-of-Flight Mass Spectrometer</strong></div>
     </div>
     <div class="top-actions">
-      <button class="icon-button" id="howButton" aria-label="Open how to use Ion Flight">?</button>
-      <button class="icon-button" id="settingsButton" aria-label="Open settings" aria-expanded="false">⚙</button>
+      <button class="icon-button" id="howButton" aria-label="Guide" title="Guide">?</button>
+      <button class="icon-button" id="settingsButton" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
       <div class="settings" id="settingsMenu" hidden>
         <strong>Settings</strong>
-        <button id="presentationButton">▣ Enter presentation mode</button>
-        <button id="notesButton">Presenter’s notes</button>
-        <button id="resetAllButton">↺ Start investigation over</button>
+        <button id="notesButton">Open Presenter Notes</button>
+        <button id="presentationButton" aria-pressed="false">Presentation mode</button>
+        <button id="resetAllButton">Reset</button>
       </div>
     </div>
   </header>
@@ -609,8 +623,9 @@
 
   <section class="overlay" id="howOverlay" role="dialog" aria-modal="true" aria-labelledby="howTitle">
     <div class="modal">
-      <span class="eyebrow">How to use Ion Flight</span>
-      <h2 id="howTitle">Make a prediction, then let the detector answer.</h2>
+      <span class="eyebrow">Time-of-Flight Mass Spectrometer</span>
+      <h2 id="howTitle">Guide</h2>
+      <p class="modal-sub">Make a prediction, then let the detector answer.</p>
       <ol>
         <li>Begin with Investigation 1. The colored cards are known simulated inputs: mass, positive charge, and sample name.</li>
         <li>Choose a prediction. Run stays locked until you commit to one.</li>
@@ -622,21 +637,13 @@
     </div>
   </section>
 
-  <section class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-labelledby="notesTitle" hidden>
-    <div class="modal">
-      <span class="eyebrow">Presenter’s notes · 12–15 minutes</span>
-      <h2 id="notesTitle">Keep the evidence and the claim together.</h2>
-      <div class="presenter-notes">1. Read the three-part instrument path. Ask what is known before the run and what the detector will actually measure.
-
-2. Investigation 1: hold +1 charge constant. Take predictions, then run. Compare the 100 Da and 400 Da arrival times on the fixed axis.
-
-3. Investigation 2: hold 200 Da mass constant. The +2 ion receives more energy from the same voltage and arrives first.
-
-4. Investigation 3: ask for predictions before naming m/z. The 200 Da/+1 and 400 Da/+2 inputs coincide because both ratios equal 200.
-
-5. Use the transfer prompt to separate “one peak” from “one identified ion.” Flight time alone does not identify a real molecule.
-
-Optional: open the width extension. Define timing width before sigma. Compare 1 m and 2 m on the shared axis under each assumed width rule.</div>
+  <!-- Presenter notes = the printable teacher guide. build.js injects the
+       .guide-scope body of teacher-guide.html at the marker below, so there is
+       one source and nothing to fetch at runtime. Edit teacher-guide.html. -->
+  <section class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-label="Presenter Notes" hidden>
+    <div class="modal notes-modal">
+      <span class="eyebrow">Presenter notes · the printable teacher guide, on screen</span>
+<!--__GUIDE__-->
       <button class="secondary modal-close" data-close="notesOverlay">Close notes</button>
     </div>
   </section>
@@ -1060,15 +1067,27 @@ Optional: open the width extension. Define timing width before sigma. Compare 1 
         byId('lessonTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
+      function closeSettingsMenu() {
+        byId('settingsMenu').hidden = true;
+        byId('settingsButton').setAttribute('aria-expanded', 'false');
+      }
+
+      /* Reset means fresh load: lesson progress, the transfer answer, the width
+         assumption, every disclosure, presentation mode and the scroll position all
+         go back to how the page opens. The Guide overlay is the one exception the
+         contract names — a reset must not reopen it in front of a room. */
       function resetAll() {
         cancelRun('ready');
         lessonState = M.reduceLessonState(lessonState, { type: 'RESET' });
         byId('transferFeedback').textContent = '';
         byId('transferOptions').querySelectorAll('button').forEach(button => button.classList.remove('selected'));
-        byId('advancedResult').hidden = true;
-        byId('settingsMenu').hidden = true;
-        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        setAdvancedMode('absolute');
+        document.querySelectorAll('details').forEach(panel => { panel.open = false; });
+        document.querySelectorAll('.overlay').forEach(overlay => { overlay.hidden = true; });
+        setPresentationMode(false);
+        closeSettingsMenu();
         renderCurrentStep();
+        window.scrollTo({ top: 0, behavior: 'instant' });
       }
 
       function advancedSpread() {
@@ -1211,18 +1230,20 @@ Optional: open the width extension. Define timing width before sigma. Compare 1 
         menu.hidden = !menu.hidden;
         byId('settingsButton').setAttribute('aria-expanded', String(!menu.hidden));
       });
+      /* The menu item keeps the label the contract names; the on/off state rides
+         on aria-pressed and the highlight, not on the words. */
+      function setPresentationMode(on) {
+        document.body.classList.toggle('presentation', on);
+        byId('presentationButton').classList.toggle('active', on);
+        byId('presentationButton').setAttribute('aria-pressed', String(on));
+      }
       byId('presentationButton').addEventListener('click', () => {
-        document.body.classList.toggle('presentation');
-        byId('presentationButton').textContent = document.body.classList.contains('presentation')
-          ? '▣ Exit presentation mode'
-          : '▣ Enter presentation mode';
-        byId('settingsMenu').hidden = true;
-        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        setPresentationMode(!document.body.classList.contains('presentation'));
+        closeSettingsMenu();
         drawCore();
       });
       byId('notesButton').addEventListener('click', () => {
-        byId('settingsMenu').hidden = true;
-        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        closeSettingsMenu();
         byId('notesOverlay').hidden = false;
       });
       document.querySelectorAll('[data-close]').forEach(button => {
@@ -1231,8 +1252,7 @@ Optional: open the width extension. Define timing width before sigma. Compare 1 
       document.addEventListener('keydown', event => {
         if (event.key === 'Escape') {
           document.querySelectorAll('.overlay').forEach(overlay => { overlay.hidden = true; });
-          byId('settingsMenu').hidden = true;
-          byId('settingsButton').setAttribute('aria-expanded', 'false');
+          closeSettingsMenu();
         }
       });
       window.addEventListener('resize', () => {
