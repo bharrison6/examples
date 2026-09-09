@@ -3,7 +3,8 @@
 **Has this happened before?** — the fifth demo in *AI: From Zero to Takeoff*.
 (Folder and URL stay `two-winters`; the two winters are still what it is about.)
 
-`takeoff` ends with the room having watched capability curves go nearly vertical. The
+`takeoff` ends with the room having considered AI gains alongside limits and measurement
+conditions. The
 honest next question, and you will get it, is *"is this another bubble?"* This demo
 answers with evidence rather than reassurance. It compares two AI contractions that had
 overlapping pressures but different causes, and asks which historical analogies survive
@@ -27,7 +28,7 @@ sample of optimists, pessimists, or the field.
 
 | Act | What it is | Time |
 |-----|-----------|------|
-| **I — Guess the year** | Ten curated, sourced claims, 1950–2024, speaker and date hidden. Score six time-bounded forecasts; classify three assessments without grading them against the future. | 7–9 min |
+| **I — Guess the year** | Ten curated, sourced claims, 1950–2024, speaker and date hidden. Score five time-bounded forecasts; classify four assessments or untimed ambitions without grading them against the future. | 7–9 min |
 | **II — The two winters** | A scrubbable 1950–2026 timeline in six rows: landmark results plus five comparison lenses. It shows different pathways, not a fixed sequence. | 3–4 min |
 | **III — Anatomy** | The first winter, second winter, and current conditions side by side under the same lenses. Two present questions remain openly unresolved. | 2–3 min |
 | **IV — Now** | What rhymes against what is genuinely different, then the cut list and every source. | 2–3 min |
@@ -84,11 +85,11 @@ something a sceptic can go and check.
 - **What could not be sourced was cut, and the cuts are on the page.** Act IV lists seven
   claims that were researched and left out, with the reason for each — including a dollar
   figure for XCON's savings at Digital (sources disagree, and the primary is paywalled)
-  and any verbatim quotation from the ALPAC report (the National Academies' online copy is
-  page images).
+  and an unsupported claim that ALPAC predicted machine translation would never work.
 - **There is no continuous funding series**, because none exists in sourceable form. The
-  demo shows four commitments it could actually source, in four different currencies, not
-  inflation-adjusted, and says on the page that that is what they are.
+  demo shows four funding examples with different bases: programme budgets, programme
+  expenditure, and a private round. They use three currencies and cannot be combined without
+  shared price-year and accounting assumptions.
 - **Winter date ranges are conventional, not crisp.** The starts are well attested; the
   ends are argued over. The bands are drawn with a soft right edge and each carries a note
   saying exactly where historians disagree.
@@ -162,7 +163,7 @@ somewhere unusual; nothing is hardcoded to one machine.
 
 The tests also enforce the teaching model. If you add a card, update the forecast,
 assessment, and warning counts that the scorecard uses; assessments must remain unscored as
-future forecasts. The same is true of the money panel's "four commitments" caption and the
+future forecasts. The same is true of the money panel's "four funding examples" caption and the
 "ten claims" line in the guide.
 
 Then: `node src/playtest.test.js && node build.js && node src/contract.test.js`.

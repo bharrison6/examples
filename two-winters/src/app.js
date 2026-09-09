@@ -2,7 +2,7 @@
    AI Winters: Boom and Bust — the application.
 
    Four acts:
-     I   Guess the year — ten sourced predictions, date and speaker hidden.
+     I   Guess the year — ten sourced claims, date and speaker hidden.
      II  The two winters — a scrubbable comparison timeline.
      III Anatomy — historical conditions and current evidence side by side.
      IV  Rhymes and differences, the cut list, and every source.
@@ -230,7 +230,7 @@ function renderScorecard() {
   };
   grid.appendChild(stat(String(acc.verdictRight) + '/' + String(acc.scored), '', 'verdicts called right'));
   grid.appendChild(stat(acc.medianMiss == null ? '—' : acc.medianMiss.toFixed(1), 'years', 'average miss on the date'));
-  grid.appendChild(stat(String(acc.open), '', 'left unscored, because unresolved'));
+  grid.appendChild(stat(String(acc.open), '', 'unscored: unresolved forecasts or assessments'));
   box.appendChild(grid);
 
   /* The split that carries the argument. */
@@ -249,12 +249,12 @@ function renderScorecard() {
     r.appendChild(el('span', 'sc-blurb', blurb));
     return r;
   };
-  split.appendChild(row('promise', 'Time-bounded promises', 'Six claims named a near-term outcome. Five have resolved, and none arrived inside the window it named.'));
+  split.appendChild(row('promise', 'Time-bounded promises', 'Five claims named a near-term outcome. Three have resolved, and none arrived inside the window it named.'));
   split.appendChild(row('warning', 'A warning about the field itself', 'One time-bounded warning. It was right, three years early.'));
   const assessment = el('div', 'sc-row');
   assessment.appendChild(el('b', null, 'Dated assessments'));
-  assessment.appendChild(el('span', 'sc-score', '3 to inspect, not score'));
-  assessment.appendChild(el('span', 'sc-blurb', 'ALPAC, Perceptrons, and Lighthill describe conditions or evidence at a time. Later developments do not turn them into failed forecasts.'));
+  assessment.appendChild(el('span', 'sc-score', '4 to inspect, not score'));
+  assessment.appendChild(el('span', 'sc-blurb', 'The 1958 press claim, ALPAC, Perceptrons, and Lighthill lack a scoreable future window or describe evidence at a time. Later developments do not turn them into failed forecasts.'));
   split.appendChild(assessment);
   box.appendChild(split);
 
@@ -297,7 +297,7 @@ function buildTimeline() {
   });
 
   const legend = $('#tl-legend'); legend.innerHTML = '';
-  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'The results the promises were measured against.' }].concat(D.STAGES);
+  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'Historical results placed beside claims and assessments.' }].concat(D.STAGES);
   for (const s of lanes) {
     const d = el('div', 'lg');
     const sw = el('i'); sw.style.background = Timeline.LANE_COLOR[s.id];
@@ -629,10 +629,10 @@ function runSelfTest() {
      D.EVENTS.filter(e => e.p === 'd').every(e => !/-01-01$/.test(e.d)));
 
   ok('Card counts match the prose on the scorecard',
-     D.CARDS.filter(c => c.kind === 'promise').length === 6 &&
-     D.CARDS.filter(c => c.kind === 'dismiss').length === 3 &&
+     D.CARDS.filter(c => c.kind === 'promise').length === 5 &&
+     D.CARDS.filter(c => c.kind === 'assessment').length === 4 &&
      D.CARDS.filter(c => c.kind === 'warning').length === 1,
-     'promise/dismiss/warning = ' + ['promise','dismiss','warning']
+     'promise/assessment/warning = ' + ['promise','assessment','warning']
        .map(k => D.CARDS.filter(c => c.kind === k).length).join('/'));
   ok('No promise in the deck arrived inside the window it named',
      D.CARDS.filter(c => c.kind === 'promise').every(c => c.verdict !== 'yes'));
