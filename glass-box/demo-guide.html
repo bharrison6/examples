@@ -3,64 +3,85 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Glass Box — presenter guide</title>
-<style>
+<title>How a Language Model Works — presenter guide</title>
+<!-- ONE SOURCE FOR THE NOTES. This file is canonical for three surfaces: this
+     printable page, Glass-Box-Demo-Guide.pdf, and the demo's Settings -> Open
+     Presenter Notes overlay. build.js lifts the second stylesheet and the
+     .guide-scope div out of here verbatim and injects them into index.html, and
+     `node build.js --check` fails the moment any of the three drifts. Edit only
+     this file; never hand-edit the notes inside the app.
+
+     The two stylesheets are split on purpose and the split is load-bearing:
+     the FIRST is page furniture (page box, reset, body) that must NOT travel
+     into the app, because a bare `body` or `*` rule inside a modal overlay
+     would restyle the whole demo. Only the SECOND travels, and every selector
+     in it starts with .guide-scope. -->
+<style id="guide-page">
   @page { size: A4 portrait; margin: 10mm 9mm; }
-  /* Murray State palette: navy #002144 and gold #ECAC00. Gold is a rule and a
-     fill, never small type — it does not carry on white paper. */
-  :root { --ink:#111820; --ink2:#41505f; --ink3:#71808f; --line:#c2cede;
-          --navy:#002144; --gold:#ECAC00; --hi:#FFF7E4; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
-    color: var(--ink); background: #fff; font-size: 7.4pt; line-height: 1.26;
-    max-width: 210mm; margin: 0 auto; padding: 10mm 9mm;
-  }
-  header { border-bottom: 2.4pt solid var(--navy); padding-bottom: 1.8mm; margin-bottom: 2.2mm;
-           display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; }
-  .eyebrow { font-size: 6.4pt; font-weight: 700; letter-spacing: 1.5pt; text-transform: uppercase;
-             color: var(--navy); border-bottom: 1.6pt solid var(--gold);
-             display: inline-block; padding-bottom: .5mm; margin-bottom: 1.2mm; }
-  h1 { font-size: 14pt; letter-spacing: .4pt; line-height: 1; color: var(--navy); }
-  h1 small { display: block; font-size: 6.9pt; font-weight: 600; letter-spacing: 1.4pt;
-             text-transform: uppercase; color: var(--ink2); margin-top: 1mm; }
-  .meta { text-align: right; font-size: 6.6pt; color: var(--ink2); line-height: 1.35; }
-  .cols { column-count: 2; column-gap: 5mm; column-rule: .4pt solid var(--line); }
-  section { break-inside: avoid; margin-bottom: 2mm; }
-  h2 { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .8pt; color: var(--navy);
-       border-bottom: 1.2pt solid var(--gold); padding-bottom: .5mm; margin-bottom: 1mm; }
-  p { margin-bottom: 1mm; }
-  ol { margin: 0 0 1mm 3.4mm; }
-  ul { margin: 0 0 1mm 3mm; }
-  li { margin-bottom: .6mm; }
-  .beat { display: grid; grid-template-columns: 10mm 1fr; gap: 1.2mm; margin-bottom: 1.2mm; break-inside: avoid; }
-  .beat .t { font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; font-size: 7pt; }
-  .beat > div > b:first-of-type { display: block; }
-  .say { background: var(--hi); border-left: 1.6pt solid var(--gold); padding: .9mm 1.3mm;
-         margin: .6mm 0; font-style: italic; break-inside: avoid; }
-  .mis { border: .5pt solid var(--line); border-radius: 1.4mm; padding: 1.1mm 1.4mm; margin-bottom: 1.2mm; break-inside: avoid; }
-  .mis .claim { font-weight: 700; color: var(--navy); }
-  .mis .claim::before { content: "“"; } .mis .claim::after { content: "”"; }
-  .mis .ans { color: var(--ink2); margin-top: .3mm; }
-  code { font-family: ui-monospace, Consolas, monospace; font-size: 6.8pt; }
-  footer { margin-top: 2mm; padding-top: 1.2mm; border-top: .6pt solid var(--line);
-           font-size: 6.4pt; color: var(--ink3); display: flex; justify-content: space-between; gap: 4mm; }
-  .warn { color: #a3341f; font-weight: 600; }
-  .page2 { break-before: page; padding-top: 2mm; }
+  body { background: #fff; max-width: 210mm; margin: 0 auto; padding: 10mm 9mm; }
   @media screen { body { box-shadow: 0 0 0 1px #e3e8f0; margin: 12px auto; } }
   @media print { body { padding: 0; max-width: none; margin: 0; } }
 </style>
+<style id="guide-css">
+  /* Murray State palette: navy #002144 and gold #ECAC00. Gold is a rule and a
+     fill, never small type — it does not carry on white paper. The custom
+     properties live on .guide-scope, not :root, so the injected copy carries
+     its own light palette into the demo's dark one.
+
+     The print units (pt, mm) are deliberate: this stylesheet is what renders
+     the A4 PDF. The app does not re-unit them — it scales the whole injected
+     block with `zoom`, so the shipped page and the PDF are laid out by exactly
+     the bytes below. */
+  .guide-scope { --ink:#111820; --ink2:#41505f; --ink3:#71808f; --line:#c2cede;
+                 --navy:#002144; --gold:#ECAC00; --hi:#FFF7E4;
+                 font-family: "Segoe UI", -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
+                 color: var(--ink); font-size: 7.4pt; line-height: 1.26; }
+  .guide-scope header { border-bottom: 2.4pt solid var(--navy); padding-bottom: 1.8mm; margin-bottom: 2.2mm;
+           display: flex; justify-content: space-between; align-items: flex-end; gap: 6mm; }
+  .guide-scope .eyebrow { font-size: 6.4pt; font-weight: 700; letter-spacing: 1.5pt; text-transform: uppercase;
+             color: var(--navy); border-bottom: 1.6pt solid var(--gold);
+             display: inline-block; padding-bottom: .5mm; margin-bottom: 1.2mm; }
+  .guide-scope h1 { font-size: 14pt; letter-spacing: .4pt; line-height: 1.04; color: var(--navy); }
+  .guide-scope h1 small { display: block; font-size: 6.9pt; font-weight: 600; letter-spacing: 1.4pt;
+             text-transform: uppercase; color: var(--ink2); margin-top: 1mm; }
+  .guide-scope .meta { text-align: right; font-size: 6.6pt; color: var(--ink2); line-height: 1.35; }
+  .guide-scope .cols { column-count: 2; column-gap: 5mm; column-rule: .4pt solid var(--line); }
+  .guide-scope section { break-inside: avoid; margin-bottom: 2mm; }
+  .guide-scope h2 { font-size: 7.6pt; text-transform: uppercase; letter-spacing: .8pt; color: var(--navy);
+       border-bottom: 1.2pt solid var(--gold); padding-bottom: .5mm; margin-bottom: 1mm; }
+  .guide-scope p { margin-bottom: 1mm; }
+  .guide-scope ol { margin: 0 0 1mm 3.4mm; padding-left: 0; }
+  .guide-scope ul { margin: 0 0 1mm 3mm; padding-left: 0; }
+  .guide-scope li { margin-bottom: .6mm; }
+  .guide-scope .beat { display: grid; grid-template-columns: 10mm 1fr; gap: 1.2mm; margin-bottom: 1.2mm; break-inside: avoid; }
+  .guide-scope .beat .t { font-weight: 800; color: var(--navy); font-variant-numeric: tabular-nums; font-size: 7pt; }
+  .guide-scope .beat > div > b:first-of-type { display: block; }
+  .guide-scope .say { background: var(--hi); border-left: 1.6pt solid var(--gold); padding: .9mm 1.3mm;
+         margin: .6mm 0; font-style: italic; break-inside: avoid; }
+  .guide-scope .mis { border: .5pt solid var(--line); border-radius: 1.4mm; padding: 1.1mm 1.4mm; margin-bottom: 1.2mm; break-inside: avoid; }
+  .guide-scope .mis .claim { font-weight: 700; color: var(--navy); }
+  .guide-scope .mis .claim::before { content: "“"; }
+  .guide-scope .mis .claim::after { content: "”"; }
+  .guide-scope .mis .ans { color: var(--ink2); margin-top: .3mm; }
+  .guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: 6.8pt; }
+  .guide-scope footer { margin-top: 2mm; padding-top: 1.2mm; border-top: .6pt solid var(--line);
+           font-size: 6.4pt; color: var(--ink3); display: flex; justify-content: space-between; gap: 4mm; }
+  .guide-scope .warn { color: #a3341f; font-weight: 600; }
+  .guide-scope .page2 { break-before: page; padding-top: 2mm; }
+</style>
 </head>
 <body>
+<div class="guide-scope">
 
 <header>
   <div>
     <div class="eyebrow">Murray State University</div>
-    <h1>Glass Box<small>three 10-minute acts &middot; how modern AI works &middot; for educators</small></h1>
+    <h1>How a Language Model Works<small>Glass Box &middot; three 10-minute acts &middot; for educators</small></h1>
   </div>
   <div class="meta">
     <b>You need:</b> one phone, tablet or laptop. Open <code>index.html</code>.<br>
-    No install, no login, no network. Projecting? footer &rarr; <b>presenter mode</b>.<br>
+    No install, no login, no network. Projecting? <b>&#9881; Settings &rarr; Presentation mode</b>.<br>
     <b class="warn">Do not train before the session</b> — the untrained model is the opening act.<br>
     Acts stand alone: teach one, two, or all three.
   </div>
@@ -174,13 +195,13 @@
   </div></div>
 
   <div class="beat"><div class="t">5:30</div><div>
-    <b>Reset, then "watch it run".</b> Two beats to point at: the calculator error
+    <b>Press §3.2's <code>restart run</code>, then "watch it run".</b> Two beats to point at: the calculator error
     (<code>9 x $13.00</code>) and the recovery on the next turn — errors are just observations; and
     the context meter growing — every turn, the whole transcript is re-read.
   </div></div>
 
   <div class="beat"><div class="t">8:00</div><div>
-    <b>The closer: set the window to "tiny", reset, watch it run.</b> Mid-task, the goal falls out
+    <b>The closer: set the window to "tiny", <code>restart run</code>, watch it run.</b> Mid-task, the goal falls out
     of the visible window and the agent stops dead, telling you why. Open "what the model sees" and
     show the red truncation line.
     <div class="say">"The model remembers nothing between turns. The context window is its entire
@@ -232,10 +253,14 @@
     math so the same run reproduces exactly, on every device (the shipped run: Model D ~54%, Model S
     ~96%, §2.3 climbs 60→78%, §2.4 rounds 49→77→83→84→85%). You can rehearse to the digit. The README
     documents the honest spread across other seeds.</li>
-    <li>Phone works; a projected laptop is better for rooms. Presenter mode (footer link) enlarges
-    everything one notch.</li>
+    <li>Phone works; a projected laptop is better for rooms. <b>Presentation mode</b> (&#9881; Settings)
+    enlarges everything one notch.</li>
+    <li><b>Controls:</b> <b>?</b> opens the <b>Guide</b> overlay — it also opens on every load, so a
+    late arrival can read it themselves. <b>&#9881; Settings</b> holds <b>Open Presenter Notes</b>
+    (this document, on screen), <b>Presentation mode</b> and <b>Reset</b>.</li>
     <li>Refreshing the page forgets everything — which is itself a teachable moment, but not one you
-    want at minute 25.</li>
+    want at minute 25. <b>Settings &rarr; Reset</b> does the same on purpose, for a clean start between
+    rooms; it leaves Presentation mode as you set it.</li>
   </ul>
 </section>
 
@@ -259,9 +284,10 @@
 </div>
 
 <footer>
-  <span>Glass Box &middot; examples repo &middot; runs entirely offline, on the device</span>
+  <span>How a Language Model Works (Glass Box) &middot; examples repo &middot; runs entirely offline, on the device</span>
   <span>Companion file: <code>index.html</code> &middot; this guide: <code>demo-guide.html</code></span>
 </footer>
 
+</div><!-- /guide -->
 </body>
 </html>
