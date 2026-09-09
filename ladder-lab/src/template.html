@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ladder Lab — PLC Trainer</title>
+<title>PLC Ladder Logic Trainer — Ladder Lab</title>
 <!--
-  Ladder Lab — a fully offline, deterministic PLC trainer for the classroom.
-  Single file: open it in any Chromium/Firefox browser, no network needed.
-  Companion: teacher-guide.html (printable one-page lesson plan).
+  PLC Ladder Logic Trainer (Ladder Lab) — a fully offline, deterministic PLC
+  trainer for the classroom. Single file: open it in any Chromium/Firefox
+  browser, no network needed.
+  Companion: teacher-guide.html (the printable one-page lesson plan). Its
+  scoped stylesheet and body are injected below at the GUIDE_CSS and GUIDE
+  placeholders, so Settings -> Open Presenter Notes shows that same document.
+  Each placeholder must appear exactly once, which is why this comment spells
+  them without their delimiters.
 -->
 <style>
 /*__CSS__*/
 </style>
+<!-- The teacher guide's own scoped typography, lifted verbatim from
+     src/teacher-guide.html by build.js. It comes after the app stylesheet so
+     the guide styles its own body inside the notes sheet. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
 </head>
 <body>
   <header id="topbar">
-    <div id="brand"><span class="t1">LADDER LAB</span><span class="t2">MURRAY STATE · PLC TRAINER</span></div>
+    <div id="brand"><span class="t1">PLC LADDER LOGIC TRAINER</span><span class="t2">MURRAY STATE · LADDER LAB</span></div>
 
     <div class="tb-group" id="program-group">
       <span class="tb-label">Program</span>
@@ -36,7 +47,7 @@
     <div class="tb-group">
       <button id="btn-run" class="tb-btn primary" title="Run / pause the PLC (Space)">⏸ Pause</button>
       <button id="btn-step" class="tb-btn" title="Advance exactly one full scan ( . )">Step Scan</button>
-      <button id="btn-reset" class="tb-btn" title="Reset the PLC and the intersection">⟲ Reset</button>
+      <button id="btn-reset" class="tb-btn" title="Reset the PLC and the intersection; the program is left alone">⟲ Reset PLC</button>
     </div>
 
     <div class="tb-group">
@@ -68,19 +79,21 @@
     <span id="sel-status"></span>
 
     <div id="help-settings">
-      <button type="button" id="btn-notes-quick" class="tb-btn" data-sheet="presenter-notes" title="Presenter's notes">📝 Notes</button>
-      <button type="button" id="btn-howto" class="tb-btn tb-icon student-guide-open" title="How to use Ladder Lab" aria-label="How to use Ladder Lab">?</button>
+      <button type="button" id="btn-notes-quick" class="tb-btn" data-sheet="presenter-notes" title="Open Presenter Notes" aria-label="Open Presenter Notes">📝 Notes</button>
+      <button type="button" id="btn-howto" class="tb-btn tb-icon student-guide-open" title="Guide" aria-label="Guide">?</button>
+      <!-- Settings. The first three entries are the contract set, labelled
+           exactly: Open Presenter Notes, Presentation mode, Reset. This demo's
+           own controls sit below the rule. -->
       <details id="teacher-menu">
-        <summary>⚙ Settings</summary>
+        <summary title="Settings" aria-label="Settings">⚙ Settings</summary>
         <div id="teacher-drop">
-          <label><input type="checkbox" id="chk-bigui"> Presentation mode (big UI + presenter notes)</label>
+          <button type="button" id="btn-notes" data-sheet="presenter-notes">📝 Open Presenter Notes</button>
+          <label><input type="checkbox" id="chk-bigui"> Presentation mode</label>
+          <button type="button" id="btn-resetall" class="danger">⚠ Reset</button>
+          <div class="sep"></div>
           <label><input type="checkbox" id="chk-hideladder"> Hide ladder pane (predict-then-reveal)</label>
-          <div class="sep"></div>
-          <button type="button" id="btn-notes" data-sheet="presenter-notes">📝 Presenter's notes</button>
-          <button class="teacher-guide-open">📄 Open teacher guide</button>
-          <button id="btn-selftest">🧪 Run engine self-test</button>
-          <div class="sep"></div>
-          <button id="btn-resetall" class="danger">⚠ Reset everything</button>
+          <a class="btn" id="btn-printable-guide" href="teacher-guide.html" target="_blank" rel="noopener">📄 Printable teacher guide</a>
+          <button type="button" id="btn-selftest">🧪 Run engine self-test</button>
         </div>
       </details>
     </div>
@@ -110,7 +123,7 @@
   <div id="toast" role="status"></div>
 
   <dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
-    <div class="student-guide-head"><h2 id="student-guide-title">How to use Ladder Lab</h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
+    <div class="student-guide-head"><h2 id="student-guide-title">Guide<span class="sg-sub">PLC Ladder Logic Trainer</span></h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
     <div class="student-guide-body">
       <p class="sg-lede">This is a real PLC, not an animation. The ladder program sits on the left, the live intersection (or motor) on the right, and every tag value underneath.</p>
 
@@ -138,65 +151,24 @@
         <li>Click any instruction for a plain-English account of what it is doing <i>right now</i>.</li>
       </ol>
 
-      <p class="sg-foot">Reopen this any time with the <b>?</b> button in the top bar. Teaching with it? <b>⚙ Settings</b> holds presentation mode, the presenter's notes, and the printable teacher guide.</p>
+      <p class="sg-foot">This Guide opens on every load; reopen it any time with the <b>?</b> button in the top bar. Teaching with it? <b>⚙ Settings</b> holds <b>Open Presenter Notes</b> (the teacher guide in full), <b>Presentation mode</b> and <b>Reset</b>.</p>
     </div>
     <form method="dialog" class="student-guide-actions"><button>Start exploring</button></form>
   </dialog>
 
+  <!-- Presenter Notes. The body is the teacher guide itself, injected by
+       build.js from src/teacher-guide.html — the same file that ships as the
+       printable guide and is rendered to the PDF. Edit the guide, never this
+       copy; `node build.js --check` fails if the two drift apart. -->
   <dialog class="student-guide presenter-notes" id="presenter-notes" aria-labelledby="presenter-notes-title">
-    <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter's notes</h2><form method="dialog"><button aria-label="Close presenter's notes">×</button></form></div>
+    <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter Notes<span class="sg-sub">the teacher guide in full</span></h2><form method="dialog"><button aria-label="Close presenter notes">×</button></form></div>
     <div class="student-guide-body">
-      <p class="sg-lede">Stage notes for the 45-minute lab, distilled from the teacher guide. The full printable version is under <b>⚙ Settings → Open teacher guide</b>.</p>
-
-      <h3>Run of show</h3>
-      <ul class="pn-run">
-        <li><span class="pn-time">0–5</span><span><b>Hook.</b> Trainer mode, Program 1 running. Ask the room: "what is deciding when the lights change?" Introduce the PLC.</span></li>
-        <li><span class="pn-time">5–12</span><span><b>Scan cycle.</b> Pause, then Step Scan with the watch window open. Press <code>PED_NS</code> while paused and step once — <i>now</i> it appears in the input image. Then Program 6 A/B for rung order.</span></li>
-        <li><span class="pn-time">12–20</span><span><b>Read the ladder.</b> Program 5 (seal-in): click each instruction for its plain-English role. Then Program 1 — find the four step bits, the timers, the interlock contacts.</span></li>
-        <li><span class="pn-time">20–32</span><span><b>Build.</b> Challenges 1 (seal-in) then 2 (delayed start); the auto-grader gives step-by-step feedback. Fast finishers take challenge 3.</span></li>
-        <li><span class="pn-time">32–42</span><span><b>Troubleshoot.</b> Hide the ladder pane. Inject a random fault into Program 1 or 2; the class predicts the bug from the intersection alone, then reveal the ladder and confirm. Solve times make a friendly leaderboard.</span></li>
-        <li><span class="pn-time">42–45</span><span><b>Debrief</b> with the questions below; assign challenge 4 as an extension.</span></li>
-      </ul>
-
-      <h3>Three things to say out loud</h3>
-      <ul>
-        <li><b>The scan cycle.</b> Reads all inputs into a snapshot, solves the ladder top-to-bottom and left-to-right from that snapshot, writes all outputs at once. One lap = one scan; real PLCs run ~1–20 ms. A button press does nothing until the next input read.</li>
-        <li><b>Why rung order matters.</b> A rung that writes a bit affects later rungs in the same scan, but earlier rungs only see it next scan. That one-scan difference is the root of real interlock and sequencing bugs.</li>
-        <li><b>Latch vs. seal-in.</b> An OTE coil is re-solved every scan. A seal-in holds it on by wiring the output's own contact in parallel with START (Program 5) — lose power and the motor stays off, usually the safe choice. OTL stays on until an explicit OTU, which is why the crosswalk request in Program 2 uses one.</li>
-      </ul>
-
-      <h3>Misconceptions to head off</h3>
-      <ul class="pn-myths">
-        <li><b>"Ladder is a schematic."</b> It looks like relay wiring but it is a <i>program</i>, solved in order, one rung at a time. Electricity flows everywhere at once; a scan does not.</li>
-        <li><b>"Outputs change mid-rung."</b> They update at the <i>end</i> of the scan, all together — watch the output image table while stepping.</li>
-        <li><b>"Pressing a button acts instantly."</b> It acts at the next input scan. In step mode a press does nothing until you step.</li>
-        <li><b>"A timer counts wall-clock."</b> TON accumulates only while its rung is true, in scan-time, and resets when the rung goes false.</li>
-        <li><b>"Two coils with the same tag both work."</b> The last rung wins, every scan — see the double-coil fault.</li>
-      </ul>
-
-      <h3>Debrief questions</h3>
-      <ol>
-        <li>Why can both directions never be green in Program 1, even if a timer misbehaves? <i>(Two independent defenses: the step sequence and the XIO interlock contacts.)</i></li>
-        <li>Why is the walk request latched instead of wired straight to the walk sign? What would happen if it weren't?</li>
-        <li>In the Scan Order Demo, which variant would you pick for an emergency-stop rung, and why?</li>
-        <li>Seal-in vs. OTL for the motor: which restarts by itself after a power blip? Which is safer, and when?</li>
-        <li>Our simulated scan is 20 ms. What real-world inputs could a PLC miss entirely between scans, and how would you catch them?</li>
-      </ol>
-
-      <h3>Programs at a glance</h3>
-      <table class="pn-table">
-        <tr><th>Program</th><th>Teaches</th><th>Key tags</th></tr>
-        <tr><td>1 Basic stoplight</td><td>timers chained into a 4-step sequence; interlock</td><td><code>STEP1–4</code> <code>NS_GRN</code> <code>EW_GRN</code></td></tr>
-        <tr><td>2 + Crosswalk</td><td>latched request honored at the next safe phase</td><td><code>PED_NS</code> <code>REQ_NS</code> <code>WALK_NS</code></td></tr>
-        <tr><td>3 Sensor-actuated</td><td>rest state plus demand from the car sensor, minimum green</td><td><code>LOOP_EW</code></td></tr>
-        <tr><td>4 Night flash</td><td>selector switch modes; two-timer flasher</td><td><code>SW_NIGHT</code> <code>FLASH</code></td></tr>
-        <tr><td>5 Motor seal-in</td><td>start/stop/seal-in — teach before the stoplight</td><td><code>PB_START</code> <code>PB_STOP</code> <code>MOTOR</code></td></tr>
-        <tr><td>6 Scan order A/B</td><td>rung order = a one-scan difference (use Step Scan)</td><td><code>B_SRC</code> <code>B_ECHO</code></td></tr>
-      </table>
-
-      <p class="sg-foot">Driving it: <kbd>Space</kbd> run/pause, <kbd>.</kbd> step one scan. <b>⚙ Settings</b> also has hide-ladder for predict-then-reveal, the engine self-test to run in front of the class, and reset everything.</p>
+<!--__GUIDE__-->
     </div>
-    <form method="dialog" class="student-guide-actions"><button>Close notes</button></form>
+    <form method="dialog" class="student-guide-actions">
+      <a class="pn-print" href="teacher-guide.html" target="_blank" rel="noopener">📄 Printable copy</a>
+      <button>Close notes</button>
+    </form>
   </dialog>
 
   <div class="ll-overlay" id="selftest-overlay" hidden>
@@ -207,20 +179,38 @@
     </div>
   </div>
 
-  <div class="msu-guide-overlay" id="msu-guide" hidden>
-    <section class="msu-guide-dialog" role="dialog" aria-modal="true" aria-labelledby="msu-guide-title" tabindex="-1">
-      <div class="msu-guide-bar"><h2 id="msu-guide-title">Ladder Lab teacher guide</h2><span class="msu-guide-spacer"></span><button type="button" id="msu-guide-print">Open printable copy</button><button type="button" id="msu-guide-close" aria-label="Close teacher guide">Close</button></div>
-      <iframe class="msu-guide-frame" id="msu-guide-frame" data-guide="teacher-guide.html" title="Ladder Lab teacher guide"></iframe>
-    </section>
-  </div>
+  <!-- There is no second in-app rendering of the teacher guide. Presenter
+       Notes above IS the guide, injected from the same source, so the old
+       iframe overlay would only have been a divergent copy of it. The menu
+       links out to the printable file instead. -->
 
 <script>
 /*__JS__*/
 </script>
 <script>
 (() => {
+  /* Boot flags, and the Guide-on-load rule.
+
+     Settings -> Reset restores the just-opened state by reloading, which is
+     fresh-load by construction rather than by hand-resetting six stateful
+     modules. Two things must survive that reload: the Guide must NOT greet the
+     presenter a second time, and Presentation mode is a display preference, not
+     demo state, so it stays on. They ride across in location.hash, which works
+     on file:// where the storage APIs are not guaranteed to.
+
+     This script is parsed after the app bundle but runs before its
+     DOMContentLoaded init, so LL_BOOT is set by the time app.js reads it. */
+  const marks = location.hash.replace(/^#/, '').split(',');
+  const boot = { reset: marks.includes('reset'), presentation: marks.includes('pres') };
+  window.LL_BOOT = boot;
+  if (boot.reset) {
+    /* Consume the hash so a later manual reload greets the room normally. */
+    try { history.replaceState(null, '', location.pathname + location.search); }
+    catch (e) { /* file:// without a session history entry: harmless */ }
+  }
+
   /* Modal-sheet controller. Any [data-sheet] button opens the <dialog> whose id
-     it names; .student-guide-open is the legacy alias for the how-to sheet.
+     it names; .student-guide-open is the legacy alias for the Guide sheet.
      Esc, the × and the footer button all close (native <dialog>), as does a
      tap on the backdrop. */
   const openerOf=new WeakMap();
@@ -230,21 +220,11 @@
     dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
     dialog.addEventListener('close',()=>{const opener=openerOf.get(dialog);if(opener?.isConnected)opener.focus()});
   });
-  /* The how-to sheet greets every load; the ? button reopens it any time. */
-  open('student-guide');
+  /* The Guide sheet greets every load; the ? button reopens it any time. A
+     reload that came from Reset is not a first load, so it lands on the app. */
+  if (!boot.reset) open('student-guide');
 })();
 </script>
-<script>
-(() => {
-  const overlay=document.getElementById('msu-guide');if(!overlay)return;
-  const dialog=overlay.querySelector('.msu-guide-dialog'),frame=document.getElementById('msu-guide-frame'),close=document.getElementById('msu-guide-close');let returnFocus=null,inerted=[],overlayWasInert=false;
-  const show=opener=>{returnFocus=opener||document.activeElement;overlayWasInert=overlay.inert;overlay.inert=false;if(!frame.getAttribute('src'))frame.setAttribute('src',frame.dataset.guide);overlay.hidden=false;inerted=[...document.body.children].filter(node=>node!==overlay&&!node.inert);inerted.forEach(node=>{node.inert=true});dialog.focus()};
-  const hide=()=>{overlay.hidden=true;inerted.forEach(node=>{node.inert=false});inerted=[];overlay.inert=overlayWasInert;if(returnFocus&&typeof returnFocus.focus==='function')returnFocus.focus()};
-  document.addEventListener('click',event=>{const opener=event.target.closest?.('.teacher-guide-open');if(opener){event.preventDefault();opener.closest('details[open]')?.removeAttribute('open');show(opener)}});close.addEventListener('click',hide);
-  document.getElementById('msu-guide-print').addEventListener('click',()=>window.open(frame.dataset.guide,'_blank','noopener'));
-  overlay.addEventListener('pointerdown',event=>{if(event.target===overlay)hide()});window.addEventListener('keydown',event=>{if(!overlay.hidden&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();hide()}},true);
-})();
-</script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:nowrap;animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:normal;max-width:calc(100vw - 16px);animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
 </body>
 </html>
