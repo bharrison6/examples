@@ -13,8 +13,9 @@ pointer to this file).
 - **Folder names are public URLs** (`bharrison6.github.io/examples/<slug>/`) — never
   rename a shipped demo folder. New demos: kebab-case title slug (`bridge-works`).
 - **Every demo meets [CONTRACT.md](CONTRACT.md)** — required files (index.html,
-  README.md, demo.json, printable guide) and required UX (how-to popup, settings +
-  presentation mode with presenter notes, theme, attribution, mobile, offline).
+  README.md, demo.json, printable guide) and required UX (Guide via `?`, Settings with Open Presenter Notes +
+  Presentation mode + Reset, presenter notes single-sourced with the printable guide,
+  theme, attribution, mobile, offline).
 - **Generated surfaces**: the README demo table and the launcher card bodies in
   `index.html` are generated from `demo.json` manifests. Edit the manifest (or
   `tours/*.json` for ordering), then run `node tools/build-hub.js`. Never hand-edit

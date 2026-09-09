@@ -4,7 +4,7 @@ artifact_kind: reference
 schema_version: 2
 title: Examples repo protocol — naming, contract, generated surfaces, memory, git
 created: 2026-08-07T15:17:29Z
-updated: 2026-08-07T15:17:29Z
+updated: 2026-09-09T03:18:02Z
 author: msu.soeai
 model: claude-fable-5
 model_basis: confirmed
@@ -36,8 +36,9 @@ Murray State University). Hosted via GitHub Pages at `bharrison6.github.io/examp
 
 ## Canonical files (read these, don't duplicate them)
 
-- `CONTRACT.md` — the demo contract: required files AND required UX (how-to popup with
-  reopen, settings + presentation mode with presenter notes, MSU theme for MSU demos,
+- `CONTRACT.md` — the demo contract: required files AND required UX (Guide via `?`,
+  Settings with Open Presenter Notes + Presentation mode + Reset, presenter notes
+  single-sourced with the printable guide [ruling 2026-09-09], MSU theme for MSU demos,
   Bryant Harrison attribution, mobile capable, offline/no runtime inference). Open
   list by user directive — items get added; new keys are backfilled into every
   `demo.json` compliance block.
