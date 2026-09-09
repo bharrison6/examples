@@ -1466,10 +1466,11 @@ function landmarkCard(L, now, before) {
     }
   }
 
-  return `<div class="lc"><h3>${L.title}</h3><div class="ask">${L.ask}</div>` +
+  return `<details class="lc"><summary><span class="lc-title">${L.title}</span>` +
+         `<span class="lc-ask">${L.ask}</span></summary><div class="lc-body">` +
          (before ? `<div class="value-legend">Each open square: before ↓ now · Δ change</div>` :
            `<div class="value-legend">Each open square: initialized value</div>`) +
-         `<div class="lc-grid">${grid}</div><div class="delta">${line}</div></div>`;
+         `<div class="lc-grid">${grid}</div><div class="delta">${line}</div></div></details>`;
 }
 
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
