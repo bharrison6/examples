@@ -104,6 +104,7 @@ body {
   min-height: 100vh; min-height: 100dvh;
   overflow-x: hidden;
 }
+body.details-open { overflow: hidden; }
 
 :focus-visible { outline: 3px solid var(--lite); outline-offset: 2px; }
 
@@ -183,6 +184,13 @@ body.presenter #app { width: 100%; }
 .lesson-strip span { display: block; margin-bottom: .35em; color: #006b9a; font-size: calc(.59 * var(--u)); font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
 .lesson-strip article:first-child span { color: #7B5A00; }
 .lesson-strip p { margin: 0; color: var(--paper-muted); font-size: calc(.9 * var(--u)); line-height: 1.35; }
+.stage-tools { display: flex; justify-content: flex-end; margin-top: calc(.55 * var(--u)); }
+#btn-details {
+  flex: 0 0 auto; min-height: calc(2.55 * var(--u)); padding-inline: calc(.8 * var(--u));
+  color: var(--navy); background: #fff; border-color: #AAB7C6;
+}
+#btn-details::after { content: '\2192'; color: #006b9a; }
+.details-hint { color: var(--paper-muted); font-size: calc(.7 * var(--u)); font-weight: 600; }
 #col-a { min-width: 0; padding: calc(1 * var(--u)); border-radius: 22px; color: var(--ink); background: var(--navy); box-shadow: 0 18px 48px rgba(0,33,68,.16); }
 #col-b { min-width: 0; }
 
@@ -355,26 +363,34 @@ select {
   border: 1px solid var(--paper-line); border-left: 5px solid var(--gold);
 }
 #banner h3 { font: 700 calc(1.12 * var(--u))/1.25 Georgia, "Times New Roman", serif; margin-bottom: calc(.4 * var(--u)); color: var(--navy); }
-#banner p { font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.55; }
+#banner p { font-size: calc(.88 * var(--u)); color: var(--paper-muted); line-height: 1.55; }
 #banner p + p { margin-top: calc(.45 * var(--u)); }
 #banner .proof {
-  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--paper-muted);
+  margin-top: calc(.55 * var(--u)); font-size: calc(.72 * var(--u)); color: var(--paper-muted);
   border-top: 1px solid var(--paper-line); padding-top: calc(.45 * var(--u));
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------------------------------------------- accordion */
-.accordion { padding: 0; overflow: hidden; background: #fff; border-color: var(--paper-line); }
-.acc-head {
-  width: 100%; background: none; border: 0; color: var(--navy);
-  font-family: inherit; font-size: calc(.86 * var(--u)); font-weight: 700;
-  padding: calc(.7 * var(--u)); display: flex; justify-content: space-between;
-  align-items: center; cursor: pointer; min-height: calc(2.9 * var(--u)); text-align: left;
+/* ----------------------------------------------------------- details */
+#details.overlay.sheet { place-items: stretch end; }
+#details .details-drawer {
+  width: min(580px, calc(100vw - 24px)); max-width: none; height: 100dvh; max-height: 100dvh;
+  border: 0; border-left: 4px solid var(--gold); border-radius: var(--r) 0 0 var(--r);
+  animation: drawer-in .22s ease;
 }
-.acc-head .chev { transition: transform .18s ease; color: var(--gold); }
-.acc-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
-.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.6; }
-.acc-body h4 { color: #006b9a; font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
+@keyframes drawer-in { from { transform: translateX(24px); opacity: .4 } to { transform: none; opacity: 1 } }
+.details-drawer .sheet-head { padding-top: calc(.8 * var(--u) + var(--safe-t)); }
+.details-body { display: flex; flex-direction: column; gap: calc(.8 * var(--u)); }
+.details-explainer {
+  padding: calc(.85 * var(--u)); background: #fff; border: 1px solid var(--paper-line);
+  border-radius: var(--r);
+}
+.details-explainer > h3 {
+  color: var(--navy); font: 700 calc(1.12 * var(--u))/1.25 Georgia, "Times New Roman", serif;
+  margin-bottom: calc(.55 * var(--u));
+}
+.acc-body { font-size: calc(.9 * var(--u)); color: var(--paper-muted); line-height: 1.6; }
+.acc-body h4 { color: #006b9a; font-size: calc(.9 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
 .acc-body h4:first-child { margin-top: 0; }
 .acc-body p + p { margin-top: calc(.5 * var(--u)); }
 .acc-body b { color: var(--navy); }
@@ -669,6 +685,9 @@ body.step-rules #board {
   .lesson-strip article { display: grid; grid-template-columns: 4.6rem 1fr; gap: .5rem; align-items: start; }
   .lesson-strip span { margin: .12em 0 0; }
   .lesson-strip p { font-size: calc(.875 * var(--u)); }
+  .stage-tools { justify-content: stretch; }
+  #btn-details { width: 100%; }
+  #details .details-drawer { width: calc(100vw - 8px); }
 }
 
 body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 420px); }
@@ -886,8 +905,8 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 .score3 .w b { color: var(--gold); } .score3 .d b { color: var(--ink-2); } .score3 .l b { color: var(--warm); }
 
 /* the quieter banner used where no proof is possible */
-#banner.quiet { border-color: var(--line-2); border-width: 1px; background: linear-gradient(160deg, #052a55, #002144 70%); }
-#banner.quiet h3 { color: var(--ink); }
+#banner.quiet { border-color: #B7DCEB; border-left-color: var(--lite); background: #F2FAFD; }
+#banner.quiet h3 { color: var(--navy); }
 
 /* Shorter still — a 320x568 iPhone SE 1st gen. Nothing is dropped, the
    rhythm just tightens, because the TRAIN button has to stay on screen
@@ -1062,6 +1081,11 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
         <article><span>Observe</span><p id="stage-observe">Changing the rules changes its play. Playing more games does not.</p></article>
         <article><span>Takeaway</span><p id="stage-takeaway">A person supplied its strategy; this opponent never learns from experience.</p></article>
       </div>
+      <div class="stage-tools">
+        <button class="btn details-trigger" id="btn-details" type="button" aria-label="Details" aria-haspopup="dialog" aria-controls="details">
+          <span>Details</span><span class="details-hint">Evidence and explanation</span>
+        </button>
+      </div>
     </section>
 
     <!-- Two wrappers, not a bare grid. On a phone #main is a plain block,
@@ -1153,16 +1177,6 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       <button class="btn ghost sm" id="btn-learned" hidden>What it learned last time</button>
     </section>
 
-    <!-- =========================== BANNER ========================= -->
-    <div id="banner" hidden></div>
-
-    <!-- ========================== EXPLAINER ======================= -->
-    <section class="panel accordion" id="how-panel">
-      <button class="acc-head" id="how-head" aria-expanded="false">
-        <span>How is it learning?</span><span class="chev">&#9662;</span>
-      </button>
-      <div class="acc-body" id="how-body" hidden></div>
-    </section>
     </div><!-- /col-b -->
 
     <footer id="foot">
@@ -1170,6 +1184,29 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
       One HTML file · runs offline · nothing leaves this device
     </footer>
   </main>
+</div>
+
+<!-- =========================== DETAILS =========================== -->
+<!-- The evidence and technical explanation stay in their original live
+     nodes, but live in this reusable sheet so the activity remains compact.
+     renderBanner() and applyMode() keep them synchronized with the stage and
+     selected era while the shared sheet mechanism supplies focus management,
+     Escape, backdrop dismissal and focus return. -->
+<div class="overlay sheet" id="details" hidden role="dialog" aria-modal="true" aria-labelledby="details-title">
+  <div class="sheet-inner details-drawer" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="details-title">Details</h2><div class="sub" id="details-sub">Stage 1a · Rules-based intelligence</div></div>
+      <button class="icon-btn" data-close="details" aria-label="Close Details">&times;</button>
+    </div>
+    <div class="sheet-body details-body" tabindex="0" role="region" aria-label="Details content">
+      <div id="banner" hidden></div>
+      <section class="details-explainer" id="how-panel" aria-labelledby="how-title">
+        <h3 id="how-title">How it works</h3>
+        <div class="acc-body" id="how-body"></div>
+      </section>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="details">Back to activity</button></div>
+  </div>
 </div>
 
 <!-- ========================= HOW TO PLAY ========================= -->
@@ -4218,6 +4255,7 @@ const isNet   = () => S.mode === 'net';
 const STAGE_COPY = {
   rules: {
     kicker: 'Stage 1a · written rules', title: 'Rules-based intelligence',
+    details: 'Stage 1a · Rules-based intelligence',
     question: 'Can a program play well without learning?',
     try: 'Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.',
     observe: 'Changing the rules changes its play. Playing more games does not.',
@@ -4225,6 +4263,7 @@ const STAGE_COPY = {
   },
   one: {
     kicker: 'Stage 1b · learned scores', title: 'Machine learning',
+    details: 'Stage 1b · Machine learning',
     question: 'Can experience improve its choices?',
     try: 'Show move scores in Era 0. Train 5,000 games, then compare the new era with Era 0.',
     observe: 'Game outcomes change the scores attached to board positions.',
@@ -4232,6 +4271,7 @@ const STAGE_COPY = {
   },
   net: {
     kicker: 'Stage 1c · shared weights', title: 'Neural networks',
+    details: 'Stage 1c · Neural networks',
     question: 'Can one set of learned numbers score many positions?',
     try: 'Create learning examples, then train adjustable weights—numbers reused to score many board positions.',
     observe: 'Held-out means positions kept out of training. Lower error is a closer match to the frozen table estimates.',
@@ -4239,6 +4279,7 @@ const STAGE_COPY = {
   },
   ult: {
     kicker: 'Optional extension · missing information', title: 'Ultimate tic-tac-toe',
+    details: 'Optional extension · Ultimate tic-tac-toe',
     question: 'What happens when the learner cannot see the whole game?',
     try: 'Play a match, turn on move scores, and notice which global facts are absent.',
     observe: 'The learner sees each small board, but not its location or where a move sends the opponent.',
@@ -4254,6 +4295,7 @@ function renderStageIntro() {
   $('#stage-try').textContent = c.try;
   $('#stage-observe').textContent = c.observe;
   $('#stage-takeaway').textContent = c.takeaway;
+  $('#details-sub').textContent = c.details;
 }
 
 function reportAvailable() {
@@ -5169,7 +5211,14 @@ function renderBanner() {
       `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} won, ${baseline.play.draws} drawn, ${baseline.play.losses} lost; now: ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
       `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
       `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
-    setTimeout(() => { const b = $('#btn-ultimate'); if (b) b.addEventListener('click', () => { S.mode = 'ult'; applyMode(); }); }, 0);
+    setTimeout(() => {
+      const b = $('#btn-ultimate');
+      if (b) b.addEventListener('click', () => {
+        closeSheet('details');
+        S.mode = 'ult';
+        applyMode();
+      });
+    }, 0);
     return;
   }
 
@@ -5737,6 +5786,10 @@ function openSheet(id, opener) {
   sheetOpener = opener || document.activeElement;
   $('#app').inert = true; $('#app').setAttribute('aria-hidden', 'true');
   sheet.hidden = false;
+  if (id === 'details') {
+    document.body.classList.add('details-open');
+    $('.details-body', sheet).scrollTop = 0;
+  }
   /* the print rules key off this, so printing while the notes are open
      prints the notes and nothing else */
   if (id === 'notes') { document.body.classList.add('notes-open'); $('#notes-body').scrollTop = 0; }
@@ -5745,6 +5798,7 @@ function openSheet(id, opener) {
 function closeSheet(id) {
   const sheet = $('#' + id); sheet.hidden = true;
   if (id === 'notes') document.body.classList.remove('notes-open');
+  if (id === 'details') document.body.classList.remove('details-open');
   if (!$$('.overlay.sheet').some(x => !x.hidden)) { $('#app').inert = false; $('#app').removeAttribute('aria-hidden'); }
   if (sheetOpener && document.contains(sheetOpener) && !sheetOpener.disabled) sheetOpener.focus();
   sheetOpener = null;
@@ -5916,8 +5970,8 @@ those scores over time. When it chooses, it gives priority to the legal moves wh
 have the strongest learned scores.</p>
 <h4>How to read a score</h4>
 <p>A positive score means the resulting board has tended to work out well for the player who just
-moved; a negative score means the opposite. It is a learned priority, not a spoken reason. Show its
-brain makes those priorities visible square by square.</p>
+moved; a negative score means the opposite. It is a learned priority, not a spoken reason. <b>Show
+move scores</b> makes those priorities visible square by square.</p>
 <h4>Why it explores</h4>
 <p>Early in training it sometimes tries a random legal move. That produces experience about choices
 it would otherwise ignore. As practice grows, it relies more often on its strongest current score.</p>
@@ -5966,8 +6020,10 @@ function applyMode() {
   });
   document.body.classList.toggle('step-rules', rules);
   document.body.classList.toggle('step-ult', ult);
-  $('#how-head span').textContent = rules ? 'Rules, learning, and which is better'
-                                          : 'How is it learning?';
+  $('#how-title').textContent = rules ? 'How learning differs from written rules'
+    : isNet() ? 'How the neural network works'
+    : ult ? 'How the representation works'
+    : 'How the learning works';
   const howStart = $('.sheet-foot [data-close="howto"]', $('#howto'));
   if (howStart) howStart.textContent = isNet() ? 'Explore neural networks' : rules ? 'Play the rules' : 'Explore machine learning';
   $('#how-body').innerHTML = isNet() ? NEURAL_HOW : TABLE_HOW;
@@ -6050,6 +6106,10 @@ $('#btn-learned').addEventListener('click', e => {
   openSheet('learned', e.currentTarget);
 });
 $('#btn-settings').addEventListener('click', e => openSheet('settings', e.currentTarget));
+$('#btn-details').addEventListener('click', e => {
+  renderBanner();
+  openSheet('details', e.currentTarget);
+});
 /* The instructions have one home and two doors: the ? in the brand bar,
    which is on screen at every size, and the entry in Settings. Both land
    on the same sheet, so there is nothing to keep in step. */
@@ -6071,13 +6131,6 @@ $('#btn-reset').addEventListener('click', () => {
   S.seed = $('#in-seed').value.trim();
   resetAll(true);
   closeSheet('settings');
-});
-
-const howHead = $('#how-head');
-howHead.addEventListener('click', () => {
-  const open = howHead.getAttribute('aria-expanded') === 'true';
-  howHead.setAttribute('aria-expanded', String(!open));
-  $('#how-body').hidden = open;
 });
 
 /* Deep links keep the public one-page URL while selecting a real stage. */

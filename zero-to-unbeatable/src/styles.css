@@ -78,6 +78,7 @@ body {
   min-height: 100vh; min-height: 100dvh;
   overflow-x: hidden;
 }
+body.details-open { overflow: hidden; }
 
 :focus-visible { outline: 3px solid var(--lite); outline-offset: 2px; }
 
@@ -157,6 +158,13 @@ body.presenter #app { width: 100%; }
 .lesson-strip span { display: block; margin-bottom: .35em; color: #006b9a; font-size: calc(.59 * var(--u)); font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
 .lesson-strip article:first-child span { color: #7B5A00; }
 .lesson-strip p { margin: 0; color: var(--paper-muted); font-size: calc(.9 * var(--u)); line-height: 1.35; }
+.stage-tools { display: flex; justify-content: flex-end; margin-top: calc(.55 * var(--u)); }
+#btn-details {
+  flex: 0 0 auto; min-height: calc(2.55 * var(--u)); padding-inline: calc(.8 * var(--u));
+  color: var(--navy); background: #fff; border-color: #AAB7C6;
+}
+#btn-details::after { content: '\2192'; color: #006b9a; }
+.details-hint { color: var(--paper-muted); font-size: calc(.7 * var(--u)); font-weight: 600; }
 #col-a { min-width: 0; padding: calc(1 * var(--u)); border-radius: 22px; color: var(--ink); background: var(--navy); box-shadow: 0 18px 48px rgba(0,33,68,.16); }
 #col-b { min-width: 0; }
 
@@ -329,26 +337,34 @@ select {
   border: 1px solid var(--paper-line); border-left: 5px solid var(--gold);
 }
 #banner h3 { font: 700 calc(1.12 * var(--u))/1.25 Georgia, "Times New Roman", serif; margin-bottom: calc(.4 * var(--u)); color: var(--navy); }
-#banner p { font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.55; }
+#banner p { font-size: calc(.88 * var(--u)); color: var(--paper-muted); line-height: 1.55; }
 #banner p + p { margin-top: calc(.45 * var(--u)); }
 #banner .proof {
-  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--paper-muted);
+  margin-top: calc(.55 * var(--u)); font-size: calc(.72 * var(--u)); color: var(--paper-muted);
   border-top: 1px solid var(--paper-line); padding-top: calc(.45 * var(--u));
   font-variant-numeric: tabular-nums;
 }
 
-/* ---------------------------------------------------------- accordion */
-.accordion { padding: 0; overflow: hidden; background: #fff; border-color: var(--paper-line); }
-.acc-head {
-  width: 100%; background: none; border: 0; color: var(--navy);
-  font-family: inherit; font-size: calc(.86 * var(--u)); font-weight: 700;
-  padding: calc(.7 * var(--u)); display: flex; justify-content: space-between;
-  align-items: center; cursor: pointer; min-height: calc(2.9 * var(--u)); text-align: left;
+/* ----------------------------------------------------------- details */
+#details.overlay.sheet { place-items: stretch end; }
+#details .details-drawer {
+  width: min(580px, calc(100vw - 24px)); max-width: none; height: 100dvh; max-height: 100dvh;
+  border: 0; border-left: 4px solid var(--gold); border-radius: var(--r) 0 0 var(--r);
+  animation: drawer-in .22s ease;
 }
-.acc-head .chev { transition: transform .18s ease; color: var(--gold); }
-.acc-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
-.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.6; }
-.acc-body h4 { color: #006b9a; font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
+@keyframes drawer-in { from { transform: translateX(24px); opacity: .4 } to { transform: none; opacity: 1 } }
+.details-drawer .sheet-head { padding-top: calc(.8 * var(--u) + var(--safe-t)); }
+.details-body { display: flex; flex-direction: column; gap: calc(.8 * var(--u)); }
+.details-explainer {
+  padding: calc(.85 * var(--u)); background: #fff; border: 1px solid var(--paper-line);
+  border-radius: var(--r);
+}
+.details-explainer > h3 {
+  color: var(--navy); font: 700 calc(1.12 * var(--u))/1.25 Georgia, "Times New Roman", serif;
+  margin-bottom: calc(.55 * var(--u));
+}
+.acc-body { font-size: calc(.9 * var(--u)); color: var(--paper-muted); line-height: 1.6; }
+.acc-body h4 { color: #006b9a; font-size: calc(.9 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
 .acc-body h4:first-child { margin-top: 0; }
 .acc-body p + p { margin-top: calc(.5 * var(--u)); }
 .acc-body b { color: var(--navy); }
@@ -643,6 +659,9 @@ body.step-rules #board {
   .lesson-strip article { display: grid; grid-template-columns: 4.6rem 1fr; gap: .5rem; align-items: start; }
   .lesson-strip span { margin: .12em 0 0; }
   .lesson-strip p { font-size: calc(.875 * var(--u)); }
+  .stage-tools { justify-content: stretch; }
+  #btn-details { width: 100%; }
+  #details .details-drawer { width: calc(100vw - 8px); }
 }
 
 body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 420px); }
@@ -860,8 +879,8 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
 .score3 .w b { color: var(--gold); } .score3 .d b { color: var(--ink-2); } .score3 .l b { color: var(--warm); }
 
 /* the quieter banner used where no proof is possible */
-#banner.quiet { border-color: var(--line-2); border-width: 1px; background: linear-gradient(160deg, #052a55, #002144 70%); }
-#banner.quiet h3 { color: var(--ink); }
+#banner.quiet { border-color: #B7DCEB; border-left-color: var(--lite); background: #F2FAFD; }
+#banner.quiet h3 { color: var(--navy); }
 
 /* Shorter still — a 320x568 iPhone SE 1st gen. Nothing is dropped, the
    rhythm just tightens, because the TRAIN button has to stay on screen
