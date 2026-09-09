@@ -640,6 +640,7 @@ body.step-rules #board {
 
 @media (max-width: 520px) {
   #topbar { width: min(100% - 28px, 1180px); }
+  .brand-context { display: none; }
   .icon-btn { width: calc(2.75 * var(--u)); padding: 0; }
   .icon-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .lesson-strip { grid-template-columns: 1fr; }
@@ -1008,7 +1009,7 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink); border-bottom: 0; font
   <div id="brandbar">
   <header id="topbar">
     <div id="brand">
-      <span class="b0">Murray State University · AI literacy</span>
+      <span class="b0">Murray State University<span class="brand-context"> · AI literacy</span></span>
       <span class="b1">Types of AI</span>
     </div>
     <div class="header-actions">
