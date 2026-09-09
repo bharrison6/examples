@@ -1,13 +1,17 @@
-# Ladder Lab — a browser PLC trainer built on the stoplight program
+# PLC Ladder Logic Trainer — a browser PLC trainer built on the stoplight program
 
-Open `index.html` in any modern browser. **Nothing to install, no server, no network** — it
-runs offline on school Chromebooks straight off a USB stick or a shared drive.
+*Ladder Lab.* Open `index.html` in any modern browser. **Nothing to install, no server, no
+network** — it runs offline on school Chromebooks straight off a USB stick or a shared drive.
 
 | File | What it is |
 |---|---|
-| `index.html` | The whole app — one self-contained file (~400 KB), built from `src/`. |
+| `index.html` | The whole app — one self-contained file (~410 KB), built from `src/`. |
 | `teacher-guide.html` | One-page printable teacher guide (hit **Print** in the corner). |
 | `Ladder-Lab-Teacher-Guide.pdf` | The same guide, pre-rendered to one Letter page. |
+
+The teacher guide is also the app's presenter notes: `build.js` lifts it out of
+`src/teacher-guide.html` and into `index.html`, so the printed sheet, the PDF and
+**⚙ Settings → Open Presenter Notes** are one document from one source.
 
 ## What makes it a real PLC and not an animation
 
@@ -59,49 +63,65 @@ output instructions passing power through and double-coil "last write wins".
 
 ## Getting oriented
 
-A **how-to** overlay opens on every load — the scan cycle, step mode, and challenges in one
+The **Guide** overlay opens on every load — the scan cycle, step mode, and challenges in one
 screen. Dismiss it with the **×**, a tap outside, or **Esc**; the **?** button in the top bar
 reopens it any time.
 
 ## Teacher features
 
-**⚙ Settings** menu: **presentation mode** (large UI, plus a one-tap presenter's-notes button
-in the top bar), hide-ladder-pane (have the class predict the logic from the intersection,
-then reveal it), reset everything, and an engine self-test that runs 21 assertions about scan
-semantics in front of the class.
+**⚙ Settings**, beside the **?**, offers three things first:
 
-**Presenter's notes** — openable from the Settings menu at any time — are stage notes for the
-45-minute lab: run of show, the three points to make out loud, misconceptions to head off,
-debrief questions, and a program cheat sheet. They are distilled from `teacher-guide.html`,
-which stays available in full (in-app or printable) from the same menu.
+- **Open Presenter Notes** — the teacher guide itself, inside the app.
+- **Presentation mode** — large UI for the projector, plus a one-tap notes button in the top bar.
+- **Reset** — back to the just-opened state, program and editor and faults and all. It reloads,
+  so it is a fresh load by construction. Presentation mode is a display preference rather than
+  demo state and stays on across it, the same way it survives a reload; the Guide does not
+  reopen.
+
+Below those sit this demo's own controls: hide-ladder-pane (have the class predict the logic
+from the intersection, then reveal it), the printable teacher guide, and an engine self-test
+that runs 21 assertions about scan semantics in front of the class.
+
+**Presenter Notes are the teacher guide**, not a summary of it — the same 45-minute lesson
+plan, misconceptions, discussion questions and cheat sheet you would print. `build.js` injects
+it from `src/teacher-guide.html` at build time, so there is nothing to fetch at runtime and
+nothing to keep in step by hand; `node build.js --check` fails if they ever drift.
+
+The top bar's **⟲ Reset PLC** is a different, smaller thing: it restarts the scan and the
+intersection and leaves the program alone.
 
 Keyboard: **Space** run/pause, **.** step one scan.
 
 ## Developing
 
 Sources live in `src/` and are concatenated by `build.js` into the single file. Never hand-edit
-`index.html` — edit `src/`, rebuild, and copy the output up:
+`index.html` or `teacher-guide.html` in this folder — edit `src/` and rebuild. One command
+writes every generated copy; there is no copy-up step:
 
 ```
-node build.js                  # src/ -> dist/index.html + dist/teacher-guide.html
-cp dist/index.html index.html            # the committed runnable copy
-cp dist/teacher-guide.html teacher-guide.html
+node build.js                  # writes index.html + teacher-guide.html to dist/ AND here
+node build.js --check          # verifies all four match src/, writes nothing
 ```
 
-The printable PDF is rendered from the guide:
+`--check` is also what proves the in-app presenter notes still equal the guide: the notes are
+sliced out of `src/teacher-guide.html` at build time, so any drift makes the committed
+`index.html` stale and the check fails.
+
+The printable PDF is rendered from the shipped guide by an installed Chrome or Edge (no
+dependency to install):
 
 ```
-chrome --headless --no-pdf-header-footer \
-  --print-to-pdf=Ladder-Lab-Teacher-Guide.pdf teacher-guide.html
+node tools/pdf.mjs             # teacher-guide.html -> Ladder-Lab-Teacher-Guide.pdf (one page)
 ```
 
-Test suites (the first four are pure node, no browser needed):
+Test suites (the first five are pure node, no browser needed):
 
 ```
 node src/engine.js --test      # 21 scan-cycle / instruction semantics tests
 node src/programs.test.js      # 147 behavioural tests over the 7 programs + 11 faults
 node src/challenges.test.js    #  83 grader tests incl. reference solutions and review regression ratchets
 node src/sim.test.js           #  intersection determinism
+node build.js --check          #  generated files match src/, notes still equal the guide
 node tools/integration.mjs     #  full browser playtest of dist/ (needs playwright + Chrome);
                                #  desktop, 1366x768 Chromebook and 390x844 phone passes
 ```

@@ -3,48 +3,81 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ladder Lab — Teacher Guide (printable)</title>
-<style>
-  :root { --ink:#1d2126; --accent:#b57e00; --rule:#c9c9c2; }
+<title>PLC Ladder Logic Trainer — Teacher Guide (printable)</title>
+
+<!-- Page chrome for the standalone printable sheet. NOT injected into the app:
+     build.js lifts only the scoped stylesheet and the guide-scope div, so
+     nothing in this block can leak a page-level rule into index.html. -->
+<style id="guide-page">
+  @page { size: letter; margin: .38in; }
   * { box-sizing: border-box; }
-  body { font-family: Georgia, 'Times New Roman', serif; color: var(--ink); background:#e9e9e5;
-         margin:0; padding:20px; font-size: 10.4px; line-height: 1.28; }
-  .page { background:#fff; width: 8.5in; margin: 0 auto; padding: .34in .4in;
-          box-shadow: 0 6px 30px rgba(0,0,0,.25); }
-  h1 { font-family: system-ui, sans-serif; letter-spacing:.6px; font-size: 17px; margin:0;
-       border-bottom: 2.5px solid var(--accent); padding-bottom: 3px; }
-  h1 small { font-weight: 400; color:#666; font-size: 9.6px; letter-spacing: 0; }
-  h2 { font-family: system-ui, sans-serif; font-size: 10.4px; text-transform: uppercase;
-       letter-spacing: 1px; color: var(--accent); margin: 8px 0 2px; }
-  p, li { margin: 2px 0; }
-  ul, ol { margin: 2px 0; padding-left: 15px; }
-  .cols { display: flex; gap: 14px; }
-  .cols > div { flex: 1; min-width: 0; }
-  .trio { display: flex; gap: 14px; }
-  .trio > div { flex: 1; min-width: 0; }
-  .trio h2 { margin-top: 6px; }
-  table { border-collapse: collapse; width: 100%; margin-top: 2px; }
-  td, th { border: 1px solid var(--rule); padding: 2px 4px; vertical-align: top; text-align: left; }
-  th { font-family: system-ui, sans-serif; font-size: 9px; background: #f4f1e8; }
-  .mins { white-space: nowrap; font-family: system-ui, sans-serif; font-weight: 700; font-size: 9px; }
-  .tag { font-family: ui-monospace, Consolas, monospace; font-size: 9.4px; background:#f2f2ee; padding: 0 2px; }
-  .foot { margin-top: 7px; border-top: 1px solid var(--rule); padding-top: 4px; font-size: 9px; color:#555;
-          display:flex; justify-content: space-between; gap: 10px; }
-  .printbtn { position: fixed; top: 14px; right: 14px; font-family: system-ui,sans-serif; font-size: 14px;
-              background: var(--accent); color:#fff; border:0; border-radius: 8px; padding: 10px 16px; cursor:pointer; }
+  body { margin: 0; padding: 20px; background: #e9e9e5; }
+  body > .guide-scope {
+    background: #fff; width: 8.5in; margin: 0 auto; padding: .34in .4in;
+    box-shadow: 0 6px 30px rgba(0,0,0,.25);
+  }
+  .printbtn { position: fixed; top: 14px; right: 14px; font-family: system-ui, sans-serif; font-size: 14px;
+              background: #b57e00; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; }
   @media print {
-    body { background:#fff; padding:0; }
-    .page { box-shadow:none; width:auto; padding: 0; }
-    .printbtn { display:none; }
-    @page { size: letter; margin: .38in; }
+    body { background: #fff; padding: 0; }
+    body > .guide-scope { box-shadow: none; width: auto; padding: 0; }
+    .printbtn { display: none !important; }
+  }
+</style>
+
+<!-- The guide's own typography. Every selector is scoped, and every size is in
+     em off the one root size, so the app can raise that root for the screen and
+     nothing else changes. This is the block build.js injects verbatim into
+     index.html, which is how the in-app presenter notes and this printed sheet
+     end up being one document from one source. Located by its id, never by a
+     bare style-tag search. -->
+<style id="guide-css">
+  .guide-scope {
+    --gl-ink: #1d2126; --gl-accent: #b57e00; --gl-rule: #c9c9c2;
+    font-family: Georgia, 'Times New Roman', serif;
+    color: var(--gl-ink);
+    font-size: 10.4px;
+    line-height: 1.28;
+  }
+  .guide-scope * { box-sizing: border-box; }
+  .guide-scope h1 {
+    font-family: system-ui, sans-serif; letter-spacing: .035em; font-size: 1.64em; margin: 0;
+    color: var(--gl-ink); border-bottom: .147em solid var(--gl-accent); padding-bottom: .176em;
+  }
+  .guide-scope h1 small { font-weight: 400; color: #666; font-size: .565em; letter-spacing: 0; }
+  .guide-scope h2 {
+    font-family: system-ui, sans-serif; font-size: 1em; text-transform: uppercase;
+    letter-spacing: .096em; color: var(--gl-accent); margin: .77em 0 .19em;
+  }
+  .guide-scope p, .guide-scope li { margin: .19em 0; }
+  .guide-scope ul, .guide-scope ol { margin: .19em 0; padding-left: 1.44em; }
+  .guide-scope .cols, .guide-scope .trio { display: flex; gap: 1.35em; }
+  .guide-scope .cols > div, .guide-scope .trio > div { flex: 1; min-width: 0; }
+  .guide-scope .trio h2 { margin-top: .58em; }
+  .guide-scope table { border-collapse: collapse; width: 100%; margin-top: .19em; }
+  .guide-scope td, .guide-scope th {
+    border: 1px solid var(--gl-rule); padding: .19em .385em; vertical-align: top; text-align: left;
+  }
+  .guide-scope th { font-family: system-ui, sans-serif; font-size: .865em; background: #f4f1e8; }
+  .guide-scope .mins { white-space: nowrap; font-family: system-ui, sans-serif; font-weight: 700; font-size: .865em; }
+  .guide-scope .tag { font-family: ui-monospace, Consolas, monospace; font-size: .904em; background: #f2f2ee; padding: 0 .2em; }
+  .guide-scope .foot {
+    margin-top: .67em; border-top: 1px solid var(--gl-rule); padding-top: .385em; font-size: .865em; color: #555;
+    display: flex; justify-content: space-between; gap: .96em;
+  }
+  /* Narrow screens: the three- and two-column bands stack. The printed sheet is
+     8.5in wide and never reaches this. */
+  @media (max-width: 700px) {
+    .guide-scope .cols, .guide-scope .trio, .guide-scope .foot { display: block; }
+    .guide-scope .foot span + span { display: block; margin-top: .3em; }
   }
 </style>
 </head>
 <body>
 <button class="printbtn" onclick="window.print()">🖨 Print</button>
-<div class="page">
+<div class="guide-scope">
 
-  <h1>LADDER LAB — Teacher Guide <small>· the stoplight PLC lab · one page · runs fully offline</small></h1>
+  <h1>PLC LADDER LOGIC TRAINER — Teacher Guide <small>· Ladder Lab · the stoplight PLC lab · one page · runs fully offline</small></h1>
 
   <div class="trio">
     <div>
@@ -52,7 +85,7 @@
       <p>A PLC is not event-driven. Forever, it: <b>(1) reads all inputs</b> into an <i>input image table</i> (a snapshot),
       <b>(2) solves the ladder top-to-bottom, left-to-right</b> using that snapshot, <b>(3) writes all outputs</b> at once from the
       <i>output image table</i>. One lap = one <b>scan</b> (real PLCs: ~1–20&nbsp;ms). Pressing a button does <i>nothing</i> until the next
-      input read — Ladder Lab's <b>Step Scan</b> button and the image tables let students watch this happen, which no physical trainer can show.</p>
+      input read — the trainer's <b>Step Scan</b> button and the image tables let students watch this happen, which no physical trainer can show.</p>
     </div>
     <div>
       <h2>Why rung order matters</h2>
@@ -120,9 +153,9 @@
   </table>
 
   <div class="foot">
-    <span><b>Settings menu (⚙):</b> presentation mode (big UI + presenter's notes) · hide ladder (predict-then-reveal) · engine self-test · reset everything. The <b>?</b> button reopens the how-to.</span>
-    <span>Ladder Lab · fully offline · deterministic</span>
+    <span><b>Settings menu (&#9881;):</b> Open Presenter Notes (this guide, inside the app) &middot; Presentation mode (big UI) &middot; Reset &middot; plus hide-ladder for predict-then-reveal, the printable guide and the engine self-test. The <b>?</b> button opens the Guide.</span>
+    <span>PLC Ladder Logic Trainer &middot; Ladder Lab &middot; fully offline &middot; deterministic</span>
   </div>
-</div>
+</div><!-- /guide -->
 </body>
 </html>
