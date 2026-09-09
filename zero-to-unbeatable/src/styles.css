@@ -28,12 +28,17 @@
   --lite:    #00A4E3;          /* brand accent */
   --warm:    #FF4500;          /* brand accent, sparingly */
 
-  --bg:      #00142B;          /* a shade under brand navy */
+  --bg:      #FFFDF8;
   --bg-2:    #001B3A;
   --panel:   #002144;
   --panel-2: #0A3161;
   --line:    #14406F;
   --line-2:  #1E5490;
+  --paper:   #FFFDF8;
+  --paper-2: #F2F0E9;
+  --paper-line: #D7D5CC;
+  --paper-ink: #132238;
+  --paper-muted: #536174;
 
   --ink:     #F3F7FF;
   --ink-2:   #A9C0DD;
@@ -55,7 +60,7 @@
   :root { --u: .94rem; }
 }
 
-body.presenter { --u: 1.5rem; }
+body.presenter { --u: 1.25rem; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
@@ -65,11 +70,8 @@ body.presenter { --u: 1.5rem; }
 html { -webkit-text-size-adjust: 100%; }
 
 body {
-  background:
-    radial-gradient(120% 60% at 50% 0%, #063061 0%, transparent 60%),
-    var(--bg);
-  background-attachment: fixed;
-  color: var(--ink);
+  background: var(--paper);
+  color: var(--paper-ink);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   font-size: var(--u);
   line-height: 1.4;
@@ -79,28 +81,30 @@ body {
 
 :focus-visible { outline: 3px solid var(--lite); outline-offset: 2px; }
 
-#app { max-width: calc(29 * var(--u)); margin: 0 auto; padding: 0 calc(.7 * var(--u)); }
-body.presenter #app { max-width: calc(25 * var(--u)); }
+#app { width: 100%; }
+body.presenter #app { width: 100%; }
 
 /* ---------------------------------------------------------------- top */
 /* The wordmark and the gold rule stay pinned together, so the brand bar
    reads as one object and page content never peeks through it. */
 #brandbar {
   position: sticky; top: 0; z-index: 30;
-  background: var(--bg); padding-bottom: calc(.55 * var(--u));
+  background: var(--navy);
+  border-bottom: 3px solid var(--gold);
 }
 #topbar {
   display: flex; align-items: center; justify-content: space-between; gap: calc(.5 * var(--u));
-  padding: calc(.5 * var(--u) + var(--safe-t)) calc(.1 * var(--u)) calc(.4 * var(--u));
+  width: min(1180px, calc(100% - 40px)); margin-inline: auto;
+  padding: calc(.75 * var(--u) + var(--safe-t)) 0 calc(.72 * var(--u));
 }
 #brand { min-width: 0; }
 #brand .b0 {
-  display: block; font-size: calc(.56 * var(--u)); letter-spacing: .2em; font-weight: 700;
+  display: block; font-size: calc(.58 * var(--u)); letter-spacing: .18em; font-weight: 800;
   text-transform: uppercase; color: var(--gold); white-space: nowrap;
 }
 #brand .b1 {
-  display: block; font-weight: 800; letter-spacing: .1em; line-height: 1.05;
-  font-size: calc(1.22 * var(--u)); color: var(--ink); margin-top: 1px;
+  display: block; font-family: Georgia, "Times New Roman", serif; font-weight: 700; letter-spacing: -.02em; line-height: 1.05;
+  font-size: calc(1.55 * var(--u)); color: var(--ink); margin-top: .12em;
 }
 #brand .b1 em {
   font-style: normal; font-weight: 600; letter-spacing: .12em; text-transform: uppercase;
@@ -108,28 +112,45 @@ body.presenter #app { max-width: calc(25 * var(--u)); }
 }
 .icon-btn {
   flex: 0 0 auto;
-  background: var(--panel); border: 1px solid var(--line-2); color: var(--gold);
-  width: calc(2.7 * var(--u)); height: calc(2.7 * var(--u));
-  border-radius: 50%; font-size: calc(1.1 * var(--u)); cursor: pointer;
-  display: grid; place-items: center; line-height: 1;
+  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.24); color: var(--ink);
+  min-width: calc(2.8 * var(--u)); min-height: calc(2.8 * var(--u)); padding: 0 calc(.75 * var(--u));
+  border-radius: 999px; font-size: calc(.95 * var(--u)); cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: .45em; line-height: 1;
 }
 .icon-btn:active { background: var(--panel-2); }
+.header-actions { display: flex; gap: calc(.45 * var(--u)); }
+.icon-label { font-size: calc(.72 * var(--u)); font-weight: 800; }
 @media (max-width: 430px) {
   #brand .b1 { white-space: nowrap; font-size: calc(1.05 * var(--u)); letter-spacing: .055em; }
   #brand .b1 em { display: none; }
 }
 
 /* the brand rule: gold, then the accent blue */
-#rule { height: 3px; border-radius: 3px;
-        background: linear-gradient(90deg, var(--gold) 0 62%, var(--lite) 62% 100%); }
-
-#main { padding-bottom: calc(1.2 * var(--u) + var(--safe-b)); }
+#main {
+  width: min(1180px, calc(100% - 40px)); margin-inline: auto;
+  display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(360px, .85fr);
+  gap: calc(1.35 * var(--u)); align-items: start;
+  padding: calc(1.05 * var(--u)) 0 calc(2 * var(--u) + var(--safe-b));
+}
+#stage-intro { grid-column: 1 / -1; color: var(--paper-ink); }
+.intro-copy { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, .7fr); gap: 8px 48px; align-items: end; }
+.eyebrow { grid-column: 1 / -1; margin: 0; color: #006b9a; font-size: calc(.7 * var(--u)); font-weight: 850; letter-spacing: .16em; text-transform: uppercase; }
+#stage-title { margin: 0; color: var(--navy); font: 700 clamp(2rem, 3.6vw, 2.65rem)/1 Georgia, "Times New Roman", serif; letter-spacing: -.035em; }
+.frame-question { margin: 0; color: var(--paper-muted); font-size: calc(.9 * var(--u)); line-height: 1.4; }
+.learning-question { grid-column: 1 / -1; margin: calc(.65 * var(--u)) 0 0; padding-top: calc(.7 * var(--u)); border-top: 1px solid var(--paper-line); color: var(--navy); font: 700 calc(1.25 * var(--u))/1.25 Georgia, "Times New Roman", serif; }
+.lesson-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: calc(.6 * var(--u)); overflow: hidden; border: 1px solid var(--paper-line); border-radius: 14px; background: var(--paper-line); }
+.lesson-strip article { padding: calc(.58 * var(--u)) calc(.7 * var(--u)); background: #fff; }
+.lesson-strip span { display: block; margin-bottom: .35em; color: #006b9a; font-size: calc(.59 * var(--u)); font-weight: 850; letter-spacing: .13em; text-transform: uppercase; }
+.lesson-strip article:first-child span { color: #7B5A00; }
+.lesson-strip p { margin: 0; color: var(--paper-muted); font-size: calc(.9 * var(--u)); line-height: 1.35; }
+#col-a { min-width: 0; padding: calc(1 * var(--u)); border-radius: 22px; color: var(--ink); background: var(--navy); box-shadow: 0 18px 48px rgba(0,33,68,.16); }
+#col-b { min-width: 0; }
 
 /* ------------------------------------------------------------- panels */
 .panel {
   background: var(--panel); border: 1px solid var(--line);
   border-radius: var(--r); padding: calc(.7 * var(--u));
-  margin-bottom: calc(.6 * var(--u));
+  margin-bottom: calc(.6 * var(--u)); color: var(--ink);
 }
 .lbl {
   font-size: calc(.6 * var(--u)); letter-spacing: .16em; text-transform: uppercase;
@@ -139,7 +160,7 @@ body.presenter #app { max-width: calc(25 * var(--u)); }
 .row { display: flex; gap: calc(.5 * var(--u)); align-items: center; flex-wrap: wrap; }
 
 /* ---------------------------------------------------------- opponent */
-#opponent-panel { padding: calc(.6 * var(--u)); }
+#opponent-panel { padding: 0 0 calc(.75 * var(--u)); border: 0; border-bottom: 1px solid var(--line); border-radius: 0; background: transparent; }
 #opp-row { display: flex; flex-direction: column; gap: calc(.25 * var(--u)); margin-top: calc(.45 * var(--u)); }
 select {
   width: 100%; min-width: 0;
@@ -185,7 +206,7 @@ select {
      29u is the measured height of everything else stacked above and
      below it in the one-column layout; the floor stops the board
      collapsing to nothing on a very short window. */
-  max-width: min(100%, max(calc(11 * var(--u)), calc(100dvh - 29 * var(--u))));
+  max-width: min(100%, 340px);
   margin-inline: auto;
 }
 .cell {
@@ -238,6 +259,7 @@ select {
   cursor: pointer; min-height: calc(2.75 * var(--u)); flex: 1;
   display: inline-flex; align-items: center; justify-content: center; gap: .4em;
 }
+.btn:hover, .seg button:hover, .icon-btn:hover { filter: brightness(1.1); }
 .btn:active { transform: translateY(1px); }
 .btn.primary {
   background: linear-gradient(180deg, #FFC42B, var(--gold));
@@ -251,7 +273,7 @@ select {
 .btn.big .t-sub { font-size: calc(.68 * var(--u)); opacity: .78; font-weight: 700; }
 .btn:disabled { opacity: .45; cursor: default; }
 
-#play-controls { display: flex; gap: calc(.45 * var(--u)); padding: calc(.4 * var(--u)); }
+#play-controls { display: flex; gap: calc(.45 * var(--u)); padding: calc(.4 * var(--u)); margin-bottom: 0; }
 
 /* ------------------------------------------------------ brain readout */
 #brain-readout {
@@ -265,7 +287,7 @@ select {
   background: linear-gradient(90deg, #FF4500, #8A2C33, #0A3161, #97781A, #ECAC00); }
 
 /* -------------------------------------------------------------- train */
-#train-panel { border-color: var(--line-2); background: linear-gradient(180deg, #04264D, #002144); }
+#train-panel { border-color: var(--navy); background: var(--navy); box-shadow: 0 12px 34px rgba(0,33,68,.12); }
 .seg { display: flex; gap: calc(.35 * var(--u)); margin-top: calc(.5 * var(--u)); }
 .seg button {
   flex: 1; background: var(--panel-2); border: 1px solid var(--line-2); color: var(--ink-2);
@@ -288,37 +310,37 @@ select {
 #banner {
   border-radius: var(--r); padding: calc(.85 * var(--u));
   margin-bottom: calc(.6 * var(--u));
-  background: linear-gradient(160deg, #0A3161, #002144 70%);
-  border: 2px solid var(--gold);
+  background: #fff;
+  border: 1px solid var(--paper-line); border-left: 5px solid var(--gold);
 }
-#banner h3 { font-size: calc(1.02 * var(--u)); line-height: 1.25; margin-bottom: calc(.4 * var(--u)); color: var(--gold); }
-#banner p { font-size: calc(.77 * var(--u)); color: var(--ink-2); line-height: 1.55; }
+#banner h3 { font: 700 calc(1.12 * var(--u))/1.25 Georgia, "Times New Roman", serif; margin-bottom: calc(.4 * var(--u)); color: var(--navy); }
+#banner p { font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.55; }
 #banner p + p { margin-top: calc(.45 * var(--u)); }
 #banner .proof {
-  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--ink-3);
-  border-top: 1px solid var(--line-2); padding-top: calc(.45 * var(--u));
+  margin-top: calc(.55 * var(--u)); font-size: calc(.64 * var(--u)); color: var(--paper-muted);
+  border-top: 1px solid var(--paper-line); padding-top: calc(.45 * var(--u));
   font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------- accordion */
-.accordion { padding: 0; overflow: hidden; }
+.accordion { padding: 0; overflow: hidden; background: #fff; border-color: var(--paper-line); }
 .acc-head {
-  width: 100%; background: none; border: 0; color: var(--ink);
+  width: 100%; background: none; border: 0; color: var(--navy);
   font-family: inherit; font-size: calc(.86 * var(--u)); font-weight: 700;
   padding: calc(.7 * var(--u)); display: flex; justify-content: space-between;
   align-items: center; cursor: pointer; min-height: calc(2.9 * var(--u)); text-align: left;
 }
 .acc-head .chev { transition: transform .18s ease; color: var(--gold); }
 .acc-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
-.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--ink-2); line-height: 1.6; }
-.acc-body h4 { color: var(--gold); font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
+.acc-body { padding: 0 calc(.7 * var(--u)) calc(.7 * var(--u)); font-size: calc(.79 * var(--u)); color: var(--paper-muted); line-height: 1.6; }
+.acc-body h4 { color: #006b9a; font-size: calc(.8 * var(--u)); margin: calc(.8 * var(--u)) 0 calc(.2 * var(--u)); }
 .acc-body h4:first-child { margin-top: 0; }
 .acc-body p + p { margin-top: calc(.5 * var(--u)); }
-.acc-body b { color: var(--ink); }
+.acc-body b { color: var(--navy); }
 .acc-body code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .92em; color: var(--lite); }
 
-#foot { text-align: center; color: var(--ink-3); font-size: calc(.64 * var(--u)); padding: calc(.7 * var(--u)) 0; line-height: 1.6; }
-#foot .msu { color: var(--gold); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; display: block; }
+#foot { grid-column: 1 / -1; text-align: center; color: var(--paper-muted); font-size: calc(.64 * var(--u)); padding: calc(.7 * var(--u)) 0; line-height: 1.6; }
+#foot .msu { color: var(--navy); font-weight: 700; letter-spacing: .12em; text-transform: uppercase; display: block; }
 /* Standing byline, always on screen. It sits under the overlays rather
    than over them (z-index below .overlay), never takes a pointer event,
    and settles back so it cannot compete with the board. Fixed in px, not
@@ -341,46 +363,53 @@ select {
 }
 .overlay.sheet { place-items: end center; padding: 0; }
 .sheet-inner {
-  background: var(--bg-2); border: 1px solid var(--line-2); border-top: 3px solid var(--gold);
+  background: var(--paper); color: var(--paper-ink); border: 1px solid var(--paper-line); border-top: 4px solid var(--gold);
   border-radius: var(--r) var(--r) 0 0; width: 100%;
-  max-width: calc(29 * var(--u)); max-height: 92dvh; display: flex; flex-direction: column;
+  max-width: min(760px, 100%); max-height: 92dvh; display: flex; flex-direction: column;
   animation: rise .22s ease;
 }
 @keyframes rise { from { transform: translateY(18px); opacity: .4 } to { transform: none; opacity: 1 } }
 .sheet-head {
   display: flex; justify-content: space-between; align-items: flex-start; gap: calc(.5 * var(--u));
-  padding: calc(.8 * var(--u)); border-bottom: 1px solid var(--line);
+  padding: calc(.8 * var(--u)); border-bottom: 1px solid var(--paper-line);
 }
-.sheet-head h2 { font-size: calc(1.02 * var(--u)); }
-.sheet-head .sub { font-size: calc(.6 * var(--u)); letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-top: 3px; }
+.sheet-head h2 { color: var(--navy); font: 700 calc(1.35 * var(--u))/1.1 Georgia, "Times New Roman", serif; }
+.sheet-head .sub { font-size: calc(.6 * var(--u)); letter-spacing: .14em; text-transform: uppercase; color: #006b9a; margin-top: 3px; }
 .sheet-body { padding: calc(.8 * var(--u)); overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.sheet-foot { padding: calc(.7 * var(--u)); padding-bottom: calc(.7 * var(--u) + var(--safe-b)); border-top: 1px solid var(--line); display: flex; gap: calc(.5 * var(--u)); }
+.sheet-foot { padding: calc(.7 * var(--u)); padding-bottom: calc(.7 * var(--u) + var(--safe-b)); border-top: 1px solid var(--paper-line); display: flex; gap: calc(.5 * var(--u)); }
+.sheet-inner .icon-btn { color: var(--navy); background: #fff; border-color: var(--paper-line); }
+.sheet-inner .btn:not(.primary) { color: var(--navy); background: #fff; border-color: #AAB7C6; text-decoration: none; }
+.sheet-inner .lbl { color: #006b9a; }
+.sheet-inner .help, .sheet-inner .switch { color: var(--paper-muted); }
+.sheet-inner input[type=text] { background: #fff; color: var(--paper-ink); border-color: #AAB7C6; }
+.sheet-inner input[type=text]::placeholder { color: #687789; }
+.text-link { color: #005F8C; font-weight: 800; text-underline-offset: .18em; }
 /* ---------------------------------------------------- how to play */
 /* The instructions sheet borrows the app's sheet chrome wholesale; only
    the prose inside it needs rules. Everything sizes off --u, so it grows
    with presenter mode and shrinks on a short phone like the rest. */
-#howto .howto-lede { font-size: calc(.82 * var(--u)); line-height: 1.55; color: var(--ink); }
+#howto .howto-lede { font-size: calc(.88 * var(--u)); line-height: 1.55; color: var(--paper-ink); }
 #howto .howto-steps {
   list-style: none; counter-reset: howto; margin: calc(.8 * var(--u)) 0;
   display: grid; gap: calc(.55 * var(--u));
 }
 #howto .howto-steps li {
   counter-increment: howto; position: relative;
-  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  background: #fff; border: 1px solid var(--paper-line); border-radius: var(--r);
   padding: calc(.55 * var(--u)) calc(.6 * var(--u)) calc(.55 * var(--u)) calc(2.5 * var(--u));
-  font-size: calc(.76 * var(--u)); line-height: 1.5; color: var(--ink-2);
+  font-size: calc(.78 * var(--u)); line-height: 1.5; color: var(--paper-muted);
 }
-#howto .howto-steps li b { color: var(--ink); }
+#howto .howto-steps li b { color: var(--navy); }
 #howto .howto-steps li::before {
   content: counter(howto); position: absolute; left: calc(.55 * var(--u)); top: calc(.5 * var(--u));
   width: calc(1.5 * var(--u)); height: calc(1.5 * var(--u)); border-radius: 50%;
   background: var(--gold); color: var(--navy); font-weight: 800; font-size: calc(.72 * var(--u));
   display: grid; place-items: center; line-height: 1;
 }
-#howto .howto-note { font-size: calc(.74 * var(--u)); line-height: 1.55; color: var(--ink-2); margin-top: calc(.6 * var(--u)); }
-#howto .howto-note b { color: var(--gold); }
-#howto .howto-note.quiet { color: var(--ink-3); font-size: calc(.7 * var(--u)); }
-#howto .howto-note.quiet b { color: var(--ink-2); }
+#howto .howto-note { font-size: calc(.76 * var(--u)); line-height: 1.55; color: var(--paper-muted); margin-top: calc(.6 * var(--u)); }
+#howto .howto-note b { color: var(--navy); }
+#howto .howto-note.quiet { color: var(--paper-muted); font-size: calc(.7 * var(--u)); }
+#howto .howto-note.quiet b { color: var(--navy); }
 
 .field { margin-bottom: calc(1.1 * var(--u)); }
 .field:last-child { margin-bottom: 0; }
@@ -465,7 +494,7 @@ input[type=text]::placeholder { color: var(--ink-3); }
 /* Full lesson names wrap within equal-width tabs on narrow screens. */
 #mode-seg button {
   flex: 1 1 0; min-width: 0; white-space: normal; line-height: 1.3;
-  font-size: calc(.72 * var(--u)); padding-inline: calc(.25 * var(--u));
+  font-size: calc(.86 * var(--u)); padding-inline: calc(.3 * var(--u));
 }
 
 #depth-seg { margin-top: 0; flex: 1 1 auto; }
@@ -487,7 +516,7 @@ body.step-ult #opp-row select { flex: 1 1 auto; width: auto; min-width: 0; }
    the board — so the board yields a little further here, exactly as it
    does for the TRAIN button in step 2. Same principle, same place. */
 body.step-rules #board {
-  max-width: min(100%, max(calc(9 * var(--u)), calc(100dvh - 33 * var(--u))));
+  max-width: min(100%, 340px);
 }
 
 /* The commentary line under the board: which rule answered you. */
@@ -495,7 +524,7 @@ body.step-rules #board {
   background: var(--panel); border: 1px solid var(--lite); border-left-width: 3px;
   border-radius: var(--r); padding: calc(.55 * var(--u)) calc(.65 * var(--u));
   margin-bottom: calc(.55 * var(--u));
-  font-size: calc(.74 * var(--u)); color: var(--ink-2); line-height: 1.5;
+  font-size: calc(.875 * var(--u)); color: var(--ink-2); line-height: 1.5;
 }
 #rule-fired.waiting { border-color: var(--line-2); color: var(--ink-3); }
 #rule-fired.nofire  { border-color: var(--warm); }
@@ -526,8 +555,8 @@ body.step-rules #board {
   padding: 1px 0; line-height: 1.5;
 }
 .rule .rt { flex: 1 1 auto; min-width: 0; }
-.rule .rt b { display: block; font-size: calc(.76 * var(--u)); color: var(--ink); font-weight: 700; }
-.rule .rg { display: block; font-size: calc(.62 * var(--u)); color: var(--ink-3); line-height: 1.35; }
+.rule .rt b { display: block; font-size: calc(.875 * var(--u)); color: var(--ink); font-weight: 700; }
+.rule .rg { display: block; font-size: calc(.875 * var(--u)); color: var(--ink-2); line-height: 1.35; }
 .rule .rc {
   flex: 0 0 auto; font-size: calc(.6 * var(--u)); color: var(--ink-3);
   font-variant-numeric: tabular-nums; padding-top: 2px;
@@ -544,7 +573,7 @@ body.step-rules #board {
 .rule.fallback.fired { border-color: var(--warm); background: var(--panel-2); }
 .rule.fallback.fired .rt b { color: var(--warm); }
 .rp-foot {
-  margin-top: calc(.5 * var(--u)); font-size: calc(.66 * var(--u));
+  margin-top: calc(.5 * var(--u)); font-size: calc(.8 * var(--u));
   color: var(--ink-3); line-height: 1.5;
   border-top: 1px solid var(--line); padding-top: calc(.4 * var(--u));
 }
@@ -568,18 +597,32 @@ body.step-rules #board {
 /* Wide AND not much taller than it is wide: catches laptops, tablets in
    landscape and a phone turned sideways, but leaves a portrait tablet as
    one tall column where it belongs. */
-@media (min-width: 760px) and (min-aspect-ratio: 4/5) {
-  /* presenter mode is listed too: `body.presenter #app` out-specifies a
-     bare `#app`, so without it a projector collapses back to one column
-     with an enormous board and the TRAIN button off the bottom */
-  #app, body.presenter #app { max-width: calc(50 * var(--u)); }
-  #main { display: flex; align-items: flex-start; gap: calc(.8 * var(--u)); flex-wrap: wrap; }
-  #col-a { flex: 1 1 calc(20 * var(--u)); min-width: 0; }
-  #col-b { flex: 1 1 calc(18 * var(--u)); min-width: 0; }
-  #foot  { flex: 1 0 100%; }
-  /* side by side, so only column A has to fit the board */
-  #board { max-width: min(100%, max(calc(11 * var(--u)), calc(100dvh - 13 * var(--u)))); }
+@media (max-width: 820px) {
+  #main { grid-template-columns: 1fr; width: min(100% - 28px, 1180px); padding-top: calc(1.1 * var(--u)); }
+  #stage-intro, #foot { grid-column: 1; }
+  .intro-copy { grid-template-columns: 1fr; gap: 8px; }
+  .eyebrow, .learning-question { grid-column: 1; }
+  #stage-title { font-size: clamp(2rem, 10vw, 3rem); }
+  .lesson-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lesson-strip article { padding: calc(.62 * var(--u)); }
+  .lesson-strip p { font-size: calc(.68 * var(--u)); }
+  #col-b { display: flex; flex-direction: column; }
+  #train-panel { order: -2; }
+  #rules-panel { order: -2; }
+  #banner { order: -1; }
 }
+
+@media (max-width: 520px) {
+  #topbar { width: min(100% - 28px, 1180px); }
+  .icon-btn { width: calc(2.75 * var(--u)); padding: 0; }
+  .icon-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .lesson-strip { grid-template-columns: 1fr; }
+  .lesson-strip article { display: grid; grid-template-columns: 4.6rem 1fr; gap: .5rem; align-items: start; }
+  .lesson-strip span { margin: .12em 0 0; }
+  .lesson-strip p { font-size: calc(.875 * var(--u)); }
+}
+
+body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 440px); }
 
 /* A phone held sideways has almost no height to spare. Stop the sticky
    header eating a fifth of it, tighten the rhythm, and fold the opponent
@@ -593,7 +636,14 @@ body.step-rules #board {
   #mode-seg { flex: 0 0 auto; }
   #score-row { margin-top: 0; flex: 0 0 auto; }
   .sc { padding-inline: calc(.4 * var(--u)); }
-  #board { max-width: min(100%, max(calc(9 * var(--u)), calc(100dvh - 14 * var(--u)))); }
+  #main { grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr); }
+  #stage-intro .eyebrow, #stage-intro #stage-title, #stage-intro .frame-question { display: none; }
+  #stage-intro .intro-copy { display: block; }
+  #stage-intro .learning-question { margin: 0; padding: 0; border: 0; font-size: calc(1 * var(--u)); }
+  #stage-intro .lesson-strip { grid-template-columns: 1fr; margin-top: calc(.35 * var(--u)); }
+  #stage-intro .lesson-strip article { display: none; }
+  #stage-intro .lesson-strip article:first-child { display: grid; grid-template-columns: 4.5rem 1fr; gap: .5rem; }
+  #board { max-width: min(100%, calc(100dvh - 12 * var(--u))); }
 }
 
 @media (prefers-reduced-motion: reduce) {

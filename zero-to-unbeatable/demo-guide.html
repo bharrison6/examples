@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Zero to Unbeatable — demo guide</title>
+<title>Types of AI — demo guide</title>
 <style>
 @page { size:A4 portrait; margin:12mm; }
 .guide { --navy:#002144; --gold:#ECAC00; --ink:#172433; --muted:#526577; font:10.4pt/1.42 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#fff; max-width:190mm; margin:16px auto; padding:8mm 10mm; }
@@ -27,67 +27,82 @@
 <div class="guide">
 <header>
   <div class="eyebrow">Murray State University</div>
-  <h1>Zero to Unbeatable<small>Demo 1 · rules, machine learning, neural networks · 20 minutes</small></h1>
-  <p class="meta"><b>You need:</b> one browser and the demo’s `index.html`. It works offline. For projection, use Settings → Presentation mode. Start with a fresh page so the group sees the learning take place.</p>
+  <h1>Types of AI<small>Demo 1 · rules, machine learning, neural networks · 20 minutes</small></h1>
+  <p class="meta"><b>You need:</b> one browser and the demo’s <code>index.html</code>. It works offline. Start with a fresh page; use Settings → Presentation mode to project, Open Presenter Notes for this guide in the app, and Open printable PDF when a handout helps.</p>
 </header>
 
 <section>
-<h2>Purpose</h2>
-<p>This is not a race from “simple AI” to “better AI.” It puts three different sources of a program’s skill beside the same small game: a person’s written instructions, experience stored in a table, and shared weights that learn to approximate that table.</p>
-<p class="say">“Watch where the skill comes from. The board stays the same; the mechanism changes.”</p>
+<h2>The question for all 20 minutes</h2>
+<p><b>Where does this opponent’s skill come from?</b> The board and game rules stay the same. What changes is the source of the move: written instructions, experience stored as move scores, or a network’s adjustable numbers—called weights—reused to score many board positions.</p>
+<p class="say">“Do not rank these as old AI and new AI. Watch what supplied the skill.”</p>
 </section>
 
 <section>
 <h2>1a · Rules-based intelligence — 5 minutes</h2>
-<p>Open <b>1a Rules-based intelligence</b>. Ask a volunteer to play the full eight-rule opponent. Point to the highlighted rule after each reply. It can say why it moved because a person wrote its decision process down in advance.</p>
+<h3>Question</h3>
+<p>Can an opponent be skilled when it has never learned from a game?</p>
+<h3>Activity</h3>
 <ol>
-<li>Switch to First 2 and invite the room to find a fork.</li>
-<li>Return to All 8. Explain that the app checks every reachable game line against this policy. The full rule set has no losing line.</li>
-<li>Ask: “If it is skilled but never learned, should we call it AI?”</li>
+<li>Open <b>1a Rules-based intelligence</b> and play a few moves against All 8.</li>
+<li>Point to the highlighted rule after each reply. Switch to First 2 and invite the room to find a fork, then return to All 8.</li>
+<li>Choose the policy check if time allows. It examines every reachable game line for this written policy.</li>
 </ol>
-<p class="note">The useful distinction is not whether the program is impressive. It is whether its competence came from a person’s rules or from experience.</p>
+<h3>Expected observation</h3>
+<p>The opponent can explain a move by naming a rule. All 8 has no losing line because the app checks the whole policy, not because it won a few demonstrations.</p>
+<h3>Teaching limit</h3>
+<p>Its skill came from a person’s move priorities. Changing its behavior means revising those instructions; playing it supplies no new experience.</p>
 </section>
 
 <section>
 <h2>1b · Machine learning — 7 minutes</h2>
-<p>Open <b>1b Machine learning</b>. Era 0 begins with a table full of zeroes. Let someone beat it, then run a visible training burst and play the new era. The program changes only the numeric values it has learned from completed games.</p>
+<h3>Question</h3>
+<p>What changes when an opponent keeps a score for positions it has experienced?</p>
+<h3>Activity</h3>
 <ol>
-<li>Use the era selector to compare an earlier and later opponent.</li>
-<li>Turn on Show its brain. Each empty square displays the learned score for the position created by that move.</li>
-<li>When a later era is checked, distinguish a search-based proof from a good-looking win streak.</li>
+<li>Open <b>1b Machine learning</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
+<li>Play one short game, then run a visible training burst. Select an earlier and a later era to compare their move scores.</li>
+<li>Use the policy check on a later era if time allows, then use <b>New game</b> to return the board to play.</li>
 </ol>
-<p class="say">“This is machine learning, but its memory is a filing cabinet: one number for each position it has room to store.”</p>
+<h3>Expected observation</h3>
+<p>Completed games change stored move scores. A later era can choose differently because the table remembers estimates for positions it has encountered.</p>
+<h3>Teaching limit</h3>
+<p>Human play does not train this table. Only the app’s training burst updates it. The table also has one separate score per position, so it does not automatically carry what it learned to a different situation.</p>
 </section>
 
 <section class="page-break">
 <h2>1c · Neural networks — 7 minutes</h2>
-<p>Open <b>1c Neural networks</b>. The first button says <b>Create learning examples</b>. It visibly lets a fresh copy of the 1b algorithm play 20,000 seeded games, then freezes the values it learned. Those frozen examples are the teacher for a new small network of shared weights.</p>
+<h3>Question</h3>
+<p>Can adjustable numbers reused across many boards approximate the scores a table learned?</p>
+<h3>Activity</h3>
 <ol>
-<li>Press Create learning examples. Explain that these are learned examples, not answers copied from a perfect-game solver.</li>
-<li>Press Train network. The live display shows how closely the weights match examples used for training and positions kept out of training.</li>
-<li>After a run, read the separate playing score. Each 100-game check uses the same random seed and scoring procedure, though game paths can change as the network changes. MSE means average squared prediction-score error; zero is an exact match. A lower error and a better score are observations, not a promise that the network will handle every unseen position well.</li>
-<li>Turn on Show its brain. Its squares now come from a network calculation. The frozen table is not consulted while it chooses a move.</li>
+<li>Open <b>1c Neural networks</b> and choose <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its resulting estimates are frozen as the teacher.</li>
+<li>Choose <b>Train network</b>. Compare the error for examples used in training with the error for positions kept out of training.</li>
+<li>Read the separate playing score, then use <b>Show move scores</b> to see the network’s calculation for each legal move.</li>
 </ol>
-<p class="note">The examples are the fresh table’s current estimates. A position it never visited can still have its initial score of zero, even where a perfect-game solver would give a different answer.</p>
-<p class="note">Technical detail for interested students: rotations and reflections of the same board are kept together when examples are split, preventing an obvious near-copy from appearing in both the practice and check sets. The app’s source test also compares its hand-written gradient with a finite-difference estimate away from ReLU corners.</p>
-<p class="say">“A neural network is a kind of machine learning. Here it is learning a compact approximation of another learner’s experience, not receiving tic-tac-toe strategy by hand.”</p>
+<h3>Expected observation</h3>
+<p>Training changes weights: adjustable numbers reused to calculate scores for many boards, rather than a separate stored entry for every board. Lower training and held-out error mean closer agreement with this frozen teacher; the playing score is a different measurement.</p>
+<h3>Teaching limit</h3>
+<p>Preparation creates a fresh learned teacher; it does not copy answers from a perfect-game solver. People still chose the board description and learning procedure. Held-out error measures agreement on withheld examples, not playing strength or a promise about every unseen board. When the network plays, it uses its own calculation and does not consult the frozen table.</p>
+<p class="note">A fresh teacher can leave an unvisited position at its initial score of zero. That is a limit of the examples, not proof that the position is neutral in perfect tic-tac-toe.</p>
+<p class="say">“A neural network is a type of machine learning. Here it learns a compact approximation of another learner’s experience.”</p>
 </section>
 
 <section>
-<h2>Optional advanced extension</h2>
-<p>The Neural networks tab links to Ultimate tic-tac-toe as an optional representation-limit activity. It changes the game and adds global information: a board’s place in the meta-grid and where a square sends the opponent. A one-board table leaves those facts out, and a neural network with the same inputs would too. It is deliberately separate from the neural-network lesson.</p>
+<h2>Optional advanced extension — 1 minute</h2>
+<p>Open Ultimate tic-tac-toe from the neural tab only after the three-stage comparison. It adds facts a one-board picture omits: a board’s place in the larger grid and where a move sends the next player. Network weights cannot repair missing inputs; a network given the same incomplete one-board picture misses those facts too.</p>
 </section>
 
 <section>
-<h2>Discussion prompts</h2>
+<h2>Close with evidence, not a winner</h2>
 <ul>
-<li>Which opponent is easiest to explain? Which is easiest to update?</li>
-<li>Why is a held-out score more useful than reporting only the examples used to train?</li>
-<li>What would have to be checked before calling a trained network unbeatable?</li>
+<li>Which source of skill was easiest to explain? Which was easiest to update?</li>
+<li>Why compare held-out error with training error?</li>
+<li>What evidence would you need before calling a network unbeatable?</li>
 </ul>
+<p class="note">Reopen Guide with the header’s Guide button. Settings also offers Open Presenter Notes, Presentation mode, and Reset; Reset returns the full demonstration to its initial state.</p>
 </section>
 
-<footer>Bryant Harrison · Murray State University · Zero to Unbeatable · single-file offline demo · no accounts or runtime network requests</footer>
+<footer>Bryant Harrison · Murray State University · Types of AI · single-file offline demo · no accounts or runtime network requests</footer>
 </div><!-- /guide -->
 </body>
 </html>
