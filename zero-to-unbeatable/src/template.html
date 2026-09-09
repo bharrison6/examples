@@ -68,6 +68,11 @@
         <article><span>Observe</span><p id="stage-observe">Changing the rules changes its play. Playing more games does not.</p></article>
         <article><span>Takeaway</span><p id="stage-takeaway">A person supplied its strategy; this opponent never learns from experience.</p></article>
       </div>
+      <div class="stage-tools">
+        <button class="btn details-trigger" id="btn-details" type="button" aria-label="Details" aria-haspopup="dialog" aria-controls="details">
+          <span>Details</span><span class="details-hint">Evidence and explanation</span>
+        </button>
+      </div>
     </section>
 
     <!-- Two wrappers, not a bare grid. On a phone #main is a plain block,
@@ -159,16 +164,6 @@
       <button class="btn ghost sm" id="btn-learned" hidden>What it learned last time</button>
     </section>
 
-    <!-- =========================== BANNER ========================= -->
-    <div id="banner" hidden></div>
-
-    <!-- ========================== EXPLAINER ======================= -->
-    <section class="panel accordion" id="how-panel">
-      <button class="acc-head" id="how-head" aria-expanded="false">
-        <span>How is it learning?</span><span class="chev">&#9662;</span>
-      </button>
-      <div class="acc-body" id="how-body" hidden></div>
-    </section>
     </div><!-- /col-b -->
 
     <footer id="foot">
@@ -176,6 +171,29 @@
       One HTML file · runs offline · nothing leaves this device
     </footer>
   </main>
+</div>
+
+<!-- =========================== DETAILS =========================== -->
+<!-- The evidence and technical explanation stay in their original live
+     nodes, but live in this reusable sheet so the activity remains compact.
+     renderBanner() and applyMode() keep them synchronized with the stage and
+     selected era while the shared sheet mechanism supplies focus management,
+     Escape, backdrop dismissal and focus return. -->
+<div class="overlay sheet" id="details" hidden role="dialog" aria-modal="true" aria-labelledby="details-title">
+  <div class="sheet-inner details-drawer" tabindex="-1">
+    <div class="sheet-head">
+      <div><h2 id="details-title">Details</h2><div class="sub" id="details-sub">Stage 1a · Rules-based intelligence</div></div>
+      <button class="icon-btn" data-close="details" aria-label="Close Details">&times;</button>
+    </div>
+    <div class="sheet-body details-body" tabindex="0" role="region" aria-label="Details content">
+      <div id="banner" hidden></div>
+      <section class="details-explainer" id="how-panel" aria-labelledby="how-title">
+        <h3 id="how-title">How it works</h3>
+        <div class="acc-body" id="how-body"></div>
+      </section>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" data-close="details">Back to activity</button></div>
+  </div>
 </div>
 
 <!-- ========================= HOW TO PLAY ========================= -->
