@@ -8,14 +8,19 @@ no account, network request, AI service, or installation is needed.
 
 ## Teaching sequence
 
-The three tabs are mechanisms, not difficulty levels.
+The three top-level tabs sit below the branded header because they change the
+whole lesson; they are mechanisms, not difficulty levels.
 
 - **1a · Rules-based intelligence** follows a hand-written eight-rule ladder.
   It learns nothing from play; the policy check examines every reachable game
-  line before the app calls the full ladder unbeatable.
+  line before the app calls the full ladder unbeatable. Directly above the
+  ordered list, **First 2 rules**, **First 4 rules**, and **All 8 rules** choose
+  how much of that visible ladder the opponent can use.
 - **1b · Machine learning** stores estimates for positions after visible
   training bursts. `Show move scores` exposes those estimates. Human play does
-  not train the table; only the app’s training burst updates it.
+  not train the table; only the app’s training burst updates it. The opponent
+  era selector sits directly above **Train the AI** so comparing Era 0 with a
+  trained era is part of the same action.
 - **1c · Neural networks** first uses a fresh 20,000-game seeded table learner
   to create frozen learning examples, then trains reusable adjustable weights to
   approximate them. People still designed the board inputs and learning
