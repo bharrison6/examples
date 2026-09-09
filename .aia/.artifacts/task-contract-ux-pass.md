@@ -59,6 +59,38 @@ about any demo changes.
 - Everything else in CONTRACT.md stays as is (theme, attribution, mobile, offline: zero
   network at runtime).
 
+## Folded in (operator answers of 2026-09-09, before the pass started)
+
+- **Retitle, Path A** ([[demo-titles-descriptive-retitle]], [[demo-titles-retitle]]): each lane
+  also changes its demo's display title to the new title in the table below, everywhere the
+  title appears inside the folder: `demo.json` `title`, the in-app header and `<title>`, the
+  guide heading (source and shipped) with a PDF re-render, and the README heading. Folder name
+  and guide filenames do not change. The old title may stay as a subtitle or in the tagline
+  where it reads well; it is not required to survive.
+- **Wavelet Lab Part 3** ([[wavelet-lab-part-3-rework]], [[wavelet-lab-part-3-live]]): the
+  `wavelet-lab/` lane also replaces Part 3 with the live predict-your-next-toggle mechanic and
+  adds a "Portrait at 64" preset, per that task's expected outcome.
+- Fan-out width: batches of five, approved in prose ("Batches of five").
+
+| Lane | New display title (Path A) |
+|---|---|
+| bridge-works | Truss Bridge Builder |
+| front-doors | AI Tool Guide |
+| fuel-golf | Orbital Mechanics Golf |
+| glass-box | How a Language Model Works |
+| inhibitor-investigation | (unchanged) |
+| ion-flight | Time-of-Flight Mass Spectrometer |
+| ladder-lab | PLC Ladder Logic Trainer |
+| missing-time | Gaps in the Rock Record |
+| should-have-known-that | Engineering Trivia |
+| takeoff | The Pace of AI Progress |
+| the-stranger | Prompting Strategies |
+| topping-out | Construction Scheduling |
+| two-winters | AI Winters: Boom and Bust |
+| wavelet-lab | (unchanged) |
+| what-the-survey-missed | (unchanged) |
+| zero-to-unbeatable | Types of AI (held) |
+
 ## Lanes
 
 Each builder owns ONE demo folder and nothing else. Known state from the orchestrator's

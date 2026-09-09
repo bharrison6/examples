@@ -10,10 +10,10 @@ updated: 2026-09-09T03:24:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: proposed
-fires_on: "[[demo-titles-descriptive-retitle]] is answered"
-blocked_by: "Path A versus Path B is the operator's choice; the confirmed title list is ready"
-snooze_until: 2026-09-16
+status: executing
+sanctioned_by: 441fc3445f164c2886e7ec24fadccb57
+decided_path: "Path A: display titles only; folder slugs and URLs unchanged (operator, console, 2026-09-09)"
+folded_into: contract-ux-pass
 priority: normal
 scope: examples
 source_basis: conversation

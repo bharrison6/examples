@@ -6,13 +6,13 @@ prospective_kind: decision
 schema_version: 2
 title: "Wavelet Lab Part 3: replace the fixed prediction question with a live one, remove it, or keep it?"
 created: 2026-09-09T03:24:00Z
-updated: 2026-09-09T03:24:00Z
+updated: 2026-09-09T03:26:52Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
 status: open
 question: "Part 3 of Wavelet Lab is a single multiple-choice question (two omitted coefficients of 5 and -2 contribute 29 to squared error) plus a paragraph telling the student to explore the Portrait scene. The rest of the lab is explorable. What should Part 3 become?"
-position: "Replace it with a live mechanic tied to the student's own state: before a coefficient toggle in Part 1, the lab shows the coefficient about to be dropped and asks for the resulting rise in squared error, then toggles and checks; and make 'Portrait at 64' a one-click preset in Part 2."
+position: "Replace with the live predict-your-next-toggle mechanic and a Portrait preset (recommended)"
 alternatives:
   - "Replace with the live predict-your-next-toggle mechanic and a Portrait preset (recommended)"
   - "Remove Part 3 entirely; fold the Portrait prompt into Part 2 as a preset"
@@ -31,6 +31,10 @@ source_basis: authored
 confidence: 80
 human_edited: false
 sensitivity: normal
+decided_by: human
+decided_via: console
+answer_event: 16a888bbe48a4407aaf594599ad81d9a
+load_bearing: false
 ---
 
 # Wavelet Lab Part 3
