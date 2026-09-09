@@ -1648,7 +1648,7 @@ function renderBoard() {
   $('bdBody').innerHTML = h;
 }
 function esc(s) { return String(s).replace(/[<>&]/g, function (c) { return { '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]; }); }
-function armReset(btn, label, act) {
+function armReset(btn, label, act, msg) {
   var armed = false, timer = null;
   btn.addEventListener('click', function () {
     if (!armed) {
@@ -1658,7 +1658,7 @@ function armReset(btn, label, act) {
     }
     clearTimeout(timer); armed = false; btn.textContent = label; btn.classList.remove('active');
     act(); renderBoard(); renderLevels();
-    setStatus('Leaderboard cleared.', '');
+    setStatus(msg || 'Leaderboard cleared.', '');
   });
 }
 armReset($('btnResetLevel'), "Reset this level's board", function () {
@@ -1666,6 +1666,38 @@ armReset($('btnResetLevel'), "Reset this level's board", function () {
   var p = ls(PROG_K, {}); delete p[S.L.id]; ss(PROG_K, p);
 });
 armReset($('btnResetAll'), 'Reset every board', function () { ss(BOARD_K, {}); ss(PROG_K, {}); });
+
+/* Settings -> Reset. The contract asks for the demo's fresh-load state, so this is
+   the state of a browser that has never opened it: nothing in storage, level 1 with
+   its starter, default toggles, empty board, Draw tool. Everything init() reads is
+   reset to the value init() would have defaulted to. The Guide overlay is
+   deliberately NOT reopened — a mid-session reset should not push a how-to at the
+   room, and the ? button is right there. */
+function resetDemo() {
+  [BOARD_K, DESIGN_K, PREF_K, PROG_K].forEach(function (k) {
+    try { localStorage.removeItem(k); } catch (e) {}
+  });
+  S.big = false; S.showPar = true; S.xray = true; S.nums = false; S.selfWeight = false;
+  S.name = ''; S.overload = false; S.keyboard = false;
+  S.lastDebrief = null; S.sel = -1; S.kstart = null;
+  $('tglBig').checked = false; $('tglPar').checked = true; $('tglKeyboard').checked = false;
+  $('tglOverload').checked = false;
+  [['tglXray', true], ['tglNums', false], ['tglWeight', false]].forEach(function (p) {
+    $(p[0]).checked = p[1];
+    $(p[0]).closest('.tgl').classList.toggle('on', p[1]);
+  });
+  $('dbName').value = '';
+  applyPresentation();
+  cv.tabIndex = -1;
+  cv.setAttribute('role', 'img');
+  cv.setAttribute('aria-label', 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode.');
+  document.querySelector('[data-tool=build]').click();
+  document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); });
+  $('fbd').classList.add('hidden');
+  resize();
+  loadLevel(0);
+}
+armReset($('btnReset'), 'Reset', resetDemo, 'Reset — back to a first run.');
 
 /* ------------------------------------------------------------- main loop */
 var last = 0;
