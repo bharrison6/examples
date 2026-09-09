@@ -14,7 +14,6 @@ status: active
 scope: examples
 source_basis: conversation
 sensitivity: normal
-sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T03:33:00Z
 tags: [design, teaching, tic-tac-toe, contract]
 ---
 
@@ -74,7 +73,8 @@ were merged, retaining both changelog entries and peer commits. Root card/README
 were regenerated from manifests. Publication follows the user's existing explicit
 push authorization; final delivery is recorded in the completion changelog.
 
-The original authorized brief is retained below for provenance.
+The original authorized brief is retained below for provenance. Its prospective
+sanction was prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T03:33:00Z.
 
 # Original expected outcome
 
