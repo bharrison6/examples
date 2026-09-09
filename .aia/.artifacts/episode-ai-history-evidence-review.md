@@ -1,24 +1,39 @@
 ---
 id: ai-history-evidence-review
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: task
+memory_class: episodic
+lifecycle: complete
 schema_version: 2
 title: Review evidence and teaching claims for AI Progress and AI Winters
 created: 2026-09-09T13:24:52Z
-updated: 2026-09-09T13:24:52Z
+updated: 2026-09-09T13:47:35Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
-status: executing
+status: active
 scope: examples
 source_basis: conversation
 sensitivity: normal
-sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T13:24:18Z
 tags: [ai-fellows, teaching, design]
 ---
 
-## Expected outcome and owned work
+## Completed result
+
+The native research worker committed the dated source audit in 0287799/f7e051e,
+integrated by the coordinator in 3a9c956. Commit, owned-file cleanliness and full
+artifact content were read back. [[ai-progress-winters-evidence-2026-09-09]] is the
+canonical report; both builders received its source mappings and corrections.
+It corrects GPQA population comparisons, pricing threshold/units, matched-effort
+ARC comparisons, METR robustness/uncertainty, SWE protocol assumptions and
+historical assessments misgraded as forecasts. It supplies a compact sourced
+release timeline and contrasting deployment studies.
+
+Unresolved original quotation pages, image-only benchmark figures and unavailable
+full AlphaFold3 text remain explicitly unverified. This bounded research is complete;
+it does not claim app implementation or browser/PDF verification. Builders own
+incorporation and tests. Parent stayed coordination-only and did not redo research.
+
+## Original expected outcome and owned work
 
 Research the current takeoff/ and two-winters/ demos read-only, identify what each
 actually claims, and find stronger/more complete/recent evidence to teach the point
@@ -49,4 +64,3 @@ your checkout, untracked; return early if framing is wrong, impossible or requir
 a decision. Return commit, changed paths, tests actually run, browser/PDF evidence,
 remaining limitations, and temporary content/design decisions. Signal a usable
 candidate early. Do not push; coordinator integrates and publishes.
-
