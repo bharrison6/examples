@@ -123,7 +123,7 @@ body.presenter #app { width: 100%; }
 .header-actions { display: flex; gap: calc(.45 * var(--u)); }
 .icon-label { font-size: calc(.72 * var(--u)); font-weight: 800; }
 .tab-short { display: none; }
-#stage-nav { background: var(--paper); border-top: 1px solid rgba(255,255,255,.12); }
+#stage-nav { background: var(--paper); border-top: 1px solid var(--paper-line); }
 #mode-seg {
   width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: calc(.45 * var(--u)) 0;
   gap: calc(.5 * var(--u));
@@ -136,9 +136,12 @@ body.presenter #app { width: 100%; }
 #mode-seg button.on { background: var(--navy); border-color: var(--navy); color: #fff; }
 #mode-seg .tab-code { color: #006b9a; font-weight: 900; }
 #mode-seg button.on .tab-code { color: var(--gold); }
-#lens-nav { grid-column: 1 / -1; display: flex; justify-content: center; }
+#lens-nav {
+  display: flex; justify-content: center; padding: calc(.38 * var(--u)) 20px;
+  background: var(--paper); border-top: 1px solid rgba(255,255,255,.12);
+}
 #lens-seg {
-  width: min(440px, 100%); margin: 0; padding: 3px; gap: 3px;
+  width: min(520px, 100%); margin: 0; padding: 3px; gap: 3px;
   border: 1px solid var(--paper-line); border-radius: 10px; background: var(--paper-2);
 }
 #lens-seg button {
@@ -371,6 +374,22 @@ select {
 #train-stats .st .k { display: block; font-size: calc(.5 * var(--u)); letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); }
 #btn-learned { width: 100%; margin-top: calc(.5 * var(--u)); flex: none; }
 
+#learned-report { padding: calc(.8 * var(--u)); overflow: hidden; }
+.learned-inline-head { margin-bottom: calc(.65 * var(--u)); }
+.learned-inline-head h2 {
+  margin: calc(.12 * var(--u)) 0 calc(.18 * var(--u)); color: var(--ink);
+  font: 700 calc(1.18 * var(--u))/1.25 Georgia, "Times New Roman", serif;
+}
+#learned-inline-sub { color: var(--ink-2); font-size: calc(.7 * var(--u)); line-height: 1.45; }
+#learned-inline-body .headline { margin-bottom: calc(.6 * var(--u)); }
+#learned-inline-body .lc:last-child { margin-bottom: 0; }
+#learned-inline-body .lc-grid { max-width: min(100%, calc(20 * var(--u))); }
+#learned-inline-body .lc-cell .lv,
+#learned-inline-body .lc-cell .value-pair { font-size: max(12px, calc(.75 * var(--u))); }
+#learned-inline-body .lc-cell .value-pair .arrow { font-size: max(10px, calc(.62 * var(--u))); }
+#learned-inline-body .lc .ask,
+#learned-inline-body .lc .delta { font-size: max(13px, calc(.81 * var(--u))); }
+
 /* ------------------------------------------------------ network view */
 #network-view { padding: calc(.8 * var(--u)); overflow: hidden; }
 .network-view-head { display: flex; align-items: flex-start; justify-content: space-between; gap: calc(.5 * var(--u)); }
@@ -581,7 +600,16 @@ input[type=text]::placeholder { color: var(--ink-3); }
 .lc-cell.mk1 { color: var(--you); background: var(--panel-2); }
 .lc-cell.mk2 { color: var(--ai); background: var(--panel-2); }
 .lc-cell .lv { font-size: calc(.68 * var(--u)); font-variant-numeric: tabular-nums; font-weight: 800; }
-.lc-cell .dl { position: absolute; bottom: 2px; left: 0; right: 0; font-size: calc(.48 * var(--u)); font-weight: 800; }
+.lc-cell .value-pair { display: grid; gap: 1px; font-size: calc(.65 * var(--u)); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.lc-cell .value-pair .before { opacity: .78; text-decoration: line-through; text-decoration-thickness: 1px; }
+.lc-cell .value-pair .arrow { font-size: calc(.52 * var(--u)); opacity: .72; }
+.lc-cell .value-pair .after { font-weight: 900; }
+.lc-cell .value-pair .cell-delta { font-size: .86em; opacity: .85; }
+.value-legend {
+  margin: 0 auto calc(.35 * var(--u)); color: var(--ink-2); text-align: center;
+  font-size: max(12px, calc(.68 * var(--u))); font-variant-numeric: tabular-nums;
+}
+.lc-cell .dl { position: absolute; bottom: 2px; left: 0; right: 0; font-size: calc(.42 * var(--u)); font-weight: 800; }
 .lc-cell.up   { box-shadow: 0 0 0 2px var(--gold) inset; }
 .lc-cell.down { box-shadow: 0 0 0 2px var(--warm) inset; }
 .lc .delta { margin-top: calc(.55 * var(--u)); font-size: calc(.75 * var(--u)); line-height: 1.5; }

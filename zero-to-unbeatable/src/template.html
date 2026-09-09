@@ -45,6 +45,12 @@
       <button class="icon-btn" id="btn-settings" aria-label="Settings" title="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
   </header>
+  <nav id="lens-nav" aria-label="Explore models or learning methods">
+    <div class="seg" id="lens-seg" role="tablist" aria-label="Explore models or learning methods">
+      <button data-view="action" class="on" role="tab" aria-selected="true" aria-controls="stage-nav">Model types</button>
+      <button data-view="learn" role="tab" aria-selected="false" aria-controls="learning-overview">How they learn</button>
+    </div>
+  </nav>
   <nav id="stage-nav" aria-label="Strategy model examples">
     <div class="seg" id="mode-seg" role="tablist" aria-label="Strategy model examples">
       <button data-mode="rules" class="on" role="tab" aria-selected="true" aria-controls="stage-intro" aria-label="1a Symbolic AI, also called GOFAI"><span class="tab-code">1a</span><span class="tab-long">Symbolic AI (GOFAI)</span><span class="tab-short"><span>Symbolic AI</span><small>GOFAI</small></span></button>
@@ -56,13 +62,6 @@
   </div>
 
   <main id="main">
-
-    <nav id="lens-nav" aria-label="Lesson view">
-      <div class="seg" id="lens-seg" role="tablist" aria-label="Lesson view">
-        <button data-view="action" class="on" role="tab" aria-selected="true" aria-controls="stage-intro">Model in action</button>
-        <button data-view="learn" role="tab" aria-selected="false" aria-controls="learning-overview">How they learn</button>
-      </div>
-    </nav>
 
     <section id="stage-intro" aria-labelledby="stage-title">
       <div class="intro-copy">
@@ -208,6 +207,15 @@
       <button class="btn ghost sm" id="btn-learned" hidden>What it learned last time</button>
     </section>
 
+    <section class="panel" id="learned-report" hidden aria-labelledby="learned-inline-title">
+      <div class="learned-inline-head">
+        <p class="panel-kicker">Selected-era learning record</p>
+        <h2 id="learned-inline-title">Era 0 — untrained baseline</h2>
+        <p id="learned-inline-sub"></p>
+      </div>
+      <div id="learned-inline-body"></div>
+    </section>
+
     <section class="panel" id="network-view" hidden aria-label="Current neural network weights"></section>
 
     </div><!-- /col-b -->
@@ -254,10 +262,10 @@
       <button class="icon-btn" data-close="howto" aria-label="Close">&times;</button>
     </div>
     <div class="sheet-body">
-      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? The A–D row compares model representations. <b>How they learn</b> separately compares learning methods; the two axes can be combined.</p>
+      <p class="howto-lede"><b>Ask one question throughout:</b> where does this opponent’s skill come from? Start with <b>Model types</b>, then choose 1a–1d to compare representations. Switch to <b>How they learn</b> for learning methods; switching views keeps the selected model, game, and training state in place.</p>
       <ol class="howto-steps">
         <li><b>1a · Symbolic AI (GOFAI).</b> Play once and watch the highlighted rule explain each reply. Compare <b>First 2</b> with <b>All 8</b>. A person supplied every move priority; playing more games cannot change them.</li>
-        <li><b>1b · Value table.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the new era with Era 0. Reinforcement learning updates a stored value for each position from game outcomes.</li>
+        <li><b>1b · Value table.</b> Use <b>Show move scores</b> in Era 0, train 5,000 games, then compare the selected era with its predecessor in the panel below the training controls. Changing the era updates the panel. Reinforcement learning updates a stored value for each position from game outcomes.</li>
         <li><b>1c · Neural Network.</b> Choose <b>Create learning examples</b>, then train the network. Inspect its real weights and compare error on practiced and <b>held-out positions</b>—positions kept out of training.</li>
         <li><b>1d · Other model types.</b> Scan six other model families, then use <b>How they learn</b> to compare five common learning setups across models.</li>
       </ol>
