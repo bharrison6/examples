@@ -3,56 +3,77 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Ion Flight — Teacher Guide</title>
+  <title>Time-of-Flight Mass Spectrometer — Teacher Guide</title>
+  <!--
+    Canonical, printable teacher and presenter guide for this demo. This file is the
+    single source of truth for the presenter notes: build.js lifts the style block
+    tagged id="guide-css" and the .guide-scope div out of here verbatim and injects them into
+    index.html, so Settings -> Open Presenter Notes shows exactly this document with
+    no sibling file to fetch. Edit here; never edit the copy inside index.html.
+    node build.js --check fails if the two have drifted.
+
+    Every rule in the id="guide-css" block MUST be scoped to .guide-scope, because it
+    is injected into an app that has its own stylesheet. Page-level chrome for the
+    standalone printable file lives in the second, untagged style block, which is not
+    extracted. Sizes in the first block are em-relative so the same document can be
+    10pt on paper and larger on screen.
+  -->
+  <style id="guide-css">
+.guide-scope { color: #172b42; }
+.guide-scope .g-head { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
+.guide-scope h1 { margin: 0; color: #002144; font-size: 2.3em; line-height: 1.05; }
+.guide-scope .g-sub { margin: 5px 0 0; color: #526a7e; }
+.guide-scope h2 { margin: 15px 0 6px; color: #002144; font-size: 1.4em; break-after: avoid; }
+.guide-scope h3 { margin: 11px 0 4px; color: #006a98; font-size: 1.1em; break-after: avoid; }
+.guide-scope p { margin: 5px 0; }
+.guide-scope ul, .guide-scope ol { margin: 5px 0 8px 20px; padding: 0; }
+.guide-scope li { margin: 4px 0; }
+.guide-scope .lead { font-size: 1.1em; }
+.guide-scope .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
+.guide-scope .warning { background: #fff6d9; border-left-color: #ecac00; }
+.guide-scope .formula { margin: 9px 0; padding: 10px; color: white; background: #002144; border-radius: 4px; text-align: center; font: bold 1.3em Georgia, serif; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
+.guide-scope .scroll table { min-width: 380px; }
+.guide-scope th, .guide-scope td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
+.guide-scope th { color: white; background: #002144; font-size: .9em; }
+.guide-scope .small { font-size: .9em; color: #526a7e; }
+.guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+.guide-scope a { color: #006a98; }
+.guide-scope .page-break { break-before: page; page-break-before: always; }
+.guide-scope .g-foot { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: .85em; }
+  </style>
   <style>
+    /* Standalone printable page only — not extracted into the app. */
     @page { size: letter; margin: .55in; }
     * { box-sizing: border-box; }
     body { max-width: 7.4in; margin: 0 auto; color: #172b42; font: 10pt/1.38 Arial, sans-serif; }
-    header { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
-    h1 { margin: 0; color: #002144; font-size: 23pt; line-height: 1.05; }
-    header p { margin: 5px 0 0; color: #526a7e; }
-    h2 { margin: 15px 0 6px; color: #002144; font-size: 14pt; break-after: avoid; }
-    h3 { margin: 11px 0 4px; color: #006a98; font-size: 11pt; break-after: avoid; }
-    p { margin: 5px 0; }
-    ul, ol { margin: 5px 0 8px 20px; padding: 0; }
-    li { margin: 4px 0; }
-    .lead { font-size: 11pt; }
-    .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
-    .warning { background: #fff6d9; border-left-color: #ecac00; }
-    .formula { margin: 9px 0; padding: 10px; color: white; background: #002144; border-radius: 4px; text-align: center; font: bold 13pt Georgia, serif; }
-    table { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
-    th, td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
-    th { color: white; background: #002144; font-size: 9pt; }
-    .small { font-size: 9pt; color: #526a7e; }
-    .page-break { break-before: page; page-break-before: always; }
-    footer { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: 8.5pt; }
-    a { color: #006a98; }
     @media screen {
       body { margin: 24px auto; padding: .55in; background: white; box-shadow: 0 0 24px #0003; }
     }
     @media (max-width: 680px) {
       body { margin: 0; padding: 18px; box-shadow: none; font-size: 11pt; }
-      .page-break { break-before: auto; page-break-before: auto; }
-      table { display: block; overflow-x: auto; }
+      .guide-scope .page-break { break-before: auto; page-break-before: auto; }
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Ion Flight</h1>
-    <p>Teacher and presenter guide · Guided linear time-of-flight investigation · Murray State University</p>
-  </header>
+<div class="guide-scope">
+  <div class="g-head">
+    <h1>Time-of-Flight Mass Spectrometer</h1>
+    <p class="g-sub">Teacher and presenter guide · Guided linear time-of-flight investigation · Murray State University</p>
+  </div>
 
-  <main>
-    <section aria-labelledby="purpose">
-      <h2 id="purpose">Purpose and learning target</h2>
-      <p class="lead">Students analyze charged particles by timing their flight. They use three linked experiments to separate the effects of mass and positive charge, then discover why different ions with equal mass-to-charge ratio can produce one coincident detector peak.</p>
-      <div class="box"><strong>Target claim:</strong> A time-of-flight detector measures arrival time directly. Under this ideal model, that time depends on mass-to-charge ratio, so one peak does not establish one kind of ion or identify a real molecule.</div>
-      <p>An <strong>ion</strong> is an electrically charged atom or molecule. The simplified path is: a voltage boost happens before timing, ions coast through a field-free tube in vacuum, and the detector records arrivals.</p>
-    </section>
+  <section aria-labelledby="g-purpose">
+    <h2 id="g-purpose">Purpose and learning target</h2>
+    <p class="lead">Students analyze charged particles by timing their flight. They use three linked experiments to separate the effects of mass and positive charge, then discover why different ions with equal mass-to-charge ratio can produce one coincident detector peak.</p>
+    <div class="box"><strong>Target claim:</strong> A time-of-flight detector measures arrival time directly. Under this ideal model, that time depends on mass-to-charge ratio, so one peak does not establish one kind of ion or identify a real molecule.</div>
+    <p>An <strong>ion</strong> is an electrically charged atom or molecule. The simplified path is: a voltage boost happens before timing, ions coast through a field-free tube in vacuum, and the detector records arrivals.</p>
+  </section>
 
-    <section aria-labelledby="units">
-      <h2 id="units">Units students see</h2>
+  <section aria-labelledby="g-units">
+    <h2 id="g-units">Units students see</h2>
+    <div class="scroll">
       <table>
         <thead><tr><th>Label</th><th>Meaning in this activity</th></tr></thead>
         <tbody>
@@ -63,22 +84,24 @@
           <tr><td>kilovolt (kV)</td><td>One thousand volts. Core investigations hold the boost at 20 kV.</td></tr>
         </tbody>
       </table>
-      <p class="small">The screen uses one scale for every core run: 1.00 physical µs takes 160 ms on screen, or 160,000× slow motion. The detector trace keeps the same 0–18 µs horizontal axis.</p>
-    </section>
+    </div>
+    <p class="small">The screen uses one scale for every core run: 1.00 physical µs takes 160 ms on screen, or 160,000× slow motion. The detector trace keeps the same 0–18 µs horizontal axis.</p>
+  </section>
 
-    <section aria-labelledby="flow">
-      <h2 id="flow">12–15 minute core flow</h2>
-      <ol>
-        <li><strong>Orient (2 minutes).</strong> Open <code>index.html</code>. Use the opening how-to and identify the known simulated inputs, clock start, drift tube, and detector. Ask: “What will we know before Run, and what will the detector measure?”</li>
-        <li><strong>Investigation 1 — mass (3 minutes).</strong> Both ions are +1. Students predict, then compare 100 Da and 400 Da on the shared axis.</li>
-        <li><strong>Investigation 2 — charge (3 minutes).</strong> Both ions are 200 Da. Students predict, then compare +1 and +2.</li>
-        <li><strong>Investigation 3 — equal ratio (3 minutes).</strong> Compare 200 Da/+1 with 400 Da/+2. Let the coincident arrival motivate the conventional m/z label.</li>
-        <li><strong>Transfer (2–4 minutes).</strong> Ask whether one real detector peak proves one ion is present. Discuss what additional evidence a molecular identity would require.</li>
-      </ol>
-    </section>
+  <section aria-labelledby="g-flow">
+    <h2 id="g-flow">12–15 minute core flow</h2>
+    <ol>
+      <li><strong>Orient (2 minutes).</strong> Open <code>index.html</code>. Use the opening Guide overlay and identify the known simulated inputs, clock start, drift tube, and detector. Ask: “What will we know before Run, and what will the detector measure?”</li>
+      <li><strong>Investigation 1 — mass (3 minutes).</strong> Both ions are +1. Students predict, then compare 100 Da and 400 Da on the shared axis.</li>
+      <li><strong>Investigation 2 — charge (3 minutes).</strong> Both ions are 200 Da. Students predict, then compare +1 and +2.</li>
+      <li><strong>Investigation 3 — equal ratio (3 minutes).</strong> Compare 200 Da/+1 with 400 Da/+2. Let the coincident arrival motivate the conventional m/z label.</li>
+      <li><strong>Transfer (2–4 minutes).</strong> Ask whether one real detector peak proves one ion is present. Discuss what additional evidence a molecular identity would require.</li>
+    </ol>
+  </section>
 
-    <section aria-labelledby="evidence">
-      <h2 id="evidence">Expected simulated evidence</h2>
+  <section aria-labelledby="g-evidence">
+    <h2 id="g-evidence">Expected simulated evidence</h2>
+    <div class="scroll">
       <table>
         <thead><tr><th>Investigation</th><th>Center arrivals</th><th>Evidence-based explanation</th></tr></thead>
         <tbody>
@@ -87,12 +110,14 @@
           <tr><td>200 Da/+1 vs 400 Da/+2</td><td>Both: 10.80 µs</td><td>200 ÷ 1 = 200 and 400 ÷ 2 = 200. Both have m/z = 200, so the ideal detector records one coincident peak.</td></tr>
         </tbody>
       </table>
-      <div class="box warning"><strong>Keep inputs and evidence distinct.</strong> Sample cards show values the simulation already knows. Exact arrivals and the completed trace stay hidden until Run. The navy line is the summed detector signal; colored ticks identify the known packet centers. A peak represents a group arriving over a timing range.</div>
-    </section>
+    </div>
+    <div class="box warning"><strong>Keep inputs and evidence distinct.</strong> Sample cards show values the simulation already knows. Exact arrivals and the completed trace stay hidden until Run. The navy line is the summed detector signal; colored ticks identify the known packet centers. A peak represents a group arriving over a timing range.</div>
+  </section>
 
-    <section class="page-break" aria-labelledby="advanced">
-      <h2 id="advanced">Optional advanced extension: peak width</h2>
-      <p>Introduce <strong>timing width</strong> before naming sigma. The extension compares 200 and 205 Da ions, both +1, in 1.00 m and 2.00 m tubes. It uses a shared 0–16 µs axis and an explicit classroom criterion: centers count as resolved when their separation is at least their mean full width at half maximum (FWHM).</p>
+  <section class="page-break" aria-labelledby="g-advanced">
+    <h2 id="g-advanced">Optional advanced extension: peak width</h2>
+    <p>Introduce <strong>timing width</strong> before naming sigma. The extension compares 200 and 205 Da ions, both +1, in 1.00 m and 2.00 m tubes. It uses a shared 0–16 µs axis and an explicit classroom criterion: centers count as resolved when their separation is at least their mean full width at half maximum (FWHM).</p>
+    <div class="scroll">
       <table>
         <thead><tr><th>Assumed width rule</th><th>1.00 m result</th><th>2.00 m result</th><th>What changes</th></tr></thead>
         <tbody>
@@ -100,39 +125,41 @@
           <tr><td>σ = 1.5% of arrival time</td><td>Separation 0.089 µs<br>mean FWHM 0.256 µs<br>overlapping</td><td>Separation 0.179 µs<br>mean FWHM 0.512 µs<br>overlapping</td><td>Separation and width both double; their ratio stays constant.</td></tr>
         </tbody>
       </table>
-      <p>The widths are assumptions, and this comparison does not support a universal promise that a longer tube improves resolution.</p>
-    </section>
+    </div>
+    <p>The widths are assumptions, and this comparison does not support a universal promise that a longer tube improves resolution.</p>
+  </section>
 
-    <section aria-labelledby="model">
-      <h2 id="model">Model and boundaries</h2>
-      <div class="formula">qV = ½mv² &nbsp; → &nbsp; t = L √[m / (2qV)]</div>
-      <ul>
-        <li><strong>t</strong> is field-free flight time in seconds; <strong>L</strong> is length in metres; <strong>m</strong> is mass converted from Da to kilograms.</li>
-        <li><strong>q = z·e</strong> is positive charge in coulombs; z is the charge number; <strong>V</strong> is voltage in volts.</li>
-        <li>The clock begins at drift-tube entry. Acceleration time is excluded.</li>
-        <li>The Gaussian peak uses σ as its timing spread, FWHM = 2.355σ, and area proportional to packet count.</li>
-      </ul>
-      <p>This ideal linear TOF does not model an ion source, extraction optics, reflectron focusing, detector efficiency, calibration, fragmentation, uncertainty, or molecular identification.</p>
-    </section>
+  <section aria-labelledby="g-model">
+    <h2 id="g-model">Model and boundaries</h2>
+    <div class="formula">qV = ½mv² &nbsp; → &nbsp; t = L √[m / (2qV)]</div>
+    <ul>
+      <li><strong>t</strong> is field-free flight time in seconds; <strong>L</strong> is length in metres; <strong>m</strong> is mass converted from Da to kilograms.</li>
+      <li><strong>q = z·e</strong> is positive charge in coulombs; z is the charge number; <strong>V</strong> is voltage in volts.</li>
+      <li>The clock begins at drift-tube entry. Acceleration time is excluded.</li>
+      <li>The Gaussian peak uses σ as its timing spread, FWHM = 2.355σ, and area proportional to packet count.</li>
+    </ul>
+    <p>This ideal linear TOF does not model an ion source, extraction optics, reflectron focusing, detector efficiency, calibration, fragmentation, uncertainty, or molecular identification.</p>
+  </section>
 
-    <section aria-labelledby="prompts">
-      <h2 id="prompts">Discussion prompts</h2>
-      <ul>
-        <li>Which values are controlled inputs, and which values are detector observations?</li>
-        <li>Why does the +2 ion arrive first when mass is held constant?</li>
-        <li>How can two different ions make one peak in the equal-ratio experiment?</li>
-        <li>What additional evidence would you need before identifying a real molecule?</li>
-        <li>In the extension, which assumed width rule lets the longer tube cross the stated criterion, and why?</li>
-      </ul>
-      <p><strong>Controls:</strong> <b>?</b> reopens the how-to. <b>⚙</b> opens presentation mode, presenter’s notes, and full reset. Run locks the prediction during flight; Replay uses the same physical-to-screen scale.</p>
-    </section>
+  <section aria-labelledby="g-prompts">
+    <h2 id="g-prompts">Discussion prompts</h2>
+    <ul>
+      <li>Which values are controlled inputs, and which values are detector observations?</li>
+      <li>Why does the +2 ion arrive first when mass is held constant?</li>
+      <li>How can two different ions make one peak in the equal-ratio experiment?</li>
+      <li>What additional evidence would you need before identifying a real molecule?</li>
+      <li>In the extension, which assumed width rule lets the longer tube cross the stated criterion, and why?</li>
+    </ul>
+    <p><strong>Controls:</strong> <b>?</b> reopens the Guide. <b>⚙</b> Settings offers Open Presenter Notes (this document), Presentation mode, and Reset. Run locks the prediction during flight; Replay uses the same physical-to-screen scale.</p>
+  </section>
 
-    <section aria-labelledby="sources">
-      <h2 id="sources">Sources and attribution</h2>
-      <p>Iowa State University Chemical Instrumentation Facility, <a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial">Mass Spectrometry Tutorial</a>, for qV acceleration, field-free drift, and detector timing. Shimadzu, <a href="https://www.shimadzu.com/an/sites/shimadzu.com.an/files/pim/pim_document_file/technical/11021/journal_vol_11_issue_2_02.pdf">MALDI basics</a>, for pulsed-ionization context. The Morris project record at <a href="https://digitalcommons.murraystate.edu/orcagrants/227/">Murray State Digital Commons</a> supports plausible course fit. These sources do not endorse this activity, and the demo is not presented as Morris’s instrument or assignment.</p>
-    </section>
-  </main>
+  <section aria-labelledby="g-sources">
+    <h2 id="g-sources">Sources and attribution</h2>
+    <p>Iowa State University Chemical Instrumentation Facility, <a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial">Mass Spectrometry Tutorial</a>, for qV acceleration, field-free drift, and detector timing. Shimadzu, <a href="https://www.shimadzu.com/an/sites/shimadzu.com.an/files/pim/pim_document_file/technical/11021/journal_vol_11_issue_2_02.pdf">MALDI basics</a>, for pulsed-ionization context. The Morris project record at <a href="https://digitalcommons.murraystate.edu/orcagrants/227/">Murray State Digital Commons</a> supports plausible course fit. These sources do not endorse this activity, and the demo is not presented as Morris’s instrument or assignment.</p>
+  </section>
 
-  <footer><strong>Ion Flight</strong> · Bryant Harrison · Murray State University · Offline teaching model. Open <code>index.html</code> to run the investigation. This HTML file is the canonical guide source.</footer>
+  <div class="g-foot"><strong>Time-of-Flight Mass Spectrometer</strong> · Bryant Harrison · Murray State University · Offline teaching model. Open <code>index.html</code> to run the investigation. This file, teacher-guide.html, is the canonical source of this document; the in-app presenter notes are generated from it at build time.</div>
+
+</div><!-- /guide -->
 </body>
 </html>

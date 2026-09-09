@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Ion Flight is an offline guided investigation of what a time-of-flight detector measures.">
-  <title>Ion Flight · Guided TOF Investigation</title>
+  <meta name="description" content="An offline guided time-of-flight mass spectrometer investigation of what a flight-time detector measures.">
+  <title>Time-of-Flight Mass Spectrometer · Guided Investigation</title>
   <style>
     :root {
       --navy: #002144;
@@ -101,6 +101,7 @@
       box-shadow: var(--shadow);
     }
     .settings strong { display: block; color: var(--navy); margin-bottom: 7px; }
+    .settings button.active { color: white; background: var(--navy); }
     .settings button {
       width: 100%;
       padding: 9px 10px;
@@ -413,7 +414,15 @@
     .modal h2 { margin: 5px 0 10px; }
     .modal li { margin: 8px 0; }
     .modal-close { margin-top: 14px; }
-    .presenter-notes { white-space: pre-line; color: #34526a; }
+    .modal-sub { margin: 0 0 12px; color: var(--muted); font-size: .97rem; }
+
+    /* The presenter notes sheet holds the printable teacher guide, injected by
+       build.js from teacher-guide.html. The guide ships its own .guide-scope
+       stylesheet (added after this one, so it wins ties); the app only sets how
+       big that document renders on a screen instead of on paper. */
+    .notes-modal { width: min(880px, 100%); }
+    #notesOverlay .guide-scope { font-size: 14px; line-height: 1.5; }
+    .presentation #notesOverlay .guide-scope { font-size: 16px; }
 
     .presentation { font-size: 18px; }
     .presentation .shell { width: min(1580px, 100%); }
@@ -462,21 +471,48 @@
       .workspace { display: block; border: 0; box-shadow: none; }
     }
   </style>
+  <!-- Injected by build.js from the first <style> block of teacher-guide.html.
+       Last in the head so .guide-scope rules win ties against the app chrome. -->
+  <style>
+.guide-scope { color: #172b42; }
+.guide-scope .g-head { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
+.guide-scope h1 { margin: 0; color: #002144; font-size: 2.3em; line-height: 1.05; }
+.guide-scope .g-sub { margin: 5px 0 0; color: #526a7e; }
+.guide-scope h2 { margin: 15px 0 6px; color: #002144; font-size: 1.4em; break-after: avoid; }
+.guide-scope h3 { margin: 11px 0 4px; color: #006a98; font-size: 1.1em; break-after: avoid; }
+.guide-scope p { margin: 5px 0; }
+.guide-scope ul, .guide-scope ol { margin: 5px 0 8px 20px; padding: 0; }
+.guide-scope li { margin: 4px 0; }
+.guide-scope .lead { font-size: 1.1em; }
+.guide-scope .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
+.guide-scope .warning { background: #fff6d9; border-left-color: #ecac00; }
+.guide-scope .formula { margin: 9px 0; padding: 10px; color: white; background: #002144; border-radius: 4px; text-align: center; font: bold 1.3em Georgia, serif; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
+.guide-scope .scroll table { min-width: 380px; }
+.guide-scope th, .guide-scope td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
+.guide-scope th { color: white; background: #002144; font-size: .9em; }
+.guide-scope .small { font-size: .9em; color: #526a7e; }
+.guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+.guide-scope a { color: #006a98; }
+.guide-scope .page-break { break-before: page; page-break-before: always; }
+.guide-scope .g-foot { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: .85em; }
+  </style>
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">+</div>
-      <div><small>Murray State University · Instrument analysis</small><strong>Ion Flight</strong></div>
+      <div><small>Murray State University · Instrument analysis</small><strong>Time-of-Flight Mass Spectrometer</strong></div>
     </div>
     <div class="top-actions">
-      <button class="icon-button" id="howButton" aria-label="Open how to use Ion Flight">?</button>
-      <button class="icon-button" id="settingsButton" aria-label="Open settings" aria-expanded="false">⚙</button>
+      <button class="icon-button" id="howButton" aria-label="Guide" title="Guide">?</button>
+      <button class="icon-button" id="settingsButton" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button>
       <div class="settings" id="settingsMenu" hidden>
         <strong>Settings</strong>
-        <button id="presentationButton">▣ Enter presentation mode</button>
-        <button id="notesButton">Presenter’s notes</button>
-        <button id="resetAllButton">↺ Start investigation over</button>
+        <button id="notesButton">Open Presenter Notes</button>
+        <button id="presentationButton" aria-pressed="false">Presentation mode</button>
+        <button id="resetAllButton">Reset</button>
       </div>
     </div>
   </header>
@@ -609,8 +645,9 @@
 
   <section class="overlay" id="howOverlay" role="dialog" aria-modal="true" aria-labelledby="howTitle">
     <div class="modal">
-      <span class="eyebrow">How to use Ion Flight</span>
-      <h2 id="howTitle">Make a prediction, then let the detector answer.</h2>
+      <span class="eyebrow">Time-of-Flight Mass Spectrometer</span>
+      <h2 id="howTitle">Guide</h2>
+      <p class="modal-sub">Make a prediction, then let the detector answer.</p>
       <ol>
         <li>Begin with Investigation 1. The colored cards are known simulated inputs: mass, positive charge, and sample name.</li>
         <li>Choose a prediction. Run stays locked until you commit to one.</li>
@@ -622,21 +659,115 @@
     </div>
   </section>
 
-  <section class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-labelledby="notesTitle" hidden>
-    <div class="modal">
-      <span class="eyebrow">Presenter’s notes · 12–15 minutes</span>
-      <h2 id="notesTitle">Keep the evidence and the claim together.</h2>
-      <div class="presenter-notes">1. Read the three-part instrument path. Ask what is known before the run and what the detector will actually measure.
+  <!-- Presenter notes = the printable teacher guide. build.js injects the
+       .guide-scope body of teacher-guide.html at the marker below, so there is
+       one source and nothing to fetch at runtime. Edit teacher-guide.html. -->
+  <section class="overlay" id="notesOverlay" role="dialog" aria-modal="true" aria-label="Presenter Notes" hidden>
+    <div class="modal notes-modal">
+      <span class="eyebrow">Presenter notes · the printable teacher guide, on screen</span>
+<div class="guide-scope">
+  <div class="g-head">
+    <h1>Time-of-Flight Mass Spectrometer</h1>
+    <p class="g-sub">Teacher and presenter guide · Guided linear time-of-flight investigation · Murray State University</p>
+  </div>
 
-2. Investigation 1: hold +1 charge constant. Take predictions, then run. Compare the 100 Da and 400 Da arrival times on the fixed axis.
+  <section aria-labelledby="g-purpose">
+    <h2 id="g-purpose">Purpose and learning target</h2>
+    <p class="lead">Students analyze charged particles by timing their flight. They use three linked experiments to separate the effects of mass and positive charge, then discover why different ions with equal mass-to-charge ratio can produce one coincident detector peak.</p>
+    <div class="box"><strong>Target claim:</strong> A time-of-flight detector measures arrival time directly. Under this ideal model, that time depends on mass-to-charge ratio, so one peak does not establish one kind of ion or identify a real molecule.</div>
+    <p>An <strong>ion</strong> is an electrically charged atom or molecule. The simplified path is: a voltage boost happens before timing, ions coast through a field-free tube in vacuum, and the detector records arrivals.</p>
+  </section>
 
-3. Investigation 2: hold 200 Da mass constant. The +2 ion receives more energy from the same voltage and arrives first.
+  <section aria-labelledby="g-units">
+    <h2 id="g-units">Units students see</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Label</th><th>Meaning in this activity</th></tr></thead>
+        <tbody>
+          <tr><td>dalton (Da)</td><td>A mass unit used for atoms and molecules.</td></tr>
+          <tr><td>elementary charge (e)</td><td>+1e or +2e is positive charge. The dimensionless charge number z is 1 or 2.</td></tr>
+          <tr><td>microsecond (µs)</td><td>One millionth of a second. The detector clock and horizontal trace axis show real flight time in µs.</td></tr>
+          <tr><td>metre (m)</td><td>Flight-tube length. Core investigations hold it at 1.50 m.</td></tr>
+          <tr><td>kilovolt (kV)</td><td>One thousand volts. Core investigations hold the boost at 20 kV.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="small">The screen uses one scale for every core run: 1.00 physical µs takes 160 ms on screen, or 160,000× slow motion. The detector trace keeps the same 0–18 µs horizontal axis.</p>
+  </section>
 
-4. Investigation 3: ask for predictions before naming m/z. The 200 Da/+1 and 400 Da/+2 inputs coincide because both ratios equal 200.
+  <section aria-labelledby="g-flow">
+    <h2 id="g-flow">12–15 minute core flow</h2>
+    <ol>
+      <li><strong>Orient (2 minutes).</strong> Open <code>index.html</code>. Use the opening Guide overlay and identify the known simulated inputs, clock start, drift tube, and detector. Ask: “What will we know before Run, and what will the detector measure?”</li>
+      <li><strong>Investigation 1 — mass (3 minutes).</strong> Both ions are +1. Students predict, then compare 100 Da and 400 Da on the shared axis.</li>
+      <li><strong>Investigation 2 — charge (3 minutes).</strong> Both ions are 200 Da. Students predict, then compare +1 and +2.</li>
+      <li><strong>Investigation 3 — equal ratio (3 minutes).</strong> Compare 200 Da/+1 with 400 Da/+2. Let the coincident arrival motivate the conventional m/z label.</li>
+      <li><strong>Transfer (2–4 minutes).</strong> Ask whether one real detector peak proves one ion is present. Discuss what additional evidence a molecular identity would require.</li>
+    </ol>
+  </section>
 
-5. Use the transfer prompt to separate “one peak” from “one identified ion.” Flight time alone does not identify a real molecule.
+  <section aria-labelledby="g-evidence">
+    <h2 id="g-evidence">Expected simulated evidence</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Investigation</th><th>Center arrivals</th><th>Evidence-based explanation</th></tr></thead>
+        <tbody>
+          <tr><td>Same charge; 100 vs 400 Da</td><td>Ion A: 7.64 µs<br>Ion B: 15.27 µs</td><td>With charge and voltage held constant, the lighter ion crosses the tube sooner.</td></tr>
+          <tr><td>Same mass; +1 vs +2</td><td>Ion A: 10.80 µs<br>Ion B: 7.64 µs</td><td>The +2 ion receives more kinetic energy from the same voltage boost and arrives sooner.</td></tr>
+          <tr><td>200 Da/+1 vs 400 Da/+2</td><td>Both: 10.80 µs</td><td>200 ÷ 1 = 200 and 400 ÷ 2 = 200. Both have m/z = 200, so the ideal detector records one coincident peak.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box warning"><strong>Keep inputs and evidence distinct.</strong> Sample cards show values the simulation already knows. Exact arrivals and the completed trace stay hidden until Run. The navy line is the summed detector signal; colored ticks identify the known packet centers. A peak represents a group arriving over a timing range.</div>
+  </section>
 
-Optional: open the width extension. Define timing width before sigma. Compare 1 m and 2 m on the shared axis under each assumed width rule.</div>
+  <section class="page-break" aria-labelledby="g-advanced">
+    <h2 id="g-advanced">Optional advanced extension: peak width</h2>
+    <p>Introduce <strong>timing width</strong> before naming sigma. The extension compares 200 and 205 Da ions, both +1, in 1.00 m and 2.00 m tubes. It uses a shared 0–16 µs axis and an explicit classroom criterion: centers count as resolved when their separation is at least their mean full width at half maximum (FWHM).</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Assumed width rule</th><th>1.00 m result</th><th>2.00 m result</th><th>What changes</th></tr></thead>
+        <tbody>
+          <tr><td>Fixed σ = 0.06 µs</td><td>Separation 0.089 µs<br>FWHM 0.141 µs<br>overlapping</td><td>Separation 0.179 µs<br>FWHM 0.141 µs<br>resolved</td><td>Separation doubles while absolute width stays fixed.</td></tr>
+          <tr><td>σ = 1.5% of arrival time</td><td>Separation 0.089 µs<br>mean FWHM 0.256 µs<br>overlapping</td><td>Separation 0.179 µs<br>mean FWHM 0.512 µs<br>overlapping</td><td>Separation and width both double; their ratio stays constant.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The widths are assumptions, and this comparison does not support a universal promise that a longer tube improves resolution.</p>
+  </section>
+
+  <section aria-labelledby="g-model">
+    <h2 id="g-model">Model and boundaries</h2>
+    <div class="formula">qV = ½mv² &nbsp; → &nbsp; t = L √[m / (2qV)]</div>
+    <ul>
+      <li><strong>t</strong> is field-free flight time in seconds; <strong>L</strong> is length in metres; <strong>m</strong> is mass converted from Da to kilograms.</li>
+      <li><strong>q = z·e</strong> is positive charge in coulombs; z is the charge number; <strong>V</strong> is voltage in volts.</li>
+      <li>The clock begins at drift-tube entry. Acceleration time is excluded.</li>
+      <li>The Gaussian peak uses σ as its timing spread, FWHM = 2.355σ, and area proportional to packet count.</li>
+    </ul>
+    <p>This ideal linear TOF does not model an ion source, extraction optics, reflectron focusing, detector efficiency, calibration, fragmentation, uncertainty, or molecular identification.</p>
+  </section>
+
+  <section aria-labelledby="g-prompts">
+    <h2 id="g-prompts">Discussion prompts</h2>
+    <ul>
+      <li>Which values are controlled inputs, and which values are detector observations?</li>
+      <li>Why does the +2 ion arrive first when mass is held constant?</li>
+      <li>How can two different ions make one peak in the equal-ratio experiment?</li>
+      <li>What additional evidence would you need before identifying a real molecule?</li>
+      <li>In the extension, which assumed width rule lets the longer tube cross the stated criterion, and why?</li>
+    </ul>
+    <p><strong>Controls:</strong> <b>?</b> reopens the Guide. <b>⚙</b> Settings offers Open Presenter Notes (this document), Presentation mode, and Reset. Run locks the prediction during flight; Replay uses the same physical-to-screen scale.</p>
+  </section>
+
+  <section aria-labelledby="g-sources">
+    <h2 id="g-sources">Sources and attribution</h2>
+    <p>Iowa State University Chemical Instrumentation Facility, <a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial">Mass Spectrometry Tutorial</a>, for qV acceleration, field-free drift, and detector timing. Shimadzu, <a href="https://www.shimadzu.com/an/sites/shimadzu.com.an/files/pim/pim_document_file/technical/11021/journal_vol_11_issue_2_02.pdf">MALDI basics</a>, for pulsed-ionization context. The Morris project record at <a href="https://digitalcommons.murraystate.edu/orcagrants/227/">Murray State Digital Commons</a> supports plausible course fit. These sources do not endorse this activity, and the demo is not presented as Morris’s instrument or assignment.</p>
+  </section>
+
+  <div class="g-foot"><strong>Time-of-Flight Mass Spectrometer</strong> · Bryant Harrison · Murray State University · Offline teaching model. Open <code>index.html</code> to run the investigation. This file, teacher-guide.html, is the canonical source of this document; the in-app presenter notes are generated from it at build time.</div>
+
+</div>
       <button class="secondary modal-close" data-close="notesOverlay">Close notes</button>
     </div>
   </section>
@@ -1362,15 +1493,27 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
         byId('lessonTitle').scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
+      function closeSettingsMenu() {
+        byId('settingsMenu').hidden = true;
+        byId('settingsButton').setAttribute('aria-expanded', 'false');
+      }
+
+      /* Reset means fresh load: lesson progress, the transfer answer, the width
+         assumption, every disclosure, presentation mode and the scroll position all
+         go back to how the page opens. The Guide overlay is the one exception the
+         contract names — a reset must not reopen it in front of a room. */
       function resetAll() {
         cancelRun('ready');
         lessonState = M.reduceLessonState(lessonState, { type: 'RESET' });
         byId('transferFeedback').textContent = '';
         byId('transferOptions').querySelectorAll('button').forEach(button => button.classList.remove('selected'));
-        byId('advancedResult').hidden = true;
-        byId('settingsMenu').hidden = true;
-        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        setAdvancedMode('absolute');
+        document.querySelectorAll('details').forEach(panel => { panel.open = false; });
+        document.querySelectorAll('.overlay').forEach(overlay => { overlay.hidden = true; });
+        setPresentationMode(false);
+        closeSettingsMenu();
         renderCurrentStep();
+        window.scrollTo({ top: 0, behavior: 'instant' });
       }
 
       function advancedSpread() {
@@ -1513,18 +1656,20 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
         menu.hidden = !menu.hidden;
         byId('settingsButton').setAttribute('aria-expanded', String(!menu.hidden));
       });
+      /* The menu item keeps the label the contract names; the on/off state rides
+         on aria-pressed and the highlight, not on the words. */
+      function setPresentationMode(on) {
+        document.body.classList.toggle('presentation', on);
+        byId('presentationButton').classList.toggle('active', on);
+        byId('presentationButton').setAttribute('aria-pressed', String(on));
+      }
       byId('presentationButton').addEventListener('click', () => {
-        document.body.classList.toggle('presentation');
-        byId('presentationButton').textContent = document.body.classList.contains('presentation')
-          ? '▣ Exit presentation mode'
-          : '▣ Enter presentation mode';
-        byId('settingsMenu').hidden = true;
-        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        setPresentationMode(!document.body.classList.contains('presentation'));
+        closeSettingsMenu();
         drawCore();
       });
       byId('notesButton').addEventListener('click', () => {
-        byId('settingsMenu').hidden = true;
-        byId('settingsButton').setAttribute('aria-expanded', 'false');
+        closeSettingsMenu();
         byId('notesOverlay').hidden = false;
       });
       document.querySelectorAll('[data-close]').forEach(button => {
@@ -1533,8 +1678,7 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
       document.addEventListener('keydown', event => {
         if (event.key === 'Escape') {
           document.querySelectorAll('.overlay').forEach(overlay => { overlay.hidden = true; });
-          byId('settingsMenu').hidden = true;
-          byId('settingsButton').setAttribute('aria-expanded', 'false');
+          closeSettingsMenu();
         }
       });
       window.addEventListener('resize', () => {
