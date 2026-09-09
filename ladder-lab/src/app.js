@@ -326,23 +326,39 @@ LL.App = (function () {
     });
 
     /* settings menu
-       Presentation mode = the projector big-UI scale PLUS the presenter's-notes
+       Presentation mode = the projector big-UI scale PLUS the presenter-notes
        affordance in the top bar. The notes sheet itself stays openable from the
        menu at any time; body.presentation only surfaces the one-tap button. */
+    function applyBigUI(on, announce) {
+      ctx.bigUI = on;
+      document.body.classList.toggle('bigui', on);
+      document.body.classList.toggle('presentation', on);
+      bus.emit('bigui:changed', { bigUI: on });
+      if (on && announce) toast('Presentation mode on — the presenter notes are in the top bar.', 3000);
+    }
     document.getElementById('chk-bigui').addEventListener('change', function () {
-      ctx.bigUI = this.checked;
-      document.body.classList.toggle('bigui', this.checked);
-      document.body.classList.toggle('presentation', this.checked);
-      bus.emit('bigui:changed', { bigUI: this.checked });
-      if (this.checked) toast('Presentation mode on — presenter’s notes are in the top bar.', 3000);
+      applyBigUI(this.checked, true);
     });
     document.getElementById('chk-hideladder').addEventListener('change', function () {
       hideLadderPref = this.checked;
       applyHideLadder();
       if (this.checked) toast('Ladder hidden — have the class predict the logic from the intersection!', 3000);
     });
+
+    /* Settings -> Reset. Fresh-load state, by actually reloading: six stateful
+       modules (engine, sim, editor, challenges, faults, watch) would otherwise
+       each need a hand-written teardown, and one missed field is a demo that
+       looks reset and is not. Two things ride across the reload in the hash,
+       which works on file:// where the storage APIs are not guaranteed to:
+       "do not greet me with the Guide again", and Presentation mode, which is
+       a display preference rather than demo state and so survives Reset the
+       same way it survives a reload. The template's boot script reads the hash
+       and clears it. */
     document.getElementById('btn-resetall').addEventListener('click', function () {
       if (confirm('Reset EVERYTHING? This restores the app to its just-opened state.\nUnsaved student programs in the editor will be lost.')) {
+        var marks = ['reset'];
+        if (document.getElementById('chk-bigui').checked) marks.push('pres');
+        location.hash = marks.join(',');
         location.reload();
       }
     });
@@ -378,6 +394,14 @@ LL.App = (function () {
     /* short screens (Chromebooks/projectors): start with the watch drawer
        collapsed so the ladder and intersection get the room. */
     if (window.innerHeight < 780) { watchTouched = true; setWatchCollapsed(true); }
+
+    /* Presentation mode carried across a Settings -> Reset (see above). Applied
+       before the first render so every pane is laid out at the projector scale
+       from the start, and silently: the presenter did not just turn it on. */
+    if (window.LL_BOOT && window.LL_BOOT.presentation) {
+      document.getElementById('chk-bigui').checked = true;
+      applyBigUI(true, false);
+    }
 
     /* first load */
     loadProgram(LL.Programs.byId('stoplight_basic'));
