@@ -3,8 +3,8 @@ id: ai-progress-winters-evidence-2026-09-09
 artifact_kind: reference
 schema_version: 2
 title: Primary-source evidence audit for AI Progress and AI Winters
-created: 2026-09-09T14:00:00Z
-updated: 2026-09-09T14:00:00Z
+created: 2026-09-09T13:44:00Z
+updated: 2026-09-09T13:45:04Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
