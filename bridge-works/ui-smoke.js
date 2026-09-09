@@ -51,9 +51,9 @@ function check(name, cond, detail) {
   await page.goto('file://' + path.join(__dirname, 'index.html'));
   await page.waitForTimeout(600);
 
-  console.log('[0] The how-to popup opens on load');
+  console.log('[0] The Guide opens on load');
   const openHelp = async () => (await page.locator('#mHelp:not(.hidden)').count()) === 1;
-  check('the how-to is showing on load', await openHelp());
+  check('the Guide is showing on load', await openHelp());
   await page.screenshot({ path: '/tmp/bw-0-help.png' });
   await page.click('#hpClose');
   await page.waitForTimeout(200);
@@ -595,11 +595,16 @@ function check(name, cond, detail) {
         !broke, broke || done + ' random draw/erase operations');
   await page.screenshot({ path: '/tmp/bw-17-fuzz.png' });
 
-  /* --------------------------- 13. contract UX: how-to, settings, presenter notes */
-  console.log('\n[13] Contract UX — reopenable how-to, settings, presenter notes');
+  /* ------------------------------ 13. contract UX: Guide, settings, presenter notes */
+  console.log('\n[13] Contract UX — Guide, settings menu, presenter notes, reset');
+  check('the ? control is named Guide',
+        (await page.locator('#btnHelp').getAttribute('aria-label')) === 'Guide',
+        await page.locator('#btnHelp').getAttribute('aria-label'));
+  check('  and the overlay it opens is headed Guide',
+        (await txt('#mHelp h2')).trim().startsWith('Guide'), await txt('#mHelp h2'));
   await page.click('#btnHelp');
   await page.waitForTimeout(150);
-  check('the ? control reopens the how-to', await openHelp());
+  check('the ? control reopens the Guide', await openHelp());
   await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
   check('  Escape dismisses it', !(await openHelp()));
@@ -618,14 +623,33 @@ function check(name, cond, detail) {
   await page.click('#btnTeacher');
   await page.waitForTimeout(200);
   check('the ⚙ button opens a settings menu', (await txt('#mTeacher h2')) === 'Settings');
-  check('  which offers presentation mode', (await txt('#mTeacher')).includes('Presentation mode'));
+  /* the contract fixes these three labels exactly; demo-specific options may sit beside them */
+  for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
+    check('  the menu offers "' + label + '"',
+          (await page.locator('#mTeacher').getByText(label, { exact: true }).count()) >= 1);
+  }
   await page.click('#btnNotesOpen');
   await page.waitForTimeout(200);
-  check("  and opens the presenter's notes", await openNotes());
+  check('  and opens the presenter notes', await openNotes());
   const notes = await txt('#mNotes');
-  check('    carrying the run of show', notes.includes('Run of show') && notes.includes('method of joints'));
+  check('    carrying the session plan', notes.includes('30-minute session plan') && notes.includes('method of joints'));
   check('    and the numbers a presenter needs',
         notes.includes('300 kN') && notes.includes('$180 per joint') && notes.includes('720 kN'));
+  /* The notes are not a summary of the guide: they ARE the guide, injected by
+     tools/guide-sync.js. That script's --check proves it byte for byte; this proves
+     the injected block is what the browser actually renders. The guide is read here
+     in node and parsed in the page, so the page itself still fetches nothing. */
+  const gSrc = fs.readFileSync(path.join(__dirname, 'teacher-guide.html'), 'utf8');
+  const gA = gSrc.indexOf('<div class="guide-scope">');
+  const gB = gSrc.indexOf('</div><!-- /guide -->');
+  const guideText = await page.evaluate((html) => {
+    const d = document.createElement('div');
+    d.innerHTML = html;
+    return d.textContent.replace(/\s+/g, ' ').trim();
+  }, gSrc.slice(gA, gB) + '</div>');
+  const notesBody = (await page.textContent('#mNotes .guide-scope')).replace(/\s+/g, ' ').trim();
+  check('    and matching teacher-guide.html word for word', notesBody === guideText,
+        notesBody.length + ' vs ' + guideText.length + ' chars');
   await page.screenshot({ path: '/tmp/bw-18-notes.png' });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
@@ -648,6 +672,52 @@ function check(name, cond, detail) {
   await page.click('#tcClose');
   await page.waitForTimeout(300);
 
+  /* Reset: the contract asks for the demo's fresh-load state, with the Guide closed.
+     "No storage at all" is the wrong test — a fresh load writes bw.design.v1 itself
+     (init -> loadLevel -> refresh -> saveDesign) before anyone touches anything. So
+     the control is a real fresh load: clear storage, reload, and record what the game
+     leaves behind. Reset has to reproduce exactly that. */
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+  await page.waitForTimeout(900);
+  const freshLoad = await page.evaluate(() => ({
+    design: localStorage.getItem('bw.design.v1'),
+    keys: ['bw.board.v1', 'bw.design.v1', 'bw.prefs.v1', 'bw.progress.v1']
+      .filter((k) => localStorage.getItem(k) !== null)
+  }));
+  await page.click('#hpClose');                // the Guide opens on load; put it away
+  await page.waitForTimeout(150);
+  /* Move off a first run, so a no-op could not pass this. */
+  await gotoLevel(2);
+  await page.click('#btnTeacher');
+  await page.waitForTimeout(200);
+  await page.click('#tglPar');                 // flip a default off
+  await page.waitForTimeout(150);
+  await page.click('#btnReset');               // first tap arms
+  await page.waitForTimeout(200);
+  await page.click('#btnReset');               // second tap confirms
+  await page.waitForTimeout(500);
+  const fresh = await page.evaluate(() => ({
+    li: BWGAME.li, xray: BWGAME.xray, par: BWGAME.showPar, big: BWGAME.big,
+    keyboard: BWGAME.keyboard, tool: BWGAME.tool,
+    bodyBig: document.body.classList.contains('big'),
+    notesBtnHidden: document.getElementById('btnNotes').classList.contains('hidden'),
+    design: localStorage.getItem('bw.design.v1'),
+    keys: ['bw.board.v1', 'bw.design.v1', 'bw.prefs.v1', 'bw.progress.v1']
+      .filter((k) => localStorage.getItem(k) !== null)
+  }));
+  check('Reset returns the demo to its fresh-load state',
+        fresh.li === 0 && fresh.xray === true && fresh.par === true &&
+        fresh.big === false && fresh.keyboard === false && fresh.tool === 'build' &&
+        !fresh.bodyBig && fresh.notesBtnHidden,
+        'level ' + (fresh.li + 1) + ', xray ' + fresh.xray + ', par ' + fresh.par +
+        ', presentation ' + fresh.big);
+  check('  leaving exactly what a fresh load leaves',
+        fresh.keys.join(',') === freshLoad.keys.join(',') && fresh.design === freshLoad.design,
+        fresh.keys.join(',') + ' vs ' + freshLoad.keys.join(','));
+  check('  without reopening the Guide', !(await openHelp()));
+  await refreshView();
+
   check('the attribution is visible', await page.locator('.bh-credit').isVisible());
   check('  naming author and institution',
         (await txt('.bh-credit')).includes('Bryant Harrison') &&
@@ -660,7 +730,7 @@ function check(name, cond, detail) {
   await page.click('#btnHelp');
   await page.waitForTimeout(250);
   const hb = await page.locator('#mHelp .sheet').boundingBox();
-  check('the how-to fits a phone screen', hb.width <= 390 && hb.height <= 844,
+  check('the Guide fits a phone screen', hb.width <= 390 && hb.height <= 844,
         Math.round(hb.width) + 'x' + Math.round(hb.height));
   await page.screenshot({ path: '/tmp/bw-19-phone-help.png' });
   await page.click('#hpStart');
