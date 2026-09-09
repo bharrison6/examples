@@ -104,6 +104,28 @@ From the bridge-works lane (2026-09-09):
 - **A guide that has outgrown its PDF** may legitimately become two pages; do not shrink type
   below readability to force one page. Correct the README if it promised one page.
 
+From the missing-time and what-the-survey-missed lanes (2026-09-09):
+
+- **Use a lane-private scratch directory**: the session scratchpad is shared by every lane and
+  files named `probe.mjs`, `cdp.mjs`, `guide.png` were overwritten mid-run. Write your harness
+  and screenshots under `<scratchpad>\<slug>-lane\` and re-read nothing you did not just write.
+- **Label assertions must be scoped to the Settings block**, not the whole document: once the
+  guide is injected, its prose names "Open Presenter Notes" and the others, so a document-wide
+  search matches its own answer key. Extract the menu block first and guard that it contains no
+  `guide-scope`.
+- **No `src/` copy step is needed when the root guide is the source**: lifting the scoped
+  stylesheet and `.guide-scope` body straight from the root `teacher-guide.html` gives one file,
+  no copy, and the same `--check` (missing-time's `build.js` is the worked example).
+
+## Orchestrator sweep after batch 3 (not lane work)
+
+- `inhibitor-investigation/build.js` still locates the guide stylesheet with `indexOf('<style>')`
+  and its `src/teacher-guide.html` head comment contains that literal, so the first
+  `.guide-scope` rule is swallowed (notes render at 16px). Fix with a comment-masked search or an
+  explicit `<style id="guide-css">` marker, rebuild, and scope its `test-build.js` label
+  assertions (lines ~34-36) to the menu block.
+- Regenerate the hub (`node tools/build-hub.js`) once, push, and record the completion episode.
+
 ## Folded in (operator answers of 2026-09-09, before the pass started)
 
 - **Retitle, Path A** ([[demo-titles-descriptive-retitle]], [[demo-titles-retitle]]): each lane
