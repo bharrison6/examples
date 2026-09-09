@@ -2,12 +2,12 @@
    Two Winters — the timeline canvas.
 
    Seventy-six years across the x axis. Six rows down the y axis: one for
-   landmark results, then one for each of the five stages of the mechanism.
+   landmark results, then five lenses for comparing claims, institutions,
+   constraints, reassessment, and withdrawal.
 
-   The whole point of the lane layout is that nobody has to be told the
-   pattern repeats. Scrub forward and the lanes light up top-to-bottom —
-   promise, money, limit, naming, withdrawal — and then they do it again,
-   and then a third run starts and stops partway down.
+   The lane layout supports comparison without asserting that history repeats
+   in order. Scrubbing makes each historical pathway inspectable, while the
+   present stays evidence to evaluate rather than a third run to complete.
 
    Hand-rolled on a 2d context, like the rest of this repository. Everything
    is laid out in CSS pixels and scaled by devicePixelRatio at draw time so
@@ -32,7 +32,7 @@ const C = {
   grid:   'rgba(143,163,192,0.11)'
 };
 
-/* One colour per lane, warm at the top of the cycle and cold at the bottom. */
+/* One colour per comparison lens; red remains reserved for withdrawal. */
 const LANE_COLOR = {
   result:     C.ink,
   promise:    C.gold,

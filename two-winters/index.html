@@ -8,12 +8,12 @@
 <title>AI Winters: Boom and Bust — has this happened before?</title>
 <!--
   AI Winters: Boom and Bust — a single-file, offline demonstration of the two
-  AI funding collapses of the twentieth century, the mechanism they shared,
-  and an even-handed comparison with the present.
+  AI funding contractions of the twentieth century and a bounded comparison
+  with the present.
 
-  Four acts: guess the year on ten real predictions with the date hidden;
-  scrub a 1950-2026 timeline whose lanes are the five stages of the
-  mechanism; read the two winters side by side on those same five stages;
+  Four acts: date ten real claims with the speaker and date hidden;
+  scrub a 1950-2026 timeline through five comparison lenses; read the two
+  winters side by side without treating either as a template for today;
   then weigh what rhymes against what is genuinely different.
 
   Every claim on screen resolves to a source in the dataset, and
@@ -92,6 +92,10 @@ h2 { font-size: clamp(1.15rem, 3.6vw, 1.6rem); font-weight: 800; }
 h3 { font-size: clamp(1.02rem, 3vw, 1.22rem); font-weight: 800; }
 p  { margin: 0 0 1em; }
 a  { color: var(--sky); }
+button:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
 
 /* --------------------------------------------------------------- chrome */
 
@@ -202,6 +206,7 @@ main { max-width: var(--maxw); margin: 0 auto; padding: 18px 14px 64px; }
   letter-spacing: .04em; text-transform: uppercase;
 }
 .src:hover { background: rgba(0,164,227,0.18); }
+.src:focus-visible { color: var(--navy-deep); background: var(--gold); border-color: var(--gold); }
 .src.bad { color: var(--red); border-color: var(--red); background: rgba(255,69,0,0.1); }
 .src-title { color: var(--dim); font-size: .76rem; line-height: 1.35; flex: 1 1 220px; min-width: 0; }
 .src-id { color: var(--dim); font-size: .7rem; font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -692,7 +697,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
       </div>
 
       <div class="field">
-        <span class="lbl">And did it come true?</span>
+        <span class="lbl" id="verdict-prompt">And did it come true?</span>
         <div id="verdict-btns" role="group" aria-label="Your verdict"></div>
       </div>
     </div>
@@ -710,13 +715,12 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 
 <!-- =========================== ACT II ================================= -->
 <section class="act" data-act="2" hidden>
-  <h1>Seventy-six years, five stages, twice.</h1>
+  <h1>Seventy-six years, five lenses, two different contractions.</h1>
   <p>
-    Each row below is one stage of the same mechanism. Drag the slider forward and watch
-    the rows light up in order &mdash; a promise, then money against it, then a hard limit,
-    then somebody naming the gap, then the money leaving. It happens once between 1955 and
-    1980, again between 1982 and 1992, and a third run is under way now that has not
-    reached the bottom rows.
+    Each row below is one lens for comparing events: claims, institutional bets, constraints,
+    reassessment, and withdrawal. Drag the slider forward. The events do not form a fixed
+    sequence: the first contraction involved different institutions and pressures from the
+    second. The current entries are evidence about today, not a third run of an historical script.
   </p>
   <p class="help">
     The two pale bands are the winters. They are drawn with a soft right-hand edge because
@@ -725,7 +729,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   </p>
 
   <div id="tl-wrap">
-    <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results, then the five stages of an AI winter. Two shaded bands mark the winters."></canvas>
+    <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results and five comparison lenses. Two shaded bands mark conventional AI-winter date ranges."></canvas>
     <div id="tl-winter" hidden></div>
   </div>
 
@@ -754,13 +758,14 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   </div>
 
   <div class="panel">
-    <h3>The money, as four points rather than a curve</h3>
+    <h3>Four funding examples, not a comparable total</h3>
     <p class="help">
       There is no continuous, sourceable series of AI funding across these seventy-six
       years &mdash; particularly not for US spending before 1980 &mdash; so this demo does
-      not draw one. These are the four commitments it could actually source, in their
-      original currencies, not adjusted for inflation, and not converted to a common unit.
-      Read them as four data points with sources attached, not as a trend.
+      not draw one. These are four sourceable funding examples with different bases: programme
+      budgets, programme expenditure, and a private funding round. They use three currencies,
+      different price years, and no common accounting basis. Read them as dated evidence, not
+      as a combined total or trend.
     </p>
     <div id="money-list"></div>
   </div>
@@ -772,13 +777,12 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 
 <!-- =========================== ACT III ================================ -->
 <section class="act" data-act="3" hidden>
-  <h1>The same five stages, twice &mdash; and once more, halfway.</h1>
+  <h1>Compare the conditions; do not force a cycle.</h1>
   <p>
-    Reading across a row shows how one stage played out in each era. Reading down a column
-    shows one era&rsquo;s whole cycle. Two cells in the third column are marked
-    <b>open</b> rather than filled in &mdash; the binding technical limit, which nobody has
-    identified, and the withdrawal, which has not happened. In both previous cycles those
-    same two cells were open right up until they were obvious.
+    Reading across a row compares a historical condition with another and with the present.
+    Two cells in the present column remain <b>open</b>: no single binding constraint has been
+    established, and no withdrawal has occurred. Those absences do not forecast what happens
+    next; they keep the question honest.
   </p>
 
   <div id="anatomy"></div>
@@ -804,7 +808,7 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 <footer id="foot">
   <span class="msu">Murray State University</span>
   <span class="who">Bryant Harrison</span>
-  <span>One HTML file &middot; runs offline &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</span>
+  <span>One HTML file &middot; runs offline &middot; source-backed historical inquiry</span>
 </footer>
 
 <!-- ============================= GUIDE ============================== -->
@@ -842,9 +846,9 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
       <div class="field">
         <span class="lbl">The four acts</span>
         <ul class="ht-acts">
-          <li><b>Guess the year</b> &mdash; ten predictions, 1950 to 2024.</li>
-          <li><b>The two winters</b> &mdash; a timeline you can scrub, laid out so the repeated pattern is visible rather than asserted.</li>
-          <li><b>Anatomy</b> &mdash; the first winter, the second winter, and now, on the same five stages.</li>
+          <li><b>Guess the year</b> &mdash; ten curated claims, 1950 to 2024.</li>
+          <li><b>The two winters</b> &mdash; a timeline you can scrub, using five lenses to compare different historical pathways.</li>
+          <li><b>Anatomy</b> &mdash; compare the first winter, the second winter, and now without treating them as one cycle.</li>
           <li><b>Now</b> &mdash; what rhymes with the two winters, what is genuinely different, what was cut for lack of a source, and every source.</li>
         </ul>
       </div>
@@ -956,20 +960,20 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
 
   <h2>Why this demo exists</h2>
   <p>
-    It follows <b>Takeoff</b>, which ends with the room having watched capability curves go
-    almost vertical. The honest next question &mdash; and you will get it, usually from
+    It follows <b>Takeoff</b>, which ends with the room considering AI gains alongside
+    limits and measurement conditions. The honest next question &mdash; and you will get it, usually from
     someone who has been in a technical field a long time &mdash; is <i>&ldquo;is this
     another bubble?&rdquo;</i>
   </p>
   <p>
-    This demo answers that with evidence instead of reassurance. AI has collapsed twice.
-    Both times the same five things happened in the same order. Knowing that sequence is
-    how you judge a claim without either swallowing it or dismissing it.
+    This demo answers that with evidence instead of reassurance. AI has contracted twice,
+    through different combinations of technical limits, institutional choices, and markets.
+    The histories rhyme; they do not provide a fixed sequence for the present.
   </p>
   <p class="say">
-    The one sentence to land: <b>confident predictions that AI was nearly here have a bad
-    record &mdash; and so do confident predictions that it would never work.</b> Most rooms
-    only believe the first half until they are scored on the second.
+    The one sentence to land: <b>a prediction needs a deadline and an outcome; an assessment
+    needs evidence about its own moment.</b> Do not grade a historical claim until you know
+    which kind it is.
   </p>
 
   <h2>The shape of the session</h2>
@@ -979,9 +983,9 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <div class="scroll">
   <table>
     <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
-    <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced predictions with the speaker and date hidden. The room guesses the year and the outcome. Scorecard splits promises from dismissals.</td><td>7&ndash;9 min</td></tr>
-    <tr><td><b>II &mdash; The two winters</b></td><td>Scrub the timeline. The five lanes light up in order, twice.</td><td>3&ndash;4 min</td></tr>
-    <tr><td><b>III &mdash; Anatomy</b></td><td>The two winters and the present, on the same five stages. Two cells in the third column are empty.</td><td>2&ndash;3 min</td></tr>
+    <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced claims with the speaker and date hidden. Score forecasts; classify assessments instead of pretending they are forecasts.</td><td>7&ndash;9 min</td></tr>
+    <tr><td><b>II &mdash; The two winters</b></td><td>Scrub the timeline. Five lenses compare historical pathways without forcing a sequence.</td><td>3&ndash;4 min</td></tr>
+    <tr><td><b>III &mdash; Anatomy</b></td><td>Compare the two winters and the present under the same lenses. Two current questions stay open.</td><td>2&ndash;3 min</td></tr>
     <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
   </table>
   </div>
@@ -998,14 +1002,14 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <div class="scroll">
   <table>
     <tr><th>Year</th><th>Card</th><th>Type</th><th>What it is for</th></tr>
-    <tr><td>1950</td><td>Turing &mdash; fifty years to the imitation game</td><td><span class="tag p">promise</span></td><td>Opens gently. Nobody guesses this early. Sets up that the field has always had deadlines.</td></tr>
-    <tr><td>1958</td><td>&ldquo;walk, talk, see, write, reproduce itself&rdquo;</td><td><span class="tag p">promise</span></td><td>The press-release failure mode. The underlying idea was real and important; the sentence was not.</td></tr>
+    <tr><td>1950</td><td>Turing &mdash; fifty years to the imitation game</td><td><span class="tag o">open forecast</span></td><td>Its about-2000 bar was missed; the current status remains contested. Use it to separate a past deadline from an unresolved present judgment.</td></tr>
+    <tr><td>1958</td><td>&ldquo;walk, talk, see, write, reproduce itself&rdquo;</td><td><span class="tag d">untimed ambition</span></td><td>An expansive press claim without a deadline. Classify it; do not pretend it supplies a scoreable outcome window.</td></tr>
     <tr><td>1957</td><td>Simon &amp; Newell &mdash; chess champion in ten years</td><td><span class="tag p">promise</span></td><td><b>The most useful card in the deck.</b> Right destination, wrong by a factor of four. Pause here.</td></tr>
     <tr><td>1960</td><td>Simon &mdash; any work a man can do, in twenty years</td><td><span class="tag p">promise</span></td><td>Twenty years lands in 1980, the bottom of the first winter. Also: it is usually misdated to 1965.</td></tr>
-    <tr><td>1966</td><td>ALPAC &mdash; machine translation is not near</td><td><span class="tag d">dismissal</span></td><td>The first dismissal. Fair about 1966, catastrophic as a forecast. Funding stopped.</td></tr>
-    <tr><td>1967</td><td>Minsky &mdash; substantially solved within a generation</td><td><span class="tag p">promise</span></td><td>From his own textbook, not a magazine. Use this if someone challenges the sourcing.</td></tr>
-    <tr><td>1969</td><td><i>Perceptrons</i> &mdash; neural nets read as a dead end</td><td><span class="tag d">dismissal</span></td><td>The proofs were right; the conclusion the field drew was not. And the authors disputed the tidy story.</td></tr>
-    <tr><td>1973</td><td>Lighthill &mdash; no major impact anywhere in the field</td><td><span class="tag d">dismissal</span></td><td>The report that ended UK funding. True about 1973; read as permanent.</td></tr>
+    <tr><td>1966</td><td>ALPAC &mdash; machine translation is not near</td><td><span class="tag d">assessment</span></td><td>Distinguish a near-term economic assessment from a forecast. The report also recommended continued computational-linguistics research.</td></tr>
+    <tr><td>1967</td><td>Minsky &mdash; substantially solved within a generation</td><td><span class="tag p">promise</span></td><td>A reported quotation attributed to his textbook. Use it to explain why the app labels this source route reported.</td></tr>
+    <tr><td>1969</td><td><i>Perceptrons</i> &mdash; neural nets read as a dead end</td><td><span class="tag d">assessment</span></td><td>The proofs were right; the history of how the field received them is disputed.</td></tr>
+    <tr><td>1973</td><td>Lighthill &mdash; no major impact so far</td><td><span class="tag d">assessment</span></td><td>A retrospective judgment on impact and constraints, not a permanent forecast.</td></tr>
     <tr><td>1984</td><td>Schank &amp; Minsky &mdash; a winter is coming</td><td><span class="tag w">warning</span></td><td>The card that saves the demo from being anti-hype. They were <b>right</b>, three years early.</td></tr>
     <tr><td>2024</td><td>Amodei &mdash; &ldquo;could come as early as 2026&rdquo;</td><td><span class="tag o">open</span></td><td>Deliberately unscored. The year named is the year you are standing in.</td></tr>
   </table>
@@ -1014,59 +1018,53 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   <h3>Short of time?</h3>
   <p>
     Keep four: <b>Simon &amp; Newell 1957</b> (over-promise, right destination),
-    <b>ALPAC 1966</b> (dismissal that aged badly), <b>Schank &amp; Minsky 1984</b>
+    <b>ALPAC 1966</b> (assessment versus forecast), <b>Schank &amp; Minsky 1984</b>
     (a prediction that was right), and <b>Amodei 2024</b> (still open). Those four carry
     the whole argument. Skip to Act III and close.
   </p>
 
   <h3>What the scorecard is for</h3>
   <p>
-    It shows two bars: how the room did on promises, and how it did on dismissals. Most
-    rooms are much better at spotting hype than at spotting a dismissal about to age badly.
-    If the two bars come out very different heights, say so out loud &mdash; that asymmetry
-    is the finding, not the total.
+  It scores time-bounded forecasts and displays dated assessments without grading their
+  future accuracy. That distinction is the teaching point: a claim about conditions in 1966
+  needs different evidence from a claim about what will happen by 1976.
   </p>
   <p class="say">
-    &ldquo;You are all good at not being fooled by someone selling you the future. You are
-    much worse at not being fooled by someone telling you it will not work. Both of those
-    are in the historical record about equally often.&rdquo;
+    &ldquo;Before calling a historical claim right or wrong, ask whether it actually made a
+    prediction. If it did, name the outcome and deadline. If it did not, assess its own evidence.&rdquo;
   </p>
 
   <h2>Act II &mdash; the timeline</h2>
   <p>
-    Do not narrate the events. Drag the slider slowly from 1950 and let the room watch the
-    rows fire top to bottom. Say the stage names as each lane lights: promise, money, limit,
-    naming, withdrawal. Then keep dragging and let them notice it happen again.
+    Do not narrate a cycle into existence. Drag the slider slowly from 1950 and use the rows
+    as comparison lenses: claims, institutional bets, constraints, reassessment, withdrawal.
+    Ask which causes matter in each episode and which do not carry across.
   </p>
   <ul>
     <li>The <b>&lsquo;</b> and <b>&rsquo;</b> buttons step one event at a time if you want to stop and read one.</li>
     <li>Tap any dot for the full text and its source.</li>
-    <li>Point at the <b>third run</b>, from 2020 on: the top rows have fired and the bottom two have not.</li>
+    <li>Point at the current entries as evidence about today, not a third historical run.</li>
   </ul>
   <p class="say warn">
-    Do not let the lanes turn into a prophecy. The correct line is: &ldquo;the first three
-    stages have happened. Whether the last two do is the open question, and nothing on this
-    screen settles it.&rdquo;
+    Do not let the lenses turn into a prophecy. The correct line is: &ldquo;these comparisons
+    tell us what to investigate. They do not establish that a withdrawal will occur.&rdquo;
   </p>
   <h3>The money panel &mdash; read the caveat aloud</h3>
   <p>
-    Four funding commitments, in four different currencies, not inflation-adjusted. That is
-    on purpose: no continuous, sourceable series of AI funding exists across these years, so
-    the demo shows four points with sources rather than drawing a line it cannot defend.
-    Saying that out loud buys you more credibility than a prettier chart would.
+    Four funding examples with different bases: programme budgets, programme expenditure, and
+    a private funding round. They use three currencies and different price years. No continuous,
+    sourceable funding series exists across these years, so the demo shows dated evidence rather
+    than drawing a combined total or a line it cannot defend.
   </p>
 
   <h2>Act III &mdash; anatomy</h2>
   <p>
-    Read down the first column, then the second, then stop at the third. Two cells in the
-    &ldquo;Now&rdquo; column are empty &mdash; the binding technical limit, and the
-    withdrawal. Make the room sit with that.
+    Compare the columns by cause, not by step number. Two cells in the &ldquo;Now&rdquo; column remain
+    open: no single binding technical constraint is established, and no withdrawal has occurred.
   </p>
   <p class="say">
-    &ldquo;In both previous cycles, the limit was completely obvious afterwards and
-    invisible at the time to the people doing the work. There is no reason to think we are
-    better placed. If someone tells you they know what today&rsquo;s binding constraint is,
-    they are making the same kind of claim that failed twice.&rdquo;
+    &ldquo;Hindsight makes old constraints easier to see. It does not prove that today has the
+    same constraint or that it must end the same way. Ask what evidence would support the claim.&rdquo;
   </p>
 
   <h2>Act IV &mdash; closing</h2>
@@ -1074,34 +1072,34 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
     Give both columns roughly equal time. The strongest item on each side:
   </p>
   <ul>
-    <li><b>Rhymes:</b> in February 2026 OpenAI stopped reporting SWE-bench Verified because
-      models had been trained on it and most of the hard problems they still failed had
-      broken tests. Scores kept rising; what they measured stopped being capability. Both
-      previous winters started with a gap between claim and measurement.</li>
-    <li><b>Different:</b> scaling behaviour that has held across more than seven orders of
-      magnitude, and 900 million people a week actually using the thing. Neither previous
-      boom had a measured extrapolable relationship, and neither had users.</li>
+    <li><b>Rhymes:</b> in February 2026 OpenAI stopped reporting SWE-bench Verified after
+      contamination concerns and an audit of 138 selected hard tasks found faulty tests in
+      59.4% of that subset. That is a warning about one evaluation, not a field verdict.</li>
+    <li><b>Different:</b> scaling behaviour measured across more than seven orders of
+      magnitude, and reported consumer reach at a far larger scale. Earlier booms also had
+      deployed systems and paying organisations, so be precise about the difference.</li>
   </ul>
   <p>
-    Close on the checklist, not on a verdict: given any AI claim, ask which of the five
-    stages it belongs to and what evidence would move it.
+    Close on the checklist, not on a verdict: given any AI claim, ask whether it is a forecast
+    or an assessment, what evidence supports it, and what evidence would move it.
   </p>
 
   <h2>Questions you will get</h2>
   <h3>&ldquo;So is it a bubble or not?&rdquo;</h3>
   <p>
-    Refuse the binary, in one sentence, then give the useful answer: some of the money is
-    ahead of the returns, which is stage two of the pattern; and the technology is in
-    hundreds of millions of hands, which neither previous boom managed. Both are true.
-    Financial correction and technological dead end are different claims and they are being
-    argued as if they were one.
+    Refuse the binary, in one sentence, then give the useful answer: current funding,
+    reported usage, technical reliability, and returns are distinct questions. Earlier eras
+    also had deployed systems and organisational users, though current consumer reach is
+    much larger. A financial correction and a technological dead end are different claims
+    and need different evidence.
   </p>
   <h3>&ldquo;Aren&rsquo;t the winter dates made up?&rdquo;</h3>
   <p>
-    Partly, and the demo says so. The starts are well attested &mdash; ALPAC 1966, the
-    hardware collapse in 1987. The ends are conventional and historians disagree; the second
-    winter is dated to 1993 here and to 2000 by other accounts. That is why the bands have a
-    soft right edge and a note under them.
+    Partly, and the demo says so. The bands are conventions for broader contractions, not
+    dates stamped by a single event. The 1987 hardware collapse is a useful second-winter
+    anchor; the first has more distributed causes and withdrawals, including but not limited
+    to ALPAC. The ends are also conventional and historians disagree; that is why the bands
+    have soft edges and explanatory notes.
   </p>
   <h3>&ldquo;Where did you get this?&rdquo;</h3>
   <p>
@@ -1112,10 +1110,10 @@ body.presenting #actnav button { min-height: 52px; font-size: .94rem; }
   </p>
   <h3>&ldquo;Why is that quote from a quotation-checking website?&rdquo;</h3>
   <p>
-    Because the Simon and Minsky lines are in printed books from 1960 and 1967 that are not
-    online, and that site verified both against page scans and gives the page numbers. It is
-    a stronger source than a paraphrase from a blog, and the demo marks the difference:
-    every claim carries <b>primary</b> or <b>reported</b>.
+    Because the Simon and Minsky lines are routed through a quotation-checking source that
+    cites printed books and page references. This build has not inspected those original
+    pages, so it labels the claims <b>reported</b> rather than primary. That distinction is
+    part of the lesson: a plausible citation route is not the same as direct verification.
   </p>
 
   <h2>Before you present</h2>
@@ -1191,11 +1189,11 @@ const DATA = (() => {
    -------------------------------------------------------------------------- */
 
 const INTRO = {
-  title: 'AI has boomed and collapsed twice before. Both times, the same five things happened in the same order.',
+  title: 'AI has contracted twice before. The histories rhyme, but they do not repeat as a script.',
   body: [
     'You have just watched capability curves go almost straight up. The fair question from anyone who has been in a technical field for thirty years is: is this another bubble?',
-    'That question has an evidence base. Artificial intelligence has had two funding collapses severe enough that the people inside them named the weather — the AI winters. The first ran roughly from the mid-1970s to about 1980. The second began in 1987. In both, the sequence was the same: a confident promise, real money committed against it, a hard technical limit nobody had measured, an authoritative voice that named the gap, and then the money leaving.',
-    'This is not a demo about hype being bad. It is about a track record. Confident predictions that AI was nearly here have a poor record — and so do confident predictions that it would never work. You are about to be scored on both.'
+    'That question has an evidence base. Artificial intelligence has had two funding contractions severe enough that people inside the field named the weather — the AI winters. The first involved research expectations, machine translation, and UK policy; the second involved expert systems, specialised hardware, and shifting defence priorities. They share pressures, but neither supplies a template for the next one.',
+    'This is not a demo about hype being bad. It separates time-bounded forecasts from contemporary assessments, then asks what evidence supports each present-day analogy. You will score forecasts. You will inspect assessments without pretending they were prophecies.'
   ],
   note: 'No AI is used anywhere in this app. It is a set of dated quotations, a timeline, and a link to the original source of each one. Everything runs from this single file with no network.',
   cta: 'Start — guess the year'
@@ -1204,15 +1202,15 @@ const INTRO = {
 /* --------------------------------------------------------------------------
    ACT I — Guess the year.
 
-   Ten real, sourced predictions, shown with the speaker and the date hidden.
+   Ten real, sourced claims, shown with the speaker and the date hidden.
    The viewer guesses the year on a slider and picks a verdict. Deliberately
-   mixed: four confident over-promises that failed, three confident dismissals
-   that failed, one that was right, one that was right about its own moment
-   and wrong as a forecast, and one still open.
+   mixed: five time-bounded promises, four contemporary or untimed assessments and one
+   warning. Only a time-bounded forecast earns an outcome score. An assessment
+   may be useful, mistaken, or misused without being a prediction.
 
-   `kind` is what the prediction claimed, not whether it was correct:
+   `kind` identifies the claim form, not whether it was correct:
      'promise'  — AI is nearly here / this will work
-     'dismiss'  — this will not work / is not worth funding
+     'assessment' — a diagnosis of conditions at the time, not a forecast
      'warning'  — trouble is coming
 
    `verdict` is what happened:
@@ -1232,9 +1230,9 @@ const CARDS = [
   where: '“Computing Machinery and Intelligence”, Mind LIX(236)',
   year: 1950,
   kind: 'promise',
-  verdict: 'late',
-  verdictLine: 'Later than fifty years, and still argued about.',
-  what: 'Turing set a deadline of about 2000 and a specific bar: five minutes, and an interrogator no better than 70% at telling machine from human. Nothing convincingly cleared that bar by 2000. Whether it has been cleared since is a live argument, partly because the test as Turing stated it is narrower than the way people quote it.',
+  verdict: 'open',
+  verdictLine: 'Its about-2000 bar was missed; its current status is still contested.',
+  what: 'Turing set an about-2000 deadline and a specific bar: five minutes, and an interrogator no better than 70% at telling machine from human. The card does not assign a current pass/fail verdict because the test’s status and interpretation remain contested. It separates the missed historical window from the unresolved present question.',
   status: 'primary', src: 'turing1950'
 },
 
@@ -1245,11 +1243,11 @@ const CARDS = [
   role: 'on Frank Rosenblatt’s perceptron',
   where: '“New Navy Device Learns By Doing”, 8 July 1958',
   year: 1958,
-  kind: 'promise',
-  verdict: 'no',
-  verdictLine: 'No. Not one of the six things on that list.',
-  what: 'The machine being described had learned to tell a card marked on the left from one marked on the right, after fifty tries. The perceptron was a real and important idea — it is the direct ancestor of every neural network running today — and the press release around it was not. Both things are true, and the gap between them is the shape of the whole problem.',
-  status: 'primary', src: 'cornell-perceptron'
+  kind: 'assessment',
+  verdict: 'context',
+  verdictLine: 'An untimed ambition, not a forecast with an outcome window.',
+  what: 'The machine being described had learned to tell a card marked on the left from one marked on the right, after fifty tries. The reported sentence makes expansive claims but supplies no deadline, so this activity treats it as an untimed ambition to classify rather than a prediction to score. Cornell’s 2019 account quotes the 1958 New York Times report; it is a reported source, not the original article.',
+  status: 'reported', src: 'cornell-perceptron'
 },
 
 {
@@ -1262,8 +1260,8 @@ const CARDS = [
   kind: 'promise',
   verdict: 'late',
   verdictLine: 'Right idea. Wrong by thirty years.',
-  what: 'Deep Blue beat Garry Kasparov 3½–2½ in May 1997 — forty years after the lecture rather than ten, so thirty years past the deadline. This is the single most useful card in the deck: the prediction was not stupid, and it was not wrong about the destination. It was wrong about the distance, by a factor of four. That is the characteristic failure mode, and it is the one to hold in mind about any date you hear this year.',
-  status: 'primary', src: 'simon-newell-1958'
+  what: 'Deep Blue beat Garry Kasparov 3½–2½ in May 1997 — forty years after the forecast rather than ten, so thirty years past the deadline. This card illustrates one dated claim whose destination arrived much later; it does not establish a general rule about every AI timeline.',
+  status: 'reported', src: 'simon-newell-1958'
 },
 
 {
@@ -1277,7 +1275,7 @@ const CARDS = [
   verdict: 'no',
   verdictLine: 'No. By 1980 the field was in its first winter.',
   what: 'Twenty years from 1960 lands in 1980, which is roughly the bottom of the first AI winter. This sentence is very widely quoted with the date 1965, from its reprint in The Shape of Automation; it was first published in 1960. If a demo is going to score you on dates, it had better get its own right.',
-  status: 'primary', src: 'qi-simon'
+  status: 'reported', src: 'qi-simon'
 },
 
 {
@@ -1287,11 +1285,11 @@ const CARDS = [
   role: 'chaired by John R. Pierce, for the National Academy of Sciences',
   where: 'Language and Machines: Computers in Translation and Linguistics',
   year: 1966,
-  kind: 'dismiss',
-  verdict: 'no',
-  verdictLine: 'Fair about 1966. Badly wrong as a forecast.',
-  what: 'US federal support for machine translation fell away after this report, and the field lost most of a generation. Machine translation is now used billions of times a day. ALPAC is the cleanest example of the second failure mode: a committee that read its own moment accurately, and then let that reading stand in for the future.',
-  note: 'Paraphrased, not quoted. The National Academies’ online copy is page images, so no wording from the report itself is quoted anywhere in this demo.',
+  kind: 'assessment',
+  verdict: 'context',
+  verdictLine: 'A 1966 assessment, not a forecast to grade against the future.',
+  what: 'ALPAC questioned the near-term economics of fully automatic translation while recommending $2.5–3 million annually for computational-linguistics research and tools for human translators. Its recommendations, its later funding effects, and the eventual success of machine translation are different claims. This card keeps them separate.',
+  note: 'Paraphrased from the original report. It is included to practice distinguishing an assessment from a prediction.',
   status: 'primary', src: 'alpac'
 },
 
@@ -1306,20 +1304,20 @@ const CARDS = [
   verdict: 'no',
   verdictLine: 'No — and a generation later the field was in its second winter.',
   what: 'Minsky wrote this in his own textbook, which is why it is used here rather than the more famous “three to eight years” line attributed to him by Life magazine in 1970. That article contains errors, and Minsky denied at least one quotation in it. A book he wrote himself is the stronger evidence, and it says something just as strong.',
-  status: 'primary', src: 'qi-minsky'
+  status: 'reported', src: 'qi-minsky'
 },
 
 {
   id: 'perceptrons-1969',
-  quote: 'A book of mathematical proofs shows what a single-layer perceptron cannot compute. The field reads it as a verdict on neural networks in general, and moves on.',
+  quote: 'A book of mathematical proofs shows what a single-layer perceptron cannot compute. Later accounts disagree about how broadly it shaped research priorities.',
   who: 'Marvin Minsky and Seymour Papert',
   role: 'MIT — and, more to the point, everyone who read them',
   where: 'Perceptrons: An Introduction to Computational Geometry, MIT Press',
   year: 1969,
-  kind: 'dismiss',
-  verdict: 'no',
-  verdictLine: 'The proofs held. The conclusion the field drew from them did not.',
-  what: 'Neural networks came back and now run essentially everything. But the tidy story — “this book killed neural networks for a decade” — is itself disputed, and the authors disputed it: they argued the work waned for its own reasons, not because of them. Both halves matter. A dismissal took hold, and the popular account of why is too neat.',
+  kind: 'assessment',
+  verdict: 'context',
+  verdictLine: 'A mathematical result with a contested historical reception.',
+  what: 'The book proved limits of single-layer perceptrons. Its historical reception is contested: claims that it caused a field-wide pause are too neat, and the authors disputed that causal account. The card is about separating a mathematical result from claims about a whole field’s research choices.',
   note: 'Paraphrased. The claim shown is about how the book was received, which is exactly the part historians argue over.',
   status: 'reported', src: 'perceptrons-wiki'
 },
@@ -1331,10 +1329,10 @@ const CARDS = [
   role: 'Lucasian Professor of Applied Mathematics, Cambridge, writing for the UK Science Research Council',
   where: 'Artificial Intelligence: A General Survey — written July 1972, published 1973',
   year: 1973,
-  kind: 'dismiss',
-  verdict: 'no',
-  verdictLine: 'True in 1973. Then read as permanent, which it was not.',
-  what: 'Lighthill named a real obstacle — combinatorial explosion, the way search spaces blow up once a problem leaves the laboratory. UK government support for AI ended at most British universities. Jim Howe, who was in the Edinburgh department it hit, wrote that the report “provoked a massive loss of confidence in AI by the academic establishment in the UK” and that it “persisted for a decade”.',
+  kind: 'assessment',
+  verdict: 'context',
+  verdictLine: 'A retrospective judgment on impact so far, not a permanent forecast.',
+  what: 'Lighthill criticized unmet promises and combinatorial explosion, while distinguishing useful automation and central-nervous-system research from the disputed bridge between them. His report assessed the impact achieved by 1973; it did not say that later methods could never matter. UK policy effects and the report’s influence are historical questions, not proof that the assessment predicted the future.',
   status: 'primary', src: 'lighthill'
 },
 
@@ -1348,7 +1346,7 @@ const CARDS = [
   kind: 'warning',
   verdict: 'yes',
   verdictLine: 'Right. It arrived three years later.',
-  what: 'This is the card that stops the demo from being a story about hype. The two people who called it were insiders, they described the mechanism rather than a mood, and they were correct about both the shape and roughly the timing. Confident predictions are not all worthless. Predictions about mechanism have done better than predictions about dates.',
+  what: 'This is a historically interesting warning from insiders that roughly anticipated a later contraction. It shows that a selected warning can be useful; it does not establish that mechanism forecasts generally outperform date forecasts.',
   note: 'Paraphrased. The underlying account is Daniel Crevier’s 1993 history, AI: The Tumultuous Search for Artificial Intelligence.',
   status: 'reported', src: 'aiwinter-wiki'
 },
@@ -1387,11 +1385,11 @@ const CARDS = [
    -------------------------------------------------------------------------- */
 
 const STAGES = [
-  { id: 'promise',    label: 'A promise',        blurb: 'Someone with standing says the thing is close.' },
-  { id: 'money',      label: 'Money against it',  blurb: 'A government or an industry commits real budget.' },
-  { id: 'limit',      label: 'A hard limit',      blurb: 'An obstacle nobody had measured turns out to be load-bearing.' },
-  { id: 'naming',     label: 'Someone names it',  blurb: 'A report, or a market, states the gap out loud.' },
-  { id: 'withdrawal', label: 'The money leaves',  blurb: 'Funding stops. The field calls it a winter.' }
+  { id: 'promise',    label: 'Claims & ambitions', blurb: 'What people said the technology could soon do.' },
+  { id: 'money',      label: 'Institutional bets', blurb: 'Public or private commitments made under uncertainty.' },
+  { id: 'limit',      label: 'Constraints',        blurb: 'Technical or economic limits that became salient.' },
+  { id: 'naming',     label: 'Reassessment',       blurb: 'Reports, researchers, or markets revising expectations.' },
+  { id: 'withdrawal', label: 'Withdrawal',         blurb: 'Funding, markets, or institutional attention pulling back.' }
 ];
 
 const EVENTS = [
@@ -1407,7 +1405,7 @@ const EVENTS = [
 
 { d: '1957-01-01', p: 'y', stage: 'promise', era: 1, label: 'Ten years to a chess champion',
   text: 'Simon and Newell predict a computer world chess champion within ten years, a computer-discovered mathematical theorem within ten years, and computer music of accepted aesthetic value within ten years.',
-  status: 'primary', src: 'simon-newell-1958' },
+  status: 'reported', src: 'simon-newell-1958' },
 
 { d: '1958-07-08', p: 'd', stage: 'promise', era: 1, label: 'The perceptron, in the press',
   text: 'A Navy press conference and a New York Times story promise a machine that will “walk, talk, see, write, reproduce itself and be conscious of its existence.” The demonstration was an IBM 704 learning left from right in fifty trials.',
@@ -1415,7 +1413,7 @@ const EVENTS = [
 
 { d: '1960-01-01', p: 'y', stage: 'promise', era: 1, label: 'Twenty years to any work a man can do',
   text: 'Simon, in The New Science of Management Decision. Reprinted in 1965, which is the date it is usually given.',
-  status: 'primary', src: 'qi-simon' },
+  status: 'reported', src: 'qi-simon' },
 
 { d: '1966-11-01', p: 'm', stage: 'naming', era: 1, label: 'The ALPAC report',
   text: 'A National Academy of Sciences committee reviews a decade of machine-translation funding and finds no translator shortage, no output usable without a human rewriting it, and no near prospect of useful machine translation.',
@@ -1427,14 +1425,14 @@ const EVENTS = [
 
 { d: '1967-01-01', p: 'y', stage: 'promise', era: 1, label: 'Substantially solved within a generation',
   text: 'Minsky, in his own textbook: “few compartments of intellect will remain outside the machine’s realm”.',
-  status: 'primary', src: 'qi-minsky' },
+  status: 'reported', src: 'qi-minsky' },
 
 { d: '1969-01-01', p: 'y', stage: 'limit', era: 1, label: 'Perceptrons',
-  text: 'Minsky and Papert prove what a single-layer perceptron cannot compute. The proofs are correct. The field generalises them into a verdict on neural networks as a whole — a step the authors later said was not theirs.',
+  text: 'Minsky and Papert prove limits of single-layer perceptrons. The mathematical result is distinct from the contested historical account of how researchers and funders responded to it.',
   status: 'reported', src: 'perceptrons-wiki' },
 
 { d: '1972-07-01', p: 'm', stage: 'limit', era: 1, label: 'Combinatorial explosion, named',
-  text: 'Lighthill identifies the obstacle: methods that work on toy problems blow up exponentially when the problem is real. This is the load-bearing technical fact of the first winter.',
+  text: 'Lighthill criticized combinatorial explosion: methods that work on toy problems can grow impractically on larger ones. It is one constraint in a broader first-winter history, not a single sufficient cause.',
   status: 'primary', src: 'lighthill' },
 
 { d: '1973-04-01', p: 'y', stage: 'naming', era: 1, label: 'The Lighthill report',
@@ -1447,7 +1445,7 @@ const EVENTS = [
 
 /* ---- the thaw and the second build-up ---- */
 { d: '1980-01-01', p: 'y', stage: 'result', era: 2, label: 'R1/XCON goes into production',
-  text: 'A rule-based expert system starts configuring VAX orders at Digital Equipment Corporation. Expert systems work — narrowly, expensively, and only where a human expert has written the rules down. That success is what ends the first winter and starts the second cycle.',
+  text: 'A rule-based expert system starts configuring VAX orders at Digital Equipment Corporation. Expert systems work — narrowly, expensively, and only where a human expert has written the rules down. Its production use is evidence that the history cannot be reduced to research funding alone.',
   status: 'primary', src: 'r1' },
 
 { d: '1982-04-01', p: 'y', stage: 'money', era: 2, label: 'Japan’s Fifth Generation project',
@@ -1456,8 +1454,8 @@ const EVENTS = [
   status: 'reported', src: 'fgcs-wiki' },
 
 { d: '1983-01-01', p: 'y', stage: 'money', era: 2, label: 'DARPA’s Strategic Computing Initiative',
-  text: 'The US answer: about $1 billion, aimed at machines that would “see, hear, speak, and think like a human”.',
-  money: { amount: 1000, unit: '$m', note: '≈$1bn over the programme' },
+  text: 'A later historical study describes roughly $1 billion spent across the 1983–93 Strategic Computing programme, aimed at machines that would “see, hear, speak, and think like a human”. This is a programme total, not a single 1983 cash commitment.',
+  money: { amount: 1000, unit: '$m', note: '≈$1bn programme expenditure over 1983–93; not a 1983 commitment' },
   status: 'reported', src: 'sci-wiki' },
 
 { d: '1983-06-01', p: 'y', stage: 'money', era: 2, label: 'The UK’s Alvey Programme',
@@ -1487,11 +1485,11 @@ const EVENTS = [
 
 /* ---- what happened afterwards ---- */
 { d: '1997-05-01', p: 'm', stage: 'result', era: 3, label: 'Deep Blue beats Kasparov',
-  text: 'Deep Blue wins the New York rematch 3½–2½. Simon and Newell’s ten-year prediction lands, forty years late.',
+  text: 'Deep Blue wins the New York rematch 3½–2½, forty years after Simon and Newell’s forecast and thirty years past its stated deadline.',
   status: 'primary', src: 'deepblue' },
 
 { d: '2012-10-01', p: 'y', stage: 'result', era: 3, label: 'AlexNet wins ImageNet',
-  text: 'A deep convolutional network takes the ILSVRC-2012 classification task with a 15.3% top-5 error rate. The best entry from any other team is 26.2%. The approach buried in 1969 is now the state of the art.',
+  text: 'A deep convolutional network takes the ILSVRC-2012 classification task with a 15.3% top-5 error rate. The best entry from any other team is 26.2%. This later result does not settle the contested account of how Perceptrons affected earlier research choices.',
   status: 'primary', src: 'ilsvrc2012' },
 
 { d: '2016-03-01', p: 'm', stage: 'result', era: 3, label: 'AlphaGo beats Lee Sedol',
@@ -1499,11 +1497,11 @@ const EVENTS = [
   status: 'primary', src: 'alphago' },
 
 { d: '2017-06-12', p: 'd', stage: 'result', era: 3, label: 'Attention Is All You Need',
-  text: 'The transformer. Every large language model in use today is a descendant of this paper.',
+  text: 'The transformer paper introduced an influential architecture that underlies many contemporary large language models.',
   status: 'primary', src: 'attention' },
 
 { d: '2020-01-23', p: 'd', stage: 'result', era: 3, label: 'Scaling laws',
-  text: 'Kaplan and colleagues report that loss falls as a power law in model size, data and compute, “with some trends spanning more than seven orders of magnitude”. This is the single biggest structural difference from either previous boom: a measured, extrapolable relationship rather than a promise.',
+  text: 'Kaplan and colleagues report that language-model loss falls as a power law with model size, data, and compute, “with some trends spanning more than seven orders of magnitude”. Within the studied ranges, this is measured predictive evidence about loss; it is not a general-capability law or a guarantee beyond those ranges.',
   status: 'primary', src: 'kaplan' },
 
 { d: '2020-05-28', p: 'd', stage: 'result', era: 3, label: 'GPT-3',
@@ -1515,11 +1513,11 @@ const EVENTS = [
   status: 'reported', src: 'chatgpt-tc' },
 
 { d: '2026-02-01', p: 'm', stage: 'limit', era: 3, label: 'A benchmark stops measuring',
-  text: 'OpenAI publishes that it will no longer report SWE-bench Verified: frontier models had been exposed to the benchmark during training, and when it audited the problems its models still failed, most of those problems turned out to have broken tests. The scores kept going up. What they measured stopped being capability.',
-  status: 'reported', src: 'swebench' },
+  text: 'OpenAI says it will stop reporting SWE-bench Verified because frontier models had been exposed to the benchmark during training. Its audit examined 138 selected hard tasks (27.6% of the 500-task benchmark); 59.4% of that audited subset had faulty tests. This is an evaluation warning, not evidence that the field or a whole benchmark has been retired.',
+  status: 'primary', src: 'swebench' },
 
 { d: '2026-02-27', p: 'd', stage: 'money', era: 3, label: '900 million users, $110 billion raised',
-  text: 'OpenAI reports 900 million weekly users and more than 50 million paying subscribers, alongside a $110 billion private round at a $730 billion pre-money valuation. Both halves are the point: usage at a scale neither previous boom had, and capital commitment at a scale neither previous boom came close to.',
+  text: 'OpenAI reports 900 million weekly active users and more than 50 million consumer subscribers, alongside a $110 billion private round at a $730 billion pre-money valuation. These are company-reported, dated usage and funding figures, not a measure of profitability or a prediction of returns.',
   money: { amount: 110000, unit: '$m', note: '$110bn private round at a $730bn pre-money valuation' },
   status: 'reported', src: 'openai-900m' }
 
@@ -1536,11 +1534,12 @@ const WINTERS = [
 ];
 
 /* --------------------------------------------------------------------------
-   ACT III — the anatomy.
+   ACT III — compare conditions.
 
-   The same five stages, three columns. Column three is the present, and it
-   is deliberately incomplete: two of the five cells are empty, and saying
-   so is the honest position.
+   These rows are lenses for comparing the two historical contractions with
+   the present. They are not a five-step causal law and the present column is
+   deliberately incomplete: absence of a withdrawal is evidence only that it
+   has not happened, not a prediction that it must.
    -------------------------------------------------------------------------- */
 
 const ANATOMY = [
@@ -1552,30 +1551,30 @@ const ANATOMY = [
           body: 'Japan announces machines built on logic programming that will reason at supercomputer speed. Britain and the US answer within a year.',
           src: ['fgcs-wiki'] },
     now: { head: '“Could come as early as 2026”',
-          body: 'The hedges are real and are usually dropped in the retelling. The claims are also being made by people who have shipped the previous four things they promised.',
+          body: 'The hedges are real and are often dropped in retelling. This card preserves the stated uncertainty and does not infer a forecasting record beyond the source itself.',
           src: ['mlg'] } },
 
   { stage: 'money',
     w1: { head: 'US federal funding, largely uncounted',
           body: 'No sourceable total exists for 1950s–60s US AI spending, so this demo does not invent one. What is sourceable is what happened when it stopped.',
           src: [] },
-    w2: { head: '£350m + ~$1bn + ¥57bn',
-          body: 'Alvey, DARPA’s Strategic Computing Initiative and Japan’s Fifth Generation, committed within about eighteen months of each other. Three governments, one bet.',
+    w2: { head: 'Three programme examples, different bases',
+          body: 'Alvey and Japan’s Fifth Generation had stated programme budgets; the roughly $1bn Strategic Computing figure describes expenditure across 1983–93. Their currencies, price years, and accounting bases differ, so the display does not combine them.',
           src: ['alvey', 'sci-wiki', 'fgcs-wiki'] },
     now: { head: '$110bn in a single round',
-          body: 'OpenAI’s February 2026 raise, at a $730bn pre-money valuation — two orders of magnitude past the three national programmes of the 1980s combined, and private rather than governmental.',
+          body: 'OpenAI’s February 2026 announced investment, at a $730bn pre-money valuation, is a private funding round. It is not directly comparable with historical programme totals without a shared currency, price year, and accounting basis.',
           src: ['openai-900m'] } },
 
   { stage: 'limit',
     w1: { head: 'Combinatorial explosion',
-          body: 'Search-based methods that solved toy problems blew up exponentially on real ones. Lighthill named it in 1972 and nobody had a good answer.',
+          body: 'Lighthill criticized search methods whose demands could grow rapidly outside toy problems. It was an important identified constraint among several first-winter pressures, not a settled single explanation.',
           src: ['lighthill'] },
     w2: { head: 'Rules do not scale',
           body: 'Expert systems knew only what was typed into them, broke at the edge of their rule base, cost a fortune to maintain, and did not learn.',
           src: ['aiwinter-wiki'] },
-    now: { head: 'Not yet identified',
-          pending: 'nobody knows what it is yet',
-          body: 'This cell is empty, and that is the honest answer. In both previous cycles the binding limit was obvious afterwards and invisible at the time to the people doing the work. The nearest visible candidate is that measurement is falling behind capability claims — see the next row.',
+    now: { head: 'No single binding constraint established here',
+          pending: 'open question',
+          body: 'No single binding limit is established. In prior contractions, constraints became clearer in hindsight; that observation does not tell us that the present has one comparable limit. Evaluation quality is one live question, not a diagnosis of the field.',
           src: [] } },
 
   { stage: 'naming',
@@ -1585,8 +1584,8 @@ const ANATOMY = [
     w2: { head: 'The market, not a report',
           body: 'There is no Lighthill for the second winter. Schank and Minsky called it in 1984; the LISP hardware business made it official in 1987.',
           src: ['aiwinter-wiki'] },
-    now: { head: 'Nobody authoritative has',
-          body: 'The nearest thing is a benchmark maintainer retiring its own benchmark: in February 2026 OpenAI stopped reporting SWE-bench Verified because contamination and broken tests had made the scores stop meaning anything. That is a measurement problem being named, not the field being named.',
+    now: { head: 'An evaluation warning, not a field verdict',
+          body: 'In February 2026 OpenAI said it would stop reporting SWE-bench Verified after contamination concerns and an audit of selected hard tasks found faulty tests in 59.4% of that subset. This identifies a measurement problem; it does not name a general AI limit or predict a withdrawal.',
           src: ['swebench'] } },
 
   { stage: 'withdrawal',
@@ -1596,9 +1595,9 @@ const ANATOMY = [
     w2: { head: 'DARPA 1987; Fifth Generation 1992',
           body: 'Schwarz cut AI at DARPA “deeply and brutally”. Japan’s programme ran its full ten years and ended without a commercial product.',
           src: ['sci-wiki', 'fgcs-wiki'] },
-    now: { head: 'Has not happened',
-          pending: 'this stage has not occurred',
-          body: 'Money is still going in, at increasing scale, and usage is still going up. If the pattern holds, this is the cell to watch — and it is the last one to move, not the first. Nothing on this page is evidence that it will move at all.',
+    now: { head: 'No comparable broad contraction established',
+          pending: 'snapshot, not forecast',
+          body: 'Money is still going in and reported usage is high. This snapshot does not establish a comparable broad contraction: a financial correction, a research-funding shift, and a technological dead end are separate propositions that need separate evidence.',
           src: ['openai-900m'] } }
 ];
 
@@ -1608,40 +1607,40 @@ const ANATOMY = [
 
 const RHYMES = [
   { head: 'Benchmark claims are outrunning evaluation',
-    body: 'In February 2026 OpenAI stopped reporting SWE-bench Verified — the coding benchmark it had itself released — saying frontier models had been exposed to it during training, and that when it audited the hard problems its models still failed, most of those problems had broken tests. Scores were still rising. What they measured had stopped being capability. Both previous winters began with a gap between the claim and the measurement.',
+    body: 'In February 2026 OpenAI said it would stop reporting SWE-bench Verified because frontier models had been exposed to the benchmark during training. Its audit covered 138 selected hard tasks, 27.6% of the benchmark; 59.4% of that audited subset had faulty tests. This is a concrete warning about one evaluation, useful when judging capability claims. It does not establish a field-wide limit or a coming winter.',
     src: 'swebench' },
   { head: 'Very large money committed against a promise',
-    body: '$110 billion in one round at a $730 billion pre-money valuation, February 2026. In 1982–83 three governments committed roughly £350m, $1bn and ¥57bn within eighteen months of each other, and the second winter followed. Scale is not by itself evidence of a bubble — but money moving ahead of demonstrated returns is exactly the second stage of the pattern.',
+    body: '$110 billion in one announced private round at a $730 billion pre-money valuation, February 2026. Historical programmes had different currencies, price years, and accounting bases; the roughly $1bn Strategic Computing figure spans 1983–93 rather than a single 1983 commitment. These are institutional bets made under uncertainty, not directly combinable figures.',
     src: 'openai-900m' },
   { head: 'Confident dates from people with real standing',
     body: 'Simon had a Nobel Prize coming and Minsky had founded the MIT AI Lab. Standing has never been much protection: their public timelines missed by decades. The current timelines come from people who have actually shipped, which is a real difference — and it was also true of Simon, who had shipped the Logic Theorist.',
     src: 'qi-simon' },
   { head: 'The limit is invisible from inside',
-    body: 'Combinatorial explosion and the brittleness of rule bases are obvious in hindsight and were not obvious at the time to the people doing the work. There is no reason to think we are better placed now. Anyone who tells you they know what today’s binding constraint is, is making the same category of claim that failed twice.',
+    body: 'Combinatorial explosion and rule-base maintenance became more visible over time. Hindsight can sharpen a past account, but it does not license a claim that the present must contain an analogous hidden limit. Treat precise present-day diagnoses as hypotheses with evidence burdens.',
     src: 'lighthill' }
 ];
 
 const DIFFERENT = [
   { head: 'Hundreds of millions of people actually use it',
-    body: '900 million weekly users and more than 50 million paying subscribers, reported February 2026, for one product. Neither previous boom had users; it had customers for specialist hardware and government programme deliverables. A withdrawal of research funding does not remove a product people are already paying for.',
+    body: 'OpenAI reported 900 million weekly active users and more than 50 million consumer subscribers in February 2026 for one product. Earlier AI eras also had deployed systems and paying organisations, including XCON at Digital, so this is a difference of scale, consumer reach, and business model — not the false claim that earlier booms had no users.',
     src: 'openai-900m' },
   { head: 'The scaling behaviour is measured, not asserted',
-    body: 'Kaplan and colleagues showed in 2020 that loss falls as a power law in model size, data and compute, “with some trends spanning more than seven orders of magnitude”. Neither previous boom had anything like this: a quantitative relationship that has kept holding as inputs grew by factors of millions. It is not a guarantee that it continues. It is a different kind of evidence from a prediction.',
+    body: 'Kaplan and colleagues reported in 2020 that language-model loss followed power laws with model size, data, and compute, with some trends spanning more than seven orders of magnitude. This is measured predictive evidence within the study’s ranges. It does not establish general capability, permanent scaling, or a direct comparison with every earlier AI programme.',
     src: 'kaplan' },
   { head: 'The systems are general, not hand-built',
-    body: 'The 1980s bet on rule bases a human expert had to write out by hand — which is why they were brittle and why they did not transfer. Today’s systems are trained rather than authored, and the same model that writes code also reads radiographs badly and drafts a memo well. Generality is the specific thing the second winter’s technology lacked.',
+    body: 'The 1980s bet on rule bases a human expert had to write out by hand, creating maintenance and transfer limits. Current systems are trained rather than authored rule by rule. That architectural difference is material, while its practical value still depends on the task, evaluation, and deployment setting.',
     src: 'attention' },
   { head: 'The idea that was buried came back and won',
-    body: 'Neural networks were written off after 1969 and were the losing side for two decades. In 2012 the same family of methods won ImageNet outright — 15.3% top-5 error against 26.2% for the best of everyone else. This cuts both ways: it is the strongest evidence that dismissals age badly, and a reminder that the gap between “dead end” and “state of the art” was forty-three years.',
+    body: 'Neural networks lost influence after 1969 and returned powerfully in 2012, when AlexNet won ImageNet with 15.3% top-5 error against 26.2% for the best other entry. The comparison cautions against treating a field’s temporary research priorities as a permanent verdict.',
     src: 'ilsvrc2012' }
 ];
 
 const CLOSER = {
   head: 'What to do with this',
   body: [
-    'The pattern is not a prediction. It is a checklist. When you hear a claim about AI this year, you can ask which of the five stages it belongs to, and what evidence would move it.',
-    'The historical record says two specific things. Confident dates have been wrong by factors of three and four, in the direction of too soon. And confident dismissals have been wrong by decades, in the direction of too final. Those are not the same error and you cannot avoid both by picking a side.',
-    'The most reliable predictions in this deck were about mechanism, not timing: Schank and Minsky in 1984 described how a collapse would work, and it worked that way three years later. That is the kind of claim worth making, and the kind worth listening for.'
+    'Historical comparison is not a prediction. Use these lenses to ask whether a claim is a forecast or an assessment, what evidence it rests on, and what evidence would move it.',
+    'This curated deck shows several near-term forecasts that missed their windows. It does not establish a representative error rate for optimists, pessimists, or AI research. The four dated assessments or untimed ambitions are here precisely because they need a different standard of judgment.',
+    'Schank and Minsky’s 1984 warning is a useful historical case, not a forecasting rule. A credible present claim should state its mechanism, boundary conditions, and what would count against it.'
   ]
 };
 
@@ -1652,8 +1651,8 @@ const CLOSER = {
 const CUT = [
   { claim: 'A dollar figure for XCON’s annual savings at Digital',
     why: 'The commonly repeated figures are $25 million and $40 million a year and the sources disagree. Digital’s own account is in Communications of the ACM in 1989, behind a paywall this build could not read. The system’s existence and production use are shown; the number is not.' },
-  { claim: 'Any verbatim quotation from the ALPAC report',
-    why: 'The National Academies’ online copy of Language and Machines is page images, not text, and an exact-phrase search for the most widely quoted sentence returned no page carrying it. The report is described, and nothing is put in quotation marks.' },
+  { claim: 'ALPAC as a verdict that machine translation would never work',
+    why: 'The original report distinguishes near-term translation economics from longer-term computational-linguistics research, and recommends continued support. Treating it as a permanent prediction would misstate the document.' },
   { claim: '“Half a billion dollars of AI hardware industry vanished in a year”, as a figure',
     why: 'It traces to Daniel Crevier’s 1993 history through tertiary sources and no primary was found. It is shown once, attributed to Crevier by name, and never used as a number on a chart.' },
   { claim: 'Hubert Dreyfus predicting no computer could beat a child at chess, then losing to Mac Hack VI in 1967',
@@ -1678,9 +1677,9 @@ const SOURCES = {
   'cornell-perceptron': { t: 'Cornell Chronicle — Professor’s perceptron paved the way for AI, 60 years too soon (quoting the New York Times, 8 July 1958)', u: 'https://news.cornell.edu/stories/2019/09/professors-perceptron-paved-way-ai-60-years-too-soon' },
   'qi-simon':           { t: 'Quote Investigator — “Machines will be capable, within twenty years, of doing any work that a man can do” (verified against scans; The New Science of Management Decision, 1960, p. 38)', u: 'https://quoteinvestigator.com/2020/11/11/ai-can-do/' },
   'qi-minsky':          { t: 'Quote Investigator — “Within a generation … the problems of creating artificial intelligence will be substantially solved” (verified against scans; Computation: Finite and Infinite Machines, 1967, p. 2)', u: 'https://quoteinvestigator.com/2021/03/04/ai-solved/' },
-  'alpac':              { t: 'ALPAC — Language and Machines: Computers in Translation and Linguistics, National Academy of Sciences (1966)', u: 'https://doi.org/10.17226/9547' },
+  'alpac':              { t: 'ALPAC — Language and Machines: Computers in Translation and Linguistics (1966), original report PDF', u: 'https://www.mt-archive.net/50/ALPAC-1966.pdf' },
   'perceptrons-wiki':   { t: 'Perceptrons (Minsky & Papert, MIT Press 1969; expanded edition 1988) — including the dispute over its effect on the field', u: 'https://en.wikipedia.org/wiki/Perceptrons_(book)' },
-  'lighthill':          { t: 'Lighthill — Artificial Intelligence: A General Survey (July 1972, published 1973), full text', u: 'http://www.chilton-computing.org.uk/inf/literature/reports/lighthill_report/p001.htm' },
+  'lighthill':          { t: 'Lighthill — Artificial Intelligence: A General Survey (July 1972, published 1973), report and responses', u: 'https://rodsmith.nz/wp-content/uploads/Lighthill_1973_Report.pdf' },
   'howe':               { t: 'Jim Howe — Artificial Intelligence at Edinburgh University: a Perspective', u: 'https://www.inf.ed.ac.uk/about/AIhistory.html' },
   'r1':                 { t: 'McDermott — R1: An Expert in the Computer Systems Domain, AAAI-80', u: 'https://cdn.aaai.org/AAAI/1980/AAAI80-076.pdf' },
   'fgcs-wiki':          { t: 'Fifth Generation Computer Systems — budget figure sourced to Odagiri, Nakamura & Shibuya, Research Policy 26(2):191–207 (1997)', u: 'https://en.wikipedia.org/wiki/Fifth_Generation_Computer_Systems' },
@@ -1695,12 +1694,12 @@ const SOURCES = {
   'gpt3':               { t: 'Brown et al. — Language Models are Few-Shot Learners (arXiv:2005.14165)', u: 'https://arxiv.org/abs/2005.14165' },
   'chatgpt-tc':         { t: 'TechCrunch — ChatGPT launched three years ago today (30 November 2025)', u: 'https://techcrunch.com/2025/11/30/chatgpt-launched-three-years-ago-today/' },
   'swebench':           { t: 'OpenAI — Why SWE-bench Verified no longer measures frontier coding capabilities (February 2026)', u: 'https://openai.com/index/why-we-no-longer-evaluate-swe-bench-verified/' },
-  'openai-900m':        { t: 'TechCrunch — ChatGPT reaches 900M weekly active users (27 February 2026)', u: 'https://techcrunch.com/2026/02/27/chatgpt-reaches-900m-weekly-active-users' },
+  'openai-900m':        { t: 'OpenAI — Scaling AI for everyone (27 February 2026)', u: 'https://openai.com/index/scaling-ai-for-everyone/' },
   'mlg':                { t: 'Dario Amodei — Machines of Loving Grace (October 2024)', u: 'https://www.darioamodei.com/essay/machines-of-loving-grace' }
 };
 
 /* A note the app shows next to the source list, because two of these need it. */
-const SOURCE_NOTE = 'Two sources here are openai.com pages, which refuse automated retrieval. Their titles and substance were confirmed against contemporaneous reporting during the build; they open normally in a browser. Where a claim rests on a printed history rather than a document — Crevier 1993, McCorduck 2004 — the historian is named on the claim itself and the claim is marked “reported” rather than “primary”.';
+const SOURCE_NOTE = 'OpenAI’s pages are primary company statements. Their reported user and funding figures are labelled as such in the copy; they are not independent measures of profitability or capability. Where a claim rests on a printed history rather than a document — Crevier 1993, McCorduck 2004 — the historian is named on the claim itself and the claim is marked “reported” rather than “primary”.';
 
 return { INTRO, CARDS, STAGES, EVENTS, WINTERS, ANATOMY, RHYMES, DIFFERENT, CLOSER, CUT, SOURCES, SOURCE_NOTE };
 })();
@@ -1842,7 +1841,7 @@ const BAND_TEXT = {
  *  either way — they are shown, not marked, because marking an unresolved
  *  claim would be exactly the error this demo is about. */
 function verdictCorrect(guess, actual) {
-  if (actual === 'open') return null;
+  if (actual === 'open' || actual === 'context') return null;
   if (actual === 'late') return guess === 'no';   /* "did it come true in the window it named?" -> no */
   return guess === actual;
 }
@@ -1897,12 +1896,12 @@ if (typeof module !== 'undefined' && module.exports) module.exports = ENGINE;
    Two Winters — the timeline canvas.
 
    Seventy-six years across the x axis. Six rows down the y axis: one for
-   landmark results, then one for each of the five stages of the mechanism.
+   landmark results, then five lenses for comparing claims, institutions,
+   constraints, reassessment, and withdrawal.
 
-   The whole point of the lane layout is that nobody has to be told the
-   pattern repeats. Scrub forward and the lanes light up top-to-bottom —
-   promise, money, limit, naming, withdrawal — and then they do it again,
-   and then a third run starts and stops partway down.
+   The lane layout supports comparison without asserting that history repeats
+   in order. Scrubbing makes each historical pathway inspectable, while the
+   present stays evidence to evaluate rather than a third run to complete.
 
    Hand-rolled on a 2d context, like the rest of this repository. Everything
    is laid out in CSS pixels and scaled by devicePixelRatio at draw time so
@@ -1927,7 +1926,7 @@ const C = {
   grid:   'rgba(143,163,192,0.11)'
 };
 
-/* One colour per lane, warm at the top of the cycle and cold at the bottom. */
+/* One colour per comparison lens; red remains reserved for withdrawal. */
 const LANE_COLOR = {
   result:     C.ink,
   promise:    C.gold,
@@ -2201,9 +2200,9 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Timeline;
    AI Winters: Boom and Bust — the application.
 
    Four acts:
-     I   Guess the year — ten sourced predictions, date and speaker hidden.
-     II  The two winters — a scrubbable timeline with the mechanism in lanes.
-     III Anatomy — the same five stages, three eras, side by side.
+     I   Guess the year — ten sourced claims, date and speaker hidden.
+     II  The two winters — a scrubbable comparison timeline.
+     III Anatomy — historical conditions and current evidence side by side.
      IV  Rhymes and differences, the cut list, and every source.
 
    No framework, no build-time templating beyond concatenation, no network.
@@ -2276,6 +2275,11 @@ const VERDICTS = [
   { id: 'no',   label: 'It didn’t' },
   { id: 'open', label: 'Still open' }
 ];
+const ASSESSMENT_CHOICES = [
+  { id: 'context', label: 'A dated assessment' },
+  { id: 'no', label: 'A forecast about the future' },
+  { id: 'open', label: 'I need more context' }
+];
 
 function renderCard() {
   const c = D.CARDS[S.i];
@@ -2300,8 +2304,12 @@ function renderCard() {
   sl.value = String(S.pending.year);
   $('#year-read').textContent = String(S.pending.year);
 
+  const assessment = c.verdict === 'context';
+  $('#verdict-prompt').textContent = assessment
+    ? 'What kind of claim is this?'
+    : 'And did it come true within the time it named?';
   const vb = $('#verdict-btns'); vb.innerHTML = '';
-  for (const v of VERDICTS) {
+  for (const v of assessment ? ASSESSMENT_CHOICES : VERDICTS) {
     const b = el('button', 'vbtn', v.label);
     b.type = 'button';
     b.dataset.v = v.id;
@@ -2332,11 +2340,11 @@ function lockIn() {
   renderReveal();
 }
 
-const VERDICT_CLASS = { yes: 'good', no: 'bad', late: 'mixed', open: 'openv' };
-const VERDICT_WORD  = { yes: 'It came true', no: 'It did not', late: 'True, but far too late', open: 'Still open' };
+const VERDICT_CLASS = { yes: 'good', no: 'bad', late: 'mixed', open: 'openv', context: 'mixed' };
+const VERDICT_WORD  = { yes: 'It came true', no: 'It did not', late: 'True, but far too late', open: 'Still open', context: 'A dated assessment' };
 const KIND_WORD = {
   promise: 'a confident promise',
-  dismiss: 'a confident dismissal',
+  assessment: 'a contemporary assessment',
   warning: 'a warning'
 };
 
@@ -2344,7 +2352,8 @@ function renderReveal() {
   const c = D.CARDS[S.i], a = S.answers[c.id];
   const miss = E.yearMiss(a.year, c.year);
   const band = E.missBand(miss);
-  const right = E.verdictCorrect(a.verdict, c.verdict);
+  const assessment = c.verdict === 'context';
+  const right = assessment ? a.verdict === 'context' : E.verdictCorrect(a.verdict, c.verdict);
 
   $('#guess-wrap').hidden = true;
   $('#btn-lock').hidden = true;
@@ -2370,8 +2379,10 @@ function renderReveal() {
   marks.appendChild(m1);
 
   const m2 = el('div', 'mark ' + (right === null ? 'openv' : right ? 'good' : 'bad'));
-  m2.appendChild(el('b', null, right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
-  m2.appendChild(el('span', null, right === null
+  m2.appendChild(el('b', null, assessment ? (right ? 'Classified correctly' : 'Read the distinction') : right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
+  m2.appendChild(el('span', null, assessment
+    ? (right ? 'It diagnoses conditions at a date; it is not a future forecast.' : 'Read the reveal: this evaluates conditions at a date rather than predicting what must happen next.')
+    : right === null
     ? 'This one has not resolved. Nobody is marked on it.'
     : 'You said ' + VERDICT_WORD[a.verdict].toLowerCase() + '.'));
   marks.appendChild(m2);
@@ -2417,7 +2428,7 @@ function renderScorecard() {
   };
   grid.appendChild(stat(String(acc.verdictRight) + '/' + String(acc.scored), '', 'verdicts called right'));
   grid.appendChild(stat(acc.medianMiss == null ? '—' : acc.medianMiss.toFixed(1), 'years', 'average miss on the date'));
-  grid.appendChild(stat(String(acc.open), '', 'left unscored, because unresolved'));
+  grid.appendChild(stat(String(acc.open), '', 'unscored: unresolved forecasts or assessments'));
   box.appendChild(grid);
 
   /* The split that carries the argument. */
@@ -2436,13 +2447,17 @@ function renderScorecard() {
     r.appendChild(el('span', 'sc-blurb', blurb));
     return r;
   };
-  split.appendChild(row('promise', 'Confident promises', 'Somebody with standing said AI was nearly here. Six of these; five have resolved, and not one of them arrived inside the window it named.'));
-  split.appendChild(row('dismiss', 'Confident dismissals', 'Somebody with standing said it would not work, or was not worth funding. Three of these; all three were overturned.'));
-  split.appendChild(row('warning', 'A warning about the field itself', 'One of these. It was right, three years early — which is the best forecasting record on this page.'));
+  split.appendChild(row('promise', 'Time-bounded promises', 'Five claims named a near-term outcome. Three have resolved, and none arrived inside the window it named.'));
+  split.appendChild(row('warning', 'A warning about the field itself', 'One time-bounded warning. It was right, three years early.'));
+  const assessment = el('div', 'sc-row');
+  assessment.appendChild(el('b', null, 'Dated assessments'));
+  assessment.appendChild(el('span', 'sc-score', '4 to inspect, not score'));
+  assessment.appendChild(el('span', 'sc-blurb', 'The 1958 press claim, ALPAC, Perceptrons, and Lighthill lack a scoreable future window or describe evidence at a time. Later developments do not turn them into failed forecasts.'));
+  split.appendChild(assessment);
   box.appendChild(split);
 
   box.appendChild(el('p', 'sc-tail',
-    'If your two bars are very different heights, that is the useful finding: most people are much better at spotting hype than at spotting a dismissal that is about to age badly. Both errors are in the historical record, in roughly equal measure.'));
+    'The useful habit is to ask which claim can actually be scored. A dated forecast needs an outcome and a time window; a contemporary assessment needs evidence about its own conditions. Mixing them makes history look more certain than it is.'));
 
   const acts = el('div', 'row');
   const again = el('button', 'btn ghost', 'Play again');
@@ -2480,7 +2495,7 @@ function buildTimeline() {
   });
 
   const legend = $('#tl-legend'); legend.innerHTML = '';
-  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'The results the promises were measured against.' }].concat(D.STAGES);
+  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'Historical results placed beside claims and assessments.' }].concat(D.STAGES);
   for (const s of lanes) {
     const d = el('div', 'lg');
     const sw = el('i'); sw.style.background = Timeline.LANE_COLOR[s.id];
@@ -2812,10 +2827,10 @@ function runSelfTest() {
      D.EVENTS.filter(e => e.p === 'd').every(e => !/-01-01$/.test(e.d)));
 
   ok('Card counts match the prose on the scorecard',
-     D.CARDS.filter(c => c.kind === 'promise').length === 6 &&
-     D.CARDS.filter(c => c.kind === 'dismiss').length === 3 &&
+     D.CARDS.filter(c => c.kind === 'promise').length === 5 &&
+     D.CARDS.filter(c => c.kind === 'assessment').length === 4 &&
      D.CARDS.filter(c => c.kind === 'warning').length === 1,
-     'promise/dismiss/warning = ' + ['promise','dismiss','warning']
+     'promise/assessment/warning = ' + ['promise','assessment','warning']
        .map(k => D.CARDS.filter(c => c.kind === k).length).join('/'));
   ok('No promise in the deck arrived inside the window it named',
      D.CARDS.filter(c => c.kind === 'promise').every(c => c.verdict !== 'yes'));

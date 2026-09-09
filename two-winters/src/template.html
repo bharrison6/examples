@@ -8,12 +8,12 @@
 <title>AI Winters: Boom and Bust — has this happened before?</title>
 <!--
   AI Winters: Boom and Bust — a single-file, offline demonstration of the two
-  AI funding collapses of the twentieth century, the mechanism they shared,
-  and an even-handed comparison with the present.
+  AI funding contractions of the twentieth century and a bounded comparison
+  with the present.
 
-  Four acts: guess the year on ten real predictions with the date hidden;
-  scrub a 1950-2026 timeline whose lanes are the five stages of the
-  mechanism; read the two winters side by side on those same five stages;
+  Four acts: date ten real claims with the speaker and date hidden;
+  scrub a 1950-2026 timeline through five comparison lenses; read the two
+  winters side by side without treating either as a template for today;
   then weigh what rhymes against what is genuinely different.
 
   Every claim on screen resolves to a source in the dataset, and
@@ -83,7 +83,7 @@
       </div>
 
       <div class="field">
-        <span class="lbl">And did it come true?</span>
+        <span class="lbl" id="verdict-prompt">And did it come true?</span>
         <div id="verdict-btns" role="group" aria-label="Your verdict"></div>
       </div>
     </div>
@@ -101,13 +101,12 @@
 
 <!-- =========================== ACT II ================================= -->
 <section class="act" data-act="2" hidden>
-  <h1>Seventy-six years, five stages, twice.</h1>
+  <h1>Seventy-six years, five lenses, two different contractions.</h1>
   <p>
-    Each row below is one stage of the same mechanism. Drag the slider forward and watch
-    the rows light up in order &mdash; a promise, then money against it, then a hard limit,
-    then somebody naming the gap, then the money leaving. It happens once between 1955 and
-    1980, again between 1982 and 1992, and a third run is under way now that has not
-    reached the bottom rows.
+    Each row below is one lens for comparing events: claims, institutional bets, constraints,
+    reassessment, and withdrawal. Drag the slider forward. The events do not form a fixed
+    sequence: the first contraction involved different institutions and pressures from the
+    second. The current entries are evidence about today, not a third run of an historical script.
   </p>
   <p class="help">
     The two pale bands are the winters. They are drawn with a soft right-hand edge because
@@ -116,7 +115,7 @@
   </p>
 
   <div id="tl-wrap">
-    <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results, then the five stages of an AI winter. Two shaded bands mark the winters."></canvas>
+    <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results and five comparison lenses. Two shaded bands mark conventional AI-winter date ranges."></canvas>
     <div id="tl-winter" hidden></div>
   </div>
 
@@ -145,13 +144,14 @@
   </div>
 
   <div class="panel">
-    <h3>The money, as four points rather than a curve</h3>
+    <h3>Four funding examples, not a comparable total</h3>
     <p class="help">
       There is no continuous, sourceable series of AI funding across these seventy-six
       years &mdash; particularly not for US spending before 1980 &mdash; so this demo does
-      not draw one. These are the four commitments it could actually source, in their
-      original currencies, not adjusted for inflation, and not converted to a common unit.
-      Read them as four data points with sources attached, not as a trend.
+      not draw one. These are four sourceable funding examples with different bases: programme
+      budgets, programme expenditure, and a private funding round. They use three currencies,
+      different price years, and no common accounting basis. Read them as dated evidence, not
+      as a combined total or trend.
     </p>
     <div id="money-list"></div>
   </div>
@@ -163,13 +163,12 @@
 
 <!-- =========================== ACT III ================================ -->
 <section class="act" data-act="3" hidden>
-  <h1>The same five stages, twice &mdash; and once more, halfway.</h1>
+  <h1>Compare the conditions; do not force a cycle.</h1>
   <p>
-    Reading across a row shows how one stage played out in each era. Reading down a column
-    shows one era&rsquo;s whole cycle. Two cells in the third column are marked
-    <b>open</b> rather than filled in &mdash; the binding technical limit, which nobody has
-    identified, and the withdrawal, which has not happened. In both previous cycles those
-    same two cells were open right up until they were obvious.
+    Reading across a row compares a historical condition with another and with the present.
+    Two cells in the present column remain <b>open</b>: no single binding constraint has been
+    established, and no withdrawal has occurred. Those absences do not forecast what happens
+    next; they keep the question honest.
   </p>
 
   <div id="anatomy"></div>
@@ -195,7 +194,7 @@
 <footer id="foot">
   <span class="msu">Murray State University</span>
   <span class="who">Bryant Harrison</span>
-  <span>One HTML file &middot; runs offline &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</span>
+  <span>One HTML file &middot; runs offline &middot; source-backed historical inquiry</span>
 </footer>
 
 <!-- ============================= GUIDE ============================== -->
@@ -233,9 +232,9 @@
       <div class="field">
         <span class="lbl">The four acts</span>
         <ul class="ht-acts">
-          <li><b>Guess the year</b> &mdash; ten predictions, 1950 to 2024.</li>
-          <li><b>The two winters</b> &mdash; a timeline you can scrub, laid out so the repeated pattern is visible rather than asserted.</li>
-          <li><b>Anatomy</b> &mdash; the first winter, the second winter, and now, on the same five stages.</li>
+          <li><b>Guess the year</b> &mdash; ten curated claims, 1950 to 2024.</li>
+          <li><b>The two winters</b> &mdash; a timeline you can scrub, using five lenses to compare different historical pathways.</li>
+          <li><b>Anatomy</b> &mdash; compare the first winter, the second winter, and now without treating them as one cycle.</li>
           <li><b>Now</b> &mdash; what rhymes with the two winters, what is genuinely different, what was cut for lack of a source, and every source.</li>
         </ul>
       </div>

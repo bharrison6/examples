@@ -2,9 +2,9 @@
    AI Winters: Boom and Bust — the application.
 
    Four acts:
-     I   Guess the year — ten sourced predictions, date and speaker hidden.
-     II  The two winters — a scrubbable timeline with the mechanism in lanes.
-     III Anatomy — the same five stages, three eras, side by side.
+     I   Guess the year — ten sourced claims, date and speaker hidden.
+     II  The two winters — a scrubbable comparison timeline.
+     III Anatomy — historical conditions and current evidence side by side.
      IV  Rhymes and differences, the cut list, and every source.
 
    No framework, no build-time templating beyond concatenation, no network.
@@ -77,6 +77,11 @@ const VERDICTS = [
   { id: 'no',   label: 'It didn’t' },
   { id: 'open', label: 'Still open' }
 ];
+const ASSESSMENT_CHOICES = [
+  { id: 'context', label: 'A dated assessment' },
+  { id: 'no', label: 'A forecast about the future' },
+  { id: 'open', label: 'I need more context' }
+];
 
 function renderCard() {
   const c = D.CARDS[S.i];
@@ -101,8 +106,12 @@ function renderCard() {
   sl.value = String(S.pending.year);
   $('#year-read').textContent = String(S.pending.year);
 
+  const assessment = c.verdict === 'context';
+  $('#verdict-prompt').textContent = assessment
+    ? 'What kind of claim is this?'
+    : 'And did it come true within the time it named?';
   const vb = $('#verdict-btns'); vb.innerHTML = '';
-  for (const v of VERDICTS) {
+  for (const v of assessment ? ASSESSMENT_CHOICES : VERDICTS) {
     const b = el('button', 'vbtn', v.label);
     b.type = 'button';
     b.dataset.v = v.id;
@@ -133,11 +142,11 @@ function lockIn() {
   renderReveal();
 }
 
-const VERDICT_CLASS = { yes: 'good', no: 'bad', late: 'mixed', open: 'openv' };
-const VERDICT_WORD  = { yes: 'It came true', no: 'It did not', late: 'True, but far too late', open: 'Still open' };
+const VERDICT_CLASS = { yes: 'good', no: 'bad', late: 'mixed', open: 'openv', context: 'mixed' };
+const VERDICT_WORD  = { yes: 'It came true', no: 'It did not', late: 'True, but far too late', open: 'Still open', context: 'A dated assessment' };
 const KIND_WORD = {
   promise: 'a confident promise',
-  dismiss: 'a confident dismissal',
+  assessment: 'a contemporary assessment',
   warning: 'a warning'
 };
 
@@ -145,7 +154,8 @@ function renderReveal() {
   const c = D.CARDS[S.i], a = S.answers[c.id];
   const miss = E.yearMiss(a.year, c.year);
   const band = E.missBand(miss);
-  const right = E.verdictCorrect(a.verdict, c.verdict);
+  const assessment = c.verdict === 'context';
+  const right = assessment ? a.verdict === 'context' : E.verdictCorrect(a.verdict, c.verdict);
 
   $('#guess-wrap').hidden = true;
   $('#btn-lock').hidden = true;
@@ -171,8 +181,10 @@ function renderReveal() {
   marks.appendChild(m1);
 
   const m2 = el('div', 'mark ' + (right === null ? 'openv' : right ? 'good' : 'bad'));
-  m2.appendChild(el('b', null, right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
-  m2.appendChild(el('span', null, right === null
+  m2.appendChild(el('b', null, assessment ? (right ? 'Classified correctly' : 'Read the distinction') : right === null ? 'Not scored' : right ? 'Verdict right' : 'Verdict wrong'));
+  m2.appendChild(el('span', null, assessment
+    ? (right ? 'It diagnoses conditions at a date; it is not a future forecast.' : 'Read the reveal: this evaluates conditions at a date rather than predicting what must happen next.')
+    : right === null
     ? 'This one has not resolved. Nobody is marked on it.'
     : 'You said ' + VERDICT_WORD[a.verdict].toLowerCase() + '.'));
   marks.appendChild(m2);
@@ -218,7 +230,7 @@ function renderScorecard() {
   };
   grid.appendChild(stat(String(acc.verdictRight) + '/' + String(acc.scored), '', 'verdicts called right'));
   grid.appendChild(stat(acc.medianMiss == null ? '—' : acc.medianMiss.toFixed(1), 'years', 'average miss on the date'));
-  grid.appendChild(stat(String(acc.open), '', 'left unscored, because unresolved'));
+  grid.appendChild(stat(String(acc.open), '', 'unscored: unresolved forecasts or assessments'));
   box.appendChild(grid);
 
   /* The split that carries the argument. */
@@ -237,13 +249,17 @@ function renderScorecard() {
     r.appendChild(el('span', 'sc-blurb', blurb));
     return r;
   };
-  split.appendChild(row('promise', 'Confident promises', 'Somebody with standing said AI was nearly here. Six of these; five have resolved, and not one of them arrived inside the window it named.'));
-  split.appendChild(row('dismiss', 'Confident dismissals', 'Somebody with standing said it would not work, or was not worth funding. Three of these; all three were overturned.'));
-  split.appendChild(row('warning', 'A warning about the field itself', 'One of these. It was right, three years early — which is the best forecasting record on this page.'));
+  split.appendChild(row('promise', 'Time-bounded promises', 'Five claims named a near-term outcome. Three have resolved, and none arrived inside the window it named.'));
+  split.appendChild(row('warning', 'A warning about the field itself', 'One time-bounded warning. It was right, three years early.'));
+  const assessment = el('div', 'sc-row');
+  assessment.appendChild(el('b', null, 'Dated assessments'));
+  assessment.appendChild(el('span', 'sc-score', '4 to inspect, not score'));
+  assessment.appendChild(el('span', 'sc-blurb', 'The 1958 press claim, ALPAC, Perceptrons, and Lighthill lack a scoreable future window or describe evidence at a time. Later developments do not turn them into failed forecasts.'));
+  split.appendChild(assessment);
   box.appendChild(split);
 
   box.appendChild(el('p', 'sc-tail',
-    'If your two bars are very different heights, that is the useful finding: most people are much better at spotting hype than at spotting a dismissal that is about to age badly. Both errors are in the historical record, in roughly equal measure.'));
+    'The useful habit is to ask which claim can actually be scored. A dated forecast needs an outcome and a time window; a contemporary assessment needs evidence about its own conditions. Mixing them makes history look more certain than it is.'));
 
   const acts = el('div', 'row');
   const again = el('button', 'btn ghost', 'Play again');
@@ -281,7 +297,7 @@ function buildTimeline() {
   });
 
   const legend = $('#tl-legend'); legend.innerHTML = '';
-  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'The results the promises were measured against.' }].concat(D.STAGES);
+  const lanes = [{ id: 'result', label: 'What actually worked', blurb: 'Historical results placed beside claims and assessments.' }].concat(D.STAGES);
   for (const s of lanes) {
     const d = el('div', 'lg');
     const sw = el('i'); sw.style.background = Timeline.LANE_COLOR[s.id];
@@ -613,10 +629,10 @@ function runSelfTest() {
      D.EVENTS.filter(e => e.p === 'd').every(e => !/-01-01$/.test(e.d)));
 
   ok('Card counts match the prose on the scorecard',
-     D.CARDS.filter(c => c.kind === 'promise').length === 6 &&
-     D.CARDS.filter(c => c.kind === 'dismiss').length === 3 &&
+     D.CARDS.filter(c => c.kind === 'promise').length === 5 &&
+     D.CARDS.filter(c => c.kind === 'assessment').length === 4 &&
      D.CARDS.filter(c => c.kind === 'warning').length === 1,
-     'promise/dismiss/warning = ' + ['promise','dismiss','warning']
+     'promise/assessment/warning = ' + ['promise','assessment','warning']
        .map(k => D.CARDS.filter(c => c.kind === k).length).join('/'));
   ok('No promise in the deck arrived inside the window it named',
      D.CARDS.filter(c => c.kind === 'promise').every(c => c.verdict !== 'yes'));
