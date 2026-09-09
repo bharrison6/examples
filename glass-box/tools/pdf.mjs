@@ -41,9 +41,15 @@ if (CHECK) {
   if (!fs.existsSync(out)) {
     throw new Error(`PDF CHECK FAILED: ${path.basename(out)} is missing; run node tools/pdf.mjs`);
   }
-  const bytes = fs.statSync(out).size;
-  if (bytes < 8192) throw new Error(`PDF CHECK FAILED: ${path.basename(out)} is only ${bytes} bytes`);
-  console.log(`PDF CHECK OK: guide parses and ${path.basename(out)} exists (${(bytes / 1024).toFixed(0)} KB); no files written.`);
+  const pdf = fs.readFileSync(out);
+  // Different renderers compress the same guide differently. File size is not
+  // evidence that pages are missing; check the container markers instead.
+  // Page/content correctness still requires PDF parsing and visual review.
+  if (!pdf.subarray(0, 8).toString('ascii').startsWith('%PDF-') ||
+      !/%%EOF\s*$/.test(pdf.subarray(-1024).toString('ascii'))) {
+    throw new Error(`PDF CHECK FAILED: ${path.basename(out)} has invalid PDF boundary markers`);
+  }
+  console.log(`PDF CHECK OK: guide title and PDF boundary markers verified (${(pdf.length / 1024).toFixed(1)} KB); no files written.`);
   process.exit(0);
 }
 

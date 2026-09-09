@@ -57,7 +57,8 @@ equivalent to policy-gradient reinforcement learning. No runtime external AI cal
 ## Active lanes — baseline 640eebb, after Demo 1 publication
 
 Native UI builder owns only `glass-box/src/{template.html,styles.css,app.js}`,
-`glass-box/index.html`, and necessary UI regression tests under `glass-box/src/`.
+`glass-box/index.html`, necessary UI regression tests under `glass-box/src/`, and
+selector updates in the existing `glass-box/tools/integration.mjs` when required.
 Reuse the completed `zero-to-unbeatable` UI as the visual reference, not copied
 game mechanics. Preserve engine.js, text.js, arith.js, agent.js and worker.js
 unless a demonstrated correctness defect is reported to parent. Build.js changes
@@ -108,6 +109,17 @@ the shared checkout and no history rewrites. Commit explicit owned files, then
 integrate and push verified work under existing authorization.
 
 # Verification and return
+
+Parent evidence so far: `node src/selftest.test.js` passed 29/29. Full
+`node src/arc.test.js` reproduced direct/worked exam 54/96; frozen sampling
+60/62/68/78 for 1/2/4/8 attempts; accepted counts 82/93/101/98 and subsequent
+exam 77/83/84/85. These are bounded seeded results, not promises for other tasks.
+Canonical guide currently 820 visible words; shared semantic renderer generated
+two Letter pages, both visually inspected. Parent corrected header/footer
+semantics and removed forced page breaks to avoid an almost-empty third page.
+PDF helper now verifies boundary markers instead of an arbitrary 8KB size floor;
+full PDF validity/layout is separately checked through Poppler and visual review.
+UI/browser checks remain pending until candidate-ready.
 
 Read-only baseline Chrome inspection (before this build): the first screen is a
 long sequence of five activities with no compact lesson scaffold. Guide opens
