@@ -13,7 +13,7 @@
   "theme": "murray-state",
   "built_for": "murray-state",
   "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
-  "built_with": ["codex", "gpt-5.6-terra", "gpt-6-astra"],
+  "built_with": ["codex", "gpt-5.6-terra", "gpt-6-astra", "claude-code"],
   "status": "active",
   "added": "2026-09-08",
   "compliance": {
@@ -23,11 +23,11 @@
     "settings_menu": true,
     "presentation_mode": true,
     "presenter_notes": true,
-    "settings_reset": false,
-    "notes_match_guide": false,
+    "settings_reset": true,
+    "notes_match_guide": true,
     "msu_theme": true,
     "attribution_visible": true,
     "mobile": true,
-    "offline_no_inference": "unverified"
+    "offline_no_inference": true
   }
 }
