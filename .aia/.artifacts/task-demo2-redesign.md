@@ -56,7 +56,7 @@ equivalent to policy-gradient reinforcement learning. No runtime external AI cal
 
 ## Active lanes — baseline 640eebb, after Demo 1 publication
 
-Native UI builder owns only `glass-box/src/{template.html,styles.css,app.js}`,
+Native UI builder owns only `glass-box/src/{template.html,app.js}`,
 `glass-box/index.html`, necessary UI regression tests under `glass-box/src/`, and
 selector updates in the existing `glass-box/tools/integration.mjs` when required.
 Reuse the completed `zero-to-unbeatable` UI as the visual reference, not copied
@@ -68,6 +68,18 @@ units on this isolated branch, and coordinate the shared index before a commit.
 No descendants or browser work; parent handles Chrome. Return candidate-ready
 before final tests, then exact owned commits, tests, decisions and limitations.
 Return early if an impossible or unsound requirement needs reframing.
+
+Styling handoff: after the UI builder confirms its untouched CSS release, the
+native styling worker owns only `glass-box/src/styles.css` and
+`.aia/.data/demo2-redesign/style-progress.md`. Read the current template and
+`zero-to-unbeatable/src/styles.css` as design reference. Match Demo 1's cream,
+navy and gold language, readable typography, compact header/top tabs, clear
+lesson scaffold and responsive workbenches. Preserve genuine chart semantics,
+contrast, phone usability at 390/320px, presenter scaling, centered Guide and
+Settings, and right-side Details drawer. Coordinate class names with UI builder;
+do not edit template/app/guide/build or run browser/tests/builds/commits. Parent
+commits CSS; UI builder builds once both lanes are ready. Incremental checkpoint
+and early return on unsound requirements apply. No descendants.
 
 Guide lane owns only `glass-box/src/demo-guide.html`, `glass-box/README.md`, and
 `.aia/.data/demo2-redesign/guide-progress.md`. No commits, generated files or PDF;
