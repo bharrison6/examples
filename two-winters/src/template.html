@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
-<meta name="theme-color" content="#00142B">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
 <title>AI Winters: Boom and Bust — has this happened before?</title>
 <!--
   AI Winters: Boom and Bust — a single-file, offline demonstration of the two
@@ -34,8 +34,8 @@
 <div id="brandbar">
   <header id="topbar">
     <div id="brand">
-      <span class="b0">Murray State University</span>
-      <span class="b1">AI WINTERS: BOOM AND BUST <em>has this happened before?</em></span>
+      <span class="b0">Murray State University · AI literacy</span>
+      <span class="b1">AI Winters: Boom and Bust</span>
     </div>
     <div id="topbar-tools">
       <button class="icon-btn" id="btn-howto" aria-label="Guide" title="Guide">?</button>
@@ -43,10 +43,10 @@
     </div>
   </header>
   <nav id="actnav" role="tablist" aria-label="Acts">
-    <button data-act="1" class="on" role="tab" aria-selected="true">Guess the year<span>Act I</span></button>
-    <button data-act="2" role="tab" aria-selected="false">The two winters<span>Act II</span></button>
-    <button data-act="3" role="tab" aria-selected="false">Anatomy<span>Act III</span></button>
-    <button data-act="4" role="tab" aria-selected="false">Now<span>Act IV</span></button>
+    <button data-act="1" class="on" role="tab" aria-selected="true">1 · Claims<span>What kind of claim?</span></button>
+    <button data-act="2" role="tab" aria-selected="false">2 · History<span>What changed?</span></button>
+    <button data-act="3" role="tab" aria-selected="false">3 · Compare<span>Which conditions matter?</span></button>
+    <button data-act="4" role="tab" aria-selected="false">4 · Today<span>What follows from this?</span></button>
   </nav>
 </div>
 
@@ -55,20 +55,21 @@
 <!-- =========================== ACT I ================================== -->
 <section class="act" data-act="1">
 
-  <div id="intro">
+  <div id="intro" class="stage-intro"><div class="eyebrow">Question 01 · Read a claim in context</div>
     <h1 id="intro-title"></h1>
     <div id="intro-body"></div>
-    <p id="intro-note"></p>
+    <div class="lesson-strip"><article><b>Date it</b><p>Place a claim in its historical setting.</p></article><article><b>Classify it</b><p>Separate forecasts from assessments and untimed ambitions.</p></article><article><b>Check it</b><p>Read what happened and what the source supports.</p></article></div><p id="intro-note"></p>
     <button class="btn primary big" id="btn-begin"></button>
   </div>
 
   <div id="card-body" hidden>
+    <div class="activity-heading"><h1>Read the claim. Place it in time.</h1><button class="btn ghost" data-details="claims">Details</button></div>
     <div id="card-head">
       <span id="card-count">1 / 10</span>
       <span id="card-progress-track"><i id="card-progress"></i></span>
     </div>
 
-    <div class="quote-card">
+    <div class="claim-workspace"><div class="quote-card"><span class="quote-kicker">What kind of claim is this?</span>
       <p id="card-quote"></p>
       <p id="card-note" hidden></p>
     </div>
@@ -78,7 +79,7 @@
         <label class="lbl" for="year-slider">What year was this said?</label>
         <span id="year-read" aria-hidden="true">1985</span>
         <input type="range" id="year-slider" min="1950" max="2026" step="1" value="1985"
-               aria-label="Guess the year this prediction was made">
+               aria-label="Guess the year this claim was made">
         <div id="year-ticks"><span>1950</span><span>1988</span><span>2026</span></div>
       </div>
 
@@ -88,11 +89,12 @@
       </div>
     </div>
 
+    </div><!-- /claim-workspace -->
     <div id="reveal-wrap" hidden></div>
 
     <div class="row">
       <button class="btn primary big" id="btn-lock">Lock it in</button>
-      <button class="btn primary big" id="btn-next-card" hidden>Next prediction</button>
+      <button class="btn primary big" id="btn-next-card" hidden>Next claim</button>
     </div>
   </div>
 
@@ -101,19 +103,8 @@
 
 <!-- =========================== ACT II ================================= -->
 <section class="act" data-act="2" hidden>
-  <h1>Seventy-six years, five lenses, two different contractions.</h1>
-  <p>
-    Each row below is one lens for comparing events: claims, institutional bets, constraints,
-    reassessment, and withdrawal. Drag the slider forward. The events do not form a fixed
-    sequence: the first contraction involved different institutions and pressures from the
-    second. The current entries are evidence about today, not a third run of an historical script.
-  </p>
-  <p class="help">
-    The two pale bands are the winters. They are drawn with a soft right-hand edge because
-    the end dates are conventional rather than agreed &mdash; the notes under the chart say
-    exactly where historians disagree.
-  </p>
-
+  <div class="stage-intro"><div class="eyebrow">Question 02 · Reconstruct the history</div><h1>Two winters. Different pathways.</h1><p>Use the timeline to inspect landmark results and five comparison lenses. The rows organize evidence; they do not prescribe a sequence that every era must follow.</p><button class="btn ghost" data-details="history">Details</button></div>
+  <div class="timeline-workspace"><div class="timeline-bench"><div class="bench-head"><b>Explore 1950–2026</b><span>Drag the date or step between events</span></div>
   <div id="tl-wrap">
     <canvas id="tl" aria-label="Timeline from 1950 to 2026. Six rows: landmark results and five comparison lenses. Two shaded bands mark conventional AI-winter date ranges."></canvas>
     <div id="tl-winter" hidden></div>
@@ -128,23 +119,20 @@
   <div id="tl-stats">
     <div class="stat"><b id="tl-year">2026</b><span>showing up to</span></div>
     <div class="stat"><b id="tl-total">0</b><span>events so far</span></div>
-    <div class="stat"><b id="tl-with">0</b><span>times the money left</span></div>
+    <div class="stat"><b id="tl-with">0</b><span>withdrawal events</span></div>
   </div>
 
-  <div id="tl-detail" class="empty"></div>
+  </div><!-- /timeline-bench --><aside id="tl-detail" class="empty"></aside></div><!-- /timeline-workspace -->
 
-  <div class="panel">
-    <h3>The rows</h3>
+  <details class="panel supporting"><summary>Read the six timeline rows</summary>
     <div id="tl-legend"></div>
-  </div>
+  </details>
 
-  <div class="panel">
-    <h3>Where the winter dates are soft</h3>
+  <details class="panel supporting"><summary>Why the winter dates have soft edges</summary>
     <div id="tl-winters"></div>
-  </div>
+  </details>
 
-  <div class="panel">
-    <h3>Four funding examples, not a comparable total</h3>
+  <details class="panel supporting"><summary>Four funding examples with different accounting bases</summary>
     <p class="help">
       There is no continuous, sourceable series of AI funding across these seventy-six
       years &mdash; particularly not for US spending before 1980 &mdash; so this demo does
@@ -154,7 +142,7 @@
       as a combined total or trend.
     </p>
     <div id="money-list"></div>
-  </div>
+  </details>
 
   <div class="row">
     <button class="btn primary" id="btn-to-anatomy">Put the two winters side by side</button>
@@ -163,14 +151,8 @@
 
 <!-- =========================== ACT III ================================ -->
 <section class="act" data-act="3" hidden>
-  <h1>Compare the conditions; do not force a cycle.</h1>
-  <p>
-    Reading across a row compares a historical condition with another and with the present.
-    Two cells in the present column remain <b>open</b>: no single binding constraint has been
-    established, and no withdrawal has occurred. Those absences do not forecast what happens
-    next; they keep the question honest.
-  </p>
-
+  <div class="stage-intro"><div class="eyebrow">Question 03 · Compare one condition at a time</div><h1>What is similar? What is different?</h1><p>Choose a lens, then compare the first winter, the second winter, and today. Open an era’s Details for the complete explanation and sources. Two present-day questions remain unresolved.</p><button class="btn ghost" data-details="compare">Details</button></div>
+  <div id="lens-nav" role="group" aria-label="Choose a comparison lens"></div>
   <div id="anatomy"></div>
 
   <div class="row">
@@ -180,12 +162,7 @@
 
 <!-- =========================== ACT IV ================================= -->
 <section class="act" data-act="4" hidden>
-  <h1>What rhymes, and what does not.</h1>
-  <p>
-    Two columns, argued as honestly as the sources allow. Neither column wins. The point of
-    having both is that you leave able to judge a specific claim on its specific evidence,
-    rather than reaching for a mood.
-  </p>
+  <div class="stage-intro"><div class="eyebrow">Question 04 · Test an analogy</div><h1>What can history tell us about today?</h1><p>Inspect a similarity beside a difference. Each claim needs its own evidence; neither column predicts the next winter. Open the statements that matter to your argument.</p><button class="btn ghost" data-details="today">Details</button></div>
   <div id="close"></div>
 </section>
 
@@ -210,23 +187,25 @@
     <div class="sheet-body">
       <ol class="ht-steps">
         <li>
-          <b>Read the prediction.</b> Ten of them, all real, all sourced. The speaker and the
-          date are hidden.
+          <b>Read the claim.</b> Ten sourced claims, with the speaker and date hidden: five
+          time-bounded forecasts, four assessments or untimed ambitions, and one warning.
         </li>
         <li>
-          <b>Guess two things.</b> Drag the slider to the year you think it was said, then
-          say whether it came true. Then press <em>Lock it in</em> and find out.
+          <b>Guess the year, then classify.</b> Drag the slider to the year you think it was
+          said. For a time-bounded forecast, call its outcome; for an assessment or untimed
+          ambition, identify the kind of claim. Then press <em>Lock it in</em> and find out.
         </li>
         <li>
-          <b>Watch the split.</b> Some of these are people promising AI was nearly here.
-          Some are people saying it would never work. At the end you get scored on both
-          separately, and that comparison is the whole point.
+          <b>Watch the split.</b> Forecasts receive an outcome score only when they name a
+          time window. Assessments and untimed ambitions stay unscored context, because later
+          events do not turn them into failed prophecies.
         </li>
       </ol>
 
+      <p class="ht-tip">Open <b>Details</b> beside an activity, event, or comparison for context and named sources. Escape closes the panel and returns you to the activity.</p>
       <p class="ht-tip">
-        There is nothing to beat. Most rooms do well on one kind of prediction and badly on
-        the other, and which one is which is usually a surprise.
+        There is nothing to beat. The point is to notice which claims have an outcome and a
+        deadline, and which need evidence about their own historical setting.
       </p>
 
       <div class="field">
@@ -234,8 +213,8 @@
         <ul class="ht-acts">
           <li><b>Guess the year</b> &mdash; ten curated claims, 1950 to 2024.</li>
           <li><b>The two winters</b> &mdash; a timeline you can scrub, using five lenses to compare different historical pathways.</li>
-          <li><b>Anatomy</b> &mdash; compare the first winter, the second winter, and now without treating them as one cycle.</li>
-          <li><b>Now</b> &mdash; what rhymes with the two winters, what is genuinely different, what was cut for lack of a source, and every source.</li>
+          <li><b>Compare</b> &mdash; choose one lens at a time. Open each era’s Details for its explanation and sources.</li>
+          <li><b>Today</b> &mdash; expand a similarity or difference, then decide what evidence supports your analogy.</li>
         </ul>
       </div>
 
@@ -244,20 +223,20 @@
         <ul class="ht-acts">
           <li><b>?</b> &mdash; <b>Guide</b>. Reopens this panel at any point.</li>
           <li><b>&#9881;</b> &mdash; <b>Settings</b>: <em>Open Presenter Notes</em>, <em>Presentation mode</em>,
-            <em>Reset</em>, and a self-test that checks every claim against its declared source, live,
+            <em>Reset</em>, and a check that validates source references and data structure,
             in front of whoever is asking.</li>
         </ul>
       </div>
 
       <p class="help">
-        Nothing here is generated by an AI. It is a set of dated quotations, a timeline and a
+        No AI inference runs here. This is a set of dated quotations, a timeline and a
         link to the original source of each one. The whole app is one file that runs offline
         and stores nothing.
       </p>
     </div>
     <div class="sheet-foot ht-foot">
       <span class="ht-dismiss">Tap outside, or press <kbd>Esc</kbd>, to close.</span>
-      <button class="btn primary" data-close="howto">Got it &mdash; first prediction</button>
+      <button class="btn primary" data-close="howto">Got it &mdash; first claim</button>
     </div>
   </div>
 </div>
@@ -339,6 +318,12 @@
   </div>
 </div>
 
+<div class="overlay side-sheet" id="details" hidden>
+  <div class="sheet-inner" role="dialog" aria-modal="true" aria-labelledby="details-title" tabindex="-1">
+    <div class="sheet-head"><div><span class="eyebrow">Look closer</span><h2 id="details-title">Details</h2></div><button class="icon-btn" data-close="details" aria-label="Close Details">×</button></div>
+    <div class="sheet-body" id="details-body"></div><div class="sheet-foot"><button class="btn primary" data-close="details">Back to activity</button></div>
+  </div>
+</div>
 <script>
 /*__JS__*/
 </script>

@@ -26,7 +26,7 @@
 <style id="guide-css">
 .guide-scope { color: inherit; }
 .guide-scope .g-head { margin-bottom: 18px; }
-.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #ECAC00; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #805800; }
 .guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
 .guide-scope .g-sub { opacity: .72; font-size: .92rem; }
 .guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
@@ -47,10 +47,10 @@
   display: inline-block; padding: 1px 7px; border-radius: 999px;
   font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
 }
-.guide-scope .tag.p { background: rgba(236,172,0,.18); color: #ECAC00; }
-.guide-scope .tag.d { background: rgba(0,164,227,.18); color: #00A4E3; }
-.guide-scope .tag.w { background: rgba(185,140,255,.18); color: #B98CFF; }
-.guide-scope .tag.o { background: rgba(126,217,87,.18); color: #7ED957; }
+.guide-scope .tag.p { background: rgba(236,172,0,.18); color: #805800; }
+.guide-scope .tag.d { background: rgba(0,164,227,.18); color: #00608b; }
+.guide-scope .tag.w { background: rgba(185,140,255,.18); color: #68418f; }
+.guide-scope .tag.o { background: rgba(126,217,87,.18); color: #24644e; }
 .guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
 </style>
 <style>
@@ -63,6 +63,8 @@ body {
 @media print {
   body { font-size: 10.5pt; }
   .page { max-width: none; padding: 0; }
+  .guide-scope .deck-heading { break-before: page; }
+  .guide-scope th, .guide-scope td { padding: 4px 8px; }
   .guide-scope h2 { break-after: avoid; }
   .guide-scope h3 { break-after: avoid; }
   .guide-scope h3 + p { break-inside: avoid; }
@@ -110,10 +112,10 @@ body {
   <div class="scroll">
   <table>
     <tr><th>Act</th><th>What happens</th><th>Time</th></tr>
-    <tr><td><b>I &mdash; Guess the year</b></td><td>Ten sourced claims with the speaker and date hidden. Score forecasts; classify assessments instead of pretending they are forecasts.</td><td>7&ndash;9 min</td></tr>
+    <tr><td><b>I &mdash; Guess the year</b></td><td>Five time-bounded forecasts, four assessments or untimed ambitions, and one warning, with the speaker and date hidden. Score forecasts; classify the unscored context.</td><td>7&ndash;9 min</td></tr>
     <tr><td><b>II &mdash; The two winters</b></td><td>Scrub the timeline. Five lenses compare historical pathways without forcing a sequence.</td><td>3&ndash;4 min</td></tr>
-    <tr><td><b>III &mdash; Anatomy</b></td><td>Compare the two winters and the present under the same lenses. Two current questions stay open.</td><td>2&ndash;3 min</td></tr>
-    <tr><td><b>IV &mdash; Now</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
+    <tr><td><b>III &mdash; Compare</b></td><td>Compare the two winters and the present under the same lenses. Two current questions stay open.</td><td>2&ndash;3 min</td></tr>
+    <tr><td><b>IV &mdash; Today</b></td><td>Rhymes against differences. Close on the checklist.</td><td>2&ndash;3 min</td></tr>
   </table>
   </div>
 
@@ -121,11 +123,13 @@ body {
   <p>
     Do the first two cards yourself, out loud, so the room sees the mechanic. Then hand it
     over &mdash; ask for a show of hands on the year before you drag the slider, and ask for
-    a verbal verdict before you press <b>Lock it in</b>. The room being wrong together is
+    a verbal verdict or classification before you press <b>Lock it in</b>. For the four
+    context cards, choose <b>Assessment or untimed ambition</b> when the claim does not
+    supply a scoreable future window. The room being wrong together is
     the experience; a silent room reading a screen is not.
   </p>
 
-  <h3>The deck, and what each card is for</h3>
+  <h3 class="deck-heading">The deck, and what each card is for</h3>
   <div class="scroll">
   <table>
     <tr><th>Year</th><th>Card</th><th>Type</th><th>What it is for</th></tr>
@@ -176,27 +180,34 @@ body {
     Do not let the lenses turn into a prophecy. The correct line is: &ldquo;these comparisons
     tell us what to investigate. They do not establish that a withdrawal will occur.&rdquo;
   </p>
-  <h3>The money panel &mdash; read the caveat aloud</h3>
+  <h3>The funding examples &mdash; read the caveat aloud</h3>
   <p>
-    Four funding examples with different bases: programme budgets, programme expenditure, and
+    Expand <b>Four funding examples with different accounting bases</b> below the timeline.
+    These are programme budgets, programme expenditure, and
     a private funding round. They use three currencies and different price years. No continuous,
     sourceable funding series exists across these years, so the demo shows dated evidence rather
     than drawing a combined total or a line it cannot defend.
   </p>
 
-  <h2>Act III &mdash; anatomy</h2>
+  <h2>Act III &mdash; compare</h2>
   <p>
-    Compare the columns by cause, not by step number. Two cells in the &ldquo;Now&rdquo; column remain
-    open: no single binding technical constraint is established, and no withdrawal has occurred.
+    Choose one of the five lens buttons; its navy fill marks the selected lens. Compare the
+    three era headings, then open each era&rsquo;s <b>Details</b> for the full explanation
+    and named sources. Escape closes the side panel and returns focus to its button.
+    Compare causes, not step numbers. Two cells in the &ldquo;Today&rdquo; column remain
+    open: no single binding technical constraint is established here, and this snapshot does not
+    establish a comparable broad contraction.
   </p>
   <p class="say">
     &ldquo;Hindsight makes old constraints easier to see. It does not prove that today has the
     same constraint or that it must end the same way. Ask what evidence would support the claim.&rdquo;
   </p>
 
-  <h2>Act IV &mdash; closing</h2>
+  <h2>Act IV &mdash; today</h2>
   <p>
-    Give both columns roughly equal time. The strongest item on each side:
+    Expand a similarity and a difference, giving both columns roughly equal time. The
+    supporting statements start closed so the room can investigate one claim at a time.
+    The strongest item on each side:
   </p>
   <ul>
     <li><b>Rhymes:</b> in February 2026 OpenAI stopped reporting SWE-bench Verified after
@@ -233,7 +244,8 @@ body {
     Open <b>Settings &rarr; Run the self-test</b> in front of them. It re-derives, live, that
     every claim resolves to a declared source, that no source is cited and never used, and
     that the counts quoted on screen match the data. Then scroll to Act IV, which lists every
-    source and, separately, everything researched and <b>cut</b> for lack of one.
+    source under <b>Every source</b> and, separately, everything researched and <b>cut</b>
+    for lack of one. Both supporting sections open on request.
   </p>
   <h3>&ldquo;Why is that quote from a quotation-checking website?&rdquo;</h3>
   <p>
