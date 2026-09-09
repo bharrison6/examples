@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Modernize Types of AI and make the three teaching stages clear
 created: 2026-09-09T03:35:20Z
-updated: 2026-09-09T03:35:20Z
+updated: 2026-09-09T03:47:53Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -29,7 +29,8 @@ public zero-to-unbeatable folder and existing guide/PDF paths.
 
 # Builder lane
 
-Own zero-to-unbeatable/** EXCEPT its PDF, plus incremental progress in
+Own zero-to-unbeatable/** EXCEPT its PDF, canonical src/demo-guide.html, README.md,
+SPEC.md and tools/render_guide.py, plus incremental progress in
 .aia/.data/types-ai-redesign/build-progress.md. Parent packages the PDF after the
 source guide is stable, handles root generated card/README, memory/logs, independent
 review, Chrome validation, integration and publishing. No other demo, contract,
@@ -66,6 +67,26 @@ are learned estimates including unvisited zeroes; no guaranteed generalization o
 unbeatable network claim. Keep measured error distinct from gameplay outcomes.
 
 # Return and verification
+
+## Guide packaging lane (split from the existing authorized work)
+
+Own only zero-to-unbeatable/src/demo-guide.html, README.md and SPEC.md, plus
+.aia/.data/types-ai-redesign/guide-progress.md. The UI builder explicitly released
+these untouched paths on 2026-09-09. No other files, PDF authoring, git operations,
+browser interactions or descendants. Keep the canonical guide's semantic HTML
+markers and section/page-break structure compatible with the existing renderer.
+Title Types of AI; align visible action names with the UI builder and latest
+CONTRACT. Use a clear 20-minute presenter sequence: question, activity, expected
+observation and teaching limit for each stage; explain that preparation creates a
+fresh learned teacher, held-out error measures agreement not playing strength,
+human play does not train the table, and network weights cannot repair absent
+inputs in the optional extension. Avoid unexplained expert jargon and performance
+guarantees. Keep the guide compact enough for two readable pages. Update README
+and SPEC to describe final teaching/contract surfaces without duplicating a long
+presenter script. Parent owns rendering/PDF, verification and committing this lane.
+Coordinate canonical-guide stability before the UI builder regenerates the app.
+Return early if any requirement is unclear or unsound. Return changed paths and
+actual read-only extraction check result; persist progress while working.
 
 Return commits/files, design rationale, tests actually run and remaining risks.
 Run existing playtest, neural/lifecycle and build parity tests; add only meaningful
