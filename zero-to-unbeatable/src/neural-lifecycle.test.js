@@ -49,7 +49,8 @@ function harness(phase) {
     S.neural = { model, metrics: NET.metrics(model), checkpoints: new Map() };
   }
   const context = vm.createContext({
-    S, OG, NET, ULT: { newBrain: () => ({}) }, RULES: { DEPTHS: [] },
+    S, OG, NET, NETWORK_VIEW: { snapshot: () => ({}) },
+    ULT: { newBrain: () => ({}) }, RULES: { DEPTHS: [] },
     $: selector => {
       if (!nodes.has(selector)) nodes.set(selector, object(selector));
       return nodes.get(selector);
@@ -60,6 +61,7 @@ function harness(phase) {
     applyMode: () => effects.push(['applyMode']),
     renderTrain: () => effects.push(['renderTrain']),
     renderBanner: () => effects.push(['renderBanner']),
+    renderNetworkInspector: () => effects.push(['renderNetworkInspector']),
     newGame: () => effects.push(['newGame']),
     recordNeuralCheckpoint: () => effects.push(['checkpoint'])
   });
