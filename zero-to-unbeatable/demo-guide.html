@@ -27,78 +27,80 @@
 <div class="guide">
 <header>
   <div class="eyebrow">Murray State University</div>
-  <h1>Types of AI<small>Demo 1 · rules, machine learning, neural networks · 20 minutes</small></h1>
+  <h1>Types of AI<small>Demo 1 · model representations and learning methods · 20 minutes</small></h1>
   <p class="meta"><b>You need:</b> one browser and the demo’s <code>index.html</code>. It works offline. Start with a fresh page; use Settings → Presentation mode to project, Open Presenter Notes for this guide in the app, and Open printable PDF when a handout helps.</p>
 </header>
 
 <section>
 <h2>The question for all 20 minutes</h2>
-<p><b>Where does this opponent’s skill come from?</b> The board and game rules stay the same. What changes is the source of the move: written instructions, experience stored as move scores, or a network’s adjustable numbers—called weights—reused to score many board positions.</p>
-<p class="say">“Do not rank these as old AI and new AI. Watch what supplied the skill.”</p>
+<p><b>How is a strategy represented, and how did it get there?</b> A–C compare written rules, a value table, and shared neural-network weights on one game. D introduces other model families. The separate <b>How they learn</b> tab explains training methods.</p>
+<p class="say">“A model is how the strategy is represented. A learning method is how its adjustable parts change.”</p>
 </section>
 
 <section>
-<h2>1a · Rules-based intelligence — 5 minutes</h2>
+<h2>1a · Symbolic AI (GOFAI) — 4 minutes</h2>
 <h3>Question</h3>
 <p>Can an opponent be skilled when it has never learned from a game?</p>
 <h3>Activity</h3>
 <ol>
-<li>Open <b>1a Rules-based intelligence</b> and play a few moves against All 8.</li>
+<li>Open <b>1a Symbolic AI (GOFAI)</b> and play a few moves against All 8.</li>
 <li>Point to the highlighted rule after each reply. Switch to First 2 and invite the room to find a fork, then return to All 8.</li>
-<li>Choose the policy check if time allows. It examines every reachable game line for this written policy.</li>
+<li>Open <b>Details</b> for the exhaustive policy evidence and the explanation of GOFAI.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>The opponent can explain a move by naming a rule. All 8 has no losing line because the app checks the whole policy, not because it won a few demonstrations.</p>
 <h3>Teaching limit</h3>
-<p>Its skill came from a person’s move priorities. Changing its behavior means revising those instructions; playing it supplies no new experience.</p>
+<p>GOFAI means Good Old-Fashioned Artificial Intelligence. These rules form a decision list: a matching rule chooses a move; otherwise the next rule is checked. It can be drawn as a decision tree. Here people wrote the tests; trees can also be learned.</p>
 </section>
 
 <section>
-<h2>1b · Machine learning — 7 minutes</h2>
+<h2>1b · Value table — 5 minutes</h2>
 <h3>Question</h3>
 <p>What changes when an opponent keeps a score for positions it has experienced?</p>
 <h3>Activity</h3>
 <ol>
-<li>Open <b>1b Machine learning</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
+<li>Open <b>1b Value table</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
 <li>Play one short game, then run a visible training burst. Select an earlier and a later era to compare their move scores.</li>
-<li>Use the policy check on a later era if time allows, then use <b>New game</b> to return the board to play.</li>
+<li>Use <b>Details</b> to inspect evidence for the selected era, then return to play.</li>
 </ol>
 <h3>Expected observation</h3>
-<p>Completed games change stored move scores. A later era can choose differently because the table remembers estimates for positions it has encountered.</p>
+<p>The model is a table; the learning method is reinforcement learning. Game outcomes and estimates of later replies update separate position scores. Practice can therefore change its choices.</p>
 <h3>Teaching limit</h3>
 <p>Human play does not train this table. Only the app’s training burst updates it. The table also has one separate score per position, so it does not automatically carry what it learned to a different situation.</p>
 </section>
 
 <section class="page-break">
-<h2>1c · Neural networks — 7 minutes</h2>
+<h2>1c · Neural Network — 7 minutes</h2>
 <h3>Question</h3>
 <p>Can adjustable numbers reused across many boards approximate the scores a table learned?</p>
 <h3>Activity</h3>
 <ol>
-<li>Open <b>1c Neural networks</b> and choose <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its resulting estimates are frozen as the teacher.</li>
-<li>Choose <b>Train network</b>. Compare the error for examples used in training with the error for positions kept out of training.</li>
-<li>Read the separate playing score, then use <b>Show move scores</b> to see the network’s calculation for each legal move.</li>
+<li>Open <b>1c Neural Network</b> and choose <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its estimates become frozen teaching targets.</li>
+<li>Inspect the network’s layers and a connection’s numeric weight. Choose <b>Train network</b>, then compare the weight with its initial value.</li>
+<li>Compare training error, held-out error, and the separate playing score. Use <b>Show move scores</b> to inspect predictions for legal moves.</li>
 </ol>
 <h3>Expected observation</h3>
-<p>Training changes weights: adjustable numbers reused to calculate scores for many boards, rather than a separate stored entry for every board. Lower training and held-out error mean closer agreement with this frozen teacher; the playing score is a different measurement.</p>
+<p>This feedforward multilayer perceptron uses supervised learning. Backpropagation calculates how weights affect error; normalized gradient updates adjust them. Shared weights influence many positions. Neuron activations are responses to an input, not stored weights; a positive weight does not mean a good move.</p>
 <h3>Teaching limit</h3>
-<p>Preparation creates a fresh learned teacher; it does not copy answers from a perfect-game solver. People still chose the board description and learning procedure. Held-out error measures agreement on withheld examples, not playing strength or a promise about every unseen board. When the network plays, it uses its own calculation and does not consult the frozen table.</p>
+<p>Lower error means closer agreement with the teacher, not guaranteed playing strength. People chose the inputs and learning procedure. During play the network calculates its own scores without consulting the frozen table. It is trained with gradients, not evolutionary selection.</p>
 <p class="note">A fresh teacher can leave an unvisited position at its initial score of zero. That is a limit of the examples, not proof that the position is neutral in perfect tic-tac-toe.</p>
 <p class="say">“A neural network is a type of machine learning. Here it learns a compact approximation of another learner’s experience.”</p>
 </section>
 
 <section>
-<h2>Optional advanced extension — 1 minute</h2>
-<p>Open Ultimate tic-tac-toe from the neural tab only after the three-stage comparison. It adds facts a one-board picture omits: a board’s place in the larger grid and where a move sends the next player. Network weights cannot repair missing inputs; a network given the same incomplete one-board picture misses those facts too.</p>
+<h2>Other models and how they learn — 4 minutes</h2>
+<p><b>D · Other model types</b> introduces linear models, decision trees, ensembles, nearest neighbors, support-vector machines, and probabilistic models. Search/planning is explained separately as a problem-solving approach.</p>
+<p>Open the unlettered <b>How they learn</b> tab. Supervised learning uses example targets; unsupervised learning finds structure without target labels; self-supervised learning creates targets from the data; reinforcement learning uses action rewards; semi-supervised learning combines labeled and unlabeled examples. These approaches can be combined.</p>
+<p>Self-play is not the same as self-supervision. B uses reinforcement learning; C uses supervised targets produced by B’s algorithm. A neural network can use other learning methods too.</p>
 </section>
 
 <section>
 <h2>Close with evidence, not a winner</h2>
 <ul>
-<li>Which source of skill was easiest to explain? Which was easiest to update?</li>
-<li>Why compare held-out error with training error?</li>
-<li>What evidence would you need before calling a network unbeatable?</li>
+<li>Which model stores separate values, and which shares weights?</li>
+<li>Why does lower held-out error not prove unbeatable play?</li>
 </ul>
+<p>Optional Ultimate tic-tac-toe explores missing inputs: shared weights cannot supply omitted facts about a board’s place in the larger game or where a move sends the opponent.</p>
 <p class="note">Reopen Guide with the header’s Guide button. Settings also offers Open Presenter Notes, Presentation mode, and Reset; Reset returns the full demonstration to its initial state.</p>
 </section>
 

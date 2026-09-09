@@ -1,12 +1,17 @@
 # Types of AI — current implementation specification
 
-The demo exposes three accessible tabs on one shared tic-tac-toe board:
-1a Rules-based intelligence, 1b Machine learning, and 1c Neural networks.
-The tabs compare different sources of skill, not a progression of difficulty.
+The model row exposes 1a Symbolic AI (GOFAI), 1b Value table, 1c Neural Network,
+and 1d Other model types. A-C compare strategy representations on one game;
+D is a model-family overview. A separate unlettered Model in action / How they
+learn row distinguishes the model view from cross-cutting learning methods.
+The tabs are not an exhaustive AI taxonomy or a progression of difficulty.
 `#rules`, `#learning`, and `#neural` select them directly.
 
 1a is a readable hand-written eight-rule ladder. It receives no experience and
-is verified by `OG.verifyPolicy`. 1b is tabular afterstate value learning. Its
+is verified by `OG.verifyPolicy`. Its ordered tests can be expressed as a decision
+tree; the tests here are authored, though trees can also be learned. GOFAI expands
+to Good Old-Fashioned Artificial Intelligence. 1b uses tabular reinforcement
+learning. Its
 table records the value for the player who just made a complete afterstate;
 visible training bursts create eras, and Show move scores exposes legal-move
 estimates. Human play does not update the table.
@@ -19,9 +24,15 @@ group to train or held-out by a deterministic seed hash. A label is a current
 table estimate, not a perfect-game target; an unvisited position can remain at
 its initial zero value.
 
-The model has one-hot cell/turn inputs, two ReLU hidden layers, and a linear
+The model has 29 one-hot cell/turn inputs, 28 and 18 ReLU hidden units, and a linear
 value output clamped only when read. Its weights are adjustable numbers reused
-to calculate many positions, unlike the table’s separate stored entries. People
+to calculate many positions, unlike the table’s separate stored entries. A
+read-only inspector visualizes the actual instance and exposes signed connection
+weights and biases with changes from initialization. Counts are derived from the
+instance: 1,334 connection weights plus 47 biases, 1,381 parameters. Numerical
+weight inspection must cover values omitted from any simplified overview and
+must not mutate model state. Backpropagation supplies derivatives to normalized
+gradient updates on frozen supervised targets. People
 designed both the inputs and learning procedure. Bounded training batches keep
 preparation, training, Reset, and tab changes interruptible. The network policy
 evaluates legal afterstates with `NET.predict(model, child)` and has no teacher
@@ -29,6 +40,14 @@ parameter. MSE is average squared prediction-score error; reported train/held-ou
 error and the fixed-seed playing score remain separate measurements. No neural-
 network unbeatable claim appears unless that exact policy is separately verified
 and the wording is deliberately revised.
+
+How they learn distinguishes supervised, unsupervised, self-supervised,
+reinforcement and semi-supervised feedback using examples, without treating them
+as mutually exclusive model families. Self-play does not imply self-supervision;
+supervised targets need not come from humans. Gradient and evolutionary methods
+are optimization approaches. D lists linear/logistic models, learned trees,
+ensembles, nearest neighbors, support-vector machines and probabilistic/Bayesian
+models; search/planning is identified separately as a problem-solving approach.
 
 The required Guide opens on entry and from the header’s Guide button. Settings,
 beside Guide, contains Open Presenter Notes, Presentation mode, and Reset. The
