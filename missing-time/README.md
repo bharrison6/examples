@@ -1,8 +1,8 @@
-# Missing Time
+# Gaps in the Rock Record
 
-**Missing Time** is an offline, self-contained rock-record and preservation investigation for the AI Fellows collection. Students inspect surviving layers, sample fossils, and use labelled synthetic chronology anchors to make a local missing interval visible. They then distinguish an evidence-supported local inference from an extinction claim that the available observations cannot support.
+**Gaps in the Rock Record** (folder `missing-time`) is an offline, self-contained rock-record and preservation investigation for the AI Fellows collection. Students inspect surviving layers, sample fossils, and use labelled synthetic chronology anchors to make a local missing interval visible. They then distinguish an evidence-supported local inference from an extinction claim that the available observations cannot support.
 
-Open [index.html](index.html) in a modern browser. The how-to opens at launch; `?` reopens it. `⚙` offers presentation mode, presenter notes, and reset. The printable guide is [HTML](teacher-guide.html) or [PDF](teacher-guide.pdf).
+Open [index.html](index.html) in a modern browser. The **Guide** overlay opens at launch; the `?` button reopens it. `⚙` **Settings** offers **Open Presenter Notes**, **Presentation mode** and **Reset** (back to Case 1 with the evidence ledger, supplied ages and reveal cleared; Presentation mode is left as the presenter set it). The printable guide is [HTML](teacher-guide.html) or [PDF](teacher-guide.pdf) — the same document the notes overlay shows.
 
 ## What the model teaches
 
@@ -18,7 +18,7 @@ Exact gap durations are not calculated from thickness. When students select **Sh
 
 ## Develop and verify
 
-`model.js` is the production model. `build.js` bundles it verbatim into the self-contained `index.html`.
+`model.js` is the production model and `teacher-guide.html` is the canonical guide. `build.js` bundles the model verbatim into the self-contained `index.html`, and lifts the guide's `guide-css` stylesheet and its `.guide-scope` body into the presenter-notes overlay, so the on-screen notes, the printable guide and the PDF are one document from one source.
 
 ```text
 node test-model.js
@@ -27,15 +27,18 @@ node test-build.js
 node build.js --check
 ```
 
-The model tests hand-worked continuous deposition, pause, top-down erosion through a whole and partial layer, specimen survival, synthetic lifetimes, chronology anchors, and valid evidence-action gates. Build checks confirm exact bundling and parse both inline scripts.
+The model tests hand-worked continuous deposition, pause, top-down erosion through a whole and partial layer, specimen survival, synthetic lifetimes, chronology anchors, and valid evidence-action gates. Build checks confirm exact bundling of both sources, the CONTRACT.md Required UX surface (Guide button, the three Settings items, first-load and Reset semantics), and parse both inline scripts. `node build.js --check` fails if `index.html` has drifted from `teacher-guide.html`.
 
-No external scripts, styles, fonts, images, data, analytics, or AI services are loaded at runtime. Direct-file and disconnected-network browser behavior remain unverified in the manifest until parent browser review.
+No external scripts, styles, fonts, images, data, analytics, or AI services are loaded at runtime. This was verified by recording `Network.requestWillBeSent` in headless Chrome while exercising every control of the built page opened as a local `file://` document: one request, the file itself, and none external. The same probe saw three external requests on a control page that makes them.
 
-Rebuild the printable PDF from canonical HTML with the local renderer:
+Rebuild the printable PDF from the canonical HTML with an installed Chrome/Edge (no dependencies to install):
 
 ```text
-python tools/render_guide.py
+node tools/pdf.mjs
 ```
+
+`tools/render_guide.py` is the original ReportLab renderer, kept for reference. It predates the
+`.guide-scope` restructure and is no longer the way the shipped PDF is produced.
 
 ## Scope and sources
 

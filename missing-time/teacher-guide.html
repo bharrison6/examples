@@ -1,8 +1,71 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Missing Time - Teacher Guide</title><style>@page{size:letter;margin:.55in}body{max-width:7.4in;margin:auto;color:#172b42;font:10pt/1.35 Arial,sans-serif}header{border-bottom:5px solid #ecac00;padding-bottom:9px}h1{margin:0;color:#002144;font-size:23pt}header p{color:#526a7e}h2{color:#002144;font-size:14pt;break-after:avoid}p{margin:5px 0}li{margin:3px 0}.lead{font-size:11pt}.box{margin:9px 0;padding:9px 11px;border-left:5px solid #00a4e3;background:#eef8fc}.warning{border-color:#ecac00;background:#fff6d9}table{width:100%;border-collapse:collapse;margin:7px 0}th,td{padding:5px 6px;border:1px solid #b8cad8;text-align:left;vertical-align:top}th{background:#002144;color:#fff;font-size:9pt}.page-break{break-before:page;page-break-before:always}footer{margin-top:14px;padding-top:7px;border-top:1px solid #b8cad8;color:#526a7e;font-size:8.5pt}</style></head><body><header><h1>Missing Time</h1><p>Teacher and presenter guide - bounded rock-record investigation - Murray State University</p></header><main>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gaps in the Rock Record — Teacher Guide</title>
+<!--
+  CANONICAL SOURCE for the printable teacher guide, for teacher-guide.pdf, AND for the
+  in-app presenter notes. build.js lifts the FIRST stylesheet (the one tagged
+  <style id="guide-css">) plus the .guide-scope div out of this file and injects both into
+  index.html, so Settings -> Open Presenter Notes shows this document with nothing fetched
+  at runtime. Edit this file; `node build.js --check` fails if index.html has drifted from it.
+
+  Every rule in the guide-css stylesheet MUST be scoped to .guide-scope: it is injected into
+  the running app, where a page-level rule would repaint the demo. build.js refuses the
+  build if a bare body/html/* rule appears there.
+
+  The SECOND stylesheet is standalone page/print chrome. It never ships to the app; it is
+  where the letter-size print sizing and the page break live.
+-->
+<style id="guide-css">
+.guide-scope{color:#172b42;font-size:.95rem;line-height:1.5}
+.guide-scope .head{border-bottom:5px solid #ecac00;padding-bottom:9px;margin-bottom:6px}
+.guide-scope h1{margin:0;color:#002144;font-size:1.5rem}
+.guide-scope .sub{margin:4px 0 0;color:#526a7e;font-size:.9rem}
+.guide-scope h2{color:#002144;font-size:1.05rem;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #00a4e3;break-after:avoid}
+.guide-scope p{margin:0 0 .7em}
+.guide-scope ul,.guide-scope ol{padding-left:20px;margin:0 0 .8em}
+.guide-scope li{margin-bottom:4px}
+.guide-scope .lead{font-size:1rem}
+.guide-scope .box{margin:9px 0;padding:9px 11px;border-left:5px solid #00a4e3;background:#eef8fc}
+.guide-scope .warning{border-left-color:#ecac00;background:#fff6d9}
+.guide-scope .scroll{overflow-x:auto;max-width:100%}
+.guide-scope table{width:100%;border-collapse:collapse;margin:7px 0;font-size:.85rem;min-width:420px}
+.guide-scope th,.guide-scope td{padding:5px 6px;border:1px solid #b8cad8;text-align:left;vertical-align:top}
+.guide-scope th{background:#002144;color:#fff}
+.guide-scope code{background:#e8eef2;padding:1px 3px}
+.guide-scope .foot{margin-top:14px;padding-top:7px;border-top:1px solid #b8cad8;color:#526a7e;font-size:.8rem}
+.guide-scope a{color:#00618c}
+</style>
+<style>
+@page{size:letter;margin:.55in}*{box-sizing:border-box}body{margin:0;color:#172b42;font:10pt/1.35 Arial,sans-serif}
+.guide-scope{max-width:7.4in;margin:auto;font-size:10pt;line-height:1.35}
+.guide-scope h1{font-size:23pt}
+.guide-scope .head{padding-bottom:7px;margin-bottom:0}
+.guide-scope .sub{font-size:10pt;margin:3px 0 0}
+.guide-scope h2{font-size:14pt;margin:8px 0 2px;padding-bottom:0;border-bottom:0}
+.guide-scope .lead{font-size:11pt}
+.guide-scope p{margin:4px 0}
+.guide-scope li{margin:3px 0}
+.guide-scope .box{margin:7px 0;padding:7px 10px}
+.guide-scope table{font-size:9pt;min-width:0;margin:5px 0}
+.guide-scope .scroll{overflow-x:visible}
+.guide-scope .page-break{break-before:page;page-break-before:always}
+.guide-scope .foot{font-size:8.5pt}
+.guide-scope a{color:#172b42}
+@media print{a{color:#172b42;text-decoration:none}}
+</style>
+</head>
+<body>
+<div class="guide-scope">
+<header class="head"><h1>Gaps in the Rock Record</h1><p class="sub">Missing Time · teacher and presenter guide · bounded rock-record investigation · Murray State University</p></header>
 <section><h2>Purpose and learning target</h2><p class="lead">Students compare surviving rock thickness in metres with elapsed model time in Myr since start. They use labelled synthetic chronology anchors, not thickness, to make a local missing interval visible and limit claims to evidence.</p><div class="box"><strong>Target claim:</strong> a local gap means rock from an interval is absent here. It does not by itself identify cause, prove an extinction boundary, or turn a local fossil absence into a global one.</div><p>One Myr is one million years in this authored model. Metres record surviving rock height. Sampling reveals specimens only in surviving rock and never alters the record.</p></section>
-<section><h2>Current app flow</h2><ol><li>Select Case 1, 2, or 3 and inspect surviving rock; the time mapping and gaps remain hidden at first.</li><li>Sample surviving layers; the sample ledger stays visible.</li><li>Select <strong>Show supplied age evidence</strong>. Only then do supplied base/top ages for every surviving layer, the assumed within-layer linear mapping, and any missing-interval display appear.</li><li>Choose a warranted conclusion, then reveal the authored history.</li></ol><p><strong>Controls:</strong> <b>?</b> reopens how-to. <b>Settings</b> contains presentation mode, openable presenter notes, and reset. This app does not calculate time from thickness.</p></section>
-<section><h2>Three authored investigations</h2><table><thead><tr><th>Case</th><th>Evidence task</th><th>Warranted conclusion</th></tr></thead><tbody><tr><td>1. Section A</td><td>Sample middle and top rock, then show supplied ages for A’s surviving layers.</td><td>No missing interval is represented under the supplied chronology and within-layer continuity assumption; a local last observation does not establish global extinction.</td></tr><tr><td>2. Section B</td><td>Show supplied ages and sample Red siltstone adjacent below the gap plus Cross-bedded sand above it.</td><td>A visible local gap does not identify its cause or establish an extinction boundary.</td></tr><tr><td>3. Sections C and D</td><td>Show supplied chronology at both C and D; sample below C’s gap and D’s Green mudstone.</td><td>D preserves material from the interval missing at C. A blank is not a global fossil absence.</td></tr></tbody></table></section>
+<section><h2>Current app flow</h2><ol><li>Select Case 1, 2, or 3 and inspect surviving rock; the time mapping and gaps remain hidden at first.</li><li>Sample surviving layers; the sample ledger stays visible.</li><li>Select <strong>Show supplied age evidence</strong>. Only then do supplied base/top ages for every surviving layer, the assumed within-layer linear mapping, and any missing-interval display appear.</li><li>Choose a warranted conclusion, then reveal the authored history.</li></ol><p><strong>Controls:</strong> the <strong>Guide</strong> overlay opens at launch; the <strong>?</strong> button reopens it. <strong>⚙ Settings</strong> offers <strong>Open Presenter Notes</strong> (this guide, on screen), <strong>Presentation mode</strong> (a stripped, projector-sized layout), and <strong>Reset</strong> (back to Case 1 with the evidence ledger, supplied ages and reveal cleared). Reset leaves Presentation mode as you set it. This app does not calculate time from thickness.</p></section>
+<section><h2>Three authored investigations</h2><div class="scroll"><table><thead><tr><th>Case</th><th>Evidence task</th><th>Warranted conclusion</th></tr></thead><tbody><tr><td>1. Section A</td><td>Sample middle and top rock, then show supplied ages for A’s surviving layers.</td><td>No missing interval is represented under the supplied chronology and within-layer continuity assumption; a local last observation does not establish global extinction.</td></tr><tr><td>2. Section B</td><td>Show supplied ages and sample Red siltstone adjacent below the gap plus Cross-bedded sand above it.</td><td>A visible local gap does not identify its cause or establish an extinction boundary.</td></tr><tr><td>3. Sections C and D</td><td>Show supplied chronology at both C and D; sample below C’s gap and D’s Green mudstone.</td><td>D preserves material from the interval missing at C. A blank is not a global fossil absence.</td></tr></tbody></table></div></section>
 <section><h2>Chronology evidence and units</h2><p>Supplied synthetic base and top ages for every surviving layer establish the displayed model-time placement, under an explicit constant-rate linear mapping within each surviving layer. Fossil times are mapped from that supplied chronology; they are not independently measured dates. The left view is surviving height above base in metres; the time view is model Myr since start. Equal thickness does not mean equal elapsed time, and an unsampled layer is not an observed fossil absence.</p><div class="box warning"><strong>Scope of the mapping:</strong> dating uncertainty and unresolved internal hiatuses are omitted. Case 3 uses Section C ages bracketing C’s pause and Section D ages at the base and top of D’s Green mudstone. C and D carry the comparison; do not infer the interval from column height.</div></section>
-<section class="page-break"><h2>Authored model and reveal boundaries</h2><p>The model deposits layers at stated constant rates, can pause deposition, erodes top-down, then resumes deposition. Specimens stay at authored positions only while their rock survives. A removed specimen is not moved to a hiatus boundary.</p><table><thead><tr><th>Case</th><th>Authored reveal</th><th>Teaching point</th></tr></thead><tbody><tr><td>1</td><td>Asteria’s synthetic lifetime ends at 3.40 Myr, inside Green mudstone.</td><td>Hidden truth does not make a local sample proof of global extinction.</td></tr><tr><td>2</td><td>Erosion removes 15.00 m of Pale limestone and 10.00 m from Red siltstone.</td><td>Removed fossils are absent from surviving rock.</td></tr><tr><td>3</td><td>C has a 2.00 Myr pause while D accumulates Green mudstone.</td><td>A specimen at D was never moved into C’s hiatus.</td></tr></tbody></table><p>This is a small authored preservation model, not a basin simulator. It omits reworking, transport, dating uncertainty, sampling statistics, facies correlation, and global distribution.</p></section>
+<section class="page-break"><h2>Authored model and reveal boundaries</h2><p>The model deposits layers at stated constant rates, can pause deposition, erodes top-down, then resumes deposition. Specimens stay at authored positions only while their rock survives. A removed specimen is not moved to a hiatus boundary.</p><div class="scroll"><table><thead><tr><th>Case</th><th>Authored reveal</th><th>Teaching point</th></tr></thead><tbody><tr><td>1</td><td>Asteria’s synthetic lifetime ends at 3.40 Myr, inside Green mudstone.</td><td>Hidden truth does not make a local sample proof of global extinction.</td></tr><tr><td>2</td><td>Erosion removes 15.00 m of Pale limestone and 10.00 m from Red siltstone.</td><td>Removed fossils are absent from surviving rock.</td></tr><tr><td>3</td><td>C has a 2.00 Myr pause while D accumulates Green mudstone.</td><td>A specimen at D was never moved into C’s hiatus.</td></tr></tbody></table></div><p>This is a small authored preservation model, not a basin simulator. It omits reworking, transport, dating uncertainty, sampling statistics, facies correlation, and global distribution.</p></section>
 <section><h2>Suggested facilitation</h2><ul><li>Ask what observation could distinguish a local disappearance from extinction.</li><li>Have students name chronology anchors before interpreting a gap.</li><li>For Case 2, point out that erosion removes top-down, including specimens in removed deposits.</li><li>For Case 3, ask what the second local section changes and what it cannot prove.</li></ul><p>Conclusion feedback is not a mastery score. It only reports whether the selected statement follows from visible authored evidence.</p></section>
-<section><h2>Source context and attribution</h2><p>StratPal, <a href="https://mindthegap-erc.github.io/StratPal/articles/event_data.html">Event data</a>, for occurrence-event and preservation context. This activity retains authored synthetic specimens in surviving rock; it does not treat event-data transformations as a specimen-preservation algorithm.</p><p>Created by Bryant Harrison - Murray State University. The source is teaching context, not a current assignment or endorsement.</p></section></main><footer><strong>Missing Time</strong> - Bryant Harrison - Murray State University - Offline authored teaching model. This HTML file is the canonical guide source.</footer></body></html>
+<section><h2>Source context and attribution</h2><p>StratPal, <a href="https://mindthegap-erc.github.io/StratPal/articles/event_data.html">Event data</a>, for occurrence-event and preservation context. This activity retains authored synthetic specimens in surviving rock; it does not treat event-data transformations as a specimen-preservation algorithm.</p><p>Created by Bryant Harrison · Murray State University. The source is teaching context, not a current assignment or endorsement.</p></section>
+<p class="foot"><strong>Gaps in the Rock Record</strong> (folder <code>missing-time</code>) · Bryant Harrison · Murray State University · Offline authored teaching model. Offline at runtime: no external scripts, styles, fonts, images, data, or AI service. Links are optional reader-initiated source citations. This HTML file is the canonical guide source.</p>
+</div><!-- /guide -->
+</body></html>
