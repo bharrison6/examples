@@ -605,7 +605,7 @@ body.step-rules #board {
   #stage-title { font-size: clamp(2rem, 10vw, 3rem); }
   .lesson-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .lesson-strip article { padding: calc(.62 * var(--u)); }
-  .lesson-strip p { font-size: calc(.68 * var(--u)); }
+  .lesson-strip p { font-size: calc(.875 * var(--u)); }
   #col-b { display: flex; flex-direction: column; }
   #train-panel { order: -2; }
   #rules-panel { order: -2; }

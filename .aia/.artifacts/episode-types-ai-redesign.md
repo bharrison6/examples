@@ -1,16 +1,16 @@
 ---
 id: types-ai-redesign
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: task
+memory_class: episodic
+lifecycle: complete
 schema_version: 2
 title: Modernize Types of AI and make the three teaching stages clear
 created: 2026-09-09T03:35:20Z
-updated: 2026-09-09T03:47:53Z
+updated: 2026-09-09T04:13:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
-status: executing
+status: active
 scope: examples
 source_basis: conversation
 sensitivity: normal
@@ -18,7 +18,65 @@ sanctioned_by: prose:01a08159-d0e4-7013-a510-bffe0b53d74f@2026-09-09T03:33:00Z
 tags: [design, teaching, tic-tac-toe, contract]
 ---
 
-# Expected outcome
+# Completion — 2026-09-09
+
+Delivered Types of AI, the descriptive display title for the existing
+zero-to-unbeatable URL. The first demo now uses the launcher's cream, navy and
+gold design, a visible question and Try/Observe/Takeaway for each stage, readable
+rules, compact board and responsive controls. Existing rule, table, neural and
+Ultimate engines are unchanged. Core implementation: 920306f; desktop spacing:
+95842f0; mobile header: d94aa9e; guide and two-page PDF: a5ab98f. Parent additionally
+kept tablet/landscape lesson copy at a readable size.
+
+Guide opens on entry and from the header question button. Settings has Open
+Presenter Notes, Presentation mode and Reset. Notes are embedded from canonical
+src/demo-guide.html; standalone HTML matches it and the existing PDF renderer
+uses it. PDF filename and public folder remain stable. The 20-minute guide gives
+each stage a question, activity, observation and teaching limit.
+
+Independent Astra High review identified selected-era proof/report problems and
+overstated teaching language. Builder and parent addressed them. Browser review
+also caught old table scores on an unprepared neural board and misleading table
+visit counts on network predictions; both were corrected and rechecked. Network
+game messages now identify the network, and table estimates are described as
+estimates. Initial independent review was followed by parent source and browser
+verification; a second native reviewer dispatch hit the agent-thread limit.
+
+## Observed verification
+
+- Parent ran all 102 gameplay checks, neural determinism/split/gradient/policy
+  tests, nine lifecycle/UI checks, generated app/guide parity and three hub checks.
+- Chrome: Guide on entry/reopen/Escape with focus restored, direct #learning
+  entry, keyboard stage arrows, Settings labels, presentation scaling, neural
+  preparation and fitting, Stop training, full Reset and optional extension.
+- Trained table reached verified Era 4 (20,000 games; 15,408 complete lines and
+  4,959 positions examined). Selecting Era 0 removed the unbeatable banner and
+  later-era report. Neural mode kept the table report hidden; before preparation
+  its board had no old scores, and afterward its cells said network predicted
+  score without table visits.
+- In one browser run, stopped neural fitting at 37,888 updates changed train MSE
+  0.703 to 0.469, held-out MSE 0.743 to 0.572 and sampled play 52/11/37 to 80/4/16
+  won/drawn/lost. This is an observed run, not a performance guarantee.
+- Layout inspected at desktop, 390px, 320px and 844x390 landscape; no horizontally
+  clipped visible controls. Landscape retains the question and readable Try cue.
+  Chrome error log was empty. Direct-file/disconnected operation was not rerun;
+  build validation rejects external runtime asset references.
+- PDF: extraction covered all six sections and 770 visible source words; two
+  letter pages inspected visually. Metadata title Types of AI. Committed and raw
+  PDF blob hashes matched (8d2f436efc6ff0cf7128c4cd04a9716ebaeb47e3).
+
+## Coordination and delivery
+
+Work was isolated in codex/types-ai-redesign. Claude coordinator 79d3584e reserved
+this demo and its root card for Codex and held the hub generator during integration.
+Other demo edits remained in their owners' lanes. Latest committed main changes
+were merged, retaining both changelog entries and peer commits. Root card/README
+were regenerated from manifests. Publication follows the user's existing explicit
+push authorization; final delivery is recorded in the completion changelog.
+
+The original authorized brief is retained below for provenance.
+
+# Original expected outcome
 
 Modernize the first demo using the launcher's restrained navy, cream and gold
 editorial design. A newcomer should understand what the three methods learn (or
