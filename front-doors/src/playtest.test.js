@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ==========================================================================
-   Front Doors — dataset, engine and document checks.
+   AI Tool Guide (folder: front-doors) — dataset, engine and document checks.
 
    Run: node src/playtest.test.js        (VERBOSE=1 to print passing rows)
 
@@ -460,12 +460,120 @@ if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
 
   ok('Attribution is visible in the built file',
      built.includes('Bryant Harrison') && built.includes('Murray State University'));
-  ok('The how-to overlay and the settings overlay both ship',
+  ok('The guide overlay and the settings overlay both ship',
      built.includes('id="howto"') && built.includes('id="settings"'));
   ok('Presentation mode and the presenter notes both ship',
      built.includes('id="chk-presenter"') && built.includes('id="notes"'));
   ok('The date is stamped where the room can see it',
      built.includes('class="stamp"') && built.includes('js-date'));
+
+  /* ---- CONTRACT.md "Required UX", asserted of the shipped page -----------
+     Every label check below is scoped to the block that owns it. A
+     document-wide search would pass on this page for the wrong reason: the
+     presenter guide is injected into the same file and its own prose names
+     "Open Presenter Notes", "Presentation mode" and "Reset" while telling the
+     presenter what the buttons do. That would be the test matching its own
+     answer key, so each region is cut out first and proved guide-free.
+     -------------------------------------------------------------------- */
+  {
+    /* Regions are cut out of a COMMENT-MASKED copy, for the same reason
+       build.js masks before it looks for the guide's markers: the comment that
+       documents a thing is not the thing. Without this, the settings region
+       swallowed the head comment of the notes overlay, whose text explains
+       that the guide is "scoped to .guide-scope" -- and the exclusion below
+       failed on a mention rather than on a leak. Masking preserves length and
+       newlines, so every offset still lines up with the real file. */
+    const code = built.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
+
+    const region = (openMark, closeMark, what) => {
+      const b = code.indexOf(openMark);
+      const e = b > -1 ? code.indexOf(closeMark, b) : -1;
+      ok('The ' + what + ' block can be isolated from the rest of the page', b > -1 && e > b);
+      return b > -1 && e > b ? code.slice(b, e) : '';
+    };
+
+    /* The header, from the brand bar to the end of the tool cluster. */
+    const headerBlock = region('<div id="topbar-tools">', '</header>', 'header tools');
+    /* Settings, from its overlay to the next overlay that follows it. */
+    const settingsBlock = region('<div class="overlay" id="settings"', '<div class="overlay" id="notes"', 'settings');
+
+    ok('Neither block contains any of the injected guide',
+       !headerBlock.includes('guide-scope') && !settingsBlock.includes('guide-scope'));
+    ok('CONTROL: the guide IS in the page, so that exclusion is not vacuous',
+       built.includes('guide-scope'));
+
+    /* Guide (?) */
+    ok('The header carries a ? button whose accessible name is exactly "Guide"',
+       /<button[^>]*id="btn-howto"[^>]*>\s*\?\s*<\/button>/.test(headerBlock) &&
+       /id="btn-howto"[^>]*aria-label="Guide"/.test(headerBlock) &&
+       /id="btn-howto"[^>]*title="Guide"/.test(headerBlock),
+       (headerBlock.match(/<button[^>]*id="btn-howto"[^>]*>/) || [''])[0]);
+    ok('The guide overlay is headed "Guide"',
+       /<h2 id="howto-title">Guide<\/h2>/.test(built));
+    ok('The guide overlay opens on first load',
+       /open\('howto'\)/.test(built));
+
+    /* Settings (gear), and the three labels the contract fixes. */
+    ok('Settings sits beside it and is named Settings',
+       /id="btn-settings"[^>]*aria-label="Settings"/.test(headerBlock));
+    for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
+      ok('The settings menu offers "' + label + '", spelled exactly that way',
+         settingsBlock.includes(label));
+    }
+    ok('CONTROL: a label the menu does not carry is not found in that block',
+       !settingsBlock.includes('Restart the round') &&
+       !settingsBlock.includes('Presenter’s notes'));
+    /* The scoping above is not decoration. The guide is injected into this
+       same file and names all three labels in its own "Before you present"
+       section, so a document-wide search for them would pass whether or not
+       the buttons exist -- it would be matching the answer key. Prove that
+       trap is real, so nobody later "simplifies" the scoping away. */
+    {
+      const notesBlock = built.slice(built.indexOf('<div class="guide-scope">'));
+      ok('CONTROL: the injected guide names all three labels too, which is why the search is scoped',
+         ['Open Presenter Notes', 'Presentation mode', 'Reset']
+           .every(l => notesBlock.includes(l)));
+    }
+
+    /* The three are controls, not prose about controls. */
+    ok('Open Presenter Notes is a button that opens the notes overlay',
+       /<button[^>]*id="btn-notes"[^>]*>Open Presenter Notes<\/button>/.test(settingsBlock) &&
+       /#btn-notes'\)\.addEventListener\('click'/.test(built));
+    ok('Presentation mode is a checkbox that toggles the presenting class',
+       /<input type="checkbox" id="chk-presenter">/.test(settingsBlock) &&
+       /classList\.toggle\('presenting'/.test(built));
+    ok('Reset is a button wired to a whole-demo reset',
+       /<button[^>]*id="btn-reset"[^>]*>Reset<\/button>/.test(settingsBlock) &&
+       /#btn-reset'\)\.addEventListener\('click', resetDemo\)/.test(built));
+
+    /* Reset's fresh-load semantics, read off the function body rather than
+       trusted to its name: it must clear the job, re-render, close every
+       overlay and return to Act I -- and must NOT touch presentation mode. */
+    {
+      const b = built.indexOf('function resetDemo()');
+      const body = b > -1 ? built.slice(b, built.indexOf('\n}', b)) : '';
+      ok('Reset returns the demo to its fresh-load state', b > -1 &&
+         /S\.job = null/.test(body) && /renderJob\(\)/.test(body) &&
+         /selftest-out/.test(body) && /o\.hidden = true/.test(body) &&
+         /setAct\(1\)/.test(body));
+      ok('Reset leaves presentation mode alone',
+         b > -1 && !/presenting|chk-presenter|S\.presenter/.test(body));
+      ok('CONTROL: that probe reads a real function body, not an empty slice',
+         body.length > 120, body.length + ' chars');
+    }
+
+    /* The retitle (Path A). "Front Doors" may survive as a subtitle; the
+       DISPLAY TITLE may not. */
+    ok('The page title is the new display title',
+       /<title>AI Tool Guide [^<]*<\/title>/.test(built),
+       (built.match(/<title>[^<]*<\/title>/) || [''])[0]);
+    ok('The header brand carries the new display title',
+       /<span class="b1">AI TOOL GUIDE/.test(built));
+    ok('The guide heading carries the new display title',
+       guide.includes('AI Tool Guide'));
+    ok('The old display title is not left standing as a heading',
+       !/<h1>Front Doors\b/.test(guide) && !/<span class="b1">FRONT DOORS/.test(built));
+  }
 
   const guideOut = readRoot('presenter-guide.html');
   ok('The shipped guide is byte-identical to its source',
@@ -534,11 +642,22 @@ head('10. manifest');
      m.attribution && m.attribution.author === 'Bryant Harrison' &&
      m.attribution.institution === 'Murray State University');
   ok('The theme is the Murray State one', m.theme === 'murray-state');
-  ok('The compliance block carries every key its neighbours carry',
-     ['readme', 'guide', 'howto_popup', 'settings_menu', 'presentation_mode',
-      'presenter_notes', 'msu_theme', 'attribution_visible', 'mobile',
+  /* The key set is CONTRACT.md's, as rewritten for the 2026-09-09 UX pass:
+     howto_popup became guide_button, and settings_reset / notes_match_guide
+     joined it. A key is never deleted, only answered honestly. */
+  ok('The compliance block carries every key the contract names',
+     ['readme', 'guide', 'guide_button', 'settings_menu', 'presentation_mode',
+      'presenter_notes', 'settings_reset', 'notes_match_guide', 'msu_theme',
+      'attribution_visible', 'mobile',
       'offline_no_inference'].every(k => k in m.compliance),
      Object.keys(m.compliance).join(','));
+  ok('The manifest title is the new display title',
+     m.title === 'AI Tool Guide', m.title);
+  ok('Provenance names this build step',
+     m.built_with.includes('claude-code'), JSON.stringify(m.built_with));
+  ok('The folder name and the declared guide filenames did NOT change with it',
+     m.slug === 'front-doors' && m.guide.html === 'presenter-guide.html' &&
+     m.guide.pdf === 'Front-Doors-Presenter-Guide.pdf');
   ok('No compliance key is missing rather than false',
      Object.keys(m.compliance).every(k => [true, false, 'unverified'].includes(m.compliance[k])));
   ok('The manifest carries no price either',
