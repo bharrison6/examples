@@ -6,7 +6,7 @@ prospective_kind: task
 schema_version: 2
 title: Redesign AI Winters with balanced history and teaching
 created: 2026-09-09T13:24:52Z
-updated: 2026-09-09T13:24:52Z
+updated: 2026-09-09T14:08:13Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -19,6 +19,14 @@ tags: [ai-fellows, teaching, design]
 ---
 
 ## Expected outcome and owned work
+
+Independent acceptance on 2026-09-09 rejected the initial candidate's visual
+treatment: despite corrected evidence and passing automated checks, Chrome QA
+observed the old dark expanded layout, no side Details and generic source labels.
+The Terra lane is finishing content propagation through its final commit, then
+transferring exclusive two-winters ownership to the Astra builder for the complete
+interface overhaul. This task remains executing; it is not complete on the basis
+of automated checks or a builder's handoff alone. Parent stays coordination-only.
 
 Redesign two-winters/ (AI Winters: Boom and Bust) with the complete visual and
 teaching treatment of zero-to-unbeatable and glass-box (read-only references).
@@ -48,4 +56,3 @@ your checkout, untracked; return early if framing is wrong, impossible or requir
 a decision. Return commit, changed paths, tests actually run, browser/PDF evidence,
 remaining limitations, and temporary content/design decisions. Signal a usable
 candidate early. Do not push; coordinator integrates and publishes.
-
