@@ -356,25 +356,90 @@ const num = (s) => parseFloat(String(s).replace(/[^0-9.-]/g, ''));
   check('notes carry a timed run of show', /0–3 min/.test(notes) && /19–20 min/.test(notes));
   check('notes carry the headline numbers from the teacher guide',
         /1,835/.test(notes) && /661/.test(notes) && /L3 791/.test(notes), 'pars + escape gap');
-  check('notes carry the misconceptions to catch', /Catch these three/.test(notes));
-  check('notes point at the full teacher guide',
-        await page.locator('#notesModal .teacher-guide-open').count() === 1);
-  await page.click('#notesModal .teacher-guide-open');
-  await page.waitForTimeout(500);
-  check('the printable teacher guide opens in-app',
-        await page.evaluate(() => !document.getElementById('msu-guide').hidden));
-  check('the guide is served from the demo folder, not the network',
-        await page.evaluate(() => (document.getElementById('msu-guide-frame').getAttribute('src') || '').endsWith('teacher-guide.html')));
-  await page.click('#msu-guide-close');
-  await page.waitForTimeout(200);
-  check('closing the guide returns to the notes',
-        await page.evaluate(() => document.getElementById('msu-guide').hidden) &&
-        await page.locator('#notesModal.show').count() === 1);
+  check('notes carry the misconceptions to catch',
+        /Misconception 1/.test(notes) && /Misconception 2/.test(notes) && /Misconception 3/.test(notes));
+  // The notes ARE the printable guide, injected from teacher-guide.html by
+  // tools/guide-sync.js. So these assert the guide's own prose is on screen,
+  // rather than that a second copy of it loads in a frame.
+  check('notes carry the whole guide, not a summary of it',
+        /20-minute session plan/.test(notes) && /Discussion questions/.test(notes) &&
+        /Classroom logistics/.test(notes), 'guide section headings');
+  check('notes name the three settings items the contract requires',
+        /Open Presenter Notes/.test(notes) && /Presentation mode/.test(notes) && /Reset/.test(notes));
+  // The link to the printable copy is a hyperlink the reader may follow, not a
+  // fetch the page makes: assert where it points without navigating off the game.
+  const printLink = await page.evaluate(() => {
+    const a = document.querySelector('#notesModal a[href$="teacher-guide.html"]');
+    return a && { href: a.getAttribute('href'), target: a.target, rel: a.rel };
+  });
+  check('notes offer the printable copy from the demo folder, not the network',
+        !!printLink && printLink.href === 'teacher-guide.html', printLink && printLink.href);
+  check('the printable copy opens in its own tab, leaving the game running',
+        !!printLink && printLink.target === '_blank' && /noopener/.test(printLink.rel));
   check('notes are scrollable rather than clipped on small screens',
         await page.evaluate(() => getComputedStyle(document.querySelector('#notesModal .box')).overflowY === 'auto'));
   await page.click('#closeNotes');
   await page.waitForTimeout(80);
   check('notes close back to the game', await page.locator('#notesModal.show').count() === 0);
+
+  console.log('\n[9b] Contract UX: Guide button, the three Settings items, whole-demo Reset');
+  check('the guide control is named Guide',
+        await page.evaluate(() => (document.getElementById('btnHelp').getAttribute('aria-label') || '').trim() === 'Guide'));
+  check('the Guide overlay is headed Guide',
+        /^Guide\b/.test((await page.textContent('#helpTitle')).trim()));
+  // accessible name of each settings control, with emoji and ellipses stripped
+  const tgLabel = (id) => page.evaluate((i) => {
+    const b = document.getElementById(i);
+    return (b.getAttribute('aria-label') || b.textContent || '')
+      .replace(/[^\x20-\x7e]/g, '').replace(/\.\.\.$/, '').trim();
+  }, id);
+  check('settings offers Open Presenter Notes, exactly labelled',
+        await tgLabel('tgNotes') === 'Open Presenter Notes', await tgLabel('tgNotes'));
+  check('settings offers Presentation mode, exactly labelled',
+        await tgLabel('tgProjector') === 'Presentation mode', await tgLabel('tgProjector'));
+  check('settings offers Reset, exactly labelled',
+        await tgLabel('tgResetAll') === 'Reset', await tgLabel('tgResetAll'));
+
+  // Reset must return the demo to a fresh load, and must NOT undo presentation
+  // mode, which is a presenter's display preference rather than demo state.
+  await page.evaluate(() => {
+    localStorage.setItem('fuelgolf_progress', JSON.stringify({ 1: { done: true, best: 500 } }));
+    localStorage.setItem('fuelgolf_lb_1', JSON.stringify([{ name: 'Someone', dv: 500 }]));
+    localStorage.setItem('fuelgolf_name', JSON.stringify('Someone'));
+  });
+  await page.click('#btnHud');            // dirty a piece of transient UI too
+  await page.click('#btnTeacher');
+  await page.click('#tgProjector');       // presentation mode ON before the reset
+  await page.waitForTimeout(120);
+  await page.click('#tgResetAll');
+  await page.waitForTimeout(60);
+  check('Reset asks before it clears', await page.evaluate(() =>
+        getComputedStyle(document.getElementById('resetAllConfirmRow')).display !== 'none'));
+  await page.click('#tgResetAllYes');
+  await page.waitForTimeout(400);
+  const afterReset = await page.evaluate(() => ({
+    prog: localStorage.getItem('fuelgolf_progress'),
+    lb: localStorage.getItem('fuelgolf_lb_1'),
+    name: localStorage.getItem('fuelgolf_name'),
+    level: document.getElementById('levelChip').textContent,
+    dv: document.getElementById('dvChip').textContent,
+    openModals: document.querySelectorAll('.modal.show').length,
+    hud: document.getElementById('hud').classList.contains('show'),
+    projector: document.body.classList.contains('projector')
+  }));
+  check('Reset clears saved scores, badges and name',
+        !afterReset.prog && !afterReset.lb && !afterReset.name,
+        JSON.stringify({ p: afterReset.prog, l: afterReset.lb, n: afterReset.name }));
+  check('Reset returns to level 1 with an empty tally',
+        /Level 1/.test(afterReset.level) && num(afterReset.dv) === 0,
+        afterReset.level + ' / ' + afterReset.dv);
+  check('Reset closes every panel and the HUD',
+        afterReset.openModals === 0 && !afterReset.hud);
+  check('Reset leaves presentation mode alone', afterReset.projector === true);
+  await page.click('#btnTeacher');
+  await page.click('#tgProjector');       // back off, for the checks below
+  await page.click('#closeTeacher');
+  await page.waitForTimeout(120);
   check('presentation mode surfaces the 🎤 notes control in the top bar',
         await page.locator('#btnNotes').isVisible());
   await page.keyboard.press('n');
