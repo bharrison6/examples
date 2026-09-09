@@ -62,6 +62,7 @@ const isNet   = () => S.mode === 'net';
 const STAGE_COPY = {
   rules: {
     kicker: 'Stage 1a · written rules', title: 'Rules-based intelligence',
+    details: 'Stage 1a · Rules-based intelligence',
     question: 'Can a program play well without learning?',
     try: 'Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.',
     observe: 'Changing the rules changes its play. Playing more games does not.',
@@ -69,6 +70,7 @@ const STAGE_COPY = {
   },
   one: {
     kicker: 'Stage 1b · learned scores', title: 'Machine learning',
+    details: 'Stage 1b · Machine learning',
     question: 'Can experience improve its choices?',
     try: 'Show move scores in Era 0. Train 5,000 games, then compare the new era with Era 0.',
     observe: 'Game outcomes change the scores attached to board positions.',
@@ -76,6 +78,7 @@ const STAGE_COPY = {
   },
   net: {
     kicker: 'Stage 1c · shared weights', title: 'Neural networks',
+    details: 'Stage 1c · Neural networks',
     question: 'Can one set of learned numbers score many positions?',
     try: 'Create learning examples, then train adjustable weights—numbers reused to score many board positions.',
     observe: 'Held-out means positions kept out of training. Lower error is a closer match to the frozen table estimates.',
@@ -83,6 +86,7 @@ const STAGE_COPY = {
   },
   ult: {
     kicker: 'Optional extension · missing information', title: 'Ultimate tic-tac-toe',
+    details: 'Optional extension · Ultimate tic-tac-toe',
     question: 'What happens when the learner cannot see the whole game?',
     try: 'Play a match, turn on move scores, and notice which global facts are absent.',
     observe: 'The learner sees each small board, but not its location or where a move sends the opponent.',
@@ -98,6 +102,7 @@ function renderStageIntro() {
   $('#stage-try').textContent = c.try;
   $('#stage-observe').textContent = c.observe;
   $('#stage-takeaway').textContent = c.takeaway;
+  $('#details-sub').textContent = c.details;
 }
 
 function reportAvailable() {
@@ -1013,7 +1018,14 @@ function renderBanner() {
       `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} won, ${baseline.play.draws} drawn, ${baseline.play.losses} lost; now: ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
       `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
       `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
-    setTimeout(() => { const b = $('#btn-ultimate'); if (b) b.addEventListener('click', () => { S.mode = 'ult'; applyMode(); }); }, 0);
+    setTimeout(() => {
+      const b = $('#btn-ultimate');
+      if (b) b.addEventListener('click', () => {
+        closeSheet('details');
+        S.mode = 'ult';
+        applyMode();
+      });
+    }, 0);
     return;
   }
 
@@ -1581,6 +1593,10 @@ function openSheet(id, opener) {
   sheetOpener = opener || document.activeElement;
   $('#app').inert = true; $('#app').setAttribute('aria-hidden', 'true');
   sheet.hidden = false;
+  if (id === 'details') {
+    document.body.classList.add('details-open');
+    $('.details-body', sheet).scrollTop = 0;
+  }
   /* the print rules key off this, so printing while the notes are open
      prints the notes and nothing else */
   if (id === 'notes') { document.body.classList.add('notes-open'); $('#notes-body').scrollTop = 0; }
@@ -1589,6 +1605,7 @@ function openSheet(id, opener) {
 function closeSheet(id) {
   const sheet = $('#' + id); sheet.hidden = true;
   if (id === 'notes') document.body.classList.remove('notes-open');
+  if (id === 'details') document.body.classList.remove('details-open');
   if (!$$('.overlay.sheet').some(x => !x.hidden)) { $('#app').inert = false; $('#app').removeAttribute('aria-hidden'); }
   if (sheetOpener && document.contains(sheetOpener) && !sheetOpener.disabled) sheetOpener.focus();
   sheetOpener = null;
@@ -1760,8 +1777,8 @@ those scores over time. When it chooses, it gives priority to the legal moves wh
 have the strongest learned scores.</p>
 <h4>How to read a score</h4>
 <p>A positive score means the resulting board has tended to work out well for the player who just
-moved; a negative score means the opposite. It is a learned priority, not a spoken reason. Show its
-brain makes those priorities visible square by square.</p>
+moved; a negative score means the opposite. It is a learned priority, not a spoken reason. <b>Show
+move scores</b> makes those priorities visible square by square.</p>
 <h4>Why it explores</h4>
 <p>Early in training it sometimes tries a random legal move. That produces experience about choices
 it would otherwise ignore. As practice grows, it relies more often on its strongest current score.</p>
@@ -1810,8 +1827,10 @@ function applyMode() {
   });
   document.body.classList.toggle('step-rules', rules);
   document.body.classList.toggle('step-ult', ult);
-  $('#how-head span').textContent = rules ? 'Rules, learning, and which is better'
-                                          : 'How is it learning?';
+  $('#how-title').textContent = rules ? 'How learning differs from written rules'
+    : isNet() ? 'How the neural network works'
+    : ult ? 'How the representation works'
+    : 'How the learning works';
   const howStart = $('.sheet-foot [data-close="howto"]', $('#howto'));
   if (howStart) howStart.textContent = isNet() ? 'Explore neural networks' : rules ? 'Play the rules' : 'Explore machine learning';
   $('#how-body').innerHTML = isNet() ? NEURAL_HOW : TABLE_HOW;
@@ -1894,6 +1913,10 @@ $('#btn-learned').addEventListener('click', e => {
   openSheet('learned', e.currentTarget);
 });
 $('#btn-settings').addEventListener('click', e => openSheet('settings', e.currentTarget));
+$('#btn-details').addEventListener('click', e => {
+  renderBanner();
+  openSheet('details', e.currentTarget);
+});
 /* The instructions have one home and two doors: the ? in the brand bar,
    which is on screen at every size, and the entry in Settings. Both land
    on the same sheet, so there is nothing to keep in step. */
@@ -1915,13 +1938,6 @@ $('#btn-reset').addEventListener('click', () => {
   S.seed = $('#in-seed').value.trim();
   resetAll(true);
   closeSheet('settings');
-});
-
-const howHead = $('#how-head');
-howHead.addEventListener('click', () => {
-  const open = howHead.getAttribute('aria-expanded') === 'true';
-  howHead.setAttribute('aria-expanded', String(!open));
-  $('#how-body').hidden = open;
 });
 
 /* Deep links keep the public one-page URL while selecting a real stage. */
