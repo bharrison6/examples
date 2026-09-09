@@ -33,7 +33,7 @@
 
 <section>
 <h2>The question for all 20 minutes</h2>
-<p><b>How is a strategy represented, and how did it get there?</b> A–C compare written rules, a value table, and shared neural-network weights on one game. D introduces other model families. The separate <b>How they learn</b> tab explains training methods.</p>
+<p><b>How is a strategy represented, and how did it get there?</b> Choose <b>Model types</b> to reveal A–D. A–C compare written rules, a value table, and shared neural-network weights on one game; D introduces other families. The top-level <b>How they learn</b> tab explains training methods.</p>
 <p class="say">“A model is how the strategy is represented. A learning method is how its adjustable parts change.”</p>
 </section>
 
@@ -60,8 +60,8 @@
 <h3>Activity</h3>
 <ol>
 <li>Open <b>1b Value table</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
-<li>Play one short game, then run a visible training burst. Select an earlier and a later era to compare their move scores.</li>
-<li>Use <b>Details</b> to inspect evidence for the selected era, then return to play.</li>
+<li>Play one short game, then run a training burst. Read the change report below the training controls for recorded scores before and after that burst.</li>
+<li>Select earlier and later eras: the report compares each selected era with its predecessor. Era 0 shows the untrained baseline. <b>Details</b> supplies the policy-check evidence.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>The model is a table; the learning method is reinforcement learning. Game outcomes and estimates of later replies update separate position scores. Practice can therefore change its choices.</p>
