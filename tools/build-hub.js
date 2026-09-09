@@ -35,12 +35,16 @@ for (const ent of fs.readdirSync(ROOT, { withFileTypes: true })) {
 if (!Object.keys(demos).length) { fail('no demo.json manifests found'); process.exit(1); }
 
 // ---- validate declared files ----------------------------------------------
+/* A demo that does not satisfy its own manifest is not ready to be advertised.
+   Whether that is an error depends on whether anything already promises it,
+   which is only known once the tours are read -- so collect here, judge below. */
+const incomplete = new Map();
 for (const [slug, m] of Object.entries(demos)) {
   const need = [m.entry || 'index.html', 'README.md'];
   if (m.guide) need.push(m.guide.html, m.guide.pdf);
-  for (const f of need.filter(Boolean)) {
-    if (!fs.existsSync(path.join(ROOT, slug, f))) fail(`${slug}: declared file missing: ${f}`);
-  }
+  const missing = need.filter(Boolean)
+    .filter(f => !fs.existsSync(path.join(ROOT, slug, f)));
+  if (missing.length) incomplete.set(slug, missing);
 }
 
 // ---- ordering from tours ---------------------------------------------------
@@ -59,7 +63,19 @@ if (fs.existsSync(tourDir)) {
     }
   }
 }
-const untoured = Object.keys(demos).filter(s => !order.includes(s)).sort();
+/* Judge the incomplete demos now that we know what the tours promise. A demo
+   in a tour must be whole; a demo in no tour is work in progress, and excluding
+   it keeps this gate usable while another lane is mid-build. */
+for (const [slug, missing] of incomplete) {
+  if (order.includes(slug)) {
+    fail(`${slug}: promised by a tour but incomplete -- missing ${missing.join(', ')}`);
+  } else {
+    console.log(`note: ${slug} is still being built (missing ${missing.join(', ')}) `
+      + '-- left out of the README table, and no launcher card expected yet');
+  }
+}
+const untoured = Object.keys(demos)
+  .filter(s => !order.includes(s) && !incomplete.has(s)).sort();
 if (untoured.length) console.log('note: demos in no tour (appended alphabetically): ' + untoured.join(', '));
 const ordered = order.concat(untoured);
 
