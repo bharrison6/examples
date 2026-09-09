@@ -1,16 +1,19 @@
 ---
 id: wavelet-lab-part-3-rework
 artifact_kind: memory
-memory_class: prospective
-prospective_kind: decision
+memory_class: episodic
+episodic_kind: decision
+lifecycle: complete
 schema_version: 2
 title: "Wavelet Lab Part 3: replace the fixed prediction question with a live one, remove it, or keep it?"
 created: 2026-09-09T03:24:00Z
-updated: 2026-09-09T03:26:52Z
+updated: 2026-09-09T03:40:00Z
 author: msu.soeai
 model: claude-fable-5-1
 model_basis: confirmed
-status: open
+status: active
+acted_on: "Folded into the wavelet-lab lane of [[contract-ux-pass]] as [[wavelet-lab-part-3-live]] (executing) on 2026-09-09"
+applied_in: [wavelet-lab-part-3-live, contract-ux-pass, event:16a888bbe48a4407aaf594599ad81d9a]
 question: "Part 3 of Wavelet Lab is a single multiple-choice question (two omitted coefficients of 5 and -2 contribute 29 to squared error) plus a paragraph telling the student to explore the Portrait scene. The rest of the lab is explorable. What should Part 3 become?"
 position: "Replace with the live predict-your-next-toggle mechanic and a Portrait preset (recommended)"
 alternatives:
