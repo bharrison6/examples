@@ -43,3 +43,16 @@ legible on the navy interface and usable on touch and keyboard.
 the anti-cycle guardrails. `node build.js --check` verifies the built page and
 canonical guide. `node src/contract.test.js` checks contract UX and offline
 resource loading. `node tools/pdf.mjs` regenerates the printable guide.
+
+## Classroom interface
+
+Cream teaching pages use navy workbenches and gold selected-state accents. The claim
+round pairs the quotation with year and classification controls. History pairs its
+canvas and slider with a selected-event card. Compare renders one selected lens and
+three era cards; their labelled Details buttons open full explanations and sources in
+a right-side dialog. Today starts its supporting statements and source lists collapsed.
+Dialogs trap keyboard focus, make the background inert, close on Escape and restore
+focus to the initiating control. Reset restores the first lens and closes disclosures
+while preserving Presentation mode. Source links name the referenced document.
+
+`node tools/ui.test.cjs` checks these interactions across desktop and phone widths.

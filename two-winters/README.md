@@ -30,12 +30,12 @@ sample of optimists, pessimists, or the field.
 |-----|-----------|------|
 | **I — Guess the year** | Ten curated, sourced claims, 1950–2024, speaker and date hidden. Score five time-bounded forecasts; classify four assessments or untimed ambitions without grading them against the future. | 7–9 min |
 | **II — The two winters** | A scrubbable 1950–2026 timeline in six rows: landmark results plus five comparison lenses. It shows different pathways, not a fixed sequence. | 3–4 min |
-| **III — Anatomy** | The first winter, second winter, and current conditions side by side under the same lenses. Two present questions remain openly unresolved. | 2–3 min |
-| **IV — Now** | What rhymes against what is genuinely different, then the cut list and every source. | 2–3 min |
+| **III — Compare** | Choose one lens, then inspect three era cards. Each Details panel holds the full explanation and named sources. Two present questions remain openly unresolved. | 2–3 min |
+| **IV — Today** | Expand a similarity beside a difference; supporting cut and source lists open on request. | 2–3 min |
 
 ### The five comparison lenses
 
-The lanes in Act II and rows in Act III make causes comparable. They do **not** assert that
+The lanes in Act II and selected lens in Act III make causes comparable. They do **not** assert that
 every contraction follows this order or that the present is completing a third cycle:
 
 1. **Claims and ambitions** — what people said the technology could soon do.
@@ -187,3 +187,11 @@ Then: `node src/playtest.test.js && node build.js && node src/contract.test.js`.
 ---
 
 Bryant Harrison · Murray State University. Sources checked September 2026.
+
+### Interaction checks
+
+`node tools/ui.test.cjs` uses an available Playwright installation (and optional `CHROME_PATH`)
+to exercise the complete deck, all five lenses and fifteen era Details panels, focus return,
+Settings, presenter notes, self-test and Reset at 1280, 390 and 320 pixels.
+It checks runtime requests and page overflow; screenshots go to an OS temporary directory
+unless `QA_OUTPUT` is set. No browser dependency is shipped in the offline demo.
