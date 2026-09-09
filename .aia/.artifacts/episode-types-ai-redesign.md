@@ -6,7 +6,7 @@ lifecycle: complete
 schema_version: 2
 title: Modernize Types of AI and make the three teaching stages clear
 created: 2026-09-09T03:35:20Z
-updated: 2026-09-09T04:13:00Z
+updated: 2026-09-09T05:01:00Z
 author: codex
 model: gpt-6-astra
 model_basis: confirmed
@@ -21,6 +21,8 @@ tags: [design, teaching, tic-tac-toe, contract]
 
 Follow-up [[types-ai-controls]] moves stage tabs to page-level navigation, explains
 rule-count controls above the rules list, and groups Era selection with training.
+Follow-up [[types-ai-details-drawer]] moves long evidence and explanations into a
+responsive right-side Details drawer with keyboard scrolling and focus return.
 
 Delivered Types of AI, the descriptive display title for the existing
 zero-to-unbeatable URL. The first demo now uses the launcher's cream, navy and
