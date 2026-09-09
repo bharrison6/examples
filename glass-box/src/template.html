@@ -27,365 +27,271 @@ if (window.GB_FLAGS.has('presenting')) document.body.classList.add('presenter');
 if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { /* some hosts refuse replaceState on file://; a visible #reset is cosmetic */ } }
 </script>
 
-<header class="top">
-  <div class="brandline">
-    <h1>How a Language Model <b>Works</b></h1>
-    <div class="msu-brand">Murray State University · AI Learning Lab</div>
-    <div class="sub">Glass Box<br>predictor → reasoner → agent</div>
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">AI Learning Lab</span>
+      <h1>How a Language Model Works</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn presenter-notes-open" id="notes-open" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn student-guide-open" id="howto-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" id="glass-settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙</span><span class="icon-label">Settings</span></button>
+    </div>
   </div>
-  <div class="top-tools"><button class="btn small ghost presenter-notes-open" id="notes-open" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button><button class="btn small ghost student-guide-open" id="howto-open" title="Guide" aria-label="Guide">?</button><button class="btn small ghost" id="glass-settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙</span> Settings</button></div>
-  <nav class="acts">
-    <button id="nav1" class="on">Act 1<small>the predictor</small></button>
-    <button id="nav2">Act 2<small>the reasoner</small></button>
-    <button id="nav3">Act 3<small>the agent</small></button>
+  <nav class="acts" role="tablist" aria-label="Language model lesson stages">
+    <button id="nav1" class="on" role="tab" aria-selected="true" aria-controls="act1" tabindex="0"><span>LLM</span><small>language model</small></button>
+    <button id="nav2" role="tab" aria-selected="false" aria-controls="act2" tabindex="-1"><span>Reasoning</span><small>worked steps</small></button>
+    <button id="nav3" role="tab" aria-selected="false" aria-controls="act3" tabindex="-1"><span>Agents</span><small>tool-using loop</small></button>
   </nav>
 </header>
 
 <main>
 
 <!-- ══════════════════════════ ACT 1 ══════════════════════════ -->
-<section class="act on" id="act1">
+<section class="act on" id="act1" role="tabpanel" aria-labelledby="nav1">
+  <section class="stage-intro" aria-labelledby="stage1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">LLM · live transformer</span>
+      <h2 id="stage1-title">A model learns to predict what comes next</h2>
+      <p class="frame-question">How can changing thousands of numbers turn random text into recognizable patterns?</p>
+    </div>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Try</span><p>Read the untrained sample. Train one era, then compare it with Era 0.</p></article>
+      <article><span>Observe</span><p>Loss falls while the model’s next-token probabilities and writing change.</p></article>
+      <article><span>Takeaway</span><p>Training changes parameters. Inference uses the frozen parameters to predict tokens.</p></article>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">→</span></button>
+  </section>
 
-  <div class="card">
-    <h2>A language model is a guess-the-next-piece machine</h2>
-    <p class="exp">Underneath every chatbot is a single trick: given some text, predict what comes next
-    — over and over, one piece at a time. This page carries a complete, working language model with
-    <b><span id="a1params">42,458</span> parameters</b>. It is about fifty million times smaller than a
-    frontier model, but it is the same kind of machine: same layers, same attention, same training rule.
-    You are going to watch it learn to write, from nothing, on this device.</p>
-    <p class="exp">It starts <b>untrained</b> — random numbers, no knowledge of English, no knowledge of
-    anything. Nothing here is faked or downloaded: every number you will see is computed in front of you.</p>
+  <div class="workspace-grid llm-workspace">
+    <section class="workbench train-workbench" aria-labelledby="train-heading">
+      <div class="panel-head">
+        <div><span class="panel-kicker">Live training</span><h3 id="train-heading">Train the model</h3></div>
+        <span id="statphase" class="status-pill">untrained</span>
+      </div>
+      <p class="panel-lede">This small transformer begins with random parameters. Its only training text is one original story.</p>
+      <div class="livebox sample-hero" id="livesample"><span class="dim">The untrained sample will appear here.</span></div>
+      <div class="statline" aria-label="Live training measurements">
+        <span>step <b id="statstep">0</b></span>
+        <span>loss <b id="statloss">—</b></span>
+        <span>speed <b id="statsps">—</b>/s</span>
+      </div>
+      <div class="lossline"><canvas class="chart" id="losschart" role="img" aria-label="Training loss chart" aria-describedby="losschart-desc"></canvas></div>
+      <p class="sr-only" id="losschart-desc">No loss samples yet.</p>
+      <div class="trainbar"><button class="btn" id="trainbtn">Train · era 1</button></div>
+      <div class="eras" id="erachips" aria-label="Completed training eras"></div>
+      <details class="fold textbook-fold"><summary>Open the model’s training text</summary>
+        <p class="note" id="corpusstats"></p>
+        <div class="rawctx" id="corpusbox"></div>
+      </details>
+      <div class="compare" id="eracompare" aria-label="Samples from completed training eras"></div>
+    </section>
+
+    <section class="workbench prediction-workbench" aria-labelledby="predict-heading">
+      <div class="panel-head">
+        <div><span class="panel-kicker">Live inference</span><h3 id="predict-heading">Try next-token prediction</h3></div>
+      </div>
+      <p class="panel-lede">Choose an era, give the model some text, and inspect the eight most likely next characters.</p>
+      <label class="field-label" for="pginput">Prompt</label>
+      <input type="text" id="pginput" aria-label="Text for next-token prediction" value="the robot sat in the " autocomplete="off" autocapitalize="none">
+      <div class="era-picker"><span>Model era</span><span id="pgeras"></span></div>
+      <div class="probbars" id="probbars"></div>
+      <div class="row action-row">
+        <button class="btn small" id="pgstep">Write 1 token</button>
+        <button class="btn small ghost" id="pgauto">Write 60</button>
+      </div>
+      <label class="range-label" for="temp"><span>Temperature</span><b id="tempval">0.8</b></label>
+      <input type="range" id="temp" aria-label="Sampling temperature" min="0" max="1.6" step="0.1" value="0.8">
+      <p class="note">Lower temperature favors the strongest probability. Higher temperature makes lower-ranked tokens more likely. Other characters are omitted, so the eight displayed percentages need not sum to 100%.</p>
+    </section>
   </div>
 
-  <div class="card">
-    <h2><span class="no">1.1</span> First, text becomes tokens</h2>
-    <p class="exp">A model cannot read letters. Text is chopped into <b>tokens</b> and each token gets a
-    number. Our little model uses one token per character. Type anything:</p>
-    <input type="text" id="tokinput" aria-label="Text to tokenize" value="the robot saw the cat" autocomplete="off" autocapitalize="none">
-    <div class="tokens" id="tokout"></div>
-    <p class="note"><b>At frontier scale:</b> real models chop text into word-pieces instead of characters
-    — <span style="font-family:ui-monospace,Consolas,monospace">unbelievable</span> might become
-    <span class="pill">un</span> <span class="pill">believ</span> <span class="pill">able</span> — with a
-    vocabulary of 50,000–200,000 pieces instead of our <span id="a1vocab">26</span> characters. The idea
-    is identical: text in, numbers in a list out.</p>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">1.2</span> The machine itself: parameters in layers</h2>
-    <p class="exp">The model is a stack of arithmetic. Numbers flow in, get multiplied by big tables of
-    learned numbers — the <b>parameters</b>, also called weights — and a prediction falls out the far end.
-    This is the actual layout of the model on this page. <b>Tap a row</b> to see the real numbers it holds
-    right now:</p>
-    <div class="pmap" id="pmap"></div>
-    <div class="wpeek" id="wpeek" style="display:none">
-      <p class="note" id="wpeekcap"></p>
-      <canvas id="wpeekcanvas" role="img" aria-label="Heatmap of the selected live parameter matrix"></canvas>
+  <section class="inspection card" aria-labelledby="inspect-heading">
+    <div class="inspection-head">
+      <div><span class="panel-kicker">Look inside</span><h3 id="inspect-heading">Inspect the live model</h3></div>
+      <p>Each view says which live checkpoint it reads.</p>
     </div>
-    <p class="exp" style="margin-top:12px">Two kinds of layer alternate, and they split the work:
-    <b style="color:var(--gold)">attention</b> layers let each position look back at earlier tokens and
-    pull in the relevant ones, and <b style="color:#66c7ef">feed-forward</b> layers transform what
-    attention gathered. Stack that pair a few times — our model does it twice, frontier models do it
-    around a hundred times — and that is the whole architecture.</p>
-    <div class="scale" id="scalebars"></div>
-    <p class="note">Parameter counts of well-known models, on a <b>logarithmic</b> scale — each full bar
-    grows by digits, not by size — GPT-2 holds 2,900× this page&rsquo;s parameters and a frontier model
-    40 million×. Frontier models are the same recipe, scaled up and trained on trillions of
-    tokens instead of one children's story.</p>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">1.3</span> Training: watch it learn to write</h2>
-    <p class="exp">Training shows the model hundreds of thousands of tiny quizzes — <i>here are 40 characters of a
-    story; guess character 41</i> — and after each guess, nudges all <span id="a1params2">42,458</span>
-    parameters a hair in the direction that would have made the right answer more likely. That nudge rule
-    (gradient descent) is the entire teacher. Its textbook is one small original story about a robot in a
-    garden, and it starts from pure static:</p>
-    <details class="fold" style="margin:0 0 10px"><summary>Read its entire textbook — the whole story</summary>
-      <p class="note" id="corpusstats" style="margin-top:6px"></p>
-      <div class="rawctx" id="corpusbox" style="max-height:220px"></div>
-    </details>
-    <div class="livebox" id="livesample"><span class="dim">press train and watch this box…</span></div>
-    <div class="statline">
-      <span>step <b id="statstep">0</b></span>
-      <span>loss <b id="statloss">—</b></span>
-      <span>speed <b id="statsps">—</b>/s</span>
-      <span id="statphase" class="pill">untrained</span>
+    <div class="inspect-tabs" role="tablist" aria-label="Model inspection views">
+      <button class="on" type="button" role="tab" aria-selected="true" aria-controls="inspect-tokens" data-inspect="tokens" tabindex="0">Tokenize text</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="inspect-parameters" data-inspect="parameters" tabindex="-1">Inspect parameters</button>
+      <button type="button" role="tab" aria-selected="false" aria-controls="inspect-attention" data-inspect="attention" tabindex="-1">Trace attention</button>
     </div>
-    <div class="lossline"><canvas class="chart" id="losschart" role="img" aria-label="Training loss chart" aria-describedby="losschart-desc"></canvas></div>
-    <p class="sr-only" id="losschart-desc">No loss samples yet.</p>
-    <p class="note"><b>Loss</b> is how wrong its guesses are, on average (lower is better). Watching this
-    number fall <i>is</i> watching it learn — there is no other teacher anywhere in the code.</p>
-    <div class="trainbar"><button class="btn" id="trainbtn">Train ▸ era 1 · babble</button></div>
-    <div class="eras" id="erachips"></div>
-    <div class="compare" id="eracompare"></div>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">1.4</span> Prediction: the only thing it ever does</h2>
-    <p class="exp">Give the trained model some text and it produces one thing: a <b>probability for every
-    token in its vocabulary</b> to come next. Chat, essays, code — all of it is this table, sampled one
-    token at a time, fed back in, repeated. Try it (and try switching eras to see the same machine with
-    different numbers inside):</p>
-    <div class="row" style="margin-bottom:8px">
-      <div class="grow"><input type="text" id="pginput" aria-label="Text for next-token prediction" value="the robot sat in the " autocomplete="off" autocapitalize="none"></div>
-    </div>
-    <div class="row" style="margin-bottom:4px">
-      <span class="note" style="margin:0">era&nbsp;</span><span id="pgeras"></span>
-    </div>
-    <div class="probbars" id="probbars"></div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn small" id="pgstep">write 1 token</button>
-      <button class="btn small ghost" id="pgauto">write 60</button>
-      <div class="grow"></div>
-    </div>
-    <div class="row" style="margin-top:8px">
-      <span class="note" style="margin:0;white-space:nowrap">temperature <b id="tempval">0.8</b></span>
-      <div class="grow"><input type="range" id="temp" aria-label="Sampling temperature" min="0" max="1.6" step="0.1" value="0.8"></div>
-    </div>
-    <p class="note"><b>Temperature</b> rescales the dice before rolling. Near 0 it always takes the top
-    guess — safe, repetitive. Higher, and it takes risks — creative, then unhinged. This is the same
-    knob you see in every AI API.</p>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">1.5</span> Attention: reading the model's mind</h2>
-    <p class="exp">Inside each attention layer, every position computes how much to look at every earlier
-    token. These weights are not drawn for show — they are read out of the live model on this page.
-    <b>Tap any character</b> to see where the model looks while predicting the next one; gold means
-    looking hard.</p>
-    <input type="text" id="attinput" aria-label="Text for attention visualization" value="the cat sat on the warm stone path" autocomplete="off" autocapitalize="none">
-    <div class="attheads" id="attheads"></div>
-    <div class="attwrap"><div class="atttext" id="atttext"></div></div>
-    <div class="attmatrix"><canvas id="attmatrix" role="img" aria-label="Attention matrix. Select a character above to highlight its row."></canvas></div>
-    <p class="note">The full map: each row is a position, each column an earlier position it may attend
-    to. The lower-left triangle shape is the rule that you cannot look at the future. Different heads
-    learn different habits — one may track the previous word, another hunts for a repeated word far back.
-    Attention is what lets "it" find what "it" refers to — and it is why models handle long, winding
-    sentences at all.</p>
-    <div class="reality"><b>What is real here:</b> everything. A hand-written transformer — embeddings,
-    two attention-plus-feed-forward blocks, layer norm, Adam optimizer — training and running in plain
-    JavaScript on this device. No network, no AI service, nothing pre-trained. What frontier models add
-    is scale: more layers, wider layers, vastly more text — and after that, the training in Acts 2 and 3.</div>
-  </div>
-
+    <section class="inspect-panel on" id="inspect-tokens" role="tabpanel">
+      <p class="exp">This teaching model uses one character per token. Type to see each character’s numeric ID.</p>
+      <input type="text" id="tokinput" aria-label="Text to tokenize" value="the robot saw the cat" autocomplete="off" autocapitalize="none">
+      <div class="tokens" id="tokout"></div>
+      <p class="note">Its vocabulary contains <span id="a1vocab">26</span> characters. Production language models commonly use larger word-piece vocabularies.</p>
+    </section>
+    <section class="inspect-panel" id="inspect-parameters" role="tabpanel" hidden>
+      <p class="exp">Tap a layer to inspect a heatmap from the latest trained checkpoint. This model has <b><span id="a1params">42,458</span> parameters</b>.</p>
+      <div class="pmap" id="pmap"></div>
+      <div class="wpeek" id="wpeek" style="display:none">
+        <p class="note" id="wpeekcap"></p>
+        <canvas id="wpeekcanvas" role="img" aria-label="Heatmap of the selected live parameter matrix"></canvas>
+      </div>
+    </section>
+    <section class="inspect-panel" id="inspect-attention" role="tabpanel" hidden>
+      <p class="exp">Choose a layer and head, then select a character. This view reads the prediction era selected above and shows its causal attention weights.</p>
+      <input type="text" id="attinput" aria-label="Text for attention visualization" value="the cat sat on the warm stone path" autocomplete="off" autocapitalize="none">
+      <div class="attheads" id="attheads"></div>
+      <div class="attwrap"><div class="atttext" id="atttext"></div></div>
+      <div class="attmatrix"><canvas id="attmatrix" role="img" aria-label="Attention matrix. Select a character above to highlight its row."></canvas></div>
+      <p class="note">Attention weights show how strongly one position used earlier positions in this computation. They do not reveal the model’s intent or explain the whole prediction.</p>
+    </section>
+  </section>
 </section>
 
 <!-- ══════════════════════════ ACT 2 ══════════════════════════ -->
-<section class="act" id="act2">
+<section class="act" id="act2" role="tabpanel" aria-labelledby="nav2" hidden>
+  <section class="stage-intro" aria-labelledby="stage2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Reasoning · measured experiment</span>
+      <h2 id="stage2-title">Worked steps give a model room to compute</h2>
+      <p class="frame-question">Does training on intermediate arithmetic steps change how a small transformer performs?</p>
+    </div>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Try</span><p>Train both models, then compare their accuracy and exam answers.</p></article>
+      <article><span>Observe</span><p>The models share a basic architecture, but their training text and exact configurations differ.</p></article>
+      <article><span>Takeaway</span><p>Extra generated steps can support computation; more attempts can help without changing weights.</p></article>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">→</span></button>
+  </section>
 
-  <div class="card">
-    <h2>A predictor imitates. A reasoner works things out.</h2>
-    <p class="exp">Act 1's model has a ceiling: it answers in one reflex guess. Ask a hard question and
-    there is nowhere for intermediate work to happen. <b>Reasoning models</b> are ordinary language
-    models given two extra things: they are trained to <b>write out their working before answering</b>,
-    and the attempts that check out are the ones reinforced. That is the recipe behind the current wave of "thinking"
-    models.</p>
-    <p class="exp">To see it without hand-waving, we shrink the problem to something a phone can train:
-    <b>3-digit addition</b>. Hard enough that a one-reflex guess fails; simple enough that everything is
-    checkable.</p>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">2.1</span> One brain, two educations</h2>
-    <p class="exp">Two copies of the same tiny transformer — same width, same depth, same step budget of
-    wall-clock time. One is shown only <b>problem → answer</b>. The other is shown the <b>written-out
-    column arithmetic</b> between them. Then both sit the same 100-question exam of unseen problems:</p>
+  <section class="workbench reason-main" aria-labelledby="reason-train-heading">
+    <div class="panel-head">
+      <div><span class="panel-kicker">Live comparison</span><h3 id="reason-train-heading">Train and compare</h3></div>
+    </div>
+    <p class="panel-lede">Both are small transformers with the same core width, depth and head count. Their context lengths, seeds and training-step budgets differ to fit each text format.</p>
     <div class="duo">
       <div class="mcard direct">
-        <h3>Model D — direct answer</h3>
+        <h3>Direct-answer model</h3>
+        <p class="model-role">Trains on problem → answer</p>
         <div class="fmt" id="fmtD">347+285=<b>632.</b></div>
         <div class="pline"><i id="pbarD" style="width:0%"></i></div>
         <div class="statline"><span>step <b id="stepD">0</b></span><span>loss <b id="lossD">—</b></span></div>
-        <div class="livebox" id="liveD" style="margin-top:6px;min-height:2.4em"><span class="dim">waiting…</span></div>
+        <div class="livebox" id="liveD"><span class="dim">waiting…</span></div>
         <div class="bignum acc-d dim" id="accD">?</div>
       </div>
       <div class="mcard scratch">
-        <h3>Model S — shows its work</h3>
+        <h3>Worked-step model</h3>
+        <p class="model-role">Trains on problem → written steps → answer</p>
         <div class="fmt" id="fmtS">347+285=<b> 7+5=12 c1 4+8+1=13 c1 3+2+1=6 c0 632.</b></div>
         <div class="pline"><i id="pbarS" style="width:0%"></i></div>
         <div class="statline"><span>step <b id="stepS">0</b></span><span>loss <b id="lossS">—</b></span></div>
-        <div class="livebox" id="liveS" style="margin-top:6px;min-height:2.4em"><span class="dim">waiting…</span></div>
+        <div class="livebox" id="liveS"><span class="dim">waiting…</span></div>
         <div class="bignum acc-s dim" id="accS">?</div>
       </div>
     </div>
-    <div class="trainbar"><button class="btn" id="a2trainbtn">Run the experiment ▸ train both</button></div>
-    <p class="note" id="a2status">Trains Model D, then Model S, then examines both — about two to three
-    minutes total on a recent phone. Accuracy checkpoints appear as each model trains.</p>
-    <p class="note"><b>Why this matters:</b> the chain of thought gives the same small network somewhere
-    to put intermediate results. Each little step is easy to learn; the direct leap is not. "Thinking" in
-    modern AI is exactly this — extra tokens the model writes to itself before committing to an answer.</p>
-  </div>
+    <div class="trainbar"><button class="btn" id="a2trainbtn">Run experiment · train both</button></div>
+    <p class="note" id="a2status">Runs both training jobs and a fixed exam, then prepares an under-trained model for the next two activities. Allow about two to three minutes on a recent phone.</p>
+  </section>
 
-  <div class="card">
-    <h2><span class="no">2.2</span> Read their exams</h2>
-    <p class="exp">Same test, both models. Wrong answers in red — notice <i>how</i> Model D fails: the
-    answer is usually the right shape and close in size, because it learned the vibe of the answer but
-    not the procedure. Model S fails differently: a slip in one written step.</p>
-    <div class="duo">
-      <div><h3 class="note" style="margin:0 0 4px">Model D</h3><div class="exlist" id="exD"></div></div>
-      <div><h3 class="note" style="margin:0 0 4px">Model S</h3><div class="exlist" id="exS"></div></div>
+  <details class="card exam-card" open>
+    <summary>Compare exam answers</summary>
+    <p class="exp">These are live answers from the fixed unseen exam. Red marks a wrong final answer.</p>
+    <div class="duo exam-duo">
+      <div><h3>Direct-answer model</h3><div class="exlist" id="exD"></div></div>
+      <div><h3>Worked-step model</h3><div class="exlist" id="exS"></div></div>
     </div>
-  </div>
+  </details>
 
-  <div class="card">
-    <h2><span class="no">2.3</span> Thinking longer: test-time compute</h2>
-    <p class="exp">Once the work is written down, it can be <b>checked</b>. We deliberately use an
-    under-trained sibling of Model S — same recipe, stopped at 400 steps (<b><span id="midacc">—</span></b>
-    on its own) — let it try each problem several times with the dice turned up, and keep only attempts
-    whose written steps a small <b>verifier</b> certifies — every column sum true, every carry consistent, the final answer assembled
-    from the steps. The verifier is never told the true answer. More attempts, more accuracy — paid for
-    in compute, not in training:</p>
-    <div class="votebars" id="votebars"></div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="votebtn" disabled>Run ▸ 1, 2, 4, 8 attempts</button>
-    </div>
-    <p class="note" id="votestatus">Train the models in §2.1 first.</p>
-    <div class="chainpeek" id="chainpeek"></div>
-    <p class="note"><b>This is the "thinking time" dial</b> on modern reasoning models: sample more
-    chains, check them, keep the good ones. Accuracy climbs with no new training at all.</p>
-  </div>
+  <div class="workspace-grid reason-followups">
+    <section class="workbench" aria-labelledby="vote-heading">
+      <div class="panel-head">
+        <div><span class="panel-kicker">Frozen weights</span><h3 id="vote-heading">Try more attempts</h3></div>
+      </div>
+      <p class="panel-lede">An under-trained worked-step model samples several answers. The verifier checks the arithmetic, and a verified answer is selected.</p>
+      <p class="measurement">Starting accuracy: <b><span id="midacc">—</span></b></p>
+      <div class="votebars" id="votebars"></div>
+      <button class="btn" id="votebtn" disabled>Run 1, 2, 4, and 8 attempts</button>
+      <p class="note" id="votestatus">Train both models first.</p>
+      <div class="chainpeek" id="chainpeek"></div>
+    </section>
 
-  <div class="card">
-    <h2><span class="no">2.4</span> Teaching itself: reinforcement</h2>
-    <p class="exp">Now close the loop. The same half-trained model poses itself fresh problems, tries
-    each a few times, and the attempts its verifier certifies as correct become <b>new training data</b>.
-    Nothing else changes — it studies its own best work. This is reinforcement learning in miniature: the
-    verifier is the reward signal, and it is the essence of how reasoning models are made.</p>
-    <div class="starbars" id="starbars"></div>
-    <div class="row" style="margin-top:10px">
-      <button class="btn" id="starbtn" disabled>Self-improvement round ▸</button>
-    </div>
-    <p class="note" id="starstatus">Train the models in §2.1 first. Each round: ~120 self-posed problems,
-    up to 3 attempts each, then fine-tune on the kept work. Press it three or four times.</p>
-    <div class="reality"><b>What is real here:</b> both models genuinely train on this device, the exam
-    problems are genuinely unseen, the verifier genuinely checks arithmetic, and the self-improvement
-    rounds genuinely reuse the model's own certified chains. What frontier labs add: the graded work is
-    math, code, science and dialogue instead of column addition; the verifier may be unit tests, proof
-    checkers, or humans comparing answers (RLHF); and the loop runs on thousands of GPUs. The shape of
-    the idea is the one on this page.</div>
+    <section class="workbench" aria-labelledby="star-heading">
+      <div class="panel-head">
+        <div><span class="panel-kicker">Weights update</span><h3 id="star-heading">Fine-tune on accepted examples</h3></div>
+      </div>
+      <p class="panel-lede">Fresh problems are generated outside the model. Verified chains with the known correct answer become supervised next-token training examples.</p>
+      <div class="starbars" id="starbars"></div>
+      <button class="btn" id="starbtn" disabled>Fine-tune on accepted examples</button>
+      <p class="note" id="starstatus">Train both models first. Each round samples fresh problems, checks their chains and answers, then fine-tunes on the accepted text.</p>
+    </section>
   </div>
-
 </section>
 
 <!-- ══════════════════════════ ACT 3 ══════════════════════════ -->
-<section class="act" id="act3">
-
-  <div class="card">
-    <h2>A reasoner that can only talk. An agent can <i>do</i>.</h2>
-    <p class="exp">Act 2's model still lives in a sealed box: text in, text out. An <b>agent</b> is a
-    reasoning model given <b>tools</b> — search, calculators, code, files — and put in a <b>loop</b>:
-    the model writes an action, the tool really runs, the result is appended to the conversation, and the
-    model reads it and acts again. The model never stops being a next-token predictor. It is just
-    predicting in a loop whose text has consequences.</p>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">3.1</span> The loop</h2>
-    <div class="loopdia" id="loopdia">
-      <div class="lstep" data-k="ctx"><b>context</b>everything so far, as text</div>
-      <div class="lstep" data-k="model"><b>model</b>predicts next action</div>
-      <div class="lstep" data-k="tool"><b>tool</b>really executes</div>
-      <div class="lstep" data-k="obs"><b>observation</b>appended to context</div>
+<section class="act" id="act3" role="tabpanel" aria-labelledby="nav3" hidden>
+  <section class="stage-intro" aria-labelledby="stage3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Agents · tool-using loop</span>
+      <h2 id="stage3-title">Text becomes action when a loop can call tools</h2>
+      <p class="frame-question">What changes when a model can choose an action, read the result, and continue?</p>
     </div>
-    <p class="note" style="margin-top:8px">Four beats, repeated until the model chooses
-    <span class="pill">finish</span>. The tools are described to the model the same way real systems do
-    it — as typed function signatures:</p>
-    <details class="fold"><summary>Show the tool definitions the model sees</summary>
-      <div class="schemas"><pre id="schemapre"></pre></div>
-    </details>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">3.2</span> Run the agent</h2>
-    <p class="exp"><b>The task:</b> <span id="goaltext"></span></p>
-    <p class="exp">The trap is that the cheapest pizza is not the right answer — one shop closes too
-    early, one is closed Wednesdays. The agent has to discover that the way you would: by reading. Play
-    it two ways. In <b>you are the model</b>, the loop pauses each turn and you choose the next action —
-    including the tempting wrong ones, which really execute.</p>
-    <div class="row">
-      <button class="btn small" id="agmode-you">▸ you are the model</button>
-      <button class="btn small ghost" id="agmode-auto">watch it run</button>
-      <button class="btn small ghost" id="agreset">restart run</button>
-      <div class="grow"></div>
-      <select id="agwindow" title="context window">
-        <option value="0">full context window</option>
-        <option value="900">small window: last 900 chars</option>
-        <option value="450">tiny window: last 450 chars</option>
-      </select>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Try</span><p>Choose the actions once. Then watch the scripted policy run the same task.</p></article>
+      <article><span>Observe</span><p>Tool results enter the context. The calculator error becomes information for the next step.</p></article>
+      <article><span>Takeaway</span><p>Tools and a loop add capability. This activity scripts decisions so the mechanism stays inspectable.</p></article>
     </div>
-    <div class="ctxmeter">
-      <span class="cnum">context</span>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">→</span></button>
+  </section>
+
+  <section class="workbench agent-workbench" aria-labelledby="agent-heading">
+    <div class="panel-head">
+      <div><span class="panel-kicker">Fictional pizza world</span><h3 id="agent-heading">Run the agent</h3></div>
+    </div>
+    <div class="task-card"><span>Task</span><p id="goaltext"></p></div>
+    <p class="panel-lede">The menus, hours and 8% tax are given exercise data. Search and calculator tools really execute against that local data.</p>
+    <div class="agent-controls">
+      <button class="btn small" id="agmode-you">You choose the actions</button>
+      <button class="btn small ghost" id="agmode-auto">Watch the scripted policy</button>
+      <button class="btn small ghost" id="agreset">Restart run</button>
+      <label class="context-select" for="agwindow"><span>Visible context</span>
+        <select id="agwindow" title="Visible context window">
+          <option value="0">Full context</option>
+          <option value="900">Small · last 900 characters</option>
+          <option value="450">Tiny · last 450 characters</option>
+        </select>
+      </label>
+    </div>
+    <p class="fixture-note"><b>About autoplay:</b> “Watch the scripted policy” uses a hand-written decision policy. Tool calls, results, context growth and truncation are live.</p>
+    <div class="ctxmeter" aria-label="Activity context size">
+      <span class="cnum">visible context</span>
       <div class="cbar"><i id="ctxfill" style="width:2%"></i></div>
       <span class="cnum"><b id="ctxtok">0</b> tokens</span>
     </div>
-    <div class="transcript" id="transcript"></div>
+    <div class="transcript" id="transcript" aria-live="polite"></div>
     <div class="candidates" id="candidates"></div>
-    <details class="fold"><summary>Show exactly what the model sees (the raw context)</summary>
+    <details class="fold raw-context-fold"><summary>Inspect the exact visible context</summary>
       <div class="rawctx" id="rawctx"></div>
     </details>
-  </div>
-
-  <div class="card">
-    <h2><span class="no">3.3</span> What the loop teaches</h2>
-    <p class="exp"><b>Errors are survivable.</b> Watch the calculator turn — the agent writes
-    <span class="pill">9 x $13.00</span>, the tool genuinely rejects it, and the error message lands in
-    the context like any other observation. The next prediction reads the error and corrects. Agents do
-    not need to be perfect; they need to see what happened.</p>
-    <p class="exp"><b>The context window is the agent's entire memory.</b> The model itself is frozen —
-    nothing is written to its parameters between turns. Re-run the task with the <b>tiny window</b>
-    setting: once the goal scrolls out of view, this agent — honestly wired to see only that window —
-    stops dead, because it no longer knows what it is doing. Every real agent system is a fight against
-    exactly this.</p>
-    <p class="exp"><b>Tools are powers, and powers are scoped.</b> Our agent can read five documents and
-    do arithmetic — nothing else. Real agents are given real powers (your files, your browser, your
-    terminal), which is why serious systems run them in sandboxes, ask before irreversible actions, and
-    log every tool call. The loop you just watched is also the audit trail.</p>
-    <div class="reality"><b>What is real here:</b> the tools are real — the calculator genuinely parses
-    and errors, search genuinely searches, the loop and the context genuinely work as shown, and the
-    decision function genuinely sees only the visible window (that is why the tiny-window run breaks).
-    The one scripted part is the decision itself: a hand-written rulebook plays the role of Act 2's
-    reasoning model, because a model good enough to plan this runs in a data center, not a phone. Wire
-    Act 2's idea to Act 3's loop at scale and you have Claude, ChatGPT's agents, coding assistants — all
-    of it.</div>
-  </div>
-
+  </section>
 </section>
 
 </main>
 
 <div class="footer">
-  How a Language Model Works (Glass Box) · everything computes live on this device — no network, no AI service, nothing pre-trained<span id="modenote"></span>
-  <div class="footer-tools"><button type="button" class="footer-link student-guide-open">guide</button> · <button type="button" class="footer-link" id="presfoot">presentation mode</button> · <button type="button" class="footer-link presenter-notes-open">presenter notes</button></div>
+  <span>How a Language Model Works · offline teaching lab<span id="modenote"></span></span>
+  <div class="footer-tools"><button type="button" class="footer-link student-guide-open">Guide</button><span aria-hidden="true">·</span><button type="button" class="footer-link" id="presfoot">Presentation mode</button><span aria-hidden="true">·</span><button type="button" class="footer-link presenter-notes-open">Presenter Notes</button></div>
 </div>
 
 <dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
   <div class="student-guide-head"><h2 id="student-guide-title">Guide<span class="head-sub">how to use this demo</span></h2><form method="dialog"><button aria-label="Close">×</button></form></div>
   <div class="student-guide-body">
-    <p class="lede">Nothing here is downloaded, faked, or phoned in — every number on the page is computed on this
-    device while you watch. Three acts, roughly ten minutes each. Take them in order, or take just one.</p>
+    <p class="lede">Follow one idea across three stages: a language model predicts tokens, worked steps can support computation, and an agent loop connects text to tools.</p>
     <ol>
-      <li><b>Act 1 — the predictor.</b> Type into the token box, tap a row of the parameter map to see the real
-      weights, then press the gold <b>Train</b> button and watch the loss fall and the writing improve. Press it
-      through all four eras — babble, words, phrases, sentences. Then try next-token prediction, drag the
-      temperature slider, and tap characters in the attention view to see where the model looks.</li>
-      <li><b>Act 2 — the reasoner.</b> Press <b>Run the experiment</b>: two identical models train side by side,
-      one shown answers alone and one shown the working, then sit the same exam. Afterwards §2.3 and §2.4 unlock —
-      buy accuracy with extra attempts, then let the model train on its own certified work.</li>
-      <li><b>Act 3 — the agent.</b> Pick <b>you are the model</b> to choose every action yourself, or
-      <b>watch it run</b>. Then set the context window to <b>tiny</b>, press <b>restart run</b>, and run it
-      again to break it on purpose.</li>
+      <li><b>LLM.</b> Read the Era 0 sample, press <b>Train</b>, and compare eras. In the next-token workbench, change the prompt, era and temperature. Use <b>Tokenize text</b>, <b>Inspect parameters</b> and <b>Trace attention</b> for deeper inspection.</li>
+      <li><b>Reasoning.</b> Press <b>Run experiment · train both</b> and compare the live exam results. Then try more frozen-model attempts and <b>Fine-tune on accepted examples</b>.</li>
+      <li><b>Agents.</b> Choose <b>You choose the actions</b> or <b>Watch the scripted policy</b>. Change <b>Visible context</b>, restart, and observe what the activity can no longer see.</li>
     </ol>
     <h3>Getting around</h3>
-    <p>The three buttons under the title switch acts. This card opens on every load; the <b>?</b> button in the
-    header is the <b>Guide</b> button and brings it back any time. <b>⚙ Settings</b> beside it holds
-    <b>Open Presenter Notes</b> (the printable session plan, on screen), <b>Presentation mode</b> and
-    <b>Reset</b>.</p>
-    <h3>Two things worth knowing</h3>
-    <p>Training takes a couple of minutes per press — the page is working, not stuck. And every act closes with a
-    <b>“What is real here”</b> panel that says exactly which parts compute live and which few pieces are
-    deliberately scripted.</p>
+    <p>The <b>LLM</b>, <b>Reasoning</b> and <b>Agents</b> tabs switch stages. <b>Details</b> opens the evidence and limits for the current stage. The <b>Guide</b> button reopens this card; <b>Settings</b> contains <b>Open Presenter Notes</b>, <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Allow time for training</h3>
+    <p>LLM eras can take several seconds. The Reasoning experiment can take a few minutes on a phone. Progress measurements update while the page works.</p>
   </div>
-  <form method="dialog" class="student-guide-actions"><button>Start with Act 1</button></form>
+  <form method="dialog" class="student-guide-actions"><button>Start with the LLM</button></form>
 </dialog>
 
 <dialog class="student-guide" id="glass-settings" aria-labelledby="glass-settings-title">
@@ -402,11 +308,60 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
     <b>Notes</b> button in the header for the stage cues.</p>
     <p><button class="btn ghost" id="presbtn" aria-pressed="false">Presentation mode<span class="state" aria-hidden="true">off</span></button></p>
     <h3>Reset</h3>
-    <p class="setnote">Back to a fresh load — untrained model, no eras, Act 2 and Act 3 as they
-    started. Presentation mode stays as you set it.</p>
+    <p class="setnote">Back to a fresh load — untrained LLM, no eras, and the Reasoning and Agents activities as they started. Presentation mode stays as you set it.</p>
     <p><button class="btn ghost" id="resetbtn">Reset</button></p>
   </div>
   <form method="dialog" class="student-guide-actions"><button>Done</button></form>
+</dialog>
+
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="student-guide-head"><h2 id="details-title">Details<span class="head-sub" id="details-subtitle">LLM</span></h2><form method="dialog"><button aria-label="Close Details">×</button></form></div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>A small transformer you can inspect</h3>
+        <p>The page creates an untrained transformer in JavaScript: character embeddings, position embeddings, two attention-plus-feed-forward blocks, normalization and an output layer. Its <b><span id="a1params2">42,458</span> parameters</b> begin as seeded random numbers and update during training.</p>
+        <p>Training repeatedly asks the model to predict the next character in one small original story. Backpropagation computes gradients; Adam uses them to update the parameters. Inference then uses a selected frozen era to produce next-token probabilities.</p>
+        <h3>How the pieces fit</h3>
+        <p>Tokens become numeric vectors. Causal attention lets each position combine information from earlier positions. Feed-forward layers transform those combined values. The output layer produces one score per possible next token.</p>
+        <p>Attention weights are real intermediate values from this model. They show a routing pattern for one computation, not a complete explanation of why the model produced an answer.</p>
+        <div class="scale" id="scalebars"></div>
+        <p class="details-note">The comparison above uses published parameter counts for this page, GPT-2 and GPT-3. Parameter count alone does not describe training data, architecture, capability or quality.</p>
+        <div class="evidence-card"><b>Boundary:</b> model initialization, training, loss, samples, probabilities, parameter heatmaps and attention maps are computed on this device. The page makes no runtime network request and loads no pretrained weights. This tiny character model demonstrates selected mechanisms; it is not a miniature claim about every production language model.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What the comparison tests</span>
+        <h3>Direct answers and worked steps</h3>
+        <p>The two arithmetic models use the same transformer family and share core width, depth and attention-head count. They differ in context length, seed and training steps because their target sequences differ. The result is a measured comparison from this seeded activity, not a guarantee that written reasoning always improves an answer.</p>
+        <p>The direct-answer model learns text shaped like <code>347+285=632.</code> The worked-step model learns text that includes column sums and carries before the final answer. Both sit the same fixed exam of unseen generated problems.</p>
+        <h3>Two different follow-up mechanisms</h3>
+        <p><b>More attempts:</b> the page freezes an under-trained worked-step model, samples 1, 2, 4 or 8 chains per problem, verifies the arithmetic, and selects a verified answer. No weights change during this experiment.</p>
+        <p><b>Accepted-example fine-tuning:</b> the activity generates fresh problems outside the model, samples chains, checks both the worked arithmetic and the known generated answer, then performs supervised next-token updates on accepted chains. This is STaR-style self-training. It is not policy-gradient reinforcement learning.</p>
+        <div class="evidence-card"><b>Boundary:</b> the models train, the exams run, the verifier checks arithmetic, and accepted text updates the model on this device. The exact scores are outcomes from a seeded teaching experiment. The task is narrow three-digit addition.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What the loop does</span>
+        <h3>Context → decision → tool → observation</h3>
+        <div class="loopdia" id="loopdia">
+          <div class="lstep" data-k="ctx"><b>context</b>visible text so far</div>
+          <div class="lstep" data-k="model"><b>decision</b>chooses a next action</div>
+          <div class="lstep" data-k="tool"><b>tool</b>executes locally</div>
+          <div class="lstep" data-k="obs"><b>observation</b>returns to context</div>
+        </div>
+        <p>This activity repeats those four beats until the policy chooses <span class="pill">finish</span>. The calculator, search, document reads, transcript, context meter and truncation are live.</p>
+        <details class="fold"><summary>Inspect the tool definitions</summary><div class="schemas"><pre id="schemapre"></pre></div></details>
+        <h3>What is scripted</h3>
+        <p>The automatic decision policy is a hand-written teaching fixture. It deliberately makes one calculator syntax error, reads the error returned by the real calculator, and retries. The manual mode lets you choose from candidate actions generated by that same scripted policy.</p>
+        <h3>What the context experiment shows</h3>
+        <p>The selected window controls how much text this activity’s policy can see. When early text falls outside a tiny window, the activity loses access to it. A production agent may also use external memory, retrieval, summaries or saved state, so a context window is not its entire possible memory.</p>
+        <div class="evidence-card"><b>Boundary:</b> the fictional pizza menus, hours and 8% tax are given local exercise data. Tool computation and context behavior are real; the policy is scripted. This demonstrates an agent loop without claiming the tiny activity has general reasoning ability.</div>
+      </section>
+    </div>
+    <form method="dialog" class="student-guide-actions"><button>Back to activity</button></form>
+  </div>
 </dialog>
 
 <!-- Presenter notes ARE the printable guide. build.js injects the .guide-scope

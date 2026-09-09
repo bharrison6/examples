@@ -73,9 +73,9 @@ await page.waitForTimeout(60);
 ok(await isOpen('presenter-notes') && !(await isOpen('glass-settings')),
   'Presenter Notes open from settings (and replace it rather than stacking)');
 const notesTxt = await page.$eval('#presenter-notes .guide-scope', (el) => el.textContent);
-ok(/Act 1/.test(notesTxt) && /Act 2/.test(notesTxt) && /Act 3/.test(notesTxt) && /Do not train before the session/.test(notesTxt),
-  'the notes carry stage cues for all three acts');
-ok(notesTxt.trim().split(/\s+/).length > 1400,
+ok(/LLM/.test(notesTxt) && /Reasoning/.test(notesTxt) && /Agents/.test(notesTxt) && /Start fresh: the untrained model is useful evidence/.test(notesTxt),
+  'the notes carry stage cues for all three stages');
+ok(notesTxt.trim().split(/\s+/).length > 700,
   'and they are the whole printable guide, not a summary (' + notesTxt.trim().split(/\s+/).length + ' words)');
 await page.keyboard.press('Escape');
 await page.waitForTimeout(60);
@@ -91,6 +91,15 @@ await page.keyboard.press('Escape');
 await page.waitForTimeout(60);
 ok(await page.isVisible('#howto-open') && await page.isVisible('#glass-settings-open'),
   'both controls stay visible in the sticky header');
+const tabLabels = await page.$$eval('nav.acts [role="tab"]', (els) => els.map((el) => el.querySelector('span').textContent.trim()));
+ok(JSON.stringify(tabLabels) === JSON.stringify(['LLM', 'Reasoning', 'Agents']),
+  'the primary tabs name the three learning stages', JSON.stringify(tabLabels));
+await page.click('#act1 .details-trigger');
+ok(await isOpen('details') && await page.$eval('#details-subtitle', (el) => el.textContent.trim()) === 'LLM',
+  'Details opens the evidence drawer for the current stage');
+await page.keyboard.press('Escape');
+ok(await page.$eval('#act1 .details-trigger', (el) => el === document.activeElement),
+  'closing Details returns focus to its trigger');
 ok(/Bryant Harrison/.test(await page.$eval('.bh-credit', (el) => el.textContent)) &&
    /Murray State University/.test(await page.$eval('.bh-credit', (el) => el.textContent)),
   'the attribution byline is present and visible');
@@ -102,6 +111,7 @@ ok(pillBox.left >= 0 && pillBox.right <= pillBox.vw + 1,
   'and it fits inside a 375px screen rather than running off it', JSON.stringify(pillBox));
 
 ok((await page.$$('#tokout .tok')).length > 5, 'tokenizer renders character tokens');
+await page.click('[data-inspect="parameters"]');
 ok((await page.$$('#pmap .prow')).length === 8, 'parameter map lists 8 component rows');
 const corpus = await page.$eval('#corpusbox', (el) => el.textContent);
 ok(/the little robot woke up in the lab/.test(corpus) && corpus.length > 4000, 'the whole textbook is readable in the §1.3 fold');
@@ -127,6 +137,7 @@ ok(after.length === before.length + 1, 'playground writes exactly one sampled to
 ok((await page.$$('#probbars .pb')).length === 8, 'probability table shows top-8 next tokens');
 
 // attention
+await page.click('[data-inspect="attention"]');
 ok((await page.$$('#attheads .chip')).length === 8, 'attention offers 2 layers x 4 heads');
 await page.$$eval('#atttext .attchar', (chars) => chars[4].click());
 const goldSpans = await page.$$eval('#atttext .attchar', (chars) => chars.filter(s => s.style.background).length);
@@ -213,7 +224,9 @@ for (const nav of ['nav1', 'nav2', 'nav3']) {
 }
 ok(undersized.length === 0, `all ${interactiveCount} visible interactive targets across three acts are >=36px`, JSON.stringify(undersized));
 await page.click('#nav1');
+await page.click('[data-inspect="parameters"]');
 const pmapTargets = await page.$$eval('#pmap button.prow', els => els.map(el => el.getBoundingClientRect().height));
+await page.click('[data-inspect="attention"]');
 const attTargets = await page.$$eval('#atttext .attchar', els => els.map(el => el.getBoundingClientRect().height));
 ok(pmapTargets.length > 0 && pmapTargets.every(h => h >= 36), 'every interactive parameter row is >=36px');
 ok(attTargets.length > 0 && attTargets.every(h => h >= 36), 'every attention character target is >=36px');

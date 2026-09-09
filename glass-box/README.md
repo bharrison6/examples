@@ -67,3 +67,8 @@ python zero-to-unbeatable/tools/render_guide.py --source glass-box/src/demo-guid
 
 Inspect the final PDF pages after either rendering route. The slow arithmetic
 test reproduces the seeded benchmark; it is separate from the browser UI checks.
+
+The historical size comparisons in Details use the published large GPT-2
+release ([OpenAI](https://openai.com/index/gpt-2-1-5b-release/)) and GPT-3
+([paper](https://arxiv.org/abs/2005.14165)). Parameter count alone does not
+describe a model's training, capability or quality.

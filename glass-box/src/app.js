@@ -57,14 +57,111 @@
     };
   })();
 
-  // ---------- act navigation ----------
+  // ---------- stage navigation + evidence drawer ----------
   const navs = [$('nav1'), $('nav2'), $('nav3')];
   const acts = [$('act1'), $('act2'), $('act3')];
-  navs.forEach((btn, i) => btn.addEventListener('click', () => {
-    navs.forEach((b, j) => b.classList.toggle('on', i === j));
-    acts.forEach((a, j) => a.classList.toggle('on', i === j));
+  const detailNames = ['LLM', 'Reasoning', 'Agents'];
+  const detailsDialog = $('details');
+  const detailsBody = detailsDialog.querySelector('.details-body');
+  const detailsStages = [...detailsDialog.querySelectorAll('[data-details-stage]')];
+  let activeStage = 0, detailsOpener = null;
+
+  function syncDetailsStage(i) {
+    $('details-subtitle').textContent = detailNames[i];
+    detailsStages.forEach((section, j) => {
+      const on = i === j;
+      section.classList.toggle('on', on);
+      section.hidden = !on;
+    });
+    detailsBody.scrollTop = 0;
+  }
+
+  function selectStage(i, moveFocus) {
+    activeStage = i;
+    navs.forEach((button, j) => {
+      const on = i === j;
+      button.classList.toggle('on', on);
+      button.setAttribute('aria-selected', String(on));
+      button.tabIndex = on ? 0 : -1;
+      if (on && moveFocus) button.focus();
+    });
+    acts.forEach((section, j) => {
+      const on = i === j;
+      section.classList.toggle('on', on);
+      section.hidden = !on;
+    });
+    syncDetailsStage(i);
     window.scrollTo({ top: 0 });
+    if (i === 0) requestAnimationFrame(() => {
+      drawLoss();
+      if (eras.length && document.querySelector('[data-inspect="attention"]').classList.contains('on')) renderAttention();
+    });
+  }
+
+  navs.forEach((button, i) => {
+    button.addEventListener('click', () => selectStage(i, false));
+    button.addEventListener('keydown', (event) => {
+      let next = null;
+      if (event.key === 'ArrowRight') next = (i + 1) % navs.length;
+      if (event.key === 'ArrowLeft') next = (i - 1 + navs.length) % navs.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = navs.length - 1;
+      if (next == null) return;
+      event.preventDefault();
+      selectStage(next, true);
+    });
+  });
+
+  document.querySelectorAll('.details-trigger').forEach((button) => button.addEventListener('click', () => {
+    detailsOpener = button;
+    syncDetailsStage(Number(button.dataset.details));
+    detailsDialog.showModal();
+    document.body.classList.add('details-open');
+    detailsDialog.querySelector('.student-guide-head button').focus();
   }));
+  detailsDialog.addEventListener('click', (event) => { if (event.target === detailsDialog) detailsDialog.close(); });
+  detailsDialog.addEventListener('close', () => {
+    document.body.classList.remove('details-open');
+    if (detailsOpener?.isConnected) detailsOpener.focus();
+  });
+
+  const inspectButtons = [...document.querySelectorAll('[data-inspect]')];
+  const inspectPanels = [...document.querySelectorAll('.inspect-panel')];
+  function selectInspector(name, moveFocus) {
+    inspectButtons.forEach((button) => {
+      const on = button.dataset.inspect === name;
+      button.classList.toggle('on', on);
+      button.setAttribute('aria-selected', String(on));
+      button.tabIndex = on ? 0 : -1;
+      if (on && moveFocus) button.focus();
+    });
+    inspectPanels.forEach((panel) => {
+      const on = panel.id === 'inspect-' + name;
+      panel.classList.toggle('on', on);
+      panel.hidden = !on;
+    });
+    requestAnimationFrame(() => {
+      if (name === 'tokens') renderTokens();
+      if (name === 'parameters') {
+        renderPmap();
+        if (pmapSel >= 0 && mirror) renderWeightPeek(componentList(mirror)[pmapSel]);
+      }
+      if (name === 'attention' && eras.length) renderAttention();
+    });
+  }
+  inspectButtons.forEach((button, i) => {
+    button.addEventListener('click', () => selectInspector(button.dataset.inspect, false));
+    button.addEventListener('keydown', (event) => {
+      let next = null;
+      if (event.key === 'ArrowRight') next = (i + 1) % inspectButtons.length;
+      if (event.key === 'ArrowLeft') next = (i - 1 + inspectButtons.length) % inspectButtons.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = inspectButtons.length - 1;
+      if (next == null) return;
+      event.preventDefault();
+      selectInspector(inspectButtons[next].dataset.inspect, true);
+    });
+  });
   // ---------- presentation mode ----------
   // One CSS variable scales the whole page; the body class also reveals the
   // header's quick route to the presenter's notes. Reachable from Settings and
@@ -185,7 +282,7 @@
     const box = $('wpeek');
     if (pmapSel === -1 || !r || !r.mat) { box.style.display = 'none'; return; }
     box.style.display = 'block';
-    $('wpeekcap').innerHTML = `<b>${r.name}</b> — ${r.cap}. Every pixel is one live parameter: gold above zero, blue below. Press train and come back — they all move.`;
+    $('wpeekcap').innerHTML = `<b>${r.name}</b> — ${r.cap}. Every pixel is one parameter from the latest trained checkpoint: gold above zero, blue below. Training can change these values.`;
     const cv = $('wpeekcanvas');
     const R = Math.min(r.rows, 64), C = Math.min(r.cols, 160);
     cv.width = C; cv.height = R;
@@ -207,13 +304,12 @@
   function renderScale(params) {
     const models = [
       { name: 'this page', p: params, you: true, note: fmt(params) + ' parameters' },
-      { name: 'GPT-2 (2019)', p: 124e6, note: '124 million' },
+      { name: 'GPT-2 · largest (2019)', p: 1.5e9, note: '1.5 billion' },
       { name: 'GPT-3 (2020)', p: 175e9, note: '175 billion' },
-      { name: 'frontier (est.)', p: 1.8e12, note: 'on the order of a trillion' },
     ];
     const wrap = $('scalebars');
     wrap.innerHTML = '';
-    const maxLog = Math.log10(2e12);
+    const maxLog = Math.log10(175e9);
     for (const m of models) {
       const div = document.createElement('div');
       div.className = 'srow' + (m.you ? ' you' : '');
@@ -274,14 +370,14 @@
   function trainLabel() {
     const t = nextTarget();
     const cur = latestEra() ? latestEra().step : 0;
-    return `Train ▸ ${t.name === 'more' ? '+400 steps' : 'era: ' + t.name} (${fmt(t.step - cur)} steps)`;
+    return `Train · ${t.name === 'more' ? 'another 400 steps' : 'era ' + t.name} (${fmt(t.step - cur)} steps)`;
   }
 
   $('trainbtn').addEventListener('click', () => {
     if (a1Busy) return;
     a1Busy = true;
     const t = nextTarget();
-    $('trainbtn').innerHTML = '<span class="spin"></span> training…';
+    $('trainbtn').innerHTML = '<span class="spin"></span> Training…';
     $('trainbtn').disabled = true;
     $('statphase').textContent = 'training';
     send({ cmd: 'a1.train', steps: t.step - (latestEra() ? latestEra().step : 0) });
@@ -422,12 +518,12 @@
   }
   $('pgstep').addEventListener('click', pgWriteOne);
   $('pgauto').addEventListener('click', () => {
-    if (pgAutoTimer) { clearInterval(pgAutoTimer); pgAutoTimer = null; $('pgauto').textContent = 'write 60'; return; }
+    if (pgAutoTimer) { clearInterval(pgAutoTimer); pgAutoTimer = null; $('pgauto').textContent = 'Write 60'; return; }
     let n = 0;
-    $('pgauto').textContent = 'stop';
+    $('pgauto').textContent = 'Stop';
     pgAutoTimer = setInterval(() => {
       pgWriteOne();
-      if (++n >= 60) { clearInterval(pgAutoTimer); pgAutoTimer = null; $('pgauto').textContent = 'write 60'; }
+      if (++n >= 60) { clearInterval(pgAutoTimer); pgAutoTimer = null; $('pgauto').textContent = 'Write 60'; }
     }, 55);
   });
   $('pginput').addEventListener('input', renderPlayground);
@@ -523,11 +619,11 @@
     // state (worker a2Init) and every reader/cache that reflected its output.
     Object.keys(voteRows).forEach(k => delete voteRows[k]);
     $('votebars').innerHTML = ''; $('chainpeek').innerHTML = '';
-    $('votebtn').disabled = true; $('votebtn').textContent = 'Try 1, 2, 4 and 8 attempts ▸';
-    $('votestatus').textContent = 'Train the models in §2.1 first.';
+    $('votebtn').disabled = true; $('votebtn').textContent = 'Run 1, 2, 4, and 8 attempts';
+    $('votestatus').textContent = 'Train both models first.';
     starBase = null; starRounds.length = 0; $('starbars').innerHTML = '';
-    $('starbtn').disabled = true; $('starbtn').textContent = 'Self-improvement round 1 ▸';
-    $('starstatus').textContent = 'Train the models in §2.1 first. Each round: ~120 self-posed problems, sampled three times, then fine-tuned on verifier-certified correct chains.';
+    $('starbtn').disabled = true; $('starbtn').textContent = 'Fine-tune on accepted examples';
+    $('starstatus').textContent = 'Train both models first. Each round uses externally generated problems, checks sampled chains and known answers, then fine-tunes on accepted text.';
     $('midacc').textContent = '—';
     ['pbarD', 'pbarS'].forEach(id => { $(id).style.width = '0%'; });
     ['stepD', 'stepS', 'lossD', 'lossS'].forEach(id => { $(id).textContent = '—'; });
@@ -550,8 +646,8 @@
 
   on('a2.phase', (m) => {
     if (m.phase === 'mid') {
-      $('a2trainbtn').innerHTML = '<span class="spin"></span> preparing §2.3\'s half-trained model…';
-      $('a2status').textContent = 'One more small model: a deliberately half-trained reasoner for the sections below (about 20 seconds)…';
+      $('a2trainbtn').innerHTML = '<span class="spin"></span> Preparing the follow-up model…';
+      $('a2status').textContent = 'Preparing one deliberately under-trained worked-step model for the two follow-up activities (about 20 seconds)…';
       return;
     }
     $('a2trainbtn').innerHTML = `<span class="spin"></span> training Model ${m.phase === 'direct' ? 'D — direct answers' : 'S — shows its work'}…`;
@@ -604,7 +700,7 @@
     a2Done = true;
     $('a2trainbtn').disabled = false;
     $('a2trainbtn').textContent = 'Re-run the experiment';
-    $('a2status').textContent = 'Done. Same brain, same time budget — the only difference was what the training text looked like. Scroll on: their exams are below, and §2.3–2.4 now unlock.';
+    $('a2status').textContent = 'Done. The live exam answers are ready, and both follow-up activities are unlocked. Open Details for the configuration differences and limits of this comparison.';
     $('midacc').textContent = pct(m.midAcc) + ' correct alone';
     $('votebtn').disabled = false;
     $('votestatus').textContent = `Using a sibling of Model S trained only ${fmt(m.midStep)} steps — deliberately mediocre (${pct(m.midAcc)}), so there is room to climb.`;
@@ -648,7 +744,7 @@
   on('a2.vote.done', () => {
     a2Busy = false;
     $('votebtn').disabled = false;
-    $('votebtn').textContent = 'Run again';
+    $('votebtn').textContent = 'Run attempts again';
     $('votestatus').textContent = 'Same frozen model every row — the climb is bought purely with more attempts plus the verifier. This is why "thinking longer" works.';
   });
   function renderChainPeek(ex) {
@@ -697,7 +793,7 @@
     starRounds.push(m);
     renderStarBars();
     $('starbtn').disabled = false;
-    $('starbtn').textContent = `Self-improvement round ${starRounds.length + 1} ▸`;
+    $('starbtn').textContent = `Fine-tune on accepted examples · round ${starRounds.length + 1}`;
     $('starstatus').textContent =
       `Round ${m.round}: kept ${m.kept}/${m.nProblems} of its own attempts and trained on them → ${pct(m.acc)} on the fixed exam. ` +
       (starRounds.length >= 2 ? 'Note it also keeps far more of its own work than when it started — better at the task, so better at generating its own curriculum.' : 'No new human-written data was involved.');
@@ -761,7 +857,7 @@
     }
     const cap = document.createElement('p');
     cap.className = 'note'; cap.style.margin = '0';
-    cap.textContent = 'You are the model. The context above is all you know. Choose the next move:';
+    cap.textContent = 'You choose the actions. Use only the visible context above to pick the next move:';
     wrap.appendChild(cap);
     for (const cand of res.list) {
       const b = document.createElement('button');
