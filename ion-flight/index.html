@@ -1456,7 +1456,12 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
         const token = runtime.runToken;
         byId('instrumentPanel').scrollIntoView({ behavior: 'instant', block: 'start' });
         byId('instrumentPanel').focus({ preventScroll: true });
-        runtime.startMs = performance.now();
+        /* The run clock starts on the first animation frame, not here: a
+           requestAnimationFrame timestamp can precede a performance.now() sampled in
+           the click handler by up to one frame, and a negative elapsed made the
+           model's nonnegative guard throw inside the frame loop, leaving the run
+           stuck in 'running' on roughly half of all clicks. */
+        runtime.startMs = 0;
         byId('runButton').disabled = true;
         byId('replayButton').hidden = true;
         byId('finding').hidden = true;
@@ -1467,6 +1472,7 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
 
         function frame(now) {
           if (token !== runtime.runToken || runtime.phase !== 'running') return;
+          if (!runtime.startMs) runtime.startMs = now;
           runtime.elapsedS = Math.min(
             maximum,
             M.physicalElapsedSeconds(now - runtime.startMs)
