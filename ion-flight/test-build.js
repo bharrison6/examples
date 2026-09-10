@@ -27,6 +27,10 @@ assert.match(index, /const summedDensity = \(result, timeUs\)/, 'advanced traces
 assert.match(index, /Both rows use the same vertical signal scale/);
 assert.match(index, /completed \|\| runtime\.phase === 'running'/, 'predictions must lock during a run');
 assert.match(index, /scrollIntoView\(\{ behavior: 'instant'/, 'Run must reveal the instrument before timing begins');
+assert.match(index, /if \(!runtime\.startMs\) runtime\.startMs = now;/,
+  'the run clock must start from the first animation-frame timestamp');
+assert.doesNotMatch(index, /runtime\.startMs = performance\.now\(\)/,
+  'a click-time performance.now() origin can exceed the first frame timestamp and make the elapsed guard throw');
 assert.match(index, /@media \(max-width: 620px\)[\s\S]*\.instrument-head \{ align-items: flex-start; flex-direction: column; \}/);
 assert.doesNotMatch(index, /mastered|M\.challenges/);
 assert.match(index, /teacher-guide\.html/);
