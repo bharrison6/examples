@@ -386,25 +386,6 @@ LL.App = (function () {
 
     document.getElementById('btn-selftest').addEventListener('click', runSelfTest);
 
-    /* Demo-side override of a frozen-kit defect (relayed from the takeoff
-       lane, 2026-09-16, NOT fixed here — the kit is frozen and a fix lives on
-       a separate branch): the shell's own A6 check-card handler
-       (behaviourScript(), registered before this script runs) hardcodes
-       "Not what the detector showed." as the wrong-answer prefix for every
-       demo, ion-flight wording that makes no sense here (there is no
-       detector in a PLC trainer). Listeners on the same element fire in
-       registration order, so this one — registered after the shell's, inside
-       init() — runs second and can safely post-process what the shell just
-       wrote, rather than fight it. Only that one hardcoded phrase is
-       replaced; the shell's "Supported." correct-answer prefix and the rest
-       of its A6 behaviour (aria-pressed, no score) are untouched. */
-    document.querySelectorAll('.check-option').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var out = btn.closest('.check').querySelector('.check-feedback');
-        if (out) out.innerHTML = out.innerHTML.replace('Not what the detector showed.', 'Not quite.');
-      });
-    });
-
     /* stage + reset, dispatched by the shell */
     document.addEventListener('stagechange', function (e) { onStageChange(e.detail.index); });
     document.addEventListener('lessonreset', resetActivity);
