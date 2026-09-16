@@ -32,6 +32,31 @@
     body > .guide-scope { max-width: none; margin: 0; padding: 0; font-size: 9.8pt; }
     .printbtn { display: none !important; }
   }
+
+  /* ---- rehomed from the injectable block (lesson-shell retrofit) ----
+     The kit refuses @media inside the stylesheet it injects, because
+     that block is evaluated against the app viewport rather than a
+     sheet of paper. These are page chrome and belong here. */
+@media (max-width: 560px) {
+    .guide-scope .tb-row { flex-wrap: wrap; }
+    .guide-scope .tb-cell {
+      flex: 1 1 100%; min-width: 0;
+      border-right: 0; border-bottom: 1px solid #111;
+    }
+    .guide-scope .tb-row:last-child .tb-cell:last-child { border-bottom: 0; }
+    .guide-scope .sheetno { flex: 1 1 100%; text-align: left; }
+    .guide-scope .tb-title .tb-val { font-size: 14pt; }
+    .guide-scope table { display: block; width: 100%; overflow-x: auto; }
+    .guide-scope .foot { display: block; }
+    .guide-scope .foot span { display: block; }
+  }
+
+@media print {
+    .guide-scope .box, .guide-scope table, .guide-scope .titleblock { break-inside: avoid; page-break-inside: avoid; }
+    .guide-scope h2, .guide-scope h3 { break-after: avoid; page-break-after: avoid; }
+    .guide-scope p, .guide-scope li { orphans: 2; widows: 2; }
+    .guide-scope a { color: #000; text-decoration: none; }
+  }
 </style>
 
 <!-- The guide's own typography, every selector scoped to .guide-scope. This is
@@ -150,26 +175,9 @@
      app’s notes overlay, which cannot scroll sideways — so under 560px the
      title block stacks and a wide table scrolls inside its own box instead of
      pushing the document off the screen. */
-  @media (max-width: 560px) {
-    .guide-scope .tb-row { flex-wrap: wrap; }
-    .guide-scope .tb-cell {
-      flex: 1 1 100%; min-width: 0;
-      border-right: 0; border-bottom: 1px solid #111;
-    }
-    .guide-scope .tb-row:last-child .tb-cell:last-child { border-bottom: 0; }
-    .guide-scope .sheetno { flex: 1 1 100%; text-align: left; }
-    .guide-scope .tb-title .tb-val { font-size: 14pt; }
-    .guide-scope table { display: block; width: 100%; overflow-x: auto; }
-    .guide-scope .foot { display: block; }
-    .guide-scope .foot span { display: block; }
-  }
+  
 
-  @media print {
-    .guide-scope .box, .guide-scope table, .guide-scope .titleblock { break-inside: avoid; page-break-inside: avoid; }
-    .guide-scope h2, .guide-scope h3 { break-after: avoid; page-break-after: avoid; }
-    .guide-scope p, .guide-scope li { orphans: 2; widows: 2; }
-    .guide-scope a { color: #000; text-decoration: none; }
-  }
+  
 
   /* ---- added for template part A9 (lesson-shell retrofit) ----
      .goals  the stage Takeaways, verbatim, as goal sentences
@@ -194,9 +202,11 @@
     font-size: 8.2pt; letter-spacing: .08em; text-transform: uppercase;
     color: #555; display: inline-block; margin-right: 6px;
   }
-  @media print {
-    .guide-scope .mis, .guide-scope .say { break-inside: avoid; page-break-inside: avoid; }
-  }
+  /* No @media here: the kit refuses it in the injectable block. The
+     print-avoid hints for these two cards are unconditional instead, which
+     costs nothing on screen — break-inside has no effect outside paged
+     media. */
+  .guide-scope .mis, .guide-scope .say { break-inside: avoid; page-break-inside: avoid; }
 </style>
 </head>
 <body>
