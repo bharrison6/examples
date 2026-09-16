@@ -1460,7 +1460,7 @@ body.presenter .bar-row { margin: 13px 0; }
     has been retired. What was the top score when its own co-author stopped reporting it?&rdquo; Let
     the room guess high: 76.80%, and the reason is not the score.</p>
   <p><b>Activity.</b> Open <b>Software engineering</b> first; it breaks the tidy story. Read
-    OpenAI's own words off the card: 59.4% of the audited failing problems had flawed tests, and
+    OpenAI's own words off the card: 59.4% of a hard 27.6% subset had flawed tests, and
     every frontier model could reproduce the human bug fix from memory. Then <b>ARC-AGI</b>, for the
     generation that changed the unit.</p>
   <p><b>Expected observation.</b> Four routes, and only one is &ldquo;beaten&rdquo;. Rooms assume
@@ -2313,7 +2313,7 @@ const DATA = {
           series: [
             { date: "2023-11-20", label: "Strongest GPT-4-based baseline", value: 39, src: "gpqa-paper", note: "The GPQA paper's own baseline, from its abstract." },
             { date: "2024-05-13", label: "GPT-4o", value: 50.6, src: "openai-o1", extraSrc: ["openai-gpt4o"], note: "GPQA Diamond pass@1 in OpenAI's o1 post table (12 Sep 2024). OpenAI's May 2024 launch chart, labelled plain 'GPQA', shows 53.6 for the same model — two OpenAI figures, two runs, both cited." },
-            { date: "2024-09-12", label: "o1", value: 77.3, src: "openai-o1", note: "pass@1 at the maximal test-time compute setting; evaluation date, not a product release." },
+            { date: "2024-09-12", label: "o1", value: 77.3, src: "openai-o1", note: "pass@1; evaluation date, not a product release." },
             { date: "2025-11-18", label: "Gemini 3 Pro", value: 91.9, src: "gemini-pro-table", note: "No tools; Google's own model table." },
             { date: "2026-02-19", label: "Gemini 3.1 Pro", value: 94.3, src: "gemini-pro-table", note: "No tools; Google's own model table." },
             { date: "2026-09-03", label: "GPT-6 Astra (max)", value: 95.8, src: "epoch-benchmarks", note: "Epoch AI's own run." }
@@ -2384,7 +2384,7 @@ const DATA = {
             { date: "2025-02-24", label: "Claude 3.7 Sonnet — vendor / official", value: 63.7, src: "anthropic-37", extraSrc: ["swebench-site"], note: "Vendor 63.7% on a 489-task subset with its own scaffold; 52.80% on the official board with the harness fixed at mini-SWE-agent." },
             { date: "2025-09-29", label: "Claude Sonnet 4.5 — vendor / official", value: 77.2, src: "anthropic-45", extraSrc: ["swebench-site"], note: "Vendor 77.2%, full 500 tasks, mean of ten trials; 70.60% official bash-only." }
           ],
-          quote: { text: "at least 59.4% of the audited problems have flawed test cases that reject functionally correct submissions … all frontier models we tested were able to reproduce the original, human-written bug fix … This is why we have stopped reporting SWE-bench Verified scores", who: "OpenAI, 23 February 2026", src: "openai-swebench-retire" },
+          quote: { text: "We audited a 27.6% subset of the dataset that models often failed to solve and found that at least 59.4% of the audited problems have flawed test cases that reject functionally correct submissions … all frontier models we tested were able to reproduce the original, human-written bug fix … This is why we have stopped reporting SWE-bench Verified scores", who: "OpenAI, 23 February 2026", src: "openai-swebench-retire" },
           note: "Retired at 76.80% on the official board, with real spread beneath it — the benchmark still discriminated. Its co-author stopped reporting it because the remaining failures measured the tests and the training data, not the model; Artificial Analysis does not carry it and uses Terminal-Bench 4.0 in the software slot instead; and the SWE-bench team's own next evaluations count from-scratch and goal-oriented work a patch benchmark cannot see. The same model scores 6 to 11 points lower on the fixed official harness than with its vendor's own scaffold.",
           src: "openai-swebench-retire", extraSrc: ["swebench-site", "epoch-benchmarks", "aa-evals"]
         },
@@ -2638,7 +2638,7 @@ const DATA = {
       date: "2026-09-08",
       acceptance: "contested",
       ai_role: "verified",
-      what: "OpenAI announced that an internal system of about 10,000 coordinating agents produced, in about 88 hours, a proof that an initially smooth fluid at rest under a smooth applied force can develop a singularity in finite time, with a Lean formalization. OpenAI states this establishes statement (C), and (D), of the official problem. Clay's statement asks for a proof of any one of four statements, and (C) explicitly permits a blowup counterexample with smooth forcing.",
+      what: "OpenAI announced that an internal system of about 10,000 coordinating agents produced a proof, in about 88 hours, that an initially smooth fluid at rest under a smooth applied force can develop a singularity in finite time; a Lean formalization and verification took a further 17 hours. OpenAI states this establishes statement (C), and (D), of the official problem. Clay's statement asks for a proof of any one of four statements, and (C) explicitly permits a blowup counterexample with smooth forcing.",
       machine: "Closed the last identified gap — a cascade construction with a smooth forcing term — inside a proof strategy people had built.",
       human: "Diego Córdoba and Luis Martínez-Zoroa developed the strategy over 2021–2023; Charles Fefferman, who wrote Clay's official problem statement, calls them 'the heroes of the story'. Both AI teams relied heavily on their work.",
       checked: "Lean, for the argument's internal validity — which does not check that the formalized statement is the one mathematicians set out to prove. Not peer-reviewed. Clay's Navier–Stokes page still reads 'Active' with no mention of it (16 September 2026); Clay's rules require publication, two years, and general acceptance, so a prize before 2028 was never possible. OpenAI: 'We do not intend to claim the Millennium Prize for this result.'",
@@ -2668,7 +2668,7 @@ const DATA = {
     { text: "88% of surveyed organisations have adopted AI, and 'AI agent deployment was in the single digits across nearly all business functions'.", src: "hai-economy" },
     { text: "On FrontierMath-Erdős, 68 genuinely unsolved problems, the best model solves 2 of 68.", src: "epoch-benchmarks" },
     { text: "OSWorld 2.0, the harder successor of the desktop-control benchmark whose first version reached its human baseline, tops out at 31.4% binary accuracy (Claude Opus 5, July 2026).", src: "epoch-osworld2" },
-    { text: "The same models that score IMO gold read analog clocks correctly 50.6% of the time, against 90.1% for people.", src: "hai-tech" }
+    { text: "The top model on ClockBench read analog clocks correctly 50.6% of the time, against 90.1% for people.", src: "hai-tech" }
   ],
   HEADLINE: {
     text: "AI capability is not plateauing. It is accelerating and reaching more people than ever.",
