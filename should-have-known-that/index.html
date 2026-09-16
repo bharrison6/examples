@@ -576,6 +576,15 @@ body.has-bottom-bar .bh-credit { display: none; }
 
 :root { --band-cold: color-mix(in srgb, var(--lite) 45%, white); }
 
+/* The kit's own [hidden]{display:none!important} rule (shell.css) matches the
+   HIDDEN ATTRIBUTE, not a class — this activity's setup/turn/play/done panels
+   are toggled with classList.add('hidden')/remove('hidden') (the pre-kit
+   file's own convention, kept rather than rewritten to attribute toggles), so
+   they need their own class rule or nothing actually hides. Caught by the
+   browser pass: without this, the setup panel, the turn banner and the play
+   panel all rendered stacked and visible at once. */
+.hidden { display: none !important; }
+
 /* .btn is already the kit's primary (gold) look by default; .primary here is
    a no-op marker kept for readability in the markup. .big is this activity's
    own larger touch-target variant, same pattern two-winters uses. */
@@ -2385,7 +2394,7 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
     /* A4 observation cue — the one-line "what just happened", within one
        screen of the LOCK IT IN control that caused it. */
     $('cue-' + suffix).textContent = BANDS[result.band].label + ' — ' + result.offBy +
-      (q.qualifier ? ' (this one is a ' + (q.qualifier.split(';')[0]) + ')' : '');
+      (q.qualifier ? ' (qualifier: ' + (q.qualifier.split(';')[0]) + ')' : '');
 
     /* A2 echo — the captured prediction shown beside the observed result. */
     const echo = $('echo-' + suffix);

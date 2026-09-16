@@ -343,7 +343,7 @@
     /* A4 observation cue — the one-line "what just happened", within one
        screen of the LOCK IT IN control that caused it. */
     $('cue-' + suffix).textContent = BANDS[result.band].label + ' — ' + result.offBy +
-      (q.qualifier ? ' (this one is a ' + (q.qualifier.split(';')[0]) + ')' : '');
+      (q.qualifier ? ' (qualifier: ' + (q.qualifier.split(';')[0]) + ')' : '');
 
     /* A2 echo — the captured prediction shown beside the observed result. */
     const echo = $('echo-' + suffix);
