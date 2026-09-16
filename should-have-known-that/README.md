@@ -14,10 +14,15 @@ Three stages appear as tabs under the header, each with the question it answers:
    categories and solo/team mode), scored by percent error.
 2. **Log estimates** — the bank's five order-of-magnitude questions (copper resistivity,
    the speed of light, the cardiac-fibrillation current, static-shock voltage, AA
-   battery energy), scored by decades off instead of percent, because a percent-error
-   scale is meaningless once guesses can span factors of ten.
+   battery energy), on a log-scale slider scored by decades off instead of percent. The
+   reason is slider resolution, not scoring: copper's 1.7×10⁻⁸ Ω·m on a linear track from
+   10⁻¹⁰ to 10⁻⁴ would sit at step 0 of 1,000, so a learner could not even express the
+   right answer.
 3. **Debrief** — final scores, the sharpest and "should have known that" guesses of the
-   whole game, and a linear-vs-log comparison computed live from that session's answers.
+   whole game, and a linear-vs-log comparison computed live from that session's answers,
+   alongside its control: what a randomly placed slider would have averaged on the exact
+   questions played (scored over all 1,001 positions of each), so a gap between the two
+   averages is read as knowledge rather than as one deck being scored more gently.
 
 Stage 2 unlocks once stage 1's deck is fully answered, and stage 3 once stage 2's is —
 the tabs stay visible throughout so the whole route is always in view. Each stage
@@ -42,15 +47,31 @@ guide. `build.js` injects the body and stylesheet of `src/demo-guide.html` into
 ## Accuracy: every taught value is re-sourced
 
 This retrofit re-checked all 40 values against a primary or primary-adjacent source
-this session (not memory), gave each one a resolvable link, and added an on-screen
-**qualifier** to the 17 that are really a range, a specified minimum, or a
-code/edition-dependent figure rather than a single fact — a bare number would otherwise
-teach false precision even when the number itself is right. The highest-stakes example:
-item 23's "100 mA" cardiac-fibrillation figure now carries "a rule-of-thumb anchor on a
-current×duration×path curve; sustained exposure carries meaningful risk from as low as
-~30 mA," and stage 2's Check-yourself item is built directly around not misreading that
-number as a safety line. Full per-item sourcing lives in `src/data.js` (the `qualifier`
-and `source` fields) and is rendered live into each stage's Details drawer.
+(not memory), gave each one a link that actually contains the number, and added an
+on-screen **qualifier** to 23 of the 40 that are really a typical value, a range, a
+specified minimum, or a code/edition-dependent figure rather than a single fact — a bare
+number would otherwise teach false precision even when the number itself is right. The
+highest-stakes example: item 23's "100 mA" cardiac-fibrillation figure carries "a
+rule-of-thumb anchor on a current-duration-path curve; sustained exposure carries
+meaningful risk from as low as ~30 mA," and stage 2's Check-yourself item is built
+directly around not misreading that number as a safety line.
+
+Scoring respects those ranges: where an item's own qualifier or reveal text names a
+sourced range, the item carries a `band: [lo, hi]` and a guess anywhere inside it scores
+Bullseye, with guesses outside it measured from the nearer edge — so 30 mA on item 23,
+or 3,000 psi on the concrete item whose reveal says "sidewalks run ~3,000 psi", are no
+longer penalised for being the more careful answer. The reveal still shows the single
+anchor value; only the score changes, and 11 of the 40 are scored against a range this
+way. The 29 single-valued items score exactly as before.
+
+The qualifier and band counts are derived from `src/data.js` at build time and injected
+into the Details drawer; `node build.js` (and `--check`) refuses to run if this README,
+`demo.json` or the guide states a different number. Full per-item sourcing lives in
+`src/data.js` (the `qualifier`, `band` and `source` fields, with the fetch date of every
+URL) and is rendered live into each stage's Details drawer. Citations that refused
+automated readers or failed TLS during the 2026-09-16 correction pass (osha.gov,
+ResearchGate, eng-tips, Whirlpool, a Mongolian mirror of ICAO Doc 7488) were replaced
+with reachable pages that carry the same number, or with an exact derivation.
 
 ## Build
 
@@ -67,10 +88,14 @@ node tools/pdf.mjs      # re-render teacher-guide.pdf from src/demo-guide.html
 ## Editing the question bank
 
 The bank lives in `src/data.js` — each entry carries `id`, `category`, `prompt`,
-`units`, `value`, `min`/`max`, `scale` (`"linear"`/`"log"`), `factoid`, and now an
-optional `qualifier` plus a `source` object (`name`, `url`, `fetched`). Edit
-`src/data.js`, then run `node build.js`. New categories appear on the start screen and
-get a color automatically. Band thresholds live in the `SCORING` object in `src/app.js`.
+`units`, `value`, `min`/`max`, `scale` (`"linear"`/`"log"`), `factoid`, an optional
+`qualifier`, an optional `band: [lo, hi]` (only where a sourced range for the same
+quantity already appears in the item's text), and a `source` object (`name`, `url`,
+`fetched`, optional `also: [{name, url}]` for a second citation). Edit `src/data.js`,
+then run `node build.js`; if you change how many items carry a qualifier or a band,
+the build tells you which prose surfaces to update. New categories appear on the start
+screen and get a color automatically. Band thresholds live in the `SCORING` object in
+`src/app.js`.
 
 ## Theme
 
