@@ -218,6 +218,85 @@ const CHECKS = Object.freeze([
             'over by assigning a non-null window.lessonShell.onReset). Without one, every answer and ' +
             'every node the activity generated survives a Reset. See ADOPTING.md.'];
   }],
+  /* 10. The A2 phone intro disclosure is present AND has not been made to hide
+     the wrong thing. Three separate properties, reported under one name:
+
+       a) the built file carries the shell's disclosure at all. It is created
+          at RUNTIME by behaviourScript() (partials.html is a reference sheet,
+          not an injected file), so the evidence is in the injected script, not
+          in the markup — which is also why a demo cannot opt out of it.
+       b) it is a NATIVE <details>/<summary>. That is where Enter/Space, the
+          disclosure role and the expanded state come from; a div with a click
+          handler gives a learner on a screen reader nothing.
+       c) NOTHING IN THE neverCollapse LIST IS HIDDEN AT PHONE WIDTH. A
+          collapsible intro that takes the stage question with it defeats its
+          own purpose: the question is the one line that orients, and the whole
+          ruling is about reaching the activity without losing the plot. The
+          scan is scoped to `max-width: 480px` blocks, because the
+          landscape-short block legitimately hides other intro parts. */
+  ['A2 phone intro disclosure', html => {
+    const out = [];
+    const d = shell.INTRO_DISCLOSURE;
+    const scripts = (html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || []).join('\n');
+    if (!scripts.includes(d.className)) {
+      out.push(`no "${d.className}" disclosure in the injected shell script — this file was built ` +
+               'against a shell with no collapsible phone intro (operator ruling 2026-09-16); rebuild');
+    }
+    if (!/createElement\(\s*['"]summary['"]\s*\)/.test(scripts)) {
+      out.push('the intro disclosure is not a native <summary> — keyboard operation and the ' +
+               'expanded state would have to be reimplemented, and a screen reader would get nothing');
+    }
+    /* Scoped scan: only the phone blocks. */
+    const phoneBlocks = [];
+    const re = new RegExp('@media[^{]*max-width:\\s*' + d.breakpointPx + 'px[^{]*\\{', 'g');
+    let m;
+    while ((m = re.exec(html))) {
+      /* Walk braces from the block's opening brace so a nested rule cannot cut
+         the block short. */
+      let depth = 1, i = m.index + m[0].length;
+      for (; i < html.length && depth > 0; i += 1) {
+        if (html[i] === '{') depth += 1;
+        else if (html[i] === '}') depth -= 1;
+      }
+      phoneBlocks.push(html.slice(m.index, i));
+    }
+    const phoneCss = phoneBlocks.join('\n');
+    d.neverCollapse.forEach(sel => {
+      const hide = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+        '[^{}]*\\{[^{}]*display\\s*:\\s*none', 'i');
+      if (hide.test(phoneCss)) {
+        out.push(`"${sel}" is hidden at phone width — the collapsible intro must keep it visible; ` +
+                 'collapsing the line that orients the learner defeats the ruling it implements');
+      }
+    });
+    return out;
+  }],
+  /* 11. The shared A6 handler must be DEMO-NEUTRAL. v2 hardcoded one demo's
+     wrong-answer sentence into the shell and shipped it to all eight built
+     demos, so a learner met "Not what the detector showed." in check cards
+     about PLC ladder logic, AI winters and wavelet compression. It survived
+     two pilots and four builds because nothing looked for it. Two properties:
+       a) no sentence from LEAKED_A6 appears in the injected script;
+       b) the handler actually reads a per-card lead, so a demo CAN supply its
+          own wording — without that, neutrality is just a different demo's
+          sentence winning. */
+  ['A6 feedback vocabulary', html => {
+    const out = [];
+    if (!html.includes('check-option')) return out;
+    const scripts = (html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || []).join('\n');
+    shell.LEAKED_A6.forEach(s => {
+      if (scripts.includes(s)) {
+        out.push(`the shared A6 handler hardcodes a demo-specific sentence: "${s}". Take the lead ` +
+                 "from the card's own data-correct-lead / data-wrong-lead instead — every demo " +
+                 'built on this shell renders it, whatever its subject.');
+      }
+    });
+    if (!/dataset\.wrongLead/.test(scripts)) {
+      out.push('the shared A6 handler reads no per-card wrong-answer lead (data-wrong-lead), so a ' +
+               'demo cannot supply its own wording and the kit picks the sentence for all of them');
+    }
+    return out;
+  }],
   ['unique ids', html => {
     const seen = new Map();
     const dupes = [];
@@ -258,10 +337,20 @@ function selfTest() {
     '</section></div>\n<form method="dialog" class="lesson-dialog-actions"><button>Back to activity</button></form>',
     '<button id="reset-btn">Reset</button>',
     `<div class="bh-credit">${PILL_TEXT}</div>`,
+    /* A phone block, the shape shell.css really has: it reveals the intro
+       summary and hides the header icon labels. Bait below adds a rule hiding
+       the stage question to it; a must-accept case below leaves it as is. */
+    '<style>@media (max-width: 480px){ .intro-more > summary { display: flex; }',
+    ' .icon-label { display: none; } }</style>',
     /* The shell's dispatch AND a demo listener, which is the real shape of a
        built page. The dispatch alone is bait below, not baseline. */
     '<script>document.dispatchEvent(new CustomEvent(\'lessonreset\'));',
-    'document.addEventListener(\'lessonreset\', () => {});</script>',
+    'document.addEventListener(\'lessonreset\', () => {});',
+    /* The v3 shell shapes the two new checks read: the runtime-built intro
+       disclosure, and an A6 lead taken from the card rather than the kit. */
+    'const d = document.createElement(\'details\'); d.className = \'intro-more\';',
+    'const sum = document.createElement(\'summary\');',
+    'const lead = card.dataset.wrongLead || \'Not quite.\';</script>',
     '</body></html>'
   ].join('');
   const baseline = checkHtml(good);
@@ -308,6 +397,34 @@ function selfTest() {
        baseline-shaped page that must produce NO failure (see below). */
     ['unique ids', 'defined more than once',
       good.replace('<button id="reset-btn">Reset</button>', '<button id="reset-btn">Reset</button><i id="reset-btn"></i>')],
+    /* --- v3 bait: the A2 phone intro disclosure, three properties --------- */
+    /* (a) built against a shell with no disclosure at all — the stale-build
+       case the whole ruling depends on catching. */
+    ['A2 phone intro disclosure', 'was built against a shell with no collapsible phone intro',
+      good.replace("d.className = 'intro-more';", "d.className = 'intro-block';")],
+    /* (b) a div-with-a-click-handler instead of the native element: it looks
+       identical in a screenshot and gives a screen-reader user nothing. */
+    ['A2 phone intro disclosure', 'not a native <summary>',
+      good.replace("document.createElement('summary')", "document.createElement('div')")],
+    /* (c) THE ONE THE RULING IS ABOUT: a collapsed intro that takes the stage
+       question with it. The question is the line that orients; hiding it to
+       win height defeats the purpose of collapsing at all. */
+    ['A2 phone intro disclosure', 'is hidden at phone width',
+      good.replace('.icon-label { display: none; }',
+        '.icon-label { display: none; } .stage-question { display: none; }')],
+    /* --- v3 bait: the A6 wording leak ------------------------------------ */
+    /* The exact defect v2 shipped to all eight demos: one demo's sentence,
+       hardcoded in the SHARED handler. */
+    ['A6 feedback vocabulary', 'hardcodes a demo-specific sentence',
+      good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
+        "const lead = '<b>Not what the detector showed.</b> ';")],
+    /* And the other half: a handler that hardcodes nothing but also offers no
+       way for a demo to supply its own lead is not neutral, it has just picked
+       a different demo's sentence to impose. Feedback supplied, hardcoded
+       string gone, per-card lead still missing — must trip. */
+    ['A6 feedback vocabulary', 'reads no per-card wrong-answer lead',
+      good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
+        "const lead = 'Not quite.'; const body = btn.dataset.feedback;")],
     /* Check 9's stripping control: the SAME duplicate, spelled inside a
        <script>, must NOT trip it — otherwise the check is reading JS strings
        as markup and would red every demo that builds HTML at runtime. Asserted
@@ -327,7 +444,18 @@ function selfTest() {
       good.replace("document.addEventListener('lessonreset', () => {});",
         'window.lessonShell.onReset = () => { rewind(); return false; };')],
     ['unique ids', 'the same duplicate id spelled inside a <script> string',
-      good.replace('</body>', '<script>var s = \'<i id="reset-btn"></i>\';</script></body>')]
+      good.replace('</body>', '<script>var s = \'<i id="reset-btn"></i>\';</script></body>')],
+    /* The neverCollapse scan must read ONLY the phone blocks, and must not
+       simply fire on any display:none inside one. `.icon-label` hidden at
+       <=480 is real, shipped, correct shell.css — if this trips, the check is
+       matching the media query rather than the selector. */
+    ['A2 phone intro disclosure', 'a phone block hiding .icon-label, which is correct and shipped', good],
+    /* And the scoping control: the landscape-short block genuinely hides intro
+       parts a phone-portrait block may not. A whole-file scan would red every
+       demo on shipped CSS. */
+    ['A2 phone intro disclosure', 'the landscape-short block hiding intro parts outside the phone block',
+      good.replace('</head>', '<style>@media (orientation: landscape) and (max-height: 560px)' +
+        '{ .stage-question { display: none } }</style></head>')]
   ];
   for (const [name, what, html] of quiet) {
     const noisy = checkHtml(html).filter(f => f.startsWith(name + ':'));

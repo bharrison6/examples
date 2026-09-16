@@ -102,8 +102,27 @@ const crypto = require('node:crypto');
    `lessonreset` event it dispatches is a required part of every demo. The css
    hash is UNCHANGED by that edit, because the change is entirely in
    behaviourScript(), which is exactly the case this version number exists to
-   catch. */
-const VERSION = '2';
+   catch.
+
+   v3 (2026-09-16): the batched unfreeze. Six changes:
+     1. `window.lessonShell.resetting` is exposed — ADOPTING.md §4 promised it
+        and the kit did not provide it.
+     2. `.lesson-strip .echo` no longer inherits the card label's uppercase, so
+        a captured prediction stops rendering as SHOUTING.
+     3. THE A2 STAGE INTRO IS COLLAPSIBLE AT PHONE WIDTH (operator ruling,
+        2026-09-16). See the intro-disclosure section of behaviourScript().
+     4. The `stagechange`-before-`lessonreset` ordering is DELIBERATELY KEPT;
+        (1) is the fix for it. Rationale in the Reset comment below.
+     5. ADOPTING.md gains the navy-vs-light panel convention.
+     6. The shared A6 check-card handler no longer hardcodes one demo's
+        wrong-answer sentence. It reads the lead from the card's own
+        data-correct-lead / data-wrong-lead, defaulting to demo-neutral words.
+        v2 shipped ion-flight's "Not what the detector showed." into all eight
+        built demos, so every learner met a sentence about a mass-spectrometer
+        detector in check cards that had nothing to do with detectors.
+   The css hash DOES change this time (2 and 3 both touch shell.css), which is
+   what forces the fleet rebuild. That is intended. */
+const VERSION = '3';
 
 const DIR = __dirname;
 const read = file => fs.readFileSync(path.join(DIR, file), 'utf8');
@@ -160,6 +179,52 @@ const KICKERS = Object.freeze([
   'k-live', 'k-measured', 'k-sourced', 'k-reasoned', 'k-scripted', 'k-illustrative'
 ]);
 const QUALIFIER_CLASS = 'k-qual';
+
+/* A2 PHONE INTRO DISCLOSURE (v3, operator ruling 2026-09-16).
+
+   The class the shell gives the <details> it builds around the lesson strip,
+   and the label its <summary> carries. check-shell.js greps a built file for
+   these, which is how a demo built against a shell that lacks the disclosure
+   goes red rather than silently shipping a 2,000px intro.
+
+   WHY THE SHELL BUILDS IT AT RUNTIME RATHER THAN partials.html SHIPPING IT:
+   partials.html is a REFERENCE SHEET, not an injected file — a demo's markup
+   lives in its own src/template.html. Putting the <details> in partials.html
+   would collapse the intro only for demos adopted AFTER this change, and would
+   need eight already-merged demos to be hand-edited to catch up. Building it
+   in behaviourScript() means every demo inherits it from the rebuild the stamp
+   already forces, with no demo-side markup change at all. It is also the
+   honest progressive-enhancement story: no script, no wrapper, intro fully
+   expanded exactly as v2 rendered it. */
+const INTRO_DISCLOSURE = Object.freeze({
+  className: 'intro-more',
+  /* The ONLY thing that goes behind the toggle in the DOM. The prerequisite
+     refresh is hidden by a CSS :has() rule instead of being moved, so that the
+     desktop grid keeps byte-identical geometry. The eyebrow, the h2 stage
+     title and the stage question are never collapsible — see NEVER_COLLAPSE. */
+  moves: Object.freeze(['.lesson-strip']),
+  /* Parts a PHONE-WIDTH rule may never hide. check-shell.js fails a built
+     stylesheet that hides any of these inside a `max-width: 480px` block.
+
+     Scoped to the phone block on purpose: the pre-existing landscape-short
+     block legitimately hides `.stage-intro h2` (a phone on its side on a
+     projector table has no height to spare), so a whole-file scan would trip
+     on correct, shipped CSS. The h2 is protected structurally instead — the
+     shell moves ONLY `.lesson-strip`, and .stage-intro is aria-labelledby the
+     h2, so hiding it at phone width would strip the region's accessible
+     name. */
+  neverCollapse: Object.freeze(['.stage-question']),
+  summaryLabel: 'Before you start · Predict · Try · Takeaway',
+  breakpointPx: 480
+});
+
+/* A6 wrong-answer/right-answer leads. DEMO-NEUTRAL by construction: a demo
+   that wants its own framing sets data-correct-lead / data-wrong-lead on the
+   .check card. v2 baked ion-flight's "Not what the detector showed." into the
+   shared handler and shipped it to all eight built demos. LEAKED_A6 is the
+   blocklist check-shell.js enforces so that cannot recur silently. */
+const A6_LEADS = Object.freeze({ correct: 'Correct.', wrong: 'Not quite.' });
+const LEAKED_A6 = Object.freeze(['Not what the detector showed.']);
 
 function css() {
   return '\n/* ---- lesson-shell/tokens.css ---- */\n' + read('tokens.css') +
@@ -358,16 +423,118 @@ function behaviourScript() {
   }));
   setPresentation(document.body.classList.contains('presenter'));
 
-  /* ---- A6 check cards: feedback for every option, nothing scored -------- */
+  /* ---- A6 check cards: feedback for every option, nothing scored --------
+     THE LEAD COMES FROM THE CARD, NOT FROM THE KIT. v2 hardcoded
+     '<b>Not what the detector showed.</b>' here — ion-flight's wording, in the
+     SHARED handler — and it rendered in all eight built demos, so a learner
+     reading a check card about PLC ladder logic or about AI winters was told
+     what "the detector" showed. The defaults below are demo-neutral; a demo
+     that wants its own framing sets data-correct-lead / data-wrong-lead on the
+     .check card. check-shell.js blocklists the leaked sentence so this cannot
+     regress quietly. The lead is set as TEXT, not markup, because it now comes
+     from an authored attribute. */
   $$('.check').forEach(card => {
     const out = $('.check-feedback', card);
+    const leadFor = btn => (btn.classList.contains('correct')
+      ? (card.dataset.correctLead || ${JSON.stringify(A6_LEADS.correct)})
+      : (card.dataset.wrongLead || ${JSON.stringify(A6_LEADS.wrong)}));
     $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
       $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
       btn.setAttribute('aria-pressed', 'true');
-      if (out) out.innerHTML = (btn.classList.contains('correct') ? '<b>Supported.</b> ' : '<b>Not what the detector showed.</b> ')
-        + (btn.dataset.feedback || '');
+      if (!out) return;
+      out.textContent = '';
+      const strong = document.createElement('b');
+      strong.textContent = leadFor(btn);
+      out.appendChild(strong);
+      /* data-feedback keeps accepting inline markup, as it always has. */
+      out.insertAdjacentHTML('beforeend', ' ' + (btn.dataset.feedback || ''));
     }));
   });
+
+  /* ---- A2 intro disclosure: collapsible stage intro at phone width ------
+     Operator ruling, 2026-09-16: "collapsible intro at phone width."
+
+     THE MEASUREMENT IT ANSWERS. At 320px the full A2 intro (eyebrow, stage
+     title, stage question, "Before you start" refresh, then the three-card
+     Predict/Try/Takeaway strip) runs 726-775px against a 568-578px viewport —
+     the intro alone is more than one whole screen — and it put
+     zero-to-unbeatable's Train button 1979px down and ion-flight's Run button
+     2327px down, i.e. 4.1 screens. Measured on both demos before this change;
+     the cost is a property of the template, not of either demo.
+
+     WHAT COLLAPSES, AND WHAT NEVER DOES. Only the lesson strip is MOVED behind
+     the toggle (it is the expensive part: 232-359px, up to half the intro) and
+     the refresh is hidden by a CSS :has() rule rather than moved, so the
+     desktop grid keeps byte-identical geometry. The eyebrow, the h2 and the
+     stage question always stay visible: the stage question is the one line
+     that orients, and the h2 is the aria-labelledby target of .stage-intro, so
+     hiding it would strip that region's accessible name.
+
+     DEFAULT COLLAPSED ON PHONES. The Guide already opens on load and already
+     carries the orientation (the demo-level question, "where this sits", a
+     step per stage), so a second orientation block between the learner and the
+     activity is redundant rather than safer. Collapsed is not unoriented — the
+     question is still on screen.
+
+     NATIVE <details>, so Enter/Space, the disclosure role and the expanded
+     state all come from the user agent rather than from an aria-expanded
+     reimplementation.
+
+     DESKTOP AND THE PROJECTOR ARE UNTOUCHED: shell.css hides the summary above
+     480px and under body.presenter, and the element is forced open in both
+     cases, so there is no toggle chrome and no geometry change. */
+  const introDisclosures = [];
+  $$('.stage-intro').forEach(intro => {
+    const strip = $('.lesson-strip', intro);
+    if (!strip || $('details.${INTRO_DISCLOSURE.className}', intro)) return;
+    const d = document.createElement('details');
+    d.className = ${JSON.stringify(INTRO_DISCLOSURE.className)};
+    d.open = true;
+    const sum = document.createElement('summary');
+    sum.textContent = ${JSON.stringify(INTRO_DISCLOSURE.summaryLabel)};
+    d.appendChild(sum);
+    intro.insertBefore(d, strip);
+    /* MOVED, never cloned: snapshot.echoes holds node references into the
+       strip, and a clone would silently orphan them from Reset. */
+    d.appendChild(strip);
+    introDisclosures.push(d);
+  });
+  const phoneMedia = window.matchMedia
+    ? window.matchMedia('(max-width: ${INTRO_DISCLOSURE.breakpointPx}px)') : null;
+  function introShouldCollapse() {
+    if (!phoneMedia || !phoneMedia.matches) return false;
+    /* Presentation mode is a projector, where width is not the constraint. */
+    return !document.body.classList.contains('presenter');
+  }
+  /* The ONE place the default is decided, so load, a breakpoint change, a
+     presentation-mode toggle and Reset cannot disagree with each other. */
+  function applyIntroCollapse() {
+    const collapse = introShouldCollapse();
+    introDisclosures.forEach(d => { d.open = !collapse; });
+  }
+  if (phoneMedia && phoneMedia.addEventListener) {
+    phoneMedia.addEventListener('change', applyIntroCollapse);
+  }
+  /* A2's prediction echo is written INTO the strip, so feedback that appeared
+     while the strip was collapsed would be invisible — which would break the
+     predict-then-observe loop the strip exists for. Re-open on live content. */
+  if (window.MutationObserver) {
+    introDisclosures.forEach(d => {
+      new MutationObserver(() => {
+        if (d.open) return;
+        if ($$('.echo', d).some(e => !e.hidden && e.textContent.trim() !== '')) d.open = true;
+      }).observe(d, {
+        childList: true, subtree: true, characterData: true,
+        attributes: true, attributeFilter: ['hidden']
+      });
+    });
+  }
+  /* setPresentation() already dispatches presentationchange, so listening is
+     enough and the presentation code above needs no edit. The init call it
+     makes fires before this listener exists, which is what the direct call is
+     for. */
+  document.addEventListener('presentationchange', applyIntroCollapse);
+  applyIntroCollapse();
 
   /* ---- Reset: IN PLACE, no page reload -----------------------------------
      Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
@@ -396,9 +563,31 @@ function behaviourScript() {
           there keeps it.
        6. The A5 Details drawer goes back to showing stage 1, with its
           subtitle restored.
+      6b. The A2 intro disclosure returns to its default for the CURRENT width
+          (v3) — recomputed, never restored from the load-time snapshot, so a
+          rotation between load and Reset cannot leave it half-open.
        7. selectStage(0) — stage 1, which also fires 'stagechange'.
        8. The page scrolls to the top.
        9. 'lessonreset' is dispatched on document.
+
+     THE ORDER OF 7 AND 9 IS DELIBERATE, AND v3 KEPT IT. The stagechange at
+     step 7 fires BEFORE lessonreset at step 9, so a stagechange handler that
+     renders activity state paints the PRE-reset state into freshly reset
+     chrome (missing-time hit exactly this). v3 fixes that with the
+     'resetting' flag rather than by reordering, for three reasons:
+       * this file and ADOPTING.md both GUARANTEE in writing that lessonreset
+         fires last, "so the demo has the final word over any node the two both
+         touch". Eight merged demos are written against that guarantee and five
+         more builder lanes are in flight; reordering invalidates all of them
+         silently.
+       * reordering swaps a known hazard for a new one — the demo's lessonreset
+         handler would then run before step 3 restored the tab chrome, so any
+         handler reading tab state would read the post-session gates.
+       * what-the-survey-missed established the hazard is inapplicable to
+         render-only-from-actions designs; it bites the move-the-instrument
+         pattern ion-flight and missing-time use. The flag fixes precisely that
+         pattern WITHOUT changing any event order, so those demos keep working
+         unmodified.
 
      WHAT THE SHELL DOES NOT TOUCH, deliberately:
        * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
@@ -425,6 +614,32 @@ function behaviourScript() {
      check-shell.js fails a built file that carries no handler, with a negative
      control proving it is not merely matching the dispatch below. */
   function resetLesson() {
+    /* v3: the flag ADOPTING.md §4 has promised since v2. True from BEFORE the
+       onReset veto until AFTER 'lessonreset' has been dispatched, so a
+       stagechange handler that genuinely has to paint can skip the one
+       stagechange step 7 fires mid-reset:
+
+           document.addEventListener('stagechange', e => {
+             if (window.lessonShell.resetting) return;   // chrome only, mid-reset
+             render(e.detail.index);
+           });
+
+       DO NOT write that guard into your 'lessonreset' handler. The flag is
+       still true while 'lessonreset' runs, by design — your handler restores
+       state and re-renders by calling your own render directly, which the
+       guard above does not touch. Guarding lessonreset would suppress the very
+       render the reset exists to perform.
+
+       try/finally, so the veto path and any throw inside a listener both leave
+       the flag false rather than wedging every later stagechange. */
+    window.lessonShell.resetting = true;
+    try {
+      return runReset();
+    } finally {
+      window.lessonShell.resetting = false;
+    }
+  }
+  function runReset() {
     if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
     $$('dialog').forEach(d => {
       if (!d.open) return;
@@ -449,6 +664,12 @@ function behaviourScript() {
     $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
     const sub = $('#details-subtitle');
     if (sub) sub.textContent = snapshot.detailsSubtitle;
+    /* 6b. The A2 intro disclosure goes back to ITS DEFAULT FOR THE CURRENT
+       WIDTH, recomputed rather than restored from the first-load snapshot.
+       Deliberate: if the phone was rotated since load, the snapshotted state is
+       the wrong answer, and restoring it is exactly how a reset leaves an
+       intro half-open. Recomputing cannot: applyIntroCollapse() is total. */
+    applyIntroCollapse();
     selectStage(0);
     try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
     document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
@@ -465,7 +686,12 @@ function behaviourScript() {
     if (cta) cta.focus();
   }
 
-  window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
+  /* 'resetting' is a live flag, false except inside resetLesson(). See the
+     comment there for the guard pattern it exists for, and for the one place
+     you must NOT use it. */
+  window.lessonShell = {
+    selectStage, setPresentation, reset: resetLesson, flags, onReset: null, resetting: false
+  };
 })();
 `;
 }
@@ -477,6 +703,9 @@ module.exports = {
   REQUIRED_TOKENS,
   REQUIRED_CLASSES,
   KICKERS,
+  INTRO_DISCLOSURE,
+  A6_LEADS,
+  LEAKED_A6,
   css,
   cssHash,
   stamp,
