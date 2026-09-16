@@ -175,10 +175,27 @@ ok('At least one cell is honestly labelled as reasoning',
 ok('Every confidence label used has a definition the reader can see',
    E.cells(D).every(({ c }) => !!D.CONF_LABEL[c.conf]));
 
-ok('The uneven row is labelled unconfirmed, not verified',
-   D.UNEVEN.conf === 'unconfirmed', D.UNEVEN.conf);
-ok('The uneven row explains why a search cannot prove a non-existence',
-   /cannot establish|whole world|did not find/i.test(D.UNEVEN.note));
+/* 2026-09-16 correction lane: the row is no longer asserted uneven. Gemini Spark
+   (support.google.com/gemini/answer/16596215) filled it, so the panel is verified
+   against that page AND keeps the record of the miss on screen. */
+ok('The formerly uneven row is verified against the product that filled it',
+   D.UNEVEN.conf === 'verified' && D.UNEVEN.src.indexOf('gemini-spark') > -1, D.UNEVEN.conf);
+ok('The formerly uneven row still explains why a search cannot prove a non-existence, and owns the miss',
+   /cannot establish|whole world|did not find/i.test(D.UNEVEN.note) && /wrong/i.test(D.UNEVEN.note));
+ok('The formerly uneven row states what was checked, where and when, not what does not exist',
+   /checked on \d{1,2} [A-Z][a-z]+ \d{4}/.test(D.UNEVEN.body) && !/stays uneven/i.test(D.UNEVEN.head));
+
+/* -------- per-source dates (the SOURCE_NOTE fix) ------------------------- */
+ok('Every source carries the ISO date it was last opened',
+   Object.keys(D.SOURCES).every(id => /^\d{4}-\d{2}-\d{2}$/.test(D.SOURCES[id].checked || '')),
+   Object.keys(D.SOURCES).filter(id => !D.SOURCES[id].checked).join(', '));
+ok('The page date is the OLDEST source date, so no source is dated later than it was opened',
+   Object.keys(D.SOURCES).every(id => D.SOURCES[id].checked >= D.CHECKED_ISO) &&
+   Object.keys(D.SOURCES).some(id => D.SOURCES[id].checked === D.CHECKED_ISO), D.CHECKED_ISO);
+ok('The source note no longer asserts one date for every source unless every source carries it',
+   (Object.keys(D.SOURCES).every(id => D.SOURCES[id].checked === D.CHECKED_ISO)) === /every one was opened on/.test(D.SOURCE_NOTE));
+ok('No learner-facing string asserts that a capability does not exist without a check date (the absence-claim rule)',
+   !/stays uneven|no version of this door|has never existed|turned up no consumer-plan/i.test(JSON.stringify(D)));
 
 ok('The source note discloses that OpenAI pages refuse automated retrieval',
    /403|refuse[sd]? automated/i.test(D.SOURCE_NOTE));
