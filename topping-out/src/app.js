@@ -208,7 +208,7 @@ TO.App = (function () {
             '<div>' +
               '<div class="field"><label>Project</label>' +
                 '<div class="choice" id="ch-project">' +
-                  '<button data-v="tutorial"><b>Tutorial</b><span class="d">Shoe Tree Annex · 10 activities · ~8 turns. Learn the loop and the views.</span></button>' +
+                  '<button data-v="tutorial"><b>Tutorial</b><span class="d">Shoe Tree Annex · 10 activities · /*@fact tutorial-turns*/8–10/*/@fact*/ turns. Learn the loop and the views.</span></button>' +
                   '<button data-v="main"><b>Full game</b><span class="d">Racer Commons — Chestnut Street · 38 activities · 3 storeys. The competitive run.</span></button>' +
                 '</div></div>' +
               '<div class="field"><label>Difficulty (instructor)</label>' +
@@ -264,6 +264,30 @@ TO.App = (function () {
     store('to.leaderboard', []);
     toast('Leaderboard cleared.');
     if (!g) renderSetup();
+  }
+
+  /* A row is a score only if the game that wrote it had finished. Between
+     the lesson-shell retrofit and 2026-09-16 the Stage 4 "Open the debrief"
+     button could reach showDebrief() mid-game, and that wrote
+     {profit: null, finish: "NaN/NaN"} rows and then blocked the real score
+     from ever being recorded. Those rows are dropped on load, once, with a
+     console note rather than an alert: the learner did nothing wrong. */
+  function isScoreRow(e) {
+    return !!e && typeof e.profit === 'number' && isFinite(e.profit) &&
+      typeof e.finish === 'string' && !/NaN|undefined/.test(e.finish) &&
+      typeof e.late === 'number' && isFinite(e.late);
+  }
+  function cleanLeaderboard() {
+    var lb = store('to.leaderboard');
+    if (!Array.isArray(lb)) return;
+    var kept = lb.filter(isScoreRow);
+    if (kept.length === lb.length) return;
+    store('to.leaderboard', kept);
+    if (window.console && console.info) {
+      console.info('[topping-out] dropped ' + (lb.length - kept.length) +
+        ' leaderboard row(s) written by an unfinished game (no profit / NaN finish); ' +
+        kept.length + ' kept.');
+    }
   }
 
   function esc(s) {
@@ -344,12 +368,21 @@ TO.App = (function () {
     var net = g.net;
     var finishWd = g.finished ? g.finishWorkingDay : cpm.projectEnd;
     var lateCal = U.calDays(finishWd) - U.calDays(net.contractWorkingDays);
-    var totalFloat = 0, minFloat = Infinity, critNext = null;
+    /* Float is a property of a chain, not a sum over activities: INSP1, BKF,
+       SOG and SOGC share the same nine days at baseline, and adding them
+       gives 36 days that do not exist. The old readout summed TF over every
+       unfinished activity (135 wd at baseline) and its "lowest non-critical"
+       line took the minimum over ALL activities, critical ones included, so
+       it read 0 for the whole game. This cell now shows the one number that
+       is true and useful: the tightest float among activities that still
+       have some, i.e. the next chain that goes critical if anything slips. */
+    var minFloat = Infinity, tightest = null, offPath = 0, critNext = null;
     g.net.activities.forEach(function (a) {
       if (g.state[a.id].finishDay !== null) return;
       var r = cpm.results[a.id];
-      totalFloat += r.tf;
-      if (r.tf < minFloat) minFloat = r.tf;
+      if (r.tf <= 0) return;
+      offPath++;
+      if (r.tf < minFloat) { minFloat = r.tf; tightest = a.id; }
     });
     for (var i = 0; i < cpm.chain.length; i++) {
       if (g.state[cpm.chain[i]].finishDay === null) { critNext = cpm.chain[i]; break; }
@@ -376,8 +409,9 @@ TO.App = (function () {
         g.cash < 0 ? 'bad' : 'good') : '') +
       cell('Critical path', critNext ? critNext : '—',
         critNext ? esc(g.byId[critNext].name) : 'complete', '', 'grow') +
-      cell('Total float left', totalFloat + ' wd',
-        'lowest non-critical: ' + (isFinite(minFloat) ? minFloat : 0) + ' wd', '', 'opt');
+      cell('Tightest float off the path', tightest ? minFloat + ' wd' : '—',
+        tightest ? esc(tightest) + ' · ' + offPath + ' activit' + (offPath === 1 ? 'y' : 'ies') + ' still carry float'
+                 : 'everything left is critical', '', 'opt');
 
     function cell(lab, val, sub, cls, extra) {
       return '<div class="hud-cell ' + (extra || '') + '">' +
@@ -1114,8 +1148,30 @@ TO.App = (function () {
   /* =================================================================
      DEBRIEF
      ================================================================= */
+  /* Two shapes. Mid-game (Stage 4's "Open the debrief" button, reachable
+     from the first commit) it prints the calls table so far under an
+     in-progress header and WRITES NOTHING — every final figure below
+     (profit, completion date, days against contract) is undefined until
+     Game.finish() has run, and a leaderboard row recorded here would be
+     the null row cleanLeaderboard() exists to remove. At finish it records
+     the score once and prints the full scoresheet. */
   function showDebrief() {
-    var lb = store('to.leaderboard') || [];
+    if (!g.finished) {
+      var contractWeeks = Math.ceil(g.net.contractWorkingDays / 5);
+      document.getElementById('debrief-body').innerHTML =
+        '<h3>Result</h3>' +
+        '<p class="debrief-progress">Week <b>' + g.week + '</b> of a ' + contractWeeks +
+        '-week contract is still open. Final profit, the completion date and the leaderboard row are ' +
+        'recorded when the last activity finishes — <b>the full debrief is available at finish</b>. ' +
+        'The calls so far are below; the roll on each one is already fixed by the seed.</p>' +
+        '<h3>The calls you made</h3>' + callsTable();
+      document.getElementById('debrief-head-sub').textContent =
+        g.teamName + ' · seed ' + g.seed + ' · week ' + g.week + ' in progress';
+      openSheet('debrief-sheet');
+      return;
+    }
+
+    var lb = (store('to.leaderboard') || []).filter(isScoreRow);
     var entryId = g.seed + '|' + g.teamName + '|' + lb.length;
     if (!g._recorded) {
       g._recorded = true;
@@ -1701,6 +1757,7 @@ TO.App = (function () {
     });
 
     setupState.seed = '';
+    cleanLeaderboard();
     renderSetup();
     moveBoardTo(0);
     buildStage(0);

@@ -51,8 +51,11 @@
    guide out of the tree, which will not always be there; run it when the
    guide changes.
 
-     node build.js           writes index.html, teacher-guide.html, appendix.html
+     node build.js           rewrites the measured figures in the prose from
+                             the harness sweep (tools/facts.js), then writes
+                             index.html, teacher-guide.html, appendix.html
      node build.js --check   verifies all three against the canonical build,
+                             that every measured figure matches the engine,
                              and that the PDF is no older than the guide;
                              writes nothing, exits 1 on any drift
 */
@@ -61,6 +64,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const shell = require('../tools/lesson-shell');
 const gc = require('../tools/lesson-shell/guide-contract');
+const facts = require('./tools/facts');
 
 const here = __dirname;
 const S = f => fs.readFileSync(path.join(here, 'src', f), 'utf8');
@@ -166,8 +170,24 @@ function buildHtml() {
 function main(argv) {
   const unknown = argv.filter(a => a !== '--check');
   if (unknown.length) die('Unknown build option: ' + unknown.join(', '));
-  const { html, guideSrc, appendixSrc, guideHtml, control } = buildHtml();
   const checkOnly = argv.includes('--check');
+
+  /* MEASURED FIGURES FIRST. Every number in the prose that comes from the
+     engine — the eight-seed sweep, the deck count, the tutorial's length —
+     is computed by tools/facts.js from the harness's own play() and written
+     into the marked spans of the source surfaces before anything is read.
+     --check reports a span whose value has drifted from the engine instead
+     of rewriting it. See tools/facts.js for why this exists. */
+  const measured = facts.compute().facts;
+  const drifted = facts.apply(measured, !checkOnly);
+  if (checkOnly && drifted.length) {
+    console.error('build parity MISMATCH -- measured figures in the prose no longer match the engine/harness in:');
+    drifted.forEach(f => console.error('  ' + f));
+    console.error('Run: node build.js   (tools/facts.js rewrites the <!--@fact--> spans from the harness sweep)');
+    return 1;
+  }
+
+  const { html, guideSrc, appendixSrc, guideHtml, control } = buildHtml();
 
   if (!checkOnly) {
     fs.writeFileSync(paths.index, html);
@@ -179,6 +199,11 @@ function main(argv) {
     console.log('  presenter notes injected from src/demo-guide.html: ' + words(guideHtml) + ' words (A9 band: <= 2500)');
     console.log('  appendix linked, not injected: ' + words(appendixSrc) + ' words');
     console.log('  runtime-load scan passed, proved on ' + control.controls + ' positive controls');
+    console.log('  measured figures from the harness sweep (' + measured['measured-date'] + '): passive ' +
+      measured['passive-avg'] + ', judgment ' + measured['thoughtful-avg'] + ', wins ' +
+      measured['thoughtful-wins-n'] + ' of ' + measured['seeds-n'] + '; deck ' + measured['calls-main-n'] +
+      ' + ' + measured['calls-tutorial-n'] + ' calls' +
+      (drifted.length ? '; rewrote ' + drifted.join(', ') : '; prose already current'));
     console.log('NOTE: if the session guide changed, re-render the PDF: node tools/pdf.mjs');
     return 0;
   }

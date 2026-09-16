@@ -91,7 +91,7 @@ from the engineer for $3,200 and two days and carry 14%; or over-excavate and ad
 and a day and carry 3%. You find out at `INSP1`, about six weeks later. Not answering is answering —
 the free option is what happens.
 
-Nine calls run through the main project and two through the tutorial: bearing, cold-weather
+<!--@fact calls-main-word-cap-->Sixteen<!--/@fact--> calls run through the main project and <!--@fact calls-tutorial-word-->three<!--/@fact--> through the tutorial, among them bearing, cold-weather
 protection on the wall pour, embed tolerance on the level 3 deck, whether to start rough-in before
 the building is dry, whether to pre-walk the rough-in inspection, and how you intend to run the
 punchlist. Three more are procurement — pre-buy the structural steel, the switchgear and elevator, or
@@ -203,7 +203,7 @@ holds sit in their own hatched block headed *"running on their own — nothing y
   lag on the arrows, the driving path thick and red.
 
 A persistent HUD carries day count, contract date, projected finish against it, cash position,
-the current critical activity and total float remaining. Glossary tooltips sit on every term a
+the current critical activity and the tightest float among the activities still off the path (float is shared along a chain, so the HUD does not sum it). Glossary tooltips sit on every term a
 first-year will not know yet — float, free float, lag, LDs, general conditions, crash, trade
 stacking.
 
@@ -221,13 +221,15 @@ so it is the same for every team and the fairness guarantee is untouched. A team
 ahead that a card still lands on finished work is told exactly that — *no impact, you are ahead of
 this one* — which is a reward rather than a shrug.
 
-Measured across eight seeds: accepting every default averages about **$68,000** and goes negative on
-two of them. A player who reads float, prices the calls by expected cost, orders manpower ahead of
-need and only fights the weather when the exposed work has no float averages about **$205,000** —
-three times as much — and wins on seven of the eight. On the eighth the rolls let the cheap options
-through, which is exactly the seed you want when you have twenty minutes of debrief and a room that
-thinks a good outcome means it was a good call. Four of the eight seeds allow a well-played job to
-finish ahead of the contract date and collect the early bonus.
+Measured by the build across the harness's <!--@fact seeds-n-->eight<!--/@fact--> seeds (`node tools/facts.js`, <!--@fact measured-date-->2026-09-16<!--/@fact-->): accepting every
+default averages **<!--@fact passive-avg-->$2,604<!--/@fact-->** — break-even, near enough — and loses money on <!--@fact passive-neg-n-->three<!--/@fact--> of them. A
+player who reads float, prices the calls by expected cost, orders manpower ahead of need and only
+fights the weather when the exposed work has no float averages **<!--@fact thoughtful-avg-->$114,531<!--/@fact-->** and wins on
+<!--@fact thoughtful-wins-n-->seven<!--/@fact--> of the <!--@fact seeds-n-->eight<!--/@fact-->. On the other <!--@fact thoughtful-loses-n-->one<!--/@fact--> the rolls let the cheap options through, which is exactly
+the seed you want when you have twenty minutes of debrief and a room that thinks a good outcome means
+it was a good call. <!--@fact thoughtful-early-n-cap-->One<!--/@fact--> of the <!--@fact seeds-n-->eight<!--/@fact--> seeds allows a well-played job to finish ahead of the
+contract date and collect the early bonus. Every figure in this paragraph is rewritten by `node build.js`
+from the harness's own sweep; `--check` fails if the prose and the engine disagree.
 
 ## Debrief
 

@@ -1120,6 +1120,7 @@ body.big .fr-tags .f.days { display: none; }
 .calls-table td.bad { color: var(--red); }
 .calls-table td.lucky { color: var(--amber); }
 .call-verdict { font-size: .82rem; line-height: 1.5; margin: 8px 0 0; color: var(--ink-2); }
+.debrief-progress { font-size: .88rem; line-height: 1.5; margin: 0 0 10px; }
 
 
 /* ---------- call detail + the safety flag ---------- */
@@ -2048,7 +2049,9 @@ body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
             contract is reported separately in calendar days. Students who have seen negative float
             in P6 need this said out loud.</li>
           <li>Days are numbered from 0 and finish is exclusive, so EF = ES + duration. Textbook
-            tables numbering days 1&ndash;<i>n</i> read one higher on EF and LF.</li>
+            tables numbering days 1&ndash;<i>n</i> (start day inclusive, EF = ES + duration &minus; 1) read
+            one higher on <b>ES and LS</b>; EF and LF come out identical. A three-day activity at the
+            start is ES 0 / EF 3 here and ES 1 / EF 3 there.</li>
           <li>Cure and inspection holds are modelled as activities rather than lags, so you can see
             them sitting on the critical path.</li>
           <li>Durations are crew-days of work, not fixed calendar durations: they shorten with crews
@@ -2148,7 +2151,7 @@ body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
             team did.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">a hand-authored deck of nine calls with their option prices</span> the calls and the event deck</span>
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">a hand-authored deck of <!--@fact calls-main-n-->16<!--/@fact--> calls with their option prices</span> the calls and the event deck</span>
           <p>Every call, its options, its prices and its exposures are written by hand in
             <code>src/data.js</code>. The deck is fixed; what varies between teams is only which
             options they buy.</p>
@@ -2210,11 +2213,13 @@ body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
             calls table and the cash S-curve are computed from this run&rsquo;s actual decisions.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">from the engine&rsquo;s own CPM, 2026-09-16, one crew per activity, no overtime</span> the do-nothing baseline</span>
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">from the engine&rsquo;s own CPM and the playtest harness, run at build on <!--@fact measured-date-->2026-09-16<!--/@fact-->; one crew per activity, no overtime</span> the do-nothing baseline</span>
           <p>Unimpeded this network runs <b>89 working days against the 134-day contract</b> &mdash;
-            45 working days, 63 calendar days, of cushion. Across eight measured seeds, absorbing
-            everything averages about $185,000 and goes negative on two; playing judgment averages
-            about $351,000.</p>
+            45 working days, 63 calendar days, of cushion. Across the harness&rsquo;s <!--@fact seeds-n-->eight<!--/@fact--> seeds,
+            absorbing everything averages <!--@fact passive-avg-->$2,604<!--/@fact--> &mdash; about break-even &mdash; and loses
+            money on <!--@fact passive-neg-n-->three<!--/@fact-->; playing judgment averages <!--@fact thoughtful-avg-->$114,531<!--/@fact--> and wins on
+            <!--@fact thoughtful-wins-n-->seven<!--/@fact--> of the <!--@fact seeds-n-->eight<!--/@fact-->. The figures are the harness&rsquo;s own output,
+            injected by the build, not typed.</p>
         </div>
         <div class="claim">
           <span class="panel-kicker"><span class="k-reasoned">Reasoned</span> the four verdicts</span>
@@ -2339,7 +2344,7 @@ going to be graded on what you knew, what it cost, and where the float was when 
 <!-- ============================ RUNNING ORDER ============================ -->
 <h2><span class="num">4</span> Seventy-five minute running order</h2>
 
-<p>The tutorial project, <i>Shoe Tree Annex</i>, is 10 activities, runs nine turns and carries two calls of
+<p>The tutorial project, <i>Shoe Tree Annex</i>, is 10 activities, runs <!--@fact tutorial-turns-->8–10<!--/@fact--> turns and carries <!--@fact calls-tutorial-word-->three<!--/@fact--> calls of
 its own. <b>Do not skip it.</b> Teams that meet the interface on the graded run spend six weeks clicking
 instead of thinking, and the debrief gets thin.</p>
 
@@ -2351,7 +2356,7 @@ instead of thinking, and the debrief gets thin.</p>
   <tbody>
     <tr><td class="n">0&ndash;5</td><td>5 min</td><td><b>Setup</b> (Stage 1). Seed code and difficulty on the board; teams enter both and name themselves. Presentation mode up front. Confirm every team reads the same project start date, Mon 7 Sep 2026, before anyone commits a week.</td></tr>
     <tr><td class="n">5&ndash;11</td><td>6 min</td><td><b>CPM at the board.</b> Forward pass, backward pass, total float, on the ten-activity tutorial network &mdash; the hand calculation is in the Appendix, &sect;1. Land one sentence: float is not slack in your day, it is what a specific activity can slip before it moves the finish. Leave free float for the debrief.</td></tr>
-    <tr><td class="n">11&ndash;22</td><td>11 min</td><td><b>Tutorial run</b> &mdash; nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
+    <tr><td class="n">11&ndash;22</td><td>11 min</td><td><b>Tutorial run</b> &mdash; <!--@fact tutorial-turns-->8–10<!--/@fact--> turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
     <tr><td class="n">22&ndash;26</td><td>4 min</td><td><b>Brief the competition.</b> Same seed, same difficulty, score is profit, no undo. Say two things out loud: calls default to the free option, so not answering is answering; and crews take two weeks, so manpower is a forecast.</td></tr>
     <tr><td class="n">26&ndash;59</td><td>33 min</td><td><b>Competitive run</b> (Stages 2&ndash;3). Twenty-four to thirty turns. Roughly half the weeks are one click; the rest carry a call, a weather decision or a crew order. Checkpoint at minute 44 &mdash; teams should be near week 12, and anyone behind should commit the quiet weeks fast.</td></tr>
     <tr><td class="n">59&ndash;63</td><td>4 min</td><td><b>Leaderboard and the do-nothing baseline.</b> Show the spread, then what absorbing everything would have scored on this seed. Worst team against baseline is usually more interesting than first against second.</td></tr>
@@ -2403,8 +2408,8 @@ and no unseeded randomness.</p>
 <p><b>Question.</b> What are you buying when you answer a call?<br>
 <b>Predict prompt.</b> Before choosing: <i>what do you think the free option costs you, in dollars?</i><br>
 <b>Activity.</b> Answer the call on the table &mdash; each option shows its price today and its
-<b>exposure</b>, the probability the deferred consequence fires &mdash; then <b>Commit</b>. Nine calls in
-<i>Racer Commons</i>, two in the tutorial.<br>
+<b>exposure</b>, the probability the deferred consequence fires &mdash; then <b>Commit</b>. <!--@fact calls-main-n-->16<!--/@fact--> calls in
+<i>Racer Commons</i>, <!--@fact calls-tutorial-n-->3<!--/@fact--> in the tutorial.<br>
 <b>Expected observation.</b> Nothing is hidden: the card prints the exposure as a percentage and names the
 activity where the consequence will land. Buying exposure down is buying a smaller bar for the same roll.<br>
 <b>Answer key.</b> Every call defaults to its first option, which is always free and always the most
@@ -6915,7 +6920,7 @@ TO.App = (function () {
             '<div>' +
               '<div class="field"><label>Project</label>' +
                 '<div class="choice" id="ch-project">' +
-                  '<button data-v="tutorial"><b>Tutorial</b><span class="d">Shoe Tree Annex · 10 activities · ~8 turns. Learn the loop and the views.</span></button>' +
+                  '<button data-v="tutorial"><b>Tutorial</b><span class="d">Shoe Tree Annex · 10 activities · /*@fact tutorial-turns*/8–10/*/@fact*/ turns. Learn the loop and the views.</span></button>' +
                   '<button data-v="main"><b>Full game</b><span class="d">Racer Commons — Chestnut Street · 38 activities · 3 storeys. The competitive run.</span></button>' +
                 '</div></div>' +
               '<div class="field"><label>Difficulty (instructor)</label>' +
@@ -6971,6 +6976,30 @@ TO.App = (function () {
     store('to.leaderboard', []);
     toast('Leaderboard cleared.');
     if (!g) renderSetup();
+  }
+
+  /* A row is a score only if the game that wrote it had finished. Between
+     the lesson-shell retrofit and 2026-09-16 the Stage 4 "Open the debrief"
+     button could reach showDebrief() mid-game, and that wrote
+     {profit: null, finish: "NaN/NaN"} rows and then blocked the real score
+     from ever being recorded. Those rows are dropped on load, once, with a
+     console note rather than an alert: the learner did nothing wrong. */
+  function isScoreRow(e) {
+    return !!e && typeof e.profit === 'number' && isFinite(e.profit) &&
+      typeof e.finish === 'string' && !/NaN|undefined/.test(e.finish) &&
+      typeof e.late === 'number' && isFinite(e.late);
+  }
+  function cleanLeaderboard() {
+    var lb = store('to.leaderboard');
+    if (!Array.isArray(lb)) return;
+    var kept = lb.filter(isScoreRow);
+    if (kept.length === lb.length) return;
+    store('to.leaderboard', kept);
+    if (window.console && console.info) {
+      console.info('[topping-out] dropped ' + (lb.length - kept.length) +
+        ' leaderboard row(s) written by an unfinished game (no profit / NaN finish); ' +
+        kept.length + ' kept.');
+    }
   }
 
   function esc(s) {
@@ -7051,12 +7080,21 @@ TO.App = (function () {
     var net = g.net;
     var finishWd = g.finished ? g.finishWorkingDay : cpm.projectEnd;
     var lateCal = U.calDays(finishWd) - U.calDays(net.contractWorkingDays);
-    var totalFloat = 0, minFloat = Infinity, critNext = null;
+    /* Float is a property of a chain, not a sum over activities: INSP1, BKF,
+       SOG and SOGC share the same nine days at baseline, and adding them
+       gives 36 days that do not exist. The old readout summed TF over every
+       unfinished activity (135 wd at baseline) and its "lowest non-critical"
+       line took the minimum over ALL activities, critical ones included, so
+       it read 0 for the whole game. This cell now shows the one number that
+       is true and useful: the tightest float among activities that still
+       have some, i.e. the next chain that goes critical if anything slips. */
+    var minFloat = Infinity, tightest = null, offPath = 0, critNext = null;
     g.net.activities.forEach(function (a) {
       if (g.state[a.id].finishDay !== null) return;
       var r = cpm.results[a.id];
-      totalFloat += r.tf;
-      if (r.tf < minFloat) minFloat = r.tf;
+      if (r.tf <= 0) return;
+      offPath++;
+      if (r.tf < minFloat) { minFloat = r.tf; tightest = a.id; }
     });
     for (var i = 0; i < cpm.chain.length; i++) {
       if (g.state[cpm.chain[i]].finishDay === null) { critNext = cpm.chain[i]; break; }
@@ -7083,8 +7121,9 @@ TO.App = (function () {
         g.cash < 0 ? 'bad' : 'good') : '') +
       cell('Critical path', critNext ? critNext : '—',
         critNext ? esc(g.byId[critNext].name) : 'complete', '', 'grow') +
-      cell('Total float left', totalFloat + ' wd',
-        'lowest non-critical: ' + (isFinite(minFloat) ? minFloat : 0) + ' wd', '', 'opt');
+      cell('Tightest float off the path', tightest ? minFloat + ' wd' : '—',
+        tightest ? esc(tightest) + ' · ' + offPath + ' activit' + (offPath === 1 ? 'y' : 'ies') + ' still carry float'
+                 : 'everything left is critical', '', 'opt');
 
     function cell(lab, val, sub, cls, extra) {
       return '<div class="hud-cell ' + (extra || '') + '">' +
@@ -7821,8 +7860,30 @@ TO.App = (function () {
   /* =================================================================
      DEBRIEF
      ================================================================= */
+  /* Two shapes. Mid-game (Stage 4's "Open the debrief" button, reachable
+     from the first commit) it prints the calls table so far under an
+     in-progress header and WRITES NOTHING — every final figure below
+     (profit, completion date, days against contract) is undefined until
+     Game.finish() has run, and a leaderboard row recorded here would be
+     the null row cleanLeaderboard() exists to remove. At finish it records
+     the score once and prints the full scoresheet. */
   function showDebrief() {
-    var lb = store('to.leaderboard') || [];
+    if (!g.finished) {
+      var contractWeeks = Math.ceil(g.net.contractWorkingDays / 5);
+      document.getElementById('debrief-body').innerHTML =
+        '<h3>Result</h3>' +
+        '<p class="debrief-progress">Week <b>' + g.week + '</b> of a ' + contractWeeks +
+        '-week contract is still open. Final profit, the completion date and the leaderboard row are ' +
+        'recorded when the last activity finishes — <b>the full debrief is available at finish</b>. ' +
+        'The calls so far are below; the roll on each one is already fixed by the seed.</p>' +
+        '<h3>The calls you made</h3>' + callsTable();
+      document.getElementById('debrief-head-sub').textContent =
+        g.teamName + ' · seed ' + g.seed + ' · week ' + g.week + ' in progress';
+      openSheet('debrief-sheet');
+      return;
+    }
+
+    var lb = (store('to.leaderboard') || []).filter(isScoreRow);
     var entryId = g.seed + '|' + g.teamName + '|' + lb.length;
     if (!g._recorded) {
       g._recorded = true;
@@ -8408,6 +8469,7 @@ TO.App = (function () {
     });
 
     setupState.seed = '';
+    cleanLeaderboard();
     renderSetup();
     moveBoardTo(0);
     buildStage(0);
