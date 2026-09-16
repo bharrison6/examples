@@ -1,12 +1,21 @@
 /* ============================================================
  * Ladder Lab — app shell (LL.App)
- * Owns: the PLC instance, the deterministic main loop, mode switching,
+ * Owns: the PLC instance, the deterministic main loop, stage switching,
  * program selector, run controls, teacher features, and all bus wiring.
  *
  * Determinism: scans advance simulated time by plc.scanMs per scan.
  * Wall clock (performance.now) is used ONLY to pace how many scans run
  * per animation frame — never inside logic. Order per tick (per SPEC):
  *   LL.Sim.prePlcTick(plc) -> plc.scan() -> LL.Sim.postPlcTick(plc, scanMs)
+ *
+ * KIT ADOPTION (lesson-shell v2): the four former mode tabs (Trainer /
+ * Editor / Challenges / Troubleshoot) are now the shell's four stages.
+ * `stage` (0-3) replaces the old `mode` string throughout. This file no
+ * longer owns navigation, dialogs, presentation-mode toggling or Reset —
+ * those are the shell's (see ../tools/lesson-shell/ADOPTING.md). It reacts
+ * to the shell's two events: `stagechange` (onStageChange, below) and
+ * `lessonreset` (resetActivity, below — REQUIRED, not optional: the shell
+ * restores only what it owns and cannot know what this engine holds).
  * ============================================================ */
 window.LL = window.LL || {};
 LL.App = (function () {
@@ -30,12 +39,13 @@ LL.App = (function () {
   var plc = null;                 // current PLC instance
   var currentProgramId = null;    // id of the loaded program (pristine or fault-patched)
   var faultSourceId = null;       // program id a fault was injected into (for restore)
-  var mode = 'trainer';           // trainer | editor | challenges | troubleshoot
+  var stage = 0;                  // 0 Trainer | 1 Editor | 2 Challenges | 3 Troubleshoot
   var running = true;
   var speed = 1;
   var accMs = 0;
   var lastWall = null;
   var hideLadderPref = false;
+  var watchTouched = false;       // true once the user works the collapse button
 
   var ctx = {
     getPlc: function () { return plc; },
@@ -59,6 +69,12 @@ LL.App = (function () {
     t.classList.add('show');
     if (toastTimer) clearTimeout(toastTimer);
     toastTimer = setTimeout(function () { t.classList.remove('show'); }, ms || 2600);
+  }
+
+  /* ---------- A4 observation cue ---------- */
+  function cue(text) {
+    var el = document.getElementById('cue-engine');
+    if (el) el.textContent = text;
   }
 
   /* ---------- program loading ---------- */
@@ -114,7 +130,7 @@ LL.App = (function () {
       sel.value = prog.variant === 'A' ? prog.id : prog.variantOf;
     } else {
       wrap.classList.remove('show');
-      if (LL.Programs.byId(prog.id)) { sel.value = prog.id; }
+      if (LL.Programs.byId(prog.id)) { sel.value = prog.id; stud.disabled = true; }
       else { stud.disabled = false; sel.value = '__student__'; }
     }
   }
@@ -147,6 +163,7 @@ LL.App = (function () {
     tick();
     refreshReadout();
     toast('Stepped 1 scan → scan #' + plc.scanCount, 1200);
+    cue('Scan #' + plc.scanCount + ' complete — outputs were written from that scan’s image table.');
   }
   function refreshReadout() {
     var el = document.getElementById('scan-readout');
@@ -174,7 +191,7 @@ LL.App = (function () {
     }
     /* renderers run per frame regardless (popovers, paused inspection) */
     if (plc) {
-      if (mode === 'trainer' || mode === 'troubleshoot') LL.Ladder.update();
+      if (stage === 0 || stage === 3) LL.Ladder.update();
       LL.Watch.update();
       LL.Sim.update();
       refreshReadout();
@@ -182,29 +199,42 @@ LL.App = (function () {
     requestAnimationFrame(frame);
   }
 
-  /* ---------- modes ---------- */
-  function setMode(m) {
-    mode = m;
-    document.body.setAttribute('data-mode', m);
-    var tabs = document.querySelectorAll('#mode-tabs button');
-    for (var i = 0; i < tabs.length; i++) tabs[i].classList.toggle('active', tabs[i].getAttribute('data-mode') === m);
-    /* Challenges needs the room for the editor — tuck the watch drawer away,
-       unless the user has explicitly set it themselves. */
-    if (!watchTouched) setWatchCollapsed(m === 'challenges');
-    show('ladder-host', m === 'trainer' || m === 'troubleshoot');
-    show('editor-host', m === 'editor' || m === 'challenges');
-    show('challenge-host', m === 'challenges');
-    show('fault-host', m === 'troubleshoot');
+  /* ---------- stages ----------
+     Reacts to the shell's `stagechange` (window.lessonShell.selectStage /
+     the stage tabs / a #stage-N hash all funnel through it). This function
+     only shows and hides existing containers and toggles which engine-strip
+     controls are visible — it renders NOTHING from program state, which
+     matters because the shell's in-place Reset fires `stagechange` (back to
+     stage 0) BEFORE `lessonreset` (see ADOPTING.md §4 step 7's ordering
+     hazard). A handler that re-rendered activity state here would resurrect
+     pre-reset content into freshly reset chrome, exactly as missing-time's
+     lane found; this one only flips `hidden`/`display`, which is idempotent
+     and safe to run before the state itself is reset. */
+  function onStageChange(i) {
+    stage = i;
+    /* Challenges (2) needs the room the watch drawer takes; every other
+       stage gets it back unless the user explicitly touched the collapse
+       button, exactly as before the retrofit. */
+    if (!watchTouched) setWatchCollapsed(stage === 2);
+    show('ladder-host', stage === 0 || stage === 3);
+    show('editor-host', stage === 1 || stage === 2);
+    show('challenge-host', stage === 2);
+    show('fault-host', stage === 3);
+    /* A3 control budget (plan §D.8): the shared engine-run controls are only
+       primary controls where a learner is directly operating the PLC's
+       timing (Trainer, Troubleshoot). Nothing is deleted — Run/Pause/Step/
+       Reset/Timing are one stage-tab away in every case, and the live
+       intersection + watch window keep running underneath regardless of
+       which stage is selected. */
+    show('engine-strip', stage === 0 || stage === 3);
     applyHideLadder();
-    bus.emit('mode:changed', { mode: m });
-    if (m === 'troubleshoot') toast('Troubleshoot: inject a fault, watch the intersection, diagnose from the ladder.', 3200);
+    if (stage === 3) toast('Troubleshoot: inject a fault, watch the intersection, diagnose from the ladder.', 3200);
   }
   function show(id, v) {
     var el = document.getElementById(id);
     if (el) el.hidden = !v;
   }
   /* ---- watch drawer ---------- */
-  var watchTouched = false;   // true once the user works the collapse button
   function setWatchCollapsed(v) {
     var bp = document.getElementById('bottom-pane');
     var btn = document.getElementById('btn-watch-collapse');
@@ -213,8 +243,11 @@ LL.App = (function () {
     btn.textContent = v ? '▴ Show tags' : '▾ Hide';
   }
 
+  /* Predict-then-reveal (promoted from a buried Settings toggle into the
+     Troubleshoot stage's Predict card — plan §B). Scoped to stage 3: hiding
+     the ladder only makes pedagogical sense while diagnosing a fault. */
   function applyHideLadder() {
-    var active = hideLadderPref && (mode === 'trainer' || mode === 'troubleshoot');
+    var active = hideLadderPref && stage === 3;
     document.body.classList.toggle('hide-ladder', active);
   }
 
@@ -228,7 +261,7 @@ LL.App = (function () {
     if (b) b.classList.remove('show');
   }
 
-  /* ---------- self-test overlay ---------- */
+  /* ---------- self-test dialog ---------- */
   function runSelfTest() {
     var res = LL.Engine.runSelfTests();
     var host = document.getElementById('selftest-body');
@@ -244,7 +277,7 @@ LL.App = (function () {
       row.textContent = (r.pass ? '✓ ' : '✗ ') + r.name + (r.pass || !r.detail ? '' : ' — ' + r.detail);
       host.appendChild(row);
     }
-    document.getElementById('selftest-overlay').hidden = false;
+    document.getElementById('selftest-dialog').showModal();
   }
 
   /* ---------- boot ---------- */
@@ -258,6 +291,9 @@ LL.App = (function () {
     LL.Editor.init(document.getElementById('editor-host'), ctx);
     LL.Challenges.initPanel(document.getElementById('challenge-host'), ctx);
     LL.Faults.initPanel(document.getElementById('fault-host'), ctx);
+    /* faults.js attaches ctx.faultsReset during initPanel — the shared ctx
+       object is the existing inter-module channel (getPlc/bus/bigUI already
+       travel this way), used here rather than a new LL.Faults export. */
 
     /* bus wiring */
     bus.on('editor:run', function (d) {
@@ -265,6 +301,7 @@ LL.App = (function () {
       loadProgram(d.program);
       setRunning(true);
       toast('Your program is now running the intersection.', 2400);
+      cue('Program sent to the live intersection — scan #' + plc.scanCount + ' is now running it.');
     });
     bus.on('challenge:starter', function (d) {
       if (d && d.program && LL.Editor.loadChallengeStarter) {
@@ -278,12 +315,15 @@ LL.App = (function () {
       faultSourceId = d.programId || null;
       setRunning(true);
       hideRestore();
+      cue('Fault injected — watch the intersection, then diagnose before revealing.');
     });
-    bus.on('fault:revealed', function () {
+    bus.on('fault:revealed', function (d) {
       if (faultSourceId) showRestore();
+      var title = (d && d.faultId && LL.Faults.byId(d.faultId) && LL.Faults.byId(d.faultId).title) || 'the fault';
+      cue('Revealed: ' + title + '.');
     });
 
-    /* topbar controls */
+    /* engine strip */
     document.getElementById('program-select').addEventListener('change', function () {
       if (this.value !== '__student__') loadById(this.value);
       else if (plc && plc.program) {
@@ -301,10 +341,6 @@ LL.App = (function () {
       var p = plc && plc.program;
       if (p && p.variant === 'A') loadById(p.variantOf);
     });
-    var tabs = document.querySelectorAll('#mode-tabs button');
-    for (var i = 0; i < tabs.length; i++) {
-      tabs[i].addEventListener('click', function () { setMode(this.getAttribute('data-mode')); });
-    }
     document.getElementById('btn-run').addEventListener('click', function () { setRunning(!running); });
     document.getElementById('btn-step').addEventListener('click', stepOnce);
     document.getElementById('btn-reset').addEventListener('click', function () {
@@ -325,56 +361,34 @@ LL.App = (function () {
       toast('Working (pristine) program restored.', 2000);
     });
 
-    /* settings menu
-       Presentation mode = the projector big-UI scale PLUS the presenter-notes
-       affordance in the top bar. The notes sheet itself stays openable from the
-       menu at any time; body.presentation only surfaces the one-tap button. */
-    function applyBigUI(on, announce) {
-      ctx.bigUI = on;
-      document.body.classList.toggle('bigui', on);
-      document.body.classList.toggle('presentation', on);
-      bus.emit('bigui:changed', { bigUI: on });
-      if (on && announce) toast('Presentation mode on — the presenter notes are in the top bar.', 3000);
-    }
-    document.getElementById('chk-bigui').addEventListener('change', function () {
-      applyBigUI(this.checked, true);
-    });
+    /* Troubleshoot's Predict card: predict-then-reveal, promoted out of
+       Settings (plan §B). */
     document.getElementById('chk-hideladder').addEventListener('change', function () {
       hideLadderPref = this.checked;
       applyHideLadder();
-      if (this.checked) toast('Ladder hidden — have the class predict the logic from the intersection!', 3000);
+      if (this.checked) toast('Ladder hidden — predict the fault from the intersection, then reveal!', 3000);
     });
 
-    /* Settings -> Reset. Fresh-load state, by actually reloading: six stateful
-       modules (engine, sim, editor, challenges, faults, watch) would otherwise
-       each need a hand-written teardown, and one missed field is a demo that
-       looks reset and is not. Two things ride across the reload in the hash,
-       which works on file:// where the storage APIs are not guaranteed to:
-       "do not greet me with the Guide again", and Presentation mode, which is
-       a display preference rather than demo state and so survives Reset the
-       same way it survives a reload. The template's boot script reads the hash
-       and clears it. */
-    document.getElementById('btn-resetall').addEventListener('click', function () {
-      if (confirm('Reset EVERYTHING? This restores the app to its just-opened state.\nUnsaved student programs in the editor will be lost.')) {
-        var marks = ['reset'];
-        if (document.getElementById('chk-bigui').checked) marks.push('pres');
-        location.hash = marks.join(',');
-        location.reload();
-      }
-    });
-    document.getElementById('btn-selftest').addEventListener('click', function () {
-      document.getElementById('teacher-menu').removeAttribute('open');
-      runSelfTest();
-    });
-    document.getElementById('btn-selftest-close').addEventListener('click', function () {
-      document.getElementById('selftest-overlay').hidden = true;
-    });
+    /* React to the shell's own presentation-mode toggle (Settings, or the
+       header Notes button) rather than owning a checkbox — ADOPTING.md §2:
+       "your presentation/projector toggle... listen for presentationchange
+       instead." ctx.bigUI / the 'bigui:changed' bus event / body.bigui are
+       this demo's OWN larger-scale mode for pixel-sized sim/editor/challenge
+       controls (~1.35x) that --u's em-based scaling does not reach — kept
+       exactly as before, just re-triggered by the shell's event instead of a
+       Settings checkbox this demo no longer owns. */
+    function applyBigUI(on) {
+      ctx.bigUI = on;
+      document.body.classList.toggle('bigui', on);
+      bus.emit('bigui:changed', { bigUI: on });
+    }
+    document.addEventListener('presentationchange', function (e) { applyBigUI(!!(e.detail && e.detail.on)); });
 
-    /* close teacher menu when clicking elsewhere */
-    document.addEventListener('pointerdown', function (e) {
-      var men = document.getElementById('teacher-menu');
-      if (men.hasAttribute('open') && !men.contains(e.target)) men.removeAttribute('open');
-    });
+    document.getElementById('btn-selftest').addEventListener('click', runSelfTest);
+
+    /* stage + reset, dispatched by the shell */
+    document.addEventListener('stagechange', function (e) { onStageChange(e.detail.index); });
+    document.addEventListener('lessonreset', resetActivity);
 
     /* watch collapse */
     document.getElementById('btn-watch-collapse').addEventListener('click', function () {
@@ -395,21 +409,84 @@ LL.App = (function () {
        collapsed so the ladder and intersection get the room. */
     if (window.innerHeight < 780) { watchTouched = true; setWatchCollapsed(true); }
 
-    /* Presentation mode carried across a Settings -> Reset (see above). Applied
-       before the first render so every pane is laid out at the projector scale
-       from the start, and silently: the presenter did not just turn it on. */
-    if (window.LL_BOOT && window.LL_BOOT.presentation) {
-      document.getElementById('chk-bigui').checked = true;
-      applyBigUI(true, false);
-    }
-
     /* first load */
     loadProgram(LL.Programs.byId('stoplight_basic'));
-    setMode('trainer');
+    onStageChange(0);
     setRunning(true);
     requestAnimationFrame(frame);
 
     if (/[?&]selftest=1/.test(location.search)) runSelfTest();
+  }
+
+  /* ============================ reset, in place =============================
+     Kit v2. By the time this fires, the shell has already put back everything
+     it owns — stage 1 selected (which already ran onStageChange(0) above,
+     applying the container show/hide, and closed the self-test <dialog> along
+     with its own four). This is the half only this file can know about.
+
+     THE ENUMERATION, written out because in place is only correct if the
+     list is complete (ADOPTING.md §4):
+
+       plc / currentProgramId / faultSourceId — replaced wholesale by
+              loadProgram() on the boot program, which also re-renders the
+              ladder and re-syncs the program selector + A/B toggle.
+       running / accMs / lastWall — set by setRunning(true).
+       speed, #speed-select — both back to 1×.
+       plc.scanMs (via getScanMs()), #scan-select — both back to 20 ms;
+              the select's value is reset BEFORE loadProgram() reads it, so
+              the fresh plc is constructed with the right scanMs directly
+              rather than constructed wrong and patched after.
+       #student-option.disabled — put back to true. syncVariantToggle() only
+              flips it false when a non-built-in program loads; nothing ever
+              flipped it back, which is a pre-existing quirk this reset now
+              has to correct explicitly (a page reload used to hide it).
+       hideLadderPref, #chk-hideladder, body.hide-ladder — all cleared.
+       watchTouched, the watch drawer — un-touched and expanded, the
+              first-load default (stage 0 is not stage 2, so
+              setWatchCollapsed(false) matches what onStageChange(0) would
+              already compute; set explicitly so a user who had pinned it
+              open on Challenges does not carry that choice past a reset).
+       #sel-status — the ladder-inspector readout, cleared.
+       #selftest-body — cleared (the dialog itself the shell already closed).
+       #cue-engine — the A4 observation cue, cleared (:empty hides it).
+       Editor — LL.Editor.setProgram(null): a fresh empty program, undo stack,
+              selection and armed tool all cleared (see editor.js).
+       Challenges — LL.Challenges.reset(): challenge 1 active, no hints
+              shown, no status or check result recorded (added for this kit
+              adoption — see challenges.js).
+       Faults — ctx.faultsReset(): fault abandoned, best-times list cleared,
+              the specific-fault <details> closed (added for this kit
+              adoption — see faults.js).
+       LL.Watch / LL.Ladder's popover — NOT touched directly. Both modules
+              already detect "the plc object changed" and rebuild their own
+              internal state from it (watch.js's `lastPlc` comparison; the
+              ladder inspector re-renders from the new plc on the next
+              frame) — this was true before the retrofit too (Reset always
+              swapped in a fresh plc), so nothing here needs to reproduce it.
+     ========================================================================= */
+  function resetActivity() {
+    document.getElementById('speed-select').value = '1';
+    document.getElementById('scan-select').value = '20';
+    loadProgram(LL.Programs.byId('stoplight_basic'));
+    document.getElementById('student-option').disabled = true;
+    LL.Sim.reset(12345);
+    speed = 1;
+    setRunning(true);
+
+    hideLadderPref = false;
+    document.getElementById('chk-hideladder').checked = false;
+    applyHideLadder();
+
+    watchTouched = false;
+    setWatchCollapsed(false);
+
+    var sel = document.getElementById('sel-status'); if (sel) sel.textContent = '';
+    var stb = document.getElementById('selftest-body'); if (stb) stb.innerHTML = '';
+    cue('');
+
+    if (LL.Editor && LL.Editor.setProgram) LL.Editor.setProgram(null);
+    if (LL.Challenges && LL.Challenges.reset) LL.Challenges.reset();
+    if (ctx.faultsReset) ctx.faultsReset();
   }
 
   if (document.readyState === 'loading') {
@@ -422,7 +499,6 @@ LL.App = (function () {
     get plc() { return plc; },
     bus: bus,
     loadById: loadById,
-    setMode: setMode,
     stepOnce: stepOnce,
     setRunning: setRunning
   };
