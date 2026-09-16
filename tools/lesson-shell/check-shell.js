@@ -284,14 +284,31 @@ const CHECKS = Object.freeze([
     const out = [];
     if (!html.includes('check-option')) return out;
     const scripts = (html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || []).join('\n');
+    /* COMMENTS ARE STRIPPED BEFORE THE BLOCKLIST SCAN, and this is not
+       tidiness — it is the difference between a check and a tautology. The
+       first run of this check failed both rebuilt demos on the kit's OWN
+       comment explaining the leak, which behaviourScript() injects into every
+       built file; takeoff carries a comment documenting it too. A blocklist
+       that matches its own documentation reports a defect that is not there
+       and hides the one that is. The kit's comment was also reworded so the
+       sentence appears nowhere in injected code — both halves, because either
+       alone leaves the check matching prose.
+
+       The strip is deliberately conservative and its limit is stated: a `//`
+       or slash-star sequence inside a string literal would over-strip. That
+       costs a false NEGATIVE (a missed leak), never a false positive, which is
+       the right direction for a check that reds a whole fleet. */
+    const code = scripts
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/^[ \t]*\/\/.*$/gm, ' ');
     shell.LEAKED_A6.forEach(s => {
-      if (scripts.includes(s)) {
+      if (code.includes(s)) {
         out.push(`the shared A6 handler hardcodes a demo-specific sentence: "${s}". Take the lead ` +
                  "from the card's own data-correct-lead / data-wrong-lead instead — every demo " +
                  'built on this shell renders it, whatever its subject.');
       }
     });
-    if (!/dataset\.wrongLead/.test(scripts)) {
+    if (!/dataset\.wrongLead/.test(code)) {
       out.push('the shared A6 handler reads no per-card wrong-answer lead (data-wrong-lead), so a ' +
                'demo cannot supply its own wording and the kit picks the sentence for all of them');
     }
@@ -305,6 +322,43 @@ const CHECKS = Object.freeze([
 
      Scoped to <style> blocks so JS property access (`if (x.hidden)`,
      `rows.hidden.at(-1)` — both real in takeoff) cannot be read as CSS. */
+  /* 13. A DEMO MUST NOT WRITE INTO SHELL-OWNED OUTPUT. The coupling the kit
+     exists to eliminate, and the only check here that is about a BOUNDARY
+     rather than a defect.
+
+     Two merged demos independently reached into `.check-feedback` — which
+     ADOPTING.md §1 assigns to the shell — to rewrite the wrong-answer sentence
+     the frozen kit hardcoded: ladder-lab with
+     `out.innerHTML = out.innerHTML.replace(...)`, takeoff by rewriting the
+     <b> lead's textContent. Both were the right call while the kit was frozen.
+     Both go DEAD SILENTLY the moment the kit is fixed: the replace stops
+     matching, the regex stops testing true, and the code still looks live. A
+     doc note cannot catch that; a check can, and it catches the next nine
+     copies rather than these two.
+
+     Note what is deliberately NOT guarded: `.echo` and `.obs-cue`. The A2/A4
+     contract says the activity fills those, so a demo writing them is correct.
+     Guarding them would red every properly built demo.
+
+     THE SHELL'S OWN SCRIPT IS EXCLUDED by its marker comment, because of
+     course it writes these surfaces — it owns them. That exclusion is the
+     check's must-accept control in --self-test; without it this reds the
+     entire fleet. */
+  ['shell-owned output', html => {
+    const out = [];
+    const blocks = html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || [];
+    const demoBlocks = blocks.filter(b => !shell.SHELL_SCRIPT_MARKER_RE.test(b));
+    shell.SHELL_OWNED_OUTPUT.forEach(surface => {
+      demoBlocks.forEach(b => {
+        if (!b.includes(surface)) return;
+        out.push(`a demo script references "${surface}", which the shell owns (ADOPTING.md §1). ` +
+                 'Post-processing what the shell rendered is the coupling the kit exists to remove, ' +
+                 'and it dies silently when the shell changes. Supply the wording through the card ' +
+                 '(data-correct-lead / data-wrong-lead) instead.');
+      });
+    });
+    return out;
+  }],
   ['reserved .hidden class', html => {
     const out = [];
     const styles = (html.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) || []).join('\n');
@@ -369,15 +423,22 @@ function selfTest() {
        the stage question to it; a must-accept case below leaves it as is. */
     '<style>@media (max-width: 480px){ .intro-more > summary { display: flex; }',
     ' .icon-label { display: none; } }</style>',
-    /* The shell's dispatch AND a demo listener, which is the real shape of a
-       built page. The dispatch alone is bait below, not baseline. */
-    '<script>document.dispatchEvent(new CustomEvent(\'lessonreset\'));',
-    'document.addEventListener(\'lessonreset\', () => {});',
+    /* TWO script blocks, because that is the real shape of a built page and
+       one of the v3 checks depends on telling them apart. First the SHELL's,
+       carrying its marker comment — it legitimately writes .check-feedback,
+       and if the 'shell-owned output' check cannot see that it is the shell,
+       it reds every demo in the fleet. */
+    `<script>/* ${shell.SHELL_SCRIPT_MARKER} */`,
+    'document.dispatchEvent(new CustomEvent(\'lessonreset\'));',
     /* The v3 shell shapes the two new checks read: the runtime-built intro
        disclosure, and an A6 lead taken from the card rather than the kit. */
     'const d = document.createElement(\'details\'); d.className = \'intro-more\';',
     'const sum = document.createElement(\'summary\');',
+    'const fb = card.querySelector(\'.check-feedback\');',
     'const lead = card.dataset.wrongLead || \'Not quite.\';</script>',
+    /* Then the DEMO's, which must carry the reset listener and must NOT touch
+       shell-owned output. */
+    '<script>document.addEventListener(\'lessonreset\', () => {});</script>',
     '</body></html>'
   ].join('');
   const baseline = checkHtml(good);
@@ -452,6 +513,16 @@ function selfTest() {
     ['A6 feedback vocabulary', 'reads no per-card wrong-answer lead',
       good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
         "const lead = 'Not quite.'; const body = btn.dataset.feedback;")],
+    /* --- v3 bait: a demo reaching into shell-owned output ----------------- */
+    /* Shaped exactly like the two shims that shipped: ladder-lab's
+       innerHTML.replace and takeoff's <b> textContent rewrite. Both are in a
+       DEMO block, so the marker exclusion must not save them. */
+    ['shell-owned output', 'which the shell owns',
+      good.replace("<script>document.addEventListener('lessonreset', () => {});</script>",
+        "<script>document.addEventListener('lessonreset', () => {});" +
+        "document.querySelectorAll('.check-option').forEach(b => b.addEventListener('click', () => {" +
+        "const o = b.closest('.check').querySelector('.check-feedback');" +
+        "if (o) o.innerHTML = o.innerHTML.replace('x', 'y');}));</script>")],
     /* --- v3 bait: a demo redefining the reserved .hidden class ------------ */
     ['reserved .hidden class', 'redefines it',
       good.replace('.icon-label { display: none; }',
@@ -496,7 +567,29 @@ function selfTest() {
        CSS rule. Both of these shapes are real in takeoff/index.html, and a
        whole-file scan would red it. */
     ['reserved .hidden class', 'JS property access spelled .hidden, which is not a CSS rule',
-      good.replace('</body>', '<script>if (r.hidden) { x = rows.hidden.at(-1).label; }</script></body>')]
+      good.replace('</body>', '<script>if (r.hidden) { x = rows.hidden.at(-1).label; }</script></body>')],
+    /* THE SELF-MATCH CONTROL, and the reason it exists: the first run of the
+       A6 blocklist failed both rebuilt demos on the kit's own comment
+       explaining the leak — a check matching its own documentation. A demo or
+       a kit may DISCUSS the leaked sentence in a comment; only executable code
+       may not contain it. If this bait goes noisy the check has become a
+       tautology again. */
+    /* THE EXCLUSION CONTROL, and the reason the check is safe to ship: the
+       shell's OWN block references .check-feedback because it owns it. The
+       baseline `good` page carries exactly that. If this goes noisy the check
+       reds all eleven merged demos on correct code. */
+    ['shell-owned output', "the shell's own block writing .check-feedback, which it owns", good],
+    /* And the demo-owned A2/A4 surfaces the activity is REQUIRED to fill must
+       not be mistaken for shell-owned output. */
+    ['shell-owned output', 'a demo writing .echo and .obs-cue, which the A2/A4 contract assigns to it',
+      good.replace("<script>document.addEventListener('lessonreset', () => {});</script>",
+        "<script>document.addEventListener('lessonreset', () => {});" +
+        "document.querySelector('.echo').innerHTML = 'observed 1.4 ms';" +
+        "document.querySelector('.obs-cue').textContent = 'the heavier ion lands later';</script>")],
+    ['A6 feedback vocabulary', 'a comment discussing the leaked sentence, which is not a leak',
+      good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
+        "/* v2 hardcoded 'Not what the detector showed.' here; fixed in v3. */\n" +
+        "const lead = card.dataset.wrongLead || 'Not quite.';")]
   ];
   for (const [name, what, html] of quiet) {
     const noisy = checkHtml(html).filter(f => f.startsWith(name + ':'));
