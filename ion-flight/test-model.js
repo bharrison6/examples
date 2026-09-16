@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const M = require('./model.js');
+const M = require('./src/model.js');
 
 const near = (actual, expected, rel = 1e-9) => {
   assert.ok(Math.abs(actual - expected) <= Math.abs(expected) * rel, `${actual} was not within ${rel} of ${expected}`);
