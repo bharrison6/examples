@@ -76,6 +76,13 @@
      cue fires only on a genuine arrival after that. */
   let zone = 'init';
   let lastDv = 0;
+  /* A finite burn's summary is owed once the game settles it. Keyed off the
+     record rather than off "did dv grow since the last poll", because the final
+     increment can round to 0 m/s and the summary would then never fire. */
+  let finitePending = false;
+  /* Stage 2's gate, opened by the learner's own act: picking a stage-2 level
+     from the game's Levels list is itself the choice (R-fuel-golf F3). */
+  let gate2Open = false;
 
   const selectedTab = () => Math.max(0, tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'));
 
@@ -107,11 +114,22 @@
      committed the flight view does not move in, and the gate card stands in
      its place. While gated the view is parked back in host 0, which is inside
      a hidden panel — game.js's draw() guard covers exactly that, so the
-     simulation keeps running and only the painting stops. */
-  function gated(stage) { return stage === 1 && !picks[1]; }
+     simulation keeps running and only the painting stops.
+
+     The gate protects the FIRST encounter, not the tenth (operator directive:
+     replayable, like a game). It consults the evidence it guards: a persisted
+     Escape Artist badge proves the level was flown, so on a revisit stage 2 is
+     free play. Reset clears the badges, so Reset re-arms it — that is correct.
+     The storage read is last in the chain so the 250 ms poll pays it only
+     while the gate is actually in question. */
+  function escapedBefore() {
+    const p = G.progress();
+    return Boolean(p[3] && p[3].done);
+  }
+  function gated(stage) { return stage === 1 && !picks[1] && !gate2Open && !escapedBefore(); }
 
   function place(stage) {
-    if (gate2) gate2.hidden = Boolean(picks[1]);
+    if (gate2) gate2.hidden = !gated(1);
     const host = gated(stage) ? hosts[0] : hosts[stage];
     if (host && activity.parentNode !== host) host.appendChild(activity);
     G.remeasure();
@@ -222,33 +240,51 @@
        reported a 6.08 km/s burn as a 2.21 km/s one, which inverts the lesson.
        A finite-thrust burn is still accumulating until endBurn() settles it, so
        it gets a provisional line and the summary once it is done. */
-    if (o.dvUsedMs > lastDv) {
-      const spent = o.dvUsedMs - lastDv;
-      lastDv = o.dvUsedMs;
-      const b = G.lastBurn();
-      if (b && !b.settled) {
-        cue(stage, 'Engine lit &mdash; <b>' + spent.toLocaleString('en-US') + ' m/s</b> delivered so far. ' +
-          'Watch the speed while it burns: the &Delta;v arriving now is worth whatever v is <i>now</i>.', true);
-      } else {
-        const atV = b ? b.vKms : o.vKms;
-        cue(stage, 'Burn committed: <b>' + (b ? b.dvMs : spent).toLocaleString('en-US') + ' m/s</b> spent at ' +
-          (b && b.finite ? 'a &Delta;v-weighted mean of ' : 'v = ') + atV.toFixed(2) + ' km/s. ' +
-          'Specific orbital energy &epsilon; is now <b>' + o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
-          (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
-                   : '<b>above zero: you are escaping.</b>'), true);
-      }
+    const b = G.lastBurn();
+    const burnSummary = () => {
+      const atV = b ? b.vKms : o.vKms;
+      cue(stage, 'Burn committed: <b>' + (b ? b.dvMs : o.dvUsedMs).toLocaleString('en-US') + ' m/s</b> spent at ' +
+        (b && b.finite ? 'a &Delta;v-weighted mean of ' : 'v = ') + atV.toFixed(2) + ' km/s. ' +
+        'Specific orbital energy &epsilon; is now <b>' + o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
+        (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
+                 : '<b>above zero: you are escaping.</b>'), true);
+      finitePending = false;
       zone = 'burn';
+    };
+    if (o.dvUsedMs > lastDv) {
+      lastDv = o.dvUsedMs;
+      if (b && !b.settled) {
+        /* The CUMULATIVE for this burn, read from the record — the HUD counts
+           the same number up. The per-poll increment was what printed
+           "106 m/s delivered so far" on every poll (R-fuel-golf F4). */
+        finitePending = true;
+        cue(stage, 'Engine lit &mdash; <b>' + b.dvMs.toLocaleString('en-US') + ' m/s</b> delivered so far. ' +
+          'Watch the speed while it burns: the &Delta;v arriving now is worth whatever v is <i>now</i>.', true);
+        zone = 'burn';
+      } else {
+        burnSummary();
+      }
       return;
     }
-    if (o.dvUsedMs < lastDv) lastDv = o.dvUsedMs;   // an undo refunded fuel
+    if (o.dvUsedMs < lastDv) {                       // an undo refunded fuel
+      lastDv = o.dvUsedMs;
+      finitePending = false;                         // the record it awaited is gone
+    }
+    if (finitePending && b && b.settled) { burnSummary(); return; }
 
     const now = o.nearPeri ? 'peri' : o.nearApo ? 'apo' : 'none';
-    /* 'init' is the silent first observation after a level load: record where
-       the ship starts without announcing it. Every level spawns at an apsis, so
-       announcing it would put a cue on screen before the learner has acted. */
-    if (zone === 'init') { zone = now; return; }
+    /* Two sentinels, both silent. 'init' is the first observation after a
+       level load: every level spawns at an apsis, so announcing it would put a
+       cue on screen before the learner has acted. 'burn' is the first
+       observation after a burn cue: a tangential burn leaves the ship AT an
+       apsis of its new orbit, so a same-position re-evaluation is not an
+       arrival, and letting it fire overwrote "Burn committed: 712 m/s…" with
+       "Periapsis: v = 6.78 km/s" ~540 ms later on essentially every burn
+       (R-fuel-golf F2). The burn cue therefore holds until the learner acts
+       again or the ship genuinely leaves for, and arrives at, another apsis. */
+    if (zone === 'init' || zone === 'burn') { zone = now; return; }
     if (now !== 'none' && now !== zone) cue(stage, CUE[now][stage](o));
-    if (now !== 'burn') zone = now;
+    zone = now;
   }
 
   /* ---- A6: the feedback prefix, overridden demo-side --------------------
@@ -280,14 +316,31 @@
     if (moonNote) moonNote.hidden = !G.LEVELS[i].moon;
     lastDv = 0;
     zone = 'init';
+    finitePending = false;
     if (resetting || syncing) return;
     const want = stageOf(i);
-    if (want === selectedTab()) return;
+    /* Loading a stage-2 level from the game's own Levels list is the learner's
+       choice, and it opens the evidence gate. Before this, a re-gated stage 2
+       ran Level 3 in the hidden host (canvas 0 px, gate card showing) and the
+       attempt was discarded on the next tab click (R-fuel-golf F3). */
+    if (want === 1) gate2Open = true;
+    /* The game framed this level against the box it had at load time. If the
+       flight view was hidden then (parked in host 0 behind a gate card), that
+       box was 0 px and loadLevel fell back to a phantom 900x600 — so once it is
+       placed somewhere visible, re-frame through the game's own fit control,
+       which is what a fresh load does: fit + camera home. */
+    const wasHidden = activity.offsetParent === null;
+    if (want === selectedTab()) {
+      place(want);
+      if (wasHidden && activity.offsetParent !== null) { const z = document.getElementById('zoomFit'); if (z) z.click(); }
+      return;
+    }
     if (tabs[want] && tabs[want].disabled) return;     // do not route around a gate
     if (gated(want)) return;
     syncing = true;
     try { window.lessonShell.selectStage(want); } finally { syncing = false; }
     place(want);
+    if (wasHidden && activity.offsetParent !== null) { const z = document.getElementById('zoomFit'); if (z) z.click(); }
   };
 
   G.hooks.onSucceed = (levelIndex, dvUsedVu, par) => {
@@ -338,10 +391,12 @@
      ENUMERATED:
        1. picks[0..3]      -> null, and the three prediction button groups'
                               aria-pressed and .selected cleared with them.
-       2. zone, lastDv     -> the A4 cue edge detectors, or the first tick
-                              after a Reset fires a phantom "burn committed"
+       2. zone, lastDv, finitePending -> the A4 cue edge detectors, or the first
+                              tick after a Reset fires a phantom "burn committed"
                               cue from a delta-v total that no longer exists.
-       3. gate-2's card    -> visible again, because picks[1] is null again.
+       3. gate-2's card    -> visible again: picks[1] is null again, gate2Open
+                              is false again, and resetActivity() clears the
+                              badge the gate also consults.
        4. the activity's host -> back to host 0. It is ONE element that moves;
                               leaving it parked in stage 2's or 3's host would
                               show stage 1 with an empty panel.
@@ -359,6 +414,8 @@
     picks = [null, null, null, null];
     zone = 'init';
     lastDv = 0;
+    finitePending = false;
+    gate2Open = false;                 // and G.resetActivity() below clears the badge the gate also consults
     PREDICT_STAGES.forEach(stage => {
       const echo = echoFor(stage);
       if (echo) echo.className = 'echo';

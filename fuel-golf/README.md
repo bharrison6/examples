@@ -208,10 +208,10 @@ Every panel and readout carries exactly one of the tour's six provenance words.
 | Label | Where, here |
 |---|---|
 | **Live** | the flight view, the HUD, the burn preview, the debrief's arithmetic — integrated in your browser as you watch |
-| **Sourced** | Earth's μ and radius, from [NASA's Earth Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html) (read 2026-09-16): GM 0.39860 × 10⁶ km³/s², volumetric mean radius 6371.000 km |
+| **Sourced** | Earth's μ and radius, from [NASA's Earth Fact Sheet](https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html) (read 2026-09-16): GM 0.39860 × 10⁶ km³/s², volumetric mean radius 6371.000 km. And the *practice* of escaping by repeated perigee burns, from [ESA's SMART-1 mission page](https://www.esa.int/Science_Exploration/Space_Science/SMART-1/Ion_engine_gets_SMART-1_to_the_Moon) (31 Aug 2006, read 2026-09-16): "thrust arcs around the perigee and coast arcs around the apogee" |
 | **Measured** | the seven pars and the 661 / 1,835 / 775 / 919 / 731 / 1,498 m/s comparisons, found against this exact engine. The integrator has no random element, so there is no seed — re-running `test-physics.js` reproduces every figure |
 | **Illustrative** | the moon, on both levels that have one. Invented orbit, mass and size so an assist fits a class period; it is labelled **on the map itself**, not only in a caption |
-| **Reasoned** | why low-thrust stages use repeated perigee burns — inferred from the 731-vs-1,498 measurement on this page. No specific flown mission's burn plan was sourced, and Details says so |
+| **Reasoned** | *why* low-thrust stages use repeated perigee burns — inferred from the 731-vs-1,498 measurement on this page and from [MIT OCW 16.07 Lecture L17](https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/e6393974ce4ed22b095f2e1d1a6a8e81_MIT16_07F09_Lec17.pdf) (read 2026-09-16), which derives that the energy bought per Δv is largest where speed is largest. SMART-1's page states the practice, not the motive, and Details says so |
 
 Nothing here is **Scripted**: there are no hand-authored fixtures in this demo. The
 Oberth advantage is not written into the game — it falls out of the integrator.
