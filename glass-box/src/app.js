@@ -38,6 +38,58 @@
     if ('disabled' in el) el.disabled = was.disabled;
   }
 
+
+  // ---------- A2 prediction capture, A4 observation cues ----------
+  // The kit snapshots and restores every .lesson-strip .echo and every .obs-cue
+  // on Reset, and styles both, but it does NOT provide the capture control or
+  // wire it -- Demo 1 implements its own .predict-btn group privately. This is
+  // the same pattern, deliberately kept identical to zero-to-unbeatable's so
+  // the two reference demos behave the same way, rather than a second dialect.
+  // (Flagged for kit v3: the Predict control is required by template part A2 and
+  // reinvented by every demo that obeys it.)
+  const PREDICT_LABELS = {
+    llm: { sentences: 'real English sentences', fragments: 'English-looking fragments' },
+    reason: { direct: 'the answers-only model', worked: 'the worked-steps model', same: 'about the same' },
+    agent: { finish: 'it still finishes', stall: 'it loses the goal' }
+  };
+  const predictions = {};
+  function echoFor(key) {
+    const group = document.querySelector('.predict-btns[data-predict="' + key + '"]');
+    return group ? group.parentElement.querySelector('.echo') : null;
+  }
+  function echo(key, html) {
+    const el = echoFor(key);
+    if (!el) return;
+    el.innerHTML = html;
+    el.hidden = false;
+  }
+  document.querySelectorAll('.predict-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      const group = b.closest('.predict-btns');
+      const key = group.dataset.predict;
+      group.querySelectorAll('.predict-btn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      predictions[key] = b.dataset.answer;
+      echo(key, 'You predicted: <b>' + PREDICT_LABELS[key][b.dataset.answer] + '</b>. Now run it.');
+    });
+  });
+  /* Silent when no prediction was made -- a learner who skipped the Predict card
+     is not told what they "should" have guessed. */
+  function revealPrediction(key, answerKey, sentence) {
+    const p = predictions[key];
+    if (!p) return;
+    const ok = p === answerKey;
+    echo(key, 'You predicted <b>' + PREDICT_LABELS[key][p] + '</b>. ' +
+      (ok ? '<span class="ok">That is what happened.</span> ' : '<span class="bad">Not what happened.</span> ') +
+      sentence);
+  }
+  function cue(id, text, warm) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle('cue-warm', !!warm);
+  }
+
   // ---------- training backend ----------
   // Preferred: a real Web Worker built from WORKER_SRC, so training never
   // touches the UI thread. Some hosts (sandboxed previews, strict CSP) refuse
@@ -381,6 +433,16 @@
     renderPlayground();
     renderAttention();
     drawLoss();
+    cue('cue-1', 'Era ' + (eras.length - 1) + ' done \u2014 loss ' + m.loss.toFixed(2) +
+      ' after ' + fmt(m.step) + ' steps. Read the new sample against Era 0 in Compare.');
+    /* TEXT.ERAS is the full era list, so eras.length === TEXT.ERAS.length means
+       every era has been trained and the prediction can be settled. */
+    if (eras.length >= TEXT.ERAS.length) {
+      revealPrediction('llm', 'fragments',
+        'It writes English-looking fragments: the spacing, the letter runs and the short words are ' +
+        'the shape of the language, but it is not saying anything true. 42,458 parameters and one ' +
+        'short story buy the shape, not the content.');
+    }
   });
 
   on('a1.progress', (m) => {
@@ -686,6 +748,17 @@
     $('starstatus').textContent = `Same ${pct(m.midAcc)} under-trained model. Each round it poses ~120 fresh problems to itself, keeps verifier-certified correct attempts, and trains on them.`;
     starBase = m.midAcc;
     renderStarBars();
+    /* Read the two exam scores off the page rather than re-deriving them, so the
+       cue cannot disagree with what the learner is looking at. */
+    const dTxt = $('accD').textContent, sTxt = $('accS').textContent;
+    cue('cue-2', 'Same exam, both models: answers-only ' + dTxt + ', worked-steps ' + sTxt + '.');
+    const dNum = parseFloat(dTxt), sNum = parseFloat(sTxt);
+    if (isFinite(dNum) && isFinite(sNum)) {
+      const winner = sNum > dNum ? 'worked' : dNum > sNum ? 'direct' : 'same';
+      revealPrediction('reason', winner,
+        'Answers-only scored ' + dTxt + ' and worked-steps ' + sTxt + ' on the identical exam. ' +
+        'Same core width, depth and head count \u2014 what differed is the text format each trained on.');
+    }
   });
 
   // ---- 2.3 verified voting ----
@@ -851,8 +924,24 @@
     }
   }
 
+  /* ep.finalAnswer is set only by a `finish` action, so its absence on a done
+     episode is exactly the "ran out of context" ending. */
+  function reportEpisodeEnd() {
+    if (!ep.done) return;
+    if (ep.finalAnswer) {
+      cue('cue-3', 'The run finished: the loop kept the goal in view the whole way and handed back an answer.');
+      revealPrediction('agent', 'finish',
+        'On the full context the loop can still see the task on every turn, so it gets to the end \u2014 ' +
+        'including recovering from the calculator error on the way.');
+    } else {
+      cue('cue-3', 'The run stopped without an answer \u2014 the goal is no longer inside the visible context.', true);
+      revealPrediction('agent', 'stall',
+        'The truncation is real: once the task text falls outside the window the loop has nothing left ' +
+        'to aim at, and no way to get it back. The same policy finishes on the full context.');
+    }
+  }
   function autoStep() {
-    if (ep.done) { agentStopTimer(); pulseLoop(''); return; }
+    if (ep.done) { agentStopTimer(); pulseLoop(''); reportEpisodeEnd(); return; }
     const choice = AGENT.policy(AGENT.visibleContext(ep, windowChars()));
     if (choice.stop) {
       ep.entries.push({ role: 'stopped', text: choice.stop });
@@ -860,6 +949,7 @@
       renderTranscript();
       agentStopTimer();
       pulseLoop('');
+      reportEpisodeEnd();
       return;
     }
     pulseLoop('model');
@@ -868,6 +958,7 @@
     setTimeout(() => pulseLoop('ctx'), 1150);
     AGENT.applyTurn(ep, choice);
     renderTranscript();
+    reportEpisodeEnd();
   }
 
   $('agmode-you').addEventListener('click', () => {
@@ -952,6 +1043,12 @@
     cpD.length = 0; cpS.length = 0;
     agMode = null;
     ep = AGENT.newEpisode();
+    // captured predictions, and the aria-pressed on the buttons that hold them.
+    // The kit restores the .echo text from its own snapshot; the state behind it
+    // is the demo's and has to be cleared here or a reset page would still
+    // "remember" a guess that is no longer shown.
+    Object.keys(predictions).forEach((k) => delete predictions[k]);
+    document.querySelectorAll('.predict-btn').forEach((b) => b.setAttribute('aria-pressed', 'false'));
 
     // (4) form controls — a template `value="..."` does not reassert itself
     $('pginput').value = 'the robot sat in the ';
