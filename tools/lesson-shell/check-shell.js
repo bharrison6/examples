@@ -56,6 +56,32 @@
 
    7. The credit pill's text is EXACTLY the fleet spec, with no suffix.
 
+   8. The demo IMPLEMENTS THE RESET CONTRACT. Reset is in-place as of kit v2:
+      the shell restores what the kit owns and dispatches `lessonreset`, and
+      the demo restores its own activity. A demo with no handler keeps every
+      answer through a Reset that visibly moved everything else, and no other
+      check in this file or in any node suite can see that.
+
+      SPECIFICITY, because this one could easily match itself: the shell's own
+      behaviour script contains the string `lessonreset` — it dispatches the
+      event — so a bare grep for the word passes on EVERY kit-built page,
+      demo handler or not. The check looks for a LISTENER (or a non-null
+      onReset veto), which the shell never installs, and --self-test carries a
+      negative control that is the dispatch alone and must FAIL.
+
+   9. No id is defined twice. This is the general form of the collision the
+      two-winters lane hit: the kit's per-stage drawer is `#details`, which is
+      also the most natural name for a demo's own per-item drill-down, and a
+      duplicate id does not error — querySelector silently returns whichever
+      came first, so the kit's drawer or the demo's popover quietly stops
+      working. RESERVED_IDS below is the kit's list; this check is wider than
+      that list on purpose, because a demo colliding with ITSELF breaks the
+      same way. Scanned outside <script> blocks only: an id spelled inside
+      generated markup in app.js is a string, not necessarily a live element,
+      and guessing costs more than it buys. Stated rather than papered over —
+      a collision created entirely at runtime by app.js is out of reach here
+      and belongs to the browser pass.
+
    PROVING THE CHECKS ARE POTENT. --self-test runs every check against
    synthetic bait that should trip it, and fails if any check stays silent. A
    checker whose silence has not been tested is not evidence. Run it whenever
@@ -82,8 +108,37 @@ const PLACEHOLDERS = Object.freeze([
   'WHAT IS LIVE HERE', 'ONE RETRIEVAL QUESTION', 'CORRECT OPTION',
   'THE FLAWED MODEL, STATED', 'WHAT THIS DEMO DOES NOT CLAIM',
   'THE FORMULA, IF THERE IS ONE', 'EACH ONE, PLAINLY', 'LESSON STAGES',
-  'PART FOUR &middot; EXAMPLE PROJECTS'
+  'PART FOUR &middot; EXAMPLE PROJECTS',
+  'WHAT THIS DEMO PUTS BACK, IN ITS OWN NOUNS'
 ]);
+
+/* Check 8. A LISTENER, not the word: the shell's own script dispatches
+   `lessonreset`, so the bare string is present on every kit-built page. The
+   shell never calls addEventListener for it and never ASSIGNS onReset (its
+   object literal writes `onReset: null`, a colon), so both of these are
+   demo-only shapes. RESET_VETO deliberately refuses `= null`, which is what a
+   demo that has not implemented the contract leaves behind. */
+const RESET_LISTENER = /addEventListener\s*\(\s*['"]lessonreset['"]/;
+const RESET_VETO = /\.onReset\s*=\s*(?!null\b)\S/;
+
+/* Check 9. The ids the kit's own markup defines; a demo must not reuse one.
+   `details` is the one that has actually bitten: it is the natural name for a
+   demo's per-item drill-down as well as the kit's per-stage drawer. Name yours
+   something else — two-winters uses #item-details. */
+const RESERVED_IDS = new Set([
+  'brandbar', 'guide', 'guide-open', 'guide-title', 'settings', 'settings-open',
+  'settings-title', 'settings-menu', 'presenter-notes', 'presenter-notes-title',
+  'details', 'details-title', 'details-subtitle', 'presentation-btn',
+  'presentation-foot', 'reset-btn'
+]);
+
+/* Script bodies are excluded from the id scan: an id spelled in a JS string is
+   not by itself a second element. Stripping is what lets a scan miss things,
+   so --self-test's bait for this check is markup-level, and the limitation is
+   stated in the head comment rather than hidden. */
+function stripScripts(html) {
+  return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '<script></script>');
+}
 
 /* Every check is a function returning an array of failure strings. Keeping
    them in one table is what lets --self-test iterate them. */
@@ -154,6 +209,27 @@ const CHECKS = Object.freeze([
     if (!m) return ['no .bh-credit element'];
     const text = m[1].trim();
     return text === PILL_TEXT ? [] : [`credit pill text is "${text}", the fleet spec is "${PILL_TEXT}"`];
+  }],
+  ['A8 reset contract', html => {
+    if (!/id="reset-btn"/.test(html)) return ['no #reset-btn — Settings must carry the contract triad'];
+    if (RESET_LISTENER.test(html) || RESET_VETO.test(html)) return [];
+    return ['the demo implements no reset handler: Reset is in-place as of kit v2, so the demo must ' +
+            "addEventListener('lessonreset', ...) to restore its own activity (or take the whole reset " +
+            'over by assigning a non-null window.lessonShell.onReset). Without one, every answer and ' +
+            'every node the activity generated survives a Reset. See ADOPTING.md.'];
+  }],
+  ['unique ids', html => {
+    const seen = new Map();
+    const dupes = [];
+    stripScripts(html).replace(/\sid\s*=\s*"([^"]+)"/g, (_, id) => {
+      const n = (seen.get(id) || 0) + 1;
+      seen.set(id, n);
+      if (n === 2) dupes.push(id);
+      return _;
+    });
+    return dupes.map(id => `id "${id}" is defined more than once${
+      RESERVED_IDS.has(id) ? ' — and it is a lesson-shell reserved id; rename YOUR element' : ''
+    }. A duplicate id does not error: querySelector takes the first and the other element silently stops working.`);
   }]
 ]);
 
@@ -180,7 +256,12 @@ function selfTest() {
     '<span class="panel-kicker"><span class="k-measured">Measured</span> x</span>',
     '<div class="claim"><span class="panel-kicker"><span class="k-reasoned">Reasoned</span> y</span><p>z</p></div>',
     '</section></div>\n<form method="dialog" class="lesson-dialog-actions"><button>Back to activity</button></form>',
+    '<button id="reset-btn">Reset</button>',
     `<div class="bh-credit">${PILL_TEXT}</div>`,
+    /* The shell's dispatch AND a demo listener, which is the real shape of a
+       built page. The dispatch alone is bait below, not baseline. */
+    '<script>document.dispatchEvent(new CustomEvent(\'lessonreset\'));',
+    'document.addEventListener(\'lessonreset\', () => {});</script>',
     '</body></html>'
   ].join('');
   const baseline = checkHtml(good);
@@ -215,7 +296,22 @@ function selfTest() {
     ['A5 detail labels', 'nested <div>',
       good.replace('<div class="claim">', '<div class="claim"><div>')],
     ['self-contained', 'theme.css', good.replace('</head>', '<link href="theme.css" rel="stylesheet"></head>')],
-    ['A0 credit pill', 'three amigos', good.replace(PILL_TEXT, PILL_TEXT + ' &middot; built with the three amigos')]
+    ['A0 credit pill', 'three amigos', good.replace(PILL_TEXT, PILL_TEXT + ' &middot; built with the three amigos')],
+    /* Check 8's NEGATIVE CONTROL, and the reason this check is worth having:
+       the page below still carries the shell's own dispatch of `lessonreset`,
+       so a grep for the word passes. Only the listener is gone. If this bait
+       stays silent, the check is matching the kit rather than the demo. */
+    ['A8 reset contract', 'implements no reset handler',
+      good.replace("document.addEventListener('lessonreset', () => {});", "window.lessonShell.onReset = null;")],
+    /* And the veto path must be accepted, not merely the listener: a demo that
+       takes the whole reset over satisfies the contract. Asserted as a
+       baseline-shaped page that must produce NO failure (see below). */
+    ['unique ids', 'defined more than once',
+      good.replace('<button id="reset-btn">Reset</button>', '<button id="reset-btn">Reset</button><i id="reset-btn"></i>')],
+    /* Check 9's stripping control: the SAME duplicate, spelled inside a
+       <script>, must NOT trip it — otherwise the check is reading JS strings
+       as markup and would red every demo that builds HTML at runtime. Asserted
+       below with the other must-not-trip cases. */
   ];
   let bad = 0;
   for (const [name, needle, html] of bait) {
@@ -223,11 +319,26 @@ function selfTest() {
     console.log(`  ${hit ? 'trips ' : 'SILENT'}  ${name} — "${needle}"`);
     if (!hit) bad += 1;
   }
+  /* The other half: pages a check must STAY SILENT on. A check that trips on
+     everything is as useless as one that trips on nothing, and both of these
+     are shapes a real demo has or will have. */
+  const quiet = [
+    ['A8 reset contract', 'a demo that takes the whole reset over with an onReset veto',
+      good.replace("document.addEventListener('lessonreset', () => {});",
+        'window.lessonShell.onReset = () => { rewind(); return false; };')],
+    ['unique ids', 'the same duplicate id spelled inside a <script> string',
+      good.replace('</body>', '<script>var s = \'<i id="reset-btn"></i>\';</script></body>')]
+  ];
+  for (const [name, what, html] of quiet) {
+    const noisy = checkHtml(html).filter(f => f.startsWith(name + ':'));
+    console.log(`  ${noisy.length ? 'FALSE+' : 'quiet '}  ${name} — ${what}`);
+    if (noisy.length) { noisy.forEach(f => console.error('    ' + f)); bad += 1; }
+  }
   if (bad) {
-    console.error(`SELF-TEST FAILED — ${bad} check(s) stayed silent on their own bait.`);
+    console.error(`SELF-TEST FAILED — ${bad} check(s) stayed silent on their own bait, or fired on a page they must accept.`);
     return 1;
   }
-  console.log(`check-shell self-test: the synthetic page passes, and all ${bait.length} checks trip on their bait.`);
+  console.log(`check-shell self-test: the synthetic page passes, all ${bait.length} checks trip on their bait, and ${quiet.length} must-accept pages stay quiet.`);
   return 0;
 }
 
