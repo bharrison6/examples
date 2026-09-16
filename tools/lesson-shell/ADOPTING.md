@@ -533,6 +533,44 @@ you are doing.
 
 ---
 
+## 5b. Absence claims in learner copy: say what you checked, not what does not exist
+
+**A demo may not assert that a capability does not exist. It may state what it
+checked, where, and when.** (Fleet rule, 2026-09-16, after the third instance.)
+
+A negative claim is cheap to write, expensive to verify, and nothing in the
+build, the contract or the checks distinguishes *we did not find it* from *it
+does not exist*. `front-doors` shipped "One row is uneven, and it **stays**
+uneven" — a prediction wearing a fact's clothes — about a competitor's product
+line, and it was false against four months of public documentation on a host
+the demo already cited. Two more failures of the same shape happened in review
+prose in the same program.
+
+The fix is a form of words, and it is also the better lesson:
+
+| Do not write | Write |
+|---|---|
+| Google has no consumer-plan peer at door 3. | No consumer-plan peer at door 3 was found on `support.google.com` or `one.google.com`, checked 16 September 2026. |
+| No version of this door works on your question overnight. | Neither vendor page describes an unattended overnight run (checked `<host>`, `<date>`). |
+| The word appears nowhere in the catalogue. | The word did not appear in the catalogue page fetched on `<date>` (search + a positive control on a word that is there). |
+
+The scoped form is *checkable* — a reader can repeat it — and it teaches the
+habit the fleet exists to teach. It also survives the product changing, which
+the bare negative does not.
+
+**Why this is a rule and not a check.** A lint for absolute-negative wording was
+prototyped and measured against every built demo (`check-shell.js` head comment
+records the numbers). The same words carry the demo's legitimate negatives —
+"this page runs no model and makes no network request", "there is no combined
+score", "a future cannot" — and what separates those from a world-capability
+claim is *whose* capability the sentence is about, which a regex cannot read.
+It would have warned 183 times on a compliant fleet. So this is the L1
+reviewer's lens: read the copy for negatives, and for each one ask *checked
+where, when?* — and if the answer is not on the page, it goes on the page or the
+sentence goes.
+
+---
+
 ## 6. Before you call it done
 
 ```

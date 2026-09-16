@@ -82,6 +82,28 @@
       a collision created entirely at runtime by app.js is out of reach here
       and belongs to the browser pass.
 
+   WHAT WAS TRIED AND NOT SHIPPED — an absence-claim lint (K4, 2026-09-16).
+   After three absence-claim failures in the fleet program (one of them a demo
+   shipping "One row is uneven, and it stays uneven" against four months of
+   public docs), a warn-only lint for absolute-negative phrasing in visible
+   learner copy was prototyped here and measured against all 14 built demos,
+   with <script>, <style>, comments and <a> stripped. A BROAD word list
+   (never / cannot / nowhere / there is no / does not exist / no version of /
+   stays …) tripped 5/5 bait sentences and 6/8 legitimate ones, and produced
+   183 warnings on a corpus that had already been corrected. A NARROW list
+   tuned to prediction-shaped phrases got false positives down to 2/8 but
+   missed 2/5 of the real failures — and one of its remaining false positives
+   was the fleet's standard self-containment sentence ("This page runs no
+   model and makes no network request"), which is a true, checkable negative
+   that must never warn. There is no regex operating point between those two:
+   the feature that separates "Google has no consumer-plan peer" from "there
+   is no combined score" is WHOSE capability the sentence is about, and that
+   is semantic. A lint that warns 183 times on compliant copy is tuned out on
+   day one, and a lint that misses "Copilot cannot accept tracked changes"
+   retires the reviewer's attention without earning it. The rule itself
+   stands and lives in ADOPTING.md §5b; enforcing it is the L1 reviewer's
+   lens, as it is for 5b's unmarked claims above.
+
    PROVING THE CHECKS ARE POTENT. --self-test runs every check against
    synthetic bait that should trip it, and fails if any check stays silent. A
    checker whose silence has not been tested is not evidence. Run it whenever
