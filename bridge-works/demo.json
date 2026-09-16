@@ -4,16 +4,24 @@
   "emoji": "🌉",
   "topic": "Engineering · Statics",
   "discipline": "Engineering",
-  "tagline": "Bridge Works: a real direct-stiffness solver — the cheapest surviving bridge wins",
+  "tagline": "Bridge Works: a real direct-stiffness solver — call what fails first, then build the cheapest bridge that survives",
   "hub_blurb": "Build a truss, watch the real solver expose tension, buckling, and collapse, then compete for the cheapest bridge that survives.",
-  "card_blurb": "Truss bridge builder on a real direct-stiffness solver: live tension and compression, Euler buckling, progressive collapse. Cheapest bridge that survives wins.",
-  "description": "**Truss Bridge Builder** — a truss design lab for physics class. Real direct-stiffness truss solver, live tension/compression colouring, Euler buckling, progressive collapse, five levels with golf-style par budgets plus a sandbox. The printable teacher guide is also the in-app presenter notes, from one source.",
+  "card_blurb": "Truss bridge builder on a real direct-stiffness solver: live tension and compression, Euler buckling, progressive collapse. Four lesson stages, a call before every first test, and the cheapest surviving bridge wins.",
+  "description": "**Truss Bridge Builder** — a truss design lab for physics and engineering class on the shared lesson shell. Real direct-stiffness truss solver, live tension/compression colouring, Euler buckling, progressive collapse, five levels with golf-style par budgets plus a sandbox, wrapped in four lesson stages (Mechanisms · Compression buckles · Load paths · Sandbox) with a predict-before-you-test call. The printable teacher guide is also the in-app presenter notes, from one source.",
   "entry": "index.html",
-  "guide": { "html": "teacher-guide.html", "pdf": "teacher-guide.pdf" },
+  "guide": {
+    "html": "teacher-guide.html",
+    "pdf": "teacher-guide.pdf"
+  },
   "theme": "murray-state",
   "built_for": "murray-state",
-  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
-  "built_with": ["claude-code"],
+  "attribution": {
+    "author": "Bryant Harrison",
+    "institution": "Murray State University"
+  },
+  "built_with": [
+    "claude-code"
+  ],
   "status": "active",
   "added": "2026-08-03",
   "compliance": {
@@ -29,5 +37,11 @@
     "attribution_visible": true,
     "mobile": true,
     "offline_no_inference": true
-  }
+  },
+  "stages": [
+    "Mechanisms",
+    "Compression buckles",
+    "Load paths",
+    "Sandbox"
+  ]
 }
