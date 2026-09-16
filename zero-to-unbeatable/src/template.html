@@ -349,12 +349,22 @@
            information stage, a map of two axes, and nothing on it runs a
            result a prediction could be checked against. Try and Takeaway
            stay: pressing a card is a real action with a visible outcome. -->
-      <article><span>Try</span><p>Press a <b>training method</b> card: the three playable models that used it light up beneath it. Then read the <b>architecture</b> cards for what each one stores or computes.</p></article>
+      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes.</p></article>
       <article><span>Takeaway</span><p>Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</p></article>
     </div>
   </section>
 
-  <section class="card map-card" aria-labelledby="methods-title">
+  <!-- Operator ruling 2026-09-16: the two halves of this stage sit behind
+       two buttons instead of stacking. Not a tablist: the kit's stage
+       tablist is the only one on the page (A1), so this is the same shape
+       as the lens row above -- a role="group" of aria-pressed buttons, and
+       app.js toggles `hidden` on the two cards. -->
+  <div class="map-switch" role="group" aria-label="Two halves of this stage" id="map-switch">
+    <button type="button" class="map-btn" data-half="methods" aria-pressed="true" aria-controls="methods-card"><span>Training methods</span><small>how a model&rsquo;s adjustable parts change</small></button>
+    <button type="button" class="map-btn" data-half="families" aria-pressed="false" aria-controls="families-card"><span>Other architectures</span><small>more ways to hold a pattern or a strategy</small></button>
+  </div>
+
+  <section class="card map-card" id="methods-card" aria-labelledby="methods-title">
     <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping is read from this demo&rsquo;s code</span></span>
     <h3 id="methods-title">Training methods &mdash; how a model&rsquo;s adjustable parts change</h3>
     <p class="panel-lede">Press a card. The categories overlap, and one system can combine them.</p>
@@ -385,18 +395,19 @@
     </div>
   </section>
 
-  <section class="card map-card" aria-labelledby="families-title">
-    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">summaries in the authors&rsquo; words; not an exhaustive catalogue of AI</span></span>
+  <section class="card map-card" id="families-card" aria-labelledby="families-title" hidden>
+    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">summaries in the authors&rsquo; words, along the axis this stage defines (what is stored, what is computed); not an exhaustive catalogue of AI</span></span>
     <h3 id="families-title">Other architectures &mdash; more ways to hold a pattern or a strategy</h3>
-    <p class="panel-lede">Each of these can be fitted by more than one training method; the architecture and the method are separate facts about a model.</p>
-    <div class="family-grid">
-      <article><h4>Linear and logistic models</h4><p>Combine input features with learned coefficients to predict a number or a probability.</p></article>
-      <article><h4>Decision trees</h4><p>Route an example through learned questions. A tree can be learned from data even though 1a&rsquo;s rule chain was written by a person.</p></article>
-      <article><h4>Ensembles</h4><p>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</p></article>
-      <article><h4>Nearest neighbours</h4><p>Predict from stored examples that are most similar under a chosen distance.</p></article>
-      <article><h4>Support-vector machines</h4><p>Learn a boundary that balances a wide margin between classes against classification errors.</p></article>
-      <article><h4>Probabilistic and Bayesian models</h4><p>Represent uncertainty with probabilities and update beliefs when evidence arrives.</p></article>
+    <p class="panel-lede">Press a card. Each of these can be fitted by more than one training method; the architecture and the method are separate facts about a model.</p>
+    <div class="family-grid" role="group" aria-label="Other architectures">
+      <button type="button" class="family-card" data-family="linear" aria-pressed="false"><b>Linear and logistic models</b><span>Combine input features with learned coefficients to predict a number or a probability.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="tree" aria-pressed="false"><b>Decision trees</b><span>Route an example through learned questions. A tree can be learned from data even though 1a&rsquo;s rule chain was written by a person.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="ensemble" aria-pressed="false"><b>Ensembles</b><span>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="knn" aria-pressed="false"><b>Nearest neighbours</b><span>Predict from stored examples that are most similar under a chosen distance.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="svm" aria-pressed="false"><b>Support-vector machines</b><span>Learn a boundary that balances a wide margin between classes against classification errors.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="bayes" aria-pressed="false"><b>Probabilistic and Bayesian models</b><span>Represent uncertainty with probabilities and update beliefs when evidence arrives.</span><em class="holds" aria-hidden="true"></em></button>
     </div>
+    <p class="obs-cue" id="cue-4b" role="status" aria-live="polite"></p>
     <aside class="search-note"><b>Search and planning are AI problem-solving approaches, not architectures.</b> They explore possible actions or future states, and they can use any of these models to score what they find.</aside>
   </section>
 
