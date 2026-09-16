@@ -1,154 +1,164 @@
 #!/usr/bin/env node
-/* Two Winters build: concatenate src/ into a single offline index.html in this
-   folder, and copy the printable presenter guide alongside it.
+/* Build two-winters/index.html from src/ plus the shared lesson shell.
 
-   `node build.js`         writes index.html and presenter-guide.html
-   `node build.js --check` verifies both match the canonical build, writes nothing
+     src/template.html    the app shell markup
+     src/styles.css       the ACTIVITY styles (the lesson shell's are shared)
+     src/data.js          every claim, source, comparison lens and cut entry
+     src/engine.js         pure functions: dates, the year scale, the scoring
+     src/timeline.js       the Act II canvas
+     src/app.js            the view layer: four stages, self-test
+     src/demo-guide.html   the canonical printable presenter guide
+     ../tools/lesson-shell/   tokens, shell CSS, shell behaviour, version stamp
 
-   The guide is canonical in src/presenter-guide.html. Its scoped stylesheet and
-   its .guide-scope div are lifted into the app verbatim, so Settings ->
-   Open Presenter Notes works from the single file with no sibling to fetch. One
-   source of truth: edit src/presenter-guide.html, never the copies.
+   THE SHARED KIT IS A BUILD-TIME DEPENDENCY ONLY. Its CSS and behaviour are
+   inlined here, so the shipped index.html is still one self-contained file
+   with zero <script src> and zero <link href>. CONTRACT.md's self-containment
+   requirement is about the built file; it says the build must be reproducible
+   from the committed sources and does not require them to live in this
+   folder (orchestrator ruling, 2026-09-15). The build stamps the output with
+   a hash of the kit's CSS, so this demo goes red if the kit changes under it.
 
-   Marker rule (do not soften it). Every marker below is found by a regex
-   anchored to the start of a line, searched over a copy of the guide in which
-   every <!-- ... --> region has been blanked to same-length spaces, and refused
-   unless it matches EXACTLY ONCE. Both halves are load-bearing: this file used
-   to say indexOf('<style>'), and the guide's own head comment contains that
-   literal while describing the mechanism, so extraction silently began inside
-   the comment and the browser dropped the first scoped rule. Naming the block
-   by id is not enough on its own -- a comment that documents the id matches it
-   too. */
-const fs = require('fs');
-const path = require('path');
-const SRC = path.join(__dirname, 'src');
-const OUT = __dirname;
-const CHECK = process.argv.includes('--check');
+   ONE SOURCE FOR THE NOTES. src/demo-guide.html is canonical for three
+   surfaces: the printable page shipped as presenter-guide.html, the rendered
+   Two-Winters-Presenter-Guide.pdf, and the app's Settings -> Open Presenter
+   Notes overlay. Its scoped stylesheet and its .guide-scope body are lifted
+   verbatim and injected, so nothing is fetched at runtime and --check fails
+   the moment any surface drifts. The shipped filename stays
+   presenter-guide.html because it is a public URL (demo.json -> guide).
 
-const CSS_FILES = ['styles.css'];
-const JS_FILES  = ['data.js', 'engine.js', 'timeline.js', 'app.js'];
+   data.js, engine.js and timeline.js carry CommonJS tails so node can
+   require them for the test suites; `typeof module` is undefined in the
+   browser and the guard handles it. A literal </script> in any string would
+   close the inline script early, so it is neutralised before injection.
 
-const read = f => fs.readFileSync(path.join(SRC, f), 'utf8');
+     node build.js           writes index.html and presenter-guide.html
+     node build.js --check   verifies both against the canonical build, and
+                             that the PDF is no older than the guide; writes
+                             nothing, exits 1 on any drift
+*/
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const shell = require('../tools/lesson-shell');
+const gc = require('../tools/lesson-shell/guide-contract');
 
-const css = CSS_FILES.map(f => `/* ==== ${f} ==== */\n` + read(f)).join('\n\n');
-let js    = JS_FILES.map(f => `/* ==== ${f} ==== */\n` + read(f)).join('\n\n');
-
-/* data.js, engine.js and timeline.js carry CommonJS tails so node can require
-   them for the test suite; `typeof module` is undefined in the browser and the
-   guard handles it. A literal </script> in any string would close the inline
-   script early, so neutralise those. */
-js = js.replace(/<\/script/gi, '<\\/script');
-
+const here = __dirname;
+const S = f => fs.readFileSync(path.join(here, 'src', f), 'utf8');
 const die = msg => { console.error(msg); process.exit(1); };
 
-/** Blank every HTML comment to same-length spaces (newlines kept, so line
- *  anchors and offsets both survive). Searching this copy means no marker can
- *  ever be matched inside prose that merely talks about the marker. */
-function maskComments(s) {
-  return s.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
+const JS_FILES = ['data.js', 'engine.js', 'timeline.js', 'app.js'];
+
+const paths = {
+  index: path.join(here, 'index.html'),
+  srcGuide: path.join(here, 'src', 'demo-guide.html'),
+  guideOut: path.join(here, 'presenter-guide.html'),
+  pdfOut: path.join(here, 'Two-Winters-Presenter-Guide.pdf')
+};
+
+function buildHtml() {
+  const guideSrc = S('demo-guide.html');
+  /* Line-anchored, unique markers and the scope-leak parse both live in the
+     kit now (guide-contract.js) — the exact discipline this file's own
+     history warned about: a plain indexOf('<style>') once matched this
+     guide's own head comment describing the mechanism, one line before the
+     real block. */
+  const guide = gc.extractGuide(guideSrc);
+
+  let js = JS_FILES.map(f => `/* ==== ${f} ==== */\n` + S(f)).join('\n\n');
+  js = js.replace(/<\/script/gi, '<\\/script');
+
+  let html = S('template.html');
+  const markers = [
+    shell.MARKERS.stamp,
+    shell.MARKERS.shellCss,
+    shell.MARKERS.appCss,
+    shell.MARKERS.guideCss,
+    shell.MARKERS.shellJs,
+    shell.MARKERS.app,
+    shell.MARKERS.guide
+  ];
+  gc.assertPlaceholders(html, markers);
+
+  /* Each injection is exactly-once and uses a function replacement, because a
+     dollar-sign substitution pattern in the injected text would otherwise be
+     eaten by String.replace. injectOnce does both. */
+  html = gc.injectOnce(html, shell.MARKERS.stamp, shell.stamp());
+  html = gc.injectOnce(html, shell.MARKERS.shellCss, shell.css());
+  html = gc.injectOnce(html, shell.MARKERS.appCss, S('styles.css'));
+  html = gc.injectOnce(html, shell.MARKERS.guideCss, guide.css);
+  html = gc.injectOnce(html, shell.MARKERS.shellJs, shell.behaviourScript());
+  html = gc.injectOnce(html, shell.MARKERS.app, js);
+  html = gc.injectOnce(html, shell.MARKERS.guide, guide.html);
+
+  /* The one permitted reference is the hyperlink to the printable guide
+     sitting beside index.html. CONTRACT.md 2026-09-08: an <a href> the reader
+     may choose to follow is not a network call by the page. The outbound
+     source links (<a href="https://...">) are the point of the demo and are
+     user-initiated navigations, not runtime fetches, so they are not part of
+     this allow-list — assertNoExternalRefs only restricts resource-loading
+     tags (script/link/img/iframe/source/video/audio/object). */
+  gc.assertNoExternalRefs(html, ['presenter-guide.html']);
+  /* And nothing may be fetched at runtime. The scan strips comments, which is
+     what makes it able to miss things, so it proves itself on synthetic bait
+     before its silence is believed. */
+  const control = gc.assertNoRuntimeLoads(html);
+
+  return { html, guideSrc, guideHtml: guide.html, control };
 }
 
-/** Index of the one line that starts with `marker`. Exactly once, or die. */
-function onceAtLineStart(masked, marker, what) {
-  const re = new RegExp('^' + marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gm');
-  const hits = [];
-  for (let m; (m = re.exec(masked)) !== null; ) hits.push(m.index);
-  if (hits.length !== 1) {
-    die(`guide marker ${what} must appear exactly once at the start of a line in `
-      + `src/presenter-guide.html; found ${hits.length}`);
+function main(argv) {
+  const unknown = argv.filter(a => a !== '--check');
+  if (unknown.length) die('Unknown build option: ' + unknown.join(', '));
+  const { html, guideSrc, guideHtml, control } = buildHtml();
+  const checkOnly = argv.includes('--check');
+
+  if (!checkOnly) {
+    fs.writeFileSync(paths.index, html);
+    fs.copyFileSync(paths.srcGuide, paths.guideOut);
+    console.log('built index.html (' + Math.round(html.length / 1024) + ' KB) and presenter-guide.html');
+    console.log('  lesson-shell ' + shell.stamp());
+    console.log('  presenter notes injected from src/demo-guide.html: ' +
+      guideHtml.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length + ' words');
+    console.log('  runtime-load scan passed, proved on ' + control.controls + ' positive controls');
+    console.log('NOTE: if the guide changed, re-render the PDF: node tools/pdf.mjs');
+    return 0;
   }
-  return hits[0];
-}
 
-/* Pull the guide apart. <style id="guide-css"> is the block scoped to
-   .guide-scope and safe to inject; the unnamed block after it is page chrome
-   for the standalone printable file and must not leak into the app. */
-const guideSrc = read('presenter-guide.html');
-const guideMasked = maskComments(guideSrc);
-
-const CSS_OPEN = '<style id="guide-css">';
-const G_OPEN = '<div class="guide-scope">';
-const G_CLOSE = '</div><!-- /guide -->';
-
-const sOpen = onceAtLineStart(guideMasked, CSS_OPEN, CSS_OPEN);
-const sClose = guideMasked.indexOf('</style>', sOpen);
-if (sClose < 0) die('guide marker </style> missing after ' + CSS_OPEN);
-const gStart = onceAtLineStart(guideMasked, G_OPEN, G_OPEN);
-/* The end marker carries its own comment terminator, so it cannot itself sit
-   inside a comment; it is matched on the raw text, still exactly once. */
-const gEnd = onceAtLineStart(guideSrc, G_CLOSE, G_CLOSE);
-if (!(sOpen < sClose && sClose < gStart && gStart < gEnd)) {
-  die('guide markers are out of order in src/presenter-guide.html');
-}
-
-const guideCss = guideSrc.slice(sOpen + CSS_OPEN.length, sClose);
-const guideHtml = guideSrc.slice(gStart, gEnd) + '</div>';
-if (/^\s*body\s*[,{]/m.test(guideCss)) {
-  die('guide stylesheet leaks a page-level rule into the app');
-}
-/* Canaries for the failure this build used to ship: if extraction ever begins
-   or ends in the wrong place, comment syntax or a nested tag comes with it. */
-for (const [needle, where] of [['<!--', 'CSS'], ['-->', 'CSS'], ['<style', 'CSS']]) {
-  if (guideCss.includes(needle)) die(`extracted guide ${where} contains "${needle}" — marker search went wrong`);
-}
-if (!/^\s*\.guide-scope\b/m.test(guideCss)) {
-  die('extracted guide CSS does not start with a .guide-scope rule — marker search went wrong');
-}
-if (!guideHtml.startsWith(G_OPEN) || !guideHtml.endsWith('</div>')) {
-  die('extracted guide body is not the .guide-scope div');
-}
-
-const tpl = read('template.html');
-const tplMasked = maskComments(tpl);
-for (const ph of ['/*__CSS__*/', '/*__JS__*/', '/*__GUIDE_CSS__*/']) {
-  /* String.replace substitutes the FIRST occurrence, so a second copy of a
-     placeholder — in a head comment, say — would silently take the payload. */
-  const n = tpl.split(ph).length - 1;
-  if (n !== 1) die(`template placeholder ${ph} must appear exactly once; found ${n}`);
-}
-/* <!--__GUIDE__--> is itself a comment, so count it before masking and require
-   that masking removes every copy (i.e. no stray literal outside a comment). */
-{
-  const n = tpl.split('<!--__GUIDE__-->').length - 1;
-  if (n !== 1) die(`template placeholder <!--__GUIDE__--> must appear exactly once; found ${n}`);
-  if (tplMasked.includes('__GUIDE__')) die('template has a stray __GUIDE__ outside a comment');
-}
-const html = tpl
-  .replace('/*__CSS__*/', () => css)
-  .replace('/*__GUIDE_CSS__*/', () => guideCss)
-  .replace('<!--__GUIDE__-->', () => guideHtml)
-  .replace('/*__JS__*/', () => js);
-
-/* A single file means a single file: nothing may be fetched at runtime. */
-const offenders = [];
-html.replace(/<(script|link|img|iframe|source|video|audio)\b[^>]*>/gi, (tag) => {
-  if (/\b(src|href)\s*=\s*["']?(?!#)[^"'>\s]+/i.test(tag) && !/data:/i.test(tag)) offenders.push(tag.slice(0, 80));
-  return tag;
-});
-if (offenders.length) {
-  console.error('build refuses to ship an external reference:\n  ' + offenders.join('\n  '));
-  process.exit(1);
-}
-
-const indexOut = path.join(OUT, 'index.html');
-const guideOut = path.join(OUT, 'presenter-guide.html');
-const sameIndex = fs.existsSync(indexOut) && fs.readFileSync(indexOut, 'utf8') === html;
-const sameGuide = fs.existsSync(guideOut) && fs.readFileSync(guideOut, 'utf8') === guideSrc;
-
-if (CHECK) {
-  if (!sameIndex) {
-    console.error('PARITY MISMATCH: index.html differs from the canonical build output. Run: node build.js');
-    process.exit(2);
+  const same = (file, want) => fs.existsSync(file) && fs.readFileSync(file, 'utf8') === want;
+  if (!same(paths.index, html)) {
+    console.error('build parity MISMATCH -- index.html differs from the canonical build. Run: node build.js');
+    console.error('(the in-app presenter notes are generated from src/demo-guide.html, and the shell CSS');
+    console.error(' comes from ../tools/lesson-shell, so a change to either requires a rebuild)');
+    return 1;
   }
-  if (!sameGuide) {
-    console.error('PARITY MISMATCH: presenter-guide.html differs from src/presenter-guide.html. Run: node build.js');
-    process.exit(2);
+  if (!same(paths.guideOut, guideSrc)) {
+    console.error('build parity MISMATCH -- presenter-guide.html differs from src/demo-guide.html. Run: node build.js');
+    return 1;
   }
-  console.log('PARITY OK: index.html and presenter-guide.html match the canonical build; no files written.');
-  process.exit(0);
+  if (!fs.readFileSync(paths.index, 'utf8').includes(guideHtml)) {
+    console.error('build parity MISMATCH -- the in-app presenter notes are not the guide body. Run: node build.js');
+    return 1;
+  }
+  /* The PDF is a render, not a copy, so it cannot be compared byte for byte.
+     Freshness is the pin that is available: it must not predate the guide it
+     is a picture of. Two seconds of slack absorbs a fresh checkout, which
+     stamps every file at about the same instant. */
+  if (!fs.existsSync(paths.pdfOut)) {
+    console.error('build parity MISMATCH -- Two-Winters-Presenter-Guide.pdf is missing. Run: node tools/pdf.mjs');
+    return 1;
+  }
+  const lag = fs.statSync(paths.srcGuide).mtimeMs - fs.statSync(paths.pdfOut).mtimeMs;
+  if (lag > 2000) {
+    console.error('build parity MISMATCH -- Two-Winters-Presenter-Guide.pdf is older than src/demo-guide.html by ' +
+      (lag / 1000).toFixed(0) + 's. Run: node tools/pdf.mjs');
+    return 1;
+  }
+  console.log('build parity OK -- index.html, presenter-guide.html and the in-app presenter notes all derive');
+  console.log('build parity OK -- from src/demo-guide.html, and the PDF is no older than it; no files written');
+  console.log('build parity OK -- lesson-shell ' + shell.stamp());
+  return 0;
 }
 
-fs.writeFileSync(indexOut, html);
-console.log('WRITE OK: index.html written:', (html.length / 1024).toFixed(0) + ' KB');
-fs.writeFileSync(guideOut, guideSrc);
-console.log('WRITE OK: presenter-guide.html copied');
+module.exports = { buildHtml, paths };
+
+if (require.main === module) process.exitCode = main(process.argv.slice(2));
