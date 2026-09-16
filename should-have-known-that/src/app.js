@@ -619,7 +619,33 @@
         'Log average: <b>' + logRound + ' pts/question</b> (' + G.log.answers.length + ' questions). ' + control + verdict + sample;
     }
     $('cue-3').textContent = 'Debrief computed from ' + allAnswers.length + ' answers this session.';
+    echoPrediction();
   }
+
+  /* ---------- stage 3 Predict capture (A2). The card asks "which deck scored
+     higher?"; before this existed nothing captured the answer and #echo-3 was
+     never written. The two buttons record it, and the echo shows the
+     prediction beside the observed direction once the debrief has run. ---- */
+  let predict3 = null;
+  function echoPrediction() {
+    const echo = $('echo-3');
+    if (!echo) return;
+    if (!predict3) { echo.hidden = true; echo.textContent = ''; return; }
+    let observed = '';
+    if (G && G.log && G.log.i >= G.log.deck.length && G.linear.answers.length && G.log.answers.length) {
+      const avg = arr => arr.reduce((s, a) => s + a.pts, 0) / arr.length;
+      const lin = Math.round(avg(G.linear.answers)), lg = Math.round(avg(G.log.answers));
+      observed = lin === lg ? ' Observed: a tie.' : ' Observed: ' + (lg > lin ? 'log' : 'linear') + ' scored higher' +
+        ((lg > lin) === (predict3 === 'log') ? ' — as you predicted.' : ' — not what you predicted.');
+    }
+    echo.hidden = false;
+    echo.textContent = 'You predicted: ' + predict3 + '.' + observed;
+  }
+  document.querySelectorAll('.predict-opt').forEach(b => b.addEventListener('click', () => {
+    predict3 = b.dataset.deck;
+    document.querySelectorAll('.predict-opt').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    echoPrediction();
+  }));
 
   /* ---------- wiring: stage 1 ---------- */
   $('start-btn').addEventListener('click', startLinear);
@@ -671,10 +697,14 @@
           nothing extra is needed here — listed to say it was checked, not
           because it needs code.
        6. Any pending reveal-animation timers, cancelled — a Reset mid-reveal
-          must not let a queued frame write into freshly reset chrome. */
+          must not let a queued frame write into freshly reset chrome.
+       7. Stage 3's captured prediction (predict3) and the two Predict buttons'
+          aria-pressed state — the kit's snapshot restores #echo-3 itself. */
   document.addEventListener('lessonreset', () => {
     clearTimers();
     G = null;
+    predict3 = null;
+    document.querySelectorAll('.predict-opt').forEach(x => x.setAttribute('aria-pressed', 'false'));
     sel.len = 10; sel.mode = 'solo'; sel.teamCount = 2; sel.cats = new Set(CATS);
     teamNameDefaults.splice(0, teamNameDefaults.length, 'Team 1', 'Team 2', 'Team 3', 'Team 4');
     buildSetup();
