@@ -3,20 +3,30 @@
 Murray State University · Instrumental Analysis
 
 **Time-of-Flight Mass Spectrometer** (folder `ion-flight/`) is a self-contained,
-guided linear time-of-flight (TOF) mass-spectrometry investigation. Students predict and run three linked two-ion
-experiments: change mass, change positive charge, then match mass-to-charge ratio.
-The instrument animation, detector arrival cues, and trace produce the evidence used
-to explain each prediction.
+guided linear time-of-flight (TOF) mass-spectrometry investigation. It is **Demo 13 of
+16** in the *AI: From Zero to Takeoff* tour (Part four, Example projects). Students
+predict and run three linked two-ion experiments — change mass, change positive charge,
+then match mass-to-charge ratio — and a fourth stage compares peak widths. The
+instrument animation, detector arrival cues, and trace produce the evidence used to
+explain each prediction.
+
+The four stages appear as tabs under the header, each with the question it answers.
+Stages 2 and 3 unlock as the previous stage produces evidence, because committing to a
+prediction before observing is the point; stage 4 is open from the start. Each stage
+carries a **Predict / Try / Takeaway** strip, an **observation cue** that names what to
+notice as it happens, a **Details** drawer with the formula, the assumptions and the
+sources, and a **Check yourself** card with written feedback on every option. A stage
+can be deep-linked with `#stage-4`.
 
 Open `index.html` in a browser. It is offline, needs no installation, and works with
 mouse or touch. The Guide overlay opens on load and the `?` control reopens it. The
 ⚙ Settings menu offers **Open Presenter Notes**, **Presentation mode** and **Reset**
-(back to the fresh-load state). Open `teacher-guide.html` to print the guide;
-`teacher-guide.pdf` is the copy declared in the manifest, rendered from that same
-canonical HTML by `tools/pdf.mjs`.
+(back to the fresh-load state). Open `teacher-guide.html` to print the guide; `teacher-guide.pdf` is the copy declared
+in the manifest. Both are generated from `src/demo-guide.html` — the canonical source —
+by `build.js` and `tools/pdf.mjs`.
 
 The presenter notes shown in the app are not a summary of the guide — they are the
-guide. `build.js` injects the body and stylesheet of `teacher-guide.html` into
+guide. `build.js` injects the body and stylesheet of `src/demo-guide.html` into
 `index.html` at build time, and `node build.js --check` fails if the two have
 drifted, so the notes cannot quietly fall behind the printed document.
 
@@ -37,6 +47,8 @@ The sequence establishes:
 1. With +1 charge held constant, 100 Da arrives before 400 Da.
 2. With 200 Da mass held constant, +2 arrives before +1.
 3. 200 Da/+1 and 400 Da/+2 coincide because both have m/z = 200.
+4. Whether a longer tube separates two close peaks depends on how the peak width
+   behaves, not on the length alone.
 
 The final transfer prompt asks why one detector peak cannot, by itself, establish
 one kind of ion or identify a real molecule. Prediction feedback reports whether
@@ -73,14 +85,28 @@ promise that a longer tube universally improves resolution.
 
 | File | Role |
 | --- | --- |
-| `model.js` | Tested SI physics, lesson state/evidence, timing scale, and resolution comparison. |
-| `app.template.html` | UI source containing the bundle marker. |
-| `build.js` | Bundles `model.js` and the teacher guide into the offline `index.html`. |
+| `src/model.js` | Tested SI physics, lesson state/evidence, timing scale, and resolution comparison. |
+| `src/template.html` | Markup source, carrying the injection markers. |
+| `src/styles.css` | The **activity** styles only — the instrument, the ion cards, the canvases. The lesson shell's styles are shared (see below). |
+| `src/app.js` | The view layer: rendering, the flight animation, the detector trace, the stage-4 comparison. |
+| `src/demo-guide.html` | Canonical printable instructor guide, and the single source of the in-app presenter notes and the PDF. |
+| `build.js` | Bundles `src/` plus the shared lesson shell into the offline `index.html`, and copies the guide out to `teacher-guide.html`. |
 | `test-model.js` | Independent numeric fixtures plus lesson-state, evidence, timing, and resolution invariants. |
-| `test-build.js` | Verbatim bundle, actual inline-script syntax, lesson markers, cancellation, and read-only build checks. |
-| `teacher-guide.html` | Canonical printable instructor guide, and the single source of the in-app presenter notes. |
-| `tools/pdf.mjs` | Renders that guide to `teacher-guide.pdf` with an installed headless Chrome or Edge. No dependencies. |
-| `tools/render_guide.py` | Superseded. The earlier ReportLab renderer; it predates the guide restructure, no longer matches the document shape, and needs a Python environment with ReportLab. Use `tools/pdf.mjs`. |
+| `test-build.js` | Verbatim bundle, inline-script syntax, the mechanism pins (animation clock origin, prediction lock, summed trace, width-rule assumption labels), the lesson-template parts, and the drift gate proved in four directions. |
+| `teacher-guide.html`, `teacher-guide.pdf` | Generated. The shipped printable guide and its render; both derive from `src/demo-guide.html`. The filenames are public URLs and do not change. |
+| `tools/pdf.mjs` | Renders the guide to `teacher-guide.pdf` with an installed headless Chrome or Edge. No dependencies. |
+
+### The shared lesson shell
+
+The header, stage tablist, stage intro, lesson strip, provenance kickers, observation
+cue, Details drawer, check cards, dialogs, credit pill, breakpoints and presentation
+scaling all come from **`../tools/lesson-shell/`**, which is one canonical copy shared
+by every demo in the tour. `build.js` reads it at build time and inlines it, so the
+shipped `index.html` is still a single self-contained file with zero `<script src>` and
+zero `<link href>`. The build stamps the output with the kit's version and a hash of
+its CSS, so if the kit changes and this demo is not rebuilt, `node build.js --check`
+and `node ../tools/lesson-shell/check-shell.js ion-flight` both fail. Editing the
+shell here is not possible by design: change it in the kit, and every demo gets it.
 
 Run with the repository’s available Node runtime:
 
@@ -89,13 +115,14 @@ node test-model.js
 node test-build.js
 node build.js --check
 node tools/pdf.mjs --check
-# Run these after changing app.template.html, model.js or teacher-guide.html:
+node ../tools/lesson-shell/check-shell.js ion-flight
+# Run these after changing anything in src/ or in ../tools/lesson-shell/:
 node build.js
 node tools/pdf.mjs
 ```
 
 `node build.js --check` is read-only and fails if `index.html` is not the exact bundle
-of the checked-in template, production model and teacher guide — which is also what
+of the checked-in sources, the production model, the teacher guide and the shared lesson shell — which is also what
 proves the in-app presenter notes still match the printable guide. `node build.js`
 writes that bundle. `test-build.js` runs the check both ways: clean sources pass, and
 a copy of the demo whose guide was edited without a rebuild fails.
@@ -107,7 +134,7 @@ produced exactly one network request, the document itself. The built file contai
 links are the outbound `<a>` reading sources in the guide. Opening the file directly
 from disk (`file://`) with the network switched off was not exercised in that pass.
 
-After editing `teacher-guide.html`, run `node build.js` to refresh the in-app notes and
+After editing `src/demo-guide.html`, run `node build.js` to refresh the in-app notes and
 `node tools/pdf.mjs` to re-render the PDF. The renderer drives an installed headless
 Chrome or Edge (set `CHROME_PATH` to point at one elsewhere), needs no packages, and
 resolves files relative to its own location. Inspect the rendered pages before sharing
