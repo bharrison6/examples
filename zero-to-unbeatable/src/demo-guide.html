@@ -75,9 +75,9 @@ body { margin: 0; background: #fff; color: #14181f; font: 16px/1.55 system-ui, -
 <ol class="goals">
   <li><b>1a.</b> This opponent&rsquo;s skill came from a person: changing its rules changes its play, and playing more games changes nothing.</li>
   <li><b>1b.</b> Reinforcement learning stores experience as a separate score for each position; only an exhaustive search over every game line, not a good record, earns the word unbeatable.</li>
-  <li><b>1c.</b> A network&rsquo;s error measures fit to its training targets; held-out error shows how that fit carries to positions it never practised, and neither is a playing-strength guarantee.</li>
+  <li><b>1c.</b> Shared weights give the network an answer for a board it never practised on &mdash; which a table cannot do &mdash; and training on other boards makes that answer better. The error readings say how close the answer is to the teacher&rsquo;s, not how well it plays.</li>
   <li><b>1d.</b> Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</li>
-  <li><b>Model types.</b> A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside; one neural-network family, the transformer, sits behind text, image, audio, video and multimodal types alike.</li>
+  <li><b>Model types.</b> A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside. One neural-network family, the transformer, serves text, vision, audio, video and multimodal types; generating images, audio and video also leans on a different family, diffusion models, which Hugging Face keeps in a library of its own.</li>
 </ol>
 
 <h2>Where this sits on the path</h2>

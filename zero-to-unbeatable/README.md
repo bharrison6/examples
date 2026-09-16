@@ -72,9 +72,11 @@ recorded; nothing is written from memory, and nothing is fetched at runtime — 
 links are ordinary hyperlinks the reader may choose to follow.
 
 The stage takeaway is the link back to the architecture lens: a type names the job,
-not the internals, and one neural-network family — the transformer — sits behind
-types on every branch of the catalogue, which Hugging Face's own framework page
-says in as many words.
+not the internals. One neural-network family — the transformer — serves text,
+vision, audio, video and multimodal jobs, which Hugging Face's own framework page
+says in as many words; generating images, audio and video also leans on diffusion
+models, a different family Hugging Face keeps in a separate library (Diffusers).
+Sources and fetch dates are in the stage's Details drawer.
 
 ## Presenter and contract surfaces
 
