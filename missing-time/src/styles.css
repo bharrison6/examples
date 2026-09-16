@@ -1,0 +1,56 @@
+/* Gaps in the Rock Record — ACTIVITY styles only. The shell owns the header,
+   stage nav, stage-intro, lesson-strip, dialogs, Details drawer, check cards,
+   credit pill and every generic control reset — see ../tools/lesson-shell.
+   Everything here is namespaced `mt-` so it cannot collide with a class the
+   kit already uses (ADOPTING.md's rename-on-collision warning). */
+
+.mt-investigation-host:empty { min-height: 0; }
+
+/* ---- linked rock/time columns ------------------------------------------- */
+.mt-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 12px 0; }
+.mt-column { min-width: 0; border-radius: var(--radius-2); overflow: hidden; background: rgba(255,255,255,.06); }
+.mt-column h4 { margin: 0; padding: 8px 10px; background: rgba(255,255,255,.1); color: #fff; font-size: calc(var(--u) * .84); font-weight: 800; }
+.mt-linked { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+.mt-linked figure { margin: 0; min-width: 0; }
+.mt-linked figcaption { margin: 0 0 3px; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .7); font-weight: 750; text-align: center; text-transform: uppercase; letter-spacing: .04em; }
+.mt-linked svg { display: block; width: 100%; height: 220px; background: rgba(255,255,255,.9); border-radius: 6px; }
+.mt-linked svg text { font-size: 8px; }
+.mt-sample-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
+.mt-sample {
+  min-height: 38px; border: 1px solid var(--line-on-navy); border-radius: 7px;
+  padding: 6px 9px; background: transparent; color: #fff; font-size: calc(var(--u) * .78); font-weight: 750;
+}
+.mt-sample:hover { background: rgba(255,255,255,.14); }
+.mt-sample[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+
+/* ---- Predict guess capture, inside the lesson-strip Predict card -------- */
+.mt-predict-btns { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
+.mt-guess { min-height: 34px; border: 1px solid var(--navy); border-radius: 7px; padding: 5px 9px; background: var(--paper); color: var(--navy); font-size: calc(var(--u) * .78); font-weight: 750; }
+.mt-guess:hover:not(:disabled) { background: var(--navy); color: #fff; }
+.mt-guess[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.mt-guess:disabled { opacity: .55; }
+
+/* ---- supplied age evidence + reveal boxes ------------------------------- */
+.mt-timebox { margin-top: 10px; border-left: 4px solid var(--gold); border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 10px 12px; background: var(--cream); color: var(--ink); font-size: calc(var(--u) * .88); }
+.mt-timebox hr { margin: 8px 0; border: 0; border-top: 1px solid var(--cream-deep); }
+
+/* ---- evidence ledger ----------------------------------------------------- */
+.mt-ledger-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.mt-ledger-list li { border-left: 4px solid var(--lite); border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 7px 10px; background: var(--cream); font-size: calc(var(--u) * .86); }
+.mt-ledger-list li.mt-ledger-empty { border-left-color: var(--line); color: var(--ink-3); }
+
+/* ---- warranted-conclusion choices ---------------------------------------- */
+.mt-conclusions { display: grid; gap: 8px; margin: 10px 0; }
+.mt-choice {
+  width: 100%; text-align: left; min-height: 44px; border: 1px solid var(--line);
+  border-radius: var(--radius-2); padding: 9px 11px; background: var(--paper); color: var(--ink);
+  font-size: calc(var(--u) * .9); font-weight: 700;
+}
+.mt-choice:hover:not(:disabled) { border-color: var(--navy); background: var(--cream); }
+.mt-conclusion-feedback { border-left: 4px solid var(--gold); border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 9px 11px; background: var(--cream); color: var(--ink-2); font-size: calc(var(--u) * .9); min-height: 20px; }
+.mt-conclusion-feedback b { color: var(--navy); }
+
+@media (max-width: 760px) {
+  .mt-linked { grid-template-columns: 1fr; }
+  .mt-linked svg { height: 190px; }
+}

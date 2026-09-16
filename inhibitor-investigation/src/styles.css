@@ -1,0 +1,73 @@
+/* Inhibitor Investigation — the ACTIVITY's own styles only (template part
+   A3). The shared lesson shell (../tools/lesson-shell) owns everything the
+   template names as "wraps": the header, the stage tablist, the stage intro
+   and lesson strip, the eyebrow, the Details/Guide/Settings/Presenter-Notes
+   dialogs, the check-yourself cards, and the credit pill. It also supplies
+   .panel-head, .panel-kicker (+ the six .k-* provenance colors), .panel-lede,
+   .control-label, .obs-cue, .workbench (a navy "live machine" surface), .btn
+   / .btn.ghost, and .evidence-card / .details-formula for the Details drawer.
+   None of those are redefined here.
+
+   This demo's own containers: the bench (the one navy .workbench surface —
+   the assay bench and its chart are the "live machine"), and three light
+   paper cards (.panel) for the evidence ledger, the explain-before-reveal
+   panel, the candidate-model reference, and the transfer panel — mirroring
+   two-winters' split between its navy "bench" surfaces and its light
+   "guess-wrap"/"reveal-wrap" panels. No kit color token is renamed; --dot-*
+   are new, activity-only colors for the three candidate curves, matching the
+   swatches already used in the legend and the chart. */
+
+a { color: var(--lite-deep); text-underline-offset: 3px; overflow-wrap: anywhere; }
+.fine { font-size: .85em; color: var(--ink-2); }
+
+/* A light paper card, for surfaces that are not the navy "live machine". */
+.panel { padding: 20px 22px; margin: 16px 0 0; border: 1px solid var(--cream-deep); border-radius: var(--radius); background: var(--paper); }
+.panel:first-child { margin-top: 0; }
+
+/* ---- Stage 1 — Bench ----------------------------------------------------- */
+.bench-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 20px; align-items: start; }
+.bench-controls, .bench-chart { min-width: 0; }
+
+.select-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 4px 0 12px; }
+.choice { min-height: 44px; padding: 9px 6px; border: 1px solid var(--line-on-navy); background: transparent; color: var(--ink-on-navy); border-radius: var(--radius-2); font-weight: 700; }
+.choice.selected { background: var(--gold); border-color: var(--gold); color: #172332; }
+.run { width: 100%; min-height: 44px; border: 0; background: var(--gold); color: #172332; padding: 12px; border-radius: var(--radius-2); font-weight: 900; }
+.run:disabled { background: rgba(255, 255, 255, .2); color: var(--ink-3-on-navy); cursor: not-allowed; }
+.budget { margin: 13px 0 0; font-size: .88em; color: var(--ink-2-on-navy); }
+.meter { height: 8px; background: rgba(255, 255, 255, .18); border-radius: 8px; overflow: hidden; margin-top: 5px; }
+.meter i { display: block; height: 100%; background: var(--gold); }
+.status { margin-top: 12px; padding: 10px 11px; border-radius: var(--radius-2); background: rgba(255, 255, 255, .1); font-size: .9em; color: var(--ink-on-navy); }
+
+.legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: .82em; margin: 0 0 8px; color: var(--ink-2-on-navy); }
+.key { display: flex; align-items: center; gap: 5px; }
+.dot { display: inline-block; width: 11px; height: 11px; border-radius: 50%; }
+.dash { display: inline-block; width: 18px; border-top: 3px dashed var(--ink-3-on-navy); }
+#chart { display: block; width: 100%; height: auto; }
+
+.evidence-panel .assays { margin: 12px 0 0; padding: 0; list-style: none; display: grid; gap: 7px; }
+.evidence-panel .assays li { border-left: 4px solid var(--lite); background: var(--cream); padding: 8px 10px; border-radius: 6px; font-size: .92em; }
+.evidence-panel .assays li.empty { color: var(--ink-2); border-left-color: var(--line); }
+
+.new-sample-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.new-sample-row .fine { margin: 0; max-width: 60ch; }
+
+/* ---- Stage 2 — Explain ---------------------------------------------------- */
+.explain-grid { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 16px; }
+.explain-options { display: grid; gap: 8px; margin: 4px 0 12px; }
+.explain-options button { width: 100%; text-align: left; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); background: #fff; border-radius: var(--radius-2); color: var(--ink); font-weight: 650; }
+.explain-options button:hover { border-color: var(--lite-deep); }
+.candidate-card p { color: var(--ink-2); font-size: .92em; }
+.candidate-card code { background: var(--cream); padding: 1px 4px; border-radius: 4px; }
+
+/* ---- Stage 3 — Transfer ---------------------------------------------------- */
+.transfer-options { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+.transfer-options button { min-height: 44px; padding: 10px 14px; border: 1px solid var(--line); background: #fff; border-radius: var(--radius-2); color: var(--ink); font-weight: 650; }
+.transfer-options button:hover { border-color: var(--lite-deep); }
+
+/* Shared feedback box for the Explain and Transfer panels. */
+.feedback { margin-top: 4px; padding: 12px 13px; border-radius: var(--radius-2); background: #FFF7D9; border-left: 4px solid var(--gold); font-size: .92em; color: var(--ink); }
+
+@media (max-width: 760px) {
+  .bench-grid, .explain-grid { grid-template-columns: 1fr; }
+  .select-grid { grid-template-columns: repeat(3, 1fr); }
+}
