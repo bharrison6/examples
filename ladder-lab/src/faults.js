@@ -545,6 +545,32 @@
       elStatus.textContent = 'Fault abandoned (a different program was loaded). Inject a new one when ready.';
     }
 
+    /* Required by the lesson-shell's in-place Reset (kit v2): before the kit,
+       Settings -> Reset reloaded the page, which threw this closure away for
+       free. `abandon()` alone is not a full reset — it leaves the "abandoned"
+       status wording, the specific-fault <details> possibly open, and the
+       in-memory best-times list, all of which a fresh load would not have.
+       Exposed on the shared ctx object (the existing inter-module channel:
+       getPlc/bus/bigUI already travel this way) rather than as a fourth
+       LL.Faults export, since app.js already holds this exact ctx. */
+    function reset() {
+      stopTimer();
+      state.active = null;
+      state.patched = null;
+      state.clicks = 0;
+      state.best = [];
+      btnReveal.disabled = true;
+      elLamp.className = 'flt-lamp';
+      elTimer.textContent = '—';
+      boxReveal.hidden = true;
+      boxReveal.textContent = '';
+      elStatus.textContent = 'No fault active. Inject one, then diagnose it from the ladder and the sim.';
+      listBest.textContent = '';
+      var teacher = containerEl.querySelector('.flt-teacher');
+      if (teacher) teacher.removeAttribute('open');
+    }
+    if (ctx) ctx.faultsReset = reset;
+
     btnInject.addEventListener('click', injectRandom);
     btnReveal.addEventListener('click', reveal);
     btnSpecific.addEventListener('click', function () {
