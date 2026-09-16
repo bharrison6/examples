@@ -74,7 +74,7 @@ function checkCard(opts) {
     '        <button class="check-option ' + (o.correct ? 'correct' : 'wrong') + '" type="button" aria-pressed="false"\n' +
     '                data-feedback="' + esc(o.feedback) + '">' + esc(o.label) + '</button>'
   ).join('\n');
-  return '    <section class="check"' +
+  return '    <section class="check" data-wrong-lead="Not what this demo showed."' +
     (opts.scenario ? ' data-scenario="' + esc(opts.scenario) + '"' : '') +
     (opts.hidden ? ' hidden' : '') +
     (opts.refutation ? ' data-refutation="true"' : '') +

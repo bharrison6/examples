@@ -25,6 +25,13 @@
      .btn .btn.ghost .btn.small
      .footer .footer-tools .footer-link
      .bh-credit
+     .intro-more                               (A2 phone disclosure, v3;
+                                                built by behaviourScript())
+
+   RESERVED, NOT VOCABULARY: `.hidden`. The kit backs it with
+   `display: none !important` (see the rule beside `[hidden]` below) so that a
+   retrofit which deletes the demo's own chrome stylesheet cannot take the rule
+   with it. A demo must not redefine it; check-shell.js fails one that does.
    =========================================================================== */
 
 * { box-sizing: border-box; }
@@ -36,6 +43,28 @@ body {
   font: 400 var(--u)/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 [hidden] { display: none !important; }
+/* A RESERVED KIT CLASS (v3), and the kit's one deliberate claim on a generic
+   author-space name. Added because five demos had independently written this
+   exact rule — bridge-works, should-have-known-that and the-stranger, all
+   spelling it `display: none !important` — and a retrofit that correctly
+   deletes the demo's own chrome stylesheet (ADOPTING.md §2) takes the rule with
+   it while the demo's JS keeps toggling the class. should-have-known-that
+   shipped straight into that: setup / turn / play panels rendered stacked, with
+   `build.js --check`, `check-shell` and `build-hub --check` all green, because
+   the markup and the contract were both correct. Five identical independent
+   copies of one rule is a missing kit primitive, not a coincidence.
+
+   `!important` is load-bearing, not defensive: without it a panel carrying its
+   own later `display: grid` wins on equal specificity and the class does
+   nothing — which is the exact case that fails.
+
+   THE PRICE, STATED: this is the one place the kit overrides a demo without
+   the demo being able to take it back unprefixed, so it is declared reserved
+   in ADOPTING.md rather than claimed quietly, and check-shell.js fails any
+   demo that defines `.hidden` as anything other than display:none. Prefer the
+   `hidden` ATTRIBUTE in new code — it is the platform's, it carries the right
+   semantics to assistive tech, and the rule above already covers it. */
+.hidden { display: none !important; }
 button, input, select, summary, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .48; cursor: not-allowed; }
@@ -157,8 +186,34 @@ section.stage.on { display: block; }
 .lesson-strip p { margin: 3px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .8); }
 /* Where the activity captured the prediction, the observed result is echoed
    beside it inside the Predict card. */
-.lesson-strip .echo { display: block; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--cream-deep); color: var(--ink); font-size: calc(var(--u) * .78); }
+/* text-transform is EXPLICITLY reset here, not merely omitted. `.echo` is a
+   span inside .lesson-strip article, and the card-label rule above styles
+   `.lesson-strip article span` — so without this the echo INHERITS the label's
+   uppercase and a captured prediction renders SHOUTING. Found by the
+   zero-to-unbeatable lane, which had to patch it demo-side; it belongs here.
+   letter-spacing is reset for the same reason. */
+.lesson-strip .echo {
+  display: block; margin-top: 5px; padding-top: 5px;
+  border-top: 1px dashed var(--cream-deep); color: var(--ink);
+  font-size: calc(var(--u) * .78);
+  font-weight: 400; text-transform: none; letter-spacing: normal;
+}
 .lesson-strip .echo b { color: var(--navy); }
+
+/* ---------- A2 phone intro disclosure (v3) --------------------------------
+   Operator ruling 2026-09-16, "collapsible intro at phone width". The
+   <details class="intro-more"> is BUILT BY behaviourScript() at runtime around
+   the lesson strip — partials.html is a reference sheet, not an injected file,
+   so markup there would reach only demos adopted after this change. See the
+   intro-disclosure section of index.js for why, and for what never collapses.
+
+   ABOVE 480px THIS IS INERT. The summary is display:none and the element is
+   held open, so the <details> is a transparent wrapper sitting in exactly the
+   grid cell .lesson-strip used to occupy: same geometry, no toggle chrome, and
+   nothing added to the accessibility tree. Desktop is unchanged by
+   construction rather than by inspection. */
+.stage-intro > .intro-more { grid-column: 1 / -1; margin: 0; }
+.intro-more > summary { display: none; }
 
 /* ---------- A3 provenance kickers and control labels ----------------------
    SIX WORDS, and they are the only vocabulary. A claim on screen without one
@@ -418,6 +473,47 @@ body.has-bottom-bar .bh-credit { display: none; }
   .check { padding: 15px 16px; }
 }
 @media (max-width: 480px) {
+  /* ---- A2 intro disclosure: the phone affordance ------------------------
+     The ONLY width at which the toggle exists. `phone` on the kit's own scale,
+     and the width at which the measurement says the intro stops fitting: at
+     320 the full intro is 726-775px against a 568-578px viewport, so it is
+     more than a whole screen by itself.
+
+     What stays visible when collapsed: the eyebrow, the h2 stage title, the
+     stage question and the Details pill. What goes behind the toggle: the
+     lesson strip (moved into the <details> by the shell) and the "Before you
+     start" refresh (hidden by the :has() rule below rather than moved, so the
+     desktop grid keeps identical geometry). The stage question stays because
+     it is the one line that orients; the h2 stays because .stage-intro is
+     aria-labelledby it, so hiding it would strip the region's accessible name.
+     The same judgement the landscape-short block below already made. */
+  .intro-more > summary {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 44px; margin-top: 2px;
+    border-top: 1px dashed var(--cream-deep); padding: 9px 2px 0;
+    color: var(--navy); font-size: calc(var(--u) * .72); font-weight: 850;
+    letter-spacing: .07em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  /* The default triangle is replaced by a chevron that reads at 12px and
+     rotates, so there is an unambiguous "there is more here" affordance. */
+  .intro-more > summary { list-style: none; }
+  .intro-more > summary::-webkit-details-marker { display: none; }
+  .intro-more > summary::after {
+    content: "\25BE"; margin-left: auto;
+    font-size: calc(var(--u) * .95); line-height: 1;
+    transition: transform .15s ease;
+  }
+  .intro-more[open] > summary::after { transform: rotate(180deg); }
+  .intro-more[open] > summary { border-bottom: 0; }
+  /* The refresh is HIDDEN, not moved: moving it out of .intro-copy would
+     change the desktop grid. :has() is already a dependency of this file (see
+     the credit pill's body:has(dialog[open]) rule). */
+  .stage-intro:has(> .intro-more:not([open])) .refresh { display: none; }
+  /* A projector is not a phone: presentation mode keeps the whole intro, and
+     the shell forces the element open to match. */
+  body.presenter .intro-more > summary { display: none; }
+
   .brandline { grid-template-columns: 1fr; }
   .msu-brand { white-space: normal; }
   .topline { align-items: start; }

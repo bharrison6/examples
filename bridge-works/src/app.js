@@ -13,7 +13,6 @@
        against the engine's record afterwards;
      * the A4 observation cues, edge-triggered off the build analysis and
        written from the test record;
-     * the A6 feedback prefix, overridden demo-side (THE KIT STRING below);
      * the lesson half of the in-place Reset.
 
    WHAT IT DELIBERATELY DOES NOT DO
@@ -24,15 +23,7 @@
        paints the PRE-reset state into freshly reset chrome. `stagechange` is a
        chrome event here, and a `resetting` flag (synthesised below, because
        the kit does not yet expose window.lessonShell.resetting) makes that
-       explicit rather than true by luck of ordering.
-
-   THE KIT STRING. lesson-shell v2's shared A6 handler hardcodes ion-flight's
-   wording — a wrong option is prefixed "Not what the detector showed." There
-   is no detector in a bridge simulator. The kit is FROZEN, so the fix belongs
-   on a kit branch and not in this lane; this file re-renders the feedback line
-   after the shell's handler has run, which works because the shell's script is
-   injected before this one and listeners fire in registration order. Fourth
-   demo to pay for this independently; recorded in the lane's friction list. */
+       explicit rather than true by luck of ordering. */
 (() => {
   'use strict';
 
@@ -218,21 +209,6 @@
     showCall();
     G.refresh();
   };
-
-  /* ---- A6: the feedback prefix, overridden demo-side -------------------
-     See THE KIT STRING at the top of this file. The shell has already written
-     its own prefix by the time this runs; this replaces the line wholesale. */
-  $$('.check').forEach(card => {
-    const out = card.querySelector('.check-feedback');
-    $$('.check-option').filter(b => card.contains(b)).forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!out) return;
-        out.innerHTML = (btn.classList.contains('correct')
-          ? '<b>Supported.</b> '
-          : '<b>Not what the solver showed.</b> ') + (btn.dataset.feedback || '');
-      });
-    });
-  });
 
   /* ---- the two directions of stage/level sync -------------------------- */
   function enterLevel(i) {

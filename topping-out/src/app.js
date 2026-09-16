@@ -1838,31 +1838,6 @@ TO.App = (function () {
     };
     document.getElementById('btn-lb-clear').onclick = clearLeaderboard;
 
-    /* ---- A6: repair the kit's leaked domain wording -------------------
-       lesson-shell v2's check-card handler hardcodes the wrong-answer prefix
-       as "Not what the detector showed." — ion-flight's noun, in every demo
-       that adopts the kit. There is no detector in a construction schedule,
-       and a learner reading it in this demo is being told about a machine
-       that does not exist.
-
-       THE KIT IS FROZEN, so this is repaired demo-side rather than upstream,
-       and it is reported in the lane's friction list for kit v3. The kit
-       registers its own click listener while its script runs, which is
-       before this file executes, so this listener fires AFTER it and gets the
-       last word on the same node. Only the prefix is rewritten; the
-       per-option feedback text is the demo's own and is left alone. */
-    document.addEventListener('click', function (e) {
-      var opt = e.target.closest && e.target.closest('.check-option');
-      if (!opt) return;
-      var card = opt.closest('.check');
-      var out = card && card.querySelector('.check-feedback');
-      if (!out) return;
-      out.innerHTML = out.innerHTML.replace(
-        '<b>Not what the detector showed.</b>',
-        '<b>Not what the schedule showed.</b>'
-      );
-    });
-
     /* Stage 4's own control. Mid-run it shows the calls table so far, which
        is what the session guide tells a presenter to open the debrief on;
        the full scoresheet appears once the job finishes. */
