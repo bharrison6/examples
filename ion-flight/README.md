@@ -21,7 +21,7 @@ can be deep-linked with `#stage-4`.
 Open `index.html` in a browser. It is offline, needs no installation, and works with
 mouse or touch. The Guide overlay opens on load and the `?` control reopens it. The
 ⚙ Settings menu offers **Open Presenter Notes**, **Presentation mode** and **Reset**
-(back to the fresh-load state). Open `teacher-guide.html` to print the guide; `teacher-guide.pdf` is the copy declared
+(back to the opening state, in place — the page does not reload). Open `teacher-guide.html` to print the guide; `teacher-guide.pdf` is the copy declared
 in the manifest. Both are generated from `src/demo-guide.html` — the canonical source —
 by `build.js` and `tools/pdf.mjs`.
 

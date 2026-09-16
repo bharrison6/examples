@@ -92,13 +92,31 @@ assert.ok(menu.indexOf('Presentation mode') < menu.indexOf('>Reset</button>'), '
 assert.doesNotMatch(menu, /Enter presentation mode|Exit presentation mode/,
   'the presentation item keeps one label; state rides on aria-pressed');
 
-/* Reset means fresh load, and must not reopen the Guide overlay. The shell
-   owns it now, so the assertion follows it there. */
+/* Reset is IN PLACE as of kit v2 (operator ruling 2026-09-16): the shell
+   restores the chrome it owns and dispatches `lessonreset`; this demo restores
+   the activity. Three properties are checkable here; the fourth -- that the
+   state actually comes back -- is browser-only, which is why the browser pass
+   is non-waivable.
+
+   The NEGATIVE assertion is the load-bearing one. "In place" is not visible in
+   a passing grep, and the way it regresses is a reload creeping back in, so
+   what is asserted is that no navigation primitive survives in the shell's
+   script at all. */
 const shellJs = scripts[1];
-assert.match(shellJs, /if \(document\.body\.classList\.contains\('presenter'\)\) f\.push\('presenting'\)/,
-  'Reset must preserve presentation mode across the reload');
-assert.match(shellJs, /!flags\.has\('reset'\)/, 'Reset must not reopen the Guide overlay');
-assert.match(shellJs, /location\.reload\(\)/, 'Reset returns the page to a fresh load');
+const appJs = scripts[2];
+assert.doesNotMatch(shellJs, /location\.reload\(\)|location\.replace\(/,
+  'Reset must not reload or navigate: it is in place as of kit v2');
+assert.match(shellJs, /document\.dispatchEvent\(new CustomEvent\('lessonreset'/,
+  'the shell must hand the activity back to the demo after restoring its own chrome');
+assert.match(shellJs, /window\.lessonShell\.onReset\(\) === false\) return false;/,
+  'the onReset veto must still be consulted first');
+assert.match(appJs, /addEventListener\('lessonreset'/,
+  'this demo must implement the reset contract, not merely inherit the shell half');
+/* Presentation mode is now preserved by NOT being touched, and the Guide is
+   kept shut by not reopening rather than by a hash flag. Assert the old
+   mechanism is gone so the two cannot coexist half-wired. */
+assert.doesNotMatch(shellJs, /flags\.has\('reset'\)/,
+  'the #reset hash flag died with the reload; the Guide simply does not reopen on a reset');
 
 /* The presenter notes ARE the printable guide: same bytes, one source. */
 /* Use the kit's own extractor rather than re-deriving the body here: a
