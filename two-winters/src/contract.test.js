@@ -4,24 +4,33 @@
 
    Run: node src/contract.test.js   (after `node build.js`)
 
-   playtest.test.js checks the data and the engine. This file checks the one
-   thing that file cannot see: the shipped index.html.
+   Rewritten for the lesson-shell retrofit (fleet/two-winters). The demo no
+   longer owns its own Guide/Settings/Reset chrome — that is
+   `../tools/lesson-shell`'s `behaviourScript()`, shared with every other
+   retrofitted demo — so this file checks the SAME CONTRACT.md properties
+   against the kit's markup and behaviour instead of re-deriving them, and
+   leans on `guide-contract.js` (the same module build.js uses) for the guide
+   extraction rather than re-parsing it a second, divergent way.
 
-   The trap this file is written around. Once the presenter guide is injected
-   into the page, the guide's own prose names "Open Presenter Notes",
-   "Presentation mode" and "Reset" — so a document-wide search for those labels
-   matches the answer key rather than the menu. Every label assertion below is
-   therefore made against the Settings overlay ALONE, sliced out by balanced
-   <div> depth, and that slice is first asserted to contain no .guide-scope
-   markup. A positive control (the labels are found where they should be) and a
-   negative control (they are also present elsewhere, so the scoping is doing
-   real work) are both reported.
+   The trap this file is written around, unchanged from before the retrofit.
+   Once the presenter guide is injected into the page, the guide's own prose
+   names "Open Presenter Notes", "Presentation mode" and "Reset" — so a
+   document-wide search for those labels matches the answer key rather than
+   the menu. Every label assertion below is therefore made against the
+   Settings dialog ALONE, sliced out by its `<dialog>...</dialog>` bounds
+   (dialogs do not nest in this file, so the first `</dialog>` after the
+   opening tag is unambiguous), and that slice is first asserted to contain
+   no `.guide-scope` markup. A positive control (the labels are found where
+   they should be) and a negative control (they are also present elsewhere,
+   so the scoping is doing real work) are both reported.
    ========================================================================== */
 
 const fs = require('fs');
 const path = require('path');
+const gc = require('../../tools/lesson-shell/guide-contract');
 
 const INDEX = path.join(__dirname, '..', 'index.html');
+const GUIDE_SRC = path.join(__dirname, 'demo-guide.html');
 const html = fs.readFileSync(INDEX, 'utf8');
 
 let pass = 0, fail = 0;
@@ -36,24 +45,16 @@ const TITLE = 'AI Winters: Boom and Bust';
 
 /* ------------------------------------------------------------- slicing --- */
 
-/** The whole element starting at `openIdx`, found by balanced <div> depth.
- *  The markup here is hand-written and has no <div in an attribute value, so
- *  counting tags is enough; a mismatch shows up as a depth that never closes. */
-function divBlockAt(src, openIdx) {
-  const re = /<div\b|<\/div>/gi;
-  re.lastIndex = openIdx;
-  let depth = 0;
-  for (let m; (m = re.exec(src)) !== null; ) {
-    depth += m[0][1] === '/' ? -1 : 1;
-    if (depth === 0) return src.slice(openIdx, re.lastIndex);
-  }
-  return null;
-}
-
-function overlayBlock(id) {
-  const open = html.indexOf(`<div class="overlay" id="${id}"`);
-  if (open < 0) return null;
-  return divBlockAt(html, open);
+/** The whole `<dialog ... id="ID">...</dialog>` block. Dialogs are not
+ *  nested anywhere in this file's markup, so the first `</dialog>` after the
+ *  opening tag is unambiguous — no balanced-tag counting needed. */
+function dialogBlock(id) {
+  const re = new RegExp('<dialog\\b[^>]*\\bid="' + id + '"[^>]*>');
+  const m = re.exec(html);
+  if (!m) return null;
+  const close = html.indexOf('</dialog>', m.index);
+  if (close < 0) return null;
+  return html.slice(m.index, close + '</dialog>'.length);
 }
 
 /** The text of the first <button> in `block` whose content trims to `label`. */
@@ -76,40 +77,42 @@ const decode = s => s.replace(/&[a-z#0-9]+;/gi, e => ENT[e] != null ? ENT[e] : e
   const t = (html.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || '';
   ok('<title> carries the display title', decode(t).indexOf(TITLE) === 0, t.trim());
 
-  const brand = (html.match(/<span class="b1">([\s\S]*?)<\/span>/i) || [])[1] || '';
+  const brand = (html.match(/<div class="brandline">[\s\S]*?<h1>([\s\S]*?)<\/h1>/i) || [])[1] || '';
   ok('The header brand carries the display title',
-     brand.toUpperCase().indexOf(TITLE.toUpperCase()) === 0, brand.trim().slice(0, 60));
+     decode(brand).toUpperCase().indexOf(TITLE.toUpperCase()) === 0, brand.trim().slice(0, 60));
 
   ok('The injected guide heading carries the display title',
-     new RegExp('<h1>' + TITLE.replace(':', ':') + ' &mdash; presenter guide</h1>').test(html));
+     new RegExp('<h1>' + TITLE + ' &mdash; presenter guide</h1>').test(html));
 
-  ok('No stale "TWO WINTERS" wordmark is left in the chrome',
-     !/<span class="b1">TWO WINTERS/.test(html));
+  ok('No stale "TWO WINTERS" all-caps wordmark is left in the chrome',
+     !/<h1>TWO WINTERS/.test(html));
 }
 
 /* ========================= 2. the Guide button =========================== */
 
 {
-  const btn = (html.match(/<button[^>]*id="btn-howto"[^>]*>/i) || [])[0] || '';
-  ok('The ? button exists in the header', btn.length > 0);
+  const btn = (html.match(/<button[^>]*id="guide-open"[^>]*>[\s\S]*?<\/button>/i) || [])[0] || '';
+  ok('The Guide button exists in the header', btn.length > 0);
   ok('Its accessible name is exactly Guide', /aria-label="Guide"/.test(btn), btn);
   ok('Its tooltip is exactly Guide', /title="Guide"/.test(btn), btn);
-  ok('It is still the ? glyph', /<button[^>]*id="btn-howto"[^>]*>\s*\?\s*<\/button>/i.test(html));
+  ok('It still carries the ? glyph', /<span aria-hidden="true">\?<\/span>/.test(btn));
 
-  const g = overlayBlock('howto');
-  ok('The Guide overlay exists', !!g);
-  const h2 = g && (g.match(/<h2 id="howto-title">([\s\S]*?)<\/h2>/i) || [])[1];
-  ok('The Guide overlay heading reads exactly "Guide"', (h2 || '').trim() === 'Guide', String(h2));
-  ok('The Guide overlay ships hidden and is opened by script on load',
-     /<div class="overlay" id="howto" hidden>/.test(html) && /open\('howto'\)/.test(html));
-  ok('The Guide overlay is dismissible and reopenable',
-     !!g && /data-close="howto"/.test(g) && /#btn-howto'\)\.addEventListener/.test(html));
+  const g = dialogBlock('guide');
+  ok('The Guide dialog exists', !!g);
+  const h2 = g && (g.match(/<h2 id="guide-title">([\s\S]*?)<span/i) || [])[1];
+  ok('The Guide dialog heading reads exactly "Guide"', (h2 || '').trim() === 'Guide', String(h2));
+  ok('The Guide dialog opens on load unless the page arrived from a Reset',
+     /if \(guide && !guide\.open && !flags\.has\('reset'\)\) \{/.test(html) && /guide\.showModal\(\);/.test(html));
+  ok('The Guide dialog is dismissible (native <dialog> Escape/backdrop/close button) and reopenable '
+     + 'from at least two places (header + footer)',
+     !!g && /<form method="dialog"><button type="submit" aria-label="Close">/.test(g)
+     && (html.match(/class="[^"]*\bguide-open\b[^"]*"/g) || []).length >= 2);
 }
 
 /* ===================== 3. the Settings menu, scoped ====================== */
 
-const settings = overlayBlock('settings');
-ok('The Settings overlay exists', !!settings);
+const settings = dialogBlock('settings');
+ok('The Settings dialog exists', !!settings);
 
 if (settings) {
   /* The guard that makes every assertion below mean something. */
@@ -121,15 +124,13 @@ if (settings) {
 
   ok('Settings offers a button labelled exactly "Open Presenter Notes"',
      hasButtonLabelled(settings, 'Open Presenter Notes'));
-  ok('Settings offers a toggle labelled exactly "Presentation mode"',
-     /<span>Presentation mode<\/span>/.test(settings));
+  ok('Settings offers a button labelled exactly "Presentation mode"',
+     hasButtonLabelled(settings, 'Presentation mode'));
   ok('Settings offers a button labelled exactly "Reset"',
      hasButtonLabelled(settings, 'Reset'));
-
-  ok('No stale "Presenter mode" or "Presenter’s notes" label survives in the menu',
-     !/Presenter mode/.test(settings) && !/Presenter&rsquo;s notes/.test(settings));
-  ok('The retired "How this works" button is gone from the menu and from the script',
-     !/btn-howto-2/.test(html));
+  ok('Settings offers the demo-specific "Run the self-test" option, after the fixed triad',
+     hasButtonLabelled(settings, 'Run the self-test')
+     && settings.indexOf('id="reset-btn"') < settings.indexOf('id="btn-selftest"'));
 
   /* Negative control for the scoping: the same labels DO appear elsewhere in
      the document (the injected guide names them), so a document-wide search
@@ -142,76 +143,63 @@ if (settings) {
      + '  (a document-wide assertion would match these instead of the menu)');
 }
 
-/* ================= 4. Reset means whole-demo fresh load ================== */
-
+/* ================= 4. Reset means whole-demo fresh load =================
+   The shell's Reset is a full page reload (with a #reset[,presenting] hash
+   flag), not an in-place state rewind — a deliberate simplification the kit
+   enables (recorded in P2-progress.md): a reload trivially returns every
+   piece of session state to its fresh-load value, so there is no per-field
+   JS state left to assert against. What IS checkable statically: the button
+   exists and is labelled, the shell's handler reaches location.reload(),
+   and the reload preserves Presentation mode via the hash flag while NOT
+   preserving the 'reset' page-just-loaded flag as "show the Guide again". */
 {
-  ok('A #btn-reset control exists and is wired', /id="btn-reset"/.test(html)
-     && /\$\('#btn-reset'\)\.addEventListener\('click', resetDemo\)/.test(html));
-
-  const fnAt = html.indexOf('function resetDemo()');
-  ok('resetDemo() is defined', fnAt > 0);
-  const body = fnAt > 0 ? html.slice(fnAt, html.indexOf('\n}', fnAt)) : '';
-
-  ok('Reset clears every answer', /S\.answers = \{\};/.test(body));
-  ok('Reset returns to the first card and the opening screen',
-     /S\.i = 0;/.test(body) && /\$\('#intro'\)\.hidden = false;/.test(body)
-     && /\$\('#card-body'\)\.hidden = true;/.test(body) && /\$\('#scorecard'\)\.hidden = true;/.test(body));
-  ok('Reset drops a half-answered card', /S\.pending = \{ year: 1985, verdict: null \};/.test(body)
-     && /S\.revealed = false;/.test(body));
-  ok('Reset rewinds the Act II timeline to the full span',
-     /S\.tl\.setCursor\(1\);/.test(body) && /#tl-slider'\)\.value = '1000'/.test(body)
-     && /S\.tl\.select\(null\);/.test(body));
-  ok('Reset clears the self-test output', /#selftest-out'\)\.innerHTML = '';/.test(body));
-  ok('Reset returns to Act I', /setAct\(1\);/.test(body));
-  ok('Reset closes every overlay, so the Guide does NOT reopen',
-     /\$\$\('\.overlay'\)\.forEach\(o => \{ o\.hidden = true; \}\);/.test(body)
-     && !/open\('howto'\)/.test(body));
-  ok('Reset leaves Presentation mode alone (contract: a projector preference, not demo state)',
-     !/presenter/i.test(body) && !/chk-presenter/.test(body));
+  ok('A #reset-btn control exists', /id="reset-btn"/.test(html));
+  ok("The shell's Reset handler calls onReset() first, then always reloads",
+     /if \(window\.lessonShell\.onReset && window\.lessonShell\.onReset\(\) === false\) return;/.test(html)
+     && /location\.reload\(\);/.test(html));
+  ok('Reset preserves Presentation mode across the reload (pushes a "presenting" hash flag '
+     + 'when the page is currently in presenter mode)',
+     /if \(document\.body\.classList\.contains\('presenter'\)\) f\.push\('presenting'\);/.test(html));
+  ok('A page that just reloaded from Reset does not reopen the Guide '
+     + '(the shell checks flags.has(\'reset\') before auto-opening it)',
+     /!flags\.has\('reset'\)/.test(html));
 }
 
-/* ============= 5. the notes are the guide, injected cleanly ============== */
-
+/* ============= 5. the notes are the guide, injected cleanly ==============
+   Re-derives the SAME extraction build.js uses (guide-contract.js), rather
+   than re-parsing the guide a second, potentially divergent way, and checks
+   the exact injected text is present verbatim in the built file. */
 {
-  const marker = '/* ==== presenter guide (scoped to .guide-scope) ==== */';
-  const at = html.indexOf(marker);
-  ok('The injected guide stylesheet is present', at > 0);
-  const gcss = at > 0 ? html.slice(at + marker.length, html.indexOf('</style>', at)) : '';
+  const guideSrc = fs.readFileSync(GUIDE_SRC, 'utf8');
+  const guide = gc.extractGuide(guideSrc);
 
-  ok('The injected guide CSS begins with a .guide-scope rule (not comment prose)',
-     /^\s*\.guide-scope\b/.test(gcss), JSON.stringify(gcss.trim().slice(0, 48)));
-  ok('The injected guide CSS carries no comment syntax or nested <style> — the '
-     + "indexOf('<style>') bug, pinned",
-     !gcss.includes('<!--') && !gcss.includes('-->') && !gcss.includes('<style'));
-  ok('Every injected guide rule is scoped to .guide-scope',
-     gcss.split('}').map(s => s.split('{')[1] === undefined ? '' : s.split('{')[0])
-         .filter(s => s.trim()).every(sel => sel.split(',').every(p => /\.guide-scope\b/.test(p))));
+  ok('The extracted guide stylesheet begins with a .guide-scope rule (guide-contract.js '
+     + 'already refuses an unscoped sheet at build time; this re-checks the shipped file)',
+     /^\.guide-scope\b/.test(guide.css.trim()));
+  ok('The exact extracted guide stylesheet text is injected in the built page, verbatim',
+     html.includes(guide.css));
+  ok('The exact extracted guide body (.guide-scope div) is injected in the built page, verbatim, '
+     + 'exactly once',
+     html.split(guide.html).length - 1 === 1);
 
-  ok('The guide body is injected exactly once',
-     html.split('<div class="guide-scope">').length - 1 === 1);
-  const notes = overlayBlock('notes');
-  ok('The guide body is injected inside the notes overlay',
-     !!notes && notes.includes('<div class="guide-scope">'));
-  ok('The notes overlay opens from the Settings button, closing Settings first',
-     /#btn-notes'\)\.addEventListener\('click', \(\) => \{ close\('settings'\); open\('notes'\); \}\)/.test(html));
+  const notes = dialogBlock('presenter-notes');
+  ok('The guide body is injected inside the Presenter Notes dialog', !!notes && notes.includes(guide.html));
 
-  /* The guide is one document, not a summary of one: the shipped printable
-     copy's body must be byte-identical to what the app shows. */
-  const guideFile = fs.readFileSync(path.join(__dirname, '..', 'presenter-guide.html'), 'utf8');
-  const cut = s => {
-    const a = s.indexOf('<div class="guide-scope">');
-    const b = s.indexOf('</div><!-- /guide -->');
-    return a < 0 || b < 0 ? null : s.slice(a, b);
-  };
-  const inApp = (() => {
-    const a = html.indexOf('<div class="guide-scope">');
-    const tail = html.slice(a).match(/<\/div>\r?\n    <\/div>/);
-    const b = tail ? a + tail.index : -1;
-    return a < 0 ? null : html.slice(a, b < 0 ? undefined : b);
-  })();
-  ok('The in-app notes body is byte-identical to the printable guide body',
-     !!inApp && !!cut(guideFile) && inApp.trim() === cut(guideFile).trim(),
-     inApp && cut(guideFile) ? `app ${inApp.trim().length} ch / guide ${cut(guideFile).trim().length} ch` : 'slice failed');
+  ok('The Presenter Notes dialog opens from a .notes-open trigger, and the shell\'s dialog-swap '
+     + 'logic closes whichever dialog the trigger was pressed inside before opening the new one '
+     + '(so Notes opened from Settings closes Settings, from Guide closes Guide, etc. — a general '
+     + 'rule rather than one hardcoded pair)',
+     /const b = e\.target\.closest && e\.target\.closest\('\.notes-open'\);/.test(html)
+     && /if \(host\) host\.close\(\);/.test(html));
+
+  /* The guide is one document, not a summary of one: the printable copy's
+     body must be byte-identical to what the app shows — the same string,
+     asserted twice above (verbatim-injected, and present in the dialog),
+     and here confirmed against the ACTUAL presenter-guide.html on disk. */
+  const guideOut = path.join(__dirname, '..', 'presenter-guide.html');
+  const printedMatches = fs.existsSync(guideOut) && fs.readFileSync(guideOut, 'utf8') === guideSrc;
+  ok('The shipped presenter-guide.html is byte-identical to src/demo-guide.html (one source, '
+     + 'not a copy that can drift)', printedMatches);
 }
 
 /* ======================== 6. offline at runtime ========================== */
