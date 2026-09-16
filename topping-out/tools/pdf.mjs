@@ -36,8 +36,17 @@ if (!fs.existsSync(guide)) {
   throw new Error(`Instructor guide is missing: ${guide}. Run: node build.js`);
 }
 const html = fs.readFileSync(guide, 'utf8');
-if (!/<title>Construction Scheduling — Instructor Guide<\/title>/.test(html)) {
-  throw new Error('Unexpected guide title; refusing to render a file that is not the guide.');
+/* The shipped filename is a public URL and does not change, so this guard is
+   the only thing standing between `node tools/pdf.mjs` and rendering whatever
+   happens to be sitting at that path. Kept exact rather than loosened to a
+   substring: the title is now "Session Guide" because the 8.3k-word
+   instructor guide was split into the injected session guide and the linked
+   CPM appendix, and the PDF is a render of the SESSION guide specifically.
+   Rendering the appendix to this filename would be wrong, and a loose match
+   on "Construction Scheduling" would allow exactly that. */
+if (!/<title>Construction Scheduling — Session Guide<\/title>/.test(html)) {
+  throw new Error('Unexpected guide title; refusing to render a file that is not the session guide. ' +
+    'The PDF is a render of src/demo-guide.html, not of the CPM appendix.');
 }
 
 if (CHECK) {

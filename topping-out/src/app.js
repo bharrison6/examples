@@ -17,6 +17,10 @@ TO.App = (function () {
   var pending = null;           // { crews, ot, alloc, expedite }
   var lastProjection = null;
   var animating = false;
+  /* The previous week's critical set, joined, so the A4 cue can say "the
+     path MOVED" rather than reprinting it every week. null means "no week
+     has run yet", which is why the first commit does not claim a move. */
+  var lastCriticalKey = null;
 
   /* ---------- persistence (degrades gracefully) ------------------- */
   var memStore = {};
@@ -123,36 +127,46 @@ TO.App = (function () {
     toast._t = setTimeout(function () { t.classList.remove('on'); }, ms || 2600);
   }
 
-  /* ---------- overlays -------------------------------------------- */
-  /* Every modal in the game is a .overlay that toggles [hidden]. These
-     two wrap that so Esc, the backdrop and the close buttons all go
-     through the same door. */
-  function openOverlay(id) {
-    var el = document.getElementById(id);
-    if (el) el.hidden = false;
+  /* ---------- the demo's own two dialogs --------------------------
+     DELETED in the lesson-shell retrofit: openOverlay / closeOverlay /
+     topOverlay, the Escape handler, the backdrop-click handler and the
+     [data-close] wiring. The shell's four dialogs are native <dialog>
+     elements and do every one of those things — ADOPTING.md §2.
+
+     What is left is the two dialogs that belong to the ACTIVITY rather than
+     to the lesson: the per-run Debrief and the Engine self-test. They are
+     NOT folded into the kit's per-stage #details drawer (ADOPTING.md §5 —
+     that drawer is fixed content about the stage; these are outputs of this
+     particular run), so they keep their own ids and are opened here.
+
+     Both are native <dialog>, which matters for Reset: the shell closes
+     every open <dialog>, not only its own four, so a debrief left up when
+     someone presses Reset does not survive it. */
+  function openSheet(id) {
+    var d = document.getElementById(id);
+    if (!d) return;
+    if (d.open) return;
+    try { d.showModal(); } catch (e) { d.setAttribute('open', ''); }
   }
-  function closeOverlay(id) {
-    var el = document.getElementById(id);
-    if (el) el.hidden = true;
-  }
-  /* topmost open overlay, for Esc — later in the document wins, which
-     is the one drawn on top */
-  function topOverlay() {
-    var open = document.querySelectorAll('.overlay:not([hidden])');
-    return open.length ? open[open.length - 1] : null;
+  function closeSheet(id) {
+    var d = document.getElementById(id);
+    if (d && d.open) { try { d.close(); } catch (e) { d.removeAttribute('open'); } }
   }
 
   /* ---------- presentation mode -----------------------------------
-     One switch: the large-type UI the room can read from the back, and
-     the 🎙 shortcut to the presenter's notes in the title bar. Stored
-     under the old key so an instructor's machine keeps its setting. */
-  function setPresentation(on) {
+     The shell owns the toggle and the body class now. This listens for the
+     shell's `presentationchange` and does the one thing the shell cannot:
+     re-render the activity, because the HUD and the views lay out
+     differently at the larger type scale.
+
+     `big` is this demo's own class name for its own activity rules and is
+     kept; `presenter` is the shell's and is set by the shell. Storing the
+     preference stays here — it is this demo's localStorage key, and an
+     instructor's machine should remember it. */
+  function applyPresentation(on) {
     document.body.classList.toggle('big', !!on);
-    document.body.classList.toggle('presenting', !!on);
     store('to.big', !!on);
-    var a = document.getElementById('chk-big'), b = document.getElementById('chk-big2');
-    if (a) a.checked = !!on;
-    if (b) b.checked = !!on;
+    if (g) renderAll();
   }
 
   /* =================================================================
@@ -205,13 +219,17 @@ TO.App = (function () {
                 '</div></div>' +
             '</div>' +
           '</div>' +
+          /* The Guide button carries the shell's `guide-open` class and needs
+             no id and no handler of its own — the shell delegates on that
+             class. The Presentation-mode checkbox that used to sit here is
+             gone: the shell owns presentation mode, and a second control for
+             it would be a second source of truth. */
           '<div style="display:flex;gap:10px;align-items:center;margin-top:6px;flex-wrap:wrap">' +
             '<button class="btn primary" id="btn-start" style="font-size:1rem;padding:11px 24px">Start the job</button>' +
-            '<button class="btn ghost" id="btn-howto3">? Guide</button>' +
-            '<label style="font-size:.85rem;display:flex;align-items:center;gap:6px;cursor:pointer">' +
-              '<input type="checkbox" id="chk-big"' + (document.body.classList.contains('big') ? ' checked' : '') + '> Presentation mode</label>' +
-            '<a class="btn ghost" href="teacher-guide.html" target="_blank">📄 Instructor guide</a>' +
-            '<button class="btn ghost" id="btn-selftest2">🧪 Engine self-test</button>' +
+            '<button class="btn ghost guide-open" type="button">? Guide</button>' +
+            '<a class="btn ghost" href="teacher-guide.html" target="_blank" rel="noopener">📄 Session guide</a>' +
+            '<a class="btn ghost" href="appendix.html" target="_blank" rel="noopener">📐 CPM appendix</a>' +
+            '<button class="btn ghost" id="btn-selftest2" type="button">🧪 Engine self-test</button>' +
           '</div>' +
         '</div>' +
       '</div>' +
@@ -231,15 +249,21 @@ TO.App = (function () {
       setupState.seed = randomSeedCode();
       document.getElementById('in-seed').value = setupState.seed;
     };
-    document.getElementById('chk-big').onchange = function () { setPresentation(this.checked); };
-    document.getElementById('btn-howto3').onclick = function () { openOverlay('howto'); };
     document.getElementById('btn-start').onclick = startGame;
     document.getElementById('btn-selftest2').onclick = showSelfTest;
+    /* The setup sheet's own leaderboard control. Settings has a second one
+       under a DIFFERENT id (btn-lb-clear) — check-shell.js fails a built file
+       that defines any id twice, and both of these are real controls in two
+       real places, so they are two ids rather than one shared one. */
     var reset = document.getElementById('btn-lb-reset');
-    if (reset) reset.onclick = function () {
-      if (!window.confirm('Clear the leaderboard for every seed on this computer?')) return;
-      store('to.leaderboard', []); renderSetup(); toast('Leaderboard cleared.');
-    };
+    if (reset) reset.onclick = clearLeaderboard;
+  }
+
+  function clearLeaderboard() {
+    if (!window.confirm('Clear the leaderboard for every seed on this computer?')) return;
+    store('to.leaderboard', []);
+    toast('Leaderboard cleared.');
+    if (!g) renderSetup();
   }
 
   function esc(s) {
@@ -287,6 +311,17 @@ TO.App = (function () {
     document.getElementById('setup').hidden = true;
     document.getElementById('app').hidden = false;
     renderAll();
+
+    /* The lesson half of starting a job. Stage 2 opens because there is now
+       a schedule to run a week against - a real prerequisite, which is why
+       it is a gate rather than a lock. */
+    unlockStage(1, 'Run a week');
+    answerCushion();
+    predictCriticalUI();
+    var cpm0 = g.computeCPM(null, null);
+    cue('Schedule solved: ' + cpm0.projectEnd + ' working days against a ' +
+        g.net.contractWorkingDays + '-day contract. ' +
+        (cpm0.criticalIds || []).length + ' activities are on the critical path - read the float column.');
   }
 
   function resetPending() {
@@ -936,6 +971,33 @@ TO.App = (function () {
       renderAll();
       renderReport(rec);
       if (TO.App._mSet && window.innerWidth <= 820) TO.App._mSet('meet');
+
+      /* A week has run, so a decision now has a consequence to look at:
+         stage 3 (make a call) and stage 4 (debrief) both open here. */
+      unlockStage(2, 'Make a call');
+      unlockStage(3, 'Debrief');
+      /* Stage 2's signature prediction is judged against the network the
+         engine has just re-solved, and the widget is rebuilt for the next
+         week off the new state. */
+      answerCritical();
+      predictCriticalUI();
+
+      /* A4: the week the critical path moves is the observation that
+         matters most in this demo, so it is said out loud rather than left
+         for the learner to notice in a bar chart. */
+      var after = g.computeCPM(null, null);
+      var crit = (after.criticalIds || []);
+      if (lastCriticalKey !== null && crit.join(',') !== lastCriticalKey) {
+        cue('The critical path MOVED this week - it now runs through ' +
+            crit.slice(0, 3).join(', ') + (crit.length > 3 ? '...' : '') +
+            '. Who was watching the float column last week?');
+      } else {
+        cue('Week committed. Critical path unchanged: ' +
+            (crit.length ? crit.slice(0, 3).join(', ') : 'nothing left') +
+            (crit.length > 3 ? '...' : '') + '.');
+      }
+      lastCriticalKey = crit.join(',');
+
       if (g.finished) setTimeout(function () { showDebrief(); }, 900);
     });
   }
@@ -1163,7 +1225,7 @@ TO.App = (function () {
     document.getElementById('debrief-body').innerHTML = html;
     document.getElementById('debrief-head-sub').textContent =
       g.teamName + ' · seed ' + g.seed + ' · ' + g.net.name;
-    document.getElementById('debrief').hidden = false;
+    openSheet('debrief-sheet');
 
     function cmpRow(k, a, b, d, good) {
       return '<tr><td>' + k + '</td><td class="num">' + a + '</td><td class="num">' + b +
@@ -1336,21 +1398,53 @@ TO.App = (function () {
     document.getElementById('selftest-sum').textContent =
       rep.passed + ' passed, ' + rep.failed + ' failed, ' + rep.total + ' total';
     document.getElementById('selftest-sum').style.color = rep.failed ? 'var(--red)' : 'var(--green)';
-    document.getElementById('selftest').hidden = false;
+    openSheet('selftest-sheet');
   }
 
-  /* ---------- Reset ------------------------------------------------
-     The contract’s Reset: the demo as it is on a fresh load — the setup
-     sheet, empty fields, no run in progress, every overlay closed. The
-     Guide overlay opens on load but NOT on Reset: a presenter who has
-     just reset does not want the briefing back over the sheet.
+  /* ---------- Reset: the demo half of the kit's in-place contract ---
+     The shell restores what the kit named — the stage tabs and their
+     `disabled` gates, the A6 check answers, the A2 prediction echoes, the
+     A4 cue, the Details drawer, the selected stage — from a snapshot taken
+     before this file ran, then dispatches `lessonreset`. It cannot know what
+     the activity holds. This is that part.
 
-     Two things deliberately survive, because they survive a reload too
-     and so are not demo state: Presentation mode, which is a display
-     preference for the room, and the leaderboard, which holds earlier
-     sections’ scores and has its own control in Settings. */
-  function resetDemo() {
-    Array.prototype.forEach.call(document.querySelectorAll('.overlay'), function (ov) { ov.hidden = true; });
+     ENUMERATED BEFORE IT WAS WRITTEN, per ADOPTING.md §4, because in-place
+     reset is correct only if the list is complete and the failure mode is
+     quiet. Walking the module's own closed-over state:
+
+       g               the game            -> null
+       baseline        the no-intervention run for the debrief -> null
+       lastProjection  the previous week's projection, or week 1 of the
+                       next game shows a delta against the last week of
+                       the game before it -> null
+       pending         { crews, ot, alloc, expedite } -> null
+       animating       the week-runs animation guard -> false
+       phase           news | report | done -> 'news'
+       view            4d | gantt | network -> '4d'
+       setupState      team, seed, project, difficulty -> fresh object
+       toast._t        a pending toast timeout -> cleared, or a stale
+                       "Reset" message fires over the fresh sheet
+       memStore        the localStorage fallback cache. NOT cleared: it
+                       backs the leaderboard and the presentation
+                       preference, both of which survive a reload and are
+                       therefore not demo state.
+
+     DOM this file generated or toggled:
+       #app / #setup   the hidden/shown pair -> back to setup
+       #view-host      innerHTML from the renderers -> emptied, so a stale
+                       Gantt cannot flash before the next render
+       #project-block, #hud, #meeting-{head,body,foot} -> emptied
+       body.m-site and the #m-nav button classes -> back to MEETING
+       #board-host     MOVED between stage slots by the stagechange handler
+                       -> moved back to stage 1's slot (ADOPTING.md §4
+                       step 6 names exactly this case)
+       the two <dialog>s -> the shell already closed them in step 2
+
+     Two things deliberately survive, because they survive a reload too and
+     so are not demo state: Presentation mode (a display preference for the
+     room, and the shell leaves it alone by design) and the leaderboard,
+     which holds earlier sections' scores and has its own control. */
+  function resetActivity() {
     g = null;
     baseline = null;
     lastProjection = null;
@@ -1358,15 +1452,236 @@ TO.App = (function () {
     animating = false;
     phase = 'news';
     view = '4d';
+    lastCriticalKey = null;
+    clearTimeout(toast._t);
+
+    var setEmpty = function (id) { var el = document.getElementById(id); if (el) el.innerHTML = ''; };
+    ['view-host', 'project-block', 'hud', 'meeting-head', 'meeting-body', 'meeting-foot',
+     'debrief-body', 'selftest-body', 'selftest-sum'].forEach(setEmpty);
+
+    var cue = document.getElementById('cue-board');
+    if (cue) cue.textContent = '';
+
     document.body.classList.remove('m-site');
     var ms = document.getElementById('m-site'), mm = document.getElementById('m-meet');
     if (ms) ms.classList.remove('on');
     if (mm) mm.classList.add('on');
+
+    /* The view tab strip is markup, not generated, so its `active` class is
+       the demo's to put back. */
+    var vt = document.getElementById('view-tabs');
+    if (vt) Array.prototype.forEach.call(vt.querySelectorAll('button[data-view]'), function (b) {
+      b.classList.toggle('active', b.getAttribute('data-view') === '4d');
+    });
+
     document.getElementById('app').hidden = true;
     document.getElementById('setup').hidden = false;
     setupState = { team: '', seed: '', project: 'tutorial', difficulty: 'standard' };
     renderSetup();
-    toast('Reset — back to the setup sheet.');
+    moveBoardTo(0);
+  }
+
+  /* =================================================================
+     THE LESSON — four stages around one activity
+     =================================================================
+
+     There is exactly ONE board (#board-host). The four stages are lesson
+     framings of the same continuous game, so the board is MOVED between
+     their .board-slot elements rather than duplicated. See the structural
+     note at the top of src/template.html.
+     ================================================================= */
+
+  var STAGE_COUNT = 4;
+
+  function moveBoardTo(index) {
+    var host = document.getElementById('board-host');
+    var slot = document.querySelector('.board-slot[data-slot="' + index + '"]');
+    if (!host || !slot || host.parentNode === slot) return;
+    slot.appendChild(host);
+  }
+
+  /* ---------- the gates -------------------------------------------
+     Genuine prerequisites, not artificial locks: there is no week to run
+     before there is a schedule, and nothing to debrief before a decision
+     has run. `disabled` is authored in template.html as well, because the
+     shell snapshots tab state BEFORE this file runs — a gate applied only
+     here would come back unlocked after a Reset. */
+  function unlockStage(index, why) {
+    var tab = document.getElementById('tab-' + (index + 1));
+    if (!tab || !tab.disabled) return;
+    tab.disabled = false;
+    if (why) tab.setAttribute('title', why);
+    else tab.removeAttribute('title');
+  }
+
+  /* ---------- A4 the observation cue ------------------------------
+     One aria-live line naming the thing to notice AT THE MOMENT it becomes
+     true. The week the critical path moves is the one that matters most, so
+     it gets said rather than left for the learner to spot in a bar chart. */
+  function cue(text) {
+    var el = document.getElementById('cue-board');
+    if (el) el.textContent = text || '';
+  }
+
+  /* ---------- A2 prediction capture ------------------------------
+     Plan §A2: "where the activity can capture the prediction it must — the
+     prediction is then echoed beside the observed result". All four stages
+     capture one; stage 2's is the demo's signature, because the engine
+     recomputes the critical path anyway and can therefore mark the
+     prediction right or wrong without being asked to judge anything.
+
+     The echo is a kit-owned node (.echo inside .lesson-strip), which is why
+     Reset restores it from the shell's snapshot and this file does not have
+     to. */
+  var predicted = { 0: null, 1: null, 2: null, 3: null };
+
+  function echoFor(stage) {
+    var strip = document.querySelector('#stage-' + (stage + 1) + ' .lesson-strip .echo');
+    return strip || null;
+  }
+
+  function showEcho(stage, html) {
+    var e = echoFor(stage);
+    if (!e) return;
+    e.innerHTML = html;
+    e.hidden = false;
+  }
+
+  /* Stage 1 — a number: how many working days of cushion does the job have
+     against its contract? The engine knows the answer exactly. */
+  function predictCushionUI() {
+    var slot = document.getElementById('predict-1');
+    if (!slot || slot.dataset.built) return;
+    slot.dataset.built = '1';
+    slot.innerHTML =
+      '<label class="control-label" for="pred-cushion">Working days of cushion' +
+        '<span class="why">Your guess at contract days minus the unimpeded schedule. Recording it is what makes the next screen worth reading.</span>' +
+      '</label>' +
+      '<span class="predict-row">' +
+        '<input type="number" id="pred-cushion" min="0" max="200" step="1" inputmode="numeric" aria-describedby="pred-cushion-h">' +
+        '<button class="btn ghost" type="button" id="pred-cushion-go">Record it</button>' +
+      '</span>';
+    document.getElementById('pred-cushion-go').onclick = function () {
+      var v = Number(document.getElementById('pred-cushion').value);
+      if (!isFinite(v) || v <= 0) { toast('Put a number of working days in first.'); return; }
+      predicted[0] = v;
+      showEcho(0, '<b>You said</b> ' + v + ' working days.' +
+        (g ? '' : ' Start the job and the schedule will answer.'));
+      if (g) answerCushion();
+    };
+  }
+
+  function answerCushion() {
+    if (!g || predicted[0] == null) return;
+    var cpm = g.computeCPM(null, null);
+    var actual = g.net.contractWorkingDays - cpm.projectEnd;
+    showEcho(0, '<b>You said</b> ' + predicted[0] + ' working days &middot; ' +
+      '<b>the schedule says</b> ' + actual + ' (' + cpm.projectEnd + ' working days against a ' +
+      g.net.contractWorkingDays + '-day contract).');
+  }
+
+  /* Stage 2 — THE signature prediction: which activity is critical after
+     this week? Offered as a select of the activities that are actually in
+     play, so it is answerable rather than a guessing game, and judged
+     against the recomputed critical set after Commit. */
+  function predictCriticalUI() {
+    var slot = document.getElementById('predict-2');
+    if (!slot) return;
+    if (!g) { slot.innerHTML = ''; delete slot.dataset.built; return; }
+    var cpm = g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null);
+    /* Unfinished work only. `state[id].finishDay === null` is the engine's
+       own test for "not complete" — openActivities() uses the same one. An
+       activity already in the ground cannot become critical. */
+    var open = g.net.activities.filter(function (a) {
+      var s = g.state[a.id];
+      return cpm.results[a.id] && s && s.finishDay === null;
+    });
+    if (!open.length) { slot.innerHTML = ''; return; }
+    slot.innerHTML =
+      '<label class="control-label" for="pred-crit">Which activity is critical after this week?' +
+        '<span class="why">Pick before you commit. The engine re-solves the network afterwards, so this is a real prediction with a real answer.</span>' +
+      '</label>' +
+      '<span class="predict-row">' +
+        '<select id="pred-crit"><option value="">choose an activity&hellip;</option>' +
+        open.map(function (a) {
+          return '<option value="' + esc(a.id) + '">' + esc(a.id) + ' &mdash; ' + esc(a.name) + '</option>';
+        }).join('') +
+        '</select>' +
+        '<button class="btn ghost" type="button" id="pred-crit-go">Record it</button>' +
+      '</span>';
+    document.getElementById('pred-crit-go').onclick = function () {
+      var v = document.getElementById('pred-crit').value;
+      if (!v) { toast('Pick an activity first.'); return; }
+      predicted[1] = v;
+      showEcho(1, '<b>You said</b> ' + esc(v) + ' will be critical. Commit the week to find out.');
+    };
+  }
+
+  function answerCritical() {
+    if (!g || predicted[1] == null) return;
+    var cpm = g.computeCPM(null, null);
+    var crit = cpm.criticalIds || [];
+    var hit = crit.indexOf(predicted[1]) !== -1;
+    showEcho(1, '<b>You said</b> ' + esc(predicted[1]) + ' &middot; ' +
+      '<b>the engine says</b> ' + (crit.length ? esc(crit.slice(0, 4).join(', ')) : 'nothing left') +
+      (crit.length > 4 ? '&hellip;' : '') + ' &mdash; ' +
+      (hit ? 'you had it.' : 'not on the path this week.'));
+  }
+
+  /* Stage 3 — what did you think the free option was worth? Captured as a
+     dollar figure so it can be put beside the priced exposure. */
+  function predictCallUI() {
+    var slot = document.getElementById('predict-3');
+    if (!slot || slot.dataset.built) return;
+    slot.dataset.built = '1';
+    slot.innerHTML =
+      '<label class="control-label" for="pred-call">What do you think the free option costs you? ($)' +
+        '<span class="why">Exposure times the delay, priced at where the float is right now. Write it down before you choose, then argue with the debrief.</span>' +
+      '</label>' +
+      '<span class="predict-row">' +
+        '<input type="number" id="pred-call" min="0" step="100" inputmode="numeric">' +
+        '<button class="btn ghost" type="button" id="pred-call-go">Record it</button>' +
+      '</span>';
+    document.getElementById('pred-call-go').onclick = function () {
+      var v = Number(document.getElementById('pred-call').value);
+      if (!isFinite(v) || v < 0) { toast('Put a dollar figure in first.'); return; }
+      predicted[2] = v;
+      showEcho(2, '<b>You said</b> ' + U.money(v) + '. The debrief prints what it actually cost.');
+    };
+  }
+
+  /* Stage 4 — covered, or got away with it? Judged against the run's own
+     calls log. */
+  function predictDebriefUI() {
+    var slot = document.getElementById('predict-4');
+    if (!slot || slot.dataset.built) return;
+    slot.dataset.built = '1';
+    slot.innerHTML =
+      '<span class="control-label">How will your calls table read?' +
+        '<span class="why">Commit to an answer before you open it. This is the same habit the debrief is grading.</span>' +
+      '</span>' +
+      '<span class="predict-row">' +
+        '<button class="btn ghost" type="button" data-pred4="covered">Mostly covered</button>' +
+        '<button class="btn ghost" type="button" data-pred4="lucky">Mostly got away with it</button>' +
+      '</span>';
+    Array.prototype.forEach.call(slot.querySelectorAll('[data-pred4]'), function (b) {
+      b.onclick = function () {
+        predicted[3] = b.getAttribute('data-pred4');
+        Array.prototype.forEach.call(slot.querySelectorAll('[data-pred4]'), function (o) {
+          o.setAttribute('aria-pressed', String(o === b));
+        });
+        showEcho(3, '<b>You said</b> mostly ' +
+          (predicted[3] === 'covered' ? '&ldquo;covered&rdquo;' : '&ldquo;got away with it&rdquo;') +
+          '. Open the debrief and count.');
+      };
+    });
+  }
+
+  function buildStage(index) {
+    if (index === 0) predictCushionUI();
+    else if (index === 1) predictCriticalUI();
+    else if (index === 2) predictCallUI();
+    else if (index === 3) predictDebriefUI();
   }
 
   /* =================================================================
@@ -1374,14 +1689,70 @@ TO.App = (function () {
      ================================================================= */
   function init() {
     initTooltips();
-    if (store('to.big')) setPresentation(true);
+    /* The shell sets body.presenter; this mirrors it onto the demo's own
+       `big` class for the activity rules, and re-renders. The stored
+       preference is read here because the shell has no persistence. */
+    if (store('to.big')) {
+      if (window.lessonShell) window.lessonShell.setPresentation(true);
+      else document.body.classList.add('big');
+    }
+    document.addEventListener('presentationchange', function (e) {
+      applyPresentation(e.detail && e.detail.on);
+    });
+
     setupState.seed = '';
     renderSetup();
+    moveBoardTo(0);
+    buildStage(0);
 
-    /* The briefing opens on every load, over the setup sheet. It is the
-       first thing a team sees and the last thing that should need
-       explaining, so it is not remembered-dismissed. */
-    openOverlay('howto');
+    /* The Guide opens on load — the shell does that now, and deliberately
+       does NOT reopen it after a Reset (ADOPTING.md §4). */
+
+    /* ---- the shell's two events --------------------------------------
+       `stagechange` is a CHROME event and nothing here renders activity
+       state from it. That restraint is required, not stylistic: the shell
+       fires stagechange from inside its reset, BEFORE `lessonreset`, so a
+       handler that re-rendered the game would resurrect the pre-reset state
+       into freshly reset chrome. missing-time shipped exactly that bug.
+       Moving the board and building the stage's own prediction widget are
+       both safe because neither reads game state that reset has not yet
+       cleared — and `predictCriticalUI` explicitly clears itself when `g`
+       is null, which is what it is during a reset. */
+    document.addEventListener('stagechange', function (e) {
+      var i = e.detail ? e.detail.index : 0;
+      moveBoardTo(i);
+      buildStage(i);
+      /* The Gantt and network renderers measure their host, so a stage
+         change has to re-measure. The 4D view draws to a fixed box. */
+      if (g && !animating && view !== '4d') {
+        renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
+      }
+    });
+
+    /* Reset. `onReset` is the shell's veto path and the right home for the
+       mid-run confirmation: returning false cancels the WHOLE reset, so
+       there is exactly one place that can refuse it and no way to end up
+       half-reset. From the setup sheet there is nothing to lose, so it
+       just runs. */
+    if (window.lessonShell) {
+      window.lessonShell.onReset = function () {
+        if (g && !window.confirm('Reset? The run in progress is lost.')) return false;
+        return true;
+      };
+    }
+    document.addEventListener('lessonreset', function () {
+      resetActivity();
+      predicted = { 0: null, 1: null, 2: null, 3: null };
+      /* The prediction widgets are regenerated rather than restored: each
+         carries a dataset.built guard, so the guard has to be dropped too
+         or buildStage(0) becomes a no-op and stage 1 comes back empty. */
+      [1, 2, 3, 4].forEach(function (n) {
+        var s = document.getElementById('predict-' + n);
+        if (s) { s.innerHTML = ''; delete s.dataset.built; }
+      });
+      buildStage(0);
+      toast('Reset — back to the setup sheet.');
+    });
 
     /* mobile tab bar: SITE shows the drawings, MEETING shows the loop.
        During the week animation we flip to the site so the player sees
@@ -1397,68 +1768,76 @@ TO.App = (function () {
 
     document.getElementById('view-tabs').onclick = function (e) {
       var b = e.target.closest('button[data-view]');
-      if (!b || animating) return;
+      if (!b || animating || !g) return;
       view = b.getAttribute('data-view');
       renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
     };
-    document.getElementById('btn-instructor').onclick = function () { openOverlay('instructor'); };
-    document.getElementById('btn-howto').onclick = function () { openOverlay('howto'); };
-    document.getElementById('btn-howto2').onclick = function () {
-      closeOverlay('instructor'); openOverlay('howto');
-    };
-    document.getElementById('btn-notes').onclick = function () {
-      closeOverlay('instructor'); openOverlay('presenter');
-    };
-    document.getElementById('btn-notes-top').onclick = function () { openOverlay('presenter'); };
+
+    /* Settings' demo-specific controls. The contract triad above them —
+       Open Presenter Notes, Presentation mode, Reset — is the shell's. */
     document.getElementById('btn-selftest').onclick = function () {
-      closeOverlay('instructor');
+      closeSheet('settings');
       showSelfTest();
     };
-    document.getElementById('chk-big2').onchange = function () {
-      setPresentation(this.checked);
-      if (g) renderAll();
-    };
-    /* Mid-run a Reset throws away a class’s work, so it asks first; from
-       the setup sheet there is nothing to lose and it just runs. */
-    document.getElementById('btn-reset').onclick = function () {
-      if (g && !window.confirm('Reset? The run in progress is lost.')) return;
-      resetDemo();
-    };
-    document.getElementById('btn-lb-reset2').onclick = function () {
-      if (!window.confirm('Clear the leaderboard for every seed on this computer?')) return;
-      store('to.leaderboard', []); toast('Leaderboard cleared.');
-      if (!g) renderSetup();
-    };
-    Array.prototype.forEach.call(document.querySelectorAll('[data-close]'), function (b) {
-      b.onclick = function () { closeOverlay(b.getAttribute('data-close')); };
+    document.getElementById('btn-lb-clear').onclick = clearLeaderboard;
+
+    /* ---- A6: repair the kit's leaked domain wording -------------------
+       lesson-shell v2's check-card handler hardcodes the wrong-answer prefix
+       as "Not what the detector showed." — ion-flight's noun, in every demo
+       that adopts the kit. There is no detector in a construction schedule,
+       and a learner reading it in this demo is being told about a machine
+       that does not exist.
+
+       THE KIT IS FROZEN, so this is repaired demo-side rather than upstream,
+       and it is reported in the lane's friction list for kit v3. The kit
+       registers its own click listener while its script runs, which is
+       before this file executes, so this listener fires AFTER it and gets the
+       last word on the same node. Only the prefix is rewritten; the
+       per-option feedback text is the demo's own and is left alone. */
+    document.addEventListener('click', function (e) {
+      var opt = e.target.closest && e.target.closest('.check-option');
+      if (!opt) return;
+      var card = opt.closest('.check');
+      var out = card && card.querySelector('.check-feedback');
+      if (!out) return;
+      out.innerHTML = out.innerHTML.replace(
+        '<b>Not what the detector showed.</b>',
+        '<b>Not what the schedule showed.</b>'
+      );
     });
-    /* Tap the paper around the briefing to dismiss it — the same gesture
-       on a phone as clicking away from it on a laptop. Scoped to the
-       briefing and the notes: nobody wants to lose a debrief to a
-       stray tap. */
-    ['howto', 'presenter'].forEach(function (id) {
-      var ov = document.getElementById(id);
-      ov.addEventListener('click', function (e) { if (e.target === ov) closeOverlay(id); });
-    });
-    document.getElementById('btn-debrief-close').onclick = function () {
-      document.getElementById('debrief').hidden = true;
+
+    /* Stage 4's own control. Mid-run it shows the calls table so far, which
+       is what the session guide tells a presenter to open the debrief on;
+       the full scoresheet appears once the job finishes. */
+    document.getElementById('btn-open-debrief').onclick = function () {
+      if (!g) { toast('Start the job first — there is nothing to debrief yet.'); return; }
+      showDebrief();
     };
+
     window.addEventListener('resize', function () {
       if (g && !animating && view !== '4d') renderView(g.computeCPM(pending ? pending.alloc : null, pending ? pending.ot : null));
     });
+    /* Enter starts the job from the setup sheet. Escape is the shell's now
+       (native <dialog> handles it), and the old topOverlay() guard is gone
+       with it: `dialog:open` is the direct question. */
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        var top = topOverlay();
-        if (top) { top.hidden = true; e.preventDefault(); }
-        return;
-      }
-      /* Enter starts the job — but not while a modal is up over the
-         setup sheet, or the briefing dismisses straight into a run. */
-      if (e.key === 'Enter' && !document.getElementById('setup').hidden && !topOverlay()) startGame();
+      if (e.key !== 'Enter') return;
+      if (document.querySelector('dialog[open]')) return;
+      if (document.getElementById('setup').hidden) return;
+      if (document.getElementById('stage-1').hidden) return;
+      startGame();
     });
   }
 
-  return { init: init, get game() { return g; } };
+  return {
+    init: init,
+    get game() { return g; },
+    _lesson: {
+      unlockStage: unlockStage, cue: cue, moveBoardTo: moveBoardTo,
+      answerCushion: answerCushion, answerCritical: answerCritical,
+      buildStage: buildStage, STAGE_COUNT: STAGE_COUNT
+    }
+  };
 })();
 
 if (typeof document !== 'undefined') {
