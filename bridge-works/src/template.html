@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An offline truss-bridge builder on a real direct-stiffness solver: build, watch the live tension and compression, predict what fails first, then drive a vehicle across. Cheapest surviving bridge wins.">
+<title>Truss Bridge Builder · Bridge Works</title>
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
+<style>
+/*__CSS__*/
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last in
+     the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University · Part four · Example projects</span>
+      <h1>Truss Bridge Builder</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Four stages = the lesson's beats, NOT the six levels. Stage 1 holds
+       levels 1-2, stage 2 holds level 3, stage 3 holds 4-5, and the Sandbox
+       (level 6) sits outside the path with no par and the vehicle picker open.
+
+       NO TAB IS GATED, on purpose. The pre-retrofit game let a learner pick any
+       level, and none of these beats is a correction to an earlier beat's
+       answer (fuel-golf's finite-thrust stage was, which is why its tab 3 opens
+       disabled). The prediction-before-evidence gate here is on the EVIDENCE:
+       every Load test on every level is withheld until the learner commits
+       "what fails first?" — see the .testcall group inside the activity. -->
+  <nav class="stages" role="tablist" aria-label="Truss lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Mechanisms</span><small>Why does a flat roadway fold before anything breaks?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Compression buckles</span><small>Why does one member hold 300 kN pulled but 45 kN pushed?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Load paths</span><small>Where does the load go when the shape or the supports change?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Sandbox</span><small>Which of your ideas survive a vehicle you pick?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============================ STAGE 1 ================================== -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 8 of 16 &middot; Part four &middot; Engineering &middot; Stage 1</span>
+      <h2 id="stage-1-title">A shape that cannot hold still</h2>
+      <p class="stage-question">Why does a flat roadway fold under a car before any member is overloaded?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>truss</b> is a frame of straight <b>members</b>
+        meeting at <b>joints</b>. Every joint here is a <b>pin</b> &mdash; it carries no bending &mdash; so a
+        member can only be pulled (<b>tension</b>) or pushed (<b>compression</b>) along its own length.
+        A <b>mechanism</b> is a frame that can change shape without any member changing length.
+        Demo 7 handed forward one habit: commit a prediction before you run anything, so the run is a
+        measurement and not a show.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Level 1 opens with nothing but the gap. Lay the flat roadway alone and call it under the canvas: does it hold, snap, buckle &mdash; or fold?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>With <b>Draw</b> selected, drag members along the deck line from the left abutment to the right, commit your call, then press <b>&#9654; Load test</b>.</p></article>
+      <article><span>Takeaway</span><p>A frame with a four-sided panel folds without straining any member; a triangle cannot change shape without changing a member's length &mdash; and the solver finds the fold as a rank deficiency, not as a rule someone typed in.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="0">
+   <!-- ===== A3 THE ACTIVITY ===============================================
+        #activity is the element app.js moves between the four hosts. It has to
+        be INSIDE the host and never the host itself: appending a node into
+        itself is a HierarchyRequestError, which no build check can see (kit
+        ruling 1, 2026-09-16).
+
+        ONE CANVAS, RELOCATED, NOT FOUR. Duplicating it would duplicate #cv,
+        #costVal, #btnTest and about forty other ids — invalid, and four places
+        for the game to drift apart. The settled pattern (ladder-lab, fuel-golf,
+        topping-out reached it independently).
+        ==================================================================== -->
+   <div class="activity" id="activity">
+    <section class="workbench" aria-labelledby="act-heading">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker"><span class="k-live">Live</span> a direct-stiffness truss solve on your design, re-run on every change and at every vehicle position</span>
+          <h3 id="act-heading">Bridge Works <span class="level-chip" id="levelChip">Level &ndash;</span></h3>
+        </div>
+        <!-- The bill. The costing is a MODEL — steel by weight at $4.80/kg and
+             $180 per fabricated joint — chosen so that panel count is a real
+             trade-off. The par is a benchmark found against this same engine
+             offline, so it is Measured rather than Live. -->
+        <div class="cost-box" aria-label="Running cost">
+          <span class="panel-kicker kick-inline"><span class="k-illustrative">Illustrative</span> costing model: $4.80/kg steel + $180 a joint</span>
+          <span id="costVal">$0</span>
+          <span id="costBreak"></span>
+          <span id="parVal"></span>
+          <span class="panel-kicker kick-inline"><span class="k-measured">Measured</span><span class="k-qual">par: deterministic &mdash; no seed; test-physics.js reproduces it</span></span>
+        </div>
+      </div>
+      <p class="panel-lede">You are the fabricator: get the vehicle across for <b>less money than par</b>, golf-style,
+        and the cheapest surviving bridge tops the leaderboard. Drag between grid points to lay steel. Red
+        members are being pulled, blue squashed, brighter is nearer its limit, grey is carrying nothing you
+        paid for. The orange anchors are the abutments the level gives you; nothing longer than 4 m.</p>
+
+      <!-- ===== the toolbar, every control with a purpose label ============ -->
+      <div class="bw-toolbar">
+        <div class="bw-group">
+          <span class="control-label">Tool
+            <span class="why"><b>Draw</b> lays a member; <b>Erase</b> removes one; <b>Check a joint</b> draws every force meeting at a joint and prints their sum, which is always zero.</span></span>
+          <div class="bw-row">
+            <button class="tool active" type="button" data-tool="build" title="Drag between grid points to add a member">&#9998; Draw</button>
+            <button class="tool" type="button" data-tool="erase" title="Tap a member or joint to remove it">&#10006; Erase</button>
+            <button class="tool" type="button" data-tool="inspect" title="Tap a joint to see every force meeting there">&#8853; Check a joint</button>
+            <span class="bw-sep"></span>
+            <button id="btnUndo" type="button" title="Undo (Ctrl+Z)">&#8630; Undo</button>
+            <button id="btnClear" type="button">Clear</button>
+          </div>
+        </div>
+        <div class="bw-group">
+          <span class="control-label">View
+            <span class="why"><b>X-ray</b> parks the level's vehicle at mid-span and colours every member by force before you commit; <b>Numbers</b> prints kN on each member; <b>Dead load</b> adds the steel's own weight, 900 N/m.</span></span>
+          <div class="bw-row">
+            <label class="tgl on"><input type="checkbox" id="tglXray" checked> X-ray</label>
+            <label class="tgl"><input type="checkbox" id="tglNums"> Numbers</label>
+            <label class="tgl"><input type="checkbox" id="tglWeight"> Dead load</label>
+            <span class="bw-group-inline" id="vehGroup" hidden>
+              <label class="tgl on">Vehicle <select id="vehSel" aria-label="Test vehicle"></select></label>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="bw-status">
+        <span id="toolHint"></span>
+        <span id="statusMsg" role="status" aria-live="polite"></span>
+      </div>
+
+      <!-- The bounded canvas frame. Was the flex remainder of a body that could
+           not scroll; the shell owns a scrolling document, so it is a box now.
+           game.js already measured the canvas's own box (clientWidth/Height,
+           getBoundingClientRect, a ResizeObserver), so relocation between hosts
+           and presentation mode both re-measure for free. -->
+      <div class="bridge-stage" id="bridge-stage">
+        <canvas id="cv" tabindex="-1" role="img" aria-label="Bridge design canvas. Use the pointer to build, or enable keyboard editing in Settings."></canvas>
+        <div id="hint"></div>
+        <div id="fbd" hidden></div>
+      </div>
+      <div class="bw-legend" aria-label="Colour key">
+        <span class="panel-kicker kick-inline"><span class="k-live">Live</span> member forces from the current solve</span>
+        <span><i class="sw sw-t"></i>tension &mdash; pulled apart</span>
+        <span><i class="sw sw-c"></i>compression &mdash; squashed</span>
+        <span><i class="sw sw-z"></i>carrying nothing</span>
+        <span class="dim">brighter = closer to its limit &middot; sag drawn &times;45</span>
+      </div>
+
+      <!-- ===== A4's instrument: the weakest link, docked and always shown =====
+           Read from the TEST RECORD (T.first / T.maxU), never from live state.
+           The debrief carries the same line; this keeps it on screen after the
+           debrief closes, because the debrief is a dialog and the lesson is not
+           hidden behind a toggle (fuel-golf friction list, item 9). -->
+      <div class="weakest" id="weakest" aria-live="polite">
+        <span class="wk-label">Weakest link</span>
+        <span class="wk-body">No load test yet on this level.</span>
+      </div>
+
+      <!-- ===== A2's capture, applied to EVERY Load test ======================
+           The Load test button stays disabled until one of these is pressed;
+           the call is echoed against the engine's record of the first failure
+           after the run, in the stage's Predict card and in the debrief, then
+           cleared so the next test needs a fresh call. Four outcomes, because
+           those are the four things the record can name. -->
+      <div class="testcall" id="testcall" role="group" aria-labelledby="testcall-label">
+        <span class="control-label" id="testcall-label">Before you test &mdash; what goes first?
+          <span class="why">Commit a call to unlock <b>Load test</b>. Being wrong costs nothing; committing first is what turns the crossing into a measurement.</span></span>
+        <div class="call-options">
+          <button class="call-option" type="button" aria-pressed="false" data-call="mechanism">It folds &mdash; a mechanism, before any member is overloaded</button>
+          <button class="call-option" type="button" aria-pressed="false" data-call="buckling">A compression member buckles</button>
+          <button class="call-option" type="button" aria-pressed="false" data-call="tension">A member tears in tension</button>
+          <button class="call-option" type="button" aria-pressed="false" data-call="held">It holds &mdash; nothing fails</button>
+        </div>
+      </div>
+
+      <div class="bw-actions">
+        <span class="control-label">Run and compare
+          <span class="why"><b>Load test</b> drives the level's vehicle across, re-solving at every position. <b>Levels</b> and <b>Gallery</b> change what you are working on; the <b>Leaderboard</b> is this machine's class list.</span></span>
+        <div class="bw-row">
+          <button id="btnTest" type="button" class="primary" disabled>&#9654; Load test</button>
+          <button id="btnLevels" type="button">Levels</button>
+          <button id="btnGallery" type="button">Gallery</button>
+          <button id="btnBoard" type="button" title="Class leaderboard" aria-label="Class leaderboard">&#127942; Leaderboard</button>
+        </div>
+      </div>
+    </section>
+   </div><!-- /#activity -->
+  </div>
+
+  <p class="obs-cue" id="cue-1" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">Level 2's rectangular frame folded with no member overloaded. Why could no member resist?</h3>
+    <p class="check-prompt">You watched the dashed ghost rock, and the debrief listed the joints that ran away.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="A member only resists a change in its own length, and a rectangle can shear into a parallelogram with every side exactly as long as before. The solver sees this as arithmetic: that motion strains nothing, so K maps it to zero force and is singular. One diagonal per panel removes exactly one fold.">The fold changed no member's length, and a member only resists a change in its own length</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Strength never entered it. The debrief showed every member at 0% of its limit when the frame folded; thicker steel would have folded just as freely. A mechanism is a geometry problem, and only geometry &mdash; a diagonal &mdash; fixes it.">The members were too weak &mdash; thicker steel would have held</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Every joint here is an ideal pin by design, and a pin is not loose &mdash; it holds position perfectly and only lets members rotate. Real trusses are modelled the same way. The frame folded because its members could rotate about those pins without any of them stretching.">The joints were loose &mdash; a stiffer connection would have held it</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 2 ================================== -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 8 of 16 &middot; Part four &middot; Engineering &middot; Stage 2</span>
+      <h2 id="stage-2-title">Length decides the push</h2>
+      <p class="stage-question">The same 4 m member holds 300 kN pulled. Why does it fail at 45 kN pushed?</p>
+      <p class="refresh"><b>Before you start.</b> <b>Yield</b> is the stress at which steel stops
+        springing back; pulled, every member here yields at &sigma;<sub>y</sub>&middot;A = 300 kN whatever its
+        length. <b>Buckling</b> is a pushed member bowing sideways long before it could crush, and
+        <b>Euler's formula</b> P<sub>cr</sub> = &pi;&sup2;EI/L&sup2; says the load that does it falls
+        with the <i>square</i> of length. Stage 1 gave you shapes that hold still; this stage asks
+        which of their members are doing the pushing.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Level 3 sends a 125 kN truck over a 10 m gap. Before you test your first design there, call the first failure: fold, buckle, tear, or hold?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Build, or load a <b>Gallery</b> truss; turn on <b>Numbers</b>; commit your call; press <b>&#9654; Load test</b>; then read <b>Weakest link</b> under the canvas and the debrief's <b>buckles at</b> column.</p></article>
+      <article><span>Takeaway</span><p>Compression capacity falls as 1/L&sup2; &mdash; 180 kN at 2 m, 80 kN at 3 m, 45 kN at 4 m &mdash; while tension stays at 300 kN at any length, which is why cheap designs shorten their struts or hang the deck so the long members are pulled.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="1"></div>
+
+  <p class="obs-cue" id="cue-2" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Is compression just tension with a minus sign?</h3>
+    <p class="check-prompt">The debrief's table shows a 300 kN tension limit on every row and a "buckles at" figure that changes with length.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="The sign selects a different failure mode. Pulled, the member yields at &sigma;<sub>y</sub>A = 300 kN at any length. Pushed, it bows sideways at P<sub>cr</sub> = &pi;&sup2;EI/L&sup2;, capped at 180 kN when stubby &mdash; 45 kN at 4 m. The engine's own check: a 2 m strut carries 179.97 kN, a 4 m strut 44.99 kN, a ratio of 4.00.">No &mdash; a pushed member fails by buckling sideways, at a load that falls with the square of its length</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="That is the model this stage exists to break. The same steel section, the same 4 m, holds 300 kN pulled and 45 kN pushed: a factor of nearly seven between the two signs. Bookkeeping does not produce a factor of seven; a different failure mode does.">Yes &mdash; the sign is bookkeeping, and the same magnitude fails either way</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="It is the other way round for anything slender. Squashing does not fail the steel; the member escapes sideways first, and it does so sooner the longer it is. Only a very short strut gets anywhere near its crushing strength, which is why the game caps compression at 180 kN rather than 300.">Compression is stronger &mdash; the steel is being squashed together, not torn</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="check" aria-labelledby="check-2b-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2b-title">You flip a working truss under the deck so its long members hang instead of prop. Same geometry, same cost. What changes?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="The long members that were pushing are now pulling, so their limit is 300 kN instead of a buckling figure that fell with their length. The engine's own regression run measures it: the propped version peaks at 37% of limit, the hung version at 32%, for identical steel.">The long members are now in tension, so the 300 kN limit applies instead of a buckling limit</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="The force magnitudes are close to the same &mdash; but the limits are not. A member's percentage of limit is force over capacity, and flipping the truss swaps a buckling capacity for a yield capacity on the members that matter. Same forces, different denominators.">Nothing &mdash; the forces are the same size either way, so the design is equally safe</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 3 ================================== -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 8 of 16 &middot; Part four &middot; Engineering &middot; Stage 3</span>
+      <h2 id="stage-3-title">Where the load travels</h2>
+      <p class="stage-question">How does a wheel's weight find its way to the ground when you cannot build below the deck, or when a pier appears mid-span?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>load path</b> is the chain of members that
+        carries a wheel's weight to a <b>support</b> &mdash; an abutment or a pier. In a <b>through
+        truss</b> the roadway is the bottom chord and the frame stands above it; in a <b>bowstring</b>
+        a curved compression chord is tied by the deck, so the deck itself is in tension. Stage 2 told
+        you which members are dangerous; this stage moves the load onto different ones.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Level 4 forbids building below the deck. Call the first failure of your first design there &mdash; fold, buckle, tear, or hold &mdash; before you press the button.</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Load a <b>Gallery</b> bowstring or Pratt at 2&ndash;3 m depth, use <b>Check a joint</b> on a deck joint to read &Sigma;F = 0, commit your call and press <b>&#9654; Load test</b>. Then move to Level 5 and see what the pier does to par.</p></article>
+      <article><span>Takeaway</span><p>Load splits by stiffness, not by counting: a stiffer path attracts more force, a mid-span pier turns one 16 m span into two 8 m ones and cuts the chord forces far more than in half, and a member drawn grey is steel you paid for that carries nothing.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="2"></div>
+
+  <p class="obs-cue" id="cue-3" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">Does adding a member always make a truss stronger?</h3>
+    <p class="check-prompt">The debrief flags members that never passed 5% of their limit, and first attempts usually have several.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Load shares by stiffness, so a new, stiffer path takes force away from its neighbours &mdash; or dumps more onto one of them. Add a member to a design that just made par and watch where the peak moves. And every member costs steel and a joint whether or not it works.">Not necessarily &mdash; a stiffer added path attracts more force and can overload its neighbour, and it costs money either way</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="That is the intuition the solver is here to test. A statically indeterminate truss does not split load evenly; it splits it by stiffness, and the debrief's grey rows are members that took almost none. More members means more expensive; it does not reliably mean stronger.">Yes &mdash; every member adds capacity, so more is always safer</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="check" aria-labelledby="check-3b-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3b-title">In a Pratt truss from the Gallery, what are the verticals doing?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="They carry each panel's shear up to the top chord &mdash; in compression in a Pratt, in tension in a Howe, which the engine's own regression run checks (Pratt interior diagonals in tension, Howe in compression). Erase one vertical with X-ray on and its panel becomes a rectangle: the truss becomes a mechanism.">Carrying each panel's shear to the top chord &mdash; erase one and its panel becomes a rectangle</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="A member genuinely carrying nothing is drawn grey, and a Pratt's verticals are not grey &mdash; they are blue. Spacers would be zero-force members; these are part of the load path, and removing one leaves a four-sided panel that folds.">Holding the chords apart &mdash; spacers that carry nothing</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 4 ================================== -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 8 of 16 &middot; Part four &middot; Engineering &middot; Stage 4</span>
+      <h2 id="stage-4-title">The open span</h2>
+      <p class="stage-question">With no par and any vehicle, which of your ideas about trusses survive a 20 t crane?</p>
+      <p class="refresh"><b>Before you start.</b> The Sandbox sits <b>outside the lesson path</b>: an
+        18 m gap, no par, nothing saved to the leaderboard, and the <b>Vehicle</b> picker unlocked.
+        Every rule from stages 1&ndash;3 still runs &mdash; the same solver, the same steel section,
+        the same buckling law.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Pick a Gallery truss and a vehicle, and call the first failure before you test it. Then change one thing and call it again.</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Choose a <b>Vehicle</b>, load a <b>Gallery</b> truss, vary its <b>Depth</b> and <b>Panels</b>, commit your call, press <b>&#9654; Load test</b>.</p></article>
+      <article><span>Takeaway</span><p>Every result on this span comes from the same three facts: triangles hold shape, compression capacity falls with L&sup2;, and load follows stiffness.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="3"></div>
+
+  <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">Across the three lesson stages, which one change most reliably lowered a design's peak compression force?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Buckling capacity falls with L&sup2;, so the cheapest fix for a pushed member is to make it shorter &mdash; more panels &mdash; or to turn it into a pulled one by hanging the deck. The engine's own par search finds its best Level 3 and Level 5 designs hung below the deck.">Shortening the compression members, or hanging the deck so they pull instead of push</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Load follows stiffness, not head-count. Extra members redistribute force and often leave several at under 5% of their limit &mdash; grey, and billed. Stage 3's check is the same lesson.">Adding members anywhere, because more members share the load</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Shallower makes it worse. A truss carries bending as a chord force pair, and that force is roughly the bending divided by the depth: halve the depth and the chords work about twice as hard. The debrief's advice line says the same thing when it tells you to deepen a truss whose chord tore.">Making the truss shallower, so its members are shorter</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span>Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button>
+  </div>
+</div>
+
+<!-- ===== A7 GUIDE (the shell opens this on load) ========================== -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">One game across four stages: <b>carry the load for less than par</b> &mdash; and before each test, <b>call which member goes first</b>. Cheapest surviving bridge wins; the leaderboard keeps score.</p>
+    <p class="note">Where this sits: the second AI-built classroom tool in Part four, after the orbital game. Its solver is the real direct-stiffness method, so every collapse you watch is a computed result, and its assumptions are one tap away in Details.</p>
+    <ol>
+      <li><b>Mechanisms.</b> With <b>Draw</b>, drag a roadway across Level 1. Commit a call under the canvas, press <b>&#9654; Load test</b>, watch it fold, then add a triangle.</li>
+      <li><b>Compression buckles.</b> Level 3's truck. Turn on <b>Numbers</b>, call it, test it, and read <b>Weakest link</b>.</li>
+      <li><b>Load paths.</b> Level 4 forbids building below the deck; Level 5 adds a pier. Load a <b>Gallery</b> truss and use <b>Check a joint</b>.</li>
+      <li><b>Sandbox.</b> Any vehicle, no par. Outside the path.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The four tabs switch stages; <b>Levels</b> inside the activity moves them too. <b>Details</b> opens the formulas, assumptions and sources for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> holds <b>Open Presenter Notes</b>, <b>Presentation mode</b> and <b>Reset</b>. <b>&#8630; Undo</b> is Ctrl+Z.</p>
+    <h3>Time</h3>
+    <p>Thirty minutes for stages 1&ndash;3, most of it on Level 2's frame and Level 3's truck. A load test takes a few seconds; the debrief is where the time goes.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Mechanisms</button></form>
+</dialog>
+
+<!-- ===== A8 SETTINGS ===================================================== -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen &mdash; the thirty-minute run of show, the statics behind each stage, the misconceptions to catch and the pars.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to the start: Level 1 with an empty gap, saved designs and personal bests
+      cleared, the Draw tool, X-ray on, every call and check answer forgotten, stage 1. The
+      <b>class leaderboard is left alone</b> &mdash; it holds other people's results; use the two-step
+      clears under <i>Class data</i> for that. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+    <h3>Display</h3>
+    <p class="setnote">Options the game had before it joined the lesson shell.</p>
+    <p class="set-row"><label class="tgl"><input type="checkbox" id="tglPar" checked> Show par budgets</label></p>
+    <p class="set-row"><label class="tgl"><input type="checkbox" id="tglKeyboard"> Keyboard editing cursor &mdash; arrow keys move; B builds, E erases, I inspects</label></p>
+    <h3>Demonstrations</h3>
+    <p class="set-row"><label class="tgl"><input type="checkbox" id="tglOverload"> Let me pick the test vehicle on any level</label></p>
+    <p class="setnote">For showing a class what happens when a bridge that comfortably carried a car meets a 20 t crane. Runs with a non-standard vehicle are marked as demos and stay off the leaderboard.</p>
+    <h3>Class data</h3>
+    <p class="setnote">Scores are stored in this browser only &mdash; each machine keeps its own class list. Each button asks twice.</p>
+    <p class="set-row">
+      <button id="btnResetLevel" class="btn ghost small" type="button">Reset this level's board</button>
+      <button id="btnResetAll" class="btn ghost small" type="button">Reset every board</button>
+    </p>
+    <h3>Printable guide</h3>
+    <p class="setnote">The presenter notes above <i>are</i> the complete teacher guide &mdash; same words, one source. This opens the printable copy in a new tab.</p>
+    <p><a class="btn ghost" href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy</a></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ===== A5 DETAILS DRAWER =============================================== -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Mechanisms</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the canvas, the colours, the joint tool, the fold</span>
+          <p>Every member force on screen comes from assembling this design's stiffness matrix and
+            solving <b>K&middot;u = F</b> in your browser, again on every edit. The dashed fold you
+            watch on a rectangle is not an animation someone drew: it is the null-space direction the
+            solver found when <b>K</b> came out singular, projected back onto exact member lengths so
+            nothing stretches.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">deterministic &mdash; no seed; 86 checks in test-physics.js</span> the pars</span>
+          <p>Each par is a budget a triangulated design can beat, found offline against this same
+            solver: Level 1's best surviving design in the search costs $929 against a par of $1,050,
+            and no un-triangulated ladder survives any level at any depth or panel count (80 variants
+            tried per level). Nothing in the solver is random, so re-running the suite reproduces
+            every figure.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the bill</span>
+          <p>Steel at $4.80/kg on a 9.42 kg/m section (about $45 a metre) and $180 per joint are
+            invented so that panel count is a real trade-off. The <i>shape</i> of the bill &mdash;
+            connections roughly 45% of a typical design &mdash; is the teaching point; the dollar
+            figures are not a quotation.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">k = (EA/L)&middot;[c&sup2; cs; cs s&sup2;] &nbsp;&rarr;&nbsp; K&middot;u = F</div>
+        <p>The <b>direct stiffness method</b>: each member is a two-force axial element whose
+          stiffness EA/L is rotated into global coordinates by the cosines of its direction, every
+          element is added into a global matrix <b>K</b>, the supports are applied as boundary
+          conditions, and the displacements <b>u</b> are solved for. Member forces follow from the
+          strains. Because it is a stiffness solve and not a joint-by-joint walk, designs with extra
+          members, two pinned ends or a pier &mdash; statically <b>indeterminate</b> designs &mdash;
+          solve correctly, with load split by stiffness.</p>
+        <p>The reduced matrix is factored by Gaussian elimination with <b>full pivoting</b>, which
+          reports the rank honestly. Rank deficiency means a motion that strains nothing exists; the
+          solver returns that null-space vector, and the game projects it onto exact member lengths
+          (largest amplitude with under 0.5% length change) before drawing it.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Two-dimensional, pin-jointed.</b> No bending in any member, no out-of-plane behaviour.</li>
+          <li><b>Linear elastic, small displacement.</b> Deflections are drawn 45&times; life size (capped
+            at 1.3 m so a near-failure design stays on screen) but solved at true scale.</li>
+          <li><b>One steel section for everything</b>, so the design problem is about geometry rather
+            than shopping for sections.</li>
+          <li><b>Ideal supports.</b> The left abutment is a pin (fixed both ways); the others are rollers
+            (fixed vertically, free to slide).</li>
+          <li><b>A joint dropped mid-member splits it</b>, and two members meeting in a straight line at
+            an unloaded joint are condensed back into one (springs in series, EA/L<sub>total</sub>,
+            exact) &mdash; otherwise a pure pin idealisation would call every such joint a mechanism.</li>
+          <li><b>Members no longer than 4 m</b>, on a 0.5 m grid.</li>
+          <li><b>Joints never fail.</b> This is a steel truss with idealised pins: member buckling and
+            yield are modelled, connection failure is not. See the Reasoned note below.</li>
+        </ul>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span> why the joints are idealised, and what that leaves out</span>
+          <p>In real structures &mdash; especially glued or nailed ones like a craft-stick bridge &mdash;
+            the connection is often what goes first, and this model cannot represent that failure at all.
+            The steel pin-jointed idealisation is chosen precisely because it isolates the two things
+            statics can teach cleanly: a shape that cannot hold still, and a member that buckles or yields.
+            That choice is the honest one for this lesson, and the reason engineers model what they
+            model is a lesson in itself.</p>
+        </div>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.purdue.edu/freeform/me323/wp-content/uploads/sites/2/2022/04/week16.pdf" target="_blank" rel="noopener">Purdue ME 323, Mechanics of Materials, Topic 18: Column buckling (PDF)</a>
+            &mdash; read 2026-09-16: the Euler-Bernoulli derivation this stage's stiffness elements share their assumptions with; eq. (7) P<sub>cr</sub> = &pi;&sup2;EI/L&sup2; is used in stage 2.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is a truss <i>idealisation</i>. Real bridge
+          joints are bolted or welded and carry some bending; real members have imperfections; real
+          decks span between joints as beams. The solver shows why triangles work and where load
+          goes. It is not a design tool and its numbers should not be carried into one.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> every member's force and its percentage of limit</span>
+          <p>Utilisation is force divided by capacity, and capacity is chosen per member per sign:
+            &sigma;<sub>y</sub>A when pulled, min(0.6&sigma;<sub>y</sub>A, &pi;&sup2;EI/L&sup2;) when
+            pushed, with L the whole unbraced straight run. The debrief's <b>buckles at</b> column is
+            that second figure.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">specified minimum, not typical; the model rounds 36 ksi to 250 MPa</span> the yield stress</span>
+          <p>ASTM A36 carbon structural steel is specified at a <i>minimum</i> yield of 36 ksi
+            (&asymp; 248 MPa). Real A36 typically yields somewhat higher; the game uses 250 MPa as the
+            round figure, so T<sub>max</sub> = 250 MPa &times; 12 cm&sup2; = 300 kN.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">reference-table value, not a standard</span> E = 200 GPa</span>
+          <p>The modulus for structural steel in common engineering reference tables. With
+            I = 3.647 &times; 10<sup>&minus;7</sup> m<sup>4</sup>, EI = 72.9 kN&middot;m&sup2; and
+            &pi;&sup2;EI &asymp; 720 kN&middot;m&sup2;, which is where the 720/L&sup2; on the Takeaway card
+            comes from.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">not sourced on this page</span> the section and the density</span>
+          <p>A 12 cm&sup2; section, I = 3.647 &times; 10<sup>&minus;7</sup> m<sup>4</sup> and 7,850 kg/m&sup3;
+            are the authors' choices: the density is the usual carbon-steel figure, and the section was
+            picked so that a 2 m strut sits right at the 180 kN cap while a 4 m strut carries a quarter
+            of that. Nothing on the Takeaway card depends on the exact values &mdash; only on the
+            1/L&sup2; law.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">P<sub>cr</sub> = &pi;&sup2;EI / L&sup2; &asymp; 720 kN&middot;m&sup2; / L&sup2;, capped at 180 kN</div>
+        <p><b>Euler buckling</b> for a pinned-pinned column. The cap is 0.6 of the squash load: a
+          simplification standing in for the real column curves, which bend the Euler hyperbola over as
+          a strut gets stubby. So 2 m &rarr; 180 kN (the cap binds from about 2.0 m), 3 m &rarr; 80 kN,
+          4 m &rarr; 45 kN. The buckling length is the <i>whole</i> collinear chain, because an
+          intermediate pin with nothing bracing it braces nothing.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Pinned-pinned effective length</b> (K = 1) for every member; no end fixity credit.</li>
+          <li><b>A straight, perfect member.</b> Real struts have initial crookedness and residual
+            stress, which lower the buckling load below Euler's.</li>
+          <li><b>No lateral bracing out of plane.</b> The one length is used for both directions.</li>
+          <li><b>The 0.6 cap is a stand-in</b> for a design column curve, not a code provision.</li>
+          <li><b>Tension capacity is yield, not fracture</b>, and no connection or net-section check is
+            made at the joints &mdash; a joint here cannot fail, where in a glued or bolted real
+            structure the connection is often the first thing to go.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.purdue.edu/freeform/me323/wp-content/uploads/sites/2/2022/04/week16.pdf" target="_blank" rel="noopener">Purdue ME 323, Mechanics of Materials, Topic 18: Column buckling (PDF)</a>
+            &mdash; read 2026-09-16: eq. (7), "P<sub>cr</sub> = &pi;&sup2;EI/L&sup2;" for the pinned-pinned column, and eq. (9) with the effective length L<sub>eff</sub> for other end conditions.</li>
+          <li><a href="https://www.ssab.com/en-us/brands-and-products/commercial-steel/structural-steel/astm-a36" target="_blank" rel="noopener">SSAB, ASTM A36 product page</a>
+            &mdash; read 2026-09-16: "Yield strength (min ksi) 36"; tensile strength 58&ndash;80 ksi. A steelmaker's datasheet, not the ASTM standard itself, which is paywalled.</li>
+          <li><a href="https://www.engineeringtoolbox.com/young-modulus-d_417.html" target="_blank" rel="noopener">The Engineering ToolBox, Young's Modulus table</a>
+            &mdash; read 2026-09-16: "Steel, Structural ASTM-A36: 200 GPa". A reference table; treat as a widely used value rather than a measurement.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the 1/L&sup2; law is the lesson; the 45 kN is a
+          property of <i>this</i> section. A real design would use column curves, effective-length
+          factors, safety factors and a real section catalogue, and would get different numbers. What
+          transfers is the direction and the shape of the effect, not its size.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the crossing, re-solved at every position</span>
+          <p>The vehicle is stepped across the deck and the structure is solved from scratch at each
+            position with whatever members are still standing. Each wheel load lands on the deck member
+            beneath it and is shared to that member's two joints by lever arm &mdash; the standard
+            tributary distribution to panel points. The regression run checks that every newton of
+            wheel load reaches the joints at 48 positions.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the progressive collapse</span>
+          <p>When a member's utilisation passes 100% it is removed and the structure is re-solved with
+            what is left, up to forty times per position. On a minimal truss the first break is fatal
+            &mdash; what remains is a mechanism. On a redundant one the run records a genuine cascade
+            (buckle &rarr; re-solve &rarr; tear &rarr; re-solve &rarr; mechanism).</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">deterministic &mdash; no seed</span> Pratt verticals compress, Howe verticals stretch, Warren diagonals alternate</span>
+          <p>The gallery's one-line descriptions of where each truss puts tension and compression are
+            checked against this solver in the regression suite, not asserted from a textbook: Pratt
+            interior diagonals in tension, Howe in compression, a Warren alternating T/C with one
+            repeat exactly at mid-span and a fully tensile bottom chord.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span> the gallery's dates</span>
+          <p>Howe 1840, Whipple's iron bowstring 1841, Pratt 1844: the US patents, read today. Warren
+            1848: a British patent, read through a professional-magazine history rather than the patent
+            itself &mdash; see Sources.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">at each x: F(x) &rarr; solve &rarr; break the worst &rarr; re-solve &rarr; next x</div>
+        <p>A <b>quasi-static moving load</b>: no inertia, no dynamic amplification, no impact. That is
+          the usual first idealisation for a slow vehicle, and it is what lets every position be a
+          clean equilibrium solve. A member dangling off a half-built structure with nothing pushing
+          on it is pruned as a <b>zero-force member</b> and drawn grey rather than reported as a
+          collapse; with <b>Dead load</b> on, every live member first receives its own weight (900 N/m,
+          half to each end), so a hanger keeps its load and a stub that cannot carry its own weight is
+          reported honestly.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Quasi-static.</b> No dynamics, so no impact factor and no vibration.</li>
+          <li><b>Deck members carry wheels between joints without bending</b> &mdash; the wheel load
+            goes straight to the two joints.</li>
+          <li><b>One member breaks per re-solve</b>, the most overloaded one; simultaneous failures are
+            sequenced.</li>
+          <li><b>Removal is instantaneous</b> and the remaining structure is solved statically; the
+            falling-wreckage animation after a mechanism is a display, not a solve.</li>
+          <li><b>The self-weight figure (900 N/m)</b> stands for the member plus its share of a deck and
+            is illustrative.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://patents.google.com/patent/US1685A/en" target="_blank" rel="noopener">US Patent 1,685, William Howe, "Truss-frame for bridges"</a>
+            &mdash; read 2026-09-16: issued July 10, 1840; principal braces from the abutments toward the centre with counter-braces.</li>
+          <li><a href="https://patents.google.com/patent/US2064A/en" target="_blank" rel="noopener">US Patent 2,064, Squire Whipple, "Construction of iron-truss bridges"</a>
+            &mdash; read 2026-09-16: issued April 24, 1841; a cast-iron arch with wrought-iron thrust ties along its chord &mdash; the tied arch the gallery calls a bowstring.</li>
+          <li><a href="https://patents.google.com/patent/US3523A/en" target="_blank" rel="noopener">US Patent 3,523, Thomas W. and Caleb Pratt, truss-frames for bridges</a>
+            &mdash; read 2026-09-16: issued April 4, 1844; diagonal tension bars crossing in each panel.</li>
+          <li><a href="https://www.structuremag.org/article/the-warren-truss/" target="_blank" rel="noopener">Frank Griggs Jr., "The Warren Truss", STRUCTURE magazine, July 2015</a>
+            &mdash; read 2026-09-16: Warren and Monzani's British patent No. 12,242, "Construction of Bridges and Aqueducts", August 15, 1848. A secondary source; the patent itself was not read.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this demo does not claim how a real bridge fails.
+          Real progressive collapse involves dynamics, connection behaviour, redistribution over time
+          and deck action, none of which is modelled. It shows that a spare load path is what turns
+          "one member gone" into "still standing", and that the spare path costs money.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the whole Sandbox</span>
+          <p>Same solver, same steel, same buckling law, an 18 m gap and any vehicle. Nothing here is
+            scored or saved to the leaderboard.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the five vehicles</span>
+          <p>A 30 kN car, a 60 kN van, a 120 kN tipper, a 125 kN truck and a 200 kN crane, with
+            invented axle spacings and per-axle loads. They are sized to make each level's par
+            interesting, not to match any real vehicle class or legal axle limit.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">everything from stages 1&ndash;3, with the vehicle picker unlocked</div>
+        <p>The Vehicle control is the only new thing. A vehicle longer than the gap is left out of the
+          list; a demo run with a non-standard vehicle on a lesson level is marked as such and kept
+          off the leaderboard.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Every simplification from the other three stages still applies</b> &mdash; 2D pins,
+            linear elastic, one section, quasi-static, Euler with a cap.</li>
+          <li><b>No par and no save</b>, so nothing measured here is a benchmark.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.purdue.edu/freeform/me323/wp-content/uploads/sites/2/2022/04/week16.pdf" target="_blank" rel="noopener">Purdue ME 323, Topic 18: Column buckling (PDF)</a>
+            &mdash; read 2026-09-16: the same buckling law governs every compression member here.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> a design that survives the crane here survives it
+          <i>in this model</i>. Anything that exploits the model's absences &mdash; perfect pins, no
+          dynamics, no imperfections &mdash; is telling you about the simulation, not about
+          bridges.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- ===== PRESENTER NOTES = THE PRINTABLE GUIDE =========================== -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- ===== THE ACTIVITY'S OWN DIALOGS ======================================
+     Four, and none is a duplicate of the shell's per-stage Details drawer
+     (ADOPTING.md section 5): a debrief about ONE crossing, a level list, the
+     truss gallery, and this machine's class leaderboard. Native <dialog>, so
+     Escape, the backdrop, the focus trap and focus return are the platform's.
+     data-lightdismiss on the three informational ones only: the debrief asks
+     for a decision (retry / save / next), so a stray tap must not answer it.
+     ====================================================================== -->
+<dialog class="game-dialog" id="bw-debrief" aria-labelledby="dbTitle">
+  <div class="box">
+    <div class="game-dialog-head">
+      <h2 id="dbTitle">Debrief <span class="panel-kicker kick-inline"><span class="k-live">Live</span> read from this crossing's test record</span></h2>
+      <form method="dialog"><button type="submit" class="icon" aria-label="Close">&times;</button></form>
+    </div>
+    <div class="body" id="dbBody"></div>
+    <div class="foot">
+      <button id="dbRetry" type="button">Back to build</button>
+      <input type="text" id="dbName" placeholder="name or initials" maxlength="18" aria-label="Name for the leaderboard" hidden>
+      <button id="dbSave" type="button" class="primary" hidden>Save to leaderboard</button>
+      <button id="dbNext" type="button" class="primary" hidden>Next level &rarr;</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="game-dialog" id="bw-levels" data-lightdismiss aria-labelledby="lvTitle">
+  <div class="box">
+    <div class="game-dialog-head">
+      <h2 id="lvTitle">Levels <span class="sub">&mdash; picking one moves the stage tabs with it</span></h2>
+      <form method="dialog"><button type="submit" class="icon" aria-label="Close">&times;</button></form>
+    </div>
+    <div class="body"><div class="ggrid" id="lvGrid"></div></div>
+  </div>
+</dialog>
+
+<dialog class="game-dialog" id="bw-gallery" data-lightdismiss aria-labelledby="glTitle">
+  <div class="box">
+    <div class="game-dialog-head">
+      <h2 id="glTitle">Famous trusses <span class="panel-kicker kick-inline"><span class="k-sourced">Sourced</span> dates from the patents &middot; Details, stage 3</span></h2>
+      <form method="dialog"><button type="submit" class="icon" aria-label="Close">&times;</button></form>
+    </div>
+    <div class="body">
+      <p class="sub gl-lede">Load one into the current level, run the test, and compare where the forces go.
+        They all cross the same gap &mdash; they route the load differently.</p>
+      <div class="grow">
+        <label class="tgl">Depth <input type="range" id="glH" min="1" max="10" step="1" value="4"></label>
+        <span id="glHv" class="sub"></span>
+        <label class="tgl">Panels <input type="range" id="glN" min="2" max="10" step="1" value="5"></label>
+        <span id="glNv" class="sub"></span>
+      </div>
+      <div class="ggrid" id="glGrid"></div>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="game-dialog" id="bw-board" data-lightdismiss aria-labelledby="bdTitle">
+  <div class="box">
+    <div class="game-dialog-head">
+      <h2 id="bdTitle">Class leaderboard <span class="sub">&mdash; this browser only</span></h2>
+      <form method="dialog"><button type="submit" class="icon" aria-label="Close">&times;</button></form>
+    </div>
+    <div class="body" id="bdBody"></div>
+  </div>
+</dialog>
+
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+
+<!-- SCRIPT ORDER IS LOAD-BEARING: the shell first (it snapshots the chrome
+     Reset restores from, before anything else touches it), then the engine
+     (window.BW, window.BWLEVELS), then the game (window.bridgeWorks), then the
+     lesson layer, whose A6 listeners must register AFTER the shell's. -->
+<script>
+/*__SHELL_JS__*/
+</script>
+<script>
+/*__PHYSICS__*/
+</script>
+<script>
+/*__LEVELS__*/
+</script>
+<script>
+/*__GAME__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+</body>
+</html>
