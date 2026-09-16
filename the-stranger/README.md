@@ -47,7 +47,16 @@ total, ~25,700 words**, written from a blank page each. No templating: a gate fa
 
 **Read that precisely.** The gate lives in `tools/validate.py`, which is a separate step run by
 hand before a build. `build.js` never invokes it and never re-derives it, so a clean
-`node build.js --check` is **not** evidence that any content gate holds. This README said "fails
+`node build.js --check` is **not** evidence that any content gate holds -- and `--check` now says
+so on its own output, in those words, so the claim cannot be made by silence.
+
+What `build.js --check` *does* enforce about content is a **staleness pin**: if any authored file
+in `src/content/` is newer than the merged `src/content.json`, the build refuses and tells you to
+run the validator. That needs no gate logic, so it forks nothing. `validate.py` takes no arguments
+and unconditionally rewrites `src/content.json`, so it cannot be called from a `--check` that must
+write nothing, and re-implementing its seven gates in JavaScript would be a second copy that
+drifts. **Residual gap, on the record:** the pin does not catch a hand-edit of `src/content.json`
+itself, which would look fresh and ship ungated. Never edit the merged file. This README said "fails
 the build" until 2026-09-16; that was wrong about the mechanism, and the gate is a
 **verbatim-reuse** gate rather than a similarity gate -- it compares normalised sentences for
 exact identity, so two paraphrases of one sentence score as fully distinct.
