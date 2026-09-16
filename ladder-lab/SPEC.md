@@ -12,9 +12,18 @@ it in a comment.
 
 Source files in `src/`, concatenated in this order into one `index.html` (no ES
 modules, no external network resources, no localStorage — in-memory + file
-download/upload only):
+download/upload only). Since the lesson-shell v2 retrofit (2026-09), the page
+chrome (header, stage navigation, stage intro, Guide/Settings/Details/
+Presenter-Notes dialogs, footer, credit pill) is drawn by the shared kit at
+`../tools/lesson-shell/` and injected by `build.js` alongside these files —
+see that file's head comment and `ADOPTING.md`. Everything below this line is
+unchanged by that retrofit: it describes the engine and the activity, which
+the kit does not touch.
 
-1. `styles.css`   (inlined into `<style>`)
+1. `styles.css`   — ACTIVITY styles only (inlined into `<style>`, after the
+   kit's own style block, so activity rules can override a kit rule without
+   `!important`); the workbench/engine-strip/watch-drawer/toast/self-test
+   styling described in "Look and feel" below
 2. `engine.js`    — window.LL.Engine, LL.Validate
 3. `programs.js`  — window.LL.Programs
 4. `faults.js`    — window.LL.Faults
@@ -212,8 +221,11 @@ LL.Challenges.init(containerEl, ctx);
 LL.Faults;  // data + pure helpers, plus small UI panel: LL.Faults.initPanel(el, ctx)
 ```
 
-Bus events (min set): `program:loaded` {program, plc}, `scan:done`, `mode:changed`,
+Bus events (min set): `program:loaded` {program, plc}, `scan:done`,
 `bigui:changed`, `editor:run` {program}, `fault:injected`, `fault:revealed`.
+`mode:changed` is retired (the shell's own `stagechange`/`document`-level event
+replaces it — see "App shell" below); this bus is app.js's own inter-module
+channel and is unrelated to the two shell events.
 
 ### Ladder pane (LL.Ladder)
 SVG between left/right power rails; standard symbols: XIC `-| |-`, XIO `-|/|-`,
@@ -331,42 +343,65 @@ Presets/timing are part of the program `notes` so the ladder matches its spec.
 
 ## App shell (app.js) + DOM
 
+Since the lesson-shell v2 retrofit, the four former modes are the kit's four
+stages (`role="tablist"` header nav, drawn by the shell), and the header,
+Guide/Settings/Details/Presenter-Notes dialogs and footer/credit-pill are all
+shell-owned — see `ADOPTING.md`, "the shell owns" table. What `app.js` still
+owns is everything below the stage intro:
+
 ```
 <body>
- <header id="topbar">  title · program <select> · mode tabs [Trainer|Editor|Challenges|Troubleshoot]
-   · run controls (Run/Pause, Step Scan, speed select, scanMs select 10/20/50/100)
-   · Guide button (?) then Settings (⚙). The Settings menu leads with the three
-     contract entries, labelled exactly — Open Presenter Notes, Presentation mode,
-     Reset — and this demo's own controls follow below a rule: Hide ladder toggle,
-     Printable teacher guide link (opens teacher-guide.html), Self-test.
- <main id="panes">
-   <section id="left-pane">   … ladder OR editor OR challenge UI (challenges embed the editor)
-   <section id="right-pane">  … sim pane (always visible) + fault panel (troubleshoot mode)
- <footer id="bottom-pane">    … watch window + image tables/scan debugger (collapsible)
+ <header id="brandbar">  … shell-owned: brand, stage tablist (Trainer/Editor/Challenges/Troubleshoot), Guide/Settings buttons
+ <main>                  … shell-owned: four <section class="stage"> — stage intro + lesson strip + check-yourself only
+ <section class="workbench" id="panes">   … app.js-owned. A SIBLING of the four .stage sections, not nested in
+                                             any one of them — the live engine (ladder+sim+watch, or editor, or
+                                             challenges, or fault panel) is one continuous simulation regardless
+                                             of which stage is selected, so it is not rebuilt per stage.
+   #engine-strip                          … Program <select>, Run/Pause, Step Scan, Reset PLC, plus a
+                                             collapsed "Timing & speed" <details> (Speed, Scan time) — visible
+                                             only on Trainer/Troubleshoot (the A3 control-budget fix)
+   #panes-live
+     #left-pane   … #ladder-host OR #editor-host (stages 1-2 share it: challenges embeds the editor)
+     #right-pane  … #sim-host (always visible) + #fault-host (Troubleshoot)
+   #bottom-pane   … watch window + image tables/scan debugger (collapsible)
+ <dialog id="guide">/<dialog id="settings">/<dialog id="details">/<dialog id="presenter-notes">  … shell-owned
+ <dialog id="selftest-dialog">           … app.js-owned (this demo's own mechanism, not one of the shell's four)
 ```
 
-Modes: Trainer (ladder+sim), Editor (editor+sim — running student program drives
-the sim), Challenges (challenge list/spec + editor + sim), Troubleshoot (ladder+
-sim + fault panel). Hide-ladder toggle collapses left pane (Trainer/Troubleshoot).
-Presentation mode adds `body.bigui` (scaling ~1.35× fonts/symbols) and
-`body.presentation` (the one-tap notes button in the top bar). Settings → Reset
-returns the whole app to its just-opened state by reloading: six stateful modules
-would otherwise each need a hand-written teardown, and one missed field is a demo
-that looks reset and is not. Two flags ride across in `location.hash` (which works
-on `file://`, where the storage APIs are not guaranteed to) and are consumed on
-boot: `reset` suppresses the Guide-on-load greeting, and `pres` restores
-Presentation mode, which is a display preference rather than demo state. The top
-bar's own **⟲ Reset PLC** is the smaller control: sim reset with fixed seed 12345,
-timers zeroed, program untouched.
+Stages (0-indexed, per the shell's `stagechange` event): 0 Trainer (ladder+sim),
+1 Editor (editor+sim — running a student program drives the sim), 2 Challenges
+(challenge list/spec + editor + sim), 3 Troubleshoot (ladder+sim+fault panel).
+The hide-ladder toggle lives in the Troubleshoot stage's Predict card (promoted
+out of Settings) and only takes visual effect on stage 3. Presentation mode is
+now the shell's: `app.js` reacts to its `presentationchange` event by toggling
+`body.bigui` (this demo's own ~1.35× pixel-scale for the sim/editor/challenge
+panels — distinct from the kit's own `--u` em-based text scaling, which
+`body.bigui` does not touch). **Settings → Reset is in-place, not a reload**
+(kit v2, operator ruling 2026-09-16): the shell restores everything it owns and
+dispatches `lessonreset`, and `app.js`'s `resetActivity()` listener puts the
+engine, the editor, the challenges panel and the fault panel back to their
+first-load state — the full enumeration is written out as a comment beside
+that function. The top bar's own **⟲ Reset PLC** (now inside `#engine-strip`)
+is still the smaller control: sim reset with fixed seed 12345, timers zeroed,
+program untouched.
 `?selftest=1` runs engine unit tests and renders a pass/fail report (also
 runnable in node: `node src/engine.js --test` guarded by `typeof window`).
 
 ## Look and feel (styles.css)
 
-Industrial panel: dark charcoal background (#23272b), light panel cards
-(#f4f4f2) with 2px dark borders and subtle corner screws motif, safety-yellow
-(#f5a800) accents, green/red/amber indicator colors matching real stack lights,
-monospace for tags (ui-monospace), sans (system-ui) for prose, high contrast,
-min 14px base / 19px in .bigui. Buttons look like panel pushbuttons (round for
+Since the retrofit, the PAGE (header, stage nav, stage intro, lesson strip,
+Details/Guide/Settings dialogs, footer) is the kit's own light cream/paper
+surface with navy/gold/lite tokens (`../tools/lesson-shell/tokens.css`) — it is
+no longer dark. The WORKBENCH (`#panes`) keeps this demo's own industrial
+panel look, which the kit's A0 rule ("navy for live-machine surfaces")
+endorses in spirit without mandating the literal navy hex for it: dark
+charcoal background (#23272b), light panel cards (#f4f4f2) with 2px dark
+borders and subtle corner-screw motif, safety-yellow (#f5a800) accents,
+green/red/amber indicator colors matching real stack lights, monospace for
+tags (ui-monospace), sans (system-ui) for prose, high contrast, min 14px base
+/ 19px in `body.bigui`. Buttons look like panel pushbuttons (round for
 momentary, rocker/rotary look for switches). Touch targets ≥40px. No animation
 that depends on wall-clock for logic — CSS transitions for polish only.
+`--msu-blue`/`--msu-gold`/`--msu-lite`/`--msu-red` are retired in favor of the
+kit's `--navy`/`--gold`/`--lite`/`--warm` (confirmed byte-identical hexes
+before the rename).
