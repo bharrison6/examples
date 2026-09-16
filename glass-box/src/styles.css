@@ -164,6 +164,27 @@ body.details-open { overflow:hidden; }
    one nudge is not in the kit, so it stays. */
 .guide-host .guide-scope .meta { text-align:left; margin-top:2mm; }
 
+/* ---------- A2 prediction capture ----------------------------------------
+   The kit styles and Reset-restores the .echo, but ships no control for
+   capturing the prediction that fills it, so each demo provides its own. These
+   values are copied verbatim from zero-to-unbeatable (Demo 1) rather than
+   invented, so the two reference demos present the Predict card identically.
+   Reported for kit v3 along with the uppercase-inheritance note below. */
+.predict-btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 5px; margin-top: 7px; }
+.predict-btn {
+  min-height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px;
+  background: var(--paper); color: var(--navy); font-weight: 750; font-size: calc(var(--u) * .78); line-height: 1.2;
+}
+.predict-btn:hover { border-color: var(--navy); }
+.predict-btn[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--lite-soft); }
+/* The kit's `.lesson-strip article span` uppercases the card label, and the
+   .echo is a span in the same article, so it inherits the uppercase. Undo it
+   here. Demo 1 found and fixed this independently; this is the second sighting,
+   which is why it is reported as kit friction rather than patched in the kit. */
+.lesson-strip .echo { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.lesson-strip .echo .ok { color: var(--ok); font-weight: 800; }
+.lesson-strip .echo .bad { color: var(--bad); font-weight: 800; }
+
 /* ---------- narrow screens: the ACTIVITY's grids only ----------------------
    The kit already carries, at the same two breakpoints and the same values,
    every chrome rule this block used to duplicate: .topline padding, .stages
@@ -175,6 +196,7 @@ body.details-open { overflow:hidden; }
    prefers-reduced-motion and prefers-contrast blocks it never had either.
    What is left here is the four activity grids and the agent controls. */
 @media (max-width: 760px) {
+  .predict-btns { grid-template-columns:1fr; }
   .workspace-grid, .duo { grid-template-columns:1fr; }
   .reason-followups { grid-template-columns:1fr; }
   .compare { grid-template-columns:1fr; }

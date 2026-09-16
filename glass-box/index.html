@@ -725,6 +725,27 @@ body.details-open { overflow:hidden; }
    one nudge is not in the kit, so it stays. */
 .guide-host .guide-scope .meta { text-align:left; margin-top:2mm; }
 
+/* ---------- A2 prediction capture ----------------------------------------
+   The kit styles and Reset-restores the .echo, but ships no control for
+   capturing the prediction that fills it, so each demo provides its own. These
+   values are copied verbatim from zero-to-unbeatable (Demo 1) rather than
+   invented, so the two reference demos present the Predict card identically.
+   Reported for kit v3 along with the uppercase-inheritance note below. */
+.predict-btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 5px; margin-top: 7px; }
+.predict-btn {
+  min-height: 36px; border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px;
+  background: var(--paper); color: var(--navy); font-weight: 750; font-size: calc(var(--u) * .78); line-height: 1.2;
+}
+.predict-btn:hover { border-color: var(--navy); }
+.predict-btn[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--lite-soft); }
+/* The kit's `.lesson-strip article span` uppercases the card label, and the
+   .echo is a span in the same article, so it inherits the uppercase. Undo it
+   here. Demo 1 found and fixed this independently; this is the second sighting,
+   which is why it is reported as kit friction rather than patched in the kit. */
+.lesson-strip .echo { text-transform: none; letter-spacing: 0; font-weight: 500; }
+.lesson-strip .echo .ok { color: var(--ok); font-weight: 800; }
+.lesson-strip .echo .bad { color: var(--bad); font-weight: 800; }
+
 /* ---------- narrow screens: the ACTIVITY's grids only ----------------------
    The kit already carries, at the same two breakpoints and the same values,
    every chrome rule this block used to duplicate: .topline padding, .stages
@@ -736,6 +757,7 @@ body.details-open { overflow:hidden; }
    prefers-reduced-motion and prefers-contrast blocks it never had either.
    What is left here is the four activity grids and the agent controls. */
 @media (max-width: 760px) {
+  .predict-btns { grid-template-columns:1fr; }
   .workspace-grid, .duo { grid-template-columns:1fr; }
   .reason-followups { grid-template-columns:1fr; }
   .compare { grid-template-columns:1fr; }
@@ -3035,6 +3057,58 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     if ('disabled' in el) el.disabled = was.disabled;
   }
 
+
+  // ---------- A2 prediction capture, A4 observation cues ----------
+  // The kit snapshots and restores every .lesson-strip .echo and every .obs-cue
+  // on Reset, and styles both, but it does NOT provide the capture control or
+  // wire it -- Demo 1 implements its own .predict-btn group privately. This is
+  // the same pattern, deliberately kept identical to zero-to-unbeatable's so
+  // the two reference demos behave the same way, rather than a second dialect.
+  // (Flagged for kit v3: the Predict control is required by template part A2 and
+  // reinvented by every demo that obeys it.)
+  const PREDICT_LABELS = {
+    llm: { sentences: 'real English sentences', fragments: 'English-looking fragments' },
+    reason: { direct: 'the answers-only model', worked: 'the worked-steps model', same: 'about the same' },
+    agent: { finish: 'it still finishes', stall: 'it loses the goal' }
+  };
+  const predictions = {};
+  function echoFor(key) {
+    const group = document.querySelector('.predict-btns[data-predict="' + key + '"]');
+    return group ? group.parentElement.querySelector('.echo') : null;
+  }
+  function echo(key, html) {
+    const el = echoFor(key);
+    if (!el) return;
+    el.innerHTML = html;
+    el.hidden = false;
+  }
+  document.querySelectorAll('.predict-btn').forEach((b) => {
+    b.addEventListener('click', () => {
+      const group = b.closest('.predict-btns');
+      const key = group.dataset.predict;
+      group.querySelectorAll('.predict-btn').forEach((x) => x.setAttribute('aria-pressed', 'false'));
+      b.setAttribute('aria-pressed', 'true');
+      predictions[key] = b.dataset.answer;
+      echo(key, 'You predicted: <b>' + PREDICT_LABELS[key][b.dataset.answer] + '</b>. Now run it.');
+    });
+  });
+  /* Silent when no prediction was made -- a learner who skipped the Predict card
+     is not told what they "should" have guessed. */
+  function revealPrediction(key, answerKey, sentence) {
+    const p = predictions[key];
+    if (!p) return;
+    const ok = p === answerKey;
+    echo(key, 'You predicted <b>' + PREDICT_LABELS[key][p] + '</b>. ' +
+      (ok ? '<span class="ok">That is what happened.</span> ' : '<span class="bad">Not what happened.</span> ') +
+      sentence);
+  }
+  function cue(id, text, warm) {
+    const el = $(id);
+    if (!el) return;
+    el.textContent = text;
+    el.classList.toggle('cue-warm', !!warm);
+  }
+
   // ---------- training backend ----------
   // Preferred: a real Web Worker built from WORKER_SRC, so training never
   // touches the UI thread. Some hosts (sandboxed previews, strict CSP) refuse
@@ -3378,6 +3452,16 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     renderPlayground();
     renderAttention();
     drawLoss();
+    cue('cue-1', 'Era ' + (eras.length - 1) + ' done \u2014 loss ' + m.loss.toFixed(2) +
+      ' after ' + fmt(m.step) + ' steps. Read the new sample against Era 0 in Compare.');
+    /* TEXT.ERAS is the full era list, so eras.length === TEXT.ERAS.length means
+       every era has been trained and the prediction can be settled. */
+    if (eras.length >= TEXT.ERAS.length) {
+      revealPrediction('llm', 'fragments',
+        'It writes English-looking fragments: the spacing, the letter runs and the short words are ' +
+        'the shape of the language, but it is not saying anything true. 42,458 parameters and one ' +
+        'short story buy the shape, not the content.');
+    }
   });
 
   on('a1.progress', (m) => {
@@ -3683,6 +3767,17 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     $('starstatus').textContent = `Same ${pct(m.midAcc)} under-trained model. Each round it poses ~120 fresh problems to itself, keeps verifier-certified correct attempts, and trains on them.`;
     starBase = m.midAcc;
     renderStarBars();
+    /* Read the two exam scores off the page rather than re-deriving them, so the
+       cue cannot disagree with what the learner is looking at. */
+    const dTxt = $('accD').textContent, sTxt = $('accS').textContent;
+    cue('cue-2', 'Same exam, both models: answers-only ' + dTxt + ', worked-steps ' + sTxt + '.');
+    const dNum = parseFloat(dTxt), sNum = parseFloat(sTxt);
+    if (isFinite(dNum) && isFinite(sNum)) {
+      const winner = sNum > dNum ? 'worked' : dNum > sNum ? 'direct' : 'same';
+      revealPrediction('reason', winner,
+        'Answers-only scored ' + dTxt + ' and worked-steps ' + sTxt + ' on the identical exam. ' +
+        'Same core width, depth and head count \u2014 what differed is the text format each trained on.');
+    }
   });
 
   // ---- 2.3 verified voting ----
@@ -3848,8 +3943,24 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     }
   }
 
+  /* ep.finalAnswer is set only by a `finish` action, so its absence on a done
+     episode is exactly the "ran out of context" ending. */
+  function reportEpisodeEnd() {
+    if (!ep.done) return;
+    if (ep.finalAnswer) {
+      cue('cue-3', 'The run finished: the loop kept the goal in view the whole way and handed back an answer.');
+      revealPrediction('agent', 'finish',
+        'On the full context the loop can still see the task on every turn, so it gets to the end \u2014 ' +
+        'including recovering from the calculator error on the way.');
+    } else {
+      cue('cue-3', 'The run stopped without an answer \u2014 the goal is no longer inside the visible context.', true);
+      revealPrediction('agent', 'stall',
+        'The truncation is real: once the task text falls outside the window the loop has nothing left ' +
+        'to aim at, and no way to get it back. The same policy finishes on the full context.');
+    }
+  }
   function autoStep() {
-    if (ep.done) { agentStopTimer(); pulseLoop(''); return; }
+    if (ep.done) { agentStopTimer(); pulseLoop(''); reportEpisodeEnd(); return; }
     const choice = AGENT.policy(AGENT.visibleContext(ep, windowChars()));
     if (choice.stop) {
       ep.entries.push({ role: 'stopped', text: choice.stop });
@@ -3857,6 +3968,7 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
       renderTranscript();
       agentStopTimer();
       pulseLoop('');
+      reportEpisodeEnd();
       return;
     }
     pulseLoop('model');
@@ -3865,6 +3977,7 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     setTimeout(() => pulseLoop('ctx'), 1150);
     AGENT.applyTurn(ep, choice);
     renderTranscript();
+    reportEpisodeEnd();
   }
 
   $('agmode-you').addEventListener('click', () => {
@@ -3949,6 +4062,12 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     cpD.length = 0; cpS.length = 0;
     agMode = null;
     ep = AGENT.newEpisode();
+    // captured predictions, and the aria-pressed on the buttons that hold them.
+    // The kit restores the .echo text from its own snapshot; the state behind it
+    // is the demo's and has to be cleared here or a reset page would still
+    // "remember" a guess that is no longer shown.
+    Object.keys(predictions).forEach((k) => delete predictions[k]);
+    document.querySelectorAll('.predict-btn').forEach((b) => b.setAttribute('aria-pressed', 'false'));
 
     // (4) form controls — a template `value="..."` does not reassert itself
     $('pginput').value = 'the robot sat in the ';
