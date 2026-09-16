@@ -267,7 +267,19 @@ function behaviourScript() {
       t.setAttribute('aria-selected', String(on));
       t.tabIndex = on ? 0 : -1;
     });
-    panels.forEach((p, k) => p.classList.toggle('on', k === i));
+    /* Clear the hidden attribute as well as toggling the class. shell.css
+       carries [hidden] { display: none !important } and NO .stage or .stage.on
+       display rule, so panel visibility rests entirely on the attribute: a
+       class-only toggle leaves every non-first stage pinned shut by the
+       !important, whatever the class says. ion-flight shipped exactly that way
+       - stages 2-4 unreachable - and no node suite, build --check, check-shell
+       or build-hub --check could see it. Found by the two-winters lane (P2),
+       2026-09-16. */
+    panels.forEach((p, k) => {
+      const on = k === i;
+      p.classList.toggle('on', on);
+      p.hidden = !on;
+    });
     if (opts && opts.focus) tabs[i].focus();
     document.dispatchEvent(new CustomEvent('stagechange', { detail: { index: i } }));
     return i;
