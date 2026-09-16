@@ -1,4 +1,90 @@
 {
+  "retracted": {
+    "$185,000": {
+      "reason": "pre-split guide figure for the eight-seed sweep never matched the engine (engine/data byte-stable since 2026-08-06; harness gives passive $2,604 / judgment $114,531 / wins 7 of 8); replaced by build-time figures from tools/facts.js",
+      "replacedBy": "$2,604",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$351,000": {
+      "reason": "pre-split guide figure for the eight-seed sweep never matched the engine (engine/data byte-stable since 2026-08-06; harness gives passive $2,604 / judgment $114,531 / wins 7 of 8); replaced by build-time figures from tools/facts.js",
+      "replacedBy": "$114,531",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$55,400": {
+      "reason": "per-seed 'Four measured starting points' table: seed MSU-1 is not in the harness and its figures reproduce nowhere; table now rendered from the harness sweep by tools/facts.js",
+      "replacedBy": "$101,030",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$254,525": {
+      "reason": "same table (MSU-1 judgment); rendered from the sweep",
+      "replacedBy": "$219,540",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$26,700": {
+      "reason": "same table (CMGT-201 defaults): harness gives $1,617",
+      "replacedBy": "$1,617",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$525,200": {
+      "reason": "same table (CMGT-201 judgment): harness gives $72,223",
+      "replacedBy": "$72,223",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$75,550": {
+      "reason": "same table (TOPPING defaults): harness gives +$189,705, not a loss",
+      "replacedBy": "$189,705",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$116,088": {
+      "reason": "same table (TOPPING judgment): harness gives $291,147",
+      "replacedBy": "$291,147",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$283,300": {
+      "reason": "same table (CALLOWAY defaults): harness gives $265,852",
+      "replacedBy": "$265,852",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "$245,550": {
+      "reason": "same table (CALLOWAY judgment): harness gives $253,221",
+      "replacedBy": "$253,221",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "118 working days": {
+      "reason": "best observed finish is 126 wd (8 inside the 134-day contract), not 118; 118 is 8 inside the retired 126-day contract",
+      "replacedBy": "126 working days",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "27 days": {
+      "reason": "same table (MSU-1 finish): no such seed; rows now carry the measured finish per seed",
+      "replacedBy": "13 days late",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "31 days": {
+      "reason": "same table (TOPPING finish): harness gives 4 days late, not 31",
+      "replacedBy": "4 days late",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    },
+    "28 weeks": {
+      "reason": "'well-played runs land between 24 and 28 weeks': harness range is 26-30",
+      "replacedBy": "30 weeks",
+      "retractedOn": "2026-09-16",
+      "finding": "R-topping-out F1"
+    }
+  },
   "enumerated": "2026-09-16T11:53:56.717Z",
   "source": "src/teacher-guide.html",
   "words": 8294,

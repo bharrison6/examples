@@ -474,7 +474,9 @@
             contract is reported separately in calendar days. Students who have seen negative float
             in P6 need this said out loud.</li>
           <li>Days are numbered from 0 and finish is exclusive, so EF = ES + duration. Textbook
-            tables numbering days 1&ndash;<i>n</i> read one higher on EF and LF.</li>
+            tables numbering days 1&ndash;<i>n</i> (start day inclusive, EF = ES + duration &minus; 1) read
+            one higher on <b>ES and LS</b>; EF and LF come out identical. A three-day activity at the
+            start is ES 0 / EF 3 here and ES 1 / EF 3 there.</li>
           <li>Cure and inspection holds are modelled as activities rather than lags, so you can see
             them sitting on the critical path.</li>
           <li>Durations are crew-days of work, not fixed calendar durations: they shorten with crews
@@ -574,7 +576,7 @@
             team did.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">a hand-authored deck of nine calls with their option prices</span> the calls and the event deck</span>
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">a hand-authored deck of <!--@fact calls-main-n-->16<!--/@fact--> calls with their option prices</span> the calls and the event deck</span>
           <p>Every call, its options, its prices and its exposures are written by hand in
             <code>src/data.js</code>. The deck is fixed; what varies between teams is only which
             options they buy.</p>
@@ -636,11 +638,13 @@
             calls table and the cash S-curve are computed from this run&rsquo;s actual decisions.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">from the engine&rsquo;s own CPM, 2026-09-16, one crew per activity, no overtime</span> the do-nothing baseline</span>
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">from the engine&rsquo;s own CPM and the playtest harness, run at build on <!--@fact measured-date-->2026-09-16<!--/@fact-->; one crew per activity, no overtime</span> the do-nothing baseline</span>
           <p>Unimpeded this network runs <b>89 working days against the 134-day contract</b> &mdash;
-            45 working days, 63 calendar days, of cushion. Across eight measured seeds, absorbing
-            everything averages about $185,000 and goes negative on two; playing judgment averages
-            about $351,000.</p>
+            45 working days, 63 calendar days, of cushion. Across the harness&rsquo;s <!--@fact seeds-n-->eight<!--/@fact--> seeds,
+            absorbing everything averages <!--@fact passive-avg-->$2,604<!--/@fact--> &mdash; about break-even &mdash; and loses
+            money on <!--@fact passive-neg-n-->three<!--/@fact-->; playing judgment averages <!--@fact thoughtful-avg-->$114,531<!--/@fact--> and wins on
+            <!--@fact thoughtful-wins-n-->seven<!--/@fact--> of the <!--@fact seeds-n-->eight<!--/@fact-->. The figures are the harness&rsquo;s own output,
+            injected by the build, not typed.</p>
         </div>
         <div class="claim">
           <span class="panel-kicker"><span class="k-reasoned">Reasoned</span> the four verdicts</span>

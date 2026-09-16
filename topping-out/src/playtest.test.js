@@ -193,6 +193,17 @@ POLICY.thoughtful = function (g) {
 
 var SEEDS = ['MSU-2601', 'TOPPING', 'FALL26', 'WK7', 'BLUE', 'GOLD', 'CMGT-201', 'CALLOWAY'];
 
+/* When this file is REQUIRED rather than run, export the harness and stop.
+   build.js (via tools/facts.js) measures the eight seeds at build time with
+   this exact play() and these exact policies, so every "measured" figure in
+   the guide, the appendix, the template and the README is this harness's own
+   output rather than a number someone typed. The assertions below run only
+   under `node src/playtest.test.js`. */
+if (require.main !== module) {
+  module.exports = { play: play, POLICY: POLICY, SEEDS: SEEDS, newGame: newGame };
+  return;
+}
+
 /* =====================================================================
    1. CPM MATH VS A HAND CALCULATION
    The expected table is written out by hand in data.js above
