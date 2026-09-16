@@ -13,10 +13,12 @@ three. It runs immediately after **The Stranger**: that module taught the room t
 ask* changes what you get, and this one supplies the missing half — a perfectly phrased
 request to a browser tab still cannot rename a file on your laptop.
 
-Product claims were checked on **2026-09-08** against first-party sources. That date is
+Product claims were checked on **2026-09-16** against first-party sources. That date is
 stamped on the page, in the footer, and in the presenter guide, because this is the
 fastest-rotting content in the collection and the module is built to say so rather than
-pretend otherwise.
+pretend otherwise. Retrofitted onto the fleet's shared `lesson-shell` (v2): three **stages**
+where the module used to have three acts (The four doors, Pick a job, The receipts), with a
+captured prediction at the top of each one.
 
 ---
 
@@ -68,7 +70,7 @@ That ordering is the one claim on the page no vendor states, so it ships labelle
 
 ---
 
-## Act II is the act that lands
+## Stage 2 is the stage that lands
 
 **7 jobs** — realistic faculty tasks — against the same 4 doors is another **28 judgements**.
 Choose a job and the page shows which doors do the whole thing, which do part of it, which
@@ -96,9 +98,15 @@ Two honest notes the page makes about its own list:
   record, and a textbook chapter has a licence. The page points at the registrar and IT
   rather than answering a policy question it has no standing to answer.
 
-The Act II verdicts are **reasoned**, not quoted: no vendor page says anything about eighty
+The Stage 2 verdicts are **reasoned**, not quoted: no vendor page says anything about eighty
 student reflections. Each verdict therefore names the axis that decided it, so a reader can
-check the reasoning instead of trusting the answer.
+check the reasoning instead of trusting the answer. That disclosure now renders immediately
+beside the verdict cards rather than below the whole stack, closing a split-attention gap the
+pre-build accuracy audit found (2026-09-15).
+
+Before the reveal, pick a job and the page asks you to **guess which door finishes it** — the
+prediction is echoed against the computed answer once you choose, so "which one is best" never
+gets asked before "what do you think, and why".
 
 ---
 
@@ -107,15 +115,26 @@ check the reasoning instead of trusting the answer.
 Three labels, used throughout and defined on the page:
 
 - **verified** — a page belonging to the company that makes the product was opened on
-  2026-09-08 and says this. The vendor's own wording is usually quoted.
+  2026-09-16 and says this. The vendor's own wording is usually quoted.
 - **reasoned** — follows from the verified facts, but nobody states it in these words. Every
   ordering judgement is reasoned.
 - **unconfirmed** — we looked and could not confirm it. Ships anyway, labelled, because a
   blank cell is a claim too.
 
-**15 sources**, every one first-party — a page belonging to the company whose product it
+Retrofitted onto the fleet's shared six-word provenance vocabulary (Live / Measured / Sourced
+/ Reasoned / Scripted / Illustrative): `verified` maps to **Sourced** (qualified "verified
+&lt;date&gt;"), `reasoned` maps to **Reasoned** — the two words already coincide — and
+`unconfirmed` maps to **Sourced**, qualified "unconfirmed" (an unconfirmed cell still rests on
+a real page; it is not invented, so it is not Illustrative). Both vocabularies show on screen;
+see `sixLabel()` in `src/app.js`.
+
+**16 sources**, every one first-party — a page belonging to the company whose product it
 describes. The test suite enforces that: it checks the host of every source against a list of
-vendor hosts and fails on a news site or a blog.
+vendor hosts and fails on a news site or a blog. (One was added in the 2026-09-16 retrofit:
+`antigravity-remote`, backing the "remote-control mode" phrase in door 4's confusable note; the
+pre-existing `antigravity` source was retargeted from a desktop-setup-only page to
+`antigravity.google/docs/overview/`, which actually covers the system-commands/subagents/
+browser-control capabilities it is cited for — the dead-citation sweep's must-fix #2.)
 
 Two things worth knowing if you re-verify:
 
@@ -274,7 +293,7 @@ output is not a declared source.
 Every count quoted in this README, in the presenter guide and in `demo.json` is cross-checked
 against the dataset by the test suite — **as a phrase**, not as a bare integer, because "4"
 matches almost any document and would be a test that passes by accident. It looks for
-`16 cells`, `28 judgements`, `15 sources`, `13 verified`, `3 reasoned`, `9 things cut`,
+`16 cells`, `28 judgements`, `16 sources`, `13 verified`, `3 reasoned`, `9 things cut`,
 `4 doors`, `4 axes`, `7 jobs`. A control asserts that a *wrong* count would not be found, so
 the check is known to be capable of failing.
 
@@ -284,7 +303,7 @@ the check is known to be capable of failing.
 
 This is the demo in the collection with a real shelf life. When something moves:
 
-1. **Re-open the sources.** All 15 are listed in Act III and in `src/data.js` under `SOURCES`.
+1. **Re-open the sources.** All 16 are listed in Stage 3 and in `src/data.js` under `SOURCES`.
    Expect openai.com to 403 a script; use a browser.
 2. **Update the cell, not the prose.** `data.js` is the only place a claim lives. The screen,
    the self-test and the test suite all read from it.
