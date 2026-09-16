@@ -1,0 +1,75 @@
+/* What the Survey Missed — ACTIVITY styles only. The lesson shell's chrome
+   (header, stage nav, stage intro, lesson strip, Details drawer, dialogs,
+   check cards, credit pill) lives in ../tools/lesson-shell/shell.css and is
+   injected before this file, so anything here can override it without
+   !important. Nothing below restyles chrome the kit already owns. */
+
+/* ---- prediction-capture buttons (A2: "where the activity can capture the
+   prediction it must") -- a row of toggle buttons shared by all four stages.
+   Selected state needs its own rule: the shell styles .btn/.btn.ghost but has
+   no opinion on aria-pressed for a generic button. */
+.predict-capture { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.predict-capture .btn[aria-pressed="true"] { outline: 3px solid var(--gold); outline-offset: 1px; }
+.predict-capture .btn.ghost { text-align: left; }
+#interpretChoices .btn, #transferChoices .btn { flex: 1 1 240px; min-height: 54px; }
+
+/* ---- the evidence-ledger workbench: status, two habitat summaries, two
+   fixed site maps. Lives inside .workbench (navy), so every custom color
+   below is chosen to read against that dark surface. */
+.status-line { margin: 4px 0 12px; padding: 9px 12px; border-left: 4px solid var(--lite); border-radius: var(--radius-2); background: rgba(255,255,255,.08); color: var(--ink-on-navy); font-size: calc(var(--u) * .92); }
+.metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.metric-card { padding: 12px; border: 1px solid var(--line-on-navy); border-radius: var(--radius-2); background: rgba(255,255,255,.06); }
+.metric-card h4 { margin: 0 0 4px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); }
+.metric-card .metric-value { font-size: calc(var(--u) * 1.5); font-weight: 900; color: var(--gold-lite); }
+.metric-card .metric-note { margin-top: 3px; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .8); }
+
+.maps { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+.maps h4 { margin: 0 0 6px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.0); }
+.map { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+.site {
+  aspect-ratio: 1; min-height: 0; padding: 0; border: 1px solid var(--line-on-navy);
+  border-radius: 5px; background: var(--navy-2); color: var(--ink-3-on-navy);
+  font-size: calc(var(--u) * .62); font-weight: 800;
+}
+.site.detected { background: var(--lite); border-color: var(--lite-deep); color: var(--navy); }
+.site.occupied-missed { background: var(--gold); border-color: var(--gold-deep); color: var(--navy); }
+.site.unoccupied { background: rgba(255,255,255,.05); border: 1px dashed var(--line-on-navy); color: var(--ink-3-on-navy); }
+.site.active { outline: 3px solid var(--gold-lite); outline-offset: 1px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 4px 0 12px; color: var(--ink-2-on-navy); font-size: calc(var(--u) * .8); }
+.legend .dot { display: inline-block; width: 11px; height: 11px; margin-right: 4px; border-radius: 3px; vertical-align: -1px; }
+.site-detail { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius-2); background: rgba(255,255,255,.06); color: var(--ink-2-on-navy); font-size: calc(var(--u) * .86); }
+
+/* ---- the "what round 1 showed" recap card in Interpret. This lede sits
+   inside .workbench (navy background) here, unlike a typical .panel-lede on
+   a light surface, so its <b> figures need the on-navy gold, not --navy —
+   navy text on a navy background is invisible. Found in the browser pass. */
+#interpretRecap b { color: var(--gold-lite); }
+
+/* ---- the reveal panel in Compare. A light inset box inside the navy
+   workbench, distinct from .evidence-card (which is a light-surface-only
+   component in shell.css) so it reads correctly on navy. */
+#truthPanel { margin-top: 12px; padding: 12px 14px; border-radius: var(--radius-2); background: rgba(255,255,255,.94); color: var(--ink); font-size: calc(var(--u) * .92); }
+#truthPanel b { color: var(--navy); }
+
+/* ---- optional likelihood inference, a plain <details class="card"> on the
+   page's light surface (not inside .workbench), so it uses the light-surface
+   kicker colors shell.css already defines by default. */
+.card.supporting { cursor: default; }
+.card.supporting > summary { cursor: pointer; margin: -20px -20px 12px; padding: 15px 20px; border-radius: var(--radius) var(--radius) 0 0; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.1); font-weight: 800; list-style: none; }
+.card.supporting > summary::-webkit-details-marker { display: none; }
+.card.supporting > summary::before { content: "+ "; color: var(--gold-deep); }
+.card.supporting[open] > summary::before { content: "\2212 "; }
+.card.supporting select { min-height: 40px; margin: 2px 10px 10px 0; border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; background: var(--paper); color: var(--ink); }
+.grid { display: grid; grid-template-columns: 28px repeat(11, 1fr); gap: 3px; max-width: 430px; margin-top: 10px; }
+.cell { aspect-ratio: 1; border-radius: 2px; background: var(--cream-deep); }
+.cell.selected { outline: 3px solid var(--gold); outline-offset: -2px; }
+.axis { font-size: 9px; color: var(--ink-3); text-align: right; }
+.xaxis { display: grid; grid-template-columns: repeat(11, 1fr); max-width: 396px; margin-left: 31px; font-size: 9px; color: var(--ink-3); }
+.scale { margin: 8px 0 2px; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+
+@media (max-width: 760px) {
+  .maps, .metric-row { grid-template-columns: 1fr; }
+  .map { grid-template-columns: repeat(6, 1fr); }
+  #interpretChoices .btn, #transferChoices .btn { flex-basis: 100%; }
+}

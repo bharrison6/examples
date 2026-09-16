@@ -1,53 +1,1648 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>What the Survey Missed</title><style>
-:root{--n:#002144;--g:#ecac00;--b:#00a4e3;--ink:#162b3c;--muted:#50687b;--line:#b9cfdb}*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#f8fcff,#edf4f8);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}button,select{font:inherit;cursor:pointer}button:focus-visible,summary:focus-visible{outline:3px solid var(--b);outline-offset:3px}[hidden]{display:none!important}.top{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:13px clamp(16px,4vw,52px);color:#fff;background:var(--n);border-bottom:4px solid var(--g)}.eyebrow{margin:0;color:#bfeafb;font-size:.75rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.top h1{margin:2px 0 0;font-size:clamp(1.3rem,3vw,2rem)}.actions{position:relative;display:flex;gap:7px}.icon{width:40px;height:40px;border:1px solid #ffffff7a;border-radius:9px;background:#ffffff14;color:#fff;font-weight:800}.menu{position:absolute;z-index:5;top:48px;right:0;width:300px;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);box-shadow:0 14px 34px #0021442b}.menu label.action{display:flex;align-items:center;gap:9px}.notes{margin:13px 0 3px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:.75rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}.wrap{max-width:1220px;margin:auto;padding:22px clamp(16px,4vw,52px) 44px}.hero,.workspace,.after{display:grid;gap:20px}.hero{grid-template-columns:1.25fr .75fr}.workspace{grid-template-columns:285px 1fr}.after{grid-template-columns:1fr 1fr;margin-top:20px}.panel{padding:19px;border:1px solid var(--line);border-radius:15px;background:#fff;box-shadow:0 4px 18px #0021440d}.panel h2,.hero h2{margin:0 0 8px;color:var(--n)}.lead{font-size:1.08rem}.definition,.truth{padding:10px 12px;border-left:4px solid var(--g);border-radius:5px;background:#fff8df}.case{padding:20px;border-radius:15px;background:var(--n);color:#fff}.case h2{color:#fff}.badge{display:inline-block;padding:4px 9px;border-radius:99px;background:var(--g);color:#172b38;font-size:.75rem;font-weight:900}.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.facts div{padding:8px;border:1px solid #ffffff30;border-radius:7px;background:#ffffff12;font-size:.84rem}.facts b{display:block;color:#ffe187}.flow{display:grid;grid-template-columns:repeat(4,1fr);margin:20px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden}.flow div{padding:11px;border-right:1px solid var(--line);background:#fff;font-size:.88rem}.flow b{display:block;color:var(--n)}.round,.choice,.action{width:100%;margin:7px 0;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--n);font-weight:700;text-align:left}.round{border-color:var(--g);background:var(--g);color:#1a2b38;text-align:center;font-weight:900}.round:disabled{border-color:#dce6ec;background:#dce6ec;color:#718290;cursor:not-allowed}.tiny,.scale{font-size:.84rem;color:var(--muted)}.status,.detail,.feedback{padding:11px;border-radius:7px}.status{border-left:4px solid var(--b);background:#e5f5fb}.feedback{margin-top:10px;border-left:4px solid var(--g);background:#fff8df}.summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:13px 0}.card{padding:12px;border:1px solid var(--line);border-radius:10px;background:#f8fbfd}.card h3,.maps h3{margin:0;color:var(--n)}.metric{font-size:1.5rem;font-weight:900;color:var(--n)}.maps{display:grid;grid-template-columns:1fr 1fr;gap:14px}.map{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;margin-top:8px}.site{aspect-ratio:1;border:1px solid #9ab1bf;border-radius:5px;background:#f4f8fa;color:#78909d;font-size:.68rem;font-weight:900}.site.detected{background:var(--b);border-color:#008bc4;color:#002144}.site.occupied-missed{background:#7651a6;border-color:#65448e;color:#fff}.site.unoccupied{background:#dbe4e9;border-color:#bdccd4;color:#536b7b}.site.active{outline:3px solid var(--g);outline-offset:1px}.legend{display:flex;flex-wrap:wrap;gap:11px;margin:10px 0;font-size:.82rem;color:var(--muted)}.dot{display:inline-block;width:11px;height:11px;margin-right:4px;border-radius:3px;vertical-align:-1px}.detail{margin-top:12px;background:#f5f9fb}.interpret{margin-top:15px}.truth{margin-top:12px;border-color:#087a62;background:#e4f5ef}.reveal button{padding:11px 14px;border:0;border-radius:8px;background:var(--n);color:#fff;font-weight:850}.inference{margin-top:20px}.inference summary{color:var(--n);font-size:1.1rem;font-weight:850;cursor:pointer}.grid{display:grid;grid-template-columns:28px repeat(11,1fr);gap:3px;max-width:430px;margin-top:8px}.cell{aspect-ratio:1;border-radius:2px;background:#e7eef2}.cell.selected{outline:3px solid #ecac00;outline-offset:-2px}.axis{font-size:9px;color:var(--muted);text-align:right}.xaxis{display:grid;grid-template-columns:repeat(11,1fr);max-width:396px;margin-left:31px;font-size:9px;color:var(--muted)}.footer{margin-top:25px;color:var(--muted);font-size:.84rem}.modal{position:fixed;z-index:10;inset:0;display:grid;place-items:center;padding:18px;background:#001b2db8}.dialog{max-width:650px;padding:24px;border-radius:15px;background:#fff;box-shadow:0 20px 60px #00214455}.close{float:right;padding:8px 11px;border:0;border-radius:7px;background:var(--n);color:#fff;font-weight:800}.notes-dialog{width:min(880px,100%);max-width:880px;max-height:86vh;overflow:auto}#notesOverlay .eyebrow{margin:0 0 6px;color:#006c98}#notesOverlay .guide-scope{font-size:.95rem}.presentation #notesOverlay .guide-scope{font-size:1.06rem}.presentation .case,.presentation .after,.presentation .inference{display:none}.presentation .workspace{grid-template-columns:1fr}@media(max-width:760px){.hero,.workspace,.after,.maps{grid-template-columns:1fr}.facts{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.map{grid-template-columns:repeat(6,1fr)}}@media(max-width:420px){.flow,.summary{grid-template-columns:1fr}.flow div{border-bottom:1px solid var(--line)}.top{align-items:flex-start}}
-</style>
-<!-- The canonical guide's own stylesheet, lifted from teacher-guide.html by
-     build.js. Last in the head so its .guide-scope rules win ties against the
-     app chrome above; build.js refuses any rule not scoped to .guide-scope. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
+<meta name="description" content="Survey two fixed synthetic habitats across repeated rounds and discover why fewer detections does not by itself mean fewer occupied sites.">
+<title>What the Survey Missed</title>
+<!--
+  What the Survey Missed — a single-file, offline occupancy-and-detection
+  investigation. Demo 16 of 16, Part four ("Example projects") of
+  AI: From Zero to Takeoff — the ecology entry in the five-demo "investigation"
+  family (predict, run, explain before reveal).
+
+  Four stages: survey a fixed set of 48 synthetic sites once; interpret what a
+  detection difference between two habitats can and cannot mean; optionally
+  repeat the fixed survey; then compare the observed evidence with the hidden
+  synthetic model. Every detection outcome is drawn live from a seeded model;
+  the generating occupancy and detection values are invented to make one
+  point, not measured from a real survey.
+
+  Built against the shared lesson shell at ../tools/lesson-shell (build-time
+  only — see build.js). Companion: demo-guide.html, shipped as
+  teacher-guide.html. Sources live in src/ and are concatenated by build.js.
+-->
+<!-- lesson-shell v2 css:d13e2bec1db3 -->
 <style>
-/* GUIDE_CSS: BEGIN */.guide-scope{color:inherit;font-size:.95rem;line-height:1.45}
-.guide-scope h1{margin:0;color:#002144;font-size:1.5rem}
-.guide-scope h2{margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #00a4e3;color:#002144;font-size:1.05rem}
-.guide-scope .head{margin-bottom:4px;padding-bottom:8px;border-bottom:5px solid #ecac00}
-.guide-scope .sub{margin:4px 0;color:#526a7e;font-size:.9rem}
-.guide-scope .lead{font-size:1rem}
-.guide-scope p{margin:0 0 .7em}
-.guide-scope ul,.guide-scope ol{margin:0 0 .8em;padding-left:20px}
-.guide-scope li{margin-bottom:4px}
-.guide-scope .box{margin:9px 0;padding:8px 11px;border-left:5px solid #00a4e3;background:#eef8fc}
-.guide-scope .warning{border-left-color:#ecac00;background:#fff6d9}
-.guide-scope .scroll{max-width:100%;overflow-x:auto}
-.guide-scope table{width:100%;min-width:360px;border-collapse:collapse;margin:7px 0;font-size:.85rem}
-.guide-scope th,.guide-scope td{padding:5px 6px;border:1px solid #b8cad8;text-align:left;vertical-align:top}
-.guide-scope th{background:#002144;color:#fff}
-.guide-scope code{padding:1px 3px;background:#e8eef2}
-.guide-scope .foot{margin-top:12px;padding-top:7px;border-top:1px solid #b8cad8;color:#526a7e;font-size:.8rem}
-.guide-scope a{color:#00618c}/* GUIDE_CSS: END */
-</style></head><body>
-<header class="top"><div><p class="eyebrow">Murray State University · AI Fellows</p><h1>What the Survey Missed</h1></div><div class="actions"><button class="icon" id="helpButton" aria-label="Guide" title="Guide">?</button><button class="icon" id="settingsButton" aria-label="Settings" title="Settings" aria-expanded="false">⚙</button><div class="menu" id="settingsMenu" hidden><button class="action" id="notesButton">Open Presenter Notes</button><label class="action"><input id="presentationToggle" type="checkbox"> Presentation mode</label><button class="action" id="resetButton">Reset</button><p class="notes">Scenario</p><button class="action" id="replayButton">Replay as practice (same seed)</button><button class="action" id="newSeedButton">New seeded scenario</button></div></div></header>
-<main class="wrap"><section class="hero"><div class="panel"><p class="eyebrow" style="color:#006c98">A fixed synthetic wildlife survey</p><h2>Can fewer sightings mean fewer occupied sites?</h2><p class="lead">Survey two comparable synthetic habitat groups. Each round visits every site. Your evidence is a detection history, not a count of animals.</p><p class="definition"><strong>Occupancy</strong> means whether a site is used in this model. It is not abundance, the number of animals.</p></div><aside class="case"><span class="badge" id="revealBadge">BEFORE REVEAL</span><h2 id="revealHeading">What stays hidden</h2><p id="revealCopy">Realized occupied sites and generating probabilities remain hidden until the evidence explanation. Clicking a site only inspects its fixed record.</p><div class="facts"><div><b>48 sites / round</b>24 A + 24 B</div><div><b>3 rounds maximum</b>same sites each time</div><div><b>Seeded scenario</b><span id="seedLabel"></span></div></div></aside></section>
-<section class="flow"><div><b>1. Survey</b>Run one fixed round.</div><div><b>2. Interpret</b>What can detections mean?</div><div><b>3. Revisit</b>Repeat the same survey.</div><div><b>4. Compare</b>Reveal what was missed.</div></section>
-<section class="workspace"><aside class="panel controls"><h2>Fixed survey plan</h2><p class="tiny">Each enabled round visits all 24 A and all 24 B sites. The site set never adapts to detections.</p><button class="round" data-round="1">Survey round 1 · 48 site-visits</button><button class="round" data-round="2" disabled>Survey round 2 · 48 site-visits</button><button class="round" data-round="3" disabled>Survey round 3 · 48 site-visits</button><p class="tiny">After round 1, interpret the detection difference before adding rounds or revealing the model. Reset, practice replay, and new-scenario controls are in Settings.</p></aside><section><div class="panel"><h2>Evidence ledger</h2><div class="status" id="status" aria-live="polite">Run the first fixed round. It will visit all 48 sites.</div><div class="summary"><div class="card"><h3>Habitat A</h3><div class="metric" id="metricA">—</div><div class="tiny" id="detailsA">No completed visits yet.</div></div><div class="card"><h3>Habitat B</h3><div class="metric" id="metricB">—</div><div class="tiny" id="detailsB">No completed visits yet.</div></div></div><div class="legend"><span><i class="dot" style="background:#00a4e3"></i>detection recorded</span><span id="unknownLegend"><i class="dot" style="background:#f4f8fa;border:1px solid #9ab1bf"></i>no detection / not yet surveyed</span><span id="truthLegend" hidden><i class="dot" style="background:#7651a6"></i>occupied but missed</span></div><div class="maps"><div><h3>Habitat A · 24 sites</h3><div class="map" id="mapA"></div></div><div><h3>Habitat B · 24 sites</h3><div class="map" id="mapB"></div></div></div><div class="detail" id="siteDetail">Select a site after the first round to inspect its visible detection history.</div><div class="interpret" id="interpretPanel" hidden><h2>Interpret the first result</h2><p>The cards report the observed fraction ever detected. Which statement is justified before another round?</p><button class="choice explainChoice" data-explain="cautious">A difference in detections could reflect different occupancy, different detection probability, or both.</button><button class="choice explainChoice" data-explain="abundance">The habitat with fewer detections must have lower occupancy.</button><button class="choice explainChoice" data-explain="certainty">There is no observable difference until the hidden map is revealed.</button><div class="feedback" id="explainFeedback">Inspect the first-round detections, then choose a claim.</div></div></div></section></section>
-<section class="after" id="afterInterpretation" hidden><div class="panel"><h2>Transfer: plan the next study</h2><p>A colleague says: “Habitat A produced fewer detections, so it has lower occupancy.” Which response uses the model correctly?</p><button class="choice" data-transfer="correct">Ask whether detection probability differs; for example, animals at A may be harder to detect.</button><button class="choice" data-transfer="wrong">Treat the detection total as a direct animal count.</button><button class="choice" data-transfer="wrong2">Add a fourth round, because more visits guarantee the true ranking.</button><div class="feedback" id="transferFeedback">Choose a response after you have inspected the evidence.</div></div><section class="panel reveal"><h2>Compare evidence with hidden truth</h2><p>This reports the current synthetic scenario’s realized occupancy and generating parameters. It does not turn the observed ranking into a score.</p><button id="revealButton">Reveal synthetic map and model parameters</button><div class="truth" id="truth" hidden></div></section></section>
-<details class="panel inference" id="inferenceView"><summary>Optional inference view: relative likelihood from observed histories</summary><p class="tiny">Observed histories only. Darker cells have greater relative likelihood on this bounded grid. It is not a posterior probability or calibrated confidence interval. Axes label ψ (occupancy probability) and p (detection probability).</p><label>Habitat <select id="inferenceHabitat"><option value="A">Habitat A histories</option><option value="B">Habitat B histories</option></select></label> <label>ψ <select id="psiSelect"><option>0.0</option><option>0.1</option><option>0.2</option><option>0.3</option><option>0.4</option><option selected>0.5</option><option>0.6</option><option>0.7</option><option>0.8</option><option>0.9</option><option>1.0</option></select></label> <label>p <select id="pSelect"><option>0.0</option><option>0.1</option><option>0.2</option><option>0.3</option><option>0.4</option><option selected>0.5</option><option>0.6</option><option>0.7</option><option>0.8</option><option>0.9</option><option>1.0</option></select></label><div class="grid" id="likelihoodGrid"></div><div class="xaxis"><span>0</span><span></span><span></span><span></span><span></span><span>p .5</span><span></span><span></span><span></span><span></span><span>1</span></div><p class="scale" id="likelihoodText">Survey at least one round to view histories.</p><p class="detail" id="likelihoodSelection">Choose ψ and p to inspect one grid cell.</p></details><footer class="footer">Created by Bryant Harrison · Murray State University · Offline synthetic classroom investigation. Source context: MacKenzie et al., 2002, <em>Ecology</em>; USGS RPresence workshop materials.</footer></main>
-<!-- The presenter notes ARE the printable teacher guide: build.js injects the
-     .guide-scope body of teacher-guide.html at the marker below, so there is one
-     source, nothing to keep in sync by hand, and nothing to fetch at runtime.
-     Edit teacher-guide.html, never this copy. -->
-<div class="modal" id="notesOverlay" hidden role="dialog" aria-modal="true" aria-label="Presenter Notes"><div class="dialog notes-dialog"><button class="close" id="closeNotes">Close notes</button><p class="eyebrow">Presenter notes · the printable teacher guide, on screen</p>
-<!-- GUIDE: BEGIN --><div class="guide-scope">
-<header class="head"><h1>What the Survey Missed</h1><p class="sub">Teacher and presenter guide - bounded synthetic occupancy investigation - Murray State University - Bryant Harrison</p></header>
-<section><h2>Purpose and learning target</h2><p class="lead">Students distinguish observed fraction ever detected, realized occupied-site fraction in one synthetic scenario, occupancy probability (psi), and detection probability (p). Occupancy means whether a site is used in this model; it is not abundance or a number of animals.</p><div class="box"><strong>Target claim:</strong> fewer detections do not by themselves establish lower occupancy. Detection probability can differ between habitats.</div><p>Every round visits the same 24 Habitat A and 24 Habitat B sites: 48 site-visits. A site click inspects a fixed detection history; it never changes the sample.</p></section>
-<section><h2>Current app flow</h2><ol><li>Open <code>index.html</code> locally; the <strong>Guide</strong> overlay opens automatically. Dismiss it, then run fixed round 1 across all 48 sites.</li><li>Inspect observed fraction ever detected and choose the cautious claim: a difference can reflect occupancy, detection probability, or both.</li><li>Only then choose fixed rounds 2 and 3, transfer, optional likelihood, or reveal.</li><li>After reveal, the same arrays distinguish detections, occupied-but-missed sites, and unoccupied sites. Further rounds are exploration, not a blind new test.</li></ol><p><strong>Controls:</strong> <b>?</b> reopens the <strong>Guide</strong> at any point. <b>Settings</b> offers <strong>Open Presenter Notes</strong> (this guide, on screen), <strong>Presentation mode</strong> (hides the case aside, the transfer and reveal panels, and the likelihood view for a projector), and <strong>Reset</strong> (the whole demo back to first load: the first seeded scenario, no rounds run, no claims chosen, nothing revealed, the likelihood view closed and re-centred). Reset leaves Presentation mode as you set it. Two scenario controls sit below the rule: <strong>Replay as practice (same seed)</strong> keeps whatever scenario is on screen, and <strong>New seeded scenario</strong> draws the next one.</p></section>
-<section><h2>Declared synthetic model</h2><div class="scroll"><table><thead><tr><th>Habitat</th><th>Generating occupancy psi</th><th>Detection p</th><th>Meaning</th></tr></thead><tbody><tr><td>A</td><td>0.8</td><td>0.25</td><td>Higher generating occupancy probability, lower detection probability.</td></tr><tr><td>B</td><td>0.5</td><td>0.8</td><td>Lower generating occupancy probability, higher detection probability.</td></tr></tbody></table></div><p>Sites remain occupied or unoccupied across the three visits (closure). Given occupancy, detections are conditionally independent; there are no false positives; and p is constant within a habitat. These are teaching assumptions, not claims about local wildlife.</p></section>
-<section><h2>Why raw detections can mislead</h2><p>For K visits, expected fraction ever detected is <code>psi x [1 - (1 - p)^K]</code>.</p><div class="scroll"><table><thead><tr><th>Visits K</th><th>A expected ever detected</th><th>B expected ever detected</th><th>Implication</th></tr></thead><tbody><tr><td>1</td><td>0.20</td><td>0.40</td><td>B is expected to have more detections although A has greater psi.</td></tr><tr><td>3</td><td>0.4625</td><td>0.496</td><td>More visits improve evidence but do not guarantee a finite ranking matches occupancy.</td></tr></tbody></table></div><div class="box warning"><strong>Do not score the ranking.</strong> After reveal, compare observed fraction, realized occupancy, generating psi, and p by name. A seeded realization can differ from either expectation.</div></section>
-<section><h2>Optional likelihood view</h2><p>The app uses observed K-visit histories for one habitat only. For an ordered history with d detections, likelihood is <code>psi p^d (1-p)^(K-d)</code> when d is positive; for an all-zero history it is <code>(1-psi) + psi(1-p)^K</code>.</p><div class="box"><strong>Interpret carefully:</strong> shading is relative likelihood on a bounded psi/p grid. It is not posterior probability or a calibrated confidence interval. Multiply exact ordered-history probabilities over sites; do not add a binomial coefficient to one particular history.</div><p>With one visit, detections chiefly identify psi p. A high-psi/low-p and lower-psi/higher-p combination can fit the same observed fraction. The app supplies axis labels plus keyboard/touch readout rather than a unique occupancy estimate.</p></section>
-<section><h2>Facilitation and boundaries</h2><ul><li>Before round 1, contrast &ldquo;not detected&rdquo; with &ldquo;not present.&rdquo;</li><li>After round 1, ask for the unit of effort: 48 site-visits, not 48 animals counted.</li><li>Before another round, ask what changes (histories) and what stays fixed (sites).</li><li>For transfer, ask whether a different detection process could explain fewer detections.</li></ul><p>This activity teaches detection confounding. It does not estimate a real species, habitat, population, conservation priority, or field-survey result.</p></section>
-<section><h2>Sources and attribution</h2><p>MacKenzie, D. I., et al. (2002), &ldquo;Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One,&rdquo; <em>Ecology</em>, 83(8), 2248-2255. U.S. Geological Survey: <a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one">Estimating site occupancy rates when detection probabilities are less than one</a>.</p><p>U.S. Geological Survey, <a href="https://www.mbr-pwrc.usgs.gov/workshops/occupancy2023online.html">RPresence occupancy workshop, 2023 online</a>, for occupancy/detection-history context. These are source context, not course assignment information or endorsement.</p></section>
-<p class="foot"><strong>What the Survey Missed</strong> - Bryant Harrison - Murray State University - Offline synthetic teaching model. This HTML file is the canonical guide source: the printable sheet, the PDF, and the in-app presenter notes all come from it.</p>
-</div><!-- GUIDE: END -->
-</div></div><div class="modal" id="howTo" role="dialog" aria-modal="true" aria-labelledby="howTitle"><div class="dialog"><button class="close" id="closeHow">Start investigation</button><h2 id="howTitle">Guide</h2><p class="tiny">How to run this investigation.</p><ol><li>Run a first round across all 48 fixed sites.</li><li>Inspect detection histories, then state what a detection difference can and cannot mean.</li><li>Choose whether a second or third fixed round helps.</li><li>Reveal the synthetic map only after the evidence claim.</li></ol><p><strong>Assumptions:</strong> closure across visits; conditionally independent detections given occupancy; no false positives; and a constant p within each habitat. These are teaching assumptions, not local wildlife claims.</p><p class="tiny"><strong>?</strong> reopens this Guide. <strong>⚙ Settings</strong> offers <strong>Open Presenter Notes</strong> (the printable teacher guide on screen), <strong>Presentation mode</strong>, and <strong>Reset</strong> (the whole demo back to this first-load state), plus the two scenario controls.</p></div></div>
-<script>/* OCCUPANCY_MODEL: BEGIN */
+
+/* ---- lesson-shell/tokens.css ---- */
+/* ===========================================================================
+   lesson-shell / tokens.css — the palette and type contract, part A0.
+
+   ONE :root block, named identically in every demo. A reviewer greps the built
+   index.html for these names and must find every one of them, so a demo that
+   needs a colour the kit does not have adds a NEW token in its own stylesheet;
+   it never renames or drops one of these.
+
+   Arrangement (plan A0, chosen over Demo 1's navy-panels-on-cream because the
+   launcher and every post-2026-09-09 demo already use it, and dark panels wash
+   out at the edges of a projector):
+
+     cream / paper   the page
+     navy            "live machine" surfaces — a workbench, a sim canvas frame,
+                     a live readout
+     gold            the primary action, and the lesson-strip rule
+     lite            the second data series and focus rings
+     warm            genuine failure states ONLY (Murray State brand guide says
+                     use Red Orange sparingly; CONTRACT.md repeats it)
+
+   Palette source: the Murray State brand guide — Blue #002144 (PMS 289),
+   Gold #ECAC00 (PMS 123), Lite Blue #00A4E3 (PMS 2995), Red Orange #FF4500.
+   =========================================================================== */
+
+:root {
+  /* --- the A0 required set. Every name below appears in every demo. ------- */
+  --u: 1rem;              /* type unit; everything scales off it */
+  --navy: #002144;        /* brand */
+  --gold: #ECAC00;        /* brand */
+  --lite: #00A4E3;        /* brand accent — second series, focus rings */
+  --warm: #FF4500;        /* brand accent — genuine failure states only */
+  --paper: #FFFDF8;       /* page */
+  --cream: #F7F0E3;       /* secondary surface */
+  --ink: #14273A;         /* body text on paper/cream */
+  --ink-2: #40556A;       /* secondary text */
+  --ink-3: #65788A;       /* tertiary text, notes */
+  --line: #C6D1D8;        /* hairlines on light surfaces */
+
+  /* --- derived shades the shell CSS needs. Also fleet-wide, also stable. -- */
+  --navy-2: #07345D;      /* raised navy surface inside a workbench */
+  --navy-deep: #01182C;   /* code/readout wells inside a workbench */
+  --cream-deep: #EBE0CA;  /* card borders on cream */
+  --gold-deep: #9F6700;   /* gold as TEXT on paper — 4.6:1, passes AA */
+  --gold-lite: #FFD76A;   /* gold as text on navy */
+  --lite-soft: #D9EFF8;   /* lite blue wash */
+  --lite-deep: #007EB5;   /* lite blue as text on paper — 4.6:1 */
+  --bad: #C63F1D;         /* a wrong answer, a contradicted prediction */
+  --bad-soft: #FDE8E1;
+  --ok: #1C704D;          /* a supported prediction */
+  --ok-soft: #E0F5EE;
+  --ink-on-navy: #F6FBFF; /* body text on a navy surface */
+  --ink-2-on-navy: #D7E5EF;
+  --ink-3-on-navy: #B8CBD8;
+  --line-on-navy: rgba(255, 255, 255, .30);
+  --radius: 16px;
+  --radius-2: 10px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  color-scheme: light;
+}
+
+/* Presentation mode changes --u and nothing else. One value fleet-wide:
+   Demo 1 shipped 1.25rem and Demo 2 shipped 1.18rem; the plan picks 1.2. */
+body.presenter { --u: 1.2rem; }
+
+/* Very short portrait screens — an iPhone SE 1st gen is 320x568 — get the whole
+   layout down a notch rather than letting the activity push the primary action
+   off the bottom. .94rem keeps every tap target over 40px. body.presenter
+   out-specifies this, so presentation mode still wins. */
+@media (orientation: portrait) and (max-height: 660px) {
+  :root { --u: .94rem; }
+}
+
+/* ---- lesson-shell/shell.css ---- */
+/* ===========================================================================
+   lesson-shell / shell.css — the lesson parts that WRAP any activity.
+
+   Loaded after tokens.css and BEFORE the demo's own stylesheet, so a demo can
+   override any rule here without !important. Nothing in this file styles an
+   activity: no canvas, no game board, no workbench internals. It styles the
+   parts the template names — A0 header and footer, A1 stage tablist, A2 stage
+   intro and lesson strip, A3's kicker vocabulary, A4's observation cue, A5's
+   Details drawer, A6's check card, A7/A8's dialogs, and the credit pill.
+
+   CLASS VOCABULARY — a demo uses these names or the reviewer's grep fails:
+
+     .top .topline .brandline .brand-kicker .msu-brand .top-tools .icon-btn
+     .stages .stage-tab                        (A1, role=tablist)
+     section.stage .stage.on                   (A1, role=tabpanel)
+     .stage-intro .intro-copy .eyebrow .stage-question .refresh
+     .lesson-strip                             (A2, exactly 3 articles)
+     .details-trigger
+     .panel-kicker + .k-live .k-measured .k-sourced .k-scripted .k-illustrative
+     .control-label                            (A3)
+     .obs-cue                                  (A4)
+     .details-sheet .details-drawer .details-body .details-stage .evidence-card
+     .check .check-options .check-option .check-feedback   (A6)
+     .lesson-dialog .lesson-dialog-head .lesson-dialog-body .lesson-dialog-actions
+     .btn .btn.ghost .btn.small
+     .footer .footer-tools .footer-link
+     .bh-credit
+   =========================================================================== */
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--cream); }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font: 400 var(--u)/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+[hidden] { display: none !important; }
+button, input, select, summary, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .48; cursor: not-allowed; }
+/* Every interactive thing clears the 38px touch floor CONTRACT.md's "touch
+   works" is checked against. */
+button, input, select, summary, a[href], [role="button"], [tabindex]:not([tabindex="-1"]) { min-height: 38px; }
+button:focus-visible, input:focus-visible, select:focus-visible,
+summary:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--lite);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- A0 header + A1 stage navigation -------------------------------
+   The header is sticky so a presenter can always reach Guide, Settings and the
+   stage tabs. One measure (1180px) for the header, the tablist and main, so the
+   kicker, the tabs and the stage question all share a left edge. */
+.top {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--cream) 94%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--navy) 16%, transparent);
+  backdrop-filter: blur(12px);
+}
+.topline, .stages, main { max-width: 1180px; margin: 0 auto; }
+.topline { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: calc(14px + var(--safe-t)) 22px 10px; }
+.brandline { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline; min-width: 0; }
+/* The kicker is `Murray State University · <tour part label>` — one spelling
+   fleet-wide, taken from tours/*.json, never an invented collection name. */
+.brand-kicker {
+  grid-column: 1 / -1;
+  color: var(--gold-deep); font-size: calc(var(--u) * .68); font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.brandline h1 {
+  margin: 2px 0 0; color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2.6vw, 2.25rem); line-height: 1.03;
+}
+.msu-brand { color: var(--ink-2); font-size: calc(var(--u) * .72); font-weight: 750; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.top-tools { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+/* Icon buttons carry a VISIBLE text label at >=480px; the icon alone is the
+   phone affordance. The accessible name stays on the button either way. */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 40px; border: 1px solid var(--navy); border-radius: 999px;
+  padding: 5px 11px; color: var(--navy); background: var(--paper);
+  font-size: calc(var(--u) * .78); font-weight: 800;
+}
+.icon-btn:hover { background: var(--navy); color: #fff; }
+/* The header Notes button exists only in presentation mode (A8). */
+.top-tools .notes-open { display: none; }
+body.presenter .top-tools .notes-open { display: inline-flex; }
+
+/* A1: one tab per stage, short name + a question subtitle that ends in "?".
+   auto-fit means 2, 3 or 4 stages all work with no per-demo override. */
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; padding: 0 22px 12px; }
+.stage-tab {
+  min-height: 52px; border: 1px solid var(--line); border-radius: 12px;
+  padding: 6px 9px; background: var(--paper); color: var(--ink-2);
+  font-weight: 800; line-height: 1.1; text-align: center;
+}
+.stage-tab span, .stage-tab small { display: block; }
+.stage-tab small { margin-top: 4px; color: var(--ink-3); font-size: calc(var(--u) * .68); font-weight: 650; }
+.stage-tab[aria-selected="true"] { border-color: var(--navy); background: var(--navy); color: #fff; box-shadow: inset 0 -4px 0 var(--gold); }
+.stage-tab[aria-selected="true"] small { color: var(--ink-2-on-navy); }
+/* A locked stage is dimmed but still announces why (title/aria-description on
+   the button); it is not removed, so the learner sees the whole route. */
+.stage-tab:disabled { opacity: .55; }
+.stage-tab .stage-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.45em; height: 1.45em; margin: 0 auto 2px; border-radius: 999px;
+  background: var(--cream-deep); color: var(--navy); font-size: calc(var(--u) * .72);
+}
+.stage-tab[aria-selected="true"] .stage-mark { background: var(--gold); color: var(--navy); }
+.stage-tab.complete .stage-mark { background: var(--ok); color: #fff; }
+
+/* ---------- A2 stage intro and lesson strip ------------------------------- */
+main { padding: 20px 22px 74px; }
+section.stage { display: none; }
+section.stage.on { display: block; }
+.stage-intro {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 22px;
+  padding: 22px; margin-bottom: 18px;
+  border: 1px solid var(--cream-deep); border-radius: var(--radius); background: var(--paper);
+}
+.intro-copy { max-width: 720px; }
+.eyebrow, .panel-kicker {
+  color: var(--gold-deep); font-size: calc(var(--u) * .72); font-weight: 850;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.stage-intro h2 {
+  margin: 5px 0 7px; color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 3vw, 2.35rem); line-height: 1.08;
+}
+/* The stage question is the first readable line after the nav (L3 pass
+   criterion). Exactly one question per stage — two is split attention. */
+.stage-question { margin: 0; color: var(--ink-2); font-size: calc(var(--u) * 1.02); }
+/* "Before you start": two or three sentences of prerequisite refresh, no more.
+   Bold every key term on first use and define it in place. */
+.refresh { margin: 11px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .92); }
+.refresh b, .refresh strong { color: var(--navy); }
+.details-trigger {
+  align-self: start; min-height: 42px; border: 1px solid var(--navy);
+  border-radius: 999px; padding: 7px 13px; color: var(--navy);
+  background: transparent; font-weight: 800;
+}
+.details-trigger:hover { background: var(--navy); color: #fff; }
+/* Three cards, fixed labels: Predict · Try · Takeaway. */
+.lesson-strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lesson-strip article { min-width: 0; border-left: 3px solid var(--gold); padding: 7px 10px; background: var(--cream); }
+.lesson-strip article span {
+  display: block; color: var(--navy); font-size: calc(var(--u) * .72);
+  font-weight: 850; letter-spacing: .08em; text-transform: uppercase;
+}
+.lesson-strip p { margin: 3px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .8); }
+/* Where the activity captured the prediction, the observed result is echoed
+   beside it inside the Predict card. */
+.lesson-strip .echo { display: block; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--cream-deep); color: var(--ink); font-size: calc(var(--u) * .78); }
+.lesson-strip .echo b { color: var(--navy); }
+
+/* ---------- A3 provenance kickers and control labels ----------------------
+   SIX WORDS, and they are the only vocabulary. A claim on screen without one
+   of them is a defect (plan A3 / lens L1).
+
+     Live         computed here, now
+     Measured     computed here earlier and stored — say when, say the seed
+     Sourced      a published number — cite it in Details
+     Reasoned     the authors' own judgement, from the criteria the page shows
+     Scripted     a teaching fixture standing in for what a live system would
+                  have produced — say what is fixed
+     Illustrative invented numbers — say so
+
+   Reasoned was added on orchestrator ruling 2026-09-15, on evidence from the
+   front-doors accuracy audit. It is NOT a fold of Scripted: Scripted stands in
+   for a live system's output (the-stranger's 64 hand-written answers are the
+   type case), while Reasoned is judgement the authors own, derived from stated
+   criteria (front-doors' 28 job verdicts). Different mechanisms, so they
+   split. Without it, an honest "we could not confirm this" had to be rendered
+   as Illustrative — i.e. as INVENTED, which is a worse claim than the truth.
+
+   Reasoned reads neutral slate deliberately: a learner must not mistake a
+   judgement for a citation, so it shares nothing with Sourced's gold. */
+.k-live, .k-measured, .k-sourced, .k-reasoned, .k-scripted, .k-illustrative {
+  display: inline-block; border-radius: 999px; padding: 2px 8px;
+  font-size: calc(var(--u) * .64); font-weight: 850;
+  letter-spacing: .09em; text-transform: uppercase; white-space: nowrap;
+}
+.k-live { background: var(--ok-soft); color: var(--ok); }
+.k-measured { background: var(--lite-soft); color: var(--lite-deep); }
+.k-sourced { background: var(--cream-deep); color: var(--gold-deep); }
+.k-reasoned { background: #E3EAF0; color: #38546B; box-shadow: inset 0 0 0 1px #B9C8D4; }
+.k-scripted { background: #EEE6F5; color: #5A3E8C; }
+.k-illustrative { background: var(--bad-soft); color: var(--bad); }
+/* On a navy surface the same six read light. */
+.workbench .k-live, .navy-surface .k-live { background: rgba(255,255,255,.16); color: #9EE7C8; }
+.workbench .k-measured, .navy-surface .k-measured { background: rgba(255,255,255,.16); color: #8FD8F5; }
+.workbench .k-sourced, .navy-surface .k-sourced { background: rgba(255,255,255,.16); color: var(--gold-lite); }
+.workbench .k-reasoned, .navy-surface .k-reasoned { background: rgba(255,255,255,.16); color: #C6D6E3; box-shadow: inset 0 0 0 1px rgba(255,255,255,.34); }
+.workbench .k-scripted, .navy-surface .k-scripted { background: rgba(255,255,255,.16); color: #D3BCF2; }
+.workbench .k-illustrative, .navy-surface .k-illustrative { background: rgba(255,255,255,.16); color: #FFB49B; }
+
+/* AN HONESTY QUALIFIER, not a label. One optional free-text rider appended to
+   a provenance label, subordinate to it, never replacing it. The demo supplies
+   its own string; the kit deliberately does not enumerate the kinds, because
+   two audits produced four different kinds in two days:
+
+     Sourced · unconfirmed since 2026-09-08        staleness
+     Sourced · typical, range 250–400 MPa          one point in a real spread
+     Sourced · specified minimum, not typical      the value is a floor
+     Sourced · IRC 2021 — differs under IBC        code- and edition-dependent
+     Measured · seed 41                            which run produced it
+
+   Why a rider and not a second label: an unconfirmed published figure is still
+   Sourced. Demoting it to Illustrative would say it was invented, which is a
+   worse claim than the truth. Same for a range — a real spread reported at one
+   point is still a sourced measurement, honestly narrowed.
+
+   It wraps rather than pushing the panel wide: some riders are a clause, not a
+   word, and a phone at 320px must not scroll sideways. The LABEL stays nowrap. */
+.k-qual {
+  display: inline; margin-left: 5px;
+  color: var(--ink-3); font-size: calc(var(--u) * .66); font-weight: 650;
+  font-style: italic; letter-spacing: .02em;
+  white-space: normal; text-transform: none;
+}
+.k-qual::before { content: "· "; font-style: normal; }
+.workbench .k-qual, .navy-surface .k-qual { color: var(--ink-3-on-navy); }
+
+/* A claim-bearing prose block inside the Details drawer. The audit's second
+   structural finding was that a demo can label its grid cells and leave its
+   detail prose unlabeled — and that unlabeled surface is exactly where the one
+   uncertain claim lives. So detail prose that carries a claim is wrapped in
+   .claim and MUST open with a kicker; check-shell.js enforces that on any
+   block marked .claim. It cannot enforce it on prose nobody marked — see the
+   note at the head of check-shell.js. */
+.claim { margin: 0 0 12px; padding: 9px 11px 10px; border-left: 3px solid var(--line); border-radius: 0 var(--radius-2) var(--radius-2) 0; background: var(--cream); }
+.claim > .panel-kicker { display: block; margin-bottom: 4px; }
+.claim > p:last-child { margin-bottom: 0; }
+
+/* A3: every control says what changes and WHY you would change it. The label
+   sits at the control, never in a legend elsewhere (spatial contiguity). */
+.control-label { display: block; margin: 2px 0 5px; color: var(--ink-2); font-size: calc(var(--u) * .78); font-weight: 800; }
+.control-label .why { display: block; color: var(--ink-3); font-size: calc(var(--u) * .88); font-weight: 500; }
+.workbench .control-label, .navy-surface .control-label { color: var(--ink-2-on-navy); }
+.workbench .control-label .why, .navy-surface .control-label .why { color: var(--ink-3-on-navy); }
+
+/* ---------- A4 observation cue -------------------------------------------
+   One aria-live line that names the thing to notice at the moment it becomes
+   true. Must appear within one screen of the control that caused it. */
+.obs-cue {
+  display: flex; align-items: center; gap: 9px; min-height: 40px;
+  margin: 12px 0; padding: 8px 12px;
+  border-left: 4px solid var(--lite); border-radius: var(--radius-2);
+  background: var(--lite-soft); color: var(--ink);
+  font-size: calc(var(--u) * .88);
+}
+.obs-cue::before { content: "Notice"; color: var(--lite-deep); font-size: calc(var(--u) * .66); font-weight: 850; letter-spacing: .09em; text-transform: uppercase; flex: 0 0 auto; }
+.obs-cue:empty { display: none; }
+.obs-cue.cue-warm { border-left-color: var(--gold); background: #FFF6DC; }
+.obs-cue.cue-warm::before { color: var(--gold-deep); }
+
+/* ---------- generic surfaces a wrapped activity can reuse ----------------- */
+.card { min-width: 0; margin-bottom: 18px; border: 1px solid var(--cream-deep); border-radius: var(--radius); padding: 20px; background: var(--paper); color: var(--ink); }
+.workbench { min-width: 0; margin-bottom: 18px; border: 1px solid var(--navy); border-radius: var(--radius); padding: 20px; background: var(--navy); color: var(--ink-on-navy); box-shadow: 0 9px 24px rgba(0, 33, 68, .12); }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 9px; flex-wrap: wrap; }
+.panel-head h3 { margin: 3px 0 0; color: inherit; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.25); line-height: 1.12; }
+.workbench .panel-kicker { color: var(--gold-lite); }
+.panel-lede { margin: 0 0 14px; color: var(--ink-2); font-size: calc(var(--u) * .88); }
+.workbench .panel-lede { color: var(--ink-2-on-navy); }
+.note { color: var(--ink-3); font-size: calc(var(--u) * .78); }
+.workbench .note { color: var(--ink-3-on-navy); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; border: 1px solid var(--gold); border-radius: var(--radius-2);
+  padding: 9px 14px; background: var(--gold); color: var(--navy); font-weight: 850;
+}
+.btn:hover:not(:disabled) { background: #FFD05A; border-color: #FFD05A; }
+.btn.ghost { border-color: var(--navy); background: transparent; color: var(--navy); }
+.btn.ghost:hover:not(:disabled) { background: var(--navy); color: #fff; }
+.workbench .btn.ghost { border-color: var(--line-on-navy); color: #fff; }
+.workbench .btn.ghost:hover:not(:disabled) { background: #fff; border-color: #fff; color: var(--navy); }
+.btn.small { min-height: 40px; padding: 7px 11px; font-size: calc(var(--u) * .82); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+
+/* ---------- A6 check yourself --------------------------------------------
+   One or two items per stage, answerable from what was just observed, with
+   written feedback for EVERY option. At least one refutation item per demo:
+   it states the flawed model and the feedback names why it is wrong. */
+.check { margin: 18px 0 0; border: 1px solid var(--cream-deep); border-left: 4px solid var(--navy); border-radius: var(--radius); padding: 18px 20px; background: var(--paper); }
+.check h3 { margin: 4px 0 4px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.18); }
+.check .check-prompt { margin: 0 0 11px; color: var(--ink); }
+.check-options { display: grid; gap: 8px; }
+.check-option {
+  min-height: 46px; border: 1px solid var(--line); border-radius: var(--radius-2);
+  padding: 9px 13px; background: var(--paper); color: var(--ink);
+  font-weight: 650; text-align: left;
+}
+.check-option:hover:not(:disabled) { border-color: var(--navy); background: var(--cream); }
+.check-option[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--cream); font-weight: 800; }
+.check-option.correct[aria-pressed="true"] { border-color: var(--ok); background: var(--ok-soft); }
+.check-option.wrong[aria-pressed="true"] { border-color: var(--bad); background: var(--bad-soft); }
+.check-feedback { margin: 11px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .9); }
+.check-feedback:empty { display: none; }
+.check-feedback b { color: var(--navy); }
+/* Peer Instruction: in presentation mode the item goes large and the feedback
+   stays hidden until the room has voted and someone taps. */
+body.presenter .check .check-prompt { font-size: calc(var(--u) * 1.12); }
+body.presenter .check-option { font-size: calc(var(--u) * 1.02); }
+
+/* ---------- A5 Details drawer, and A7/A8 dialogs --------------------------
+   A5 is a right-side drawer; A7 (Guide), A8 (Settings) and the presenter notes
+   are centred cards. `margin: auto` is what centres a <dialog> whose width is
+   constrained — without it the card sits against the left edge at >=1024px
+   (this is task-glass-box-dialog-centering, fixed here once for the fleet). */
+body.details-open { overflow: hidden; }
+.details-sheet { inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0; border: 0; background: transparent; }
+.details-sheet::backdrop, .lesson-dialog::backdrop { background: rgba(0, 33, 68, .36); backdrop-filter: blur(2px); }
+.details-sheet[open] { display: flex; justify-content: flex-end; }
+.details-drawer { display: flex; flex-direction: column; width: min(510px, 46vw); height: 100%; background: var(--paper); color: var(--ink); box-shadow: -18px 0 48px rgba(0, 33, 68, .24); }
+.details-body { flex: 1; overflow: auto; padding: 22px; }
+.details-body h3 { margin: 16px 0 6px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.2); }
+.details-body h3:first-of-type { margin-top: 4px; }
+.details-body p { margin: 0 0 11px; color: var(--ink-2); }
+.details-body ul, .details-body ol { margin: 0 0 11px; padding-left: 21px; color: var(--ink-2); }
+.details-body li { margin: 4px 0; }
+.details-note { color: var(--ink-3) !important; font-size: calc(var(--u) * .8); }
+.details-stage { display: none; }
+.details-stage.on { display: block; }
+.details-formula { margin: 10px 0; padding: 11px; border-radius: var(--radius-2); background: var(--navy); color: #fff; font: 800 calc(var(--u) * 1.1) Georgia, "Times New Roman", serif; text-align: center; }
+/* The closing Boundary card: what this demo does NOT claim. */
+.evidence-card { margin-top: 14px; border: 1px solid var(--cream-deep); border-left: 4px solid var(--gold); border-radius: 9px; padding: 11px; background: var(--cream); color: var(--ink-2); font-size: calc(var(--u) * .86); }
+.evidence-card b { color: var(--navy); }
+
+.lesson-dialog {
+  width: min(680px, calc(100% - 32px)); max-height: min(88dvh, 800px);
+  margin: auto; padding: 0;
+  border: 1px solid var(--navy); border-top: 5px solid var(--gold); border-radius: 14px;
+  background: var(--paper); color: var(--ink); box-shadow: 0 24px 70px rgba(0, 33, 68, .3);
+}
+.lesson-dialog[open] { display: flex; flex-direction: column; }
+.lesson-dialog-head, .details-drawer .lesson-dialog-head { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: var(--navy); color: #fff; }
+.lesson-dialog-head h2 { flex: 1; margin: 0; color: #fff; font-size: calc(var(--u) * 1.18); }
+.lesson-dialog-head .head-sub { display: block; margin-top: 2px; color: var(--gold-lite); font-size: calc(var(--u) * .7); letter-spacing: .08em; text-transform: uppercase; }
+.lesson-dialog-head button { min-width: 40px; min-height: 40px; border: 1px solid var(--gold); border-radius: 8px; background: var(--gold); color: var(--navy); font-weight: 900; }
+.lesson-dialog-body { flex: 1; min-height: 0; overflow: auto; padding: 17px 19px 10px; }
+.lesson-dialog-body h3 { margin: 15px 0 5px; color: var(--navy); }
+.lesson-dialog-body p { margin: 0 0 10px; }
+.lesson-dialog-body ol, .lesson-dialog-body ul { padding-left: 22px; }
+.lesson-dialog-body li { margin: 5px 0; }
+.lesson-dialog-body .lede, .lesson-dialog-body .setnote { color: var(--ink-2); }
+.lesson-dialog-body .btn { width: 100%; }
+.lesson-dialog-actions { display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
+.lesson-dialog-actions button { min-height: 44px; border: 1px solid var(--navy); border-radius: 8px; padding: 8px 16px; background: var(--navy); color: #fff; font-weight: 800; }
+/* The presenter notes are the printable guide, injected at build time. The
+   guide's own scoped stylesheet lands after this file, so it wins inside here. */
+.guide-host { padding-top: 14px; }
+.guide-host .guide-scope { zoom: 1; }
+.guide-host .guide-scope .page-break { break-before: auto; page-break-before: auto; padding-top: 0; }
+.guide-host .guide-scope header, .guide-host .guide-scope .g-head { display: block; }
+.guide-print { margin: 14px 0 4px; border-top: 1px solid var(--line); padding-top: 10px; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+.guide-print a, .footer-link { color: var(--lite-deep); }
+
+/* ---------- A0 footer and the credit pill --------------------------------- */
+.footer { padding: 24px 22px 78px; color: var(--ink-3); font-size: calc(var(--u) * .78); text-align: center; }
+.footer-tools { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.footer-link { min-height: 36px; border: 0; background: transparent; font-weight: 750; text-decoration: underline; }
+
+/* ONE spec fleet-wide (plan A0, closing task-shared-credit-pill-design).
+   Text is exactly "Bryant Harrison · Murray State University" — provenance
+   belongs in demo.json built_with, not on the glass. Fixed in px, not --u, so
+   presentation mode does not blow it up on a projector. It never takes a
+   pointer event, and it hides whenever a modal or a bottom control bar is
+   open, so it cannot sit over a control. */
+.bh-credit {
+  position: fixed; left: 8px; bottom: calc(6px + var(--safe-b)); z-index: 30;
+  max-width: calc(100vw - 16px);
+  pointer-events: none;
+  font: 600 10px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--gold); background: rgba(0, 33, 68, .85);
+  border: 1px solid rgba(236, 172, 0, .4);
+  padding: 3px 10px; border-radius: 999px; letter-spacing: .03em;
+  animation: bh-settle 9s ease forwards;
+}
+@keyframes bh-settle { 0%, 65% { opacity: .93 } 100% { opacity: .5 } }
+body:has(dialog[open]) .bh-credit,
+body.has-bottom-bar .bh-credit { display: none; }
+@media print { .bh-credit { display: none !important; } }
+
+/* ---------- breakpoints ---------------------------------------------------
+   phone <= 480, narrow <= 760, wide > 760, plus the landscape-short case: a
+   phone held sideways on a projector table. Demo 1 has it, Demo 2 does not;
+   the plan keeps it. */
+/* The pill is position:fixed, so the page scrolls UNDER it and no amount of
+   padding can stop it passing over mid-page content — that is inherent to a
+   standing byline, and is why it takes no pointer event and fades to .5 (Demo
+   1 and Demo 2 both ship it that way). What padding CAN fix is the end of the
+   scroll, where the footer would otherwise sit permanently underneath it. So:
+   reserve that space at phone widths, and keep the pill as LOW as possible.
+
+   An earlier version of this file raised the pill 62px at <= 820px to clear a
+   bottom control bar. That was wrong twice over — it made mid-page overlap
+   worse rather than better (measured at 390px, sitting across the Predict
+   card), and a demo that actually has a bottom bar sets body.has-bottom-bar,
+   which HIDES the pill outright, so nothing needed raising. */
+@media (max-width: 480px) {
+  body { padding-bottom: calc(28px + var(--safe-b)); }
+}
+@media (max-width: 760px) {
+  .topline { padding: calc(12px + var(--safe-t)) 14px 9px; }
+  .stages { padding: 0 14px 10px; }
+  main { padding: 15px 14px 68px; }
+  .stage-intro { grid-template-columns: 1fr; padding: 17px; }
+  .details-trigger { justify-self: start; }
+  .lesson-strip { grid-template-columns: 1fr; }
+  .details-drawer { width: min(620px, 100vw); }
+  .check { padding: 15px 16px; }
+}
+@media (max-width: 480px) {
+  .brandline { grid-template-columns: 1fr; }
+  .msu-brand { white-space: normal; }
+  .topline { align-items: start; }
+  .top-tools { gap: 4px; }
+  .icon-btn { min-width: 40px; padding: 5px 8px; }
+  .icon-label { display: none; }
+  .stages { gap: 5px; }
+  .stage-tab { min-height: 50px; font-size: calc(var(--u) * .82); }
+  .stage-tab small { font-size: calc(var(--u) * .6); }
+  .lesson-strip { gap: 7px; }
+  .stage-intro h2 { font-size: 1.65rem; }
+  .card, .workbench { padding: 15px; }
+  .lesson-dialog { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-left: 0; border-right: 0; }
+  .lesson-dialog-body { padding: 14px 14px 44px; }
+  .details-drawer { width: 100vw; }
+  /* The page must not scroll sideways at 320px. Anything wider than the
+     viewport inside a stage is the demo's job to make scrollable itself. */
+  .footer { padding: 20px 14px 72px; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .top { position: static; }
+  .topline { padding: 8px 14px 6px; }
+  .brandline h1 { font-size: 1.25rem; }
+  .stages { padding: 0 14px 7px; }
+  .stage-tab { min-height: 42px; }
+  .stage-tab small { display: none; }
+  main { padding: 10px 14px 44px; }
+  /* Keep the question and the Predict card; the title, the refresh line and
+     the other two cards cost more height than they earn here. */
+  .stage-intro { padding: 11px 13px; margin-bottom: 10px; gap: 8px 14px; }
+  .stage-intro h2, .stage-intro .eyebrow, .stage-intro .refresh { display: none; }
+  .stage-question { font-size: calc(var(--u) * .94); }
+  .lesson-strip { grid-template-columns: 1fr; gap: 4px; }
+  .lesson-strip article:not(:first-child) { display: none; }
+  .lesson-strip article:first-child { display: grid; grid-template-columns: 4.5rem 1fr; gap: .5rem; align-items: baseline; }
+  .obs-cue { margin: 7px 0; min-height: 34px; }
+  .check { margin-top: 10px; padding: 11px 13px; }
+  .footer { padding: 12px 14px 40px; }
+}
+
+/* ---------- required accessibility blocks (A0) ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  html { scroll-behavior: auto; }
+}
+@media (prefers-contrast: more) {
+  :root { --ink-2: #26394D; --ink-3: #33475C; --line: #6D8496; --cream-deep: #C9BC9F; --ink-2-on-navy: #EDF5FB; --ink-3-on-navy: #DCE9F3; }
+  .stage-tab, .check-option, .icon-btn { border-width: 2px; }
+  .lesson-strip article { border-left-width: 5px; }
+}
+
+
+</style>
+<style>
+/* What the Survey Missed — ACTIVITY styles only. The lesson shell's chrome
+   (header, stage nav, stage intro, lesson strip, Details drawer, dialogs,
+   check cards, credit pill) lives in ../tools/lesson-shell/shell.css and is
+   injected before this file, so anything here can override it without
+   !important. Nothing below restyles chrome the kit already owns. */
+
+/* ---- prediction-capture buttons (A2: "where the activity can capture the
+   prediction it must") -- a row of toggle buttons shared by all four stages.
+   Selected state needs its own rule: the shell styles .btn/.btn.ghost but has
+   no opinion on aria-pressed for a generic button. */
+.predict-capture { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.predict-capture .btn[aria-pressed="true"] { outline: 3px solid var(--gold); outline-offset: 1px; }
+.predict-capture .btn.ghost { text-align: left; }
+#interpretChoices .btn, #transferChoices .btn { flex: 1 1 240px; min-height: 54px; }
+
+/* ---- the evidence-ledger workbench: status, two habitat summaries, two
+   fixed site maps. Lives inside .workbench (navy), so every custom color
+   below is chosen to read against that dark surface. */
+.status-line { margin: 4px 0 12px; padding: 9px 12px; border-left: 4px solid var(--lite); border-radius: var(--radius-2); background: rgba(255,255,255,.08); color: var(--ink-on-navy); font-size: calc(var(--u) * .92); }
+.metric-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.metric-card { padding: 12px; border: 1px solid var(--line-on-navy); border-radius: var(--radius-2); background: rgba(255,255,255,.06); }
+.metric-card h4 { margin: 0 0 4px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); }
+.metric-card .metric-value { font-size: calc(var(--u) * 1.5); font-weight: 900; color: var(--gold-lite); }
+.metric-card .metric-note { margin-top: 3px; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .8); }
+
+.maps { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 14px 0; }
+.maps h4 { margin: 0 0 6px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.0); }
+.map { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; }
+.site {
+  aspect-ratio: 1; min-height: 0; padding: 0; border: 1px solid var(--line-on-navy);
+  border-radius: 5px; background: var(--navy-2); color: var(--ink-3-on-navy);
+  font-size: calc(var(--u) * .62); font-weight: 800;
+}
+.site.detected { background: var(--lite); border-color: var(--lite-deep); color: var(--navy); }
+.site.occupied-missed { background: var(--gold); border-color: var(--gold-deep); color: var(--navy); }
+.site.unoccupied { background: rgba(255,255,255,.05); border: 1px dashed var(--line-on-navy); color: var(--ink-3-on-navy); }
+.site.active { outline: 3px solid var(--gold-lite); outline-offset: 1px; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 12px; margin: 4px 0 12px; color: var(--ink-2-on-navy); font-size: calc(var(--u) * .8); }
+.legend .dot { display: inline-block; width: 11px; height: 11px; margin-right: 4px; border-radius: 3px; vertical-align: -1px; }
+.site-detail { margin-top: 10px; padding: 10px 12px; border-radius: var(--radius-2); background: rgba(255,255,255,.06); color: var(--ink-2-on-navy); font-size: calc(var(--u) * .86); }
+
+/* ---- the "what round 1 showed" recap card in Interpret. This lede sits
+   inside .workbench (navy background) here, unlike a typical .panel-lede on
+   a light surface, so its <b> figures need the on-navy gold, not --navy —
+   navy text on a navy background is invisible. Found in the browser pass. */
+#interpretRecap b { color: var(--gold-lite); }
+
+/* ---- the reveal panel in Compare. A light inset box inside the navy
+   workbench, distinct from .evidence-card (which is a light-surface-only
+   component in shell.css) so it reads correctly on navy. */
+#truthPanel { margin-top: 12px; padding: 12px 14px; border-radius: var(--radius-2); background: rgba(255,255,255,.94); color: var(--ink); font-size: calc(var(--u) * .92); }
+#truthPanel b { color: var(--navy); }
+
+/* ---- optional likelihood inference, a plain <details class="card"> on the
+   page's light surface (not inside .workbench), so it uses the light-surface
+   kicker colors shell.css already defines by default. */
+.card.supporting { cursor: default; }
+.card.supporting > summary { cursor: pointer; margin: -20px -20px 12px; padding: 15px 20px; border-radius: var(--radius) var(--radius) 0 0; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.1); font-weight: 800; list-style: none; }
+.card.supporting > summary::-webkit-details-marker { display: none; }
+.card.supporting > summary::before { content: "+ "; color: var(--gold-deep); }
+.card.supporting[open] > summary::before { content: "\2212 "; }
+.card.supporting select { min-height: 40px; margin: 2px 10px 10px 0; border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; background: var(--paper); color: var(--ink); }
+.grid { display: grid; grid-template-columns: 28px repeat(11, 1fr); gap: 3px; max-width: 430px; margin-top: 10px; }
+.cell { aspect-ratio: 1; border-radius: 2px; background: var(--cream-deep); }
+.cell.selected { outline: 3px solid var(--gold); outline-offset: -2px; }
+.axis { font-size: 9px; color: var(--ink-3); text-align: right; }
+.xaxis { display: grid; grid-template-columns: repeat(11, 1fr); max-width: 396px; margin-left: 31px; font-size: 9px; color: var(--ink-3); }
+.scale { margin: 8px 0 2px; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+
+@media (max-width: 760px) {
+  .maps, .metric-row { grid-template-columns: 1fr; }
+  .map { grid-template-columns: repeat(6, 1fr); }
+  #interpretChoices .btn, #transferChoices .btn { flex-basis: 100%; }
+}
+
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #805800; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say {
+  margin: 8px 0; padding: 9px 12px; border-left: 4px solid #00A4E3;
+  background: rgba(0,164,227,.08); font-style: italic;
+}
+.guide-scope .warn { border-left-color: #FF4500; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .goals { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope .goals li { margin-bottom: 8px; }
+.guide-scope .mis {
+  margin: 8px 0; padding: 9px 12px; border-left: 4px solid #5a3e8c;
+  background: rgba(90,62,140,.06); border-radius: 0 6px 6px 0;
+}
+.guide-scope .mis b { display: block; color: #5a3e8c; }
+.guide-scope .mis span { display: block; margin-top: 4px; }
+.guide-scope .box { margin: 9px 0; padding: 8px 11px; border-left: 5px solid #00a4e3; background: #eef8fc; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+.guide-scope a { color: #00618c; }
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University &middot; Part four &middot; Example projects</span>
+      <h1>What the Survey Missed</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Four stages. Stage 2 unlocks after round 1; stages 3 and 4 unlock
+       together once the round-1 detection difference has been interpreted —
+       both a further round and the reveal are optional next steps in the
+       original design, not a forced sequence, so they share one gate. The
+       `disabled` attribute is authored HERE, in the template, not only
+       applied at runtime: the shell's first-load snapshot (taken before
+       app.js runs) is what Reset restores a gate FROM, so a gate written only
+       in JS would come back unlocked after a Reset (ADOPTING.md sec.4, added
+       after the K2 lane). -->
+  <nav class="stages" role="tablist" aria-label="What the Survey Missed lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Survey</span><small>Run the fixed round?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1" disabled title="Run round 1 to unlock this stage">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Interpret</span><small>What can a difference mean?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1" disabled title="Interpret round 1 to unlock this stage">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Revisit</span><small>Does repeating change it?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1" disabled title="Interpret round 1 to unlock this stage">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Compare</span><small>What was hidden?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- =========================== STAGE 1 · Survey ========================== -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 16 of 16 &middot; Part four &middot; Ecology &middot; Stage 1</span>
+      <h2 id="stage-1-title">Run the fixed round.</h2>
+      <p class="stage-question">When you survey every one of 48 fixed sites once, what have you actually measured?</p>
+      <p class="refresh"><b>Before you start.</b> <b>Occupancy</b> means a site is used by the species in
+        this model &mdash; it is not <b>abundance</b>, the number of animals present. Every round revisits
+        the same 48 fixed sites, 24 in Habitat A and 24 in Habitat B, rather than sampling new ones.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Which habitat will show more detections after this first round: A, B, or about the same?</p><span class="echo" id="echo-1" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Survey round 1 &middot; 48 site-visits</b>.</p></article>
+      <article><span>Takeaway</span><p>A fixed round returns a detection history for every site, not a count of animals &mdash; that is the only kind of evidence this investigation produces.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" id="round1-host" aria-labelledby="round1-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the generating scenario is invented to make one point, not measured</span>
+        <h3 id="round1-heading">Fixed survey plan</h3>
+      </div>
+    </div>
+    <p class="panel-lede">Every enabled round visits all 24 Habitat A and all 24 Habitat B sites &mdash; 48 fixed site-visits. The site set never adapts to what was detected.</p>
+    <label class="control-label" for="predict-1-A">Your prediction
+      <span class="why">Commit to a guess before you see any detections &mdash; this is what the observed evidence will be checked against.</span></label>
+    <div class="predict-capture" id="predict-1" role="group" aria-label="Predict which habitat will show more detections">
+      <button type="button" class="btn ghost small" id="predict-1-A" data-predict="A" aria-pressed="false">Habitat A</button>
+      <button type="button" class="btn ghost small" id="predict-1-B" data-predict="B" aria-pressed="false">Habitat B</button>
+      <button type="button" class="btn ghost small" id="predict-1-tie" data-predict="tie" aria-pressed="false">About the same</button>
+    </div>
+    <label class="control-label" for="round-1-btn">Survey round 1
+      <span class="why">Runs the one fixed round every later stage builds on. It cannot be undone except by Reset.</span></label>
+    <button class="btn" type="button" id="round-1-btn">Survey round 1 &middot; 48 site-visits</button>
+    <p class="obs-cue" id="cue-1" role="status" aria-live="polite"></p>
+    <div class="ledger-slot" id="ledger-1"></div>
+  </section>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">After round 1, Habitat B shows more detections than Habitat A. Does that mean Habitat B has more occupied sites?</h3>
+    <p class="check-prompt">In the declared model, Habitat A has the higher occupancy probability (&psi; = 0.8) but the lower detection probability (p = 0.25); Habitat B has lower occupancy (&psi; = 0.5) but higher detection (p = 0.8).</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Right. A detection difference can come from occupancy, detection probability, or both — with the declared values, Habitat B is EXPECTED to show more detections after one round despite having lower occupancy.">No &mdash; a detection difference is not the same as an occupancy difference</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="That treats a detection count as a direct animal count. A site can be occupied and never detected in a round, and a habitat with fewer occupied sites can still be easier to detect animals in, which is exactly what happens here.">Yes &mdash; more detections means more occupied sites, since more animals were found</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ========================= STAGE 2 · Interpret ========================= -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 16 of 16 &middot; Part four &middot; Ecology &middot; Stage 2</span>
+      <h2 id="stage-2-title">Interpret the first result.</h2>
+      <p class="stage-question">Is a detection difference between habitats, by itself, enough to conclude an occupancy difference?</p>
+      <p class="refresh"><b>Before you start.</b> Stage 1 gave you a <b>detection history</b> for every
+        site &mdash; whether each site was ever detected across the rounds run so far &mdash; not a
+        realized occupancy map. This stage asks what that history can justify before any map is shown.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Yes or no: does a detection difference alone prove an occupancy difference?</p><span class="echo" id="echo-2" hidden></span></article>
+      <article><span>Try</span><p>Under <b>Choose the justified claim</b>, pick the option that stays inside the round-1 evidence, then read why.</p></article>
+      <article><span>Takeaway</span><p>A difference in detections can come from occupancy, from detection probability, or from both &mdash; one round cannot tell you which.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" aria-labelledby="interpret-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-live">Live</span> the observed fraction ever detected, computed from your round-1 histories</span>
+        <h3 id="interpret-heading">What round 1 actually showed</h3>
+      </div>
+    </div>
+    <p class="panel-lede" id="interpretRecap">Run round 1 in the Survey stage first.</p>
+    <label class="control-label" for="predict-2-yes">Your call, before choosing
+      <span class="why">Commit to a yes or no before the three options below tell you the justified answer.</span></label>
+    <div class="predict-capture" id="predict-2" role="group" aria-label="Does a detection difference alone prove an occupancy difference?">
+      <button type="button" class="btn ghost small" id="predict-2-yes" data-predict="yes" aria-pressed="false">Yes, it proves it</button>
+      <button type="button" class="btn ghost small" id="predict-2-no" data-predict="no" aria-pressed="false">No, it does not by itself</button>
+    </div>
+    <label class="control-label" for="interpretChoices">Choose the justified claim
+      <span class="why">Only one of the three options stays inside what the round-1 evidence actually supports.</span></label>
+    <div class="predict-capture" id="interpretChoices" role="group" aria-label="Choose the claim justified by round 1">
+      <button type="button" class="btn ghost" data-explain="cautious">A difference in detections could reflect different occupancy, different detection probability, or both.</button>
+      <button type="button" class="btn ghost" data-explain="abundance">The habitat with fewer detections must have lower occupancy.</button>
+      <button type="button" class="btn ghost" data-explain="certainty">There is no observable difference until the hidden map is revealed.</button>
+    </div>
+    <p class="obs-cue" id="cue-2" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="check" aria-labelledby="check-2-title">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Once you have chosen the cautious claim, what should you look for before trusting any occupancy ranking from one round?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Right. Repeating the fixed survey (Revisit) and comparing with the declared model (Compare) are both ways to get evidence about detection probability, not just raw counts.">Evidence about detection probability, not only the raw detection count</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The first round's detection fraction is already confounded with detection probability, so it cannot rank true occupancy on its own — that confound is exactly what this stage's cautious claim names.">Nothing further &mdash; the first round already ranks true occupancy</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ========================== STAGE 3 · Revisit =========================== -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 16 of 16 &middot; Part four &middot; Ecology &middot; Stage 3</span>
+      <h2 id="stage-3-title">Repeat the same fixed survey.</h2>
+      <p class="stage-question">Does adding a round change which habitat shows the higher observed fraction, and does it have to?</p>
+      <p class="refresh"><b>Before you start.</b> A later round visits the exact same 48 sites again; it is
+        not a new, larger sample. Detections accumulate per site as "ever detected across K rounds," so the
+        observed fraction can only rise or stay level as K grows, in either habitat.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Will adding round 2 flip which habitat shows the higher observed fraction?</p><span class="echo" id="echo-3" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Survey round 2</b>, then <b>Survey round 3</b> if you want a third.</p></article>
+      <article><span>Takeaway</span><p>More fixed rounds improve the evidence, but a finite realization can still disagree with the true occupancy ranking.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" id="revisit-host" aria-labelledby="revisit-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-live">Live</span> the same seeded scenario, revisited</span>
+        <h3 id="revisit-heading">Add a fixed round</h3>
+      </div>
+    </div>
+    <label class="control-label" for="predict-3-yes">Your prediction
+      <span class="why">Guess before running round 2 whether the ranking you saw in round 1 can flip.</span></label>
+    <div class="predict-capture" id="predict-3" role="group" aria-label="Will round 2 flip the ranking?">
+      <button type="button" class="btn ghost small" id="predict-3-yes" data-predict="yes" aria-pressed="false">Yes, it can flip</button>
+      <button type="button" class="btn ghost small" id="predict-3-no" data-predict="no" aria-pressed="false">No, the same habitat stays higher</button>
+    </div>
+    <label class="control-label" for="round-2-btn">Survey the next fixed round
+      <span class="why">Adds one more visit to every site; it never removes or replaces a prior visit.</span></label>
+    <button class="round-btn btn" type="button" id="round-2-btn" data-round="2">Survey round 2 &middot; 48 site-visits</button>
+    <button class="round-btn btn ghost" type="button" id="round-3-btn" data-round="3" disabled>Survey round 3 &middot; 48 site-visits</button>
+    <p class="obs-cue" id="cue-3" role="status" aria-live="polite"></p>
+    <div class="ledger-slot" id="ledger-3"></div>
+  </section>
+
+  <section class="check" aria-labelledby="check-3-title">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">Adding rounds narrows the gap between the observed fraction and its expected value. Does enough rounds guarantee your finite sample ranks the habitats correctly?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Right. More rounds improve the evidence — the observed fraction gets closer to its expectation — but a finite realization can still differ from the expected ranking, and the model's own three-visit numbers (0.4625 vs 0.496) stay close enough that a real draw can invert.">No &mdash; more rounds improve the evidence but do not guarantee the ranking matches</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Even at three visits, the expected fractions for A and B (0.4625 and 0.496) are close, and a seeded realization can still land on either side of that expectation. More visits reduce but do not eliminate this.">Yes &mdash; three fixed rounds is always enough to rank them correctly</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- =========================== STAGE 4 · Compare ========================== -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 16 of 16 &middot; Part four &middot; Ecology &middot; Stage 4</span>
+      <h2 id="stage-4-title">Compare evidence with hidden truth.</h2>
+      <p class="stage-question">Which habitat actually has more occupied sites in this seeded scenario &mdash; the one with more detections, or the other one?</p>
+      <p class="refresh"><b>Before you start.</b> Revealing shows this scenario's <b>realized occupancy</b>
+        (which sites actually generated as occupied) and the <b>generating values</b> &psi; and p behind it.
+        Neither number is estimated from your rounds; both were fixed the moment the scenario was seeded.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Before revealing, which habitat has the higher realized occupancy?</p><span class="echo" id="echo-4" hidden></span></article>
+      <article><span>Try</span><p>Answer the transfer question, then press <b>Reveal synthetic map and model parameters</b>.</p></article>
+      <article><span>Takeaway</span><p>The habitat with more detections is not always the habitat with more occupied sites &mdash; and one visit alone cannot separate occupancy from detection probability.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" id="compare-host" aria-labelledby="compare-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the generating &psi; and p are invented to make one point</span>
+        <h3 id="compare-heading">Reveal the synthetic model</h3>
+      </div>
+    </div>
+    <label class="control-label" for="predict-4-A">Your prediction
+      <span class="why">Guess the realized ranking, not the detected ranking, before the reveal shows both.</span></label>
+    <div class="predict-capture" id="predict-4" role="group" aria-label="Which habitat has higher realized occupancy?">
+      <button type="button" class="btn ghost small" id="predict-4-A" data-predict="A" aria-pressed="false">Habitat A</button>
+      <button type="button" class="btn ghost small" id="predict-4-B" data-predict="B" aria-pressed="false">Habitat B</button>
+    </div>
+    <label class="control-label" for="transferChoices">Transfer: plan the next study
+      <span class="why">A colleague says "Habitat A produced fewer detections, so it has lower occupancy" — which response actually uses the model?</span></label>
+    <div class="predict-capture" id="transferChoices" role="group" aria-label="Choose the response that correctly uses the model">
+      <button type="button" class="btn ghost" data-transfer="correct">Ask whether detection probability differs; for example, animals at A may be harder to detect.</button>
+      <button type="button" class="btn ghost" data-transfer="wrong">Treat the detection total as a direct animal count.</button>
+      <button type="button" class="btn ghost" data-transfer="wrong2">Add a fourth round, because more visits guarantee the true ranking.</button>
+    </div>
+    <p class="check-feedback" id="transferFeedback" role="status" aria-live="polite"></p>
+    <label class="control-label" for="reveal-btn">Reveal the synthetic model
+      <span class="why">Shows realized occupancy and the generating &psi;/p values this scenario was seeded with.</span></label>
+    <button class="btn" type="button" id="reveal-btn">Reveal synthetic map and model parameters</button>
+    <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+    <div id="truthPanel" hidden></div>
+    <div class="ledger-slot" id="ledger-4"></div>
+  </section>
+
+  <details class="card supporting" id="inferenceView">
+    <summary>Optional: relative likelihood from observed histories</summary>
+    <span class="panel-kicker"><span class="k-live">Live</span> computed here from the histories your rounds produced &mdash; not a posterior probability</span>
+    <p class="note">Uses observed K-visit histories for one habitat only. Darker cells have greater relative
+      likelihood on this bounded &psi;/p grid. <b>It is not a posterior probability or a calibrated
+      confidence interval.</b> With one visit, &psi; and p are not separately identified.</p>
+    <label class="control-label" for="inferenceHabitat">Habitat<span class="why">Switches which habitat's observed histories the grid is computed from.</span></label>
+    <select id="inferenceHabitat"><option value="A">Habitat A histories</option><option value="B">Habitat B histories</option></select>
+    <label class="control-label" for="psiSelect">&psi;<span class="why">The occupancy probability this grid cell assumes.</span></label>
+    <select id="psiSelect"><option>0.0</option><option>0.1</option><option>0.2</option><option>0.3</option><option>0.4</option><option selected>0.5</option><option>0.6</option><option>0.7</option><option>0.8</option><option>0.9</option><option>1.0</option></select>
+    <label class="control-label" for="pSelect">p<span class="why">The detection probability this grid cell assumes.</span></label>
+    <select id="pSelect"><option>0.0</option><option>0.1</option><option>0.2</option><option>0.3</option><option>0.4</option><option selected>0.5</option><option>0.6</option><option>0.7</option><option>0.8</option><option>0.9</option><option>1.0</option></select>
+    <div class="grid" id="likelihoodGrid"></div>
+    <div class="xaxis"><span>0</span><span></span><span></span><span></span><span></span><span>p .5</span><span></span><span></span><span></span><span></span><span>1</span></div>
+    <p class="scale" id="likelihoodText">Survey at least one round to view histories.</p>
+    <p class="note" id="likelihoodSelection">Choose &psi; and p to inspect one grid cell.</p>
+  </details>
+
+  <section class="check" aria-labelledby="check-4-title">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">The reveal marks some sites "occupied but missed." What does that category show about detection?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Right. Because detection probability is less than one, a truly occupied site can produce zero detections across every round run — that gap between occupancy and detection is the whole point of this investigation.">A truly occupied site can produce zero detections across every round run</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The model has no error term for this: a detection probability below one is a stated assumption, not a mistake. An occupied-but-missed site is exactly what the declared model predicts should sometimes happen.">The model made an error, since an occupied site should always be detected eventually</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span><b>What the Survey Missed</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; source-backed occupancy investigation</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="teacher-guide.html" target="_blank" rel="noopener">Printable guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE · opens on load ════════════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">Can fewer sightings mean fewer occupied sites? Survey two fixed synthetic habitats and find out what a detection difference can and cannot prove.</p>
+    <p class="note">Where this sits: the tenth of ten AI-built classroom tools in Part four &mdash; an ecology
+      investigation whose goal, engine and assumptions are all one tap away, the same discipline every other
+      Part-four demo follows.</p>
+    <ol>
+      <li><b>Survey.</b> Predict a habitat, then press <b>Survey round 1</b> to visit all 48 fixed sites.</li>
+      <li><b>Interpret.</b> Choose the claim that is actually justified by the round-1 detection difference.</li>
+      <li><b>Revisit.</b> Optionally repeat the fixed survey with <b>Survey round 2</b> and <b>Survey round 3</b>.</li>
+      <li><b>Compare.</b> Answer the transfer question, then press <b>Reveal synthetic map and model parameters</b>.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The stage tabs switch stages; Interpret, Revisit and Compare unlock as you progress. <b>Details</b>
+      opens the assumptions and sources for the current stage. <b>Guide</b> reopens this card;
+      <b>Settings</b> holds <b>Open Presenter Notes</b>, <b>Presentation mode</b>, <b>Reset</b>, and two
+      scenario controls.</p>
+    <h3>Time</h3>
+    <p>About ten minutes for all four stages.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Survey</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS · the contract triad ════════════════ -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen: what to say at each stage, the answer key,
+      the misconceptions, and a short-of-time cut. This is the printable guide itself, not a summary of it.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the whole page up one notch for projecting to a room, and puts a
+      <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to the start: the first seeded scenario, no rounds run, no predictions or
+      interpretation chosen, nothing revealed, the likelihood view closed and re-centred. The page does not
+      reload. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+    <h3>Scenario</h3>
+    <p class="setnote">Replay keeps the scenario on screen but clears your progress through it; a new seed
+      draws the next scenario in sequence.</p>
+    <p><button class="btn ghost small" type="button" id="replay-btn">Replay as practice (same seed)</button>
+      <button class="btn ghost small" type="button" id="new-seed-btn">New seeded scenario</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS · one section per stage ══════════════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Survey</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live, and what is invented</span>
+        <h3>Every detection outcome is computed here; the generating scenario is invented</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the detection outcome for every one of 48 sites</span>
+          <p>The moment you press Survey round 1, this page draws a detection outcome for every fixed site
+            from the seeded scenario. Nothing is looked up or pre-recorded.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the generating &psi; and p values</span>
+          <p>Habitat A's occupancy probability (&psi; = 0.8) and detection probability (p = 0.25), and
+            Habitat B's (&psi; = 0.5, p = 0.8), are invented to make one point &mdash; that a lower-occupancy
+            habitat can show more detections &mdash; not measured from a real survey.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Site occupied with probability &psi;; if occupied, detected each round with probability p</div>
+        <p>A site is drawn occupied or not once per seeded scenario, and stays that way for every round
+          (closure). Given occupancy, each round's detection is an independent coin flip at probability p.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Closure across visits.</b> No site changes occupancy status between rounds within one
+            scenario.</li>
+          <li><b>No false positives.</b> A detection never occurs at an unoccupied site.</li>
+          <li><b>Conditionally independent detections.</b> Given occupancy, one round's detection outcome
+            does not depend on any other round's.</li>
+          <li><b>Constant detection probability within a habitat.</b> No per-site heterogeneity in p is
+            modeled.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one" target="_blank" rel="noopener">MacKenzie et al., Estimating Site Occupancy Rates When Detection Probabilities Are Less Than One, <i>Ecology</i> 83(8), 2002</a> &mdash; the source context for separating occupancy and detection probability and for the detection-history likelihood structure this model implements.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this demo does not estimate or claim anything about a
+          real wildlife population. It is a synthetic teaching model with invented generating parameters,
+          chosen to illustrate one confound.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>The observed fraction is computed here, from your own rounds</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the observed fraction ever detected, per habitat</span>
+          <p>Each habitat's "detected / 24 sites" fraction is computed from the detection histories your
+            rounds have produced so far &mdash; it updates the moment a round completes.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Expected fraction ever detected after K visits = &psi; &times; (1 &minus; (1 &minus; p)<sup>K</sup>)</div>
+        <p>At one visit, the expected fraction is A 0.20, B 0.40 &mdash; B is expected to show MORE
+          detections after one round despite Habitat A having the greater &psi;. A single observed round is
+          one noisy draw from that expectation, not the expectation itself.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The "cautious" claim is the only one this stage marks correct</b>, because the model
+            structure above makes it true by construction, not because it is the more agreeable-sounding
+            option.</li>
+          <li><b>A single realized round can differ from its expectation</b> in either direction; the
+            expected values are not a guarantee for any one seed.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one" target="_blank" rel="noopener">MacKenzie et al. (2002)</a> &mdash; the occupancy/detection-probability structure behind this comparison.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> a detection difference is evidence to investigate
+          further &mdash; with a repeated survey or a declared model &mdash; not proof of an occupancy
+          difference on its own.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>Every additional round's detections are drawn here, from the same seeded scenario</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> each additional round's detection outcomes</span>
+          <p>Round 2 and round 3, when run, draw detections for the same 48 fixed sites from the same
+            seeded scenario as round 1 &mdash; they do not redraw which sites are occupied.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">K = 1: A 0.20, B 0.40 &middot; K = 3: A 0.4625, B 0.496</div>
+        <p>More visits raise the expected fraction ever detected in both habitats (each additional visit is
+          another independent chance to detect an already-occupied site), and the two habitats' expected
+          fractions converge somewhat by K = 3 &mdash; but they do not cross, and a real finite draw can
+          still land on either side of either expectation.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Repeated rounds do not change occupancy.</b> Closure holds across all three rounds in a
+            scenario, not only across the first two.</li>
+          <li><b>More visits improve, but do not guarantee, a correct ranking.</b> The gap between the
+            expected fractions at K = 3 (0.4625 vs 0.496) is narrow enough that a seeded realization can
+            still invert it.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one" target="_blank" rel="noopener">MacKenzie et al. (2002)</a> &mdash; the multi-visit detection-history model this demo repeats.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> more fixed visits improve the available evidence; they
+          do not guarantee that a finite observed ranking matches either the realized occupancy or the
+          generating &psi;.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live, and what is invented</span>
+        <h3>The reveal recolors your own site arrays; the generating values are the same invented constants</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the realized occupied-site count and the reveal overlay</span>
+          <p>Reveal recomputes, from the same seeded scenario your rounds already visited, which sites were
+            actually occupied and separates "detected," "occupied but missed" and "unoccupied" on the same
+            arrays &mdash; it does not draw a new scenario.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the generating &psi;/p values shown at reveal</span>
+          <p>The reveal panel restates the same invented &psi; = 0.8, p = 0.25 (A) and &psi; = 0.5, p = 0.8
+            (B) from the Survey stage &mdash; they were fixed at the start, not estimated from your rounds.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Relative likelihood(&psi;, p) &prop; P(observed histories | &psi;, p)</div>
+        <p>The optional likelihood grid multiplies each site's exact ordered-history probability under a
+          candidate (&psi;, p) pair, using only observed histories for one chosen habitat, and shades each
+          grid cell by that value relative to the grid's own maximum. It is a bounded comparison, never a
+          posterior probability or a calibrated confidence interval.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>One visit cannot identify &psi; and p separately.</b> A high-&psi;/low-p combination and a
+            lower-&psi;/higher-p combination can fit the same one-visit observed fraction.</li>
+          <li><b>The likelihood grid inherits every Survey-stage assumption</b> (closure, no false
+            positives, conditional independence, constant p within a habitat).</li>
+          <li><b>The reveal is descriptive, not a score.</b> It does not convert the observed ranking into a
+            correctness grade.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one" target="_blank" rel="noopener">MacKenzie et al. (2002)</a> &mdash; the likelihood structure the grid implements.</li>
+          <li><a href="https://www.usgs.gov/publications/occupancytuts-occupancy-modelling-tutorials-rpresence" target="_blank" rel="noopener">Donovan, Hines &amp; MacKenzie, occupancyTuts: Occupancy modelling tutorials with RPresence, USGS, 2024</a> &mdash; current USGS teaching materials on occupancy/detection-history workflows with RPresence, replacing a retired 2023 workshop page that now redirects to an unrelated USGS homepage.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the likelihood grid is a bounded relative-likelihood
+          surface computed from your own observed histories. It is not a posterior probability or a
+          calibrated confidence interval, and with one visit, &psi; and p are not separately identified.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Item-level detail popover: a single site's visible detection history. This
+     is the ACTIVITY's own mechanism (A3), distinct from the shell's per-stage
+     #details drawer above (A5, fixed boundary/assumptions/sources content). -->
+<dialog class="lesson-dialog" id="item-details" aria-labelledby="item-details-title">
+  <div class="lesson-dialog-head">
+    <h2 id="item-details-title">Site detail</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="item-details-body"></div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+</dialog>
+
+<!-- Presenter notes ARE the printable guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<div class="guide-scope">
+
+<div class="g-head">
+  <div class="g-kicker">Demo 16 of 16 &middot; Part four &middot; Ecology &middot; about 10 min</div>
+  <h1>What the Survey Missed &mdash; presenter guide</h1>
+  <div class="g-sub">One HTML file, offline, no AI at runtime. You need: a screen to project or share; no other materials.</div>
+</div>
+
+<h2 id="g-goals">Learning goals</h2>
+<p>Not stated objectives &mdash; what the activity itself demonstrably shows, one per stage:</p>
+<ol class="goals">
+  <li>A fixed round returns a detection history for every site, not a count of animals &mdash; that is the only kind of evidence this investigation produces.</li>
+  <li>A difference in detections can come from occupancy, from detection probability, or from both &mdash; one round cannot tell you which.</li>
+  <li>More fixed rounds improve the evidence, but a finite realization can still disagree with the true occupancy ranking.</li>
+  <li>The habitat with more detections is not always the habitat with more occupied sites &mdash; and one visit alone cannot separate occupancy from detection probability.</li>
+</ol>
+
+<h2 id="g-path">Where this sits on the path</h2>
+<p>The tenth of ten AI-built classroom tools in Part four, and the last demo in the tour. Like the four
+  "investigation" demos before it (wavelet, ion flight, inhibitor, missing time), it teaches a discipline
+  through the same grammar: predict, run, then explain before reveal. Its own discipline is ecology &mdash;
+  survey design under imperfect detection &mdash; and its assumptions are one tap away, the same standard
+  every earlier demo in the tour is held to.</p>
+
+<h2 id="g-question">One question for the session</h2>
+<p><b>Can fewer sightings mean fewer occupied sites?</b> Not necessarily &mdash; a detection difference
+  between two habitats can come from a difference in occupancy, a difference in how easy the species is to
+  detect, or both, and one fixed round of surveying cannot tell you which.</p>
+<div class="say">The one sentence to land: <b>a detection is not an animal, and a difference in detections
+  is not by itself a difference in occupancy.</b> In this scenario, the habitat with the higher true
+  occupancy (Habitat A, &psi; = 0.8) is EXPECTED to show fewer detections after one round than the habitat
+  with lower occupancy but higher detectability (Habitat B, &psi; = 0.5, p = 0.8).</div>
+
+<h2>The shape of the session</h2>
+<div class="scroll">
+<table>
+  <tr><th>Stage</th><th>What happens</th><th>Time</th></tr>
+  <tr><td><b>1 &mdash; Survey</b></td><td>Predict a habitat, then run the one fixed round across all 48 sites.</td><td>2 min</td></tr>
+  <tr><td><b>2 &mdash; Interpret</b></td><td>Choose the claim actually justified by the round-1 detection difference.</td><td>2&ndash;3 min</td></tr>
+  <tr><td><b>3 &mdash; Revisit</b></td><td>Optionally repeat the fixed survey with rounds 2 and 3.</td><td>2 min</td></tr>
+  <tr><td><b>4 &mdash; Compare</b></td><td>Answer the transfer question, then reveal the synthetic model and, optionally, the likelihood view.</td><td>3 min</td></tr>
+</table>
+</div>
+
+<h2 id="g-stage1">Stage 1 &mdash; Survey</h2>
+<p><b>Question.</b> When you survey every one of 48 fixed sites once, what have you actually measured?</p>
+<p><b>Predict prompt.</b> Guess which habitat, A or B, will show more detections after this first round &mdash; before pressing Survey round 1.</p>
+<p><b>Activity.</b> Have the room commit to a habitat by show of hands before you press <b>Survey round 1
+  &middot; 48 site-visits</b>. The maps fill in live; ask what a colored site means before revealing that it
+  is only a detection, not a confirmed absence of the species elsewhere.</p>
+<p><b>Expected observation.</b> With the declared values (A: &psi; = 0.8, p = 0.25; B: &psi; = 0.5, p = 0.8),
+  Habitat B is EXPECTED to show more detections despite having the LOWER occupancy probability &mdash; the
+  room's habit of predicting the higher-occupancy habitat to "win" the detection count is the misconception
+  this stage exists to surface.</p>
+<p><b>Check-yourself answer key.</b> "Does more detections mean more occupied sites?" &mdash; No: a
+  detection difference can come from occupancy, detection probability, or both.</p>
+<p><b>Teaching limit.</b> The generating &psi; and p values are invented to make this one point; they are
+  not measured from a real survey and should not be read as typical field values.</p>
+<div class="mis"><b>Misconception: more detections means more animals were found.</b>
+  <span>A detection history counts site-visits where the species was seen, not individuals. A habitat can
+  produce more detections while having fewer occupied sites, if its detection probability is higher.</span></div>
+
+<h2 id="g-stage2">Stage 2 &mdash; Interpret</h2>
+<p><b>Question.</b> Is a detection difference between habitats, by itself, enough to conclude an occupancy difference?</p>
+<p><b>Predict prompt.</b> A quick yes/no vote before the three options: does a detection difference alone prove an occupancy difference?</p>
+<p><b>Activity.</b> Read the round-1 recap aloud, then have the room choose among the three claims. Only the
+  cautious claim ("could reflect occupancy, detection probability, or both") unlocks the rest of the demo;
+  the other two are genuine, plausible-sounding overreaches, not strawmen.</p>
+<p><b>Expected observation.</b> The cautious claim is the only one the model actually supports; "the habitat
+  with fewer detections must have lower occupancy" is exactly backwards for the declared scenario.</p>
+<p><b>Check-yourself answer key.</b> "What should you look for before trusting an occupancy ranking from one
+  round?" &mdash; Evidence about detection probability, not only the raw detection count.</p>
+<p><b>Teaching limit.</b> This stage tests recognition of the correct claim; it does not by itself estimate
+  &psi; or p from data &mdash; that is what the optional likelihood view in Stage 4 illustrates, and even it
+  cannot separate the two from one visit.</p>
+<div class="mis"><b>Misconception: a detection difference already settles which habitat has more occupied sites.</b>
+  <span>It settles nothing about occupancy alone. The same detection difference is equally consistent with an
+  occupancy difference, a detection-probability difference, or a mix of both.</span></div>
+
+<h2 id="g-stage3">Stage 3 &mdash; Revisit</h2>
+<p><b>Question.</b> Does adding a round change which habitat shows the higher observed fraction, and does it have to?</p>
+<p><b>Predict prompt.</b> Before running round 2, ask whether the room thinks the round-1 ranking can flip.</p>
+<p><b>Activity.</b> Run round 2, then round 3 if time allows. Watch the observed fractions in the metric
+  cards move toward (but not exactly reach) their theoretical expectations from the Details drawer.</p>
+<p><b>Expected observation.</b> The observed fractions get closer to their K = 3 expectations (A 0.4625, B
+  0.496) but a real seeded run can still land either side of the expected ranking &mdash; the exact outcome
+  the room sees will vary by which scenario is loaded.</p>
+<p><b>Check-yourself answer key.</b> "Does enough rounds guarantee the ranking is correct?" &mdash; No: more
+  rounds improve the evidence but do not guarantee it, because the two expected fractions stay close.</p>
+<p><b>Teaching limit.</b> Only three rounds are modeled; the demo does not claim what happens at ten or a
+  hundred rounds, where the law of large numbers would narrow this gap further.</p>
+<div class="mis"><b>Misconception: enough repeated surveys always produce the "correct" ranking.</b>
+  <span>More visits improve the evidence but a finite sample can still disagree with the underlying model,
+  especially when the two habitats' expected values are close, as they are here by K = 3.</span></div>
+
+<h2 id="g-stage4">Stage 4 &mdash; Compare</h2>
+<p><b>Question.</b> Which habitat actually has more occupied sites in this seeded scenario &mdash; the one with more detections, or the other one?</p>
+<p><b>Predict prompt.</b> Before revealing, guess which habitat has the higher REALIZED occupancy, not the higher detected fraction.</p>
+<p><b>Activity.</b> Answer the transfer question (a colleague's overreach) as a room, then press <b>Reveal
+  synthetic map and model parameters</b>. Point out the newly visible "occupied but missed" sites &mdash;
+  they were occupied the whole time and simply were not detected in the rounds run. If time allows, open the
+  optional likelihood view and note that it never produces a single confident answer from one visit.</p>
+<p><b>Expected observation.</b> Habitat A (the higher-occupancy habitat) reveals MORE occupied sites despite
+  having shown fewer detections throughout &mdash; the inversion the whole demo has been building toward.</p>
+<p><b>Check-yourself answer key.</b> "What does 'occupied but missed' show about detection?" &mdash; A truly
+  occupied site can produce zero detections across every round run, because detection probability is less
+  than one.</p>
+<p><b>Teaching limit.</b> The likelihood view uses only observed histories from one chosen habitat at a time
+  and a coarse 11-by-11 grid; it illustrates the &psi;/p ambiguity, it does not fit a model.</p>
+<div class="mis"><b>Misconception: revealing the map is the "real" measurement and the survey rounds were only practice.</b>
+  <span>The reveal is not a measurement either &mdash; it is the generating truth of a synthetic scenario,
+  shown for comparison. In a real field study, no such reveal ever happens; the survey rounds ARE the only
+  evidence a researcher gets.</span></div>
+
+<h2>Discussion questions</h2>
+<ol>
+  <li>If you could only run one more round in ONE habitat, which would you choose to best distinguish
+    "Habitat A has lower detection probability" from "Habitat A has lower occupancy"? Why does a single extra
+    round in either habitat still leave you short of a clean answer?</li>
+  <li>The reveal shows Habitat A has more occupied sites but fewer detections. Name one real-world reason a
+    species might be more occupant-rich but harder to detect (habitat structure, behavior, timing).</li>
+  <li>The optional likelihood view uses only ONE habitat's histories at a time. What would combining both
+    habitats' histories into one estimate assume that this demo does not?</li>
+  <li>This demo never estimates &psi; or p with a number and a confidence interval, the way RPresence or a
+    similar tool would. What would a real analysis need that this demo's single seeded scenario cannot
+    supply?</li>
+</ol>
+
+<h2>Presenter controls</h2>
+<p>The stage tabs switch stages; Interpret, Revisit and Compare unlock as the room progresses and re-lock on
+  Reset. <b>Details</b> (in each stage's intro) opens that stage's assumptions and sources. <b>Guide</b>
+  reopens the orientation card; <b>Settings</b> holds <b>Open Presenter Notes</b> (this document, on
+  screen), <b>Presentation mode</b> (scales the page for a projector), <b>Reset</b> (the whole demo back to
+  first load, in place &mdash; no page reload), and two scenario controls: <b>Replay as practice</b> (same
+  seed, clears progress) and <b>New seeded scenario</b> (draws the next one). Site squares in either map are
+  clickable at any time to read that one site's own detection history.</p>
+
+<h2 id="g-sources">Sources and attribution</h2>
+<p>MacKenzie, D. I., et al. (2002), &ldquo;Estimating Site Occupancy Rates When Detection Probabilities Are
+  Less Than One,&rdquo; <em>Ecology</em>, 83(8), 2248&ndash;2255. U.S. Geological Survey: <a href="https://www.usgs.gov/publications/estimating-site-occupancy-rates-when-detection-probabilities-are-less-one">Estimating
+  site occupancy rates when detection probabilities are less than one</a>. This is the source context for
+  separating occupancy probability and detection probability, and for the detection-history likelihood
+  structure this model implements.</p>
+<p>Donovan, T. M., Hines, J. E., &amp; MacKenzie, D. I. (2024), <a href="https://www.usgs.gov/publications/occupancytuts-occupancy-modelling-tutorials-rpresence">occupancyTuts:
+  Occupancy modelling tutorials with RPresence</a>, U.S. Geological Survey. Current USGS teaching materials
+  on occupancy/detection-history workflows with RPresence, cited here for occupancy-modeling teaching
+  context. This replaces a 2023 RPresence workshop page previously cited at
+  <code>mbr-pwrc.usgs.gov/workshops/occupancy2023online.html</code>, which as of a 2026-09-15 fleet-wide
+  citation sweep now blanket-redirects (confirmed against a second path on the same subdomain) to a generic
+  USGS center homepage with no occupancy-modeling content.</p>
+<div class="box">Neither source establishes a current Murray State assignment or endorsement.</div>
+
+<p class="g-foot"><b>What the Survey Missed</b> &middot; Bryant Harrison &middot; Murray State University &middot; Offline synthetic teaching model. This HTML file is the canonical guide source: the printable sheet, the PDF, and the in-app presenter notes all come from it.</p>
+</div>
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing: the shell defines window.lessonShell (dialogs,
+     the stage tablist, presentation mode, check cards) before app.js, which
+     listens for the shell's 'stagechange' event. -->
+<script>
+
+/* lesson-shell v2 behaviour — dialogs, stage tablist, presentation
+   mode, check cards. Injected by build.js; do not edit in the built file. */
+(() => {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const flags = new Set(location.hash.replace(/^#/, '').split(',').filter(Boolean));
+  const hashStage = (() => {
+    for (const f of flags) { const m = /^stage-(\d+)$/.exec(f); if (m) return Number(m[1]) - 1; }
+    return null;
+  })();
+  /* Presentation mode has to be on the body before the activity initialises,
+     so it is read here and not after. The fragment is stripped on arrival so a
+     later manual refresh is an ordinary fresh load. */
+  if (flags.has('presenting')) document.body.classList.add('presenter');
+  if (flags.size) { try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { /* some hosts refuse replaceState on file://; a visible fragment is cosmetic */ } }
+
+  /* ---- dialogs ---------------------------------------------------------- */
+  const guide = $('#guide'), settings = $('#settings'), notes = $('#presenter-notes'), details = $('#details');
+  let opener = null;
+  /* Opening a card from inside another one SWAPS them: nesting two modal
+     dialogs stacks backdrops and makes Escape ambiguous. */
+  const open = (dialog, from) => {
+    if (!dialog) return;
+    const host = from && from.closest && from.closest('dialog[open]');
+    opener = host ? $('#settings-open') : from;
+    if (host) host.close();
+    dialog.showModal();
+    const head = $('.lesson-dialog-head button', dialog);
+    if (head) head.focus();
+  };
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.guide-open');
+    if (!b) return; e.preventDefault(); open(guide, b);
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.notes-open');
+    if (!b) return; e.preventDefault(); open(notes, b);
+  });
+  const settingsOpen = $('#settings-open');
+  if (settingsOpen) settingsOpen.addEventListener('click', e => open(settings, e.currentTarget));
+  [guide, settings, notes, details].filter(Boolean).forEach(d => {
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => { if (opener && opener.isConnected) opener.focus(); });
+  });
+  /* A5: the Details trigger in the stage intro, and reopenable from anywhere. */
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.details-trigger');
+    if (!b || !details) return;
+    e.preventDefault();
+    const k = b.dataset.details || '0';
+    $$('.details-stage', details).forEach(s => {
+      const on = s.dataset.detailsStage === k;
+      s.classList.toggle('on', on); s.hidden = !on;
+    });
+    const sub = $('#details-subtitle');
+    const tab = $$('.stage-tab')[Number(k)];
+    if (sub && tab) sub.textContent = ($('span:not(.stage-mark)', tab) || {}).textContent || '';
+    opener = b;
+    details.showModal();
+    const head = $('.lesson-dialog-head button', details);
+    if (head) head.focus();
+  });
+
+  /* ---- A1 stage tablist ------------------------------------------------- */
+  const tabs = $$('.stage-tab');
+  const panels = $$('section.stage');
+
+  /* ---- the first-load snapshot ------------------------------------------
+     Taken here, before the hash can select a stage and before the demo's own
+     app.js has run at all (the shell's script tag precedes it). Reset RESTORES
+     FROM THIS rather than recomputing, which is what makes an in-place reset
+     honest for a gated demo: the gate comes back exactly as the template
+     authored it, whether or not the demo has a sync function of its own. */
+  const snapshot = {
+    tabs: tabs.map(t => {
+      const mark = $('.stage-mark', t);
+      return {
+        disabled: t.disabled,
+        className: t.className,
+        title: t.getAttribute('title'),
+        mark: mark ? mark.textContent : null
+      };
+    }),
+    echoes: $$('.lesson-strip .echo').map(e => ({ node: e, html: e.innerHTML, hidden: e.hidden })),
+    cues: $$('.obs-cue').map(c => ({ node: c, text: c.textContent, className: c.className })),
+    detailsSubtitle: (($('#details-subtitle') || {}).textContent) || ''
+  };
+  function selectStage(index, opts) {
+    if (!tabs.length) return;
+    /* A gated demo (one that unlocks stage k+1 only after stage k's evidence)
+       clamps here rather than unlocking: the prediction-before-evidence gate
+       IS the pedagogy, and a hash must not route around it. The clamp is
+       silent by design; the tab stays visible and disabled so the learner
+       still sees the whole route. */
+    let i = Math.max(0, Math.min(tabs.length - 1, index));
+    while (i > 0 && tabs[i].disabled) i -= 1;
+    tabs.forEach((t, k) => {
+      const on = k === i;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    /* Clear the hidden attribute as well as toggling the class. shell.css
+       carries [hidden] { display: none !important } and NO .stage or .stage.on
+       display rule, so panel visibility rests entirely on the attribute: a
+       class-only toggle leaves every non-first stage pinned shut by the
+       !important, whatever the class says. ion-flight shipped exactly that way
+       - stages 2-4 unreachable - and no node suite, build --check, check-shell
+       or build-hub --check could see it. Found by the two-winters lane (P2),
+       2026-09-16. */
+    panels.forEach((p, k) => {
+      const on = k === i;
+      p.classList.toggle('on', on);
+      p.hidden = !on;
+    });
+    if (opts && opts.focus) tabs[i].focus();
+    document.dispatchEvent(new CustomEvent('stagechange', { detail: { index: i } }));
+    return i;
+  }
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectStage(i));
+    tab.addEventListener('keydown', e => {
+      const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (step) {
+        e.preventDefault();
+        let j = i;
+        do { j = (j + step + tabs.length) % tabs.length; } while (tabs[j].disabled && j !== i);
+        selectStage(j, { focus: true });
+      } else if (e.key === 'Home') { e.preventDefault(); selectStage(0, { focus: true }); }
+      else if (e.key === 'End') { e.preventDefault(); selectStage(tabs.length - 1, { focus: true }); }
+    });
+  });
+  if (hashStage !== null) selectStage(hashStage);
+
+  /* ---- A8 presentation mode --------------------------------------------- */
+  function setPresentation(on) {
+    document.body.classList.toggle('presenter', on);
+    $$('#presentation-btn, #presentation-foot').forEach(b => {
+      b.setAttribute('aria-pressed', String(on));
+      b.classList.toggle('active', on);
+    });
+    document.dispatchEvent(new CustomEvent('presentationchange', { detail: { on } }));
+  }
+  $$('#presentation-btn, #presentation-foot').forEach(b => b.addEventListener('click', () => {
+    setPresentation(!document.body.classList.contains('presenter'));
+    if (settings && settings.open) settings.close();
+  }));
+  setPresentation(document.body.classList.contains('presenter'));
+
+  /* ---- A6 check cards: feedback for every option, nothing scored -------- */
+  $$('.check').forEach(card => {
+    const out = $('.check-feedback', card);
+    $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      if (out) out.innerHTML = (btn.classList.contains('correct') ? '<b>Supported.</b> ' : '<b>Not what the detector showed.</b> ')
+        + (btn.dataset.feedback || '');
+    }));
+  });
+
+  /* ---- Reset: IN PLACE, no page reload -----------------------------------
+     Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
+     location.reload(), which was trivially correct and threw the page away to
+     get there: a reload discards a canvas mid-animation, re-runs every boot
+     path, and on a slow projector laptop is a visible blank flash in front of
+     a room. In-place costs a real contract instead, and this is it.
+
+     THE DIVISION OF LABOUR — the whole contract in one sentence: if the kit
+     named the class, the shell restores it; everything else is the demo's.
+
+     WHAT THE SHELL GUARANTEES, in this order:
+       1. 'onReset()' is consulted first and a 'false' return CANCELS the whole
+          reset — nothing below runs. That is the veto path, unchanged from v1.
+       2. Every open <dialog> closes — not only the shell's four. A demo may
+          own one (two-winters' #item-details), and a dialog still open after a
+          Reset is un-restored state the learner is looking straight at.
+       3. Every stage tab goes back to its first-load chrome from the snapshot:
+          'disabled' (so a gate re-locks), class (so 'complete' marks clear),
+          title, and the .stage-mark glyph.
+       4. Every A6 check card drops its aria-pressed answer and clears its
+          feedback line.
+       5. Every A2 .echo and A4 .obs-cue returns to its snapshotted first-load
+          content. partials.html specifies both as empty on load; the snapshot
+          is used rather than a blanket clear so a demo that authored something
+          there keeps it.
+       6. The A5 Details drawer goes back to showing stage 1, with its
+          subtitle restored.
+       7. selectStage(0) — stage 1, which also fires 'stagechange'.
+       8. The page scrolls to the top.
+       9. 'lessonreset' is dispatched on document.
+
+     WHAT THE SHELL DOES NOT TOUCH, deliberately:
+       * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
+         projector every time would be hostile. CONTRACT.md's wording too.
+       * THE GUIDE. It does not reopen. A reset is not a fresh arrival, and the
+         learner who pressed it has already read it.
+       * THE ACTIVITY. The shell cannot know what a demo holds. That is what
+         step 9 is for.
+
+     WHAT THE DEMO MUST IMPLEMENT — required, not optional:
+
+         document.addEventListener('lessonreset', () => {
+           // every variable your module closes over, back to its initial value
+           // every node your app.js generated, back to its first-load content
+           // then re-render stage 1
+         });
+
+     'lessonreset' fires LAST, after the shell has finished, so the demo has
+     the final word over any node the two both touch. It is not cancelable: the
+     veto lives in onReset(), so there is exactly one place to refuse a reset.
+
+     A demo that ships no handler silently keeps its answers, its generated
+     DOM and its progress through a Reset that visibly moved everything else.
+     check-shell.js fails a built file that carries no handler, with a negative
+     control proving it is not merely matching the dispatch below. */
+  function resetLesson() {
+    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
+    $$('dialog').forEach(d => {
+      if (!d.open) return;
+      try { d.close(); } catch (e) { /* a dialog mid-close; it is already going */ }
+    });
+    tabs.forEach((t, i) => {
+      const s = snapshot.tabs[i];
+      if (!s) return;
+      t.disabled = s.disabled;
+      t.className = s.className;
+      if (s.title === null) t.removeAttribute('title'); else t.setAttribute('title', s.title);
+      const mark = $('.stage-mark', t);
+      if (mark && s.mark !== null) mark.textContent = s.mark;
+    });
+    $$('.check').forEach(card => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      const out = $('.check-feedback', card);
+      if (out) out.innerHTML = '';
+    });
+    snapshot.echoes.forEach(e => { e.node.innerHTML = e.html; e.node.hidden = e.hidden; });
+    snapshot.cues.forEach(c => { c.node.textContent = c.text; c.node.className = c.className; });
+    $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
+    const sub = $('#details-subtitle');
+    if (sub) sub.textContent = snapshot.detailsSubtitle;
+    selectStage(0);
+    try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+    document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
+    return true;
+  }
+  const resetBtn = $('#reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', () => resetLesson());
+
+  /* ---- A7: the Guide greets every load ---------------------------------- */
+  if (guide && !guide.open) {
+    opener = $('#guide-open');
+    guide.showModal();
+    const cta = $('.lesson-dialog-actions button', guide);
+    if (cta) cta.focus();
+  }
+
+  window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
+})();
+
+</script>
+<script>
+/* ==== model.js ==== */
 'use strict';
 
 // A transparent, seeded occupancy-and-detection model for a fixed synthetic survey.
@@ -187,21 +1782,400 @@
   root.OccupancyModel = api;
 }(typeof window !== 'undefined' ? window : globalThis));
 
-/* OCCUPANCY_MODEL: END */</script><script>
-(()=>{'use strict';const M=window.OccupancyModel,el=id=>document.getElementById(id);const INITIAL_SEED=20260908;let seed=INITIAL_SEED,scenario=M.createScenario(seed),rounds=0,selection=null,interpreted=false,revealed=false;const fmt=x=>(x*100).toFixed(1)+'%';
-function clearFeedback(){el('explainFeedback').textContent='Inspect the first-round detections, then choose a claim.';el('transferFeedback').textContent='Choose a response after you have inspected the evidence.';el('truth').innerHTML='';}
-function closeMenu(){el('settingsMenu').hidden=true;el('settingsButton').setAttribute('aria-expanded','false');}
-/* Three scenario operations share one path. 'replay' keeps the scenario that is
-   on screen; 'new' draws the next seeded one; 'all' is the Settings Reset and
-   returns the whole demo to its first-load state — the first seed, no rounds,
-   no claims, nothing revealed, the likelihood view closed and re-centred, every
-   overlay and the menu shut. Presentation mode is a presenter display
-   preference, not demo state, so Reset deliberately leaves it as set. */
-function reset(mode){rounds=0;selection=null;interpreted=false;revealed=false;if(mode==='new'){seed=(seed+7919)>>>0;scenario=M.createScenario(seed)}if(mode==='all'){seed=INITIAL_SEED;scenario=M.createScenario(seed);el('inferenceHabitat').value='A';el('psiSelect').value='0.5';el('pSelect').value='0.5';el('inferenceView').open=false;el('notesOverlay').hidden=true;el('howTo').hidden=true;closeMenu();}clearFeedback();render();}
-function history(site){return site.detections.slice(0,rounds).map(x=>x?'detected':'not detected').join(' · ')||'no completed visits';}
-function renderMap(id,group){const node=el(id);node.innerHTML='';M.sitesFor(scenario,group).forEach(site=>{const b=document.createElement('button');let state='';if(revealed)state=site.occupied?(M.everDetected(site,Math.max(rounds,1))?'detected':'occupied-missed'):'unoccupied';else state=rounds&&M.everDetected(site,rounds)?'detected':'';b.className='site '+state+(selection===site.id?' active':'');b.textContent=site.id.split('-')[1];b.setAttribute('aria-label',site.id+'; '+history(site)+(revealed?'; '+(site.occupied?'occupied':'unoccupied'):''));b.onclick=()=>{selection=site.id;render()};node.append(b)});}
-function summary(group){const s=rounds?M.observedSummary(scenario,rounds,group):null;el('metric'+group).textContent=s?fmt(s.observedFraction):'—';el('details'+group).textContent=s?`${s.detected} of 24 sites ever detected across ${rounds} round${rounds>1?'s':''}; ${s.siteVisits} site-visits in this habitat.`:'No completed visits yet.';}
-function renderInference(){const node=el('likelihoodGrid');node.innerHTML='';if(!rounds){el('likelihoodText').textContent='Survey at least one round to view histories.';el('likelihoodSelection').textContent='Choose ψ and p to inspect one grid cell.';return}const group=el('inferenceHabitat').value,chosenPsi=Number(el('psiSelect').value),chosenP=Number(el('pSelect').value),counts=M.countHistories(scenario,group,rounds),grid=M.likelihoodGrid(counts,10);for(let row=10;row>=0;row-=1){const label=document.createElement('span');label.className='axis';label.textContent=row===10?'ψ 1':row===5?'.5':row===0?'0':'';node.append(label);grid.filter(c=>Math.round(c.psi*10)===row).sort((a,b)=>a.p-b.p).forEach(c=>{const d=document.createElement('i');d.className='cell'+(c.psi===chosenPsi&&c.p===chosenP?' selected':'');d.style.background=`rgba(0,111,159,${(.12+.88*c.relativeLikelihood).toFixed(3)})`;d.title=`ψ=${c.psi.toFixed(1)}, p=${c.p.toFixed(1)}, relative likelihood=${c.relativeLikelihood.toFixed(2)}`;node.append(d)})}const support=M.relativeSupport(grid,.15),chosen=grid.find(c=>c.psi===chosenPsi&&c.p===chosenP);el('likelihoodSelection').textContent=chosen?`Selected ψ=${chosen.psi.toFixed(1)}, p=${chosen.p.toFixed(1)}: relative likelihood ${chosen.relativeLikelihood.toFixed(2)}.`:'Choose ψ and p to inspect one grid cell.';el('likelihoodText').textContent=`Observed ${group} histories: ${Object.entries(counts).map(([h,n])=>h+' × '+n).join(', ')}. ${support.length} of 121 cells have relative likelihood ≥ 0.15; ${rounds===1?'one visit leaves a broad ψ/p ambiguity.':'finite histories can still leave a broad region.'}`;}
-function render(){el('seedLabel').textContent=String(seed);document.querySelectorAll('[data-round]').forEach(b=>{const n=Number(b.dataset.round);b.disabled=n!==rounds+1||(n>1&&!interpreted)});el('status').textContent=!rounds?'Run the first fixed round. It will visit all 48 sites.':revealed?`Explore mode: truth is revealed. Round ${rounds} covers ${rounds*48} fixed site-visits.`:interpreted?`Round ${rounds} complete: ${rounds*48} fixed site-visits. You may add the next fixed round or reveal the model.`:`Round ${rounds} complete: ${rounds*48} fixed site-visits. Interpret this detection difference before continuing.`;summary('A');summary('B');renderMap('mapA','A');renderMap('mapB','B');const site=selection&&scenario.sites.find(x=>x.id===selection);el('siteDetail').textContent=site?`${site.id}: visible history — ${history(site)}. A site click only inspects a fixed record.`:'Select a site after the first round to inspect its visible detection history.';el('interpretPanel').hidden=!rounds||interpreted;el('afterInterpretation').hidden=!interpreted;el('truthLegend').hidden=!revealed;el('unknownLegend').innerHTML=revealed?'<i class="dot" style="background:#dbe4e9"></i>unoccupied':'<i class="dot" style="background:#f4f8fa;border:1px solid #9ab1bf"></i>no detection / not yet surveyed';el('revealBadge').textContent=revealed?'AFTER REVEAL':'BEFORE REVEAL';el('revealHeading').textContent=revealed?'What the synthetic map adds':'What stays hidden';el('revealCopy').textContent=revealed?'The map now separates occupied-but-missed sites from unoccupied sites. Continue exploring the same fixed survey evidence.':'Realized occupied sites and generating probabilities remain hidden until the evidence explanation. Clicking a site only inspects its fixed record.';el('truth').hidden=!revealed;if(revealed){const a=M.observedSummary(scenario,rounds,'A'),b=M.observedSummary(scenario,rounds,'B');el('truth').innerHTML=`<strong>Synthetic truth:</strong> A realized occupancy ${a.occupied}/24 (${fmt(a.realizedOccupancy)}); B ${b.occupied}/24 (${fmt(b.realizedOccupancy)}). Generating values: A ψ=0.8, p=0.25; B ψ=0.5, p=0.8. Expected fraction detected after ${rounds} visit${rounds>1?'s':''}: A ${fmt(M.expectedForHabitat('A',rounds))}, B ${fmt(M.expectedForHabitat('B',rounds))}. Observed: A ${fmt(a.observedFraction)}, B ${fmt(b.observedFraction)}. The arrays now distinguish detections, occupied-but-missed sites, and unoccupied sites.`}renderInference();}
-document.querySelectorAll('[data-round]').forEach(b=>b.onclick=()=>{rounds=Number(b.dataset.round);clearFeedback();render()});document.querySelectorAll('.explainChoice').forEach(b=>b.onclick=()=>{if(b.dataset.explain==='cautious'){interpreted=true;el('explainFeedback').textContent='Yes. Detection histories combine occupancy and detection. You can now repeat the fixed survey or compare with the synthetic model.'}else el('explainFeedback').textContent='That claim goes beyond the detection evidence. A detection difference can reflect occupancy, detectability, or both. Try again.';render()});document.querySelectorAll('[data-transfer]').forEach(b=>b.onclick=()=>{el('transferFeedback').textContent=b.dataset.transfer==='correct'?'Yes. Treat a detection difference as evidence to investigate detection as well as occupancy; it is not a direct animal count.' :'No. Detection totals are not abundance, and more fixed visits improve evidence without guaranteeing a finite-sample ranking.'});el('revealButton').onclick=()=>{revealed=true;render()};el('resetButton').onclick=()=>reset('all');el('replayButton').onclick=()=>reset('replay');el('newSeedButton').onclick=()=>reset('new');el('inferenceHabitat').onchange=renderInference;el('psiSelect').onchange=renderInference;el('pSelect').onchange=renderInference;el('notesButton').onclick=()=>{closeMenu();el('notesOverlay').hidden=false};el('closeNotes').onclick=()=>el('notesOverlay').hidden=true;el('helpButton').onclick=()=>{closeMenu();el('howTo').hidden=false};el('closeHow').onclick=()=>el('howTo').hidden=true;el('settingsButton').onclick=()=>{const open=el('settingsMenu').hidden;el('settingsMenu').hidden=!open;el('settingsButton').setAttribute('aria-expanded',String(open))};el('presentationToggle').onchange=e=>document.body.classList.toggle('presentation',e.target.checked);document.addEventListener('keydown',e=>{if(e.key!=='Escape')return;el('notesOverlay').hidden=true;el('howTo').hidden=true;closeMenu()});render();})();
-</script></body></html>
+
+/* ==== app.js ==== */
+'use strict';
+
+/* What the Survey Missed — view layer over ../src/model.js (OccupancyModel).
+   The lesson shell (../tools/lesson-shell) owns the header, stage tablist,
+   dialogs, presentation mode, A6 check cards and Reset; this file owns the
+   activity: the seeded scenario, the fixed survey rounds, the interpretation
+   choice, the revisit rounds, the reveal, and the optional likelihood view.
+
+   NO SHARED-INSTRUMENT MOVE. Unlike ion-flight/two-winters, the "evidence
+   ledger" (status line, two habitat summaries, two 24-site maps) is cheap
+   markup, not a canvas or a bound widget, so it is simply re-rendered into
+   three independent slots (#ledger-1, #ledger-3, #ledger-4 — Survey, Revisit,
+   Compare) every time state changes, rather than moved as one DOM node
+   between hosts. Whichever stage is on screen shows the current evidence;
+   the other two slots hold the same markup, hidden by the shell's own
+   [hidden] rule on the inactive .stage panel. */
+(() => {
+  const M = window.OccupancyModel;
+  const $ = (selector, root) => (root || document).querySelector(selector);
+  const $$ = (selector, root) => Array.from((root || document).querySelectorAll(selector));
+
+  const INITIAL_SEED = 20260908;
+  const fmt = value => (value * 100).toFixed(1) + '%';
+  const higherOf = (a, b, key) => (a[key] === b[key] ? 'tie' : (a[key] > b[key] ? 'A' : 'B'));
+
+  let seed = INITIAL_SEED;
+  let scenario = M.createScenario(seed);
+  let rounds = 0;
+  let selection = null;
+  let interpreted = false;
+  let revealed = false;
+  let round1Higher = null;
+  const predictions = { 1: null, 2: null, 3: null, 4: null };
+
+  function summaryFor(group) {
+    return rounds ? M.observedSummary(scenario, rounds, group) : null;
+  }
+
+  function history(site) {
+    return site.detections.slice(0, rounds).map(v => (v ? 'detected' : 'not detected')).join(' · ') || 'no completed visits';
+  }
+
+  /* ============================ the evidence ledger ====================== */
+
+  function statusText() {
+    if (!rounds) return 'Run the first fixed round. It will visit all 48 sites.';
+    if (revealed) return 'Explore mode: truth is revealed. Round ' + rounds + ' covers ' + (rounds * 48) + ' fixed site-visits.';
+    if (interpreted) return 'Round ' + rounds + ' complete: ' + (rounds * 48) + ' fixed site-visits. You may add the next fixed round or reveal the model.';
+    return 'Round ' + rounds + ' complete: ' + (rounds * 48) + ' fixed site-visits. Interpret this detection difference before continuing.';
+  }
+
+  function siteState(site) {
+    if (revealed) return site.occupied ? (M.everDetected(site, Math.max(rounds, 1)) ? 'detected' : 'occupied-missed') : 'unoccupied';
+    return rounds && M.everDetected(site, rounds) ? 'detected' : '';
+  }
+
+  function siteButtonsHtml(group) {
+    return M.sitesFor(scenario, group).map(site => {
+      const state = siteState(site);
+      const activeClass = selection === site.id ? ' active' : '';
+      const label = site.id + '; ' + history(site) + (revealed ? '; ' + (site.occupied ? 'occupied' : 'unoccupied') : '');
+      return '<button type="button" class="site ' + state + activeClass + '" data-site="' + site.id +
+        '" aria-label="' + label.replace(/"/g, '&quot;') + '">' + site.id.split('-')[1] + '</button>';
+    }).join('');
+  }
+
+  function siteDetailText() {
+    const site = selection && scenario.sites.find(candidate => candidate.id === selection);
+    if (!site) return 'Select a site after the first round to inspect its visible detection history.';
+    return site.id + ': visible history — ' + history(site) + '. A site click only inspects a fixed record.';
+  }
+
+  function metricCard(label, summary) {
+    return '<div class="metric-card"><h4>' + label + '</h4><div class="metric-value">' +
+      (summary ? fmt(summary.observedFraction) : '—') + '</div><div class="metric-note">' +
+      (summary
+        ? (summary.detected + ' of 24 sites ever detected across ' + rounds + ' round' + (rounds > 1 ? 's' : '') + '; ' + summary.siteVisits + ' site-visits.')
+        : 'No completed visits yet.') +
+      '</div></div>';
+  }
+
+  function ledgerHtml() {
+    const a = summaryFor('A');
+    const b = summaryFor('B');
+    const legend = revealed
+      ? '<span><i class="dot" style="background:var(--lite)"></i> detection recorded</span>' +
+        '<span><i class="dot" style="background:var(--gold)"></i> occupied but missed</span>' +
+        '<span><i class="dot" style="background:rgba(255,255,255,.15)"></i> unoccupied</span>'
+      : '<span><i class="dot" style="background:var(--lite)"></i> detection recorded</span>' +
+        '<span><i class="dot" style="background:var(--navy-2)"></i> no detection / not yet surveyed</span>';
+    return '' +
+      '<p class="status-line" role="status">' + statusText() + '</p>' +
+      '<div class="metric-row">' + metricCard('Habitat A', a) + metricCard('Habitat B', b) + '</div>' +
+      '<div class="legend">' + legend + '</div>' +
+      '<div class="maps">' +
+        '<div><h4>Habitat A &middot; 24 sites</h4><div class="map">' + siteButtonsHtml('A') + '</div></div>' +
+        '<div><h4>Habitat B &middot; 24 sites</h4><div class="map">' + siteButtonsHtml('B') + '</div></div>' +
+      '</div>' +
+      '<p class="site-detail">' + siteDetailText() + '</p>';
+  }
+
+  function renderLedgers() {
+    ['ledger-1', 'ledger-3', 'ledger-4'].forEach(id => {
+      const host = $('#' + id);
+      if (host) host.innerHTML = ledgerHtml();
+    });
+  }
+
+  /* ============================ Interpret recap =========================== */
+
+  function renderInterpretRecap() {
+    const node = $('#interpretRecap');
+    if (!node) return;
+    if (!rounds) { node.textContent = 'Run round 1 in the Survey stage first.'; return; }
+    const a = summaryFor('A');
+    const b = summaryFor('B');
+    node.innerHTML = 'After round' + (rounds > 1 ? 's 1–' + rounds : ' 1') + ': Habitat A detected <b>' +
+      a.detected + '/24</b> sites (' + fmt(a.observedFraction) + '); Habitat B detected <b>' + b.detected +
+      '/24</b> (' + fmt(b.observedFraction) + ').';
+  }
+
+  /* ============================ prediction echoes ========================= */
+
+  function updateEcho(stageKey) {
+    const echo = $('#echo-' + stageKey);
+    if (!echo) return;
+    const prediction = predictions[stageKey];
+    if (prediction == null) { echo.hidden = true; return; }
+    echo.hidden = false;
+    if (stageKey === '1') {
+      const label = prediction === 'A' ? 'Habitat A' : prediction === 'B' ? 'Habitat B' : 'about the same';
+      let text = 'You predicted: <b>' + label + '</b>.';
+      if (rounds >= 1) {
+        const a = summaryFor('A');
+        const b = summaryFor('B');
+        const higher = higherOf(a, b, 'observedFraction');
+        text += ' Observed after round 1: A ' + fmt(a.observedFraction) + ', B ' + fmt(b.observedFraction) +
+          ' — ' + (higher === 'tie' ? 'about the same' : 'Habitat ' + higher) + ' showed more detections.';
+      }
+      echo.innerHTML = text;
+    } else if (stageKey === '2') {
+      const label = prediction === 'yes' ? 'Yes, it proves it' : 'No, it does not by itself';
+      let text = 'You said: <b>' + label + '</b>.';
+      if (interpreted) text += ' The justified claim: a detection difference alone does not prove an occupancy difference.';
+      echo.innerHTML = text;
+    } else if (stageKey === '3') {
+      const label = prediction === 'yes' ? 'Yes, it can flip' : 'No, the same habitat stays higher';
+      let text = 'You predicted: <b>' + label + '</b>.';
+      if (rounds >= 2 && round1Higher) {
+        const a = summaryFor('A');
+        const b = summaryFor('B');
+        const now = higherOf(a, b, 'observedFraction');
+        text += ' After round ' + rounds + ': the higher-detection habitat has ' +
+          (now === round1Higher ? 'stayed the same as round 1.' : 'changed since round 1.');
+      }
+      echo.innerHTML = text;
+    } else if (stageKey === '4') {
+      const label = prediction === 'A' ? 'Habitat A' : 'Habitat B';
+      let text = 'You predicted: <b>' + label + '</b> has higher realized occupancy.';
+      if (revealed) {
+        const a = summaryFor('A');
+        const b = summaryFor('B');
+        const trueHigher = higherOf(a, b, 'realizedOccupancy');
+        text += ' Realized: ' + (trueHigher === 'tie' ? 'about the same' : 'Habitat ' + trueHigher) +
+          ' has higher occupancy (' + fmt(a.realizedOccupancy) + ' vs ' + fmt(b.realizedOccupancy) + ').';
+      }
+      echo.innerHTML = text;
+    }
+  }
+
+  /* ============================ optional likelihood view =================== */
+
+  function renderInference() {
+    const node = $('#likelihoodGrid');
+    if (!node) return;
+    node.innerHTML = '';
+    if (!rounds) {
+      $('#likelihoodText').textContent = 'Survey at least one round to view histories.';
+      $('#likelihoodSelection').textContent = 'Choose ψ and p to inspect one grid cell.';
+      return;
+    }
+    const group = $('#inferenceHabitat').value;
+    const chosenPsi = Number($('#psiSelect').value);
+    const chosenP = Number($('#pSelect').value);
+    const counts = M.countHistories(scenario, group, rounds);
+    const grid = M.likelihoodGrid(counts, 10);
+    for (let row = 10; row >= 0; row -= 1) {
+      const label = document.createElement('span');
+      label.className = 'axis';
+      label.textContent = row === 10 ? 'ψ 1' : row === 5 ? '.5' : row === 0 ? '0' : '';
+      node.append(label);
+      grid.filter(cell => Math.round(cell.psi * 10) === row).sort((a, b) => a.p - b.p).forEach(cell => {
+        const swatch = document.createElement('i');
+        swatch.className = 'cell' + (cell.psi === chosenPsi && cell.p === chosenP ? ' selected' : '');
+        swatch.style.background = 'rgba(0,111,159,' + (0.12 + 0.88 * cell.relativeLikelihood).toFixed(3) + ')';
+        swatch.title = 'ψ=' + cell.psi.toFixed(1) + ', p=' + cell.p.toFixed(1) + ', relative likelihood=' + cell.relativeLikelihood.toFixed(2);
+        node.append(swatch);
+      });
+    }
+    const support = M.relativeSupport(grid, 0.15);
+    const chosen = grid.find(cell => cell.psi === chosenPsi && cell.p === chosenP);
+    $('#likelihoodSelection').textContent = chosen
+      ? ('Selected ψ=' + chosen.psi.toFixed(1) + ', p=' + chosen.p.toFixed(1) + ': relative likelihood ' + chosen.relativeLikelihood.toFixed(2) + '.')
+      : 'Choose ψ and p to inspect one grid cell.';
+    $('#likelihoodText').textContent = 'Observed ' + group + ' histories: ' +
+      Object.entries(counts).map(([h, n]) => h + ' × ' + n).join(', ') + '. ' + support.length +
+      ' of 121 cells have relative likelihood ≥ 0.15; ' +
+      (rounds === 1 ? 'one visit leaves a broad ψ/p ambiguity.' : 'finite histories can still leave a broad region.');
+  }
+
+  /* ============================ gate + full render ========================= */
+
+  function renderAll() {
+    const tab2 = $('#tab-2');
+    const tab3 = $('#tab-3');
+    const tab4 = $('#tab-4');
+    tab2.disabled = rounds < 1;
+    tab2.title = tab2.disabled ? 'Run round 1 to unlock this stage' : '';
+    tab3.disabled = !interpreted;
+    tab3.title = tab3.disabled ? 'Interpret round 1 to unlock this stage' : '';
+    tab4.disabled = !interpreted;
+    tab4.title = tab4.disabled ? 'Interpret round 1 to unlock this stage' : '';
+    $('#round-2-btn').disabled = rounds !== 1;
+    $('#round-3-btn').disabled = rounds !== 2;
+    renderLedgers();
+    renderInterpretRecap();
+    renderInference();
+    ['1', '2', '3', '4'].forEach(updateEcho);
+  }
+
+  /* ============================ actions ==================================== */
+
+  $('#round-1-btn').addEventListener('click', () => {
+    if (rounds >= 1) return;
+    rounds = 1;
+    const a = summaryFor('A');
+    const b = summaryFor('B');
+    round1Higher = higherOf(a, b, 'observedFraction');
+    $('#cue-1').textContent = 'Round 1 complete: Habitat A detected ' + a.detected + '/24 (' + fmt(a.observedFraction) +
+      '); Habitat B detected ' + b.detected + '/24 (' + fmt(b.observedFraction) + '). Open Interpret to decide what this can mean.';
+    renderAll();
+  });
+
+  $$('.round-btn').forEach(button => button.addEventListener('click', () => {
+    const n = Number(button.dataset.round);
+    if (n !== rounds + 1) return;
+    rounds = n;
+    const a = summaryFor('A');
+    const b = summaryFor('B');
+    const now = higherOf(a, b, 'observedFraction');
+    $('#cue-3').textContent = 'Round ' + rounds + ' complete: observed fraction now A ' + fmt(a.observedFraction) +
+      ', B ' + fmt(b.observedFraction) + '. The higher-detection habitat has ' +
+      (now === round1Higher ? 'stayed the same as round 1.' : 'changed since round 1.');
+    renderAll();
+  }));
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('[data-explain]');
+    if (!button) return;
+    if (button.dataset.explain === 'cautious') {
+      interpreted = true;
+      $('#cue-2').textContent = 'Correct: a detection difference can reflect occupancy, detection probability, or both. Revisit and Compare are now unlocked.';
+    } else {
+      $('#cue-2').textContent = 'That claim goes beyond the detection evidence. A detection difference can reflect occupancy, detectability, or both. Try again.';
+    }
+    renderAll();
+  });
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('[data-transfer]');
+    if (!button) return;
+    $('#transferFeedback').textContent = button.dataset.transfer === 'correct'
+      ? 'Yes. Treat a detection difference as evidence to investigate detection as well as occupancy; it is not a direct animal count.'
+      : 'No. Detection totals are not abundance, and more fixed visits improve evidence without guaranteeing a finite-sample ranking.';
+  });
+
+  $('#reveal-btn').addEventListener('click', () => {
+    revealed = true;
+    const a = summaryFor('A');
+    const b = summaryFor('B');
+    $('#cue-4').textContent = 'Realized truth: Habitat A ' + a.occupied + '/24 occupied (' + fmt(a.realizedOccupancy) +
+      '); Habitat B ' + b.occupied + '/24 (' + fmt(b.realizedOccupancy) + '). Compare that with the detected fractions above.';
+    const truth = $('#truthPanel');
+    truth.hidden = false;
+    truth.innerHTML = '<b>Synthetic truth:</b> A realized occupancy ' + a.occupied + '/24 (' + fmt(a.realizedOccupancy) +
+      '); B ' + b.occupied + '/24 (' + fmt(b.realizedOccupancy) + '). Generating values: A ψ=0.8, p=0.25; B ψ=0.5, p=0.8. ' +
+      'Expected fraction detected after ' + rounds + ' visit' + (rounds > 1 ? 's' : '') + ': A ' +
+      fmt(M.expectedForHabitat('A', rounds)) + ', B ' + fmt(M.expectedForHabitat('B', rounds)) + '. Observed: A ' +
+      fmt(a.observedFraction) + ', B ' + fmt(b.observedFraction) + '.';
+    renderAll();
+  });
+
+  /* Prediction-capture toggle groups: A2's "where the activity can capture the
+     prediction it must". One delegated handler serves all four stages. */
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('.predict-capture [data-predict]');
+    if (!button) return;
+    const group = button.closest('.predict-capture');
+    const key = group.id.replace('predict-', '');
+    predictions[key] = button.dataset.predict;
+    $$('[data-predict]', group).forEach(candidate => candidate.setAttribute('aria-pressed', String(candidate === button)));
+    updateEcho(key);
+  });
+
+  /* Site inspection: a per-item popover mechanism (A3), distinct from the
+     shell's per-stage #details drawer (A5) — see ADOPTING.md sec.5. Kept as a
+     lightweight selection-and-recap in the ledger's own .site-detail line,
+     matching the pre-retrofit demo's behaviour, rather than opening the
+     #item-details dialog for a one-line fact; the dialog remains available
+     (and is cleared by Reset) for parity with the fleet pattern but is not
+     required for this small a fact. */
+  document.addEventListener('click', event => {
+    const button = event.target.closest && event.target.closest('.site');
+    if (!button) return;
+    selection = button.dataset.site;
+    renderLedgers();
+  });
+
+  ['inferenceHabitat', 'psiSelect', 'pSelect'].forEach(id => $('#' + id).addEventListener('change', renderInference));
+
+  document.addEventListener('stagechange', () => {
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
+
+  /* ---- demo-owned scenario controls, in Settings AFTER the contract triad.
+     These are NOT the shell's Reset: they replay or reseed the scenario
+     without pretending to run the shell's own chrome restoration (dialogs,
+     A6 check cards). Only the shell's #reset-btn does that full contract. */
+  function scenarioReset(newSeed) {
+    if (newSeed) { seed = (seed + 7919) >>> 0; scenario = M.createScenario(seed); }
+    rounds = 0; selection = null; interpreted = false; revealed = false; round1Higher = null;
+    predictions[1] = predictions[2] = predictions[3] = predictions[4] = null;
+    const truth = $('#truthPanel');
+    truth.hidden = true; truth.innerHTML = '';
+    $('#transferFeedback').textContent = 'Choose a response after you have inspected the evidence.';
+    ['cue-1', 'cue-2', 'cue-3', 'cue-4'].forEach(id => { const cue = $('#' + id); if (cue) cue.textContent = ''; });
+    $$('.predict-capture [data-predict]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+    $('#inferenceHabitat').value = 'A'; $('#psiSelect').value = '0.5'; $('#pSelect').value = '0.5';
+    $('#inferenceView').open = false;
+    window.lessonShell.selectStage(0);
+    renderAll();
+  }
+  $('#replay-btn').addEventListener('click', () => scenarioReset(false));
+  $('#new-seed-btn').addEventListener('click', () => scenarioReset(true));
+
+  /* ============================ reset, in place ============================
+     Kit v2. The shell has already restored everything it owns before this
+     fires: stage 1 selected (and the gate re-locked FROM THE TEMPLATE'S
+     `disabled` attributes, not from any state here), every dialog closed
+     (including #item-details), the four .obs-cue lines and .echo spans back
+     to their first-load (empty/hidden) content, the check cards cleared, the
+     Details drawer back to stage 1, and the page scrolled to the top.
+
+     THE ENUMERATION — everything this handler alone is responsible for:
+       seed, scenario           back to INITIAL_SEED / its scenario
+       rounds, selection, interpreted, revealed, round1Higher   plain values
+       predictions{1..4}        cleared (the .echo restore above only clears
+                                 the DOM; this clears the state that would
+                                 otherwise re-populate it on the next render)
+       #truthPanel              hidden and emptied (shell does not know this
+                                 element exists)
+       #transferFeedback        NOT a .obs-cue or inside a .check card, so the
+                                 shell's restore does not reach it — reset here
+       #inferenceHabitat/#psiSelect/#pSelect/#inferenceView   back to their
+                                 template values and closed
+       #item-details-title/body  cleared, so nothing stale is one click away
+       the three ledger slots and the Interpret recap   rebuilt by renderAll()
+         from the now-reset state, which also re-derives tab-2/3/4 disabled
+         (redundant with the shell's own snapshot restore, and deliberately
+         so: two independent paths land on the same locked state). */
+  document.addEventListener('lessonreset', () => {
+    seed = INITIAL_SEED;
+    scenario = M.createScenario(seed);
+    rounds = 0; selection = null; interpreted = false; revealed = false; round1Higher = null;
+    predictions[1] = predictions[2] = predictions[3] = predictions[4] = null;
+    const truth = $('#truthPanel');
+    truth.hidden = true; truth.innerHTML = '';
+    $('#transferFeedback').textContent = 'Choose a response after you have inspected the evidence.';
+    $$('.predict-capture [data-predict]').forEach(button => button.setAttribute('aria-pressed', 'false'));
+    $('#inferenceHabitat').value = 'A'; $('#psiSelect').value = '0.5'; $('#pSelect').value = '0.5';
+    $('#inferenceView').open = false;
+    $('#item-details-title').textContent = 'Site detail';
+    $('#item-details-body').innerHTML = '';
+    renderAll();
+  });
+  /* Nothing to veto: every piece of activity state can be rewound in place. */
+  window.lessonShell.onReset = null;
+
+  renderAll();
+})();
+
+</script>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
