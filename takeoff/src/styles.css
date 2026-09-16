@@ -201,8 +201,11 @@
 .st-row.bad { color: var(--bad); }
 .st-row em { grid-column: 2; color: var(--ink-3); font-style: normal; }
 
-/* ---- presentation mode ---------------------------------------------------- */
-body.presenter #chart-wrap { height: 460px; }
+/* ---- presentation mode ----------------------------------------------------
+   The chart's height is NOT set here. fitChart() in app.js measures it and
+   writes an inline height, which beats any rule in this file; its floor is
+   presenter-aware instead. A `body.presenter #chart-wrap { height: ... }`
+   rule here looked like it worked and never applied. */
 body.presenter .bar-row { margin: 13px 0; }
 
 /* ---- widths --------------------------------------------------------------- */
