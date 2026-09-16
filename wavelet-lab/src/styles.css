@@ -1,0 +1,141 @@
+/* ===========================================================================
+   Wavelet Lab &mdash; ACTIVITY styles only.
+
+   The lesson shell (header, stage tablist, stage intro, lesson strip,
+   provenance kickers, observation cue, Details drawer, check cards, dialogs,
+   credit pill, breakpoints, presentation scaling) lives in
+   tools/lesson-shell/ and is injected before this file. Everything here is
+   the transform workspace itself: the eight signal sliders, the coefficient
+   cards, the predict-then-drop panel, the image budget slider and its three
+   canvases, and the Stage 3 exercise card.
+
+   No new palette tokens are introduced: every colour below is one of the
+   kit's own (--navy, --gold, --lite, --lite-soft, --warm, --line, --paper,
+   --ink, --ink-2, --ink-3), which is what the pre-retrofit page's own
+   --blue/--sky/--soft/--danger set already mapped onto almost exactly.
+   Sizes use calc(var(--u) * n) so Presentation mode, which only changes --u,
+   scales the workspace along with the lesson chrome.
+   =========================================================================== */
+
+/* ---- the two "live machine" panels: Signal (Stage 1) and Image (Stage 2) -- */
+.wl-panel {
+  min-width: 0; margin-bottom: 18px; overflow: hidden;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--paper); box-shadow: 0 9px 24px rgba(0, 33, 68, .10);
+}
+.wl-head {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: calc(var(--u) * .8) calc(var(--u) * 1.1);
+  color: #fff; background: var(--navy);
+}
+.wl-head .panel-kicker { color: var(--gold-lite); }
+.wl-head h3 { margin: 0; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.2); }
+.wl-panel > .panel-kicker, .wl-panel > .panel-lede, .wl-panel > .control-label,
+.wl-panel > .signal-inputs, .wl-panel > .buttonrow, .wl-panel > .coefs,
+.wl-panel > .predict, .wl-panel > .wl-answer, .wl-panel > .obs-cue,
+.wl-panel > .barChart, .wl-panel > .imageTop, .wl-panel > .canvases,
+.wl-panel > .metrics, .wl-panel > .note {
+  margin-left: calc(var(--u) * 1.1); margin-right: calc(var(--u) * 1.1);
+}
+.wl-panel > .panel-kicker:first-of-type { margin-top: calc(var(--u) * .9); }
+.wl-panel > .note:last-child, .wl-panel > .obs-cue:last-child { margin-bottom: calc(var(--u) * .9); }
+.wl-panel > .barChart { margin-bottom: calc(var(--u) * .9); }
+
+/* ---- Stage 1: the eight signal values ------------------------------------ */
+.signal-inputs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; margin-bottom: 12px; }
+.valuebox { padding: 7px 6px; text-align: center; border: 1px solid var(--line); border-radius: var(--radius-2); background: var(--cream); }
+.valuebox label { display: block; margin-bottom: 2px; color: var(--ink-3); font-size: calc(var(--u) * .68); font-weight: 750; text-transform: uppercase; letter-spacing: .04em; }
+.valuebox input { width: 100%; accent-color: var(--lite); }
+.valuebox output { display: block; margin-top: 2px; color: var(--navy); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.buttonrow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; margin-bottom: 4px; }
+.buttonrow button:not(.btn) {
+  min-height: 40px; padding: 8px 13px; border: 1px solid var(--line); border-radius: var(--radius-2);
+  background: var(--paper); color: var(--navy); font-weight: 750;
+}
+.buttonrow button:not(.btn):hover:not(:disabled) { background: var(--navy); color: #fff; border-color: var(--navy); }
+.buttonrow button:not(.btn).active { background: var(--navy); color: #fff; border-color: var(--navy); box-shadow: inset 0 -3px 0 var(--gold); }
+
+.coefs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; margin-bottom: 4px; }
+.coef {
+  padding: 8px 4px; text-align: center; font-size: calc(var(--u) * .8);
+  border: 1px solid var(--line); border-radius: var(--radius-2); background: var(--lite-soft); color: var(--navy); font-weight: 750;
+}
+.coef span { display: block; color: var(--ink-3); font-size: calc(var(--u) * .68); font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.coef strong { display: block; margin-top: 2px; font-size: calc(var(--u) * 1); font-variant-numeric: tabular-nums; }
+.coef.off { background: var(--cream); color: var(--ink-3); text-decoration: line-through; opacity: .68; }
+.coef.pending { outline: 3px solid var(--gold); outline-offset: 1px; }
+
+.predict {
+  margin: 10px 0; padding: 10px 12px;
+  border: 1px solid var(--cream-deep); border-left: 4px solid var(--gold); border-radius: var(--radius-2);
+  background: var(--cream); color: var(--ink);
+}
+.predict p { margin: 0 0 8px; }
+.predictRow { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.predictRow label { color: var(--navy); font-weight: 800; font-size: calc(var(--u) * .88); }
+.predictRow input {
+  width: 7.5rem; min-height: 38px; padding: 7px 9px;
+  border: 1px solid var(--line); border-radius: var(--radius-2); background: var(--paper); color: var(--ink);
+}
+.predict .note { margin: 6px 0 0; }
+
+.wl-answer {
+  display: none; margin: 8px 0; padding: 9px 11px;
+  border-left: 4px solid var(--lite); border-radius: var(--radius-2); background: var(--lite-soft); color: var(--ink);
+  font-size: calc(var(--u) * .9);
+}
+.wl-answer.show { display: block; }
+.wl-answer b { color: var(--navy); }
+
+.barChart {
+  height: 118px; display: flex; align-items: flex-end; gap: 4px;
+  border-bottom: 2px solid var(--line); padding: 3px 3px 0;
+}
+.bar { flex: 1; min-width: 8px; position: relative; border-radius: 3px 3px 0 0; background: var(--lite); }
+.bar.neg { background: var(--gold); }
+.bar span { position: absolute; top: 100%; margin-top: 3px; width: 100%; text-align: center; color: var(--ink-3); font-size: calc(var(--u) * .62); }
+
+/* ---- Stage 2: the image workbench ----------------------------------------- */
+.imageTop { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 10px; margin-bottom: 6px; }
+.imageTop input { flex: 1; min-width: 140px; accent-color: var(--lite); }
+.budget { min-width: 8rem; color: var(--navy); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.canvases { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.canvasCard { text-align: center; color: var(--navy); font-size: calc(var(--u) * .8); font-weight: 750; }
+.canvasCard canvas {
+  display: block; width: 100%; height: auto; margin-top: 3px;
+  image-rendering: pixelated; border: 1px solid var(--line); background: var(--cream);
+}
+
+.metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; }
+.metric { padding: 7px 8px; border-radius: var(--radius-2); background: var(--lite-soft); }
+.metric b { display: block; margin-top: 1px; color: var(--navy); font-size: calc(var(--u) * 1.1); font-variant-numeric: tabular-nums; }
+
+/* ---- Stage 3: the exercise card -------------------------------------------
+   Not a "live machine" surface of its own — it reuses Stage 2's live
+   canvases via `window.lessonShell.selectStage(1)` — so it sits on the
+   shell's generic light `.card`, not `.wl-panel`. */
+.card .panel-kicker { display: block; margin-bottom: 6px; }
+.card h3 { margin: 3px 0 8px; }
+.exerciseGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 4px; }
+.exerciseGrid p { margin: 0 0 8px; }
+
+/* ---- narrow screens -------------------------------------------------------
+   The shell handles the lesson chrome breakpoints; these are the workspace's
+   own stacking points. */
+@media (max-width: 620px) {
+  .signal-inputs, .coefs { grid-template-columns: repeat(4, 1fr); }
+  .metrics { grid-template-columns: 1fr 1fr; }
+  .canvases { gap: 5px; }
+  .exerciseGrid { grid-template-columns: 1fr; }
+  .predictRow input { width: 100%; }
+}
+
+@media print {
+  .top, .stages, .buttonrow, .imageTop, .footer, .check, dialog { display: none !important; }
+  body { background: #fff; }
+  main { padding: 0; }
+  .wl-panel, .card { box-shadow: none; }
+  .canvases canvas { max-width: 180px; margin: auto; }
+}
