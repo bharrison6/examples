@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Construction Scheduling — Session Guide</title>
+<!-- Page chrome for the standalone printable file. NOT injected into the app:
+     build.js lifts only the guide-css stylesheet and the .guide-scope div, so
+     nothing here can leak a page-level rule into index.html. -->
+<style id="guide-page">
+  @page { size: letter; margin: 0.62in 0.7in; }
+
+  html { -webkit-text-size-adjust: 100%; }
+  body { background: #fff; margin: 0; padding: 0; }
+
+  /* Sheet geometry belongs to the standalone page. In the app the guide is
+     laid out by the notes overlay instead, so this stays out of #guide-css. */
+  body > .guide-scope {
+    max-width: 7.1in;
+    margin: 0 auto;
+    padding: 28px 22px 60px;
+  }
+
+  .printbtn {
+    position: fixed; top: 14px; right: 16px;
+    font-family: "Roboto Condensed", Arial, sans-serif;
+    font-size: 9pt; letter-spacing: .1em; text-transform: uppercase;
+    background: #111; color: #fff; border: 0; padding: 9px 15px; cursor: pointer;
+  }
+  .printbtn:hover { background: #b4531c; }
+
+  @media print {
+    body > .guide-scope { max-width: none; margin: 0; padding: 0; font-size: 9.8pt; }
+    .printbtn { display: none !important; }
+  }
+</style>
+
+<!-- The guide's own typography, every selector scoped to .guide-scope. This is
+     the block build.js injects verbatim into index.html, so the in-app
+     presenter notes and this printed sheet are one document from one source.
+     Found by its id, never by indexOf of a bare style tag. -->
+<style id="guide-css">
+  .guide-scope {
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+    font-size: 10.5pt;
+    line-height: 1.42;
+    color: #141414;
+    background: #fff;
+  }
+  .guide-scope p { margin: 0 0 .58em; }
+  .guide-scope b, .guide-scope strong { font-weight: 700; }
+
+  /* ---- drawing-set typography ---------------------------------- */
+  .guide-scope .mono, .guide-scope th, .guide-scope .tag,
+  .guide-scope .sheetno, .guide-scope .titleblock, .guide-scope caption {
+    font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* ---- title block --------------------------------------------- */
+  .guide-scope .titleblock {
+    border: 1.5px solid #111;
+    margin-bottom: 20px;
+  }
+  .guide-scope .tb-row { display: flex; border-bottom: 1px solid #111; }
+  .guide-scope .tb-row:last-child { border-bottom: 0; }
+  .guide-scope .tb-cell { padding: 5px 8px 6px; border-right: 1px solid #111; flex: 1 1 auto; }
+  .guide-scope .tb-cell:last-child { border-right: 0; }
+  .guide-scope .tb-lab {
+    font-size: 6.6pt; letter-spacing: .13em; text-transform: uppercase;
+    color: #555; display: block; margin-bottom: 1px;
+  }
+  .guide-scope .tb-val { font-size: 9.2pt; font-weight: 700; letter-spacing: .02em; }
+  .guide-scope .tb-title { flex: 3 1 auto; }
+  .guide-scope .tb-title .tb-val { font-size: 17pt; letter-spacing: .06em; text-transform: uppercase; line-height: 1.1; }
+  .guide-scope .tb-title .tb-sub { font-size: 9pt; font-weight: 400; color: #333; margin-top: 2px; }
+  .guide-scope .sheetno { flex: 0 0 92px; text-align: center; }
+  .guide-scope .sheetno .tb-val { font-size: 20pt; letter-spacing: .04em; }
+
+  /* ---- sections -------------------------------------------------- */
+  .guide-scope h2 {
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 11.5pt; text-transform: uppercase; letter-spacing: .11em;
+    margin: 17px 0 7px; padding-bottom: 3px;
+    border-bottom: 1.5px solid #111;
+    color: #141414;
+    break-after: avoid; page-break-after: avoid;
+  }
+  .guide-scope h2 .num {
+    display: inline-block; min-width: 1.5em;
+    color: #b4531c; font-weight: 700;
+  }
+  .guide-scope h3 {
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    font-size: 9.6pt; text-transform: uppercase; letter-spacing: .07em;
+    margin: 11px 0 4px;
+    color: #141414; border-bottom: 0; padding-bottom: 0;
+    break-after: avoid; page-break-after: avoid;
+  }
+  .guide-scope .lead { font-size: 10.8pt; }
+
+  /* ---- tables ---------------------------------------------------- */
+  .guide-scope table { border-collapse: collapse; width: 100%; margin: 8px 0 10px; font-size: 9.3pt; }
+  .guide-scope caption {
+    caption-side: top; text-align: left; font-size: 7.6pt; letter-spacing: .1em;
+    text-transform: uppercase; color: #444; padding-bottom: 4px;
+  }
+  .guide-scope th {
+    text-align: left; font-size: 8pt; text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1.2px solid #111; padding: 3px 6px 3px 0; vertical-align: bottom;
+    background: transparent; color: #141414;
+  }
+  .guide-scope td { padding: 3px 6px 3px 0; border-bottom: .5px solid #c8c8c8; vertical-align: top; }
+  .guide-scope tr:last-child td { border-bottom: 1px solid #111; }
+  .guide-scope td.n, .guide-scope th.n { text-align: right; padding-right: 12px; font-variant-numeric: tabular-nums; }
+  .guide-scope tbody tr.hi td { background: #f2ece4; }
+  .guide-scope .tight td, .guide-scope .tight th { padding-top: 2px; padding-bottom: 2px; }
+
+  /* ---- boxes ----------------------------------------------------- */
+  .guide-scope .box {
+    border: 1px solid #111; border-left: 4px solid #b4531c;
+    padding: 7px 11px 2px; margin: 9px 0 11px; background: #fbfaf8;
+    break-inside: avoid; page-break-inside: avoid;
+  }
+  .guide-scope .box .tag {
+    font-size: 7.2pt; letter-spacing: .14em; text-transform: uppercase;
+    color: #b4531c; font-weight: 700; display: block; margin-bottom: 3px;
+  }
+  .guide-scope .note { font-size: 9.2pt; color: #333; }
+
+  .guide-scope code, .guide-scope .act {
+    font-family: "SF Mono", "DejaVu Sans Mono", Consolas, monospace;
+    font-size: 8.8pt; letter-spacing: -.01em;
+  }
+  .guide-scope .act { font-weight: 700; white-space: nowrap; }
+
+  .guide-scope ol, .guide-scope ul { margin: 4px 0 10px; padding-left: 1.75em; }
+  .guide-scope li { margin-bottom: 5px; }
+  .guide-scope ol.q > li { margin-bottom: 7px; }
+  .guide-scope .src { font-size: 9.2pt; margin: 0 0 7px; padding-left: 1.1em; text-indent: -1.1em; }
+
+  .guide-scope .foot {
+    margin-top: 18px; padding-top: 6px; border-top: 1.5px solid #111;
+    font-size: 8pt; letter-spacing: .04em; color: #444;
+    font-family: "Roboto Condensed", "Arial Narrow", Arial, sans-serif;
+    text-transform: uppercase;
+    display: flex; justify-content: space-between;
+  }
+
+  /* A drawing-set title block and a six-column table are drawn for a 7.1in
+     sheet. The guide is read on phones too — as this page, and inside the
+     app’s notes overlay, which cannot scroll sideways — so under 560px the
+     title block stacks and a wide table scrolls inside its own box instead of
+     pushing the document off the screen. */
+  @media (max-width: 560px) {
+    .guide-scope .tb-row { flex-wrap: wrap; }
+    .guide-scope .tb-cell {
+      flex: 1 1 100%; min-width: 0;
+      border-right: 0; border-bottom: 1px solid #111;
+    }
+    .guide-scope .tb-row:last-child .tb-cell:last-child { border-bottom: 0; }
+    .guide-scope .sheetno { flex: 1 1 100%; text-align: left; }
+    .guide-scope .tb-title .tb-val { font-size: 14pt; }
+    .guide-scope table { display: block; width: 100%; overflow-x: auto; }
+    .guide-scope .foot { display: block; }
+    .guide-scope .foot span { display: block; }
+  }
+
+  @media print {
+    .guide-scope .box, .guide-scope table, .guide-scope .titleblock { break-inside: avoid; page-break-inside: avoid; }
+    .guide-scope h2, .guide-scope h3 { break-after: avoid; page-break-after: avoid; }
+    .guide-scope p, .guide-scope li { orphans: 2; widows: 2; }
+    .guide-scope a { color: #000; text-decoration: none; }
+  }
+
+  /* ---- added for template part A9 (lesson-shell retrofit) ----
+     .goals  the stage Takeaways, verbatim, as goal sentences
+     .say    a line to read out loud
+     .mis    a misconception card: the claim, then the correction
+     Refutation is the method here, so .mis always renders the flawed
+     model first and the correction under it — never the correction alone. */
+  .guide-scope .goals { padding-left: 1.5em; margin: 4px 0 10px; }
+  .guide-scope .goals li { margin-bottom: 7px; }
+  .guide-scope .say {
+    border-left: 3px solid #ECAC00; padding: 2px 0 2px 11px;
+    margin: 0 0 .7em; font-style: italic;
+  }
+  .guide-scope .mis {
+    border-left: 3px solid #8c6ea8; padding: 7px 11px; margin: 0 0 9px;
+    background: #f4f1f7;
+  }
+  .guide-scope .mis b { display: block; color: #4d3566; }
+  .guide-scope .mis span { display: block; margin-top: 3px; }
+  .guide-scope .prov {
+    font-family: "Roboto Condensed", Arial, sans-serif;
+    font-size: 8.2pt; letter-spacing: .08em; text-transform: uppercase;
+    color: #555; display: inline-block; margin-right: 6px;
+  }
+  @media print {
+    .guide-scope .mis, .guide-scope .say { break-inside: avoid; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<button class="printbtn" onclick="window.print()">Print</button>
+
+<div class="guide-scope">
+
+<!-- ============================ TITLE BLOCK ============================ -->
+<div class="titleblock">
+  <div class="tb-row">
+    <div class="tb-cell tb-title">
+      <span class="tb-lab">Session Guide</span>
+      <span class="tb-val">Construction&nbsp;Scheduling</span>
+      <div class="tb-sub"><i>Topping Out</i> &mdash; a week-by-week scheduling game &mdash; <i>Racer Commons</i>, 3-story commercial, 38 activities</div>
+    </div>
+    <div class="tb-cell sheetno">
+      <span class="tb-lab">Sheet</span>
+      <span class="tb-val">IG-01</span>
+    </div>
+  </div>
+  <div class="tb-row">
+    <div class="tb-cell"><span class="tb-lab">Demo</span><span class="tb-val">10 of 16 &middot; Part four</span></div>
+    <div class="tb-cell"><span class="tb-lab">Course level</span><span class="tb-val">First-year CM</span></div>
+    <div class="tb-cell"><span class="tb-lab">Session</span><span class="tb-val">75 minutes</span></div>
+    <div class="tb-cell"><span class="tb-lab">Teams</span><span class="tb-val">3&ndash;4 students</span></div>
+    <div class="tb-cell"><span class="tb-lab">Prereq</span><span class="tb-val">Network diagrams</span></div>
+  </div>
+</div>
+
+<p class="lead">Every team schedules the same building, week by week, from the same seed code. The seed
+fixes the project, the sequence of events <i>and</i> the roll behind every judgment call before anyone
+touches anything, so two teams that finish $200,000 apart did not get different weather and did not get
+different luck &mdash; they bought different exposure. That is the whole pedagogical trick. You need: one
+laptop per team (phones work), a projector, and a seed code on the board.</p>
+
+<p class="note"><b>This sheet is the session.</b> The CPM derivations, the full calls deck, all eleven
+debrief questions, the seed table, the overtime literature and the vocabulary live in the
+<b>CPM&nbsp;Appendix</b> &mdash; linked from the Guide and from Settings, and not reproduced here. Nothing
+was dropped in the split; it moved.</p>
+
+<!-- ============================ GOALS ============================ -->
+<h2><span class="num">1</span> Learning goals</h2>
+
+<p>Not stated objectives &mdash; what the activity itself demonstrably shows. One per stage, and these
+are the four Takeaway cards the learner reads on screen, verbatim:</p>
+
+<ol class="goals">
+  <li>Float is computed, not declared, and the chain with none is the one that sets the finish date.</li>
+  <li>The critical path is re-solved every Monday against what actually happened, so it moves under you.</li>
+  <li>A call is a priced bet with its odds printed on it; every team faces the same roll, so what differs
+    is the exposure you bought.</li>
+  <li>A decision is graded on what it was worth the Monday you made it, not on how the roll landed.</li>
+</ol>
+
+<h2><span class="num">2</span> Where this sits on the path</h2>
+<p>Demo 10 of 16, Part four &mdash; example projects. Part four shows the same habit of mind applied in a
+real discipline: state what you expect, run the thing, and let the result correct you. This one is the
+scheduling case, and the prerequisite it leans on is the network diagram &mdash; activities, predecessors,
+durations. It does not need any of the AI demos.</p>
+
+<h2><span class="num">3</span> One question for the session</h2>
+<p><b>What was that decision worth on the Monday you made it?</b></p>
+<p class="say">&ldquo;Nobody in this room is going to be graded on whether the roll went your way. You are
+going to be graded on what you knew, what it cost, and where the float was when you decided.&rdquo;</p>
+
+<!-- ============================ RUNNING ORDER ============================ -->
+<h2><span class="num">4</span> Seventy-five minute running order</h2>
+
+<p>The tutorial project, <i>Shoe Tree Annex</i>, is 10 activities, runs nine turns and carries two calls of
+its own. <b>Do not skip it.</b> Teams that meet the interface on the graded run spend six weeks clicking
+instead of thinking, and the debrief gets thin.</p>
+
+<table class="tight">
+  <caption>Running order &mdash; 75 minutes</caption>
+  <thead>
+    <tr><th class="n" style="width:62px">Minutes</th><th style="width:58px">Length</th><th>Segment</th></tr>
+  </thead>
+  <tbody>
+    <tr><td class="n">0&ndash;5</td><td>5 min</td><td><b>Setup</b> (Stage 1). Seed code and difficulty on the board; teams enter both and name themselves. Presentation mode up front. Confirm every team reads the same project start date, Mon 7 Sep 2026, before anyone commits a week.</td></tr>
+    <tr><td class="n">5&ndash;11</td><td>6 min</td><td><b>CPM at the board.</b> Forward pass, backward pass, total float, on the ten-activity tutorial network &mdash; the hand calculation is in the Appendix, &sect;1. Land one sentence: float is not slack in your day, it is what a specific activity can slip before it moves the finish. Leave free float for the debrief.</td></tr>
+    <tr><td class="n">11&ndash;22</td><td>11 min</td><td><b>Tutorial run</b> &mdash; nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it.</td></tr>
+    <tr><td class="n">22&ndash;26</td><td>4 min</td><td><b>Brief the competition.</b> Same seed, same difficulty, score is profit, no undo. Say two things out loud: calls default to the free option, so not answering is answering; and crews take two weeks, so manpower is a forecast.</td></tr>
+    <tr><td class="n">26&ndash;59</td><td>33 min</td><td><b>Competitive run</b> (Stages 2&ndash;3). Twenty-four to thirty turns. Roughly half the weeks are one click; the rest carry a call, a weather decision or a crew order. Checkpoint at minute 44 &mdash; teams should be near week 12, and anyone behind should commit the quiet weeks fast.</td></tr>
+    <tr><td class="n">59&ndash;63</td><td>4 min</td><td><b>Leaderboard and the do-nothing baseline.</b> Show the spread, then what absorbing everything would have scored on this seed. Worst team against baseline is usually more interesting than first against second.</td></tr>
+    <tr><td class="n">63&ndash;75</td><td>12 min</td><td><b>Debrief</b> (Stage 4). Open on the calls table; it is the fastest route into the room. Then the five misconceptions below and two or three questions from Appendix &sect;5. Finish on the week the critical path moved and ask who noticed at the time.</td></tr>
+  </tbody>
+</table>
+
+<div class="box">
+  <span class="tag">If you are short on time</span>
+  <p>Call time at minute 59 wherever teams are and score <i>projected</i> profit &mdash; the CPM finish date
+  priced out with general conditions, liquidated damages and the early bonus. It is a legitimate score and it
+  ranks teams the same way. Alternatively, assign the tutorial as ten minutes of homework and give the whole
+  44 minutes to <i>Racer Commons</i>. Do not buy time by cutting the debrief: the calls table is where the
+  session pays off.</p>
+</div>
+
+<!-- ============================ THE FOUR STAGES ============================ -->
+<h2><span class="num">5</span> Stage by stage</h2>
+
+<h3>Stage 1 &mdash; Read the schedule</h3>
+<p><b>Question.</b> Where is this job's float, and which chain has none?<br>
+<b>Predict prompt.</b> Before they start the job: <i>which chain has zero float?</i> The prediction is
+captured on screen and echoed beside the computed answer.<br>
+<b>Activity.</b> Seed and difficulty in, <b>Start the job</b>, then read the <b>Gantt</b> and
+<b>Network</b> views before committing anything. 4&ndash;5 minutes.<br>
+<b>Expected observation.</b> Unimpeded, the network runs <b>89 working days against a 134-day
+contract</b> &mdash; 45 working days, 63 calendar days, of cushion. One chain carries zero total float and
+everything else has some.<br>
+<b>Answer key.</b> The float column, not the bar length, identifies the critical chain. A bar can be long
+and have float; a two-day cure can be short and have none.<br>
+<b>Teaching limit.</b> Float here is measured to the project's own computed finish, so it is never
+negative. Students who have seen negative float in P6 need that said explicitly.</p>
+
+<h3>Stage 2 &mdash; Run a week</h3>
+<p><b>Question.</b> What does one week actually change?<br>
+<b>Predict prompt.</b> <i>Which activity is critical after this week?</i> &mdash; asked <b>before</b> Commit
+and captured, because the engine re-solves the network afterwards and will answer it. This is the demo's
+signature prediction; make the room commit out loud too.<br>
+<b>Activity.</b> Read <b>THE NEWS</b>, allocate crews, <b>Commit the week</b>, watch five working days run
+in 4D. 2 minutes for the first one, seconds thereafter.<br>
+<b>Expected observation.</b> The prediction appears beside the computed result. Sooner or later they
+disagree, and the game announces the move and names the activity it moved to.<br>
+<b>Answer key.</b> Completed work is pinned to the dates it actually happened, work in progress is anchored
+to its real start, and nothing not yet started can begin before today. Criticality falls out of that.<br>
+<b>Teaching limit.</b> One turn is one week of five working days; the engine has no clock, no network call
+and no unseeded randomness.</p>
+
+<h3>Stage 3 &mdash; Make a call</h3>
+<p><b>Question.</b> What are you buying when you answer a call?<br>
+<b>Predict prompt.</b> Before choosing: <i>what do you think the free option costs you, in dollars?</i><br>
+<b>Activity.</b> Answer the call on the table &mdash; each option shows its price today and its
+<b>exposure</b>, the probability the deferred consequence fires &mdash; then <b>Commit</b>. Nine calls in
+<i>Racer Commons</i>, two in the tutorial.<br>
+<b>Expected observation.</b> Nothing is hidden: the card prints the exposure as a percentage and names the
+activity where the consequence will land. Buying exposure down is buying a smaller bar for the same roll.<br>
+<b>Answer key.</b> Every call defaults to its first option, which is always free and always the most
+exposed. Clicking Commit through the job takes the 45%, the 40% and all the rest without deciding to.<br>
+<b>Teaching limit.</b> Exposure is a stated probability against a seeded roll, not a model of real
+construction risk. One option is deliberately <b style="color:#b3261e">&#9888; UNSAFE</b> and is
+<i>not</i> a trade-off &mdash; see the box below.</p>
+
+<h3>Stage 4 &mdash; Debrief</h3>
+<p><b>Question.</b> Was that a good decision, or a good outcome?<br>
+<b>Predict prompt.</b> Before opening it: <i>will your calls table read mostly &ldquo;covered&rdquo; or
+mostly &ldquo;got away with it&rdquo;?</i><br>
+<b>Activity.</b> Open the <b>Debrief</b>. One row per call: Week / Call / You chose / Cost / Exposure / The
+roll / Outcome. 12 minutes with the room.<br>
+<b>Expected observation.</b> The verdicts are a two-by-two, and the diagonal is the lesson:
+<i>got away with it</i> is where the luckiest team lives, and <i>unlucky: you covered it and it still bit</i>
+is where a team that did everything right can be sitting.<br>
+<b>Answer key.</b> Same seed, same roll. Put a team that left a call at 45% beside a team that bought it
+down to 3% and price both on the Monday they decided.<br>
+<b>Teaching limit.</b> Profit is the score, but the cash curve is the second set of books &mdash; a team can
+project a healthy profit while sitting $1,000,000 into the bank's money.</p>
+
+<div class="box">
+  <span class="tag">The one call that is not a trade-off</span>
+  <p>Around week six, backfilling against green unbraced foundation walls is offered three ways. Waiting
+  costs three days; engineered kickers buy them back for $6,400; and backfilling high against one side now
+  is free, saves the three days and is marked <b style="color:#b3261e">&#9888; UNSAFE</b>, with the reason
+  printed before anybody clicks. An unbraced, uncured wall loaded on one side only is an OSHA excavation and
+  structural-stability violation before it is a schedule decision. <b>It is in the deck deliberately</b>, and
+  if a team takes it the debrief opens with a red block <i>above</i> their profit &mdash; whether or not the
+  wall stood. If the roll went their way it says so: <i>and it held. That is the most dangerous possible
+  outcome, because it teaches you it was fine.</i> Read the block, then the number, then ask whether they
+  would sign that decision with their own name on the citation.</p>
+</div>
+
+<!-- ============================ MISCONCEPTIONS ============================ -->
+<h2><span class="num">6</span> Five misconceptions, and the moment that exposes each</h2>
+
+<p>These are the on-screen refutation bank too: each stage's <b>Check yourself</b> card offers the flawed
+model as a real option and names why it is wrong. State the misconception before the correction &mdash; a
+correction alone does not displace a model the student already holds.</p>
+
+<div class="mis"><b>(a) &ldquo;Float is free time you can spend casually.&rdquo; &mdash; Stage 1</b>
+<span>Total float belongs to the whole chain and is consumed by whoever spends it first.
+<span class="act">MEP1</span> carries 9 days of total float but only <b>1 day of free float</b>: slip it
+three days and the finish has not moved, but Level 2 rough-in cannot start when it wanted to. Then the
+switchgear card takes two days and the failed rough-in inspection takes three, on a branch that had
+four.</span></div>
+
+<div class="mis"><b>(b) &ldquo;Overtime always accelerates.&rdquo; &mdash; Stage 2</b>
+<span>It genuinely does at first &mdash; a 50-hour week delivers 1.25&times; and a 60-hour week
+1.50&times; in week one, and that is real acceleration, not a concession. But the cost premium applies in
+full from week one and never decays, while efficiency does: by week 5 a 50-hour crew produces
+<b>0.938</b> of a straight-time week at <b>1.375&times;</b> the labour cost. Overtime is a burst tool for a
+defined push. And it does nothing at all to a cure or a hold.</span></div>
+
+<div class="mis"><b>(c) &ldquo;The critical path is fixed at baseline.&rdquo; &mdash; Stage 2</b>
+<span>It is recomputed every Monday. <span class="act">ROOF</span> sits off the path at baseline with six
+days of float; two rain days plus the membrane-backorder card and it is critical &mdash; at which point the
+glazing card that arrives later matters twice as much. The debrief question is not whether they saw the
+announcement, it is whether anyone changed their allocation the week <i>before</i>.</span></div>
+
+<div class="mis"><b>(d) &ldquo;Weather delays everything equally.&rdquo; &mdash; Stage 3</b>
+<span>Rain days stop only weather-flagged work: earthwork, concrete placement, roofing and envelope. The
+same <i>&ldquo;ground is soup&rdquo;</i> card costs three critical days in week 3 and <b>exactly nothing</b>
+in week 18 with the building dried in. A cure keeps curing through a washout. The forecast is not the
+decision &mdash; the float column is.</span></div>
+
+<div class="mis"><b>(e) &ldquo;A good outcome means it was a good call.&rdquo; &mdash; Stage 4</b>
+<span>The gambler's fallacy in a hard hat, and the most expensive habit on this list. A team pours to plan
+at column line 4, the roll comes in at 0.61, the inspector takes the pads, and they leave convinced they
+read the geotech. They took a 45% chance of a three-day hold and $8,500 &mdash; and the roll every other
+team was handed landed above the line.</span></div>
+
+<!-- ============================ PRESENTER CONTROLS ============================ -->
+<h2><span class="num">7</span> Presenter controls</h2>
+
+<p><b>Settings</b> (&#9881; in the header) holds <b>Open Presenter Notes</b>, <b>Presentation mode</b> and
+<b>Reset</b>, in that order, then this demo's own controls: the Guide, the printable guide and the
+<b>CPM Appendix</b>, the engine self-test, and clearing the leaderboard.</p>
+
+<p><b>Presentation mode</b> &mdash; projector mode &mdash; scales the page up and puts a Notes button in
+the header. Turn it on for THE NEWS each week so the whole room reads the same card, and for the
+leaderboard and calls tables at minute 59. It survives Reset deliberately; a presenter resets between
+rooms.</p>
+
+<p><b>Reset</b> puts the job back to the setup sheet in place, with no page reload: no run in progress,
+seed and team cleared, every prediction echo and check answer cleared, stage 1 selected. Presentation mode
+and the leaderboard are not demo state and survive it. Mid-run it asks first, because a reset throws away a
+class's work.</p>
+
+<p><b>Engine self-test</b> runs <b>36 assertions</b> live &mdash; the tutorial CPM against the hand
+calculation, determinism, the non-compressible holds, the weather boundary in both directions, and the two
+checks that hold the calls fair. If a student says the software is wrong, run it in front of them; it is a
+surprisingly good two minutes of teaching.</p>
+
+<p><b>If a score is disputed or a browser dies.</b> Same seed plus same decisions produces the same profit
+to the dollar, and that is one of the 36. Replay the seed with the team's decision log.</p>
+
+<div class="foot">
+  <span>Construction Scheduling &mdash; Session Guide</span>
+  <span>Sheet IG-01</span>
+  <span>Racer Commons &mdash; 38 activities &mdash; 134 working days</span>
+</div>
+
+</div><!-- /guide -->
+
+</body>
+</html>
