@@ -1376,11 +1376,27 @@
    * exports
    * ===================================================================== */
 
+  /* Required by the lesson-shell's in-place Reset (kit v2): before the kit,
+     Settings -> Reset reloaded the page, which threw this module's whole
+     closure away for free. In place, nothing does that automatically, so a
+     reset entry point that a demo-side lessonreset handler can call is part
+     of adopting the kit — not a content or grading change. Puts the panel
+     back to its first-load state: challenge 1 active, no hints revealed, no
+     status or check result recorded. */
+  function reset() {
+    UI.activeId = CHALLENGES[0].id;
+    UI.status = {};
+    UI.hintsShown = {};
+    UI.lastResult = {};
+    renderPanel();
+  }
+
   LL.Challenges = {
     list: CHALLENGES,
     grade: grade,
     initPanel: initPanel,
-    init: initPanel // SPEC.md module-init contract alias
+    init: initPanel, // SPEC.md module-init contract alias
+    reset: reset
   };
 
   if (IS_NODE && typeof module !== 'undefined' && module.exports) {
