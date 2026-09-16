@@ -144,11 +144,12 @@ body { margin: 0; background: #fff; color: #14181f; font: 16px/1.55 system-ui, -
 <h3>Question</h3>
 <p>What else can a model be, and how else can it learn?</p>
 <h3>Predict prompt</h3>
-<p>None on this stage. 1d is a map of two axes, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
+<p>None on this stage. 1d is a map, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
 <h3>Activity</h3>
 <ol>
-  <li><span class="beat">0:00</span> The stage has two halves behind two buttons. Under <b>Training methods</b>, press each card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
+  <li><span class="beat">0:00</span> The stage has three parts behind three buttons. Under <b>Training methods</b>, press each card. The card faces do not say which model used them; the press does: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing. Point at the one-line &ldquo;used for&rdquo; notes: pretraining is self-supervised, fine-tuning and distillation are supervised, RLHF is reinforcement &mdash; stages, not extra methods.</li>
   <li><span class="beat">1:30</span> Switch to <b>Other architectures</b> and press a card: the line beneath says what that model stores and what it computes &mdash; linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
+  <li><span class="beat">2:15</span> Switch to <b>Learning with no weight change</b>: in-context learning, retrieval, search at decision time. Tie it to 1b&rsquo;s check: a model can appear to learn in a session without changing. Press <b>Search at decision time</b>: 1a&rsquo;s fork rules look one move ahead every turn; the demo&rsquo;s exhaustive search checks players and never picks a move.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>Architecture and training method are separate columns. 1c is a network trained by supervised learning; a network could equally be trained by reinforcement, and a table could be fitted to supervised targets.</p>
@@ -160,11 +161,12 @@ body { margin: 0; background: #fff; color: #14181f; font: 16px/1.55 system-ui, -
 <h3>Question</h3>
 <p>If &ldquo;type&rdquo; means the job, what goes in and what comes out?</p>
 <h3>Predict prompt</h3>
-<p>An image-to-text model: what comes out? Press a prediction, then open the <b>Image-to-Text</b> card.</p>
+<p>None on this stage: it is informational, and nothing on it runs a result a prediction could be checked against.</p>
 <h3>Activity</h3>
 <ol>
   <li><span class="beat">0:00</span> Switch the top lens to <b>Model types</b>. Press three cards the room will recognise: text generation, text-to-speech, speech-to-text (automatic speech recognition). Each shows what goes in and comes out, then the catalogue&rsquo;s own definition.</li>
   <li><span class="beat">1:30</span> Press <b>Image-to-3D</b>: the job people call image-to-mesh. Follow <b>Browse models</b> on one card if you are online; the demo itself never fetches.</li>
+  <li><span class="beat">2:00</span> Scroll to <b>Beyond one catalogue</b>: eight major types the Hub list does not show &mdash; world models (Genie 3), video with sound (Veo 3.1), robot control (Gemini Robotics), protein structure (AlphaFold), weather (GenCast), background removal (NVIDIA Broadcast), character animation, free-viewpoint video &mdash; each linked to the model&rsquo;s own page.</li>
   <li><span class="beat">2:30</span> Scroll to the whole catalogue: every type Hugging Face lists, in its groups, with the model count on the fetch date.</li>
 </ol>
 <h3>Expected observation</h3>

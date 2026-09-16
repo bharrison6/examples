@@ -1465,6 +1465,13 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   border: 1px solid var(--line); border-radius: 12px; background: var(--cream);
 }
 .map-switch.board-switch { margin-bottom: 10px; }
+.map-switch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 1d training-method cards: the one-line "used for" stage note (Sourced).
+   `.method-card span` makes every span a block; the kicker must stay inline. */
+.method-card .stage-note { display: block; margin-top: 6px; color: var(--ink-3); font-size: calc(var(--u) * .74); line-height: 1.35; }
+.method-card .stage-note b { display: inline; margin: 0; font-family: inherit; font-size: inherit; color: var(--ink-2); }
+.method-card .stage-note .k-sourced { display: inline-block; margin-right: 4px; font-size: calc(var(--u) * .6); color: var(--gold-deep); }
+.stages-note .panel-kicker { display: block; margin-bottom: 4px; }
 .map-btn {
   min-height: 46px; border: 0; border-radius: 9px; padding: 6px 12px; background: transparent;
   color: var(--ink-2); font: inherit; font-weight: 800; font-size: calc(var(--u) * .92); text-align: center; line-height: 1.2; cursor: pointer;
@@ -1514,6 +1521,12 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 .type-card .body q::after { content: "\201D"; }
 .type-card .body .n { display: block; color: var(--ink-3); font-size: calc(var(--u) * .74); margin-bottom: 8px; }
 .type-card .body a { display: inline-block; color: var(--lite-deep); font-weight: 800; font-size: calc(var(--u) * .84); }
+
+/* Model types: "Beyond one catalogue" cards are always open (no press):
+   the named example and its own-page link are the content. */
+.beyond-card { padding: 12px 13px; }
+.beyond-card .body { padding: 0; margin-top: 8px; }
+.type-card .body .n .k-sourced { margin-right: 6px; }
 
 /* the whole catalogue, in its own groups */
 #type-groups h4 { margin: 14px 0 6px; color: var(--navy); font-size: calc(var(--u) * .78); font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
@@ -1894,8 +1907,9 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
       <p class="stage-question">What else can a model be, and how else can it learn?</p>
       <p class="refresh"><b>Before you start.</b> Stages 1a&ndash;1c showed three <b>architectures</b>, meaning how a
         model is built: a rule list, a table, a network. A <b>training method</b> is a separate choice: how the
-        model&rsquo;s adjustable parts change. 1a had none, 1b used reinforcement learning, 1c used supervised
-        learning. Both axes have more members than one board can run.</p>
+        model&rsquo;s adjustable parts change, and each of 1a&ndash;1c used one or none: press a card below to see
+        which. Both axes have more members than one board can run, and some systems change what they do without
+        changing their parameters at all.</p>
     </div>
     <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1d learning guide">
@@ -1903,46 +1917,55 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
            information stage, a map of two axes, and nothing on it runs a
            result a prediction could be checked against. Try and Takeaway
            stay: pressing a card is a real action with a visible outcome. -->
-      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes.</p></article>
+      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes. Switch to <b>Learning with no weight change</b> and press a card: it says whether anything in this demo does it.</p></article>
       <article><span>Takeaway</span><p>Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</p></article>
     </div>
   </section>
 
-  <!-- Operator ruling 2026-09-16: the two halves of this stage sit behind
-       two buttons instead of stacking. Not a tablist: the kit's stage
-       tablist is the only one on the page (A1), so this is the same shape
-       as the lens row above -- a role="group" of aria-pressed buttons, and
-       app.js toggles `hidden` on the two cards. -->
-  <div class="map-switch" role="group" aria-label="Two halves of this stage" id="map-switch">
+  <!-- Operator ruling 2026-09-16: the parts of this stage sit behind
+       buttons instead of stacking (two at first; the third, learning with no
+       weight change, added on operator direction the same day). Not a
+       tablist: the kit's stage tablist is the only one on the page (A1), so
+       this is the same shape as the lens row above -- a role="group" of
+       aria-pressed buttons, and app.js toggles `hidden` on the cards. -->
+  <div class="map-switch three" role="group" aria-label="Three parts of this stage" id="map-switch">
     <button type="button" class="map-btn" data-half="methods" aria-pressed="true" aria-controls="methods-card"><span>Training methods</span><small>how a model&rsquo;s adjustable parts change</small></button>
     <button type="button" class="map-btn" data-half="families" aria-pressed="false" aria-controls="families-card"><span>Other architectures</span><small>more ways to hold a pattern or a strategy</small></button>
+    <button type="button" class="map-btn" data-half="nochange" aria-pressed="false" aria-controls="nochange-card"><span>Learning with no weight change</span><small>behaviour changes; parameters do not</small></button>
   </div>
 
   <section class="card map-card" id="methods-card" aria-labelledby="methods-title">
-    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping is read from this demo&rsquo;s code</span></span>
+    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping a press reveals is read from this demo&rsquo;s code; each &ldquo;used for&rdquo; line is Sourced (Details)</span></span>
     <h3 id="methods-title">Training methods &mdash; how a model&rsquo;s adjustable parts change</h3>
     <p class="panel-lede">Press a card. The categories overlap, and one system can combine them.</p>
     <div class="method-grid" role="group" aria-label="Training methods">
       <button type="button" class="method-card" data-method="supervised" data-uses="1c" aria-pressed="false">
-        <b>Supervised learning</b><span>Learns from inputs paired with target answers. In this demo, 1c fits frozen scores produced by another model &mdash; targets need not be written by a person.</span>
+        <b>Supervised learning</b><span>Learns from inputs paired with target answers. Example: photos, each labelled with what is in it.</span>
+        <small class="stage-note"><span class="k-sourced">Sourced</span> Used for <b>supervised fine-tuning</b> (prompts paired with good responses) and <b>distillation</b> (a student model fits a teacher&rsquo;s outputs).</small>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="unsupervised" data-uses="" aria-pressed="false">
         <b>Unsupervised learning</b><span>Looks for structure without target labels. Example: grouping similar documents into clusters without predefined topics.</span>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="self-supervised" data-uses="" aria-pressed="false">
         <b>Self-supervised learning</b><span>Generates targets from the data itself. Example: hide a word in a sentence and train a model to predict it.</span>
+        <small class="stage-note"><span class="k-sourced">Sourced</span> Used for <b>pretraining</b> large language models: predict the next token of unlabelled text, the text itself supplying the answer.</small>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card featured" data-method="reinforcement" data-uses="1b" aria-pressed="false">
-        <b>Reinforcement learning</b><span>Learns from rewards that follow actions. In this demo, 1b updates position values after wins, losses and draws &mdash; even during self-play.</span>
+        <b>Reinforcement learning</b><span>Learns from rewards that follow actions. Example: a game-playing program scored only on whether it wins.</span>
+        <small class="stage-note"><span class="k-sourced">Sourced</span> Used to <b>post-train</b> chat and reasoning models: from human preference rankings (RLHF), and newer online methods such as GRPO.</small>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="semi-supervised" data-uses="" aria-pressed="false">
         <b>Semi-supervised learning</b><span>Combines a smaller labelled set with a larger unlabelled set. Example: an image classifier trained on a few labelled images and many unlabelled ones.</span>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="none" data-uses="1a" aria-pressed="false">
-        <b>No training at all</b><span>A person writes the policy directly. In this demo, 1a&rsquo;s eight rules are fixed text; the only way its play changes is switching rules on or off.</span>
+        <b>No training at all</b><span>A person writes the policy directly. Example: a filter that is a hand-written list of banned phrases.</span>
         <em class="uses" aria-hidden="true"></em></button>
     </div>
     <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+    <aside class="search-note stages-note"><span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">fetched 2026-09-16; sources in Details</span></span>
+      <b>Pretraining and fine-tuning are stages, not methods.</b> Each stage of building a model uses one of the methods above.
+      Neither is only a generative-AI idea: a vision model can be pretrained on a large image set, then fine-tuned for a narrower
+      image task. Learning from human preferences is the exception here: every source this stage cites for it is language-model work.</aside>
     <div class="clarifiers">
       <p><b>Self-play is not self-supervised learning.</b> The value table can play against itself, but it still learns from game rewards, so its method is reinforcement learning.</p>
       <p><b>Gradient training is not evolution.</b> Backpropagation computes how prediction error changes with each weight; the update rule uses those derivatives to adjust the current network. Evolutionary optimization instead evaluates variations across a population of candidates.</p>
@@ -1963,6 +1986,18 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     </div>
     <p class="obs-cue" id="cue-4b" role="status" aria-live="polite"></p>
     <aside class="search-note"><b>Search and planning are AI problem-solving approaches, not architectures.</b> They explore possible actions or future states, and they can use any of these models to score what they find.</aside>
+  </section>
+
+  <section class="card map-card" id="nochange-card" aria-labelledby="nochange-title" hidden>
+    <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">the cards, fetched 2026-09-16, sources in Details; the line a press writes about this demo is Reasoned, read from its code</span></span>
+    <h3 id="nochange-title">Learning with no weight change &mdash; behaviour changes, parameters do not</h3>
+    <p class="panel-lede">1b asked <b>&ldquo;Does playing the AI above train it?&rdquo;</b> Here is the other side of that question: a model can appear to learn within a session without changing at all. Press a card.</p>
+    <div class="family-grid nochange-grid" role="group" aria-label="Learning with no weight change">
+      <button type="button" class="family-card nochange-card" data-nochange="context" aria-pressed="false"><b>In-context (few-shot) learning</b><span>Examples or instructions placed in the prompt change what a language model does. The GPT-3 paper ran its tasks with no gradient updates: the demonstrations were written into the text.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card nochange-card" data-nochange="retrieval" aria-pressed="false"><b>Retrieval and external memory</b><span>At answer time the model is handed information looked up in a store outside its weights. In the retrieval-augmented generation (RAG) paper, that store is a searchable index of Wikipedia.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card nochange-card" data-nochange="search" aria-pressed="false"><b>Search at decision time</b><span>Spend computation looking ahead before committing, instead of changing weights. Language-model research calls this using more test-time computation.</span><em class="holds" aria-hidden="true"></em></button>
+    </div>
+    <p class="obs-cue" id="cue-4c" role="status" aria-live="polite"></p>
   </section>
 
   <section class="check" aria-labelledby="check-4-title" data-refutation="true">
@@ -1992,14 +2027,10 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     </div>
     <button class="details-trigger" type="button" data-details="4" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Model types learning guide">
-      <article><span>Predict</span><p>An <b>image-to-text</b> model: what comes out?</p>
-        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="types">
-          <button type="button" class="predict-btn" data-answer="words" aria-pressed="false">Words</button>
-          <button type="button" class="predict-btn" data-answer="image" aria-pressed="false">Another image</button>
-          <button type="button" class="predict-btn" data-answer="mesh" aria-pressed="false">A 3-D mesh</button>
-        </div>
-        <span class="echo" hidden></span></article>
-      <article><span>Try</span><p>Press any <b>type card</b> to read what goes in and what comes out in Hugging Face&rsquo;s own words, then follow <b>Browse models</b> to see real models of that type.</p></article>
+      <!-- No Predict card here (operator ruling 2026-09-16, as for 1d): this
+           stage is informational; nothing on it runs a result a prediction
+           could be checked against. -->
+      <article><span>Try</span><p>Press any <b>type card</b> to read what goes in and what comes out in Hugging Face&rsquo;s own words, then follow <b>Browse models</b> to see real models of that type. Then read <b>Beyond one catalogue</b> for major types that list does not show.</p></article>
       <article><span>Takeaway</span><p>A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside. One neural-network family, the transformer, serves text, vision, audio, video and multimodal types; generating images, audio and video also leans on a different family, <b>diffusion models</b>, which Hugging Face keeps in a library of its own.</p></article>
     </div>
   </section>
@@ -2010,6 +2041,13 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     <p class="panel-lede">Each card names the job, then what goes in and what comes out. Press one for the catalogue&rsquo;s own definition and a link to real models of that type. Model counts are the catalogue&rsquo;s on the fetch date and will have moved.</p>
     <div class="type-grid" id="type-grid"></div>
     <p class="obs-cue" id="cue-5" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card map-card" aria-labelledby="beyond-title">
+    <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual" id="beyond-qual">each model&rsquo;s own page, fetched 2026-09-16</span></span>
+    <h3 id="beyond-title">Beyond one catalogue</h3>
+    <p class="panel-lede">The list above is one platform&rsquo;s catalogue of what people upload to it. Several of the most talked-about models are not on it, or are not filed under one of its tasks. Each card below names the job, then one real example, linked to that model&rsquo;s own page.</p>
+    <div class="type-grid" id="beyond-grid"></div>
   </section>
 
   <section class="card map-card" aria-labelledby="all-types-title">
@@ -2248,6 +2286,18 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">the authors&rsquo; summaries, not re-sourced this pass</span> the definitions on the cards</span>
           <p>The one-line descriptions of each method and family are the authors&rsquo; summaries. No figure is claimed on this stage.</p>
         </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">fetched 2026-09-16</span> the &ldquo;used for&rdquo; lines: pretraining, fine-tuning, distillation, preference learning</span>
+          <p>A language-model survey states that during pre-training an LLM is trained on &ldquo;(usually) unlabeled texts, usually in a self-supervised manner&rdquo;. The InstructGPT paper fine-tunes GPT-3 &ldquo;using supervised learning&rdquo; on labeller demonstrations, then further &ldquo;using reinforcement learning from human feedback&rdquo;. Hugging Face&rsquo;s TRL library lists Supervised Fine-Tuning, Reward Modeling, GRPO (&ldquo;an online learning algorithm&rdquo;) and knowledge distillation, whose trainer &ldquo;trains a smaller student model to match a teacher&rsquo;s next-token distribution&rdquo;. Pretraining is not only a language idea: the Vision Transformer paper reports results &ldquo;when pre-trained on large amounts of data and transferred&rdquo; to smaller image-recognition benchmarks.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">fetched 2026-09-16</span> learning with no weight change</span>
+          <p>GPT-3 was &ldquo;applied without any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model.&rdquo; Retrieval-augmented generation pairs a trained model with &ldquo;a dense vector index of Wikipedia&rdquo; as non-parametric memory. A study of test-time compute frames &ldquo;using more test-time computation&rdquo; as a way for language models to improve their outputs.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">read from this demo&rsquo;s code by the authors, not computed at runtime</span> what a no-weight-change card says about this demo</span>
+          <p>1a&rsquo;s rules 3 and 4 (<code>forkCells</code> and the forcing loop in <code>src/rules.js</code>) try each empty square on a copy of the board and count the threats it would make: a look-ahead redone every turn, with nothing fitted. The exhaustive search in <code>OG.verifyPolicyRole</code> (<code>src/engine.js</code>) takes a player and checks it for losing lines; it never chooses a move in play.</p>
+        </div>
         <h3>How it works</h3>
         <p>An <b>architecture</b> is how a model is built: what it stores and how it computes an answer. A
           <b>training method</b> is how its adjustable parts change. The two are separate choices, and the model types
@@ -2259,12 +2309,22 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
         <h3>Assumptions and simplifications</h3>
         <ul>
           <li>The cards are a wider map, not a complete catalogue of AI; families overlap and one system can combine several.</li>
-          <li>The five methods are common textbook categories; real systems mix them (a self-supervised pre-training step followed by supervised fine-tuning is one ordinary combination).</li>
+          <li>The five methods are common textbook categories; real systems mix them (a self-supervised pre-training step followed by supervised fine-tuning is one ordinary combination). Pretraining and fine-tuning are stages that use these methods, not further methods.</li>
           <li>&ldquo;No training at all&rdquo; is listed as a method so 1a has an honest place on the map; it is the absence of one.</li>
         </ul>
         <h3>Sources</h3>
         <ul>
           <li>The 1a&ndash;1c mapping: <code>src/rules.js</code> (no update step), <code>OG.trainGames</code> in <code>src/engine.js</code> (rewards), <code>NET.trainBatch</code> in <code>src/net.js</code> (frozen targets).</li>
+          <li><a href="https://arxiv.org/pdf/2402.06196" target="_blank" rel="noopener">Large Language Models: A Survey</a> &mdash; pre-training &ldquo;usually in a self-supervised manner&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> &mdash; supervised fine-tuning, then RLHF (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/index" target="_blank" rel="noopener">Hugging Face TRL</a> &mdash; SFT, reward modeling, GRPO, knowledge distillation (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/sft_trainer" target="_blank" rel="noopener">TRL SFT Trainer</a> &mdash; &ldquo;pairs of input and output sequences&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/distillation_trainer" target="_blank" rel="noopener">TRL Distillation Trainer</a> &mdash; a student matches a teacher (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/grpo_trainer" target="_blank" rel="noopener">TRL GRPO Trainer</a> &mdash; &ldquo;an online learning algorithm&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2010.11929" target="_blank" rel="noopener">An Image is Worth 16x16 Words (ViT)</a> &mdash; pre-trained, then transferred to smaller image benchmarks (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">Language Models are Few-Shot Learners (GPT-3)</a> &mdash; no gradient updates; demonstrations in the text (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</a> &mdash; a dense vector index of Wikipedia as memory (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2408.03314" target="_blank" rel="noopener">Scaling LLM Test-Time Compute Optimally</a> &mdash; improving outputs with more test-time computation (fetched 2026-09-16).</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> this stage names categories; it does not rank them, and it does not claim that any family is obsolete or that any method is always best.</div>
       </section>
@@ -2285,6 +2345,10 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <span class="panel-kicker"><span class="k-sourced">Sourced</span> one architecture family across many types</span>
           <p>Hugging Face describes its Transformers library as &ldquo;the model-definition framework for state-of-the-art machine learning models in text, computer vision, audio, video, and multimodal models&rdquo; &mdash; one family of neural-network definitions behind types on every branch of the catalogue.</p>
         </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">each model&rsquo;s own page, fetched 2026-09-16</span> Beyond one catalogue</span>
+          <p>Each card quotes the named model&rsquo;s own page (lab, vendor or paper), not Hugging Face. Two examples &mdash; Wan-Animate for character animation and 4C4D for free-viewpoint video &mdash; are current, verifiable examples of their type, chosen by the authors; they are not claims about any particular release a viewer may have seen.</p>
+        </div>
         <h3>How it works</h3>
         <p>A <b>type</b> is named by its job: what goes in and what comes out. The catalogue&rsquo;s task names are
           mostly built that way (text-to-image, image-to-text, text-to-speech) or name the output (classification,
@@ -2303,7 +2367,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           the tree and boosting families of stage 1d.</p>
         <h3>Assumptions and simplifications</h3>
         <ul>
-          <li>Hugging Face&rsquo;s catalogue is one taxonomy, chosen because it is the largest public one and is dated; other catalogues cut the jobs differently.</li>
+          <li>Hugging Face&rsquo;s catalogue is one taxonomy, chosen because it is the largest public one and is dated; other catalogues cut the jobs differently, and several widely discussed models are not on it &mdash; hence the second group.</li>
           <li>Model counts are a snapshot: the catalogue showed 3,069,798 models in total on the fetch date and grows daily.</li>
           <li>&ldquo;Image-to-mesh&rdquo; is not a catalogue name; the job lives under Image-to-3D, whose outputs include meshes.</li>
           <li>Following a Browse link leaves this page for huggingface.co; the demo itself fetches nothing.</li>
@@ -2317,6 +2381,14 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <li><a href="https://huggingface.co/docs/diffusers/index" target="_blank" rel="noopener">huggingface.co/docs/diffusers</a> &mdash; &ldquo;a library of state-of-the-art pretrained diffusion models for generating videos, images, and audio&rdquo; (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank" rel="noopener">stabilityai/stable-diffusion-xl-base-1.0</a> &mdash; &ldquo;Model type: Diffusion-based text-to-image generative model&rdquo;; the usage snippet compiles <code>pipe.unet</code> (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/black-forest-labs/FLUX.1-dev" target="_blank" rel="noopener">black-forest-labs/FLUX.1-dev</a> &mdash; &ldquo;a 12 billion parameter rectified flow transformer&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/models/genie/" target="_blank" rel="noopener">Genie 3 (Google DeepMind)</a> &mdash; world model; text to explorable environments (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/models/veo/" target="_blank" rel="noopener">Veo 3.1 (Google DeepMind)</a> &mdash; video generation with native audio (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/models/gemini-robotics/" target="_blank" rel="noopener">Gemini Robotics (Google DeepMind)</a> &mdash; vision-language-action model (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/science/alphafold/" target="_blank" rel="noopener">AlphaFold (Google DeepMind, Isomorphic Labs)</a> &mdash; protein structure and interactions (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/blog/gencast-predicts-weather-and-the-risks-of-extreme-conditions-with-sota-accuracy/" target="_blank" rel="noopener">GenCast (Google DeepMind)</a> &mdash; ensemble weather forecasts (fetched 2026-09-16).</li>
+          <li><a href="https://www.nvidia.com/en-us/geforce/broadcasting/broadcast-app/" target="_blank" rel="noopener">NVIDIA Broadcast</a> &mdash; background removal, replacement and blur (fetched 2026-09-16).</li>
+          <li><a href="https://humanaigc.github.io/wan-animate/" target="_blank" rel="noopener">Wan-Animate (Tongyi Lab, Alibaba)</a> &mdash; character animation from a performer&rsquo;s video (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2604.04063" target="_blank" rel="noopener">4C4D: 4 Camera 4D Gaussian Splatting</a> &mdash; 4D scenes from as few as four portable cameras (fetched 2026-09-16).</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> this stage shows what the world sorts models by and links to real ones. It does not run any of them, rank them, or claim that every model of a type shares one architecture.</div>
       </section>
@@ -2415,11 +2487,12 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <h3>Question</h3>
 <p>What else can a model be, and how else can it learn?</p>
 <h3>Predict prompt</h3>
-<p>None on this stage. 1d is a map of two axes, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
+<p>None on this stage. 1d is a map, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
 <h3>Activity</h3>
 <ol>
-  <li><span class="beat">0:00</span> The stage has two halves behind two buttons. Under <b>Training methods</b>, press each card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
+  <li><span class="beat">0:00</span> The stage has three parts behind three buttons. Under <b>Training methods</b>, press each card. The card faces do not say which model used them; the press does: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing. Point at the one-line &ldquo;used for&rdquo; notes: pretraining is self-supervised, fine-tuning and distillation are supervised, RLHF is reinforcement &mdash; stages, not extra methods.</li>
   <li><span class="beat">1:30</span> Switch to <b>Other architectures</b> and press a card: the line beneath says what that model stores and what it computes &mdash; linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
+  <li><span class="beat">2:15</span> Switch to <b>Learning with no weight change</b>: in-context learning, retrieval, search at decision time. Tie it to 1b&rsquo;s check: a model can appear to learn in a session without changing. Press <b>Search at decision time</b>: 1a&rsquo;s fork rules look one move ahead every turn; the demo&rsquo;s exhaustive search checks players and never picks a move.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>Architecture and training method are separate columns. 1c is a network trained by supervised learning; a network could equally be trained by reinforcement, and a table could be fitted to supervised targets.</p>
@@ -2431,11 +2504,12 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <h3>Question</h3>
 <p>If &ldquo;type&rdquo; means the job, what goes in and what comes out?</p>
 <h3>Predict prompt</h3>
-<p>An image-to-text model: what comes out? Press a prediction, then open the <b>Image-to-Text</b> card.</p>
+<p>None on this stage: it is informational, and nothing on it runs a result a prediction could be checked against.</p>
 <h3>Activity</h3>
 <ol>
   <li><span class="beat">0:00</span> Switch the top lens to <b>Model types</b>. Press three cards the room will recognise: text generation, text-to-speech, speech-to-text (automatic speech recognition). Each shows what goes in and comes out, then the catalogue&rsquo;s own definition.</li>
   <li><span class="beat">1:30</span> Press <b>Image-to-3D</b>: the job people call image-to-mesh. Follow <b>Browse models</b> on one card if you are online; the demo itself never fetches.</li>
+  <li><span class="beat">2:00</span> Scroll to <b>Beyond one catalogue</b>: eight major types the Hub list does not show &mdash; world models (Genie 3), video with sound (Veo 3.1), robot control (Gemini Robotics), protein structure (AlphaFold), weather (GenCast), background removal (NVIDIA Broadcast), character animation, free-viewpoint video &mdash; each linked to the model&rsquo;s own page.</li>
   <li><span class="beat">2:30</span> Scroll to the whole catalogue: every type Hugging Face lists, in its groups, with the model count on the fetch date.</li>
 </ol>
 <h3>Expected observation</h3>
@@ -6047,7 +6121,55 @@ FEATURED.forEach(f => {
 
 const count = GROUPS.reduce((a, g) => a + g.tasks.length, 0);
 
-const api = { FETCHED, SOURCES, GROUPS, FEATURED, count, modelsUrl, taskUrl, bySlug };
+/* BEYOND ONE CATALOGUE (operator, 2026-09-16: "it shouldn't just be hugging
+   face models"). The Hub list above is one platform's catalogue of what
+   people upload; several of the most talked-about models are not on it, or
+   are not filed under one of its tasks. One card per type, each with a named
+   example linked to that model's OWN page (lab, vendor or paper -- never
+   huggingface.co), and `quote` copied from that page on `fetched`. `in` /
+   `out` are this demo's plain words for the quote, kept to what it states.
+
+   Two examples stand in for releases the operator saw but did not name
+   (character animation; free-viewpoint video). They are examples of the
+   TYPE, verified on their own pages, not claims to be the model the
+   operator meant. Dropped for the eight-card cap, not for sourcing:
+   GNoME (materials) and AlphaZero (game playing). */
+const BEYOND = [
+  { type: 'Interactive world model', example: 'Genie 3', org: 'Google DeepMind',
+    url: 'https://deepmind.google/models/genie/', fetched: '2026-09-16',
+    in: 'a text description of a place', out: 'a photorealistic world you can move around in, generated as you go',
+    quote: 'Genie 3 is a general-purpose world model. It uses simple text descriptions to generate photorealistic environments that can be explored in real-time.' },
+  { type: 'Video generation with sound', example: 'Veo 3.1', org: 'Google DeepMind',
+    url: 'https://deepmind.google/models/veo/', fetched: '2026-09-16',
+    in: 'a written prompt', out: 'a video clip, with sound effects, ambient noise and dialogue generated alongside it',
+    quote: 'Veo 3 lets you add sound effects, ambient noise, and even dialogue to your creations – generating all audio natively.' },
+  { type: 'Robot control (vision-language-action)', example: 'Gemini Robotics', org: 'Google DeepMind',
+    url: 'https://deepmind.google/models/gemini-robotics/', fetched: '2026-09-16',
+    in: 'what the robot sees, plus an instruction in words', out: 'motor commands that move the robot',
+    quote: 'Our most advanced vision-language-action model (VLA) that converts vision and language input into motor control, enabling a robot to take action.' },
+  { type: 'Protein structure prediction', example: 'AlphaFold', org: 'Google DeepMind and Isomorphic Labs',
+    url: 'https://deepmind.google/science/alphafold/', fetched: '2026-09-16',
+    in: 'a protein, as its chain of amino acids', out: 'a predicted 3-D structure — AlphaFold 3 also predicts how molecules interact',
+    quote: "Google DeepMind and Isomorphic Labs introduce AlphaFold 3, which predicts the structure and interactions of all of life's molecules." },
+  { type: 'Weather forecasting', example: 'GenCast', org: 'Google DeepMind',
+    url: 'https://deepmind.google/blog/gencast-predicts-weather-and-the-risks-of-extreme-conditions-with-sota-accuracy/', fetched: '2026-09-16',
+    in: 'the most recent state of the weather', out: 'an ensemble of 50 or more possible forecasts, up to 15 days ahead',
+    quote: '…a GenCast forecast comprises an ensemble of 50 or more predictions, each representing a possible weather trajectory.' },
+  { type: 'Background removal (video matting)', example: 'NVIDIA Broadcast', org: 'NVIDIA',
+    url: 'https://www.nvidia.com/en-us/geforce/broadcasting/broadcast-app/', fetched: '2026-09-16',
+    in: 'live webcam video', out: 'the same video with the background removed, replaced or blurred',
+    quote: 'Background Removal, Replacement, and Blur allow you to customize your background without the need for expensive equipment' },
+  { type: 'Performance-driven character animation', example: 'Wan-Animate', org: 'Tongyi Lab, Alibaba',
+    url: 'https://humanaigc.github.io/wan-animate/', fetched: '2026-09-16', standIn: true,
+    in: 'a picture of a character, plus an ordinary video of a performer', out: 'a video of that character making the performer’s movements and expressions',
+    quote: "Wan-Animate can animate any character based on a performer's video, precisely replicating the performer's facial expressions and movements to generate highly realistic character videos." },
+  { type: 'Free-viewpoint (4D) video', example: '4C4D: 4 Camera 4D Gaussian Splatting', org: 'Zhou, Yang, Han et al., CVPR 2026',
+    url: 'https://arxiv.org/abs/2604.04063', fetched: '2026-09-16', standIn: true,
+    in: 'videos of one moving scene from as few as four portable cameras', out: 'a 4-D scene that can be watched from viewpoints no camera stood at',
+    quote: 'This paper tackles the challenge of recovering 4D dynamic scenes from videos captured by as few as four portable cameras.' }
+];
+
+const api = { FETCHED, SOURCES, GROUPS, FEATURED, BEYOND, count, modelsUrl, taskUrl, bySlug };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.MODEL_TYPES = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
@@ -6084,11 +6206,12 @@ const S = {
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
-  predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
+  predictions: {},     // Predict-card answers by key: rules, one, net (1d and Model types have no Predict: they are maps)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
   family: null,        // stage 1d: the architecture-family card that is pressed
-  half: 'methods',     // stage 1d: which of its two halves is showing
+  half: 'methods',     // stage 1d: which of its three parts is showing
+  nochange: null,      // stage 1d: the no-weight-change card that is pressed
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -7977,8 +8100,7 @@ function cue(text, warm) {
 const PREDICT_LABELS = {
   rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
   one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
-  net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
-  types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
+  net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' }
 };
 function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
 function echo(key, html) { const e = echoEl(key); e.innerHTML = html; e.hidden = false; }
@@ -8054,8 +8176,12 @@ function revealOne() {
 
 const USES_LABEL = { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' };
 const METHOD_CUE = {
-  supervised: '1c: the network fits frozen scores that a fresh 1b table produced — inputs paired with targets, and the targets came from another model.',
-  reinforcement: '1b: the table updates a position value after each win, loss and draw it plays in training — rewards, not targets.',
+  /* The "in this demo" answer lives HERE and nowhere on the card face
+     (operator, 2026-09-16: the Supervised card's visible text gave away what
+     pressing it reveals). A card shows the general definition, an example
+     and its "used for" line; the press writes which playable model used it. */
+  supervised: '1c: the network fits frozen scores that a fresh 1b table produced — inputs paired with targets, and the targets came from another model, not a person. A student fitting a teacher\u2019s outputs is the shape of distillation.',
+  reinforcement: '1b: the table updates a position value after each win, loss and draw it plays in training, including games against itself — rewards, not targets.',
   none: '1a: eight rules are fixed text; nothing in it is fitted, and the only way its play changes is switching rules on or off.',
   unsupervised: 'none of the three: no playable model here looks for structure without a target or a reward.',
   'self-supervised': 'none of the three: 1b plays itself, but it learns from game rewards, so that is reinforcement learning, not self-supervision.',
@@ -8105,14 +8231,41 @@ $$('.family-card').forEach(c => c.addEventListener('click', () => {
   S.family = S.family === c.dataset.family ? null : c.dataset.family;
   renderFamilies();
 }));
-/* Which half of 1d is showing. Two buttons, one card visible at a time;
-   the stage's check card and the Details drawer are outside both halves. */
+/* The third part of 1d: ways behaviour changes while the trained
+   parameters do not. The cards carry the Sourced general claim; the press
+   writes the Reasoned line about this demo, read from its code:
+   rules.js forkCells / rule 4 try each empty square on a copy of the board
+   (a look-ahead redone every turn, nothing fitted), and OG.verifyPolicyRole
+   in engine.js is a CHECKER of a policy -- it never chooses a move in play,
+   so this line must not say the demo's search changes how anything plays. */
+const NOCHANGE_CUE = {
+  context: 'nothing in this demo reads a prompt. The nearest case is 1b\u2019s question: its eras are frozen, so a different result against one comes from how the game went, not from anything it learned.',
+  retrieval: 'nothing in this demo looks anything up in an outside store. 1b\u2019s table is read on every move, but it is the model\u2019s own learned values, not an external memory.',
+  search: '1a. Rules 3 and 4 try each empty square on a copy of the board and count the threats it would make — a small look-ahead, redone every turn, with nothing learned. The exhaustive search elsewhere in this demo is different: it checks a player for losing lines and never picks a move.'
+};
+function renderNochange() {
+  $$('.nochange-card').forEach(c => {
+    const on = c.dataset.nochange === S.nochange;
+    c.setAttribute('aria-pressed', String(on));
+    $('.holds', c).textContent = on ? 'in this demo — below' : '';
+  });
+  const out = $('#cue-4c');
+  if (!S.nochange) { out.textContent = ''; return; }
+  const card = $('.nochange-card[data-nochange="' + S.nochange + '"]');
+  out.textContent = $('b', card).textContent + ' → in this demo: ' + NOCHANGE_CUE[S.nochange];
+}
+$$('.nochange-card').forEach(c => c.addEventListener('click', () => {
+  S.nochange = S.nochange === c.dataset.nochange ? null : c.dataset.nochange;
+  renderNochange();
+}));
+/* Which part of 1d is showing. Three buttons, one card visible at a time;
+   the stage's check card and the Details drawer are outside all of them. */
+const HALVES = { methods: '#methods-card', families: '#families-card', nochange: '#nochange-card' };
 function renderHalf() {
   /* Scoped to #map-switch: the 1c board switch reuses the .map-btn look
      and must not be driven by 1d's state (found in the browser pass). */
   $$('#map-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
-  $('#methods-card').hidden = S.half !== 'methods';
-  $('#families-card').hidden = S.half !== 'families';
+  Object.entries(HALVES).forEach(([half, sel]) => { $(sel).hidden = S.half !== half; });
 }
 $$('#map-switch .map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
 
@@ -8142,10 +8295,19 @@ function renderTypes() {
     if (!d.open) return;
     const f = T.FEATURED.find(x => x.slug === d.dataset.slug);
     $('#cue-5').textContent = `${f.name}: ${f.in} in, ${f.out} out. That is the whole definition of the type; it says nothing about what is inside.`;
-    if (f.slug === 'image-to-text') {
-      revealPrediction('types', 'words', 'Image-to-text takes an image in and puts text out — a caption, or the text printed in the picture (the catalogue\u2019s own definition).');
-    }
   }));
+  /* Beyond one catalogue: built from T.BEYOND, each link the model's own
+     page as recorded in the data, never typed into the markup. Always open
+     (no press): the example and its link are the content. A stand-in card
+     says so on its face. */
+  $('#beyond-grid').innerHTML = T.BEYOND.map(b =>
+    `<article class="type-card beyond-card"><b>${esc(b.type)}</b>` +
+    `<span class="io"><i>${esc(b.in)}</i> in &rarr; <i>${esc(b.out)}</i> out</span>` +
+    `<span class="also">example: ${esc(b.example)} (${esc(b.org)})` +
+    (b.standIn ? ' &mdash; one current example of the type' : '') + `</span>` +
+    `<div class="body"><q>${esc(b.quote)}</q>` +
+    `<span class="n"><span class="k-sourced">Sourced</span> fetched ${esc(b.fetched)}</span>` +
+    `<a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.example)} &mdash; its own page &rarr;</a></div></article>`).join('');
 }
 renderTypes();
 
@@ -8251,14 +8413,14 @@ document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};
-  S.method = null; S.family = null; S.half = 'methods';
+  S.method = null; S.family = null; S.nochange = null; S.half = 'methods';
   $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
   $$('.type-card').forEach(d => { d.open = false; });
   $('#learned-body').innerHTML = '';
   $('#learned-sub').textContent = '';
   const nv = $('#network-view');
   delete nv.dataset.layer; delete nv.dataset.neuron;
-  renderMethods(); renderFamilies(); renderHalf();
+  renderMethods(); renderFamilies(); renderNochange(); renderHalf();
   resetAll(true);
 });
 
@@ -8266,7 +8428,7 @@ document.addEventListener('lessonreset', () => {
 
 resetAll();
 renderScore();
-renderMethods(); renderFamilies(); renderHalf();
+renderMethods(); renderFamilies(); renderNochange(); renderHalf();
 /* The shell may already have selected a stage from a #stage-N hash before
    this script ran, and the old public deep links (#rules, #learning,
    #neural) are honoured through the flags the shell parsed. */

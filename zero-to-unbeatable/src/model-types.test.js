@@ -82,6 +82,33 @@ test('every outbound link is BUILT from a catalogue slug, not typed', () => {
   }
 });
 
+test('Beyond one catalogue: every card is sourced to the model\'s own page, dated, and not Hugging Face', () => {
+  /* Operator, 2026-09-16: model types must not be only Hugging Face. So the
+     second group is checked for exactly that: no card may point at the Hub,
+     and each carries its own URL, fetch date and quoted line. */
+  assert.ok(T.BEYOND.length >= 6 && T.BEYOND.length <= 8, `card count ${T.BEYOND.length}`);
+  for (const b of T.BEYOND) {
+    assert.ok(b.type && b.example && b.org, JSON.stringify(b));
+    assert.match(b.url, /^https:\/\/[a-z0-9.-]+\.[a-z]{2,}\//, `${b.example} url`);
+    assert.ok(!/huggingface\.co|hf\.co/i.test(b.url), `${b.example} links to Hugging Face`);
+    assert.match(b.fetched, /^\d{4}-\d{2}-\d{2}$/, `${b.example} fetch date`);
+    assert.ok(b.in && b.out, `${b.example} in/out`);
+    assert.ok(b.quote && b.quote.length > 30, `${b.example} has no quoted line`);
+  }
+  assert.equal(new Set(T.BEYOND.map(b => b.type)).size, T.BEYOND.length, 'one card per type');
+  /* The operator-named examples are present. */
+  for (const name of ['AlphaFold', 'NVIDIA Broadcast']) {
+    assert.ok(T.BEYOND.some(b => b.example === name), `missing ${name}`);
+  }
+  /* Positive control for the not-Hugging-Face probe: the same regex must fire
+     on a Hub URL, or its silence above proves nothing. */
+  assert.ok(/huggingface\.co|hf\.co/i.test(T.modelsUrl('text-generation')));
+  /* And the page must carry each own-page URL (app.js builds the card links
+     from this module; the Details drawer lists them as literal hrefs). */
+  const built = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+  for (const b of T.BEYOND) assert.ok(built.includes(`href="${b.url}"`), `Sources list lacks ${b.url}`);
+});
+
 test('the provenance is recorded and dated', () => {
   assert.match(T.FETCHED, /^\d{4}-\d{2}-\d{2}$/);
   assert.equal(T.SOURCES.tasks, 'https://huggingface.co/tasks');

@@ -44,16 +44,23 @@ Predict/Try/Takeaway strip, the board and the controls together.
   Ultimate tic-tac-toe is an optional representation-limit extension, one press
   away on the board switch above this stage's board: a network cannot recover
   facts absent from its inputs merely by changing weights.
-- **1d · Other architectures & training methods** holds both axes on one screen.
-  Six pressable **training method** cards — supervised, unsupervised,
+- **1d · Other architectures & training methods** holds three parts behind one
+  switch. Six pressable **training method** cards — supervised, unsupervised,
   self-supervised, reinforcement, semi-supervised, and no training at all — light
   up which of 1a, 1b and 1c used each one (supervised → 1c, reinforcement → 1b,
-  none → 1a; the other three light nothing, which is the point). Six
+  none → 1a; the other three light nothing, which is the point). The card faces
+  do not state the answer; the press does. Three cards carry a sourced one-line
+  "used for" note — pretraining (self-supervised), supervised fine-tuning and
+  distillation (supervised), RLHF and GRPO (reinforcement) — because pretraining
+  and fine-tuning are stages that use a method, not further methods. Six
   **architecture** cards cover linear/logistic models, decision trees, ensembles,
   nearest neighbours, support-vector machines and probabilistic/Bayesian models.
   Search and planning are named separately as problem-solving approaches. It also
   keeps the two clarifications the old learning tab carried: self-play is not
-  self-supervised learning, and gradient training is not evolution.
+  self-supervised learning, and gradient training is not evolution. The third
+  part, **Learning with no weight change**, covers in-context learning, retrieval
+  and search at decision time, each sourced, with a press line on what this demo
+  does (1a's fork rules look ahead; the exhaustive search only checks players).
 
 **Model types** is the other lens: what a model *does*. It is built from **Hugging
 Face's own task taxonomy**, fetched on **2026-09-16** and cited on the page —
@@ -66,7 +73,11 @@ recognition, image-to-3D, text-to-video, image-to-text, image-text-to-text, imag
 classification, tabular classification) give what goes in, what comes out, the
 catalogue's verbatim definition and an outbound link to real models of that type.
 Below them the whole catalogue is listed in its own six groups, 47 tasks, each
-chip carrying its model count on the fetch date and linking to the hub. The
+chip carrying its model count on the fetch date and linking to the hub. Between
+them, **Beyond one catalogue** lists eight major types the Hub list does not
+show, each with a named example linked to that model's own page (Genie 3, Veo
+3.1, Gemini Robotics, AlphaFold, GenCast, NVIDIA Broadcast, Wan-Animate, 4C4D),
+carried in `BEYOND` in the same file. The stage has no Predict card. The
 taxonomy lives in `src/model-types.js` with its provenance and its probe controls
 recorded; nothing is written from memory, and nothing is fetched at runtime — the
 links are ordinary hyperlinks the reader may choose to follow.
