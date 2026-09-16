@@ -350,7 +350,7 @@
     <h3 id="check-2-title">Why is the periapsis burn the cheap one?</h3>
     <div class="check-options">
       <button class="check-option correct" type="button" aria-pressed="false"
-              data-feedback="The energy a burn adds is v&middot;&Delta;v + &frac12;&Delta;v&sup2;, and the dominant term carries your speed at the moment of the burn. On this orbit that is 6.09 km/s at periapsis against 1.39 km/s at apoapsis, which is the whole 2.77&times; gap.">Because you are moving fastest there, and the energy added is v&middot;&Delta;v + &frac12;&Delta;v&sup2;</button>
+              data-feedback="The energy a burn adds is v&middot;&Delta;v + &frac12;&Delta;v&sup2;, and the dominant term carries your speed at the moment of the burn. On this orbit that is 6.08 km/s at periapsis against 1.39 km/s at apoapsis &mdash; a 4.4&times; speed ratio. The &Delta;v ratio comes out smaller, 2.77&times;, because the second term, &frac12;&Delta;v&sup2;, grows with the burn itself and does more of the work in the big apoapsis burn.">Because you are moving fastest there, and the energy added is v&middot;&Delta;v + &frac12;&Delta;v&sup2;</button>
       <button class="check-option wrong" type="button" aria-pressed="false"
               data-feedback="Proximity is not the mechanism. The formula contains v, not r. Being deep in the well matters only because falling there is what made you fast &mdash; a ship moving equally fast far from Earth would gain exactly as much from the same burn.">Because you are closer to Earth, so gravity helps the burn along</button>
       <button class="check-option wrong" type="button" aria-pressed="false"
@@ -683,13 +683,15 @@
             four are minima found against this engine offline.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">our inference from the measurement above; no specific flown mission sourced here</span> why low-thrust stages use repeated perigee burns</span>
-          <p>The 731-against-1,498 result is the reason the technique exists: if your engine cannot
-            deliver its &Delta;v inside a short arc, splitting it across successive periapsis
-            passes keeps every unit of it near maximum speed. We reason that from the measurement
-            on this page rather than from a flown example &mdash; we did not source a specific
-            mission's burn plan, and a presenter should present it as the principle, not as a
-            citation.</p>
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">the practice &mdash; ESA's SMART-1 mission page, 2006; the motive is reasoned from this page's measurement and MIT 16.07 L17</span> low-thrust stages escape by repeated perigee burns</span>
+          <p>A flown mission did exactly this. ESA's SMART-1 spent its Earth-escape cruise, in the
+            operator's words, with "thrust arcs around the perigee and coast arcs around the
+            apogee", raising apogee a little on every pass until the Moon captured it &mdash; the
+            practice, stated by the people who flew it. <em>Why</em> it works is not stated on that
+            page; it is what this page measures (731 against 1,498) and what MIT's 16.07 lecture
+            notes derive: for a given &Delta;v the energy gain is largest where the speed is
+            largest, so a burn too long for one perigee pass is split across several. Present the
+            practice as sourced and the motive as reasoning.</p>
         </div>
         <h3>How it works</h3>
         <div class="details-formula">t<sub>burn</sub> = &Delta;v / a &nbsp;&middot;&nbsp; centre the arc on periapsis</div>
@@ -714,6 +716,14 @@
         <ul>
           <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html" target="_blank" rel="noopener">NASA NSSDC, Earth Fact Sheet</a>
             &mdash; read 2026-09-16: the &mu; and radius the powered arcs are integrated against.</li>
+          <li><a href="https://www.esa.int/Science_Exploration/Space_Science/SMART-1/Ion_engine_gets_SMART-1_to_the_Moon" target="_blank" rel="noopener">ESA, "Ion engine gets SMART-1 to the Moon"</a>
+            (31 August 2006) &mdash; read 2026-09-16: "thrust arcs around the perigee and coast arcs
+            around the apogee"; the lunar braking manoeuvre "was used around perilune".</li>
+          <li><a href="https://ocw.mit.edu/courses/16-07-dynamics-fall-2009/e6393974ce4ed22b095f2e1d1a6a8e81_MIT16_07F09_Lec17.pdf" target="_blank" rel="noopener">MIT OCW 16.07 Dynamics, Lecture L17, Orbit Transfers</a>
+            (Widnall &amp; Peraire, 2008) &mdash; read 2026-09-16: "for a given &Delta;v, the change in
+            energy will be largest when &hellip; v<sub>i</sub> is maximum", with the perigee-escape
+            example; also the impulsive assumption "when the burn time of the rocket is much smaller
+            than the period of the orbit" that this stage relaxes.</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> with steering losses out and the rocket
           equation out, this stage shows the <i>shape</i> of the finite-thrust penalty, not its
