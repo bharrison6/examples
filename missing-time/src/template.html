@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
+<meta name="description" content="Sample synthetic rock layers, reveal supplied chronology anchors for a missing interval, and practice conclusions that stop where the local evidence stops.">
+<title>Gaps in the Rock Record</title>
+<!--
+  Gaps in the Rock Record (missing-time) — a single-file, offline rock-record
+  and preservation investigation. Demo 15 of 16, Part four (Example projects),
+  Geology, in AI: From Zero to Takeoff.
+
+  Three stages, one per authored case in src/model.js: a continuous section
+  (does a last appearance settle extinction?), a cut bank (does a gap explain
+  its own cause, and where do removed fossils go?), and a paired-section
+  comparison (does a second section settle what a first section's gap means?).
+
+  The three cases share one investigation mechanism (sample layers, reveal
+  supplied chronology, choose a warranted conclusion, reveal the authored
+  history), so ONE shared #investigation instrument is moved between the three
+  stage hosts by src/app.js rather than tripling the markup and the render
+  code — see the note in src/app.js above moveActivityTo(). Each stage keeps
+  its own stage-intro, Predict guess capture and Check-yourself card, which
+  are genuinely stage-specific.
+
+  Built against the shared lesson shell at ../tools/lesson-shell (build-time
+  only — see build.js). Companion: demo-guide.html, shipped as
+  teacher-guide.html. model.js is the tested production model, bundled
+  verbatim — see test-model.js.
+-->
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
+<style>
+/*__CSS__*/
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University &middot; Part four &middot; Geology</span>
+      <h1>Gaps in the Rock Record</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Three stages, ungated: the three cases are independent investigations
+       with no unlock sequence (confirmed by reading model.js — no progression
+       concept). A learner may visit them in any order. -->
+  <nav class="stages" role="tablist" aria-label="Gaps in the Rock Record lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Section A</span><small>Does a last appearance settle extinction?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Section B</span><small>Does a gap explain its own cause?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Sections C &amp; D</span><small>Does a second section settle it?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- =========================== STAGE 1 &middot; Section A ================= -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage 1</span>
+      <h2 id="stage-1-title">A continuous section. Does absence mean extinction?</h2>
+      <p class="stage-question">Does a species' last appearance in sampled rock mark where it went extinct?</p>
+      <p class="refresh"><b>Before you start.</b> Two measurements stay separate throughout this activity:
+        <b>rock thickness</b> in metres records surviving strata, and <b>model time</b> in <b>Myr</b>
+        (one Myr is one million years) is the elapsed clock this authored model runs on. A <b>fossil
+        specimen</b> marks where and when it was buried &mdash; not a full record of the organism's
+        whole existence.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Guess before you sample: does finding where a fossil stops appearing settle whether the species went extinct there?
+        <span class="mt-predict-btns" role="group" aria-label="Your guess for Section A">
+          <button class="mt-guess" type="button" data-stage="0" data-guess="yes">Yes, it settles it</button>
+          <button class="mt-guess" type="button" data-stage="0" data-guess="no">No, it doesn&rsquo;t</button>
+        </span></p><span class="echo" id="echo-1" hidden></span></article>
+      <article><span>Try</span><p>Press <b>sample</b> on every surviving layer in Section A, then <b>Show supplied age evidence</b> to see the section's Myr chronology.</p></article>
+      <article><span>Takeaway</span><p>A local last observation in sampled rock is where the record stops, not a proven extinction moment.</p></article>
+    </div>
+  </section>
+
+  <div class="mt-investigation-host" id="investigation-host-1"></div>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">Asteria is sampled in the lower two units of Section A but not in Gold sandstone above them. Does that alone establish that Asteria went globally extinct partway up the section?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="No. The sampled section only shows a local last observation &mdash; where this one investigation's evidence stops. Global distribution, sampling completeness elsewhere, and a dating method are not part of what a single local section can show.">No &mdash; a local last observation is not a global extinction record</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="That treats a sampling limit as a biological fact. Once a fossil stops appearing in ONE section's surviving rock, all it establishes is that this section's record ends there &mdash; not that the organism itself ended everywhere at that moment.">Yes &mdash; once a fossil stops appearing, the organism is extinct</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- =========================== STAGE 2 &middot; Section B ================= -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage 2</span>
+      <h2 id="stage-2-title">A missing interval, and where its fossils went.</h2>
+      <p class="stage-question">Is a rock gap always someone's last moment, and do a gap's missing fossils end up sitting at its boundary?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>contact</b> is the surface between two rock units. Where
+        rock &mdash; and therefore time &mdash; is missing across it, that missing interval is a
+        <b>hiatus</b>. Section B's hiatus is produced by an authored <b>erosion</b> event, which
+        <b>deletes</b> rock (and any fossils inside it) rather than moving it anywhere. Section A handed
+        forward that a local record has an edge; here the edge is a gap rather than the top of the
+        section.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Guess before you look: once you find rock missing here, will the surviving evidence also tell you why it is missing?
+        <span class="mt-predict-btns" role="group" aria-label="Your guess for Section B">
+          <button class="mt-guess" type="button" data-stage="1" data-guess="yes">Yes, it will</button>
+          <button class="mt-guess" type="button" data-stage="1" data-guess="no">No, it won&rsquo;t</button>
+        </span></p><span class="echo" id="echo-2" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Show supplied age evidence</b> to reveal the gap, then <b>sample</b> Red siltstone and Cross-bedded sand on either side of it.</p></article>
+      <article><span>Takeaway</span><p>Erosion deletes rock and its fossils outright; nothing is relocated to the boundary that erosion leaves behind.</p></article>
+    </div>
+  </section>
+
+  <div class="mt-investigation-host" id="investigation-host-2"></div>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Erosion removed the top of Red siltstone and all of Pale limestone in Section B. Are the fossils that were once in that removed rock now sitting at today's contact, waiting to be found there?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="No. Reveal shows the erosion event deletes the removed rock and every fossil inside it (see revealBox); nothing is relocated to where the contact now sits. A learner sampling the contact surface itself would find nothing from the removed interval.">No &mdash; erosion deletes the removed rock and its fossils; nothing moves to the boundary</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="That is what this model specifically does not do. The authored erosion event subtracts thickness (and any fossil inside the removed thickness) from the top of each layer it crosses; it does not relocate anything downward to where erosion stopped.">Yes &mdash; the fossils get pushed down to where the erosion stopped</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- =========================== STAGE 3 &middot; Sections C &amp; D ========= -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage 3</span>
+      <h2 id="stage-3-title">Two sections, one gap between them.</h2>
+      <p class="stage-question">Does a second section that keeps depositing through a first section's gap settle what the gap means?</p>
+      <p class="refresh"><b>Before you start.</b> Sections C and D start identically, then diverge: C has a
+        <b>pause</b> (no deposition, but no erosion either &mdash; a hiatus with a different cause than
+        Section B's), while D keeps accumulating rock through that same span. Stage 2 showed one cause
+        of a gap; this stage's pause shows a second, equally valid one.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Guess before you compare: if Section D preserves fossils from exactly the span missing at C, does that settle the question for the species everywhere?
+        <span class="mt-predict-btns" role="group" aria-label="Your guess for Sections C and D">
+          <button class="mt-guess" type="button" data-stage="2" data-guess="yes">Yes, it settles it</button>
+          <button class="mt-guess" type="button" data-stage="2" data-guess="no">No, it doesn&rsquo;t</button>
+        </span></p><span class="echo" id="echo-3" hidden></span></article>
+      <article><span>Try</span><p><b>Show supplied age evidence</b> for both sections, then <b>sample</b> below C's gap and the matching Green mudstone layer in D.</p></article>
+      <article><span>Takeaway</span><p>A second section can show what a gap hides locally, but two local sections still cannot certify a global claim.</p></article>
+    </div>
+  </section>
+
+  <div class="mt-investigation-host" id="investigation-host-3"></div>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">Section D preserves fossils from exactly the span missing at Section C. Do these two local sections, compared, prove a global claim about where the species lived?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="No. Comparing C and D shows that D's local record was not blank during C's pause &mdash; it does not extend to a claim about anywhere the activity did not sample. Two local sections are still two local sections, however informative the comparison is.">No &mdash; two local sections are not a global sample, however informative</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Comparing two sections is more evidence than one, but it is still local evidence from two named places. It shows the gap at C is not evidence of absence everywhere &mdash; it does not upgrade to a general, global claim.">Yes &mdash; comparing two sections is enough to settle a global claim</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span><b>Gaps in the Rock Record</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; synthetic model inspired by preservation/occurrence-event teaching contexts including StratPal; no faculty endorsement is claimed</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="teacher-guide.html" target="_blank" rel="noopener">Printable guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE &middot; opens on load ═════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to investigate missing time</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">A rock column always has less time in it than it looks like it should. <b>Where did the missing time go, and what can you honestly conclude from what survived?</b></p>
+    <p class="note">Where this sits: this is one of ten Part-four example projects &mdash; an AI-built classroom tool whose goal is a bounded rock-record inference, its engine is a live synthetic ledger, and its assumptions are one tap away.</p>
+    <ol>
+      <li><b>Section A.</b> Press <b>sample</b> on each surviving layer, then <b>Show supplied age evidence</b> to see the section's chronology.</li>
+      <li><b>Section B.</b> Reveal the gap, then sample the surviving rock immediately below and above it.</li>
+      <li><b>Sections C &amp; D.</b> Reveal chronology for both, then sample below C's gap and the matching layer in D.</li>
+      <li>In every stage, choose a <b>warranted conclusion</b> from the visible evidence, then <b>reveal</b> the authored history to compare.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The stage tabs switch sections. <b>Details</b> opens the ledger model, the constant-rate mapping,
+      and the assumptions for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> has
+      <b>Open Presenter Notes</b>, <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Time</h3>
+    <p>Eight to twelve minutes for all three sections; about three minutes each if run separately.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Section A</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS &middot; the contract triad ═════════ -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen: the learning goals, the ledger model in
+      presenter terms, per-section teaching notes and a misconceptions bank. This is the printable
+      guide itself, not a summary of it.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b>
+      button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to a fresh load: Section A selected, every guess and sample cleared in all
+      three sections, supplied age evidence and revealed histories hidden again, and every conclusion
+      unchosen. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS &middot; one section per stage ═══════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Section A</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live, and what is fixed</span>
+        <h3>The evidence display is computed here; the case history is a fixed teaching fixture</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the columns, the ledger and the evidence-readiness check</span>
+          <p>Every time you sample a layer or reveal supplied ages, the linked rock/time views, the
+            evidence ledger, and whether a conclusion is allowed yet are all recomputed here from
+            Section A's authored ledger. Nothing is looked up.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> Section A's case history itself</span>
+          <p>The layer sequence, deposition rates, fossil placements and the authored reveal text are a
+            hand-authored teaching fixture standing in for a real stratigraphic section &mdash; not a
+            simulation that could have come out differently.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">depth in a layer (m) = rate (m/Myr) &times; elapsed time in that layer (Myr)</div>
+        <p>Each layer deposits at a stated constant rate. A sample reveals only the specimens whose
+          position survives; specimen ages are placed directly on the authored timeline, then mapped to
+          a depth using that layer's own rate. Chronology anchors mark each surviving layer's base and
+          top in Myr; the model checks that every anchor agrees with the rock-derived mapping before it
+          will show it.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>You never derive an exact Myr value from thickness yourself.</b> The only source of an
+            exact time value anywhere in this activity is the supplied chronology anchors revealed by
+            <b>Show supplied age evidence</b> &mdash; mirroring how real geologic ages come from
+            independent dating evidence, not from measuring a bed and assuming a rate.</li>
+          <li><b>Deposition is constant-rate within each layer.</b> A real bed's rate can vary; this
+            model holds it fixed so the mapping is exact rather than approximate.</li>
+          <li><b>No dating uncertainty and no measurement error are modeled.</b> A supplied Myr value is
+            exact here; a real radiometric or biostratigraphic age carries a stated error bar this
+            activity omits.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>This stage cites no external figures: every number is either computed live from the
+          authored ledger or is part of the hand-authored fixture itself. The activity's event/occurrence
+          framing takes inspiration from preservation/occurrence-event teaching contexts including
+          StratPal (see the footer); that is context, not a data source for any number shown here.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> this model does not simulate global species
+          distribution, transport, or a real dating method. "Extinction" here is only ever a local
+          last-appearance in one authored section, and equal rock thickness in this section's own three
+          layers does not mean equal elapsed time &mdash; each layer's own rate decides that.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live, and what is fixed</span>
+        <h3>The gap and its removed material are computed here; the erosion event itself is authored</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the gap's Myr span and which fossils the erosion removed</span>
+          <p>Once you reveal Section B's chronology, the size of the gap and exactly which specimens the
+            erosion event removed (versus which survive) are computed here from the ledger, not looked
+            up or pre-rendered.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> Section B's erosion event and its removed thickness</span>
+          <p>That an erosion event occurred, how much rock it removed, and from which layers, are fixed
+            teaching-fixture facts &mdash; authored so this stage has a gap with a knowable, revealable
+            cause, rather than an unexplained one.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">removed thickness is subtracted top-down until the authored erosion amount is used up</div>
+        <p>The erosion event removes rock starting from the top of the section downward, deleting whole
+          layers first and then partially eating into the next one. Any fossil whose position falls
+          inside the removed thickness is deleted along with that rock &mdash; it is not moved to a new
+          position.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Erosion deletes; it does not relocate.</b> A removed fossil is gone from the surviving
+            column, not repositioned at the resulting contact &mdash; the Check-yourself item on this
+            stage tests exactly this.</li>
+          <li><b>The gap's cause is authored, not inferred.</b> In a real section you would need
+            independent evidence to tell an erosional hiatus from a non-depositional one; here the
+            reveal simply states which one this case is.</li>
+          <li><b>A hiatus does not require erosion in general.</b> This case's gap happens to be
+            erosional; Stage 3's Section C pause shows a gap with no erosion at all. Do not generalize
+            from one case to "every gap means erosion."</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>No external figures are cited on this stage; the gap size and removed-thickness figures
+          are computed live from the authored ledger described above.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> this model does not simulate real erosional
+          processes, reworking, or where eroded sediment and its fossils physically go after removal
+          &mdash; it only tracks what stays in the column and what the ledger records as deleted.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live, and what is fixed</span>
+        <h3>The comparison is computed here; both sections' histories are fixed</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> both sections' evidence ledgers and the readiness check that requires both before a conclusion is offered</span>
+          <p>Section C's pause and Section D's continued deposition are read from each section's own
+            ledger as you sample and reveal chronology; the requirement that you have evidence from BOTH
+            sections before choosing a conclusion is enforced here, not merely suggested.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the paired case histories for C and D</span>
+          <p>That C pauses for exactly 2.00 Myr while D keeps depositing Green mudstone through the same
+            span is an authored pairing, built so the comparison has a clean, revealable answer.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">a pause records elapsed time with zero deposited thickness &mdash; a second, non-erosional cause of a gap</div>
+        <p>A <code>pause</code> event advances the model clock without adding rock, producing a hiatus
+          with no erosion involved at all &mdash; the model's second mechanism for "missing time," distinct
+          from Stage 2's erosion.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Two local sections are not a global or basin-scale survey.</b> The comparison shows what
+            a second local section can and cannot add to a first section's gap; it is not a rule for how
+            many sections settle a claim in general.</li>
+          <li><b>The two sections are given identical starting rock</b> so the pause and the
+            fossil-in-D comparison are the only variable; a real paired-section study would need to
+            establish correlation between sections independently.</li>
+          <li><b>No sampling-density or facies-correlation limits are modeled</b> beyond what each
+            section's own layer list already represents.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>No external figures are cited on this stage; the comparison is computed live from the
+          two authored ledgers described above.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> two authored local sections are not a basin-scale or
+          global survey. This stage shows what local absence can and cannot support when a second local
+          section is available &mdash; it is not evidence that any two sections, in general, are enough
+          to certify a global claim.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Presenter notes ARE the printable guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing: the shell defines window.lessonShell (dialogs,
+     the stage tablist, presentation mode, check cards, in-place Reset) before
+     app.js, which listens for the shell's 'stagechange' and 'lessonreset'
+     events and calls window.lessonShell.selectStage() only if it needs to
+     drive the tabs itself (it does not). model.js has no shell dependency and
+     loads first so app.js can use MissingTimeModel immediately. -->
+<script>
+/*__MISSING_TIME_MODEL__*/
+</script>
+<script>
+/*__SHELL_JS__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
