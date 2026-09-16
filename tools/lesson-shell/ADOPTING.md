@@ -133,6 +133,9 @@ In this order, when `#reset-btn` is pressed:
 3. **Every stage tab returns to its first-load chrome** from a snapshot taken
    before your `app.js` ran: `disabled` (so a gate re-locks), class (so
    `complete` marks clear), `title`, and the `.stage-mark` glyph.
+   **Author your gate in the template markup** (`disabled` on the tab), not
+   only in `app.js` — the snapshot is taken before your script runs, so a
+   gate applied solely at runtime would come back *unlocked* after Reset.
 4. **Every A6 check card** drops its `aria-pressed` answer and clears its
    feedback line.
 5. **Every A2 `.echo` and A4 `.obs-cue`** returns to its snapshotted first-load
