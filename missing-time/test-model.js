@@ -1,5 +1,5 @@
 const assert = require('node:assert/strict');
-const M = require('./model.js');
+const M = require('./src/model.js');
 const near = (actual, expected, epsilon = 1e-9) => assert.ok(Math.abs(actual - expected) <= epsilon, `${actual} !== ${expected}`);
 
 // Hand-worked continuous record: 20 m + 14 m + 16 m over six Myr, without a gap.
