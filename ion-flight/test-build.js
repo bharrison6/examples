@@ -104,7 +104,15 @@ assert.doesNotMatch(menu, /Enter presentation mode|Exit presentation mode/,
    script at all. */
 const shellJs = scripts[1];
 const appJs = scripts[2];
-assert.doesNotMatch(shellJs, /location\.reload\(\)|location\.replace\(/,
+/* Prose is not code: the shell's own comment explains that v1 called
+   location.reload(), and the first run of this assertion failed on that
+   sentence. Block comments are stripped before the scan -- and, per
+   guide-contract.js's rule, stripping is what lets a scan miss things, so the
+   scan is proved on bait first. */
+const decomment = s => s.replace(/\/\*[\s\S]*?\*\//g, ' ');
+assert.match(decomment(shellJs + '\nlocation.reload();'), /location\.reload\(\)/,
+  'the navigation scan must see a reload when one is present (positive control)');
+assert.doesNotMatch(decomment(shellJs), /location\.reload\(\)|location\.replace\(/,
   'Reset must not reload or navigate: it is in place as of kit v2');
 assert.match(shellJs, /document\.dispatchEvent\(new CustomEvent\('lessonreset'/,
   'the shell must hand the activity back to the demo after restoring its own chrome');
