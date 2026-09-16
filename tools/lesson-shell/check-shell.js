@@ -297,6 +297,33 @@ const CHECKS = Object.freeze([
     }
     return out;
   }],
+  /* 12. `.hidden` is a RESERVED kit class as of v3 (shell.css). This check is
+     the price of that claim being safe: the kit overrides `.hidden` with
+     !important, so a demo that means anything else by it would be silently
+     overridden — trading a visible stacking bug for an invisible one. Rather
+     than not claim the name, the collision is made loud.
+
+     Scoped to <style> blocks so JS property access (`if (x.hidden)`,
+     `rows.hidden.at(-1)` — both real in takeoff) cannot be read as CSS. */
+  ['reserved .hidden class', html => {
+    const out = [];
+    const styles = (html.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) || []).join('\n');
+    const rules = styles.match(/(^|[\s,{}])\.hidden\b[^{}]*\{[^{}]*\}/g) || [];
+    rules.forEach(r => {
+      const body = r.slice(r.indexOf('{') + 1, r.lastIndexOf('}'));
+      /* Anything that is not "display: none" is a redefinition. A demo
+         re-stating display:none (with or without !important) is harmless and
+         must stay quiet — several demos legitimately still carry their own. */
+      const decls = body.split(';').map(d => d.trim()).filter(Boolean);
+      const bad = decls.filter(d => !/^display\s*:\s*none\s*(!important)?$/i.test(d));
+      if (bad.length) {
+        out.push('.hidden is a lesson-shell reserved class (display:none !important) and this file ' +
+                 `redefines it: "${bad.join('; ').slice(0, 70)}". The shell's !important wins, so the ` +
+                 'redefinition would fail silently — rename your class.');
+      }
+    });
+    return out;
+  }],
   ['unique ids', html => {
     const seen = new Map();
     const dupes = [];
@@ -425,6 +452,10 @@ function selfTest() {
     ['A6 feedback vocabulary', 'reads no per-card wrong-answer lead',
       good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
         "const lead = 'Not quite.'; const body = btn.dataset.feedback;")],
+    /* --- v3 bait: a demo redefining the reserved .hidden class ------------ */
+    ['reserved .hidden class', 'redefines it',
+      good.replace('.icon-label { display: none; }',
+        '.icon-label { display: none; } } .hidden { display: flex; opacity: .5; } @media (max-width: 480px){')],
     /* Check 9's stripping control: the SAME duplicate, spelled inside a
        <script>, must NOT trip it — otherwise the check is reading JS strings
        as markup and would red every demo that builds HTML at runtime. Asserted
@@ -455,7 +486,17 @@ function selfTest() {
        demo on shipped CSS. */
     ['A2 phone intro disclosure', 'the landscape-short block hiding intro parts outside the phone block',
       good.replace('</head>', '<style>@media (orientation: landscape) and (max-height: 560px)' +
-        '{ .stage-question { display: none } }</style></head>')]
+        '{ .stage-question { display: none } }</style></head>')],
+    /* A demo RE-STATING display:none for .hidden is harmless and common —
+       several demos still carry their own copy, and the retrofit does not
+       require deleting it. Must stay quiet or the check reds correct files. */
+    ['reserved .hidden class', 'a demo restating .hidden as display:none !important, which is harmless',
+      good.replace('</head>', '<style>.hidden{display:none !important;}</style></head>')],
+    /* And the scoping control: JS property access spelled `.hidden` is not a
+       CSS rule. Both of these shapes are real in takeoff/index.html, and a
+       whole-file scan would red it. */
+    ['reserved .hidden class', 'JS property access spelled .hidden, which is not a CSS rule',
+      good.replace('</body>', '<script>if (r.hidden) { x = rows.hidden.at(-1).label; }</script></body>')]
   ];
   for (const [name, what, html] of quiet) {
     const noisy = checkHtml(html).filter(f => f.startsWith(name + ':'));

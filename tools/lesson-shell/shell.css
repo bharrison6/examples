@@ -25,6 +25,13 @@
      .btn .btn.ghost .btn.small
      .footer .footer-tools .footer-link
      .bh-credit
+     .intro-more                               (A2 phone disclosure, v3;
+                                                built by behaviourScript())
+
+   RESERVED, NOT VOCABULARY: `.hidden`. The kit backs it with
+   `display: none !important` (see the rule beside `[hidden]` below) so that a
+   retrofit which deletes the demo's own chrome stylesheet cannot take the rule
+   with it. A demo must not redefine it; check-shell.js fails one that does.
    =========================================================================== */
 
 * { box-sizing: border-box; }
@@ -36,6 +43,28 @@ body {
   font: 400 var(--u)/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 [hidden] { display: none !important; }
+/* A RESERVED KIT CLASS (v3), and the kit's one deliberate claim on a generic
+   author-space name. Added because five demos had independently written this
+   exact rule — bridge-works, should-have-known-that and the-stranger, all
+   spelling it `display: none !important` — and a retrofit that correctly
+   deletes the demo's own chrome stylesheet (ADOPTING.md §2) takes the rule with
+   it while the demo's JS keeps toggling the class. should-have-known-that
+   shipped straight into that: setup / turn / play panels rendered stacked, with
+   `build.js --check`, `check-shell` and `build-hub --check` all green, because
+   the markup and the contract were both correct. Five identical independent
+   copies of one rule is a missing kit primitive, not a coincidence.
+
+   `!important` is load-bearing, not defensive: without it a panel carrying its
+   own later `display: grid` wins on equal specificity and the class does
+   nothing — which is the exact case that fails.
+
+   THE PRICE, STATED: this is the one place the kit overrides a demo without
+   the demo being able to take it back unprefixed, so it is declared reserved
+   in ADOPTING.md rather than claimed quietly, and check-shell.js fails any
+   demo that defines `.hidden` as anything other than display:none. Prefer the
+   `hidden` ATTRIBUTE in new code — it is the platform's, it carries the right
+   semantics to assistive tech, and the rule above already covers it. */
+.hidden { display: none !important; }
 button, input, select, summary, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .48; cursor: not-allowed; }

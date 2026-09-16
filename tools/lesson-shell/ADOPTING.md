@@ -34,6 +34,7 @@ Every disagreement below resolves to that sentence.
 | The Guide opening on load | `behaviourScript()` |
 | Presentation mode (`body.presenter`) and the header Notes button | `setPresentation()` |
 | A6 check cards: `aria-pressed`, per-option feedback, no score | `behaviourScript()` |
+| **The A2 intro disclosure** — collapsible stage intro at phone width | `behaviourScript()`, §4b |
 | **Reset** — in place, no reload | `resetLesson()`, §4 |
 | All of the above's CSS | `tokens.css` + `shell.css` |
 
@@ -43,6 +44,34 @@ Everything inside `.workbench` and anything else your `app.js` generates: your
 engine, your data, your canvases, your controls, your per-item popovers, your
 self-test. Plus your activity-only CSS in `src/styles.css`, which is injected
 **after** the shell's so you can override any shell rule without `!important`.
+
+### Which surface: the kit's navy `.workbench`, or a light panel of your own
+
+The convention three lanes arrived at independently, now the rule:
+
+> **Navy is the live device or instrument. Light is decisions and evidence.**
+
+- **`.workbench` (navy)** — the thing the learner *operates*. The spectrometer,
+  the game board, the ladder-logic rung editor, the canvas, the readout that
+  changes when a control moves. It reads as apparatus: you are looking at a
+  machine doing something.
+- **A light panel — `.card`, or your own class** — what the learner *decides*,
+  *records* or *reads as evidence*. Prediction capture, a verdict grid, a
+  sources table, a comparison of two runs, anything the learner is reasoning
+  over rather than driving.
+
+Two consequences worth stating, because both were learned the hard way:
+
+- The six provenance kickers and `.control-label` already have on-navy variants
+  in `shell.css`, so a kicker inside `.workbench` reads correctly with no extra
+  CSS. Outside it, use a light panel and the default variants.
+- **Check your own text colours on navy.** `what-the-survey-missed` shipped
+  navy-on-navy in `#interpretRecap b` — invisible, and no static check could see
+  it. On navy, emphasis is gold (`var(--gold-lite)`), never `var(--navy)`.
+
+A demo that is *all* navy has usually mislabelled its decision surfaces as
+apparatus; a demo with no navy at all usually has an instrument it has not
+committed to.
 
 ---
 
@@ -72,6 +101,32 @@ both had before the retrofit and neither has now.
 - [ ] **Your own `#details` id**, if you had one, and any other id the kit
       reserves — the list is at the top of `partials.html`. A duplicate id does
       not throw; it silently gives one of the two elements to the other. See §5.
+
+> ### ⚠ The `.hidden` trap — read this before you delete a stylesheet
+>
+> Deleting your chrome stylesheet **also deletes your `.hidden` rule**, and the
+> kit's `[hidden] { display: none !important }` backs the **attribute**, not the
+> class. If your JS keeps calling `classList.add('hidden')`, every panel it
+> controls silently renders **stacked** — and `build.js --check`, `check-shell`
+> and `build-hub --check` all stay green, because your markup and your contract
+> are both still correct. It shows up only in a browser, under a per-panel
+> `display` / `offsetParent` assertion. `should-have-known-that` shipped
+> straight into it mid-build (setup / turn / play panels stacked).
+>
+> **Since v3 the kit ships `.hidden { display: none !important }` itself**, so a
+> retrofit onto v3 or later cannot hit this. Two things still apply:
+>
+> - **`.hidden` is now a reserved kit class.** If your `.hidden` means anything
+>   other than `display: none`, rename it — the shell's `!important` wins and
+>   your version would fail silently. `check-shell.js` fails a build that
+>   redefines it, so this is caught rather than discovered in a room.
+> - **Prefer the `hidden` attribute in new code.** `el.hidden = true` is the
+>   platform's, carries the right semantics to assistive technology, and is
+>   already covered. The class exists to rescue demos that predate this rule,
+>   not as the recommended spelling.
+>
+> Retrofitting onto a kit **older than v3**? Either keep the one rule when you
+> delete the stylesheet, or convert the JS to the attribute.
 
 ### What to KEEP, and not get talked out of
 
@@ -147,9 +202,35 @@ In this order, when `#reset-btn` is pressed:
    the *pre-reset* state into freshly reset chrome (missing-time hit exactly
    this: a stale Predict echo resurrected mid-reset). Do not render activity
    state from `stagechange`; render it from your interaction handlers and
-   from your `lessonreset` handler. If you must, check
-   `window.lessonShell.resetting` — not yet provided; until it is, treat
-   `stagechange` as a chrome event only.
+   from your `lessonreset` handler. If you must, guard on
+   **`window.lessonShell.resetting`** — provided since v3:
+
+   ```js
+   document.addEventListener('stagechange', e => {
+     if (window.lessonShell.resetting) return;   // chrome only, mid-reset
+     render(e.detail.index);
+   });
+   ```
+
+   `resetting` is `true` from before step 1 until after step 9 has dispatched,
+   and `try/finally` keeps it honest through an `onReset` veto or a throwing
+   listener. **Do not write that guard into your `lessonreset` handler.** The
+   flag is still true while step 9 runs, by design: your handler restores state
+   and re-renders by calling your own render directly, which the guard above
+   does not touch. Guarding `lessonreset` would suppress the very render the
+   reset exists to perform.
+
+   **Why the order was not simply reversed** (asked at every unfreeze): this
+   file and `index.js` both guarantee that `lessonreset` fires *last*, so the
+   demo has the final word over any node both touch. Every merged demo is
+   written against that guarantee. Reversing would also swap a known hazard for
+   a new one — your `lessonreset` handler would run *before* step 3 restored
+   the tab chrome, so a handler reading tab state would read the post-session
+   gates. The flag fixes the move-the-instrument pattern without moving anyone
+   else's ground.
+7b. **The A2 intro disclosure returns to its default for the current width**
+   (v3) — recomputed, not restored from the load-time snapshot, so a rotation
+   between load and Reset cannot leave it half-open.
 8. **The page scrolls to the top.**
 9. **`lessonreset` is dispatched.**
 
@@ -223,6 +304,93 @@ window.lessonShell.onReset = () => { myOwnRewind(); return false; };
 `check-shell.js` accepts that as implementing the contract. It does **not**
 accept `window.lessonShell.onReset = null`, which is what a demo that has not
 implemented the contract leaves behind.
+
+---
+
+## 4b. The A2 intro disclosure — collapsible stage intro at phone width
+
+**Operator ruling, 2026-09-16: "collapsible intro at phone width."** New in v3.
+**You do not have to do anything to get this**, and there is nothing to copy
+into your template — but read what it assumes, because two of the assumptions
+are things your markup can break.
+
+### What it does
+
+At **≤480px**, and not in presentation mode, the shell wraps your stage's
+`.lesson-strip` in a native `<details class="intro-more">` and **closes it**.
+Collapsed, the learner sees the eyebrow, the stage title, the stage question,
+the **Details** pill and a summary line reading
+*Before you start · Predict · Try · Takeaway*. The prerequisite `.refresh` is
+hidden by a CSS `:has()` rule at the same time.
+
+Above 480px, and in presentation mode at any width, the summary is
+`display: none` and the element is held open — so **desktop and the projector
+are exactly as they were in v2**, same geometry, no toggle, nothing extra in
+the accessibility tree.
+
+### Why it exists, in numbers
+
+At 320px the full intro measured **726–775px against a 568–578px viewport** —
+more than one whole screen before the activity starts. That put
+`zero-to-unbeatable`'s Train button **1979px** down and `ion-flight`'s Run
+button **2327px** down, 4.1 screens. Both shapes, so it is the template's cost,
+not one demo's.
+
+**Be honest about what this does not fix.** On `ion-flight` the intro is only
+31% of that distance; 55% is the demo's own pre-control content, and for a demo
+that captures a prediction before its Run button that content is *required* to
+be there. Collapsing the intro buys you the first screen, not the button.
+
+### What your markup must not do
+
+- **Do not hide `.stage-question` at phone width.** `check-shell.js` fails a
+  built file whose `max-width: 480px` block hides it. Collapsing the one line
+  that orients the learner defeats the point of collapsing at all.
+- **Keep `.stage-intro` labelled by its `h2`.** `aria-labelledby="stage-N-title"`
+  is why the `h2` stays visible rather than going behind the toggle; if you
+  point it somewhere else, you lose that reason and probably the accessible
+  name too.
+- **Write your prediction echo into `.echo` inside the strip, as A2 says.** The
+  shell watches the disclosure and re-opens it if an `.echo` gains content while
+  collapsed — feedback the learner cannot see would break the predict-then-
+  observe loop. An echo you render somewhere else does not get that.
+
+### If your demo genuinely should not collapse
+
+Override it in your own CSS — yours lands after the shell's:
+
+```css
+@media (max-width: 480px) { .intro-more > summary { display: none; } }
+```
+
+…and say why in a comment. The element is held open whenever the summary is
+hidden, so this is safe; it is not a way to hide content.
+
+---
+
+## 4c. A6 check-card feedback: the lead is yours, not the kit's
+
+The shared handler writes **a bold lead, then your `data-feedback`**. Since v3
+the lead comes from the card:
+
+```html
+<section class="check" data-correct-lead="Supported." data-wrong-lead="Not what the detector showed.">
+```
+
+Defaults are demo-neutral — **`Correct.`** and **`Not quite.`** Set your own
+when your demo has a better word for it (`Supported.` / `Not what the detector
+showed.` is `ion-flight`'s evidence framing, and it should set them explicitly).
+
+**Why this is a documented contract and not an implementation detail**: v2
+hardcoded `"Not what the detector showed."` into the *shared* handler, and it
+rendered in **all eight** built demos — so a learner working through PLC ladder
+logic, AI winters or wavelet compression was told what "the detector" showed.
+It survived two pilots and four builds because nothing looked for it.
+`check-shell.js` now blocklists that sentence and requires the handler to read a
+per-card lead, so the same class of leak fails a build rather than shipping.
+
+The lead is set as **text**, not markup. `data-feedback` still accepts inline
+markup, as it always has.
 
 ---
 
