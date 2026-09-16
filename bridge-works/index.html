@@ -4441,7 +4441,11 @@ function pointer(e) {
 }
 cv.addEventListener('pointerdown', function (e) {
   if (S.phase !== 'build') return;
-  cv.focus();
+  /* preventScroll is load-bearing since the retrofit: the page scrolls now, and
+     a bare focus() on a canvas that is partly off screen scrolls it into view
+     BETWEEN pointerdown and pointermove, so the drag's end lands metres away
+     from where the finger is (measured in the browser pass: 3 m off). */
+  try { cv.focus({ preventScroll: true }); } catch (err) { cv.focus(); }
   cv.setPointerCapture(e.pointerId);
   var w = pointer(e);
   S.kcur = snap(w.x, w.y);
