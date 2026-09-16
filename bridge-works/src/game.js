@@ -1,6 +1,35 @@
-/* Bridge Works — game shell: rendering, interaction, test flow, teaching tools.
+/* Bridge Works — the ACTIVITY: rendering, interaction, test flow, teaching tools.
    All of the structural mathematics lives in physics.js; this file only asks it
-   questions and draws the answers. */
+   questions and draws the answers.
+
+   RETROFIT ONTO THE LESSON SHELL (2026-09-16). What changed in this file, and
+   what did not:
+     * The seven hand-rolled .modal overlays are gone. The activity keeps FOUR
+       native <dialog>s of its own (debrief, levels, gallery, leaderboard); the
+       Guide, Settings, Presenter Notes and Details are the shell's.
+     * The canvas was already a boxed canvas (clientWidth/clientHeight +
+       getBoundingClientRect + a ResizeObserver), so world<->screen is untouched.
+       One guard is added: draw() is skipped while the canvas has no layout box,
+       which is true whenever the activity sits in a hidden stage panel.
+     * frame() is split into frame() (body + re-queue) and stepFrame() (body) so
+       a harness can drive frames where requestAnimationFrame does not tick.
+       No statement inside the body moved.
+     * .hidden CLASS toggles became the `hidden` ATTRIBUTE. The kit's shell.css
+       carries [hidden]{display:none!important} and no .hidden rule, and kit v3
+       fails a demo that redefines .hidden — so the attribute is the form that
+       survives both.
+     * Presentation mode is the shell's (body.presenter); this file reads it.
+     * Reset is the shell's in-place Reset; resetActivity() below is the
+       activity's half, called from app.js's `lessonreset` handler. The class
+       LEADERBOARD is deliberately not cleared by it — orchestrator ruling
+       2026-09-16: a one-click Reset must not destroy another period's scores.
+       The two-step "Reset this level's board" / "Reset every board" stay.
+     * The lesson layer (app.js) talks to this file through window.bridgeWorks
+       and a handful of hooks. This file does not know about stages.
+
+   Physics, levels, pars, costing, the solver calls, the fold animation, the
+   collapse, the debrief table, undo, the joint tool and the keyboard editor
+   are byte-for-byte the pre-retrofit code. */
 'use strict';
 (function () {
 
@@ -17,12 +46,14 @@ var S = {
   nodes: [], members: [],
   tool: 'build', phase: 'build',
   xray: true, nums: false, selfWeight: false,
-  big: false, showPar: true, keyboard: false,
+  big: document.body.classList.contains('presenter'), showPar: true, keyboard: false,
   undo: [], analysis: null, sel: -1, drag: null, hover: null,
   test: null, coll: null, debris: [], shake: 0, ver: 0, foldC: null, unbraced: [],
   vehKey: null, lastDebrief: null, name: '', kcur: null, kstart: null
 };
 var V = { s: 30, ox: 0, oy: 0 };
+/* Filled in by app.js (the lesson layer). Every hook is optional. */
+var hooks = { onLevelLoad: null, onRefresh: null, onTestStart: null, onTestEnd: null, canTest: null };
 
 /* --------------------------------------------------------------- storage */
 function ls(k, d) { try { var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
@@ -31,7 +62,7 @@ var BOARD_K = 'bw.board.v1', DESIGN_K = 'bw.design.v1', PREF_K = 'bw.prefs.v1', 
 
 function savePrefs() {
   var p = ls(PREF_K, {});
-  p.big = S.big; p.showPar = S.showPar; p.xray = S.xray; p.nums = S.nums;
+  p.showPar = S.showPar; p.xray = S.xray; p.nums = S.nums;
   p.selfWeight = S.selfWeight; p.li = S.li; p.name = S.name; p.overload = S.overload;
   p.keyboard = S.keyboard;
   ss(PREF_K, p);
@@ -80,7 +111,12 @@ function loadLevel(i, fresh) {
   }
   mergeCoincident(); cleanup();
   S.kcur = { x: S.L.gap.x0, y: S.L.deckY }; S.kstart = null;
-  computeView(); renderVehSel(); refresh(); renderLevelChip();
+  computeView(); renderVehSel();
+  /* The lesson layer hears about the level BEFORE the first refresh, so its
+     edge detectors are reset before they see this level's analysis. */
+  if (hooks.onLevelLoad) hooks.onLevelLoad(i);
+  renderWeakest(S.lastDebrief && S.lastDebrief.levelIndex === i ? S.lastDebrief : null);
+  refresh(); renderLevelChip();
 }
 
 function applyDesign(d, silent) {
@@ -150,7 +186,12 @@ function refresh() {
     : '';
   $('parVal').textContent = (par && S.showPar) ? 'par ' + money(par) : (S.L.sandbox ? 'sandbox' : '');
   var cov = P.deckCoverage(S.nodes, S.members, null, S.L.deckY, S.L.gap.x0, S.L.gap.x1);
-  $('btnTest').disabled = !cov.ok;
+  /* The Load test is withheld until (a) the roadway reaches across and (b)
+     the lesson layer says a prediction has been committed — plan A2's
+     predict-before-evidence gate, applied to EVERY load test. The tab stays
+     live; only the evidence is behind the call. */
+  var gateOpen = hooks.canTest ? hooks.canTest() : true;
+  $('btnTest').disabled = !cov.ok || !gateOpen;
   S.unbraced = unbracedDeckJoints();
   if (!cov.ok) {
     setStatus('The roadway must run unbroken along the deck line before you can test.', 'warn');
@@ -165,8 +206,9 @@ function refresh() {
   $('hint').innerHTML = S.phase === 'build'
     ? '<b>' + S.L.name + '</b> — ' + S.L.blurb + (S.L.hint ? ' <span style="opacity:.8">' + S.L.hint + '</span>' : '')
     : '';
-  $('hint').classList.toggle('hidden', S.phase !== 'build');
+  $('hint').hidden = S.phase !== 'build';
   setToolHint();
+  if (hooks.onRefresh) hooks.onRefresh(S);
 }
 var TOOLHINT = {
   build: 'Drag from one grid point to another to lay a member',
@@ -560,7 +602,7 @@ function drawNumbers(lw) {
 /* -------------------------------------------------------- free body panel */
 function drawFBD() {
   var a = S.analysis, i = S.sel;
-  if (!a || i < 0) { $('fbd').classList.add('hidden'); return; }
+  if (!a || i < 0) { $('fbd').hidden = true; return; }
   /* A mechanism has no equilibrium to report, but silently showing nothing is
      what made this tool look broken. Say why, and say what to do about it. */
   var unb = S.unbraced && S.unbraced.indexOf(i) >= 0;
@@ -605,7 +647,7 @@ function drawFBD() {
       (unb ? ' — nothing bracing it' : '') + '</h4>' + body2;
     if (e2.dataset.key !== html2) { e2.dataset.key = html2; e2.innerHTML = html2; }
     e2.style.maxWidth = '22em';
-    e2.classList.remove('hidden');
+    e2.hidden = false;
     e2.style.left = Math.min(cv.clientWidth - e2.offsetWidth - 12, Math.max(8, SX(pm.x) + 22)) + 'px';
     e2.style.top = Math.min(cv.clientHeight - e2.offsetHeight - 12, Math.max(8, SY(pm.y) - 30)) + 'px';
     return;
@@ -659,7 +701,7 @@ function drawFBD() {
   var e = $('fbd');
   if (e.dataset.key !== html) { e.dataset.key = html; e.innerHTML = html; }
   e.style.maxWidth = '';
-  e.classList.remove('hidden');
+  e.hidden = false;
   e.style.left = Math.min(cv.clientWidth - e.offsetWidth - 12, Math.max(8, px + 22)) + 'px';
   e.style.top = Math.min(cv.clientHeight - e.offsetHeight - 12, Math.max(8, py - 30)) + 'px';
 }
@@ -762,7 +804,7 @@ function startTest() {
   var v = vehicle();
   var cov = P.deckCoverage(S.nodes, S.members, null, S.L.deckY, S.L.gap.x0, S.L.gap.x1);
   if (!cov.ok) { setStatus('The roadway has a gap at x = ' + cov.gapAt.toFixed(1) + ' m.', 'err'); return; }
-  S.phase = 'test'; S.sel = -1; $('fbd').classList.add('hidden');
+  S.phase = 'test'; S.sel = -1; $('fbd').hidden = true;
   var M = S.members.length;
   S.test = {
     x: S.L.gap.x0, endX: S.L.gap.x1 + LV.vehicleLength(v),
@@ -773,6 +815,7 @@ function startTest() {
   };
   S.debris = [];
   refresh();
+  if (hooks.onTestStart) hooks.onTestStart();
 }
 function stepTest(dt) {
   var T = S.test, v = vehicle();
@@ -937,12 +980,88 @@ function finishTest() {
   S.phase = 'done';
   var survived = T.broke.length === 0 && !T.mechanism;
   var cp = costParts(), cost = cp.total, par = S.L.par;
-  S.lastDebrief = { survived: survived, cost: cost, par: par, T: T, parts: cp };
+  S.lastDebrief = { survived: survived, cost: cost, par: par, T: T, parts: cp,
+                    levelIndex: S.li, levelId: S.L.id, weakest: weakestRecord(T) };
   if (survived) {
     var prog = ls(PROG_K, {});
     if (!prog[S.L.id] || cost < prog[S.L.id]) { prog[S.L.id] = Math.round(cost); ss(PROG_K, prog); }
   }
+  renderWeakest(S.lastDebrief);
   showDebrief();
+  if (hooks.onTestEnd) hooks.onTestEnd(S.lastDebrief);
+}
+
+/* THE WEAKEST LINK, READ FROM THE RECORD. The test loop writes T.first the
+   instant the first member is removed (member, force AT failure, position,
+   mode) and T.maxU/maxT/maxC as it goes. This function reads THAT record and
+   never the live analysis: by the time anything is displayed the structure
+   has re-solved, collapsed or been cleared, and sampling live state to
+   describe a past event is how fuel-golf inverted a lesson (its friction
+   list, item 9). Same source for the debrief table's row, the docked
+   readout under the canvas, and the lesson layer's cue and echo. */
+function weakestRecord(T) {
+  var n = S.members.length, i;
+  if (T.first && T.first.mode === 'mechanism' && !(T.broke && T.broke.length)) {
+    return { mode: 'mechanism', member: -1, x: T.first.x, reason: T.first.reason || '' };
+  }
+  if (T.first && T.first.member >= 0) {
+    var mi = T.first.member, L = mlen(S.members[mi]), bl = T.buckLen[mi] || L;
+    return {
+      mode: T.first.force < 0 ? 'buckling' : 'tension', member: mi, x: T.first.x,
+      force: T.first.force, len: L, buckLen: bl,
+      cap: T.first.force < 0 ? P.capC(bl) : P.capT(),
+      label: memberLabel(mi), cascade: T.broke.length, mechanismAfter: !!T.mechanism
+    };
+  }
+  /* survived: the busiest member is the weakest link that did not break */
+  var best = -1, bu = -1;
+  for (i = 0; i < n; i++) if (T.maxU[i] > bu) { bu = T.maxU[i]; best = i; }
+  if (best < 0) return { mode: 'held', member: -1, util: 0 };
+  var f = (T.maxT[best] > -T.maxC[best]) ? T.maxT[best] : T.maxC[best];
+  var Lb = mlen(S.members[best]), blb = T.buckLen[best] || Lb;
+  return { mode: 'held', member: best, util: bu, force: f, len: Lb, buckLen: blb,
+           cap: f < 0 ? P.capC(blb) : P.capT(), label: memberLabel(best) };
+}
+/* One factual sentence from the record, shared by the docked readout and the
+   lesson layer. No advice here — plainSentence() is the advice. */
+function weakestSentence(w) {
+  if (!w) return '';
+  if (w.mode === 'mechanism') {
+    return 'No member was overloaded: the frame folded as a <b>mechanism</b> with the vehicle at x = ' +
+      w.x.toFixed(1) + ' m.';
+  }
+  if (w.mode === 'held') {
+    if (w.member < 0) return 'It held, and no member carried measurable force.';
+    return 'It held. Busiest member: <b>#' + (w.member + 1) + '</b> ' + w.label + ', ' + w.len.toFixed(1) +
+      ' m, peaked at <b>' + Math.round(w.util * 100) + '%</b> of its ' + (w.force < 0 ? 'buckling' : 'tension') +
+      ' limit (' + (Math.abs(w.force) / 1000).toFixed(1) + ' of ' + (w.cap / 1000).toFixed(0) + ' kN).';
+  }
+  var s = 'First to go: <b>member #' + (w.member + 1) + '</b> ' + w.label + ', ' + w.buckLen.toFixed(1) + ' m';
+  if (w.mode === 'buckling') {
+    s += ' in compression — it <b>buckled</b> at ' + (Math.abs(w.force) / 1000).toFixed(1) + ' kN against a rating of ' +
+      (w.cap / 1000).toFixed(0) + ' kN at that length (pulled, the same member would hold ' + (P.capT() / 1000).toFixed(0) + ' kN).';
+  } else {
+    s += ' in tension — it <b>tore</b> at ' + (w.force / 1000).toFixed(1) + ' kN against its ' +
+      (w.cap / 1000).toFixed(0) + ' kN limit.';
+  }
+  s += ' Vehicle at x = ' + w.x.toFixed(1) + ' m.';
+  if (w.cascade > 1) s += ' ' + (w.cascade - 1) + ' more member' + (w.cascade > 2 ? 's' : '') + ' followed';
+  if (w.mechanismAfter) s += (w.cascade > 1 ? ', then' : ' Then') + ' what was left became a mechanism';
+  if (w.cascade > 1 || w.mechanismAfter) s += '.';
+  return s;
+}
+function renderWeakest(d) {
+  var el = $('weakest');
+  if (!el) return;
+  if (!d) {
+    el.innerHTML = '<span class="wk-label">Weakest link</span><span class="wk-body">No load test yet on this level. ' +
+      'Run one and the first failure — or the busiest member — is reported here from the test record.</span>';
+    el.className = 'weakest';
+    return;
+  }
+  el.className = 'weakest ' + (d.survived ? 'held' : 'failed');
+  el.innerHTML = '<span class="wk-label">Weakest link · ' + esc(LV.LEVELS[d.levelIndex].name) + '</span>' +
+    '<span class="wk-body">' + weakestSentence(d.weakest) + '</span>';
 }
 
 function memberLabel(i) {
@@ -1018,8 +1137,7 @@ function showDebrief() {
     rows.push({ i: i, t: T.maxT[i], c: T.maxC[i], u: T.maxU[i], len: mlen(S.members[i]),
                 buck: T.buckLen[i] || mlen(S.members[i]), dead: !T.live[i] });
   rows.sort(function (a, b) { return b.u - a.u; });
-  var weak = (rows.length && rows[0].u > 1e-9) ? rows[0].i : -1;
-  if (T.first && T.first.member >= 0) weak = T.first.member;
+  var weak = (d.weakest && d.weakest.member >= 0) ? d.weakest.member : -1;
 
   var over = d.par ? d.cost - d.par : 0;
   var html = '';
@@ -1110,14 +1228,14 @@ function tableNote() {
 function finishDebriefButtons(d) {
   var official = S.vehKey === S.L.vehicle;
   var canSave = d.survived && !S.L.sandbox && official;
-  $('dbName').classList.toggle('hidden', !canSave);
-  $('dbSave').classList.toggle('hidden', !canSave);
-  $('dbNext').classList.toggle('hidden', !(d.survived && S.li < LV.LEVELS.length - 1));
+  $('dbName').hidden = !canSave;
+  $('dbSave').hidden = !canSave;
+  $('dbNext').hidden = !(d.survived && S.li < LV.LEVELS.length - 1);
   if (d.survived && !official)
     $('dbBody').innerHTML += '<p class="sub" style="margin-top:.6em;color:#ffc75a">Tested with the ' +
       vehicle().name + ' instead of this level\'s ' + LV.VEHICLES[S.L.vehicle].name +
       ' — a demo run, so it does not go on the leaderboard.</p>';
-  show('mDebrief');
+  openDialog($('bw-debrief'));
 }
 
 /* ---------------------------------------------------------- interaction */
@@ -1246,7 +1364,7 @@ cv.addEventListener('pointerdown', function (e) {
     var k = nodeAt(w.x, w.y, 0.5);
     S.sel = k;
     if (k < 0) {
-      $('fbd').classList.add('hidden');
+      $('fbd').hidden = true;
       setStatus('No joint there — tap directly on one of the round joints.', 'warn');
     } else setStatus('');
   }
@@ -1331,7 +1449,7 @@ function keyboardErase() {
 function keyboardInspect() {
   var p = keyboardPoint(), ni = nodeAt(p.x, p.y, 0.5);
   S.sel = ni;
-  if (ni < 0) { $('fbd').classList.add('hidden'); setStatus('No joint at the keyboard cursor.', 'warn'); }
+  if (ni < 0) { $('fbd').hidden = true; setStatus('No joint at the keyboard cursor.', 'warn'); }
   else { setStatus('Inspecting joint at (' + S.nodes[ni].x + ', ' + S.nodes[ni].y + ').', ''); refresh(); }
 }
 cv.addEventListener('keydown', function (e) {
@@ -1430,25 +1548,29 @@ function cleanup() {
 }
 
 /* --------------------------------------------------------------- UI wire */
-/* Sheets keep their scroll position, so a reopened panel would otherwise come
-   back halfway down where the last button click left it. */
-function show(id) {
-  var m = $(id); m.classList.remove('hidden');
-  var sheet = m.querySelector('.sheet'); if (sheet) sheet.scrollTop = 0;
+/* The activity's four dialogs are native <dialog>: showModal() gives the
+   backdrop, Escape, the focus trap, inerting the page and focus return. Two
+   things stay this file's job (fuel-golf friction list, item 4): showModal()
+   throws on an already-open dialog, and backdrop light-dismiss is opt-in —
+   applied only to the informational three, never to the debrief, which asks
+   for a decision. Sheets keep their scroll position, so the box is scrolled
+   back to the top on open. */
+function openDialog(d) {
+  if (!d || d.open) return;
+  var box = d.querySelector('.box'); if (box) box.scrollTop = 0;
+  d.showModal();
 }
-function hide(id) { $(id).classList.add('hidden'); }
-document.querySelectorAll('.modal').forEach(function (m) {
-  m.addEventListener('pointerdown', function (e) { if (e.target === m) m.classList.add('hidden'); });
-});
-['dbClose', 'lvClose', 'glClose', 'bdClose', 'tcClose', 'hpClose', 'ntClose', 'ntDone', 'hpStart'].forEach(function (id) {
-  $(id).addEventListener('click', function () { $(id).closest('.modal').classList.add('hidden'); });
+function closeDialog(d) { if (d && d.open) d.close(); }
+function anyDialogOpen() { return !!document.querySelector('dialog[open]'); }
+document.querySelectorAll('dialog[data-lightdismiss]').forEach(function (d) {
+  d.addEventListener('pointerdown', function (e) { if (e.target === d) d.close(); });
 });
 
 document.querySelectorAll('.tool').forEach(function (b) {
   b.addEventListener('click', function () {
     document.querySelectorAll('.tool').forEach(function (x) { x.classList.remove('active'); });
     b.classList.add('active'); S.tool = b.dataset.tool; setToolHint();
-    if (S.tool !== 'inspect') { S.sel = -1; $('fbd').classList.add('hidden'); }
+    if (S.tool !== 'inspect') { S.sel = -1; $('fbd').hidden = true; }
     cv.style.cursor = S.tool === 'erase' ? 'not-allowed' : (S.tool === 'inspect' ? 'help' : 'crosshair');
   });
 });
@@ -1466,15 +1588,10 @@ function bindTgl(id, key, after) {
   });
 }
 bindTgl('tglXray', 'xray'); bindTgl('tglNums', 'nums'); bindTgl('tglWeight', 'selfWeight');
-/* Presentation mode. The visual half is the large-UI scale (body.big / --ui);
-   the presenter half is the 🗒 Notes button that rides in the top bar so the
-   stage notes are one tap away without reopening Settings. */
-function applyPresentation() {
-  document.body.classList.toggle('big', S.big);
-  $('btnNotes').classList.toggle('hidden', !S.big);
-}
-$('tglBig').addEventListener('change', function () {
-  S.big = this.checked; applyPresentation(); savePrefs();
+/* Presentation mode is the shell's (body.presenter, --u). This file only
+   reads it, for the line widths and canvas type sizes that scale with S.big. */
+document.addEventListener('presentationchange', function (e) {
+  S.big = !!(e.detail && e.detail.on);
   resize();
 });
 $('tglPar').addEventListener('change', function () { S.showPar = this.checked; savePrefs(); refresh(); });
@@ -1484,14 +1601,14 @@ $('tglKeyboard').addEventListener('change', function () {
   cv.setAttribute('role', S.keyboard ? 'application' : 'img');
   cv.setAttribute('aria-label', S.keyboard
     ? 'Bridge editing canvas. Arrow keys move the grid cursor; B starts or completes a member, E erases, and I inspects.'
-    : 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode.');
+    : 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Settings.');
   if (!S.keyboard) S.kstart = null;
   savePrefs(); refresh();
 });
 
 function renderVehSel() {
   var allow = S.L.sandbox || S.overload;
-  $('vehGroup').classList.toggle('hidden', !allow);
+  $('vehGroup').hidden = !allow;
   var sel = $('vehSel');
   var span = S.L.gap.x1 - S.L.gap.x0, h = '';
   Object.keys(LV.VEHICLES).forEach(function (k) {
@@ -1512,20 +1629,15 @@ $('tglOverload').addEventListener('change', function () {
   if (!S.overload && !S.L.sandbox) S.vehKey = S.L.vehicle;
   savePrefs(); renderVehSel(); refresh();
 });
-$('btnLevels').addEventListener('click', function () { renderLevels(); show('mLevels'); });
-$('btnGallery').addEventListener('click', function () { renderGallery(); show('mGallery'); });
-$('btnBoard').addEventListener('click', function () { renderBoard(); show('mBoard'); });
-$('btnTeacher').addEventListener('click', function () { show('mTeacher'); });
-$('btnHelp').addEventListener('click', function () { show('mHelp'); });
-function openNotes() { hide('mTeacher'); show('mNotes'); }
-$('btnNotes').addEventListener('click', openNotes);
-$('btnNotesOpen').addEventListener('click', openNotes);
+$('btnLevels').addEventListener('click', function () { renderLevels(); openDialog($('bw-levels')); });
+$('btnGallery').addEventListener('click', function () { renderGallery(); openDialog($('bw-gallery')); });
+$('btnBoard').addEventListener('click', function () { renderBoard(); openDialog($('bw-board')); });
 $('dbRetry').addEventListener('click', backToBuild);
-$('dbNext').addEventListener('click', function () { hide('mDebrief'); loadLevel(S.li + 1); });
+$('dbNext').addEventListener('click', function () { closeDialog($('bw-debrief')); loadLevel(S.li + 1); });
 $('dbSave').addEventListener('click', saveScore);
 
 function backToBuild() {
-  hide('mDebrief');
+  closeDialog($('bw-debrief'));
   S.phase = 'build'; S.test = null; S.coll = null; S.debris = [];
   S.members.forEach(function (m) { m.broken = false; });
   refresh();
@@ -1540,11 +1652,15 @@ function saveScore() {
   list.sort(function (a, b) { return a.c - b.c; });
   board[S.L.id] = list.slice(0, 30);
   ss(BOARD_K, board);
-  renderBoard(); hide('mDebrief'); show('mBoard');
+  renderBoard(); closeDialog($('bw-debrief')); openDialog($('bw-board'));
 }
 
 document.addEventListener('keydown', function (e) {
   if (e.target.tagName === 'INPUT') return;
+  /* Escape is the platform's now. And no shortcut fires behind an open
+     dialog — the shell's Guide is open on every load, and a stray Space there
+     must not start a load test on the page underneath it. */
+  if (anyDialogOpen()) return;
   if (e.key === '1') document.querySelector('[data-tool=build]').click();
   if (e.key === '2') document.querySelector('[data-tool=erase]').click();
   if (e.key === '3') document.querySelector('[data-tool=inspect]').click();
@@ -1552,7 +1668,6 @@ document.addEventListener('keydown', function (e) {
   if (e.key === 'f' || e.key === 'F') { $('tglNums').checked = !$('tglNums').checked; $('tglNums').dispatchEvent(new Event('change')); }
   if (e.key === ' ' && S.phase === 'build') { e.preventDefault(); if (!$('btnTest').disabled) startTest(); }
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); undo(); }
-  if (e.key === 'Escape') document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); });
 });
 
 /* ------------------------------------------------------------- level list */
@@ -1563,7 +1678,7 @@ function renderLevels() {
   var prog = ls(PROG_K, {}), h = '';
   LV.LEVELS.forEach(function (L, i) {
     var best = prog[L.id];
-    h += '<button type="button" class="card' + (best ? ' done' : '') + '" data-i="' + i + '" aria-label="Load level ' + L.n + ': ' + esc(L.name) + '. ' + esc(L.blurb) + '">' +
+    h += '<button type="button" class="gcard' + (best ? ' done' : '') + '" data-i="' + i + '" aria-label="Load level ' + L.n + ': ' + esc(L.name) + '. ' + esc(L.blurb) + '">' +
       '<h3>' + L.n + '. ' + L.name + '</h3><p>' + L.blurb + '</p>' +
       '<div class="meta"><span>' + (L.gap.x1 - L.gap.x0) + ' m · ' + LV.VEHICLES[L.vehicle].name + '</span>' +
       '<span>' + (L.par ? 'par ' + money(L.par) : 'sandbox') + '</span></div>' +
@@ -1571,8 +1686,8 @@ function renderLevels() {
       '</button>';
   });
   $('lvGrid').innerHTML = h;
-  $('lvGrid').querySelectorAll('.card').forEach(function (c) {
-    c.addEventListener('click', function () { hide('mLevels'); loadLevel(+c.dataset.i); });
+  $('lvGrid').querySelectorAll('.gcard').forEach(function (c) {
+    c.addEventListener('click', function () { closeDialog($('bw-levels')); loadLevel(+c.dataset.i); });
   });
 }
 
@@ -1597,19 +1712,19 @@ function renderGallery() {
     });
     var bad = maxLen > MAXLEN + 1e-6 ? 'members up to ' + maxLen.toFixed(1) + ' m — too long, add panels'
             : (p.h > S.L.build.ymax ? 'too tall for this level' : null);
-    h += '<button type="button" class="card' + (bad ? ' bad' : '') + '" data-i="' + i + '" aria-label="Load ' + esc(G.name) + ' truss"' + (bad ? ' data-bad="1" disabled' : '') + '>' +
+    h += '<button type="button" class="gcard' + (bad ? ' bad' : '') + '" data-i="' + i + '" aria-label="Load ' + esc(G.name) + ' truss"' + (bad ? ' data-bad="1" disabled' : '') + '>' +
       '<h3>' + G.name + ' <span class="sub">' + G.year + '</span></h3>' +
       svgOf(d) + '<p>' + G.note + '</p>' +
       '<div class="meta"><span>' + d.members.length + ' members</span><span>' +
       (bad ? '<span style="color:#ff8f8f">' + bad + '</span>' : money(cost)) + '</span></div></button>';
   });
   $('glGrid').innerHTML = h;
-  $('glGrid').querySelectorAll('.card').forEach(function (c) {
+  $('glGrid').querySelectorAll('.gcard').forEach(function (c) {
     c.addEventListener('click', function () {
       if (c.dataset.bad) return;
       var pp = galleryParams();
       applyDesign(LV.snapDesign(LV.GALLERY[+c.dataset.i].build(S.L.gap.x0, S.L.gap.x1, pp.h, pp.n)));
-      hide('mGallery');
+      closeDialog($('bw-gallery'));
     });
   });
 }
@@ -1667,79 +1782,140 @@ armReset($('btnResetLevel'), "Reset this level's board", function () {
 });
 armReset($('btnResetAll'), 'Reset every board', function () { ss(BOARD_K, {}); ss(PROG_K, {}); });
 
-/* Settings -> Reset. The contract asks for the demo's fresh-load state, so this is
-   the state of a browser that has never opened it: nothing in storage, level 1 with
-   its starter, default toggles, empty board, Draw tool. Everything init() reads is
-   reset to the value init() would have defaulted to. The Guide overlay is
-   deliberately NOT reopened — a mid-session reset should not push a how-to at the
-   room, and the ? button is right there. */
-function resetDemo() {
-  [BOARD_K, DESIGN_K, PREF_K, PROG_K].forEach(function (k) {
+/* The activity's half of the shell's in-place Reset (ADOPTING.md section 4).
+   Called from app.js's `lessonreset` handler, which fires LAST, after the shell
+   has closed every dialog, restored the tabs, cleared the check cards and the
+   cues, and selected stage 1.
+
+   ENUMERATED before it was written, because in-place is correct only if the
+   list is complete and every omission fails silently:
+     1. Persisted state — bw.design.v1 (saved designs), bw.prefs.v1 (toggles,
+        saved name, last level), bw.progress.v1 (best cost per level). The
+        class LEADERBOARD bw.board.v1 is NOT touched: orchestrator ruling
+        2026-09-16 — it holds other people's results, its loss is
+        unrecoverable, and the kit's Reset is one unconfirmed click. The
+        two-step clears below remain the only way to empty it, and Settings
+        says so beside the Reset button.
+     2. Every S property that loadLevel(0) does not set: showPar, xray, nums,
+        selfWeight, name, overload, keyboard, lastDebrief, sel, kstart, drag,
+        hover, shake, foldC, foldErr. (loadLevel sets li, L, phase, test,
+        coll, debris, undo, vehKey, nodes, members, kcur, analysis, unbraced.)
+        S.big is the shell's and is left as presentation mode is left.
+     3. Form controls, which never re-assert their template value: the six
+        checkboxes and their .tgl 'on' class, the vehicle <select> (rebuilt by
+        renderVehSel inside loadLevel), the debrief name field.
+     4. Canvas ARIA/tabIndex driven by the keyboard-editing preference.
+     5. The tool buttons' .active and the canvas cursor — via a real click on
+        Draw, so the one handler that owns that chrome runs.
+     6. Generated DOM: #fbd (hidden, key cleared), the docked weakest-link
+        readout, #dbBody, #lvGrid, #glGrid, #bdBody (innerHTML-filled, and
+        re-rendered on next open, so cleared here), #statusMsg.
+     7. Level 1 with its saved-design slot already removed in step 1, so the
+        starter is what loadLevel(0) finds. resize() first, because a Reset
+        from stage 3 relocates the activity to host 0 in the same pass.
+   Deliberately not touched: the Guide (a reset is not a fresh arrival) and
+   presentation mode (the presenter's, per CONTRACT). */
+function resetActivity() {
+  [DESIGN_K, PREF_K, PROG_K].forEach(function (k) {
     try { localStorage.removeItem(k); } catch (e) {}
   });
-  S.big = false; S.showPar = true; S.xray = true; S.nums = false; S.selfWeight = false;
+  S.showPar = true; S.xray = true; S.nums = false; S.selfWeight = false;
   S.name = ''; S.overload = false; S.keyboard = false;
-  S.lastDebrief = null; S.sel = -1; S.kstart = null;
-  $('tglBig').checked = false; $('tglPar').checked = true; $('tglKeyboard').checked = false;
+  S.lastDebrief = null; S.sel = -1; S.kstart = null; S.drag = null; S.hover = null;
+  S.shake = 0; S.foldC = null; S.foldErr = 0;
+  $('tglPar').checked = true; $('tglKeyboard').checked = false;
   $('tglOverload').checked = false;
   [['tglXray', true], ['tglNums', false], ['tglWeight', false]].forEach(function (p) {
     $(p[0]).checked = p[1];
     $(p[0]).closest('.tgl').classList.toggle('on', p[1]);
   });
   $('dbName').value = '';
-  applyPresentation();
   cv.tabIndex = -1;
   cv.setAttribute('role', 'img');
-  cv.setAttribute('aria-label', 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode.');
+  cv.setAttribute('aria-label', 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Settings.');
   document.querySelector('[data-tool=build]').click();
-  document.querySelectorAll('.modal').forEach(function (m) { m.classList.add('hidden'); });
-  $('fbd').classList.add('hidden');
+  var fbd = $('fbd'); fbd.hidden = true; fbd.innerHTML = ''; delete fbd.dataset.key;
+  ['dbBody', 'lvGrid', 'glGrid', 'bdBody'].forEach(function (id) { $(id).innerHTML = ''; });
+  setStatus('');
+  renderWeakest(null);
   resize();
   loadLevel(0);
 }
-armReset($('btnReset'), 'Reset', resetDemo, 'Reset — back to a first run.');
 
 /* ------------------------------------------------------------- main loop */
+/* frame() = stepFrame() + re-queue. The split is a pure extraction so that a
+   harness can drive stepFrame() by hand where requestAnimationFrame does not
+   tick (a hidden browser pane: 0 frames in 1.5 s, measured by the kit lane);
+   stepFrame() does not re-queue, so calling it on a live page cannot
+   double-run the simulation. */
 var last = 0;
-function frame(t) {
+function stepFrame(t) {
   var dt = Math.min(0.033, (t - last) / 1000 || 0.016); last = t;
   /* Any route out of the debrief returns to the build phase. Closing it with
      the ✕, clicking the backdrop or pressing Escape used to leave the game in
      'done' with a dead canvas — you could not draw again without clearing. */
-  if (S.phase === 'done' && $('mDebrief').classList.contains('hidden')) backToBuild();
-  if (S.phase === 'test' && !S.coll) stepTest(dt);
-  else if (S.coll && !S.coll.done) stepCollapse(dt);
-  stepDebris(dt);
-  draw(t);
+  if (S.phase === 'done' && !$('bw-debrief').open) backToBuild();
+  /* A load test freezes while any dialog is open — the shell's Details and
+     Guide included — so a presenter who opens the drawer mid-crossing does not
+     miss the failure. The build-phase fold animation keeps rocking; it is a
+     display of the current design, not an event. */
+  var paused = S.phase === 'test' && anyDialogOpen();
+  if (!paused) {
+    if (S.phase === 'test' && !S.coll) stepTest(dt);
+    else if (S.coll && !S.coll.done) stepCollapse(dt);
+    stepDebris(dt);
+  }
+  /* No layout box (the activity is parked in a hidden stage panel): the
+     simulation above still advanced; only the painting is skipped, because
+     every world->screen transform would divide by zero. */
+  if (cv.clientWidth > 0 && cv.clientHeight > 0) draw(t);
+}
+function frame(t) {
+  stepFrame(t);
   requestAnimationFrame(frame);
 }
 
 /* ----------------------------------------------------------------- start */
 (function init() {
   var pref = ls(PREF_K, {});
-  S.big = !!pref.big; S.showPar = pref.showPar !== false;
+  S.showPar = pref.showPar !== false;
   S.xray = pref.xray !== false; S.nums = !!pref.nums; S.selfWeight = !!pref.selfWeight;
   S.name = pref.name || ''; S.overload = !!pref.overload; S.keyboard = !!pref.keyboard;
   $('tglOverload').checked = S.overload;
-  applyPresentation();
-  $('tglBig').checked = S.big; $('tglPar').checked = S.showPar; $('tglKeyboard').checked = S.keyboard;
+  $('tglPar').checked = S.showPar; $('tglKeyboard').checked = S.keyboard;
   cv.tabIndex = S.keyboard ? 0 : -1;
   cv.setAttribute('role', S.keyboard ? 'application' : 'img');
   cv.setAttribute('aria-label', S.keyboard
     ? 'Bridge editing canvas. Arrow keys move the grid cursor; B starts or completes a member, E erases, and I inspects.'
-    : 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Teacher mode.');
+    : 'Bridge design canvas. Use the pointer to build, or enable keyboard editing in Settings.');
   $('tglXray').checked = S.xray; $('tglNums').checked = S.nums; $('tglWeight').checked = S.selfWeight;
   [['tglXray', S.xray], ['tglNums', S.nums], ['tglWeight', S.selfWeight]].forEach(function (p) {
     $(p[0]).closest('.tgl').classList.toggle('on', p[1]);
   });
+  renderWeakest(null);
   resize();
-  loadLevel(Math.min(pref.li || 0, LV.LEVELS.length - 1));
-  /* The how-to opens on every load — a demo gets a cold audience every time.
-     ✕, the backdrop, Escape or "Start building" all dismiss it, and ? reopens it. */
-  show('mHelp');
+  /* The saved level is honoured (a presenter who left on Level 3 comes back to
+     Level 3); app.js moves the stage tabs to match, or — when a #stage-N hash
+     chose a stage first — loads that stage's own level instead. */
+  S.savedLevel = Math.min(pref.li || 0, LV.LEVELS.length - 1);
+  loadLevel(S.savedLevel);
+  /* The Guide is the shell's now and it opens itself on load. */
   requestAnimationFrame(frame);
 })();
 
 S.view = V;
 window.BWGAME = S;   // exposed for the automated UI smoke test
+/* The lesson layer's whole view of this file. hooks are filled in by app.js. */
+window.bridgeWorks = {
+  S: S, hooks: hooks, LEVELS: LV.LEVELS,
+  levelIndex: function () { return S.li; },
+  loadLevel: loadLevel,
+  resetActivity: resetActivity,
+  remeasure: resize,
+  refresh: refresh,
+  stepFrame: stepFrame,
+  weakestSentence: weakestSentence,
+  lastDebrief: function () { return S.lastDebrief; },
+  openDialog: openDialog, closeDialog: closeDialog, anyDialogOpen: anyDialogOpen
+};
 })();
