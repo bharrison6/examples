@@ -368,12 +368,21 @@ TO.App = (function () {
     var net = g.net;
     var finishWd = g.finished ? g.finishWorkingDay : cpm.projectEnd;
     var lateCal = U.calDays(finishWd) - U.calDays(net.contractWorkingDays);
-    var totalFloat = 0, minFloat = Infinity, critNext = null;
+    /* Float is a property of a chain, not a sum over activities: INSP1, BKF,
+       SOG and SOGC share the same nine days at baseline, and adding them
+       gives 36 days that do not exist. The old readout summed TF over every
+       unfinished activity (135 wd at baseline) and its "lowest non-critical"
+       line took the minimum over ALL activities, critical ones included, so
+       it read 0 for the whole game. This cell now shows the one number that
+       is true and useful: the tightest float among activities that still
+       have some, i.e. the next chain that goes critical if anything slips. */
+    var minFloat = Infinity, tightest = null, offPath = 0, critNext = null;
     g.net.activities.forEach(function (a) {
       if (g.state[a.id].finishDay !== null) return;
       var r = cpm.results[a.id];
-      totalFloat += r.tf;
-      if (r.tf < minFloat) minFloat = r.tf;
+      if (r.tf <= 0) return;
+      offPath++;
+      if (r.tf < minFloat) { minFloat = r.tf; tightest = a.id; }
     });
     for (var i = 0; i < cpm.chain.length; i++) {
       if (g.state[cpm.chain[i]].finishDay === null) { critNext = cpm.chain[i]; break; }
@@ -400,8 +409,9 @@ TO.App = (function () {
         g.cash < 0 ? 'bad' : 'good') : '') +
       cell('Critical path', critNext ? critNext : '—',
         critNext ? esc(g.byId[critNext].name) : 'complete', '', 'grow') +
-      cell('Total float left', totalFloat + ' wd',
-        'lowest non-critical: ' + (isFinite(minFloat) ? minFloat : 0) + ' wd', '', 'opt');
+      cell('Tightest float off the path', tightest ? minFloat + ' wd' : '—',
+        tightest ? esc(tightest) + ' · ' + offPath + ' activit' + (offPath === 1 ? 'y' : 'ies') + ' still carry float'
+                 : 'everything left is critical', '', 'opt');
 
     function cell(lab, val, sub, cls, extra) {
       return '<div class="hud-cell ' + (extra || '') + '">' +

@@ -313,8 +313,12 @@ engine's self-tests check all <b>sixty</b> numbers in this table against the han
 student says the software is wrong, run the self-tests from the Settings menu in front of them.</p>
 
 <p class="note"><b>One indexing note.</b> The game numbers days from 0 and treats finish as exclusive, so
-EF = ES + duration. Textbook tables that number days 1 through <i>n</i> will read one higher on EF and LF.
-Say this once at the board and nobody argues about it later.</p>
+EF = ES + duration. Textbook tables that number days 1 through <i>n</i> (start day inclusive, so
+EF = ES + duration &minus; 1) read one higher on <b>ES and LS</b>; EF and LF come out identical. A three-day
+activity at the start is ES 0 / EF 3 here and ES 1 / EF 3 there, and its LS is one higher there for the same
+reason. Say this once at the board and nobody argues about it later. (Earlier printings of this note named
+EF and LF as the pair that shifts; that was wrong, and the fact-preservation check passed it &mdash; a check
+that every token still lands cannot tell a true sentence from a false one.)</p>
 
 <h3>Why the critical path moves</h3>
 <p>Because it is recomputed every Monday against reality, not read off a baseline. Completed activities are

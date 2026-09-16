@@ -203,7 +203,7 @@ holds sit in their own hatched block headed *"running on their own — nothing y
   lag on the arrows, the driving path thick and red.
 
 A persistent HUD carries day count, contract date, projected finish against it, cash position,
-the current critical activity and total float remaining. Glossary tooltips sit on every term a
+the current critical activity and the tightest float among the activities still off the path (float is shared along a chain, so the HUD does not sum it). Glossary tooltips sit on every term a
 first-year will not know yet — float, free float, lag, LDs, general conditions, crash, trade
 stacking.
 
