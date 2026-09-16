@@ -244,6 +244,20 @@
       (status.kind === 'ready' ? 'Visible evidence: ' + status.text : 'Still gathering — ' + status.text);
   }
 
+  /* NOTE ON ORDERING: renderCase() deliberately does NOT call updateEcho().
+     The shell's own selectStage(0) — part of its Reset sequence — fires
+     `stagechange` BEFORE `lessonreset` (see index.js's resetLesson: step 7
+     precedes step 9), and this app's `stagechange` listener calls
+     renderCase() for whichever stage that lands on. At that moment `guesses`
+     still holds its PRE-reset values (this handler's own lessonreset clears
+     them, but that has not fired yet) — so if renderCase() called
+     updateEcho() here, a Reset would re-populate the very .echo element the
+     shell just correctly hid via its first-load snapshot. Calling
+     updateEcho() only from the four interaction handlers below, never from
+     renderCase()/stagechange, means nothing re-touches .echo except an
+     actual user action, so it cannot resurrect stale content mid-reset.
+     Found and fixed during the browser pass — see ADOPTING.md's warning that
+     an in-place reset is correct only if the enumeration is complete. */
   function renderCase(stageIndex) {
     const caseId = CASE_IDS[stageIndex];
     const cs = byCase[caseId];
@@ -263,7 +277,6 @@
     const cue = byId('cue-core');
     cue.textContent = cs.cue;
     cue.className = 'obs-cue';
-    updateEcho(stageIndex, caseId);
   }
 
   /* ======================= interaction handlers ============================ */
@@ -276,6 +289,7 @@
     act(caseId, 'note:' + sectionId + ':' + layerId + ':' + result.label + ' — ' + names);
     byCase[caseId].cue = result.label + ': ' + names;
     renderCase(stageIndex);
+    updateEcho(stageIndex, caseId);
   }
 
   function onShowGaps(caseId, stageIndex) {
@@ -289,6 +303,7 @@
       ? 'Supplied age evidence revealed — ' + totalGapMyr.toFixed(2) + ' Myr missing in total. See the evidence panel above.'
       : 'Supplied age evidence revealed — no missing interval in this authored section.';
     renderCase(stageIndex);
+    updateEcho(stageIndex, caseId);
   }
 
   function onChoose(caseId, stageIndex, conclusionIndex) {
@@ -296,6 +311,7 @@
     if (status.kind !== 'ready') {
       byCase[caseId].feedback = status.text;
       renderCase(stageIndex);
+      updateEcho(stageIndex, caseId);
       return;
     }
     const good = conclusionIndex === 0;
@@ -304,6 +320,7 @@
       : 'That claim reaches beyond the visible evidence. ' + status.text;
     byCase[caseId].concluded = true;
     renderCase(stageIndex);
+    updateEcho(stageIndex, caseId);
   }
 
   function onReveal(caseId, stageIndex) {
