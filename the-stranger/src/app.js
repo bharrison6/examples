@@ -454,12 +454,36 @@ function announce(bits, card, termTotal, novelTotal) {
   const echo = $('#stage-' + (st + 1) + ' .echo');
   if (!echo) return;
   const chose = S.predictions[st];
-  const truth = st === 0 ? 'aim' : st === 1 ? 'filled' : (termTotal >= 15 ? 'high' : termTotal >= 5 ? 'mid' : 'low');
   const labels = {
     length: 'how long it is', aim: 'who it is aimed at', words: 'which words it uses',
     none: 'nothing changes', filled: 'something else fills it in', ask: 'it asks you',
     low: 'under five', mid: 'about ten', high: 'fifteen or more'
   };
+  /* F1 fix (R-the-stranger): each stage's prediction is about what its OWN
+     lever does when pulled, so it can only be judged against an Ask that
+     actually pulled that lever this time — never against whichever Ask
+     happens to run first. `tested` mirrors the condition the cue above is
+     already describing in prose for this same Ask (context ON; success spec
+     OFF, i.e. a card was dealt; keywords ON), so cue and echo can never
+     contradict each other. */
+  const tested = st === 0 ? bits[0] === '1'
+    : st === 1 ? !!card
+    : bits[2] === '1';
+  if (!tested) {
+    if (chose) {
+      const untested = {
+        0: 'Not yet — this Ask had lever 1 off. Turn it on and ask again to see if you were right.',
+        1: 'Not yet — this Ask had lever 2 on, so no card was dealt. Turn it off and ask again to see if you were right.',
+        2: 'Not yet — this Ask had lever 3 off. Turn it on and ask again to see if you were right.'
+      }[st];
+      echo.innerHTML = '<b>You predicted:</b> ' + labels[chose] + '. ' + untested;
+      echo.hidden = false;
+    } else {
+      echo.hidden = true;
+    }
+    return;
+  }
+  const truth = st === 0 ? 'aim' : st === 1 ? 'filled' : (termTotal >= 15 ? 'high' : termTotal >= 5 ? 'mid' : 'low');
   let txt = '<b>Observed:</b> ' + labels[truth] + '.';
   if (chose) {
     txt = '<b>You predicted:</b> ' + labels[chose] + '. ' + txt +
