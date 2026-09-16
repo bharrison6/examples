@@ -1120,6 +1120,7 @@ body.big .fr-tags .f.days { display: none; }
 .calls-table td.bad { color: var(--red); }
 .calls-table td.lucky { color: var(--amber); }
 .call-verdict { font-size: .82rem; line-height: 1.5; margin: 8px 0 0; color: var(--ink-2); }
+.debrief-progress { font-size: .88rem; line-height: 1.5; margin: 0 0 10px; }
 
 
 /* ---------- call detail + the safety flag ---------- */
@@ -6973,6 +6974,30 @@ TO.App = (function () {
     if (!g) renderSetup();
   }
 
+  /* A row is a score only if the game that wrote it had finished. Between
+     the lesson-shell retrofit and 2026-09-16 the Stage 4 "Open the debrief"
+     button could reach showDebrief() mid-game, and that wrote
+     {profit: null, finish: "NaN/NaN"} rows and then blocked the real score
+     from ever being recorded. Those rows are dropped on load, once, with a
+     console note rather than an alert: the learner did nothing wrong. */
+  function isScoreRow(e) {
+    return !!e && typeof e.profit === 'number' && isFinite(e.profit) &&
+      typeof e.finish === 'string' && !/NaN|undefined/.test(e.finish) &&
+      typeof e.late === 'number' && isFinite(e.late);
+  }
+  function cleanLeaderboard() {
+    var lb = store('to.leaderboard');
+    if (!Array.isArray(lb)) return;
+    var kept = lb.filter(isScoreRow);
+    if (kept.length === lb.length) return;
+    store('to.leaderboard', kept);
+    if (window.console && console.info) {
+      console.info('[topping-out] dropped ' + (lb.length - kept.length) +
+        ' leaderboard row(s) written by an unfinished game (no profit / NaN finish); ' +
+        kept.length + ' kept.');
+    }
+  }
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
       return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c];
@@ -7821,8 +7846,30 @@ TO.App = (function () {
   /* =================================================================
      DEBRIEF
      ================================================================= */
+  /* Two shapes. Mid-game (Stage 4's "Open the debrief" button, reachable
+     from the first commit) it prints the calls table so far under an
+     in-progress header and WRITES NOTHING — every final figure below
+     (profit, completion date, days against contract) is undefined until
+     Game.finish() has run, and a leaderboard row recorded here would be
+     the null row cleanLeaderboard() exists to remove. At finish it records
+     the score once and prints the full scoresheet. */
   function showDebrief() {
-    var lb = store('to.leaderboard') || [];
+    if (!g.finished) {
+      var contractWeeks = Math.ceil(g.net.contractWorkingDays / 5);
+      document.getElementById('debrief-body').innerHTML =
+        '<h3>Result</h3>' +
+        '<p class="debrief-progress">Week <b>' + g.week + '</b> of a ' + contractWeeks +
+        '-week contract is still open. Final profit, the completion date and the leaderboard row are ' +
+        'recorded when the last activity finishes — <b>the full debrief is available at finish</b>. ' +
+        'The calls so far are below; the roll on each one is already fixed by the seed.</p>' +
+        '<h3>The calls you made</h3>' + callsTable();
+      document.getElementById('debrief-head-sub').textContent =
+        g.teamName + ' · seed ' + g.seed + ' · week ' + g.week + ' in progress';
+      openSheet('debrief-sheet');
+      return;
+    }
+
+    var lb = (store('to.leaderboard') || []).filter(isScoreRow);
     var entryId = g.seed + '|' + g.teamName + '|' + lb.length;
     if (!g._recorded) {
       g._recorded = true;
@@ -8408,6 +8455,7 @@ TO.App = (function () {
     });
 
     setupState.seed = '';
+    cleanLeaderboard();
     renderSetup();
     moveBoardTo(0);
     buildStage(0);
