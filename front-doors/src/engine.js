@@ -160,6 +160,7 @@ function sourceUses(D) {
   }
   many(D.CHECK_NOTE.src, 'check note');
   for (const ch of D.CHANGED) many(ch.src, 'changed: ' + ch.was);
+  for (const r of (D.RECHECKED || [])) many(r.src, 'rechecked: ' + r.claim);
   many(D.UNEVEN.src, 'uneven row');
   note(D.UNEVEN.quoteSrc, 'uneven row quote');
   return uses;
@@ -234,6 +235,7 @@ function screenStrings(D) {
   };
   for (const k of ['INTRO', 'AXES', 'AXIS_NOTE', 'DOORS', 'CELLS', 'CHECK_NOTE',
                    'JOBS', 'JOBS_NOTE', 'VERDICT_LABEL', 'CHANGED', 'CHANGED_NOTE',
+                   'RECHECKED', 'RECHECKED_NOTE',
                    'STALE', 'UNEVEN', 'CUT', 'CONF_LABEL', 'SOURCE_NOTE']) {
     walk(D[k], k);
   }

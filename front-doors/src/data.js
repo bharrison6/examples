@@ -38,8 +38,8 @@ const DATA = (() => {
    When this was checked. The single most important number on the page.
    -------------------------------------------------------------------------- */
 
-const CHECKED_ON = '8 September 2026';
-const CHECKED_ISO = '2026-09-08';
+const CHECKED_ON = '16 September 2026';
+const CHECKED_ISO = '2026-09-16';
 
 const INTRO = {
   title: 'Every one of these is the same model. What changes is how far it can reach.',
@@ -144,8 +144,8 @@ const DOORS = [
     products: 'Codex (OpenAI) · Claude Code (Anthropic) · Antigravity (Google)',
     where: 'A terminal, an IDE, a desktop app, and in two of the three the cloud.',
     whereSrc: ['openai-codex-cli', 'claude-code', 'antigravity'],
-    confusable: 'All three arrive as several surfaces rather than as one program. OpenAI’s Codex is a terminal command, an IDE extension and a view inside the ChatGPT desktop app — and notably it is NOT selectable on the web or on a phone, which is the reverse of every other door here. Anthropic’s spans a terminal command, a desktop app, the web, and VS Code and JetBrains extensions. Google’s is an app, a CLI, an SDK, IDE extensions and a remote-control mode. “Which one is it” has no single answer, and that is normal at this door.',
-    confusableSrc: ['openai-work-codex', 'openai-codex-cli', 'claude-code', 'antigravity'],
+    confusable: 'All three arrive as several surfaces rather than as one program. OpenAI’s Codex is a terminal command, an IDE extension and a view inside the ChatGPT desktop app — and, confirmed again on this page’s check date, it is still NOT selectable on the web or on a phone, which is the reverse of every other door here. Anthropic’s spans a terminal command, a desktop app, the web, and VS Code and JetBrains extensions. Google’s is an app, a CLI, an SDK, IDE extensions and a remote-control mode. “Which one is it” has no single answer, and that is normal at this door.',
+    confusableSrc: ['openai-work-codex', 'openai-codex-cli', 'claude-code', 'antigravity', 'antigravity-remote'],
     cost: 'mixed',
     costText: 'Two need a paid plan; Google’s has a free individual tier.',
     costSrc: ['claude-pricing', 'openai-work-codex', 'antigravity-pricing'],
@@ -433,6 +433,43 @@ const CHANGED = [
 
 const CHANGED_NOTE = 'Three changes, all inside about six months, two of them first-party and dated. This is the evidence for the sentence at the top: the doors will outlast the names on them.';
 
+/* --------------------------------------------------------------------------
+   What was RE-checked and held. CHANGED above is the drift; this is the
+   other half of the same evidence — a claim this page could have gotten
+   stale on that a real browser, opened on RECHECKED_ON, shows is still
+   exactly what the page says. Symmetric evidence: understating what a
+   source supports is as much a defect as overstating it (operator standing
+   constraint, 2026-09-16), and this page's own top-ranked misleading risk
+   from the pre-build audit — whether Codex is still unselectable on web and
+   mobile — belongs on screen with its source and date, not only in a build
+   log. Every entry here was opened in an ordinary signed-in-style browser
+   session, which is how OpenAI's help pages are meant to be read; automated
+   script fetches 403 on this host (SOURCE_NOTE), which is why these needed
+   a human-style browser pass rather than a tool call.
+   -------------------------------------------------------------------------- */
+const RECHECKED_ON = '16 September 2026';
+const RECHECKED = [
+  {
+    claim: 'OpenAI’s Codex is still not selectable on the web or on a phone',
+    body: 'This page’s own pre-build audit ranked this its single most misleading risk, because the claim could not be confirmed either way from an automated fetch — help.openai.com returns HTTP 403 to a script. Opened directly in a browser instead: still true, in the vendor’s own FAQ wording, on the check date.',
+    quote: 'Codex is not selectable on web or mobile. You can access supported desktop Codex chats from the Remote tab in the ChatGPT mobile app.',
+    conf: 'verified', src: ['openai-work-codex']
+  },
+  {
+    claim: 'The “Chat is for fast, conversational assistance” sentence is still live, word for word',
+    body: 'A re-pass of the pre-build audit found a search-index result that looked like the sentence had drifted to different wording. Opened directly: the original sentence is still on the page, unchanged, immediately followed by parallel definitions of Work and Codex.',
+    quote: 'Chat is for fast, conversational assistance and everyday questions. Work is an agent designed for longer, multi-step work and finished deliverables. Codex remains dedicated to software development and technical work.',
+    conf: 'verified', src: ['openai-work-codex']
+  },
+  {
+    claim: '“ChatGPT agent is no longer available” — still the page’s opening line',
+    body: 'Previously confirmed only by a search-engine snippet, not a direct read of the page. A direct browser read on the check date shows the identical sentence still leads the article.',
+    quote: 'ChatGPT agent is no longer available. Use ChatGPT Work for longer, multi-step tasks and finished deliverables.',
+    conf: 'verified', src: ['openai-agent-retired']
+  }
+];
+const RECHECKED_NOTE = 'None of this page’s claims about OpenAI’s products had gone stale. The risk the pre-build audit flagged highest turned out to be a gap in what an automated fetch could reach, not a wrong claim — which is exactly why this page is re-verified in a real browser rather than trusted to a script, and why a rechecked-and-held claim gets the same visible treatment as a changed one.';
+
 /* What will rot, and what will not. Stated as a prediction so it can be checked. */
 const STALE = {
   head: 'What to expect to be wrong, and when',
@@ -535,8 +572,11 @@ const SOURCES = {
     t: 'Google Workspace admin help — Turn Gemini Enterprise on or off for users: administrator-controlled, licensed separately from Workspace',
     u: 'https://knowledge.workspace.google.com/admin/generative-ai/gemini-enterprise/turn-gemini-enterprise-on-or-off-for-users', kind: 'primary' },
   'antigravity': {
-    t: 'Google — Antigravity documentation: the app, the CLI, the SDK, IDE extensions, remote control, subagents, browser control and Review Changes',
-    u: 'https://antigravity.google/docs/getting-started', kind: 'primary' },
+    t: 'Google — Antigravity 2.0 overview: agents that execute system commands, read/write files, manage subagents and interact with Chrome',
+    u: 'https://antigravity.google/docs/overview/', kind: 'primary' },
+  'antigravity-remote': {
+    t: 'Google — Antigravity Remote Control: driving a desktop Antigravity session from a browser on another device',
+    u: 'https://antigravity.google/docs/remote-control/', kind: 'primary' },
   'antigravity-pricing': {
     t: 'Google — Antigravity pricing: a free individual tier, whose model list includes models that are not Google’s',
     u: 'https://antigravity.google/pricing', kind: 'primary' }
@@ -552,7 +592,8 @@ const CONF_LABEL = {
 
 return {
   CHECKED_ON, CHECKED_ISO, INTRO, AXES, AXIS_NOTE, DOORS, CELLS, CHECK_NOTE,
-  JOBS, JOBS_NOTE, VERDICT_LABEL, CHANGED, CHANGED_NOTE, STALE, UNEVEN,
+  JOBS, JOBS_NOTE, VERDICT_LABEL, CHANGED, CHANGED_NOTE,
+  RECHECKED_ON, RECHECKED, RECHECKED_NOTE, STALE, UNEVEN,
   CUT, SOURCES, SOURCE_NOTE, CONF_LABEL
 };
 })();
