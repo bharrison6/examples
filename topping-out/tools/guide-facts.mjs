@@ -40,7 +40,16 @@
    NEGATIVE CONTROL is built in: `verify --selftest` deletes one known token
    from the destination set in memory and asserts the checker FAILS. A
    coverage check that cannot fail proves nothing, and this one has to
-   demonstrate it can before its pass is worth reading. */
+   demonstrate it can before its pass is worth reading.
+
+   RETRACTED TOKENS. A preservation check has a blind spot the other way: it
+   preserves a FALSE sentence perfectly. On 2026-09-16 this checker passed
+   191/191 over a guide whose "eight measured seeds" figures had never matched
+   the engine. So the ledger carries a `retracted` map — token -> {reason,
+   replacedBy, retractedOn}. A retracted token is accounted for only if it is
+   ABSENT from every destination (a false figure still printed somewhere is a
+   fork) AND its `replacedBy` token is PRESENT (the correction landed). Both
+   halves are asserted; neither is a waiver. `enumerate` preserves the map. */
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -193,7 +202,9 @@ function enumerate() {
   const u = units(body);
   const full = textOf(body);
   const t = tokensOfUnits(u);
+  const prior = fs.existsSync(LEDGER) ? JSON.parse(fs.readFileSync(LEDGER, 'utf8')) : {};
   const ledger = {
+    retracted: prior.retracted || {},
     enumerated: new Date().toISOString(),
     source: 'src/teacher-guide.html',
     words: full.split(/\s+/).length,
@@ -225,8 +236,16 @@ function verify(opts) {
   }
 
   const hay = haystack.toLowerCase().replace(/\s+/g, ' ');
-  const missing = [];
+  const retracted = ledger.retracted || {};
+  const missing = [], forks = [], unlanded = [];
   for (const tok of Object.keys(ledger.tokens)) {
+    if (tok in retracted) {
+      /* retracted: must be gone, and its replacement must be here */
+      if (hay.includes(tok)) forks.push(tok);
+      const rep = String(retracted[tok].replacedBy || '').toLowerCase();
+      if (!rep || !hay.includes(rep)) unlanded.push(tok + ' -> ' + (rep || '(no replacedBy)'));
+      continue;
+    }
     if (!hay.includes(tok)) missing.push(tok);
   }
 
@@ -241,8 +260,10 @@ function verify(opts) {
   const sessionWords = d.session.split(/\s+/).filter(Boolean).length;
   console.log(`session guide: ${sessionWords} words (A9 band: <= 2500)`);
   console.log(`appendix: ${d.appendix.split(/\s+/).filter(Boolean).length} words`);
+  const nRet = Object.keys(ledger.tokens).filter(t => t in retracted).length;
   console.log(`tokens enumerated: ${Object.keys(ledger.tokens).length}`);
-  console.log(`tokens located:    ${Object.keys(ledger.tokens).length - missing.length}`);
+  console.log(`tokens located:    ${Object.keys(ledger.tokens).length - nRet - missing.length}`);
+  console.log(`tokens retracted:  ${nRet} (each must be absent everywhere and its replacement present)`);
 
   if (opts.map) {
     for (const t of Object.keys(ledger.tokens)) console.log(`  ${where(t).padEnd(22)} ${t}`);
@@ -254,9 +275,21 @@ function verify(opts) {
     if (opts.selftest) { console.log('\nself-test OK: the checker failed as it was supposed to.'); process.exit(0); }
     process.exit(1);
   }
+  if (forks.length || unlanded.length) {
+    if (forks.length) {
+      console.error(`\nRETRACTION FAIL: ${forks.length} retracted (false) token(s) still appear in a destination:`);
+      forks.forEach(t => console.error('  - ' + t + '   (' + retracted[t].reason + ')'));
+    }
+    if (unlanded.length) {
+      console.error(`\nRETRACTION FAIL: ${unlanded.length} retraction(s) whose replacement token is not present anywhere:`);
+      unlanded.forEach(t => console.error('  - ' + t));
+    }
+    process.exit(1);
+  }
   if (opts.selftest) { console.error('\nSELFTEST FAIL: removing a token did not make the check fail.'); process.exit(1); }
   if (sessionWords > 2500) { console.error(`\nA9 FAIL: session guide is ${sessionWords} words, over the 2,500 band`); process.exit(1); }
-  console.log('\nFACT PRESERVATION OK — every enumerated token lands in the session guide, the appendix or on-screen UI.');
+  console.log('\nFACT PRESERVATION OK — every enumerated token lands in the session guide, the appendix or on-screen UI' +
+    (nRet ? `, and all ${nRet} retracted tokens are gone with their replacements present.` : '.'));
 }
 
 /* ---- the unit layer ---------------------------------------------------- */
