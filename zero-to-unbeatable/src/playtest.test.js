@@ -967,6 +967,14 @@ head('7. Step 1 — the hand-written rules');
     RULES.LADDER.length === 8 && RULES.LADDER.every((r, i) => r.id === i + 1));
   check('every depth preset offered in the app is one the search has an answer for',
     RULES.DEPTHS.every(d => typeof RULES.report(d.n).safe === 'boolean'));
+  /* Operator item 1 (2026-09-16): the app opens on the First 2 rules, because
+     that is the opponent the 1a Predict card asks about. Pinned deliberately
+     -- with eight as the default, the prediction was unanswerable as set. The
+     default must also be a beatable ladder, or the prediction has no live
+     answer, and it must be one of the presets the segmented control offers. */
+  check('the app opens on the two-rule ladder the 1a prediction is about',
+    RULES.DEFAULT_DEPTH === 2 && RULES.report(RULES.DEFAULT_DEPTH).safe === false &&
+    RULES.DEPTHS.some(d => d.n === RULES.DEFAULT_DEPTH));
 
   /* The README says rule 8 is the list being tidy: by the time "empty
      side" could fire, a side is the only thing left to play, so seven
