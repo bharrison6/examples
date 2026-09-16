@@ -1365,6 +1365,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin-bottom: 14px;
   border: 1px solid var(--line); border-radius: 12px; background: var(--cream);
 }
+.map-switch.board-switch { margin-bottom: 10px; }
 .map-btn {
   min-height: 46px; border: 0; border-radius: 9px; padding: 6px 12px; background: transparent;
   color: var(--ink-2); font: inherit; font-weight: 800; font-size: calc(var(--u) * .92); text-align: center; line-height: 1.2; cursor: pointer;
@@ -1577,6 +1578,17 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <div id="era-strip" hidden></div>
         </section>
 
+        <!-- 1c only: the optional Ultimate extension is one press away on the
+             stage itself, not a button inside a dialog (operator ruling
+             2026-09-16 — "what happened to our ultimate tictactoe?"). Same
+             shape as 1d's switch. app.js shows this only while the stage is
+             1c, and it is not gated on having trained: the ultimate learner
+             is a table seeded from 1b, and reads nothing from the network. -->
+        <div class="map-switch board-switch" role="group" aria-label="Which board to play" id="board-switch" hidden>
+          <button type="button" class="map-btn" data-board="net" aria-pressed="true"><span>Standard board</span><small>the network you train here</small></button>
+          <button type="button" class="map-btn" data-board="ult" aria-pressed="false"><span>Ultimate tic-tac-toe</span><small>optional extension: a learner that cannot see the whole game</small></button>
+        </div>
+
         <!-- ============================ BOARD ========================= -->
         <section id="board-wrap" aria-label="The game">
           <span class="panel-kicker board-kicker"><span class="k-live">Live</span> the opponent computes each reply here, now</span>
@@ -1742,7 +1754,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <button type="button" class="predict-btn" data-answer="higher" aria-pressed="false">Clearly higher</button>
         </div>
         <span class="echo" hidden></span></article>
-      <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score.</p></article>
+      <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score. Optional: switch the board to <b>Ultimate tic-tac-toe</b> for a learner whose inputs leave out part of the game.</p></article>
       <article><span>Takeaway</span><p>Shared weights give the network an answer for a board it never practised on &mdash; which a table simply cannot do &mdash; and training on other boards makes that answer better. The error readings say how close the answer is to the teacher&rsquo;s, not how well it plays.</p></article>
     </div>
   </section>
@@ -2290,7 +2302,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   <li><span class="beat">0:00</span> Press <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its estimates freeze as targets. This is the one slow step.</li>
   <li><span class="beat">1:30</span> In the network view, pick a connection layer and a neuron; read one weight and its initialized value.</li>
   <li><span class="beat">2:30</span> Press <b>Train network</b>. Compare the weight with its initial value, then the practised and held-out errors, then the separate playing score. <b>Show move scores</b> shows predictions for legal moves.</li>
-  <li><span class="beat">5:00</span> Optional: from <b>Details</b>, open the Ultimate tic-tac-toe extension to show a representation that cannot see the whole game.</li>
+  <li><span class="beat">5:00</span> Optional: press <b>Ultimate tic-tac-toe</b> above the board to show a representation that cannot see the whole game; <b>Standard board</b> brings the network back.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>The network is a feedforward multilayer perceptron (29 inputs, 28 and 18 ReLU units, one output) fitted by supervised learning to targets another model produced. Backpropagation supplies gradients; updates are normalized gradient steps. Shared weights give an answer for a held-out position; the error readings say how close, and neither is playing strength.</p>
@@ -6854,16 +6866,7 @@ function renderBanner() {
       `<p><b>Prediction error:</b> MSE is the average squared difference between a predicted score and the frozen example’s score; zero means an exact match. On practiced examples it went from ${baseline.metrics.trainMse.toFixed(3)} before training to ${m.trainMse.toFixed(3)} now. On positions kept out of training it went from ${baseline.metrics.heldMse.toFixed(3)} to ${m.heldMse.toFixed(3)}. Related rotations and reflections stay together.</p>` +
       `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} won, ${baseline.play.draws} drawn, ${baseline.play.losses} lost; now: ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
       `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
-      `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
-    setTimeout(() => {
-      const b = $('#btn-ultimate');
-      if (b) b.addEventListener('click', () => {
-        $('#details').close();
-        S.mode = 'ult';
-        applyMode();
-        cue('Ultimate tic-tac-toe: the learner scores each small board but cannot see where it sits or where a move sends you.', true);
-      });
-    }, 0);
+      `<p>The optional <b>Ultimate tic-tac-toe</b> extension is the second button above the board: a table learner inherited from 1b, playing a game its inputs cannot fully see.</p>`;
     return;
   }
 
@@ -7611,6 +7614,10 @@ function applyMode() {
   document.body.classList.toggle('step-ult', ult);
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
+  /* The board switch belongs to stage 1c: it shows for the network and
+     for the ultimate extension it opens, and for nothing else. */
+  $('#board-switch').hidden = !(isNet() || ult);
+  $$('#board-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.board === S.mode)));
   $('#era-select').hidden = rules || isNet();
   $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
@@ -7643,6 +7650,17 @@ $('#btn-train').addEventListener('click', () => {
   if (isNet() && S.training) { S.cancelTraining = true; return; }
   train();
 });
+/* 1c's board switch. Not gated on having trained: the ultimate learner is
+   S.liveU, a table seeded from 1b's table by maybeSeed() inside applyMode,
+   and nothing in its path reads S.neural. Switching mid-training stops the
+   burst first, as a stage change does. */
+$$('#board-switch .map-btn').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.board === S.mode) return;
+  if (S.training) S.cancelTraining = true;
+  S.mode = b.dataset.board;
+  $('#selftest-out').textContent = '';
+  applyMode();
+}));
 $('#btn-stop-training').addEventListener('click', () => { S.cancelTraining = true; });
 $('#btn-newgame').addEventListener('click', newGame);
 function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }

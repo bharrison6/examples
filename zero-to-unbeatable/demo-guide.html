@@ -132,7 +132,7 @@ body { margin: 0; background: #fff; color: #14181f; font: 16px/1.55 system-ui, -
   <li><span class="beat">0:00</span> Press <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its estimates freeze as targets. This is the one slow step.</li>
   <li><span class="beat">1:30</span> In the network view, pick a connection layer and a neuron; read one weight and its initialized value.</li>
   <li><span class="beat">2:30</span> Press <b>Train network</b>. Compare the weight with its initial value, then the practised and held-out errors, then the separate playing score. <b>Show move scores</b> shows predictions for legal moves.</li>
-  <li><span class="beat">5:00</span> Optional: from <b>Details</b>, open the Ultimate tic-tac-toe extension to show a representation that cannot see the whole game.</li>
+  <li><span class="beat">5:00</span> Optional: press <b>Ultimate tic-tac-toe</b> above the board to show a representation that cannot see the whole game; <b>Standard board</b> brings the network back.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>The network is a feedforward multilayer perceptron (29 inputs, 28 and 18 ReLU units, one output) fitted by supervised learning to targets another model produced. Backpropagation supplies gradients; updates are normalized gradient steps. Shared weights give an answer for a held-out position; the error readings say how close, and neither is playing strength.</p>

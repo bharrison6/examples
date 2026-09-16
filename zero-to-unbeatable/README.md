@@ -41,9 +41,9 @@ Predict/Try/Takeaway strip, the board and the controls together.
   initialization, with layer sizes derived from the current model.
   Backpropagation supplies derivatives for normalized gradient updates; this is
   supervised fitting to frozen estimates, not evolutionary optimization.
-  Ultimate tic-tac-toe is an optional representation-limit extension reached from
-  this stage's Details: a network cannot recover facts absent from its inputs
-  merely by changing weights.
+  Ultimate tic-tac-toe is an optional representation-limit extension, one press
+  away on the board switch above this stage's board: a network cannot recover
+  facts absent from its inputs merely by changing weights.
 - **1d · Other architectures & training methods** holds both axes on one screen.
   Six pressable **training method** cards — supervised, unsupervised,
   self-supervised, reinforcement, semi-supervised, and no training at all — light

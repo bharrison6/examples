@@ -1075,16 +1075,7 @@ function renderBanner() {
       `<p><b>Prediction error:</b> MSE is the average squared difference between a predicted score and the frozen example’s score; zero means an exact match. On practiced examples it went from ${baseline.metrics.trainMse.toFixed(3)} before training to ${m.trainMse.toFixed(3)} now. On positions kept out of training it went from ${baseline.metrics.heldMse.toFixed(3)} to ${m.heldMse.toFixed(3)}. Related rotations and reflections stay together.</p>` +
       `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} won, ${baseline.play.draws} drawn, ${baseline.play.losses} lost; now: ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
       `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
-      `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
-    setTimeout(() => {
-      const b = $('#btn-ultimate');
-      if (b) b.addEventListener('click', () => {
-        $('#details').close();
-        S.mode = 'ult';
-        applyMode();
-        cue('Ultimate tic-tac-toe: the learner scores each small board but cannot see where it sits or where a move sends you.', true);
-      });
-    }, 0);
+      `<p>The optional <b>Ultimate tic-tac-toe</b> extension is the second button above the board: a table learner inherited from 1b, playing a game its inputs cannot fully see.</p>`;
     return;
   }
 
@@ -1832,6 +1823,10 @@ function applyMode() {
   document.body.classList.toggle('step-ult', ult);
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
+  /* The board switch belongs to stage 1c: it shows for the network and
+     for the ultimate extension it opens, and for nothing else. */
+  $('#board-switch').hidden = !(isNet() || ult);
+  $$('#board-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.board === S.mode)));
   $('#era-select').hidden = rules || isNet();
   $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
@@ -1864,6 +1859,17 @@ $('#btn-train').addEventListener('click', () => {
   if (isNet() && S.training) { S.cancelTraining = true; return; }
   train();
 });
+/* 1c's board switch. Not gated on having trained: the ultimate learner is
+   S.liveU, a table seeded from 1b's table by maybeSeed() inside applyMode,
+   and nothing in its path reads S.neural. Switching mid-training stops the
+   burst first, as a stage change does. */
+$$('#board-switch .map-btn').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.board === S.mode) return;
+  if (S.training) S.cancelTraining = true;
+  S.mode = b.dataset.board;
+  $('#selftest-out').textContent = '';
+  applyMode();
+}));
 $('#btn-stop-training').addEventListener('click', () => { S.cancelTraining = true; });
 $('#btn-newgame').addEventListener('click', newGame);
 function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }
