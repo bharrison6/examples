@@ -48,7 +48,7 @@
   // (Flagged for kit v3: the Predict control is required by template part A2 and
   // reinvented by every demo that obeys it.)
   const PREDICT_LABELS = {
-    llm: { sentences: 'real English sentences', fragments: 'English-looking fragments' },
+    llm: { yes: 'it can add', no: 'it cannot do math' },
     reason: { direct: 'the answers-only model', worked: 'the worked-steps model', same: 'about the same' },
     agent: { finish: 'it still finishes', stall: 'it loses the goal' }
   };
@@ -473,10 +473,14 @@
     /* TEXT.ERAS is the full era list, so eras.length === TEXT.ERAS.length means
        every era has been trained and the prediction can be settled. */
     if (eras.length >= TEXT.ERAS.length) {
-      revealPrediction('llm', 'fragments',
-        'It writes English-looking fragments: the spacing, the letter runs and the short words are ' +
-        'the shape of the language, but it is not saying anything true. 42,458 parameters and one ' +
-        'short story buy the shape, not the content.');
+      /* The vocabulary is read from the model's own character set, never
+         typed, so this sentence cannot drift from what the model can see. */
+      const letters = TEXT.chars.filter(c => /[a-z]/.test(c)).length;
+      revealPrediction('llm', 'no',
+        'It cannot. It has never seen a digit: its whole vocabulary is ' + letters + ' letters, a space ' +
+        'and a full stop, so a prompt like 2+2= reaches it as blank spaces and it answers with story-like ' +
+        'letters. A model learns what is in its training text, and this one\u2019s text is a story. ' +
+        'Stage 2 trains the same kind of model on sums.');
     }
   });
 
