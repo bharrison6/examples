@@ -121,7 +121,7 @@
     ]
   },
   "closing": {
-    "line": "When AI gives you a bad answer, ask which lever you left unpulled.",
+    "line": "When AI gives you a useless answer, ask which lever you left unpulled — when it is wrong, out of date, refusing, or past what it can do, no lever fixes that.",
     "sub": "Context. Success spec. Expert keywords. The stranger on the corner never knew who you were — you were the one who could tell it."
   }
 }

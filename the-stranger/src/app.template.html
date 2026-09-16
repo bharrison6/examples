@@ -109,6 +109,21 @@ body.mode-presenter #left{font-size:.8em}
 #leftScroll{flex:1 1 auto;min-height:0;overflow:auto}
 #askDock{flex:0 0 auto;border-top:1px solid var(--line);background:rgba(0,10,20,.94);box-shadow:0 -12px 16px -12px rgba(0,0,0,.9)}
 #right{display:flex;flex-direction:column;min-height:0;position:relative}
+/* The standing disclosure. It is a STATIC sibling of #cols, never a child of it:
+   stream(), pin() and showQuiz() each assign #colLive.innerHTML / #colPin.innerHTML,
+   so anything living inside a column is destroyed by the Ask that produces the
+   answer. That is exactly how the old showEmpty() start-card disclosure vanished
+   after the first Ask, leaving an "Assistant" byline and a typewriter as the only
+   things on screen. Keep this outside the columns and it cannot be wiped. */
+#scriptedBar{
+  flex:0 0 auto;display:flex;align-items:center;gap:.5em;flex-wrap:wrap;
+  padding:.4em var(--pad);border-bottom:1px solid var(--line);background:var(--sunk);
+  font-size:.68em;color:var(--dim);letter-spacing:.02em
+}
+#scriptedBar .sb-tag{
+  flex:0 0 auto;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--onacc);background:var(--acc);border-radius:5px;padding:.14em .45em
+}
 .paneTitle{
   font-size:.68em;letter-spacing:.16em;text-transform:uppercase;color:var(--dim2);
   padding:.85em var(--pad) .5em;flex:0 0 auto;
@@ -473,10 +488,10 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
       </div>
       <div id="askDock">
       <div id="promptWrap">
-        <div class="paneTitle" style="padding-left:0;padding-bottom:.2em">Step 2 &mdash; this is exactly what gets sent</div>
+        <div class="paneTitle" style="padding-left:0;padding-bottom:.2em">Step 2 &mdash; this is the whole prompt</div>
         <div id="promptBox"></div>
       </div>
-      <div class="paneTitle" style="padding-bottom:.15em">Step 3 &mdash; send it</div>
+      <div class="paneTitle" style="padding-bottom:.15em">Step 3 &mdash; ask</div>
       <div id="askRow">
         <button class="btn primary" id="btnAsk" title="Send this prompt (Enter)">Ask</button>
         <button class="btn" id="btnSkip" title="Jump to the end of the typing animation (Space)">Skip typing</button>
@@ -486,6 +501,10 @@ kbd{border:1px solid var(--line);background:var(--sunk);border-radius:5px;paddin
     </section>
 
     <section id="right">
+      <div id="scriptedBar">
+        <span class="sb-tag">Scripted</span>
+        <span>Hand-written example answer &mdash; no model runs here.</span>
+      </div>
       <div id="cols">
         <div class="col" id="colPin" hidden></div>
         <div class="col" id="colLive"></div>
@@ -994,7 +1013,7 @@ function responseNode(sc, bits, card, opts){
   wrap.innerHTML =
     '<div class="av">◉</div>'+
     '<div class="bubble ai">'+
-      '<div class="aihead"><span class="nm">Assistant</span>'+
+      '<div class="aihead"><span class="nm">Example answer</span>'+
         (card ? '<span class="chip target">'+DATA.cards[card].icon+" "+esc(DATA.cards[card].label)+"</span>" : "")+
         '<span class="chip">'+leverLabel(bits)+"</span>"+
       "</div>"+
