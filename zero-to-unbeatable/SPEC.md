@@ -66,7 +66,7 @@ error and the fixed-seed playing score remain separate measurements. No neural-
 network unbeatable claim appears unless that exact policy is separately verified
 and the wording is deliberately revised.
 
-Stage 1d holds both axes. Six pressable training-method cards distinguish
+Stage 1d holds both axes, plus a third part. Six pressable training-method cards distinguish
 supervised, unsupervised, self-supervised, reinforcement and semi-supervised
 learning, plus no training at all, without treating them as mutually exclusive
 model families; pressing one names which of 1a-1c used it, read from this demo's
@@ -76,6 +76,12 @@ come from humans. Gradient and evolutionary methods are optimization approaches.
 Six architecture cards list linear/logistic models, learned trees, ensembles,
 nearest neighbours, support-vector machines and probabilistic/Bayesian models;
 search/planning is identified separately as a problem-solving approach.
+Method card faces never name 1a-1c (the press does); supervised,
+self-supervised and reinforcement cards carry a Sourced "used for" stage note.
+The third part, learning with no weight change, has three Sourced cards
+(in-context, retrieval, search at decision time) whose press line about this
+demo is Reasoned from its code. The Model types stage has no Predict card and
+adds a `BEYOND` group of own-page-sourced model types beside the Hub catalogue.
 
 The Model types stage is generated from `src/model-types.js`, which carries
 Hugging Face's task taxonomy as fetched on 2026-09-16: the six group headings,
