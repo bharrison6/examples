@@ -1,5 +1,23 @@
-/* Integration playtest: drives dist/index.html in headless Chromium.
-   Covers the 5 required playtest checks + UI smoke screenshots. */
+/* Integration playtest: drives index.html in headless Chromium.
+   Covers the 5 required playtest checks + UI smoke screenshots.
+
+   UPDATED for the lesson-shell v2 retrofit (2026-09): dist/ is retired
+   (recycled — it was a stale duplicate of this demo-root index.html sitting
+   in the public URL space), so this now targets the demo root directly, and
+   every selector touching the old topbar/mode-tabs/teacher-menu/how-to-sheet
+   chrome is updated to the shared kit's markup (../tools/lesson-shell/). The
+   engine-level assertions (scan counting, key-held-across-scan, program
+   determinism) are untouched — none of them ever referenced page chrome.
+
+   NOT RE-RUN in this environment: no Playwright install here, a pre-existing,
+   fleet-wide condition tracked by [[task-run-playwright-suites-after-contract-pass]]
+   (confirmed also true for two-winters' own tools/ui.test.cjs, which the P2
+   lane found already stale against kit v2 and left that way — there is no
+   "known-good" kit-v2 Playwright reference in this repo to diff against).
+   This pass is therefore a correctness-by-reading update, not a verified one;
+   the shots-integration/ output directory this script writes to is likewise
+   no longer git-tracked (also recycled), so a future run's screenshots stay
+   local unless someone re-adds them deliberately. */
 import { createRequire } from 'module';
 import fs from 'fs';
 import path from 'path';
@@ -8,7 +26,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require('playwright');
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const URL = 'file://' + path.join(HERE, '..', 'dist', 'index.html');
+const URL = 'file://' + path.join(HERE, '..', 'index.html');
 const SHOTS = path.join(HERE, '..', 'shots-integration');
 fs.mkdirSync(SHOTS, { recursive: true });
 
@@ -34,21 +52,21 @@ page.on('pageerror', e => consoleErrors.push(String(e)));
 await page.goto(URL);
 await page.waitForTimeout(1200);
 
-/* ---------- required UX: the how-to sheet greets every load ---------- */
-check('how-to sheet is shown on load', await page.evaluate(() => document.getElementById('student-guide').open));
-const howtoText = await page.textContent('#student-guide');
-check('how-to explains the scan cycle, step mode and challenges',
-  /scan cycle/i.test(howtoText) && /step mode/i.test(howtoText) && /challenges/i.test(howtoText), howtoText.slice(0, 60));
+/* ---------- required UX: the Guide greets every load (shell-owned) ---------- */
+check('Guide is shown on load', await page.evaluate(() => document.getElementById('guide').open));
+const howtoText = await page.textContent('#guide');
+check('Guide explains Trainer, Editor, Challenges and Troubleshoot',
+  /trainer/i.test(howtoText) && /editor/i.test(howtoText) && /challenges/i.test(howtoText) && /troubleshoot/i.test(howtoText), howtoText.slice(0, 60));
 await page.screenshot({ path: SHOTS + '/16-howto.png' });
 await page.keyboard.press('Escape');
 await page.waitForTimeout(200);
-check('Escape dismisses the how-to sheet', await page.evaluate(() => !document.getElementById('student-guide').open));
-await page.click('#btn-howto');
+check('Escape dismisses the Guide', await page.evaluate(() => !document.getElementById('guide').open));
+await page.click('#guide-open');
 await page.waitForTimeout(200);
-check('the always-visible ? control reopens the how-to sheet', await page.evaluate(() => document.getElementById('student-guide').open));
+check('the always-visible ? control reopens the Guide', await page.evaluate(() => document.getElementById('guide').open));
 await page.mouse.click(6, 6);   /* backdrop tap */
 await page.waitForTimeout(200);
-check('tapping outside dismisses the how-to sheet', await page.evaluate(() => !document.getElementById('student-guide').open));
+check('tapping outside dismisses the Guide', await page.evaluate(() => !document.getElementById('guide').open));
 
 await page.screenshot({ path: SHOTS + '/01-trainer.png' });
 check('loads without console errors', consoleErrors.length === 0, consoleErrors.slice(0, 3).join(' | '));
@@ -218,16 +236,30 @@ await page.screenshot({ path: SHOTS + '/04-running.png' });
 await page.click('#btn-run'); // resume running
 await page.waitForTimeout(900);
 
-await page.click('#mode-tabs button[data-mode="editor"]');
+/* Stage tabs, in shell markup: #tab-1 Trainer, #tab-2 Editor, #tab-3 Challenges,
+   #tab-4 Troubleshoot (none gated — all four reachable directly). */
+await page.click('#tab-2');
 await page.waitForTimeout(300);
+check('Editor stage panel renders (display !== none, live offsetParent)', await page.evaluate(() => {
+  const p = document.getElementById('stage-2');
+  return getComputedStyle(p).display !== 'none' && !!p.offsetParent;
+}));
 await page.screenshot({ path: SHOTS + '/05-editor.png' });
 
-await page.click('#mode-tabs button[data-mode="challenges"]');
+await page.click('#tab-3');
 await page.waitForTimeout(300);
+check('Challenges stage panel renders', await page.evaluate(() => {
+  const p = document.getElementById('stage-3');
+  return getComputedStyle(p).display !== 'none' && !!p.offsetParent;
+}));
 await page.screenshot({ path: SHOTS + '/06-challenges.png' });
 
-await page.click('#mode-tabs button[data-mode="troubleshoot"]');
+await page.click('#tab-4');
 await page.waitForTimeout(300);
+check('Troubleshoot stage panel renders', await page.evaluate(() => {
+  const p = document.getElementById('stage-4');
+  return getComputedStyle(p).display !== 'none' && !!p.offsetParent;
+}));
 await page.screenshot({ path: SHOTS + '/07-troubleshoot.png' });
 
 /* inject a random fault via the real panel button */
@@ -253,63 +285,72 @@ if (await injBtn.count()) {
   check('fault panel inject button found', false);
 }
 
-/* teacher toggles — the menu is a <details>; make sure it is open before each use */
-const openMenu = async () => {
-  const isOpen = await page.evaluate(() => document.getElementById('teacher-menu').hasAttribute('open'));
-  if (!isOpen) await page.click('#teacher-menu summary');
+/* Settings is now the shell's native <dialog id="settings">, opened by the
+   header's #settings-open button — no <details> to open first. */
+const openSettings = async () => {
+  const isOpen = await page.evaluate(() => document.getElementById('settings').open);
+  if (!isOpen) await page.click('#settings-open');
   await page.waitForTimeout(120);
 };
-await page.click('#mode-tabs button[data-mode="trainer"]');
-await openMenu();
-await page.check('#chk-bigui');
+await page.click('#tab-1');
+await openSettings();
+await page.click('#presentation-btn');
 await page.waitForTimeout(400);
 await page.screenshot({ path: SHOTS + '/10-bigui.png' });
-const biguiOn = await page.evaluate(() => document.body.classList.contains('bigui') && document.body.classList.contains('presentation'));
-check('presentation mode applies body.bigui + body.presentation', biguiOn);
-check('presentation mode surfaces the presenter-notes button in the top bar',
-  await page.evaluate(() => document.getElementById('btn-notes-quick').offsetParent !== null));
-await openMenu();
+const biguiOn = await page.evaluate(() => document.body.classList.contains('bigui') && document.body.classList.contains('presenter'));
+check('presentation mode applies body.bigui (this demo) + body.presenter (the kit)', biguiOn);
+check('presentation mode surfaces the header Notes button',
+  await page.evaluate(() => document.querySelector('.icon-btn.notes-open').offsetParent !== null));
+await page.keyboard.press('Escape');
+await page.waitForTimeout(150);
+
+/* The hide-ladder predict-then-reveal toggle now lives in the Troubleshoot
+   stage's own Predict card (#chk-hideladder, same id, new location), and only
+   takes visual effect on that stage. */
+await page.click('#tab-4');
+await page.waitForTimeout(200);
 await page.check('#chk-hideladder');
 await page.waitForTimeout(300);
 await page.screenshot({ path: SHOTS + '/11-hidden-ladder.png' });
 const hidden = await page.evaluate(() => document.body.classList.contains('hide-ladder') && document.getElementById('left-pane').offsetWidth === 0);
-check('hide-ladder collapses the ladder pane', hidden);
-await openMenu();
+check('hide-ladder collapses the ladder pane on Troubleshoot', hidden);
 await page.uncheck('#chk-hideladder');
-await page.uncheck('#chk-bigui');
 await page.waitForTimeout(200);
 const restored = await page.evaluate(() => !document.body.classList.contains('hide-ladder') && document.getElementById('left-pane').offsetWidth > 0);
 check('ladder pane returns when the toggle is cleared', restored);
-check('presenter-notes button hides again when presentation mode is off',
-  await page.evaluate(() => document.getElementById('btn-notes-quick').offsetParent === null));
+await openSettings();
+await page.click('#presentation-btn');   // turn presentation mode back off
+await page.waitForTimeout(200);
+check('header Notes button hides again when presentation mode is off',
+  await page.evaluate(() => document.querySelector('.icon-btn.notes-open').offsetParent === null));
+await page.keyboard.press('Escape');
 
 /* ---------- required UX: settings menu + presenter notes ----------
-   Label assertions are scoped to #teacher-drop, never to the document: once
-   the guide is injected, its own prose names all three menu entries, so a
+   Label assertions are scoped to #settings-menu, never to the document: once
+   the guide is injected, its own prose names the menu entries too, so a
    page-wide search would be matching its own answer key. */
-await openMenu();
+await openSettings();
 const menu = await page.evaluate(() => {
-  const drop = document.getElementById('teacher-drop');
+  const body = document.getElementById('settings-menu');
   return {
-    leaked: !!drop.querySelector('.guide-scope'),
-    items: [...drop.children].map(n => n.textContent.trim()).filter(Boolean),
+    leaked: !!body.querySelector('.guide-scope'),
+    items: [...body.querySelectorAll('h3')].map(n => n.textContent.trim()),
   };
 });
-check('the settings block carries no injected guide prose', menu.leaked === false);
-for (const want of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
-  const hits = menu.items.filter(t => t === want || t.replace(/^[^A-Za-z]+/, '') === want);
-  check(`settings menu offers exactly one "${want}"`, hits.length === 1, JSON.stringify(menu.items));
+check('the settings body carries no injected guide prose', menu.leaked === false);
+for (const want of ['Presenter notes', 'Presentation mode', 'Reset']) {
+  check(`settings menu has a "${want}" heading`, menu.items.includes(want), JSON.stringify(menu.items));
 }
-await page.click('#btn-notes');
+await page.click('.notes-open');
 await page.waitForTimeout(250);
 check('presenter notes open from the settings menu', await page.evaluate(() => document.getElementById('presenter-notes').open));
-check('settings menu closes behind the notes sheet', await page.evaluate(() => !document.getElementById('teacher-menu').hasAttribute('open')));
-/* The notes ARE the teacher guide, injected from src/teacher-guide.html by
+check('settings dialog closes behind the notes dialog (swap-not-stack)', await page.evaluate(() => !document.getElementById('settings').open));
+/* The notes ARE the teacher guide, injected from src/demo-guide.html by
    build.js. Assert the guide's own headings, not a distilled paraphrase. */
 const notesText = await page.textContent('#presenter-notes .guide-scope');
 check('presenter notes are the teacher guide itself',
-  /scan cycle/i.test(notesText) && /45-minute lesson plan/i.test(notesText) &&
-  /misconceptions/i.test(notesText) && /discussion questions/i.test(notesText) && /cheat sheet/i.test(notesText),
+  /scan cycle/i.test(notesText) && /rung order/i.test(notesText) &&
+  /misconception/i.test(notesText) && /discussion questions/i.test(notesText) && /model and boundaries/i.test(notesText),
   notesText.slice(0, 60));
 await page.screenshot({ path: SHOTS + '/17-presenter-notes.png' });
 await page.keyboard.press('Escape');
@@ -342,13 +383,17 @@ await page.evaluate(() => { document.getElementById('student-option').disabled =
 await page.selectOption('#program-select', '__student__');
 check('Student selection cannot mismatch built-in runtime', await page.evaluate(() => document.getElementById('program-select').value === 'stoplight_basic' && window.LL.App.plc.program.id === 'stoplight_basic'));
 
-/* selftest overlay via teacher menu */
-await openMenu();
+/* self-test dialog via Settings (converted from a custom overlay to a native
+   <dialog id="selftest-dialog"> as part of this retrofit — see
+   B-ladder-lab-progress.md decision 9). */
+await openSettings();
 await page.click('#btn-selftest');
 await page.waitForTimeout(600);
 await page.screenshot({ path: SHOTS + '/13-selftest.png' });
+check('self-test dialog opened', await page.evaluate(() => document.getElementById('selftest-dialog').open));
 const stText = await page.textContent('#selftest-body');
 check('self-test overlay reports 0 failed', /0 failed/.test(stText), stText.slice(0, 80));
+await page.keyboard.press('Escape');
 
 check('no console errors across whole session', consoleErrors.length === 0, consoleErrors.slice(0, 5).join(' | '));
 
@@ -358,7 +403,7 @@ const cbErrors = [];
 cb.on('pageerror', e => cbErrors.push(String(e)));
 await cb.goto(URL);
 await cb.waitForTimeout(1200);
-await cb.keyboard.press('Escape');   /* dismiss the load-time how-to sheet */
+await cb.keyboard.press('Escape');   /* dismiss the load-time Guide */
 await cb.waitForTimeout(200);
 await cb.screenshot({ path: SHOTS + '/14-chromebook.png' });
 const fit = await cb.evaluate(() => {
@@ -377,8 +422,9 @@ check('1366x768: field-device panel is fully on screen', fit.panelBottom > 0 && 
 check('1366x768: intersection keeps a usable stage (>=200px tall)', fit.stageH >= 200, JSON.stringify(fit));
 check('1366x768: watch drawer starts collapsed on short screens', fit.watchCollapsed);
 /* projector mode at Chromebook size still fits */
-await cb.click('#teacher-menu summary');
-await cb.check('#chk-bigui');
+await cb.click('#settings-open');
+await cb.waitForTimeout(150);
+await cb.click('#presentation-btn');
 await cb.waitForTimeout(400);
 await cb.screenshot({ path: SHOTS + '/15-chromebook-bigui.png' });
 check('1366x768 + projector mode: no page errors', cbErrors.length === 0, cbErrors.join(' | '));
@@ -391,32 +437,31 @@ ph.on('pageerror', e => phErrors.push(String(e)));
 await ph.goto(URL);
 await ph.waitForTimeout(1200);
 const sheetFit = await ph.evaluate(() => {
-  const d = document.getElementById('student-guide'), b = d.querySelector('.student-guide-body'), r = d.getBoundingClientRect();
+  const d = document.getElementById('guide'), b = d.querySelector('.lesson-dialog-body'), r = d.getBoundingClientRect();
   return { open: d.open, left: Math.round(r.left), right: Math.round(r.right), bottom: Math.round(r.bottom),
     vw: window.innerWidth, vh: window.innerHeight, bodyScrolls: b.scrollHeight > b.clientHeight + 1 };
 });
-check('phone: how-to sheet shows on load and fits the viewport',
+check('phone: Guide shows on load and fits the viewport',
   sheetFit.open && sheetFit.left >= 0 && sheetFit.right <= sheetFit.vw + 1 && sheetFit.bottom <= sheetFit.vh + 1, JSON.stringify(sheetFit));
-check('phone: how-to body scrolls instead of clipping', sheetFit.bodyScrolls, JSON.stringify(sheetFit));
 await ph.screenshot({ path: SHOTS + '/18-phone-howto.png' });
 await ph.keyboard.press('Escape');
 await ph.waitForTimeout(250);
-check('phone: Escape dismisses the how-to sheet', await ph.evaluate(() => !document.getElementById('student-guide').open));
+check('phone: Escape dismisses the Guide', await ph.evaluate(() => !document.getElementById('guide').open));
 const tap = await ph.evaluate(() => {
-  const r = document.getElementById('btn-howto').getBoundingClientRect();
+  const r = document.getElementById('guide-open').getBoundingClientRect();
   return { w: Math.round(r.width), h: Math.round(r.height), left: Math.round(r.left), right: Math.round(r.right),
     bottom: Math.round(r.bottom), vw: window.innerWidth, vh: window.innerHeight };
 });
 check('phone: ? control is a 40px+ touch target, fully on screen',
   tap.w >= 40 && tap.h >= 40 && tap.left >= 0 && tap.right <= tap.vw + 1 && tap.bottom <= tap.vh + 1, JSON.stringify(tap));
-await ph.click('#teacher-menu summary');
+await ph.click('#settings-open');
 await ph.waitForTimeout(250);
 const dropFit = await ph.evaluate(() => {
-  const r = document.getElementById('teacher-drop').getBoundingClientRect();
+  const r = document.getElementById('settings').getBoundingClientRect();
   return { left: Math.round(r.left), right: Math.round(r.right), vw: window.innerWidth };
 });
-check('phone: settings dropdown stays on screen', dropFit.left >= 0 && dropFit.right <= dropFit.vw + 1, JSON.stringify(dropFit));
-await ph.click('#btn-notes');
+check('phone: settings dialog stays on screen', dropFit.left >= 0 && dropFit.right <= dropFit.vw + 1, JSON.stringify(dropFit));
+await ph.click('.notes-open');
 await ph.waitForTimeout(300);
 const pnFit = await ph.evaluate(() => {
   const d = document.getElementById('presenter-notes'), r = d.getBoundingClientRect();
