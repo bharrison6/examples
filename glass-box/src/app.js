@@ -6,6 +6,38 @@
   const fmt = (n) => n.toLocaleString('en-US');
   const pct = (x) => Math.round(x * 100) + '%';
 
+  // ---------- first-load snapshot, for the in-place Reset ----------
+  // Taken HERE, at the top of the module, before a single render runs, so it
+  // records what the TEMPLATE says rather than what the app has since written.
+  // Reset restores from this instead of from hand-copied string literals.
+  //
+  // This is not belt-and-braces. resetA2DerivedUI() is the demo's "rerun the
+  // experiment" path and it deliberately writes *rerun* wording into
+  // #starstatus ("Each round uses externally generated problems...") which is
+  // NOT the template's first-load wording ("Each round samples fresh
+  // problems..."). Calling it from Reset therefore leaves the page subtly not
+  // at first load — the exact quiet failure ADOPTING.md 4 warns about, and one
+  // no build check or node suite can see. Snapshotting is what makes "back to
+  // the start" mean the same thing as a fresh load.
+  const FIRST_LOAD = {};
+  [
+    'statphase', 'statstep', 'statloss', 'livesample', 'erachips', 'corpusstats',
+    'trainbtn', 'tempval', 'pmap', 'wpeekcap', 'scalebars', 'a1params', 'a1params2',
+    'a2status', 'a2trainbtn', 'accD', 'accS', 'exD', 'exS', 'midacc',
+    'votebtn', 'votestatus', 'votebars', 'chainpeek', 'starbtn', 'starstatus', 'starbars',
+    'goaltext', 'transcript', 'candidates', 'rawctx', 'ctxtok'
+  ].forEach((id) => {
+    const el = $(id);
+    if (el) FIRST_LOAD[id] = { html: el.innerHTML, cls: el.className, disabled: !!el.disabled };
+  });
+  function restoreFirstLoad(id) {
+    const el = $(id), was = FIRST_LOAD[id];
+    if (!el || !was) return;
+    el.innerHTML = was.html;
+    el.className = was.cls;
+    if ('disabled' in el) el.disabled = was.disabled;
+  }
+
   // ---------- training backend ----------
   // Preferred: a real Web Worker built from WORKER_SRC, so training never
   // touches the UI thread. Some hosts (sandboxed previews, strict CSP) refuse
@@ -57,72 +89,30 @@
     };
   })();
 
-  // ---------- stage navigation + evidence drawer ----------
-  const navs = [$('nav1'), $('nav2'), $('nav3')];
-  const acts = [$('act1'), $('act2'), $('act3')];
-  const detailNames = ['LLM', 'Reasoning', 'Agents'];
-  const detailsDialog = $('details');
-  const detailsBody = detailsDialog.querySelector('.details-body');
-  const detailsStages = [...detailsDialog.querySelectorAll('[data-details-stage]')];
-  let activeStage = 0, detailsOpener = null;
-
-  function syncDetailsStage(i) {
-    $('details-subtitle').textContent = detailNames[i];
-    detailsStages.forEach((section, j) => {
-      const on = i === j;
-      section.classList.toggle('on', on);
-      section.hidden = !on;
-    });
-    detailsBody.scrollTop = 0;
-  }
-
-  function selectStage(i, moveFocus) {
-    activeStage = i;
-    navs.forEach((button, j) => {
-      const on = i === j;
-      button.classList.toggle('on', on);
-      button.setAttribute('aria-selected', String(on));
-      button.tabIndex = on ? 0 : -1;
-      if (on && moveFocus) button.focus();
-    });
-    acts.forEach((section, j) => {
-      const on = i === j;
-      section.classList.toggle('on', on);
-      section.hidden = !on;
-    });
-    syncDetailsStage(i);
-    window.scrollTo({ top: 0 });
-    if (i === 0) requestAnimationFrame(() => {
+  // ---------- stage changes come from the shell ----------
+  // The lesson shell owns the stage tablist, the panel show/hide, the #stage-N
+  // hash, and the whole A5 Details drawer (including setting the drawer's
+  // subtitle from the selected tab's label). This demo's own copies of all of
+  // that were deleted when it adopted the kit; what is left is the one thing
+  // the shell cannot do — re-measure the canvases, which are sized in device
+  // pixels from their laid-out width and therefore draw wrong if they were
+  // laid out while their panel was hidden.
+  //
+  // Deliberately NOT rendering activity state here. ADOPTING.md 4 names the
+  // ordering hazard: the shell's reset calls selectStage(0) at step 7, which
+  // fires `stagechange` BEFORE `lessonreset` at step 9 — so a handler that
+  // rendered from activity state would paint the PRE-reset state into freshly
+  // reset chrome. These calls redraw canvases from whatever the current state
+  // is, and `resetting` keeps them out of the way entirely mid-reset.
+  let resetting = false;
+  document.addEventListener('stagechange', (event) => {
+    if (resetting) return;
+    if (event.detail.index !== 0) return;
+    requestAnimationFrame(() => {
       drawLoss();
-      if (eras.length && document.querySelector('[data-inspect="attention"]').classList.contains('on')) renderAttention();
+      const attOn = document.querySelector('[data-inspect="attention"]');
+      if (eras.length && attOn && attOn.classList.contains('on')) renderAttention();
     });
-  }
-
-  navs.forEach((button, i) => {
-    button.addEventListener('click', () => selectStage(i, false));
-    button.addEventListener('keydown', (event) => {
-      let next = null;
-      if (event.key === 'ArrowRight') next = (i + 1) % navs.length;
-      if (event.key === 'ArrowLeft') next = (i - 1 + navs.length) % navs.length;
-      if (event.key === 'Home') next = 0;
-      if (event.key === 'End') next = navs.length - 1;
-      if (next == null) return;
-      event.preventDefault();
-      selectStage(next, true);
-    });
-  });
-
-  document.querySelectorAll('.details-trigger').forEach((button) => button.addEventListener('click', () => {
-    detailsOpener = button;
-    syncDetailsStage(Number(button.dataset.details));
-    detailsDialog.showModal();
-    document.body.classList.add('details-open');
-    detailsDialog.querySelector('.student-guide-head button').focus();
-  }));
-  detailsDialog.addEventListener('click', (event) => { if (event.target === detailsDialog) detailsDialog.close(); });
-  detailsDialog.addEventListener('close', () => {
-    document.body.classList.remove('details-open');
-    if (detailsOpener?.isConnected) detailsOpener.focus();
   });
 
   const inspectButtons = [...document.querySelectorAll('[data-inspect]')];
@@ -162,29 +152,17 @@
       selectInspector(inspectButtons[next].dataset.inspect, true);
     });
   });
-  // ---------- presentation mode ----------
-  // One CSS variable scales the whole page; the body class also reveals the
-  // header's quick route to the presenter's notes. Reachable from Settings and
-  // from the footer, so a presenter never has to hunt for it mid-session.
-  // CONTRACT.md names this control exactly "Presentation mode", so its state
-  // rides in a badge and in aria-pressed rather than inside the label.
-  const presBtn = $('presbtn'), presState = presBtn.querySelector('.state'), presFoot = $('presfoot');
-  function syncPresenterUI() {
-    const on = document.body.classList.contains('presenter');
-    presState.textContent = on ? 'on' : 'off';
-    presBtn.setAttribute('aria-pressed', String(on));
-    presFoot.textContent = on ? 'leave presentation mode' : 'presentation mode';
-  }
-  function togglePresenter(e) {
-    if (e) e.preventDefault();
-    document.body.classList.toggle('presenter');
-    syncPresenterUI();
-    // canvases are sized in device pixels from their laid-out width
-    window.dispatchEvent(new Event('resize'));
-  }
-  presBtn.addEventListener('click', togglePresenter);
-  presFoot.addEventListener('click', togglePresenter);
-  syncPresenterUI();
+  // ---------- presentation mode comes from the shell ----------
+  // setPresentation() in the shell toggles body.presenter, drives aria-pressed
+  // on #presentation-btn, relabels #presentation-foot and reveals the header
+  // Notes button. The one thing it cannot know is that this demo's canvases are
+  // sized in device pixels from their laid-out width, so a --u change has to be
+  // followed by a redraw. The shell fires a window resize for exactly this, and
+  // the resize listener at the foot of this file already redraws on it; this
+  // listener is here so the dependency is visible rather than incidental.
+  document.addEventListener('presentationchange', () => {
+    requestAnimationFrame(() => { drawLoss(); if (eras.length) renderAttention(); });
+  });
 
   // ════════════════════════ ACT 1 ════════════════════════
 
@@ -919,6 +897,95 @@
   $('agwindow').addEventListener('change', () => {
     renderTranscript();
     renderCandidates();
+  });
+
+  // ---------- Reset: the activity, back to first load, IN PLACE -------------
+  // Kit v2's Reset does not reload the page (operator ruling 2026-09-16). The
+  // shell restores what it owns — dialogs closed, every tab's first-load chrome,
+  // the A6 check cards, the .echo and .obs-cue lines, the Details drawer, stage
+  // 1, scroll to top — and then dispatches `lessonreset` LAST, so this handler
+  // has the final word on any node both touch.
+  //
+  // The pre-kit Reset here was a full page reload, chosen deliberately because
+  // this activity's state surface is the widest in the tour: a 42,458-parameter
+  // transformer training inside a Web Worker, four frozen era checkpoints, the
+  // playground and attention selections, two Act 2 models with their exam
+  // tables, the voting curve, the STaR rounds, and Act 3's transcript, tool log
+  // and context meter. A reload was correct BY CONSTRUCTION; a hand-written
+  // teardown is correct only if the enumeration is complete.
+  //
+  // What makes in-place safe here rather than merely shorter: the heavy state
+  // does not have to be unwound field by field. It lives in the worker, and
+  // `a1.init` / `a2.init` REBUILD it from fixed seeds (worker.js a1Init seeds
+  // 123 and 999; a2Init seeds ARITH.SEED_DATA), so re-sending the init command
+  // restores the model bit-for-bit to its boot state — the same
+  // correct-by-construction property the reload had, scoped to the worker
+  // instead of the document. a2Init is already re-run by a2Train on every run,
+  // so Act 2 only needs its UI and its caches cleared here.
+  //
+  // The enumeration, written down before the handler as ADOPTING.md 4 asks.
+  // In order: (1) in-flight work, (2) timers, (3) every module-scope variable,
+  // (4) every form control, (5) every node app.js filled that starts empty or
+  // with placeholder text, (6) the nested inspector tablist, (7) re-init.
+  document.addEventListener('lessonreset', () => {
+    resetting = true;
+
+    // (1) in-flight work. The worker checks ABORT between chunks and answers
+    // with `aborted`; without this a training run started before Reset would
+    // keep posting progress into a page that has been put back.
+    send({ cmd: 'abort' });
+
+    // (2) timers
+    if (pgAutoTimer) { clearInterval(pgAutoTimer); pgAutoTimer = null; }
+    $('pgauto').textContent = 'Write 60';
+    agentStopTimer();
+
+    // (3) module-scope state
+    a1Busy = false;
+    eras.length = 0;            // rewound, not replaced: eraModel() closes over it
+    mirror = null;
+    pgEra = -1;
+    pmapSel = -1;
+    attHead = 0;
+    attQ = -1;
+    a2Busy = false; a2Done = false;
+    cpD.length = 0; cpS.length = 0;
+    agMode = null;
+    ep = AGENT.newEpisode();
+
+    // (4) form controls — a template `value="..."` does not reassert itself
+    $('pginput').value = 'the robot sat in the ';
+    $('temp').value = '0.8';
+    $('tempval').textContent = '0.8';
+    $('tokinput').value = 'the robot saw the cat';
+    $('attinput').value = 'the cat sat on the warm stone path';
+    $('agwindow').value = '0';
+
+    // (5) every node app.js writes into, restored from the first-load snapshot
+    // rather than from string literals. Act 1's panels that a1.ready
+    // repopulates are ALSO snapshot-restored here, so the page is correct in
+    // the window between this handler and a1.ready arriving from the worker.
+    Object.keys(FIRST_LOAD).forEach(restoreFirstLoad);
+    delete $('trainbtn')._target;
+    $('ctxfill').style.width = '2%';
+    // The A2 caches that are not DOM: voting rows, STaR rounds, starBase.
+    // resetA2DerivedUI also rewrites some copy, so the snapshot restore above
+    // is re-applied to the nodes it touches.
+    resetA2DerivedUI();
+    ['votebtn', 'votestatus', 'votebars', 'chainpeek', 'starbtn', 'starstatus',
+      'starbars', 'midacc'].forEach(restoreFirstLoad);
+    pulseLoop('');
+    renderTranscript();
+    renderCandidates();
+
+    // (6) the nested inspector tablist is the activity's own, not the shell's
+    selectInspector('tokens', false);
+
+    // (7) rebuild the model on the boot path. a1.ready pushes era 0 back and
+    // re-renders every Act 1 panel from it.
+    send({ cmd: 'a1.init' });
+
+    resetting = false;
   });
 
   // ---------- boot ----------
