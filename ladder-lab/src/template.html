@@ -1,33 +1,245 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
+<meta name="description" content="A real PLC scan-cycle engine on the classic four-way stoplight: watch a scan run, edit ladder logic, build graded challenges, and troubleshoot injected faults.">
 <title>PLC Ladder Logic Trainer — Ladder Lab</title>
 <!--
-  PLC Ladder Logic Trainer (Ladder Lab) — a fully offline, deterministic PLC
-  trainer for the classroom. Single file: open it in any Chromium/Firefox
-  browser, no network needed.
-  Companion: teacher-guide.html (the printable one-page lesson plan). Its
-  scoped stylesheet and body are injected below at the GUIDE_CSS and GUIDE
-  placeholders, so Settings -> Open Presenter Notes shows that same document.
-  Each placeholder must appear exactly once, which is why this comment spells
-  them without their delimiters.
+  PLC Ladder Logic Trainer (Ladder Lab) — a single-file, offline PLC trainer
+  built on the classic four-way-stoplight program. Demo 9 of 16, Part four
+  (Example projects) of AI: From Zero to Takeoff.
+
+  Four stages, the four former mode tabs: Trainer (how one scan runs),
+  Editor (why rung order matters), Challenges (build it from a spec), and
+  Troubleshoot (find an injected fault). The engine, the seven built-in
+  programs, the constrained ladder editor, the four graded challenges and the
+  eleven injectable faults are all unchanged from before this retrofit —
+  this pass is format only. Scan-cycle semantics are engine-verified by
+  Settings -> Run engine self-test (21 assertions) and are not touched here.
+
+  Built against the shared lesson shell at ../tools/lesson-shell (build-time
+  only — see build.js). Companion: src/demo-guide.html, shipped as
+  teacher-guide.html (the filename predates the kit and demo.json keeps it,
+  per ADOPTING.md, so existing links to it do not break). Sources live in
+  src/ and are concatenated by build.js.
 -->
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
 <style>
 /*__CSS__*/
 </style>
-<!-- The teacher guide's own scoped typography, lifted verbatim from
-     src/teacher-guide.html by build.js. It comes after the app stylesheet so
-     the guide styles its own body inside the notes sheet. -->
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
 <style>
 /*__GUIDE_CSS__*/
 </style>
 </head>
 <body>
-  <header id="topbar">
-    <div id="brand"><span class="t1">PLC LADDER LOGIC TRAINER</span><span class="t2">MURRAY STATE · LADDER LAB</span></div>
 
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University &middot; Part four &middot; Example projects</span>
+      <h1>PLC Ladder Logic Trainer</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. The four former mode tabs become the four stages. Troubleshoot is
+       reachable at any time (not gated) — a learner is free to jump straight
+       to diagnosing a fault; the tour's prediction-before-evidence gate
+       (ruling 2) applies to demos that reveal an answer, and nothing here is
+       "the answer" in that sense: each stage is an independent activity on
+       the same shared engine. -->
+  <nav class="stages" role="tablist" aria-label="Ladder Lab lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Trainer</span><small>How does one scan run?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Editor</span><small>Why does rung order matter?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Challenges</span><small>Can you build it?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Troubleshoot</span><small>Can you find the fault?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- =========================== STAGE 1 · Trainer ========================= -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 9 of 16 &middot; Part four &middot; Stage 1</span>
+      <h2 id="stage-1-title">Watch one scan run.</h2>
+      <p class="stage-question">In what order does the PLC actually do its work, and when does a button press take effect?</p>
+      <p class="refresh"><b>Before you start.</b> A PLC is not event-driven: forever, it repeats one
+        <b>scan</b> &mdash; read every input into a snapshot, solve the ladder <b>rung</b> by rung from
+        that snapshot, then write every output at once. Nothing you press changes anything until the
+        <i>next</i> input read.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Pause the PLC, then press START. Will the ladder show it as ON before or after you press <b>Step Scan</b>?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Press <b>&#9208; Pause</b>, then <b>Step Scan</b> with the watch window open, and press START in between steps.</p></article>
+      <article><span>Takeaway</span><p>A PLC scan reads all inputs, solves the ladder from that one snapshot, then writes all outputs &mdash; a button press does nothing until the next input read.</p></article>
+    </div>
+  </section>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">You press START while the PLC is paused, between two scans. When does the ladder first show it as true?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Right. The input scan only happens at the start of the next full scan, so nothing on the ladder reflects the press until you step (or resume running).">Not until the next Step Scan (or the next running scan)</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="A PLC is not event-driven: it does not react the instant a signal changes. Your press sits in the physical input until the PLC's own input scan reads it — which, while paused, only happens when you step.">Immediately, the instant you press it</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- =========================== STAGE 2 · Editor =========================== -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 9 of 16 &middot; Part four &middot; Stage 2</span>
+      <h2 id="stage-2-title">Same two rungs. Different order. Different answer.</h2>
+      <p class="stage-question">Does it matter whether a rung comes before or after the one it depends on?</p>
+      <p class="refresh"><b>Before you start.</b> Rungs solve top to bottom, once per scan. A rung that
+        writes a bit hands it to <b>later</b> rungs in the <i>same</i> scan, but to <b>earlier</b> rungs
+        only on the <i>next</i> one. Stage 1's scan order is the mechanism; this stage is what it costs
+        you if you get the order wrong.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Load Program 6A (echo lags one scan) and 6B (echo follows the same scan) in turn. Which variant makes B_ECHO react one scan later?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Place instructions from the palette to build a rung, then press <b>&#9654; Run My Program</b> to send it to the live intersection.</p></article>
+      <article><span>Takeaway</span><p>A rung sees what an earlier rung wrote this same scan, but only sees a later rung's write on the following scan &mdash; rung order is part of a ladder program's meaning, not just its layout.</p></article>
+    </div>
+  </section>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Program 6B has the same two rungs as 6A, just in the opposite order. Does swapping the order change what the program does?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Yes. Ladder is a program, not a wiring diagram: solved in a fixed order, over and over. The same two rungs one scan apart is a different program, even though every instruction is identical.">Yes &mdash; the same logic, one scan later, is a different program</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Ladder looks like relay wiring, where order genuinely would not matter because current flows everywhere at once. A PLC scan does not: it solves rungs in program order, one at a time, so where a rung sits changes when its effect is visible.">No &mdash; it is the same two rungs, so it behaves the same</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ========================== STAGE 3 · Challenges ========================= -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 9 of 16 &middot; Part four &middot; Stage 3</span>
+      <h2 id="stage-3-title">Build it from a spec.</h2>
+      <p class="stage-question">Can you turn a plain-English requirement into a program that survives a real test, not just one that looks right?</p>
+      <p class="refresh"><b>Before you start.</b> Each challenge gives a <b>spec</b> (what the program
+        must do) and a fixed tag list to build it with. Stage 2 built rungs one at a time; here the
+        grader runs your finished program against a scripted sequence of inputs and checks the outputs
+        at every step.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Before you press Check on the seal-in challenge: will your program survive a momentary loss of the START signal, or drop out?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Build your rungs, then press <b>Check my program</b>. Use <b>Reveal hint</b> if you get stuck.</p></article>
+      <article><span>Takeaway</span><p>A program is "correct" when it produces the right outputs at every step of a real test sequence &mdash; not when it merely resembles the spec.</p></article>
+    </div>
+  </section>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">The grader marks your seal-in attempt PASSED. What has it actually verified?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="That is exactly what the grader checks: your program's outputs matched the scripted sequence at every step it looked at. A different, differently-wired program that produces the same outputs on that sequence passes just as well.">That your program's outputs matched the scripted test at every step it checked</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The grader has no single intended answer key to compare against &mdash; it runs your program and checks behavior. Two structurally different programs that behave identically on the test both pass; a PASSED badge is a behavioral match, not proof of a unique correct wiring.">That your program is the one intended, correct solution</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ========================= STAGE 4 · Troubleshoot ======================== -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 9 of 16 &middot; Part four &middot; Stage 4</span>
+      <h2 id="stage-4-title">Diagnose it before you look.</h2>
+      <p class="stage-question">Can you find an injected fault from how the intersection misbehaves, before you look at the ladder?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>fault</b> here is one changed instruction, tag or
+        timer preset &mdash; the rest of the program is untouched, and it still passes validation with
+        zero errors. Until you reveal it, the intersection's behavior is your only evidence.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Hide the ladder pane below, inject a fault, and guess which instruction changed from the intersection's behavior alone &mdash; then reveal it to check.</p><span class="echo" hidden></span>
+        <label class="predict-toggle"><input type="checkbox" id="chk-hideladder"> Hide ladder pane (predict-then-reveal)</label>
+      </article>
+      <article><span>Try</span><p>Press <b>Inject random fault</b>, watch the intersection, then press <b>I&rsquo;ve diagnosed it &mdash; reveal</b>.</p></article>
+      <article><span>Takeaway</span><p>The intersection's misbehavior is evidence about which instruction changed &mdash; the ladder confirms a diagnosis, it does not have to be where you start.</p></article>
+    </div>
+  </section>
+
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">A fault gives NS_GRN two OTE coils. The light stays on when it should not. Which coil is "winning"?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Both coils execute every scan, but only the last one solved determines the bit's value in that scan's committed output image &mdash; the earlier coil's write is simply overwritten before the scan ends.">The one solved last, every single scan</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Turning on first does not protect a coil's value: every OTE on the rungs still executes in program order this same scan, and whichever one is solved LAST leaves its value in the output image, regardless of who wrote first.">Whichever one turned it on first</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<!-- ===========================================================================
+     THE WORKBENCH — the live PLC engine, unchanged from before this retrofit.
+     Deliberately a SIBLING of the four .stage sections above, not nested
+     inside any one of them: the intersection and the watch window are a
+     continuous live simulation that keeps running no matter which stage is
+     selected (this was already true before the retrofit — sim-host and
+     watch-host were never hidden by the old mode switch either). Only the
+     content INSIDE the workbench (which pane shows, which controls are
+     visible) reacts to `stagechange`, in app.js's onStageChange().
+
+     This is also the A3 control-budget fix (plan §D.8, PhET implicit
+     scaffolding): the old top bar showed 11 controls at once regardless of
+     mode. Now the shared engine strip (Program, Run/Pause, Step, Reset) plus
+     one stage-specific control group is what is visible at once, capped at 6
+     — see B-ladder-lab-progress.md for the exact count per stage. Speed and
+     Scan time are progressive disclosure behind "Timing", not deleted.
+     =========================================================================== -->
+<section class="workbench" id="panes" aria-label="Ladder Lab live engine">
+  <div class="panel-head">
+    <div>
+      <span class="panel-kicker"><span class="k-live">Live</span> the scan count, image tables, ladder power-flow and intersection state, computed here every scan</span>
+      <h3>The engine</h3>
+    </div>
+    <span id="sel-status"></span>
+  </div>
+
+  <div class="engine-strip" id="engine-strip">
     <div class="tb-group" id="program-group">
       <span class="tb-label">Program</span>
       <select id="program-select" title="Load a built-in program"></select>
@@ -36,79 +248,50 @@
         <button id="btn-var-b" class="tb-btn" title="Rung order B (rungs swapped)">B</button>
       </span>
     </div>
-
-    <nav id="mode-tabs" aria-label="Mode">
-      <button data-mode="trainer" class="active">Trainer</button>
-      <button data-mode="editor">Editor</button>
-      <button data-mode="challenges">Challenges</button>
-      <button data-mode="troubleshoot">Troubleshoot</button>
-    </nav>
-
     <div class="tb-group">
-      <button id="btn-run" class="tb-btn primary" title="Run / pause the PLC (Space)">⏸ Pause</button>
+      <button id="btn-run" class="tb-btn primary" title="Run / pause the PLC (Space)">&#9208; Pause</button>
       <button id="btn-step" class="tb-btn" title="Advance exactly one full scan ( . )">Step Scan</button>
-      <button id="btn-reset" class="tb-btn" title="Reset the PLC and the intersection; the program is left alone">⟲ Reset PLC</button>
+      <button id="btn-reset" class="tb-btn" title="Reset the PLC and the intersection; the program is left alone">&#8634; Reset PLC</button>
     </div>
-
-    <div class="tb-group">
-      <span class="tb-label">Speed</span>
-      <select id="speed-select" title="Simulation speed multiplier">
-        <option value="0.25">¼×</option>
-        <option value="0.5">½×</option>
-        <option value="1" selected>1×</option>
-        <option value="2">2×</option>
-        <option value="5">5×</option>
-        <option value="10">10×</option>
-        <option value="25">25×</option>
-      </select>
-      <span class="tb-label">Scan</span>
-      <select id="scan-select" title="Milliseconds of simulated time per PLC scan">
-        <option value="10">10 ms</option>
-        <option value="20" selected>20 ms</option>
-        <option value="50">50 ms</option>
-        <option value="100">100 ms</option>
-        <option value="200">200 ms</option>
-      </select>
-    </div>
-
+    <details class="tb-group tb-disclosure" id="timing-disclosure">
+      <summary>Timing &amp; speed</summary>
+      <div class="tb-disclosure-body">
+        <label class="control-label" for="speed-select">Speed<span class="why">How fast simulated time runs relative to the wall clock.</span></label>
+        <select id="speed-select" title="Simulation speed multiplier">
+          <option value="0.25">&frac14;&times;</option>
+          <option value="0.5">&frac12;&times;</option>
+          <option value="1" selected>1&times;</option>
+          <option value="2">2&times;</option>
+          <option value="5">5&times;</option>
+          <option value="10">10&times;</option>
+          <option value="25">25&times;</option>
+        </select>
+        <label class="control-label" for="scan-select">Scan time<span class="why">Simulated milliseconds per PLC scan — real PLCs run roughly 1&ndash;20&nbsp;ms.</span></label>
+        <select id="scan-select" title="Milliseconds of simulated time per PLC scan">
+          <option value="10">10 ms</option>
+          <option value="20" selected>20 ms</option>
+          <option value="50">50 ms</option>
+          <option value="100">100 ms</option>
+          <option value="200">200 ms</option>
+        </select>
+      </div>
+    </details>
     <div id="run-status" class="tb-group" title="PLC run state">
       <span id="run-led" class="on"></span>
-      <span id="scan-readout">scan 000000 · t=0.00 s</span>
+      <span id="scan-readout">scan 000000 &middot; t=0.00 s</span>
     </div>
+  </div>
 
-    <span id="sel-status"></span>
-
-    <div id="help-settings">
-      <button type="button" id="btn-notes-quick" class="tb-btn" data-sheet="presenter-notes" title="Open Presenter Notes" aria-label="Open Presenter Notes">📝 Notes</button>
-      <button type="button" id="btn-howto" class="tb-btn tb-icon student-guide-open" title="Guide" aria-label="Guide">?</button>
-      <!-- Settings. The first three entries are the contract set, labelled
-           exactly: Open Presenter Notes, Presentation mode, Reset. This demo's
-           own controls sit below the rule. -->
-      <details id="teacher-menu">
-        <summary title="Settings" aria-label="Settings">⚙ Settings</summary>
-        <div id="teacher-drop">
-          <button type="button" id="btn-notes" data-sheet="presenter-notes">📝 Open Presenter Notes</button>
-          <label><input type="checkbox" id="chk-bigui"> Presentation mode</label>
-          <button type="button" id="btn-resetall" class="danger">⚠ Reset</button>
-          <div class="sep"></div>
-          <label><input type="checkbox" id="chk-hideladder"> Hide ladder pane (predict-then-reveal)</label>
-          <a class="btn" id="btn-printable-guide" href="teacher-guide.html" target="_blank" rel="noopener">📄 Printable teacher guide</a>
-          <button type="button" id="btn-selftest">🧪 Run engine self-test</button>
-        </div>
-      </details>
-    </div>
-  </header>
-
-  <main id="panes">
+  <div id="panes-live">
     <section id="left-pane">
       <div id="ladder-host" class="pane-host"></div>
       <div id="challenge-host" class="pane-host" hidden></div>
       <div id="editor-host" class="pane-host" hidden></div>
       <footer id="bottom-pane">
         <div id="bottom-bar">
-          <span class="bb-title">WATCH WINDOW · IMAGE TABLES</span>
+          <span class="bb-title">WATCH WINDOW &middot; IMAGE TABLES</span>
           <span class="bb-hint">Rows flash when a bit changes. Use Step Scan to watch exactly when.</span>
-          <button id="btn-watch-collapse">▾ Hide</button>
+          <button id="btn-watch-collapse">&#9662; Hide</button>
         </div>
         <div id="watch-host"></div>
       </footer>
@@ -116,115 +299,291 @@
     <section id="right-pane">
       <div id="sim-host" class="pane-host"></div>
       <div id="fault-host" class="pane-host" hidden></div>
-      <button id="btn-restore">✓ Restore working program</button>
+      <button id="btn-restore">&#10003; Restore working program</button>
     </section>
-  </main>
-
-  <div id="toast" role="status"></div>
-
-  <dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
-    <div class="student-guide-head"><h2 id="student-guide-title">Guide<span class="sg-sub">PLC Ladder Logic Trainer</span></h2><form method="dialog"><button aria-label="Close guide">×</button></form></div>
-    <div class="student-guide-body">
-      <p class="sg-lede">This is a real PLC, not an animation. The ladder program sits on the left, the live intersection (or motor) on the right, and every tag value underneath.</p>
-
-      <h3>The scan cycle</h3>
-      <p>The PLC never stops looping. Every lap — one <b>scan</b> — it does three things, strictly in this order:</p>
-      <ol class="sg-scan">
-        <li><b>Reads every input</b> into a snapshot: the input image table.</li>
-        <li><b>Solves the rungs</b> top-to-bottom, left-to-right, from that snapshot.</li>
-        <li><b>Writes every output</b> at once, from the output image table.</li>
-      </ol>
-      <p>So pressing a button does <i>nothing</i> until the next input read — and a bit written by rung 5 reaches rung 6 in the <i>same</i> scan, but rung 4 only on the <i>next</i> one.</p>
-
-      <h3>Step mode — what no physical trainer can show you</h3>
-      <p>Press <b>⏸ Pause</b>, then <b>Step Scan</b> to advance exactly one scan at a time with both image tables on screen. Rows flash when a bit changes, so you can see precisely <i>when</i> it changed. Keyboard: <kbd>Space</kbd> to run or pause, <kbd>.</kbd> to step one scan.</p>
-
-      <h3>Challenges and troubleshooting</h3>
-      <p><b>Challenges</b> gives you four graded builds — motor seal-in, delayed start, the stoplight from a written spec, then the crosswalk. Build yours in the editor and the grader runs it against a scripted input sequence, then tells you which step failed and when.</p>
-      <p><b>Troubleshoot</b> injects one of eleven faults into a working program. Diagnose it from the intersection's misbehaviour and the ladder, then reveal the explanation.</p>
-
-      <h3>Getting started</h3>
-      <ol>
-        <li>Pick a program. <b>5 — Motor Seal-In</b> is the quickest way in; <b>1 — Basic Timed Stoplight</b> is the full thing.</li>
-        <li>Press an input on the panel — START, STOP, a pedestrian button, a car sensor — and watch the live power path light up through the ladder. Green means true.</li>
-        <li>Pause and step a few scans with the watch window open.</li>
-        <li>Click any instruction for a plain-English account of what it is doing <i>right now</i>.</li>
-      </ol>
-
-      <p class="sg-foot">This Guide opens on every load; reopen it any time with the <b>?</b> button in the top bar. Teaching with it? <b>⚙ Settings</b> holds <b>Open Presenter Notes</b> (the teacher guide in full), <b>Presentation mode</b> and <b>Reset</b>.</p>
-    </div>
-    <form method="dialog" class="student-guide-actions"><button>Start exploring</button></form>
-  </dialog>
-
-  <!-- Presenter Notes. The body is the teacher guide itself, injected by
-       build.js from src/teacher-guide.html — the same file that ships as the
-       printable guide and is rendered to the PDF. Edit the guide, never this
-       copy; `node build.js --check` fails if the two drift apart. -->
-  <dialog class="student-guide presenter-notes" id="presenter-notes" aria-labelledby="presenter-notes-title">
-    <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter Notes<span class="sg-sub">the teacher guide in full</span></h2><form method="dialog"><button aria-label="Close presenter notes">×</button></form></div>
-    <div class="student-guide-body">
-<!--__GUIDE__-->
-    </div>
-    <form method="dialog" class="student-guide-actions">
-      <a class="pn-print" href="teacher-guide.html" target="_blank" rel="noopener">📄 Printable copy</a>
-      <button>Close notes</button>
-    </form>
-  </dialog>
-
-  <div class="ll-overlay" id="selftest-overlay" hidden>
-    <div class="ll-modal">
-      <h2>Engine self-test</h2>
-      <div id="selftest-body"></div>
-      <div class="close-row"><button id="btn-selftest-close">Close</button></div>
-    </div>
   </div>
 
-  <!-- There is no second in-app rendering of the teacher guide. Presenter
-       Notes above IS the guide, injected from the same source, so the old
-       iframe overlay would only have been a divergent copy of it. The menu
-       links out to the printable file instead. -->
+  <p class="obs-cue" id="cue-engine" role="status" aria-live="polite"></p>
+</section>
 
+<div class="footer">
+  <span><b>PLC Ladder Logic Trainer</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; a genuine scan-cycle engine, not an animation</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="teacher-guide.html" target="_blank" rel="noopener">Printable guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE · opens on load ════════════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">How does a real industrial controller actually think? This is a genuine scan-cycle PLC engine on the classic four-way stoplight &mdash; not an animation.</p>
+    <p class="note">Where this sits: an Applied Engineering example project in Part four. No earlier demo is required, but if you have used Demo 2 (How a Language Model Works), the idea of a fixed, repeating computation loop should feel familiar &mdash; a PLC scan is that same idea in a control system instead of a model.</p>
+    <ol>
+      <li><b>Trainer.</b> Pick a program, then press <b>&#9208; Pause</b> and <b>Step Scan</b> to watch the scan cycle one step at a time.</li>
+      <li><b>Editor.</b> Place instructions from the palette to build or edit a rung, then <b>Run My Program</b> to send it to the live intersection.</li>
+      <li><b>Challenges.</b> Build a program that satisfies a written spec, then press <b>Check my program</b> to grade it against a scripted test.</li>
+      <li><b>Troubleshoot.</b> Press <b>Inject random fault</b>, diagnose it from the intersection, then <b>reveal</b> to check yourself.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The stage tabs switch stages; the live engine below them keeps running no matter which stage you are on. <b>Details</b> opens the mechanism, assumptions and sources for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> holds <b>Open Presenter Notes</b>, <b>Presentation mode</b>, <b>Reset</b>, and this demo's own engine self-test.</p>
+    <h3>Time</h3>
+    <p>10&ndash;15 minutes to try all four stages; a full class period to work through the challenges and several troubleshoot rounds. Keyboard: <kbd>Space</kbd> run/pause, <kbd>.</kbd> step one scan.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Trainer</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS · the contract triad ════════════════ -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable teacher guide, on screen: the scan cycle in plain terms, why rung
+      order matters, latch vs. seal-in, a 45-minute lesson plan, common misconceptions and discussion
+      questions. This is the printable guide itself, not a summary of it.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the whole page up one notch for projecting to a room (including the
+      ladder, editor and challenge panels, at their own larger scale), and puts a <b>Notes</b> button
+      in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to the just-opened state: the PLC and intersection restart on the first
+      program, the editor's undo history and any unsaved student program are cleared, the active
+      challenge and its hints reset, any injected fault is abandoned, and the engine strip returns to
+      1&times; speed and a 20&nbsp;ms scan. The page does not reload. Presentation mode stays as you
+      set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+    <h3>Engine self-test</h3>
+    <p class="setnote">Runs 21 assertions about scan-cycle semantics live, in front of the class &mdash;
+      input-scan ordering, timer/counter accumulation in simulated time, and the double-coil
+      "last write wins" behavior Stage 4 asks you to diagnose. Results appear in a card below.</p>
+    <p><button class="btn ghost" type="button" id="btn-selftest">Run engine self-test</button></p>
+    <p><a class="btn ghost" id="btn-printable-guide" href="teacher-guide.html" target="_blank" rel="noopener">Printable teacher guide</a></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- Self-test results. A demo-specific card, not one of the shell's four
+     dialogs, so it keeps its own id and its own native <dialog>. -->
+<dialog class="lesson-dialog" id="selftest-dialog" aria-labelledby="selftest-title">
+  <div class="lesson-dialog-head">
+    <h2 id="selftest-title">Engine self-test</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <div id="selftest-body"></div>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Close</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS · one section per stage ══════════════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Trainer</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>Every number on screen is computed by the same engine, this instant</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> scan count, elapsed simulated time, image tables, ladder power-flow, intersection state</span>
+          <p>Nothing here is pre-recorded. Pressing Step Scan advances the same engine that drives free
+            running, one scan at a time, and every readout updates from its current state.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">input scan &rarr; solve rungs 0..N&minus;1 (branches top&ndash;to&ndash;bottom) &rarr; output scan</div>
+        <p>Every input is latched into an input image table once per scan; the ladder is solved strictly
+          top-to-bottom, left-to-right, from that one snapshot; every output is then written from the
+          output image table, all at once. Timers and counters accumulate in <b>simulated</b> scan time
+          (never the wall clock), which is what makes a run bit-for-bit reproducible at any speed.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Scan time is fixed</b> per your Timing setting (10&ndash;200&nbsp;ms); a real controller's
+            scan time varies with program size and load.</li>
+          <li><b>One task, no interrupts, no I/O forcing or network scan</b> &mdash; the parts of a real
+            controller's cycle that this teaching engine deliberately leaves out to keep one mechanism
+            visible.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>No external source is needed for this stage's claims &mdash; they describe this engine's
+            own mechanism, verified by reading <code>src/engine.js</code> and by
+            <b>Settings &rarr; Run engine self-test</b> live in the browser.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is a teaching engine, not a certified PLC and
+          not an IEC&nbsp;61131-3 conformance-tested runtime. It models one deterministic reading of
+          Allen-Bradley-style ladder execution for the classroom, not any vendor's certified product.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live, and what is this page's own reading of a published execution model</span>
+        <h3>The validator and grader run live; the AND/OR mapping is this engine's own reading of Logix-style semantics</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> validation messages and rung-order feedback</span>
+          <p>Every message the validator shows (a duplicate coil, an unused branch, a rung that writes a
+            physical input) is computed from your program's current structure the moment you press
+            Validate or Run.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">this engine's own execution model, for a single controller, single scan, non-retentive OTE</span> series = AND, parallel branches = OR, solved rung 0..N&minus;1 in program order</span>
+          <p>This is the standard way Allen-Bradley/Logix-style ladder is taught and documented: each
+            instruction receives a rung-condition-in and passes a rung-condition-out to the next
+            instruction in series, so a series chain is AND and a parallel branch is OR. It is marked
+            Reasoned rather than Sourced because the primary Rockwell instruction-set page and PDF
+            programming manual could not be read directly in this research pass (the live page is
+            gated behind a region/cookie interstitial that returns no instruction text, and the PDF's
+            text layer did not decode) &mdash; the mapping is corroborated by two independent secondary
+            references fetched the same day, not verified against Rockwell's own wording verbatim.</p>
+        </div>
+        <h3>How it works</h3>
+        <p>The editor's own palette is a deliberately constrained subset: nine instruction types, no
+          nested branches, a fixed tag list. That constraint is this build's own teaching choice, not a
+          limit of real ladder logic.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The palette forbids nested branches</b> and limits you to the tags a program declares
+            &mdash; real Logix ladder allows both more freely.</li>
+          <li><b>The validator checks structure and tag usage</b> (duplicate coils, writing to a physical
+            input, an undeclared tag) &mdash; it is not a full IEC&nbsp;61131-3 conformance checker.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://industrialmonitordirect.com/blogs/knowledgebase/studio-5000-rung-condition-in-evaluation-in-logix-designer" target="_blank" rel="noopener">Rung-Condition Behavior in Studio 5000 Ladder Logic</a> (fetched 2026-09-16) &mdash; describes the rung-condition-in/rung-condition-out chain this stage's AND/OR mapping follows.</li>
+          <li><a href="https://plcprogramming.io/glossary/ote-output-energize" target="_blank" rel="noopener">OTE (Output Energize) — OTE Definition &amp; Explanation</a> (fetched 2026-09-16) &mdash; OTE re-solves the tag every scan from the rung's condition.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage does not claim to reproduce full Logix
+          ladder or any specific firmware version &mdash; it teaches the series/parallel = AND/OR
+          reading with a narrower instruction set and a stricter validator than a real programming
+          package would enforce.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>The grader runs your actual program against a scripted test, live</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> pass/attempted/not-tried status, hint reveals, grader feedback</span>
+          <p>Pressing Check my program deep-clones your program, runs it against a scripted input
+            sequence for that challenge, and checks the outputs at each recorded step &mdash; computed
+            here, from your program, every time you press it.</p>
+        </div>
+        <h3>How it works</h3>
+        <p>Each of the four challenges pairs a written spec and a required-tag list with a scripted
+          sequence of inputs. The grader steps the sequence, and at each checked step compares your
+          program's outputs against what the spec requires; the first mismatch it finds is reported
+          with which step failed and when.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>PASSED means "matched the scripted test at every step it checked,"</b> not "is the one
+            intended solution." A different, differently-wired program that behaves the same on that
+            sequence passes equally well.</li>
+          <li><b>No score is kept.</b> Hints do not cost anything and attempts are not counted, only
+            not&nbsp;tried / attempted / passed.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>No external source is needed &mdash; the grading mechanism is this demo's own, verified by
+            reading <code>src/challenges.js</code> and by its own test suite
+            (<code>node src/challenges.test.js</code>, 83 tests including reference solutions).</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the four challenges check one behavioral spec each.
+          They do not grade code style, comments, or scan-time efficiency, and they are not a complete
+          industrial-controls curriculum.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live, and what is this page's own reading of a published execution model</span>
+        <h3>The fault library and solve timer are live; "last write wins" is this engine's own behavior, reasoned about real Logix controllers with a stated boundary</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> which fault is active, the solve timer, the in-browser best-times list</span>
+          <p>The fault, the solve time and the best-times list are all tracked in this tab only, this
+            session &mdash; nothing is saved or shared, and the list resets on reload.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> this engine's own "last write wins" behavior</span>
+          <p>This engine's own duplicate-OTE handling is a Live claim, not a citation: reading
+            <code>src/engine.js</code> shows both coils execute every scan and the later one in program
+            order overwrites the earlier one in the committed output image, and this is one of the 21
+            assertions in <b>Settings &rarr; Run engine self-test</b> ("Two OTE coils on the same
+            output: both execute, last write wins in the committed image").</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">for a single controller, single scan, non-retentive OTE — as this engine models; real installations can differ</span> real Allen-Bradley/Logix controllers behave the same way for a duplicate OTE coil</span>
+          <p>Independent PLC-programming references consistently describe "last rung solved wins" for a
+            duplicate output coil on one controller in one scan, which is exactly the configuration this
+            engine models. It is marked Reasoned, with a qualifier, rather than a flat Sourced claim
+            because the research pass also surfaced public disagreement about duplicate/"destructive"
+            outputs on other hardware and configurations (retentive instructions, distributed I/O,
+            specific families like Micro800) &mdash; symmetric evidence in the other direction from the
+            confident "last write always wins" framing this demo's own README used before this pass.
+            The primary Rockwell manual could not be read directly (see Stage 2's Details for why), so
+            this is the fetched secondary evidence, honestly labeled rather than dressed as a citation.</p>
+        </div>
+        <h3>How it works</h3>
+        <p>Each fault deep-clones the active program and changes exactly one instruction, tag, or timer
+          preset via a structural predicate (never a hard-coded index), and every patched program is
+          re-checked to still pass validation with zero errors before it ships. Reveal highlights the
+          exact rungs the fault touched.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Eleven hand-authored faults</b> are a teaching sample, not an exhaustive fault
+            taxonomy for real PLC maintenance.</li>
+          <li><b>Solve times are local to this browser tab</b>, not a benchmarked or shared leaderboard.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://industrialmonitordirect.com/blogs/knowledgebase/studio-5000-rung-condition-in-evaluation-in-logix-designer" target="_blank" rel="noopener">Rung-Condition Behavior in Studio 5000 Ladder Logic</a> (fetched 2026-09-16).</li>
+          <li>Multiple independent PLC-programming forum and reference discussions of "last rung wins" for duplicate output coils, and of documented exceptions on other configurations, fetched 2026-09-16 &mdash; named in full in <code>.aia/.data/demo-fleet-format-alignment/B-ladder-lab-progress.md</code> (this build's own working notes, not shipped in the page).</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage does not certify that every Allen-Bradley
+          or Logix controller resolves a duplicate output coil identically in every configuration &mdash;
+          only that this engine does, verified by its own code and self-test, and that the same behavior
+          is well corroborated for the single-controller, non-retentive case this trainer models.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Presenter notes ARE the printable guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing: the shell defines window.lessonShell (dialogs,
+     the stage tablist, presentation mode, check cards) before app.js, which
+     listens for the shell's 'stagechange' event and calls
+     window.lessonShell.selectStage() to drive the tabs itself. -->
 <script>
-/*__JS__*/
+/*__SHELL_JS__*/
 </script>
 <script>
-(() => {
-  /* Boot flags, and the Guide-on-load rule.
-
-     Settings -> Reset restores the just-opened state by reloading, which is
-     fresh-load by construction rather than by hand-resetting six stateful
-     modules. Two things must survive that reload: the Guide must NOT greet the
-     presenter a second time, and Presentation mode is a display preference, not
-     demo state, so it stays on. They ride across in location.hash, which works
-     on file:// where the storage APIs are not guaranteed to.
-
-     This script is parsed after the app bundle but runs before its
-     DOMContentLoaded init, so LL_BOOT is set by the time app.js reads it. */
-  const marks = location.hash.replace(/^#/, '').split(',');
-  const boot = { reset: marks.includes('reset'), presentation: marks.includes('pres') };
-  window.LL_BOOT = boot;
-  if (boot.reset) {
-    /* Consume the hash so a later manual reload greets the room normally. */
-    try { history.replaceState(null, '', location.pathname + location.search); }
-    catch (e) { /* file:// without a session history entry: harmless */ }
-  }
-
-  /* Modal-sheet controller. Any [data-sheet] button opens the <dialog> whose id
-     it names; .student-guide-open is the legacy alias for the Guide sheet.
-     Esc, the × and the footer button all close (native <dialog>), as does a
-     tap on the backdrop. */
-  const openerOf=new WeakMap();
-  const open=(id,opener)=>{const dialog=document.getElementById(id);if(!dialog||dialog.open)return;if(opener)openerOf.set(dialog,opener);dialog.showModal();dialog.querySelector('.student-guide-head button')?.focus()};
-  document.addEventListener('click',event=>{const button=event.target.closest?.('[data-sheet], .student-guide-open');if(!button)return;event.preventDefault();button.closest('details[open]')?.removeAttribute('open');open(button.dataset.sheet||'student-guide',button)});
-  document.querySelectorAll('dialog.student-guide').forEach(dialog=>{
-    dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});
-    dialog.addEventListener('close',()=>{const opener=openerOf.get(dialog);if(opener?.isConnected)opener.focus()});
-  });
-  /* The Guide sheet greets every load; the ? button reopens it any time. A
-     reload that came from Reset is not a first load, so it lands on the app. */
-  if (!boot.reset) open('student-guide');
-})();
+/*__APP__*/
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:normal;max-width:calc(100vw - 16px);animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>
