@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('node:assert/strict');
-const M = require('./model.js');
+const M = require('./src/model.js');
 const near = (actual, expected, tolerance = 1e-12) => assert.ok(Math.abs(actual - expected) < tolerance, `${actual} should equal ${expected}`);
 
 assert.equal(M.expectedDetectedFraction(.8, .25, 1), .2);
