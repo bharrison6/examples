@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An offline guided time-of-flight mass spectrometer investigation of what a flight-time detector measures.">
+<title>Time-of-Flight Mass Spectrometer · Guided Investigation</title>
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
+<style>
+/*__CSS__*/
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University · Part four · Example projects</span>
+      <h1>Time-of-Flight Mass Spectrometer</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Four stages: the model's three core investigations, then the peak-width
+       extension. Stages 2 and 3 open locked — this demo unlocks the next stage
+       only once the current one's evidence exists, because committing to a
+       prediction before observing IS the lesson. The tabs stay visible while
+       locked so the learner sees the whole route from the first screen. -->
+  <nav class="stages" role="tablist" aria-label="Time-of-flight lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Change mass</span><small>Does a heavier ion always arrive later?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1" disabled>
+      <span class="stage-mark" aria-hidden="true">2</span><span>Change charge</span><small>Can two ions of one mass arrive apart?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1" disabled>
+      <span class="stage-mark" aria-hidden="true">3</span><span>Match the ratio</span><small>Can one peak hold two different ions?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Peak width</span><small>When do two peaks count as separate?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ══════════════════════ STAGES 1–3 · the core investigation ══════════════
+     ONE INSTRUMENT, THREE CONFIGURATIONS. The model holds three lesson records
+     (mass / charge / ratio) and renders whichever is current into a single
+     activity block. So stages 1–3 each get their own tabpanel — their own
+     intro copy and their own check — but they SHARE the instrument, which
+     app.js relocates into the active stage's .activity-host on every stage
+     change.
+
+     Why not three copies: they would carry three sets of the same element ids
+     (#run-button, #flight-canvas, #trace-canvas), which is invalid, and they
+     would be three places for the instrument to drift apart. Why not one
+     panel for three tabs: a tab needs its own tabpanel to be navigable.
+
+     Relocating is safe here because a stage change already cancels any run in
+     flight (cancelRun), and both canvases re-measure themselves from the
+     layout on every draw, so nothing caches a stale size across the move.
+     The instrument markup below therefore appears exactly once, and it starts
+     in stage 1's host. -->
+
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 13 of 16 &middot; Part four &middot; Chemistry &middot; Stage 1</span>
+      <h2 id="stage-1-title">Same charge, different masses</h2>
+      <p class="stage-question">Both ions carry the same single positive charge. Which one reaches the detector first, and by how much?</p>
+      <p class="refresh"><b>Before you start.</b> An <b>ion</b> is an electrically charged atom or molecule.
+        A <b>dalton (Da)</b> is the mass unit for atoms and molecules. This instrument gives every ion
+        a push with the same voltage, then times how long it takes to coast down a tube in vacuum &mdash;
+        so the only thing that differs between these two ions is mass.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Which packet arrives first &mdash; 100 Da or 400 Da, both at +1?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit to a prediction, then press <b>Run detector</b> and watch both packets cross the tube.</p></article>
+      <article><span>Takeaway</span><p>Flight time grows with the square root of mass, not with mass: four times the mass takes twice the time.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="0">
+   <div class="activity" id="activity">
+    <!-- #activity is the element app.js moves between the three hosts. It has
+         to be INSIDE the host and never the host itself: appending a node into
+         itself throws HierarchyRequestError, and the node suites only PARSE the
+         scripts rather than running them, so nothing but a browser pass sees it. -->
+    <!-- ===== THE INSTRUMENT · shared by stages 1–3, relocated by app.js =====
+         A3 obligations inside it: every panel and readout carries one of the
+         six provenance kickers, and every control says what it changes and
+         why. The mechanism — model.js, the t = L√(m/2qV) physics, the 160 ms/µs
+         animation timing, the first-frame clock origin and the locked
+         prediction — is unchanged from the 2026-09-08 build. -->
+    <div class="path" aria-label="Simplified instrument path">
+      <div><b>1 · Boost</b><span>Voltage adds kinetic energy before the clock starts.</span></div>
+      <div><b>2 · Coast</b><span>Ions cross a 1.50 metre field-free tube in vacuum.</span></div>
+      <div><b>3 · Detect</b><span>Arrival time becomes the measured evidence.</span></div>
+    </div>
+
+    <div class="workspace" id="workspace">
+      <section class="task-panel" aria-labelledby="lesson-title">
+        <span class="panel-kicker" id="step-kicker"></span>
+        <h3 id="lesson-title"></h3>
+        <p class="task-purpose" id="lesson-purpose"></p>
+
+        <span class="panel-kicker"><span class="k-scripted">Scripted</span> held fixed for all three stages</span>
+        <div class="conditions" aria-label="Controlled instrument conditions">
+          <div class="condition"><span>Flight tube</span><b>1.50 metre (m)</b></div>
+          <div class="condition"><span>Voltage boost</span><b>20 kilovolts (kV)</b></div>
+        </div>
+
+        <span class="panel-kicker"><span class="k-scripted">Scripted</span> known simulated ion inputs</span>
+        <div class="sample-list" id="sample-list" aria-label="Known simulated ion inputs"></div>
+        <p class="unit-key"><b>Da</b> means dalton, a mass unit for atoms and molecules. <b>+1e</b> means one
+          positive elementary charge; <b>+2e</b> means two. The charge number <b>z</b> is 1 or 2 here.</p>
+
+        <fieldset>
+          <legend id="prediction-question"></legend>
+          <span class="control-label" id="prediction-label">Your prediction
+            <span class="why">Commit before you run. Run stays locked until you do, and the list locks once the detector has answered — the commitment is the point.</span></span>
+          <div class="prediction-list" id="prediction-list" aria-describedby="prediction-label"></div>
+        </fieldset>
+        <div class="action-row">
+          <button class="btn" type="button" id="run-button" disabled>Choose a prediction first</button>
+          <button class="btn ghost" type="button" id="replay-button" hidden>Replay</button>
+        </div>
+        <p class="run-hint" id="run-hint">Arrival values and the trace stay hidden until you run the detector.</p>
+
+        <section class="finding" id="finding" aria-live="polite" hidden>
+          <h3 id="finding-verdict"></h3>
+          <div class="arrival-list" id="arrival-list"></div>
+          <p id="finding-explanation"></p>
+          <p id="finding-conclusion"></p>
+          <button class="btn next-button" type="button" id="next-button" hidden></button>
+        </section>
+      </section>
+
+      <section class="evidence-panel" id="instrument-panel" tabindex="-1" aria-label="Instrument and detector evidence">
+        <div class="instrument-head">
+          <div>
+            <span class="panel-kicker"><span class="k-live">Live</span> computed on this device</span>
+            <h3>Linear time-of-flight instrument</h3>
+          </div>
+          <span class="scale-badge">1 µs = one millionth s · 160 ms on screen</span>
+        </div>
+        <div class="flight-wrap">
+          <canvas id="flight-canvas" aria-label="Ion packet centers moving from the drift-tube entrance to the detector"></canvas>
+        </div>
+        <div class="live-strip">
+          <div><span>Detector clock</span><b id="clock-readout">Waiting for Run</b></div>
+          <div><span>Detector event</span><b id="detector-event" aria-live="polite">No arrivals recorded</b></div>
+        </div>
+        <!-- A4. The observation cue: names the thing to notice at the moment it
+             becomes true, one screen from the Run button that caused it. -->
+        <p class="obs-cue" id="cue-core" role="status" aria-live="polite"></p>
+        <div class="trace-block">
+          <div class="trace-title-row">
+            <h3>Detector trace</h3>
+            <span>Fixed time axis for all three investigations: 0–18 microseconds</span>
+          </div>
+          <canvas id="trace-canvas" aria-label="Detector signal versus flight time; no evidence recorded yet"></canvas>
+          <p class="peak-note">A <strong>peak</strong> represents a group of ions arriving over a range of
+            times. The navy trace is the total detector signal; coloured ticks mark the known packets' centre
+            times. Moving markers show group centres, not exact individual paths.</p>
+        </div>
+      </section>
+    </div>
+   </div>
+  </div>
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">Ion B has four times the mass of Ion A. How much longer did it take to arrive?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="The detector recorded 7.64 µs and 15.27 µs — exactly double. Flight time goes as the square root of mass, and the square root of 4 is 2.">Twice as long</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="That would be true if time scaled with mass itself. It scales with the square root of mass, so four times the mass is twice the time — the detector read 15.27 µs, not about 30.5 µs.">Four times as long, because it is four times the mass</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Mass does change the arrival time here — that is exactly what the two traces showed. It is the relationship that is not one-to-one.">No longer at all &mdash; the voltage is the same</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 13 of 16 &middot; Part four &middot; Chemistry &middot; Stage 2</span>
+      <h2 id="stage-2-title">Same mass, different positive charges</h2>
+      <p class="stage-question">Both ions weigh 200 Da. If one carries twice the charge, what does the same voltage do to it?</p>
+      <p class="refresh"><b>Before you start.</b> Stage 1 held charge fixed and changed mass. Now the reverse.
+        The <b>charge number z</b> counts how many elementary charges an ion carries &mdash; <b>+1e</b> is one,
+        <b>+2e</b> is two. The voltage does work on charge, so a doubly charged ion is pushed twice as hard
+        out of the same voltage.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Two ions of 200 Da, one at +1 and one at +2. Which arrives first?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run detector</b> and compare the two arrival times.</p></article>
+      <article><span>Takeaway</span><p>The same voltage gives a doubly charged ion twice the energy, so it crosses the tube sooner even at identical mass.</p></article>
+    </div>
+  </section>
+
+  <!-- The instrument is relocated here by app.js when this stage is active. -->
+  <div class="activity-host" data-activity-host="1"></div>
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Ion B carried +2 and arrived sooner than Ion A at +1. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="The voltage does work on charge, so twice the charge means twice the kinetic energy out of the same 20 kV. That makes Ion B faster: 7.64 µs against 10.80 µs.">The same voltage gave it twice the kinetic energy</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Both ions are 200 Da — the cards beside the prediction said so, and nothing about mass changed between them. Only the charge number did.">Because a doubly charged ion is lighter</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The tube is the same 1.50 m for both ions, and it is field-free: nothing accelerates an ion once the clock has started. The difference was made before the clock, in the voltage boost.">Because the tube pulls harder on a +2 ion as it flies</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 13 of 16 &middot; Part four &middot; Chemistry &middot; Stage 3</span>
+      <h2 id="stage-3-title">Different values, equal mass-to-charge ratio</h2>
+      <p class="stage-question">Ion A is 200 Da at +1 and Ion B is 400 Da at +2. What does the detector record?</p>
+      <p class="refresh"><b>Before you start.</b> Stages 1 and 2 changed mass and charge one at a time.
+        This stage changes both together. <b>m/z</b> is the conventional mass-to-charge label: divide the
+        mass value by the charge number, so 200 at +1 and 400 at +2 both give 200. Watch what that does
+        to two ions that are, by any other measure, different substances.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Equal m/z, different mass and charge. One peak or two?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run detector</b> and look at where the two centre ticks land on the trace.</p></article>
+      <article><span>Takeaway</span><p>Flight time fixes m/z and nothing more, so one peak does not establish one kind of ion.</p></article>
+    </div>
+  </section>
+
+  <!-- The instrument is relocated here by app.js when this stage is active. -->
+  <div class="activity-host" data-activity-host="2"></div>
+  <!-- This was the demo's "transfer" panel. It is already exactly an A6
+       refutation item — a flawed conclusion stated plainly, with written
+       feedback either way — so it becomes stage 3's check rather than a fourth
+       kind of closing block. -->
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">A real sample produces one detector peak at 10.80 µs. Which conclusion does flight time alone justify?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Different masses and charge numbers can share one m/z and one flight time — you just watched two of them land on the same tick. Naming a real molecule needs more evidence, calibration and instrument context.">Different ions could share the same mass-to-charge ratio</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="This stage rules that out. One peak can hold different ions that share an m/z, so flight time alone does not identify a substance.">Exactly one kind of ion must be present</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 4 · the peak-width extension ═══════════════
+     This was an optional <details> at the foot of the page. Promoted to a
+     stage because it carries its own question, its own prediction and its own
+     takeaway, and because a collapsed disclosure at the bottom of a page is
+     where a lesson beat goes to be missed. It is NOT gated: it depends on no
+     core-stage state, and a presenter may well open on it.
+
+     Its two width rules are ASSUMPTIONS, not measurements, and every surface
+     here says so. That labelling is load-bearing and must survive any edit. -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 13 of 16 &middot; Part four &middot; Chemistry &middot; Stage 4</span>
+      <h2 id="stage-4-title">When do two peaks count as separate?</h2>
+      <p class="stage-question">A 1.00 m tube cannot tell 200 Da from 205 Da. Does making the tube longer fix that?</p>
+      <p class="refresh"><b>Before you start.</b> Real ion packets do not all arrive at one exact instant,
+        so every peak has a <b>timing width</b>. <b>Sigma (&sigma;)</b> is the Gaussian spread of arrival
+        times and <b>FWHM</b> is the full width at half maximum, which is 2.355&nbsp;&times;&nbsp;&sigma;.
+        This stage compares the same ion pair in a 1.00 m and a 2.00 m tube under <b>two assumed width
+        rules</b> &mdash; the widths are stated, not measured.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Doubling the tube doubles the gap between two arrivals. Is that enough to separate the peaks?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Run paired comparison</b> on the fixed-width assumption, then switch to <b>Proportional width</b> and run it again.</p></article>
+      <article><span>Takeaway</span><p>Whether a longer tube separates two peaks depends entirely on how the peak width behaves — the length alone does not decide it.</p></article>
+    </div>
+  </section>
+
+  <section class="card" aria-labelledby="width-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-live">Live</span><span class="k-qual">under an assumed width rule you choose</span> computed on this device</span>
+        <h3 id="width-heading">Two tubes, one ion pair</h3>
+      </div>
+    </div>
+    <p class="panel-lede">200 Da and 205 Da, both at +1, in a 1.00 m tube and a 2.00 m tube. The arrival
+      times and the summed detector signal are computed here from the same model the core stages use. The
+      <b>timing width is an assumption</b>, and you pick which one.</p>
+
+    <label class="control-label" for="absolute-width-button">Timing width assumption
+      <span class="why">Which rule the peak width follows. This is the choice the stage is about: it changes the answer, and neither rule is measured from a real instrument.</span></label>
+    <div class="width-controls" id="width-controls" role="group" aria-labelledby="width-heading">
+      <button class="mode-button active" type="button" id="absolute-width-button" aria-pressed="true">Fixed width: &sigma; = 0.06 µs</button>
+      <button class="mode-button" type="button" id="fractional-width-button" aria-pressed="false">Proportional width: &sigma; = 1.5% of flight time</button>
+      <button class="btn" type="button" id="compare-button">Run paired comparison</button>
+    </div>
+
+    <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+
+    <div id="width-result" hidden>
+      <canvas id="width-canvas" aria-label="Paired summed detector-signal traces for the short and long tubes, on the same time and signal scales"></canvas>
+      <p class="width-legend"><strong>Navy line:</strong> total detector signal. <strong>Dashed sky and gold lines:</strong>
+        the two known simulated packet components. Both rows use the same vertical signal scale.</p>
+      <table class="comparison-table">
+        <thead><tr><th>Tube</th><th>Peak separation</th><th>Mean peak width (FWHM)</th><th>Criterion</th></tr></thead>
+        <tbody id="comparison-body"></tbody>
+      </table>
+      <p class="width-finding" id="width-finding"></p>
+    </div>
+
+    <details class="symbols">
+      <summary>Symbols and units used on this page</summary>
+      <div class="details-formula">t = L &radic;[ m / (2qV) ]</div>
+      <ul>
+        <li><b>t</b> is field-free flight time in seconds, shown here in microseconds (µs). One µs is one millionth of a second.</li>
+        <li><b>L</b> is tube length in metres (m). <b>m</b> is ion mass, converted from daltons (Da) to kilograms.</li>
+        <li><b>q = z·e</b> is positive charge in coulombs. <b>z</b> is the dimensionless charge number; <b>e</b> is one elementary charge.</li>
+        <li><b>V</b> is acceleration voltage in volts, shown in kilovolts (kV); one kV is 1,000 volts. Acceleration happens <em>before</em> this clock starts.</li>
+        <li><b>m/z</b> is the conventional mass-to-charge label. For example, 400 Da with z = 2 gives m/z = 400 ÷ 2 = 200.</li>
+        <li><b>&sigma;</b> (sigma) is the assumed Gaussian timing spread. FWHM, the full width at half maximum, equals 2.355&thinsp;&sigma;.</li>
+      </ul>
+      <p>In this stage, peaks count as resolved when their centre separation is at least their mean FWHM.
+        That is a declared classroom criterion, and the timing widths are assumptions. A longer tube helps
+        under the fixed-width assumption here; it is not a universal instrument promise. Full sources are in
+        <b>Details</b>.</p>
+    </details>
+  </section>
+
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">Under the fixed-width assumption, doubling the tube separated the pair. Does a longer tube always improve resolution?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Run it again on the proportional-width assumption: separation and width both double, the separation-to-width ratio stays at 0.35, and the pair stays overlapped. The tube length did not decide it — the width rule did.">No &mdash; it depends on how the peak width behaves</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Not from this evidence. You saw it fail: on the proportional-width assumption the 2.00 m tube is no better than the 1.00 m tube, because the width grew with the separation. Whether a longer tube helps a real instrument depends on how its timing width actually behaves, which this activity assumes rather than measures.">Yes &mdash; a longer flight path always separates peaks better</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The separation did double — 0.089 µs to 0.179 µs, in both runs. Separation was never the problem; whether it beat the width was.">No &mdash; because doubling the tube does not change the separation</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span><b>Time-of-Flight Mass Spectrometer</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; idealized teaching model</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="teacher-guide.html" target="_blank" rel="noopener">Printable teacher guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE · opens on load ════════════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">One question across four stages: <b>what does a flight time actually tell you about an ion?</b></p>
+    <p class="note">Where this sits: an AI-built classroom tool from Part four. Its goal is to separate what
+      a detector measures from what you may conclude, and its assumptions are one tap away in Details.</p>
+    <ol>
+      <li><b>Change mass.</b> Read the two ion cards, commit to a prediction, then press <b>Run detector</b> and watch both packets cross the tube.</li>
+      <li><b>Change charge.</b> Same idea with mass held fixed and charge changed. Unlocks once stage 1 has evidence.</li>
+      <li><b>Match the ratio.</b> Change both at once and see what the detector can no longer separate.</li>
+      <li><b>Peak width.</b> Press <b>Run paired comparison</b>, then switch the width assumption and run it again.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The four tabs switch stages. <b>Details</b> opens the formula, assumptions and sources for the current
+      stage. <b>Guide</b> reopens this card; <b>Settings</b> holds <b>Open Presenter Notes</b>,
+      <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Time</h3>
+    <p>Twelve to fifteen minutes for the three core stages; the flight animation runs at 160 milliseconds per
+      physical microsecond, so each run takes a few seconds. Stage 4 adds about five minutes.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Change mass</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS · the contract triad ════════════════
+     CONTRACT.md Required UX: this menu always carries exactly these three,
+     labelled exactly Open Presenter Notes, Presentation mode and Reset. -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable teacher guide, on screen: timings, the beats to hit, the expected
+      arrival times this model produces, and the misconceptions to name.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the whole page up one notch for projecting to a room, widens the instrument,
+      and puts a <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to a fresh load: stage 1, no predictions, no evidence, the width assumption back
+      to fixed, and every disclosure closed. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS · one section per stage ══════════════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Change mass</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>Every arrival time on this page is computed here</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> arrival times, flight animation, detector trace</span>
+          <p>The flight time, the moving packet centres and the summed detector signal are all computed on
+            this device from the formula below, each time you press Run. Nothing is looked up and nothing is
+            fetched.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the ions and the instrument settings</span>
+          <p>The two ions, the 1.50 m tube and the 20 kV boost are chosen teaching values, fixed so that
+            exactly one thing differs between the two packets. They are not a reading from a real machine.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">t = L &radic;[ m / (2qV) ]</div>
+        <p>An electric field accelerates each ion to a kinetic energy of <b>qV</b>. The ion then coasts
+          through a field-free tube at whatever speed it reached, so its flight time is the tube length
+          divided by that speed. Work the algebra and the time comes out as above: it grows with the square
+          root of mass and falls with the square root of charge and voltage.</p>
+        <p>Because charge and voltage are the same for both ions in this stage, four times the mass gives
+          exactly twice the time &mdash; the square root of four.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The clock times the drift only.</b> Acceleration happens before the clock starts, and the
+            time spent accelerating is not included. A real instrument's acceleration time is small but not
+            zero.</li>
+          <li><b>Every ion of one kind starts identically.</b> There is no spread in starting position or
+            starting speed in the core stages, so each packet is a single arrival time rather than a
+            distribution. Stage 4 is where a width is introduced, as an assumption.</li>
+          <li><b>The tube is a perfect vacuum with no field.</b> No collisions, no stray fields, no
+            detector response time.</li>
+          <li><b>The animation is not to scale in time.</b> It runs at 160 milliseconds per physical
+            microsecond &mdash; 160,000&times; slow motion &mdash; on one fixed scale for every stage, so that
+            runs can be compared by eye.</li>
+          <li><b>Ions are drawn as one marker per packet.</b> The marker is the packet's centre, not an
+            individual ion's path.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial" target="_blank" rel="noopener">Iowa
+            State University Chemical Instrumentation Facility, Mass Spectrometry Tutorial</a> &mdash; ions are
+            accelerated into a field-free drift region with kinetic energy qV, and lighter ions reach the
+            detector sooner.</li>
+          <li><a href="https://chem.libretexts.org/Bookshelves/Analytical_Chemistry/An_Introduction_to_Mass_Spectrometry_(Van_Bramer)/04:_MASS_ANALYZERS/4.04:_Time-of-Flight" target="_blank" rel="noopener">Chemistry
+            LibreTexts, <i>Time-of-Flight</i></a> &mdash; the same flight-time relation, and that ions "drift
+            through this field free region at the velocity reached during acceleration" in a tube of one to
+            two metres. This demo's 1.50 m tube sits in that range.</li>
+          <li>Physical constants: <a href="https://physics.nist.gov/cgi-bin/cuu/Value?e" target="_blank" rel="noopener">NIST,
+            elementary charge</a> (1.602176634&times;10<sup>&minus;19</sup> C, exact by definition) and
+            <a href="https://physics.nist.gov/cgi-bin/cuu/Value?ukg" target="_blank" rel="noopener">NIST,
+            atomic mass constant</a>. These sources support the underlying physics; they do not endorse this
+            activity.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is an idealized linear time-of-flight model built to
+          make one relationship visible. It does not claim to reproduce any real instrument's timing,
+          sensitivity or resolution, and it identifies no real substance.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>The same engine, with charge as the variable</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> both arrival times</span>
+          <p>Both ions are 200 Da. The only difference the model is given is the charge number, and the
+            10.80 µs against 7.64 µs you see is computed from that difference alone.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">KE = qV &nbsp;&rarr;&nbsp; v = &radic;(2qV/m)</div>
+        <p>The voltage does work on <em>charge</em>, so an ion carrying two elementary charges leaves the
+          acceleration region with twice the kinetic energy of an otherwise identical singly charged ion.
+          Twice the energy at the same mass is &radic;2 times the speed, which is why Ion B's time is Ion A's
+          divided by 1.414: 10.80 ÷ &radic;2 = 7.64.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Charge is an exact small integer.</b> z is 1 or 2 here, with no mixed or fluctuating
+            charge states.</li>
+          <li><b>Full acceleration for every ion.</b> Each ion is assumed to receive the complete 20 kV of
+            work, with no losses and no distribution of starting energies.</li>
+          <li><b>Every simplification from stage 1 still applies</b> &mdash; drift-only clock, perfect vacuum,
+            no starting spread.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial" target="_blank" rel="noopener">Iowa
+            State University CIF, Mass Spectrometry Tutorial</a> &mdash; "an electric field accelerates all ions
+            into a field-free drift region with a kinetic energy of qV, where q is the ion charge, and V is
+            the applied voltage."</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this shows that charge changes flight time in an ideal
+          instrument. It does not claim that charge states are easy to assign in practice, or that a real
+          spectrum separates them this cleanly.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>Two different ions, one computed arrival time</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the coincidence</span>
+          <p>The two times are not merely close, they are equal to the last digit the model carries: this
+            page checks them for exact equality and reports a coincident arrival on that basis, rather than
+            on a tolerance.</p>
+        </div>
+        <h3>How it works</h3>
+        <p>Rearrange the flight-time formula and the only property of the ion that survives is the ratio
+          <b>m/q</b>. Ion A is 200 Da at +1 and Ion B is 400 Da at +2, so both have m/z = 200, and an ideal
+          clock cannot separate them. The two centre ticks on the trace land on the same time, and the
+          summed signal shows one peak where a naive reading would expect two.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>This is the ideal case, constructed.</b> The two ions were chosen to share an m/z exactly.
+            In a real sample the coincidence is usually approximate, and whether two species overlap is a
+            question about the instrument's resolution.</li>
+          <li><b>m/z is all this model uses.</b> A real spectrometer can bring isotope patterns, fragment
+            spectra, chromatographic separation and accurate-mass calibration to bear. None of that exists
+            here, which is exactly why flight time alone is not enough.</li>
+          <li><b>Equal counts.</b> Both packets are given the same 150 ion counts, so relative peak height
+            carries no information in this activity.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://www.cif.iastate.edu/mass-spec/ms-tutorial" target="_blank" rel="noopener">Iowa
+            State University CIF, Mass Spectrometry Tutorial</a> &mdash; flight time in the drift region is set
+            by the mass-to-charge ratio.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the claim here is narrow and it is the important one:
+          a single flight time constrains m/z and nothing else. This demo does not claim that real
+          identification is impossible, only that this measurement alone cannot do it.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live, and what is assumed</span>
+        <h3>The arithmetic is computed; the widths are stated</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> separations, widths and the verdict</span>
+          <p>For each tube length the page computes both arrival times, their separation, each peak's FWHM
+            from the assumed sigma, and whether the separation clears the mean FWHM. The table is that
+            computation, not a stored result.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">assumed, not measured from any instrument</span> the two width rules</span>
+          <p><b>Both width rules are assumptions this activity declares.</b> A fixed &sigma; of 0.06 µs and a
+            &sigma; of 1.5% of flight time are teaching choices picked to make the two behaviours
+            distinguishable. Neither is a measurement, and neither is claimed to describe a real
+            spectrometer.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the resolution criterion</span>
+          <p>"Resolved when centre separation is at least the mean FWHM" is a declared classroom rule for
+            this comparison. Real resolution and real identification use their own defined criteria.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">FWHM = 2&radic;(2 ln 2) &sigma; &asymp; 2.355 &sigma;</div>
+        <p>Separation between the two centres is proportional to the tube length, so doubling the tube
+          doubles it: 0.089 µs becomes 0.179 µs in both runs. What changes is the width. Under the fixed
+          rule the width stays at 0.141 µs, so the separation-to-width ratio goes from 0.633 to 1.266 and
+          crosses the criterion. Under the proportional rule the width doubles too, from 0.256 µs to
+          0.512 µs, the ratio stays at 0.350, and the pair remains overlapped. The tube length is not what
+          decides it.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The width rules are assumed, and the answer depends on which one you assume.</b> That
+            dependence is the lesson of this stage, not a limitation to be apologised for.</li>
+          <li><b>Both peaks are Gaussian and of equal area.</b> Real peaks are often asymmetric.</li>
+          <li><b>Only the drift contributes.</b> A real instrument's peak width also has contributions
+            from the ion source, the detector and the electronics; none are modelled here.</li>
+          <li><b>Nothing here is a resolution specification.</b> Clearing this page's criterion is not a
+            claim that any instrument could distinguish 200 from 205 Da, nor that it could identify either.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://chem.libretexts.org/Bookshelves/Analytical_Chemistry/An_Introduction_to_Mass_Spectrometry_(Van_Bramer)/04:_MASS_ANALYZERS/4.04:_Time-of-Flight" target="_blank" rel="noopener">Chemistry
+            LibreTexts, <i>Time-of-Flight</i></a> &mdash; flight tubes of one to two metres, and ions drifting at
+            the velocity reached during acceleration. The tube lengths compared here are in that range.</li>
+          <li>FWHM = 2&radic;(2 ln 2)&thinsp;&sigma; is a property of the Gaussian, not a citation: it is the
+            constant <code>GAUSSIAN_FWHM</code> in this page's model, computed rather than looked up.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage compares two <em>assumptions</em> about peak
+          width to show that "longer tube" is not by itself an answer. It reports no real instrument's
+          resolution, and the verdict in the table is against this page's own stated criterion only.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Presenter notes ARE the printable teacher guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for Letter; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing, in this order and no other:
+     1. the model, which defines IonFlightModel;
+     2. the lesson shell, which defines window.lessonShell and wires the
+        dialogs, the tablist keyboard and presentation mode;
+     3. app.js, which uses both — it reads the shell's selected tab at start-up
+        rather than assuming stage 1, so a #stage-4 deep link lands correctly. -->
+<script>
+/*__ION_FLIGHT_MODEL__*/
+</script>
+<script>
+/*__SHELL_JS__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
