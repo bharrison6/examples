@@ -1,106 +1,152 @@
-'use strict';
-/* Wavelet Lab build: assemble the single offline index.html from three sources.
+#!/usr/bin/env node
+/* Build wavelet-lab/index.html from src/ plus the shared lesson shell.
 
-     src/template.html    the app shell, with the three placeholders below
+     src/template.html    the app shell markup
+     src/styles.css       the ACTIVITY styles (the lesson shell's are shared)
      src/wavelet.js       the tested production math module, injected verbatim
-     teacher-guide.html   the ONE presenter document, injected as the notes overlay
+     src/app.js           the view layer: signal, image workbench, Stage 3 exercise
+     src/demo-guide.html  the canonical printable presenter guide
+     ../tools/lesson-shell/   tokens, shell CSS, shell behaviour, version stamp
 
-   `node build.js`         writes index.html
-   `node build.js --check` verifies index.html matches the canonical build, writes nothing
+   THE SHARED KIT IS A BUILD-TIME DEPENDENCY ONLY. Its CSS and behaviour are
+   inlined here, so the shipped index.html is still one self-contained file
+   with zero <script src> and zero <link href>. CONTRACT.md's self-containment
+   requirement is about the built file; it says the build must be reproducible
+   from the committed sources and does not require them to live in this folder
+   (orchestrator ruling, 2026-09-15). The build stamps the output with a hash
+   of the kit's CSS, so this demo goes red if the kit changes under it.
 
-   teacher-guide.html is canonical for the presenter notes AND for the printable page
-   AND for teacher-guide.pdf (tools/pdf.mjs renders that same file). The in-app copy is
-   produced here at build time, so there is nothing to fetch at runtime and nothing to
-   keep in sync by hand; --check fails the moment the shipped page drifts from it.
+   ONE SOURCE FOR THE NOTES. src/demo-guide.html is canonical for three
+   surfaces: the printable page shipped as teacher-guide.html, the rendered
+   teacher-guide.pdf, and the app's Settings -> Open Presenter Notes overlay.
+   Its scoped stylesheet and its .guide-scope body are lifted verbatim and
+   injected, so nothing is fetched at runtime and --check fails the moment any
+   surface drifts. The shipped filename stays teacher-guide.html because it is
+   a public URL (demo.json -> guide).
 
-   Every read is normalised to LF and the output is written with LF, so the build is
-   byte-reproducible regardless of how a checkout landed line endings. */
-var fs = require('fs');
-var path = require('path');
-var root = __dirname;
-var CHECK = process.argv.indexOf('--check') >= 0;
+   src/wavelet.js is unchanged from before this retrofit and is injected
+   verbatim, exactly as the pre-retrofit build did; src/wavelet.test.js pins
+   it independently and is not part of this bundle.
 
-function read(rel) { return fs.readFileSync(path.join(root, rel), 'utf8').replace(/\r\n/g, '\n'); }
-function fail(message) { console.error(message); process.exit(1); }
+     node build.js           writes index.html and teacher-guide.html
+     node build.js --check   verifies both against the canonical build, and
+                             that the PDF is no older than the guide; writes
+                             nothing, exits 1 on any drift
+*/
+'use strict';
+const fs = require('node:fs');
+const path = require('node:path');
+const shell = require('../tools/lesson-shell');
+const gc = require('../tools/lesson-shell/guide-contract');
 
-var template = read(path.join('src', 'template.html'));
-var core = read(path.join('src', 'wavelet.js'));
-var guideSource = read('teacher-guide.html');
+const here = __dirname;
+const S = f => fs.readFileSync(path.join(here, 'src', f), 'utf8');
+const die = msg => { console.error(msg); process.exit(1); };
 
-/* --- lift the presenter guide -------------------------------------------------
-   The FIRST <style> block in the guide is scoped to .guide-scope and is the only
-   part safe to inject; the SECOND is standalone/PDF page chrome (@page, body, the
-   two-column print layout) and must never reach the app.
+const WAVELET_MARKER = '/* WAVELET_CORE */';
+const paths = {
+  index: path.join(here, 'index.html'),
+  srcGuide: path.join(here, 'src', 'demo-guide.html'),
+  guideOut: path.join(here, 'teacher-guide.html'),
+  pdfOut: path.join(here, 'teacher-guide.pdf')
+};
 
-   Markers are located in a comment-masked copy (same length, so offsets still slice the
-   original): the guide's own header comment talks ABOUT <style> and .guide-scope, and a
-   naive indexOf lands inside it and injects prose into the stylesheet. */
-var masked = guideSource.replace(/<!--[\s\S]*?-->/g, function (comment) { return ' '.repeat(comment.length); });
-var styleOpen = masked.indexOf('<style>');
-var styleClose = masked.indexOf('</style>');
-var guideOpen = masked.indexOf('<div class="guide-scope">');
-var guideClose = guideSource.indexOf('</div><!-- /guide -->'); // deliberately a comment: search the original
-if (styleOpen < 0 || styleClose < 0 || guideOpen < 0 || guideClose < 0) {
-  fail('teacher-guide.html is missing a marker build.js injects from: it needs a first\n' +
-       '<style> block scoped to .guide-scope and a <div class="guide-scope"> ... </div><!-- /guide --> body.');
+function buildHtml() {
+  const guideSrc = S('demo-guide.html');
+  /* Line-anchored, unique markers and the scope-leak parse both live in the
+     kit now (guide-contract.js). */
+  const guide = gc.extractGuide(guideSrc);
+
+  let html = S('template.html');
+  const markers = [
+    shell.MARKERS.stamp,
+    shell.MARKERS.shellCss,
+    shell.MARKERS.appCss,
+    shell.MARKERS.guideCss,
+    shell.MARKERS.shellJs,
+    shell.MARKERS.app,
+    shell.MARKERS.guide,
+    WAVELET_MARKER
+  ];
+  gc.assertPlaceholders(html, markers);
+
+  /* Each injection is exactly-once and uses a function replacement, because a
+     dollar-sign substitution pattern in the injected text would otherwise be
+     eaten by String.replace. injectOnce does both. */
+  html = gc.injectOnce(html, shell.MARKERS.stamp, shell.stamp());
+  html = gc.injectOnce(html, shell.MARKERS.shellCss, shell.css());
+  html = gc.injectOnce(html, shell.MARKERS.appCss, S('styles.css'));
+  html = gc.injectOnce(html, shell.MARKERS.guideCss, guide.css);
+  html = gc.injectOnce(html, shell.MARKERS.shellJs, shell.behaviourScript());
+  html = gc.injectOnce(html, WAVELET_MARKER, S('wavelet.js'));
+  html = gc.injectOnce(html, shell.MARKERS.app, S('app.js'));
+  html = gc.injectOnce(html, shell.MARKERS.guide, guide.html);
+
+  /* The one permitted reference is the hyperlink to the printable guide
+     sitting beside index.html. CONTRACT.md 2026-09-08: an <a href> the reader
+     may choose to follow is not a network call by the page. */
+  gc.assertNoExternalRefs(html, ['teacher-guide.html']);
+  /* And nothing may be fetched at runtime. The scan strips comments, which is
+     what makes it able to miss things, so it proves itself on synthetic bait
+     before its silence is believed. */
+  const control = gc.assertNoRuntimeLoads(html);
+
+  return { html, guideSrc, guideHtml: guide.html, control };
 }
-var guideCss = guideSource.slice(styleOpen + '<style>'.length, styleClose);
-var guideHtml = guideSource.slice(guideOpen, guideClose) + '</div>';
 
-/* A stylesheet containing markup means the slice picked up prose or a tag: the CSS parser
-   would swallow it and silently drop the rules that follow. Fail loudly instead. */
-if (guideCss.indexOf('<') >= 0) {
-  fail('the lifted stylesheet contains markup, so the <style> marker matched the wrong place:\n  ' +
-       guideCss.trim().slice(0, 120).replace(/\n/g, ' ') + ' ...');
-}
-if (guideHtml.indexOf('<div class="guide-scope">') !== 0) fail('the lifted guide body does not start at <div class="guide-scope">.');
+function main(argv) {
+  const unknown = argv.filter(a => a !== '--check');
+  if (unknown.length) die('Unknown build option: ' + unknown.join(', '));
+  const { html, guideSrc, guideHtml, control } = buildHtml();
+  const checkOnly = argv.includes('--check');
 
-var unscoped = guideCss.split('\n').filter(function (line) {
-  var text = line.trim();
-  if (!text || text.indexOf('{') < 0) return false;
-  if (/^@media\b/.test(text)) return false; // a media wrapper scopes nothing by itself
-  return !/^\.guide-scope(?=[\s,{:.>#[])/.test(text);
-});
-if (unscoped.length) {
-  fail('teacher-guide.html would restyle the app: every rule in its first <style> block must\n' +
-       'be scoped to .guide-scope. Move page chrome to the second block. Offending rules:\n  ' +
-       unscoped.map(function (l) { return l.trim(); }).join('\n  '));
-}
-
-/* --- fill the template --------------------------------------------------------
-   Function replacements, so a `$&` or `$1` inside any source stays literal. */
-var slots = [
-  ['/* WAVELET_CORE */', '/* WAVELET_CORE: BEGIN */\n' + core + '\n/* WAVELET_CORE: END */'],
-  ['/*__GUIDE_CSS__*/', '/* GUIDE_CSS: BEGIN — generated from teacher-guide.html, do not edit here */' + guideCss + '/* GUIDE_CSS: END */'],
-  ['<!--__GUIDE__-->', '<!-- GUIDE: BEGIN — generated from teacher-guide.html, do not edit here -->\n' + guideHtml + '\n<!-- GUIDE: END -->']
-];
-var output = template;
-slots.forEach(function (slot) {
-  if (output.indexOf(slot[0]) === -1) fail('src/template.html is missing the placeholder ' + slot[0]);
-  output = output.replace(slot[0], function () { return slot[1]; });
-});
-
-/* --- one file means one file: nothing may be fetched at runtime --------------- */
-var offenders = [];
-output.replace(/<(script|link|img|iframe|source|video|audio)\b[^>]*>/gi, function (tag) {
-  if (/\b(src|href)\s*=\s*["']?(?!#)[^"'>\s]+/i.test(tag) && !/data:/i.test(tag)) offenders.push(tag.slice(0, 90));
-  return tag;
-});
-if (offenders.length) fail('build refuses to ship an external reference:\n  ' + offenders.join('\n  '));
-
-var outPath = path.join(root, 'index.html');
-if (CHECK) {
-  var current = fs.existsSync(outPath) ? fs.readFileSync(outPath, 'utf8').replace(/\r\n/g, '\n') : null;
-  if (current !== output) {
-    fail('index.html is not current: it differs from src/template.html + src/wavelet.js +\n' +
-         'teacher-guide.html. The in-app presenter notes have drifted from the guide, or the\n' +
-         'app has. Run: node build.js');
+  if (!checkOnly) {
+    fs.writeFileSync(paths.index, html);
+    fs.copyFileSync(paths.srcGuide, paths.guideOut);
+    console.log('built index.html (' + Math.round(html.length / 1024) + ' KB) and teacher-guide.html');
+    console.log('  lesson-shell ' + shell.stamp());
+    console.log('  presenter notes injected from src/demo-guide.html: ' +
+      guideHtml.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length + ' words');
+    console.log('  runtime-load scan passed, proved on ' + control.controls + ' positive controls');
+    console.log('NOTE: if the guide changed, re-render the PDF: node tools/pdf.mjs');
+    return 0;
   }
-  console.log('PASS  index.html is reproducibly built from src/template.html + src/wavelet.js + teacher-guide.html');
-  console.log('PASS  in-app presenter notes match teacher-guide.html (same bytes, injected at build time)');
-} else {
-  fs.writeFileSync(outPath, output);
-  console.log('Built index.html from source:', (output.length / 1024).toFixed(0) + ' KB');
-  console.log('  math module   src/wavelet.js       ' + core.length + ' bytes injected verbatim');
-  console.log('  presenter notes teacher-guide.html  ' + guideHtml.length + ' bytes + ' + guideCss.length + ' bytes of scoped CSS');
+
+  const same = (file, want) => fs.existsSync(file) && fs.readFileSync(file, 'utf8') === want;
+  if (!same(paths.index, html)) {
+    console.error('build parity MISMATCH -- index.html differs from the canonical build. Run: node build.js');
+    console.error('(the in-app presenter notes are generated from src/demo-guide.html, and the shell CSS');
+    console.error(' comes from ../tools/lesson-shell, so a change to either requires a rebuild)');
+    return 1;
+  }
+  if (!same(paths.guideOut, guideSrc)) {
+    console.error('build parity MISMATCH -- teacher-guide.html differs from src/demo-guide.html. Run: node build.js');
+    return 1;
+  }
+  if (!fs.readFileSync(paths.index, 'utf8').includes(guideHtml)) {
+    console.error('build parity MISMATCH -- the in-app presenter notes are not the guide body. Run: node build.js');
+    return 1;
+  }
+  /* The PDF is a render, not a copy, so it cannot be compared byte for byte.
+     Freshness is the pin that is available: it must not predate the guide it
+     is a picture of. Two seconds of slack absorbs a fresh checkout, which
+     stamps every file at about the same instant. */
+  if (!fs.existsSync(paths.pdfOut)) {
+    console.error('build parity MISMATCH -- teacher-guide.pdf is missing. Run: node tools/pdf.mjs');
+    return 1;
+  }
+  const lag = fs.statSync(paths.srcGuide).mtimeMs - fs.statSync(paths.pdfOut).mtimeMs;
+  if (lag > 2000) {
+    console.error('build parity MISMATCH -- teacher-guide.pdf is older than src/demo-guide.html by ' +
+      (lag / 1000).toFixed(0) + 's. Run: node tools/pdf.mjs');
+    return 1;
+  }
+  console.log('build parity OK -- index.html, teacher-guide.html and the in-app presenter notes all derive');
+  console.log('build parity OK -- from src/demo-guide.html, and the PDF is no older than it; no files written');
+  console.log('build parity OK -- lesson-shell ' + shell.stamp());
+  return 0;
 }
+
+module.exports = { buildHtml, paths, WAVELET_MARKER };
+
+if (require.main === module) process.exitCode = main(process.argv.slice(2));
