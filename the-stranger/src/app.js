@@ -438,7 +438,7 @@ function announce(bits, card, termTotal, novelTotal) {
   let msg = '';
   if (st === 0) {
     msg = bits[0] === '1'
-      ? 'Context is on: this answer is aimed at one particular asker. Its length and its vocabulary did not change.'
+      ? 'Context is on: this answer is aimed at one particular asker. Its length and its vocabulary follow the card dealt, not this lever.'
       : 'Context is off: nothing in this answer knows who asked. Turn on lever 1 and ask again.';
   } else if (st === 1) {
     msg = card
