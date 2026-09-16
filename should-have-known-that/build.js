@@ -38,12 +38,67 @@ const paths = {
   index: path.join(here, 'index.html'),
   srcGuide: path.join(here, 'src', 'demo-guide.html'),
   guideOut: path.join(here, 'teacher-guide.html'),
-  pdfOut: path.join(here, 'teacher-guide.pdf')
+  pdfOut: path.join(here, 'teacher-guide.pdf'),
+  readme: path.join(here, 'README.md'),
+  demoJson: path.join(here, 'demo.json')
 };
+
+/* ONE COUNT, DERIVED. The number of items that carry a qualifier (and, since
+   the 2026-09-16 correction pass, a scoring band) is read from src/data.js
+   here, injected into the template, and then CHECKED against every prose
+   surface that states it. The previous build hand-wrote that number five
+   times and got it wrong five times (14 / 17 / 17 / 17 / 17 against an
+   actual 23). The guide, README and demo.json cannot take an injection —
+   teacher-guide.html must be byte-identical to src/demo-guide.html, and the
+   other two are read by the hub as-is — so for those the build refuses to
+   run until the stated number matches the derived one. */
+function bankCounts() {
+  const { QUESTIONS } = require(path.join(here, 'src', 'data.js'));
+  const qual = QUESTIONS.filter(q => q.qualifier);
+  const band = QUESTIONS.filter(q => Array.isArray(q.band));
+  const linear = q => q.scale !== 'log';
+  return {
+    total: QUESTIONS.length,
+    qualAll: qual.length,
+    qualLinear: qual.filter(linear).length,
+    qualLog: qual.filter(q => !linear(q)).length,
+    bandAll: band.length,
+    bandLinear: band.filter(linear).length,
+    bandLog: band.filter(q => !linear(q)).length
+  };
+}
+const COUNT_MARKERS = ['__QUAL_LINEAR__', '__QUAL_LOG__', '__BAND_LINEAR__'];
+
+/* Each prose surface names its count in one fixed phrase; the regex is
+   anchored on that phrase so a reworded sentence fails loudly (marker
+   missing) rather than silently passing. */
+const STATED = [
+  { file: 'README.md', path: () => paths.readme, re: /on-screen\s+\*\*qualifier\*\*\s+to\s+(\d+)\s+of\s+the\s+40/, key: 'qualAll' },
+  { file: 'README.md', path: () => paths.readme, re: /and\s+(\d+)\s+of\s+the\s+40\s+are\s+scored\s+against/, key: 'bandAll' },
+  { file: 'demo.json', path: () => paths.demoJson, re: /(\d+)\s+of\s+the\s+40\s+carrying\s+an\s+on-screen\s+qualifier/, key: 'qualAll' },
+  { file: 'demo.json', path: () => paths.demoJson, re: /(\d+)\s+scored\s+against\s+a\s+stated\s+range/, key: 'bandAll' },
+  { file: 'src/demo-guide.html', path: () => paths.srcGuide, re: /but\s+(\d+)\s+of\s+them\s+ship\s+with\s+a\s+qualifier/, key: 'qualAll' },
+  { file: 'src/demo-guide.html', path: () => paths.srcGuide, re: /(\d+)\s+of\s+the\s+40\s+are\s+scored\s+against\s+a\s+range/, key: 'bandAll' }
+];
+function assertStatedCounts(counts) {
+  const bad = [];
+  for (const s of STATED) {
+    const text = fs.readFileSync(s.path(), 'utf8');
+    const m = text.match(s.re);
+    if (!m) { bad.push(`${s.file}: the phrase this build checks is missing (${s.re})`); continue; }
+    if (Number(m[1]) !== counts[s.key]) {
+      bad.push(`${s.file}: states ${m[1]} for ${s.key}, but src/data.js derives ${counts[s.key]}`);
+    }
+  }
+  if (bad.length) die('count drift -- fix the prose to match src/data.js:\n  ' + bad.join('\n  '));
+}
 
 function buildHtml() {
   const guideSrc = S('demo-guide.html');
   const guide = gc.extractGuide(guideSrc);
+
+  const counts = bankCounts();
+  assertStatedCounts(counts);
 
   let html = S('template.html');
   const markers = [
@@ -54,9 +109,14 @@ function buildHtml() {
     shell.MARKERS.shellJs,
     shell.MARKERS.app,
     shell.MARKERS.guide,
-    DATA_MARKER
+    DATA_MARKER,
+    ...COUNT_MARKERS
   ];
   gc.assertPlaceholders(html, markers);
+
+  html = gc.injectOnce(html, '__QUAL_LINEAR__', String(counts.qualLinear));
+  html = gc.injectOnce(html, '__QUAL_LOG__', String(counts.qualLog));
+  html = gc.injectOnce(html, '__BAND_LINEAR__', String(counts.bandLinear));
 
   html = gc.injectOnce(html, shell.MARKERS.stamp, shell.stamp());
   html = gc.injectOnce(html, shell.MARKERS.shellCss, shell.css());
@@ -77,14 +137,16 @@ function buildHtml() {
   gc.assertNoExternalRefs(html, ['teacher-guide.html']);
   const control = gc.assertNoRuntimeLoads(html);
 
-  return { html, guideSrc, guideHtml: guide.html, control };
+  return { html, guideSrc, guideHtml: guide.html, control, counts };
 }
 
 function main(argv) {
   const unknown = argv.filter(a => a !== '--check');
   if (unknown.length) die('Unknown build option: ' + unknown.join(', '));
-  const { html, guideSrc, guideHtml, control } = buildHtml();
+  const { html, guideSrc, guideHtml, control, counts } = buildHtml();
   const checkOnly = argv.includes('--check');
+  const countLine = `qualifier count ${counts.qualAll}/${counts.total} (${counts.qualLinear} linear + ${counts.qualLog} log), ` +
+    `band count ${counts.bandAll} (${counts.bandLinear} linear + ${counts.bandLog} log) -- derived from src/data.js and matched on README.md, demo.json, src/demo-guide.html`;
 
   if (!checkOnly) {
     fs.writeFileSync(paths.index, html);
@@ -94,6 +156,7 @@ function main(argv) {
     console.log('  presenter notes injected from src/demo-guide.html: ' +
       guideHtml.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length + ' words');
     console.log('  runtime-load scan passed, proved on ' + control.controls + ' positive controls');
+    console.log('  ' + countLine);
     console.log('NOTE: if the guide changed, re-render the PDF: node tools/pdf.mjs');
     return 0;
   }
@@ -124,9 +187,10 @@ function main(argv) {
   console.log('build parity OK -- index.html, teacher-guide.html and the in-app presenter notes all derive');
   console.log('build parity OK -- from src/demo-guide.html, and the PDF is no older than it; no files written');
   console.log('build parity OK -- lesson-shell ' + shell.stamp());
+  console.log('build parity OK -- ' + countLine);
   return 0;
 }
 
-module.exports = { buildHtml, paths, DATA_MARKER };
+module.exports = { buildHtml, bankCounts, paths, DATA_MARKER };
 
 if (require.main === module) process.exitCode = main(process.argv.slice(2));

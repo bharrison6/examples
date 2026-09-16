@@ -805,7 +805,7 @@ body.has-bottom-bar .bh-credit { display: none; }
         <h3 id="act-1-heading">Linear estimates</h3>
       </div>
     </div>
-    <p class="panel-lede">Thirty-five questions across five categories, scored by percent error &mdash; pick your set below, or take the full bank.</p>
+    <p class="panel-lede">Thirty-five questions across five categories, scored by percent error &mdash; pick your length and categories below.</p>
 
     <!-- ---- setup sub-panel (shown before / between rounds) ---- -->
     <div class="tv-setup" id="tv-setup">
@@ -916,10 +916,13 @@ body.has-bottom-bar .bh-credit { display: none; }
       <p class="stage-question">When a guess can be off by a factor of ten, does the exact digit even matter?</p>
       <p class="refresh"><b>Before you start.</b> These five numbers &mdash; copper's resistivity, the
         speed of light, the current that can trigger cardiac fibrillation, the voltage you can feel as
-        a static shock, and the energy in an AA battery &mdash; span <b>orders of magnitude</b>, so
-        stage 1's percent-error scoring would be meaningless here: missing by 10&times; and missing by
-        1.1&times; would score almost the same. A <b>log-scale</b> slider is instead scored on <b>how
-        many times off</b> you are.</p>
+        a static shock, and the energy in an AA battery &mdash; span <b>orders of magnitude</b>, and a
+        linear slider cannot even hold them: copper's 1.7&times;10<sup>&minus;8</sup> &Omega;&middot;m on a
+        linear track from 10<sup>&minus;10</sup> to 10<sup>&minus;4</sup> would sit at <b>step 0 of
+        1,000</b>, indistinguishable from the left end. A <b>log-scale</b> slider gives every power of
+        ten the same width, and is scored on <b>how many times off</b> you are &mdash; so a 2&times; miss
+        and a 20&times; miss are different sizes of wrong, where percent error would call them 100% and
+        1,900% off.</p>
     </div>
     <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 2 learning guide">
@@ -1140,8 +1143,11 @@ body.has-bottom-bar .bh-credit { display: none; }
           <span class="panel-kicker"><span class="k-sourced">Sourced</span> all 35 linear values below</span>
           <p>Every number in this stage is a published reference value, a defined constant, a code
             requirement, or an exact unit conversion &mdash; not a measurement this page performs.
-            Fourteen of them ship with a qualifier because a single number would otherwise stand in
-            for a real range, a specified minimum, or a design convention.</p>
+            19 of the 35 ship with a qualifier because a single number would otherwise stand in
+            for a typical value, a real range, a specified minimum, or a design convention; 8 of
+            the 35 are also <b>scored against the range the item itself names</b> rather than against a
+            single point (the reveal still shows the one anchor value). These counts are derived from
+            the question bank at build time.</p>
         </div>
         <h3>How it works</h3>
         <div class="details-formula">error = |guess &minus; true| / true &nbsp;&middot;&nbsp; bands at 5% / 15% / 35% / 60%</div>
@@ -1158,6 +1164,10 @@ body.has-bottom-bar .bh-credit { display: none; }
             "true" than a measured physical constant, which is exactly what each item's qualifier says.</li>
           <li>Slider endpoints are chosen to be wide enough not to give the answer away; they are not
             themselves a claim about the plausible range of the true value.</li>
+          <li>Where an item carries an accepted range, a guess inside it scores Bullseye and a guess
+            outside it is measured from the nearer edge of the range, not from the anchor &mdash; so the
+            score never punishes an answer the item's own text endorses. The ranges are listed under
+            Sources below, each with the page it came from.</li>
         </ul>
         <h3>Sources</h3>
         <ul id="sources-0"></ul>
@@ -1177,9 +1187,11 @@ body.has-bottom-bar .bh-credit { display: none; }
         </div>
         <div class="claim">
           <span class="panel-kicker"><span class="k-sourced">Sourced</span> all five log-scale values below</span>
-          <p>Two of the five &mdash; the cardiac-fibrillation current and the static-shock perception
-            voltage &mdash; are safety-relevant rule-of-thumb figures pulled from a real risk curve or a
-            reported range, not a hard line; both carry a qualifier that says so plainly.</p>
+          <p>4 of the five carry a qualifier. Two of them &mdash; the cardiac-fibrillation current
+            and the static-shock perception voltage &mdash; are safety-relevant rule-of-thumb figures
+            pulled from a real risk curve or a reported range, not a hard line; both carry a qualifier
+            that says so plainly, and both are scored against the range they name (30&ndash;100 mA
+            sustained; 2,000&ndash;4,000 V), so the more conservative reading of each is not penalised.</p>
         </div>
         <h3>How it works</h3>
         <div class="details-formula">error = |log10(guess / true)| &nbsp;&middot;&nbsp; bands at 0.10 / 0.33 / 0.70 / 1.20 decades</div>
@@ -1219,7 +1231,11 @@ body.has-bottom-bar .bh-credit { display: none; }
         <ul>
           <li>The comparison needs at least one answer on each deck to mean anything; with only a
             handful of log questions, a single lucky or unlucky guess moves the log average a lot more
-            than it would move the 35-question linear average.</li>
+            than it would move the linear average.</li>
+          <li>The debrief also reports the control: what a slider dragged to a random position would
+            average on the exact questions you played, computed by scoring all 1,001 positions of each.
+            Across the whole bank a random guess earns roughly the same on both decks, so a gap between
+            your two averages is about what you knew, not about one deck being scored more gently.</li>
         </ul>
         <h3>Sources</h3>
         <ul><li>Not applicable &mdash; this stage computes from stage 1 and 2's already-sourced answers rather than citing a new value.</li></ul>
@@ -1292,8 +1308,11 @@ body.has-bottom-bar .bh-credit { display: none; }
       "you vs. truth" markers on the track; the observation cue names the band and the miss size.</p>
     <p><b>Check-yourself answer key.</b> "It's a specified minimum &mdash; real steel usually tests
       higher" is correct; "it's the average strength" is the flawed model item 10 exists to break.</p>
-    <p><b>Teaching limit.</b> Percent-error scoring only makes sense while the true value and the guess
-      are on the same, roughly-linear scale &mdash; which is exactly what breaks in stage 2.</p>
+    <p><b>Teaching limit.</b> A linear slider only works while the plausible answers fit on one linear
+      track &mdash; which is exactly what breaks in stage 2, where the right answer to the resistivity
+      item would sit at step 0 of 1,000. Note also that eleven items are scored against a stated range
+      (the reveal names it): a guess inside the range is Bullseye, and the reveal's single "truth" is the
+      anchor, not the only acceptable answer.</p>
   </section>
 
   <section aria-labelledby="g-s2">
@@ -1354,9 +1373,9 @@ body.has-bottom-bar .bh-credit { display: none; }
     <ol>
       <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Ask the room to derive one from the
         other (62.4 &divide; 144 in&sup2;/ft&sup2;).</li>
-      <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it
-        takes to feel a static shock? It is the current, not the voltage, that kills; say plainly that
-        100 mA is a rule of thumb, not a safe/unsafe line.</li>
+      <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the few thousand
+        volts (2,000&ndash;4,000 V for most people) it takes to feel a static shock? It is the current, not
+        the voltage, that kills; say plainly that 100 mA is a rule of thumb, not a safe/unsafe line.</li>
       <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs. 70 GPa; density
         7,850 vs. 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical
         &mdash; the real choice is cost, buckling, and joining.</li>
@@ -1366,9 +1385,10 @@ body.has-bottom-bar .bh-credit { display: none; }
         in ksi. How many other "memorized" numbers are printed on the spec sheet's name, and how many of
         those are minimums rather than typicals?</li>
       <li><b>A single number can be right AND still teach the wrong lesson.</b> Every one of the 40
-        values in this bank checks out against a real source &mdash; but 17 of them ship with a qualifier
-        because a bare number would have implied more precision than the world actually has. Ask the room
-        to name one more everyday "fact" that is really a range, a floor, or a design convention.</li>
+        values in this bank checks out against a real source &mdash; but 23 of them ship with a qualifier
+        because a bare number would have implied more precision than the world actually has, and 11 of
+        the 40 are scored against a range rather than a point for the same reason. Ask the room to name
+        one more everyday "fact" that is really a range, a floor, or a design convention.</li>
       <li><b>One gallon of gasoline is 33.7 kWh</b> &mdash; roughly a full day of an average US home's
         electricity, and (per this build's re-sourcing) a genuinely accurate figure for real gasoline, not
         a lowball regulatory number.</li>
@@ -1394,7 +1414,14 @@ body.has-bottom-bar .bh-credit { display: none; }
     </table>
     <p class="small">Because both scales share this one point table, stage 3's linear-vs-log comparison
       uses average points per question rather than the raw percent/decades numbers, which are not
-      directly comparable.</p>
+      directly comparable. The debrief also prints the control &mdash; what a randomly placed slider
+      would average on the questions actually played, scored over all 1,001 positions &mdash; and across
+      the whole bank that control is within a few points of equal on the two decks, so a gap between a
+      student's two averages is knowledge, not a gentler deck.</p>
+    <p class="small">Where an item carries an accepted range (its qualifier or reveal text names it, and
+      the Details drawer lists it with its source), a guess inside the range scores Bullseye and a guess
+      outside it is measured from the nearer edge. Eleven items are scored this way; the other 29 score
+      against their single value exactly as the table above describes.</p>
   </section>
 
   <section aria-labelledby="g-edit">
@@ -1402,12 +1429,16 @@ body.has-bottom-bar .bh-credit { display: none; }
     <p>The bank now lives in <code>src/data.js</code> (moved out of <code>index.html</code> for this
       retrofit) &mdash; each entry carries <code>id</code>, <code>category</code>, <code>prompt</code>,
       <code>units</code>, <code>value</code>, <code>min</code>/<code>max</code>, <code>scale</code>
-      (<code>"linear"</code>/<code>"log"</code>), <code>factoid</code>, and now an optional
-      <code>qualifier</code> plus a <code>source</code> object (<code>name</code>, <code>url</code>,
-      <code>fetched</code>). Edit <code>src/data.js</code>, then run <code>node build.js</code>. A value
-      with no qualifier is presented as a single, unhedged fact &mdash; add one whenever a new question is
-      really a range, a specified minimum, or a code/edition-dependent figure, per the standing "research,
-      not memory" rule: back it with an actual source before shipping it, or mark it unverified.</p>
+      (<code>"linear"</code>/<code>"log"</code>), <code>factoid</code>, an optional
+      <code>qualifier</code>, an optional <code>band: [lo, hi]</code>, and a <code>source</code> object
+      (<code>name</code>, <code>url</code>, <code>fetched</code>, optional <code>also</code> list for a
+      second citation). Edit <code>src/data.js</code>, then run <code>node build.js</code> &mdash; the
+      build derives the qualifier and band counts from the bank and refuses to run until this guide, the
+      README and <code>demo.json</code> state the same numbers. A value with no qualifier is presented as
+      a single, unhedged fact &mdash; add one whenever a new question is really a range, a specified
+      minimum, or a code/edition-dependent figure, and add a <code>band</code> only where a sourced range
+      for the same quantity already appears in the item's own text, per the standing "research, not
+      memory" rule: back it with an actual source before shipping it, or mark it unverified.</p>
   </section>
 
   <section aria-labelledby="g-controls">
@@ -1436,18 +1467,27 @@ body.has-bottom-bar .bh-credit { display: none; }
         Resolution 2</a> &mdash; the defined value of standard gravity.</li>
       <li>NIH/NCBI StatPearls, <a href="https://www.ncbi.nlm.nih.gov/books/NBK580528/">Electrical
         Injuries</a> &mdash; the current thresholds behind item 23's qualifier.</li>
-      <li>up.codes, <a href="https://up.codes/s/ampacities-for-flexible-cords-and-flexible-cables">NEC
-        Table 400.5(A)(1)</a> and <a href="https://up.codes/s/stair-treads-and-risers">IRC/IBC stair
-        tread and riser requirements</a>.</li>
-      <li>OSHA, <a href="https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1053">1926.1053,
-        Ladders</a>.</li>
+      <li>NEC Table 400.5(A)(1) as rendered by <a href="https://www.distributorwire.com/blogs/soow-so-cord-ampacity-chart-nec-400-5">Distributor
+        Wire &amp; Cable</a> (16 AWG: 13 A with two current-carrying conductors, 10 A with three), and
+        up.codes, <a href="https://up.codes/s/stair-treads-and-risers">IRC/IBC stair tread and riser
+        requirements</a> (jurisdiction-routed; the page served may be a state adoption).</li>
+      <li>29 CFR 1926.1053(b)(5)(i), Ladders, via <a href="https://www.law.cornell.edu/cfr/text/29/1926.1053">Cornell
+        LII</a> &mdash; base offset one-quarter of the ladder's <i>working length</i>, i.e. arccos&nbsp;&frac14;
+        = 75.5&deg; (osha.gov's own copy refuses automated readers).</li>
+      <li>IEC 60479-1:2018 &sect;3.3.2 Note 1, <a href="https://cdn.standards.iteh.ai/samples/102053/a6ad398bc8e94fc29370ca887ba3cb16/IEC-60479-1-2018.pdf">sample
+        pages</a> &mdash; the 80 mA at 10 s, 50 % fibrillation figure in item 23's reveal.</li>
       <li>TxDOT Roadway Design Manual, <a href="https://www.txdot.gov/manuals/des/rdw/chapter-4--basic-design-criteria/4-8-vertical-alignment/4-8-1-grades.html">Ch.
         4.8.1 Grades</a> &mdash; the terrain&times;design-speed structure behind item 36's qualifier.</li>
       <li>CPSC Publication 5098, <a href="https://www.cpsc.gov/s3fs-public/5098.pdf">Tap Water Scalds</a>.</li>
-      <li>NIST Chemistry WebBook, <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&amp;Mask=4">Water</a>
-        &mdash; thermophysical properties behind items 25, 29, 30 and 33.</li>
-      <li>ICAO Doc 7488, <a href="https://news.ncac.mn/uploads/bookSubject/2022-11/6369ec174ab34.pdf">Manual
-        of the ICAO Standard Atmosphere</a> &mdash; items 27 and 40.</li>
+      <li>Engineering ToolBox water tables &mdash; <a href="https://www.engineeringtoolbox.com/water-properties-d_1573.html">heat
+        of vaporization</a> (item 29), <a href="https://www.engineeringtoolbox.com/specific-heat-capacity-water-d_660.html">specific
+        heat</a> (item 30), <a href="https://www.engineeringtoolbox.com/boiling-points-water-altitude-d_1344.html">boiling
+        point vs. altitude</a> (item 25); item 33 is derived from item 5 and NIST's
+        <a href="https://www.nist.gov/how-do-you-measure-it/how-do-you-measure-fuel-gas-pump">231 in&sup3;
+        gallon</a>. (The NIST WebBook page cited earlier carries none of these four numbers.)</li>
+      <li>Engineering ToolBox, <a href="https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html">U.S.
+        Standard Atmosphere</a> &mdash; items 27 and 40 (replacing an ICAO Doc 7488 mirror whose TLS
+        certificate does not validate).</li>
     </ul>
     <p class="small">The full 40-row table (value, qualifier, source, date checked) is in
       <code>src/data.js</code> and in this retrofit's return report; some lower-stakes items (exact unit
@@ -1492,12 +1532,23 @@ body.has-bottom-bar .bh-credit { display: none; }
               dependent — so a single number never teaches false
               precision. Omit for a value that is genuinely a single
               defined constant or an exact arithmetic identity.
+     band     OPTIONAL [lo, hi]. A guess anywhere inside it scores as
+              correct (BULLSEYE); outside it, the error is measured from
+              the nearest edge instead of from `value`. Use ONLY where the
+              item's own qualifier or factoid already names a sourced
+              numeric range for the SAME quantity the prompt asks about —
+              never invent one, and never widen it past the source. The
+              reveal still shows `value` as the single anchor; the band
+              changes the score, not the display.
      source   { name, url, fetched } — the primary or best-available
-              citation actually checked for this build (see
-              .aia/.data/demo-fleet-format-alignment/B-should-have-known-that-progress.md
-              for which of these were freshly fetched this session vs.
-              inherited from the pre-build accuracy audit's own fetches —
-              both are research, never memory; none were back-filled).
+              citation actually checked for this build, with the date it
+              was fetched. Every URL here was fetched on the date shown and
+              contains the taught number (or the derivation's inputs);
+              none were back-filled from memory. Where a better citation
+              exists only behind a paywall, a bot wall or a certificate
+              failure, `name` says so and `url` points at the reachable
+              page that carries the number. Lane records:
+              .aia/.data/demo-fleet-format-alignment/{B,R,C}-should-have-known-that-progress.md.
    Tips: keep the true value OFF-center in [min,max], and make the range
    wide enough that the endpoints don't give the answer away.
    Scoring band thresholds live in SCORING (app.js).
@@ -1551,8 +1602,9 @@ const QUESTIONS = [
     prompt: "Angle of repose of dry sand (steepest stable pile)",
     units: "°", value: 34, min: 5, max: 85, scale: "linear",
     factoid: "Dry sand won't stack steeper than ~34° — the same physics shapes hoppers, stockpiles, and dunes.",
-    qualifier: "range 30–35° for dry sand's angle of repose; a distinct quantity from the engineering (design) friction angle, which this item does not name",
-    source: { name: "ResearchGate, \"Typical values of angle of repose\"", url: "https://www.researchgate.net/figure/Typical-values-of-angle-of-repose-30_tbl1_323441895", fetched: "2026-09-15" } },
+    qualifier: "range 30–35° for dry, not-too-angular granular material; a distinct quantity from the engineering (design) friction angle, which this item does not name",
+    band: [30, 35],
+    source: { name: "MIT OpenCourseWare 12.090, Ch. 10 \"Mass Wasting\" §2.1.2 (\"the angle of repose lies in the range 30-35°\")", url: "https://ocw.mit.edu/courses/12-090-the-environment-of-the-earths-surface-spring-2007/ab6d240ac88d9c3c222f09fbea7fc615_earthsurface_10.pdf", fetched: "2026-09-16" } },
 
   { id: 8, category: "Statics & Mechanics",
     prompt: "Speed of sound in steel",
@@ -1566,28 +1618,32 @@ const QUESTIONS = [
     prompt: "Young's modulus of structural steel",
     units: "GPa", value: 200, min: 10, max: 800, scale: "linear",
     factoid: "200 GPa is the stiffness yardstick — aluminum ~70, concrete ~30, wood ~10.",
-    qualifier: "AISC 360's fixed design constant (29,000 ksi) for all structural-steel grades, not a measured average — physically measured steel runs ~190–215 GPa",
+    qualifier: "AISC 360's fixed design constant (29,000 ksi) for all structural-steel grades — a convention every grade shares, not a measured average for any one of them",
     source: { name: "AISC 360 design value (29,000 ksi), via steelcalculator.app reference", url: "https://steelcalculator.app/reference/steel-modulus-of-elasticity/", fetched: "2026-09-16" } },
 
   { id: 10, category: "Materials",
     prompt: "Yield strength of A36 mild steel",
     units: "MPa", value: 250, min: 20, max: 1200, scale: "linear",
     factoid: "The '36' in A36 is the yield strength in ksi — 36 ksi ≈ 250 MPa, the default mild-steel number.",
-    qualifier: "specified minimum, not typical — real mill-certified A36 commonly tests higher, and the minimum drops to 220 MPa (32 ksi) above 8 in thickness",
-    source: { name: "Wikipedia, \"A36 steel\" (quoting ASTM A36/A36M's minimum-yield and thickness-exception language)", url: "https://en.wikipedia.org/wiki/A36_steel", fetched: "2026-09-15" } },
+    qualifier: "specified minimum, not typical — real mill-certified A36 commonly tests higher (AISC 341's seismic provisions take the expected yield as 1.5 × 36 = 54 ksi ≈ 370 MPa), and the minimum drops to 220 MPa (32 ksi) above 8 in thickness",
+    band: [250, 370],
+    source: { name: "Wikipedia, \"A36 steel\" (quoting ASTM A36/A36M's minimum-yield and thickness-exception language)", url: "https://en.wikipedia.org/wiki/A36_steel", fetched: "2026-09-16",
+              also: [{ name: "AISC 341-16 Table A3.1, Ry = 1.5 for A36 (expected yield 54 ksi), via steelcalculator.app", url: "https://steelcalculator.app/reference/astm-a36-steel/" }] } },
 
   { id: 11, category: "Materials",
     prompt: "Young's modulus of aluminum",
     units: "GPa", value: 70, min: 5, max: 400, scale: "linear",
     factoid: "~70 GPa — a third of steel, so an aluminum beam deflects 3× more under the same load.",
-    qualifier: "alloy-dependent; range ~69–73 GPa",
-    source: { name: "Wikipedia, \"6061 aluminium alloy\"", url: "https://en.wikipedia.org/wiki/6061_aluminium_alloy", fetched: "2026-09-15" } },
+    qualifier: "alloy-dependent, but only slightly: pure aluminum ~69 GPa, common structural alloys ~70 GPa (6061 is 68–69 GPa regardless of temper)",
+    source: { name: "Engineering ToolBox, Young's Modulus of Elasticity (Aluminum 69, Aluminum Alloys 70 GPa)", url: "https://www.engineeringtoolbox.com/young-modulus-d_417.html", fetched: "2026-09-16",
+              also: [{ name: "Wikipedia, \"6061 aluminium alloy\" (68–69 GPa)", url: "https://en.wikipedia.org/wiki/6061_aluminium_alloy" }] } },
 
   { id: 12, category: "Materials",
     prompt: "Typical compressive strength of standard concrete",
     units: "psi", value: 4000, min: 500, max: 15000, scale: "linear",
     factoid: "Sidewalks run ~3,000 psi, structural work 4,000–5,000 — and concrete is ~10× weaker in tension, hence rebar.",
-    source: { name: "Engineering ToolBox, Concrete Properties", url: "https://www.engineeringtoolbox.com/concrete-properties-d_1223.html", fetched: "2026-09-16" } },
+    band: [3000, 5000],
+    source: { name: "Engineering ToolBox, Concrete Properties (compressive strength 20–40 MPa = 3,000–6,000 psi; tensile 300–700 psi)", url: "https://www.engineeringtoolbox.com/concrete-properties-d_1223.html", fetched: "2026-09-16" } },
 
   { id: 13, category: "Materials",
     prompt: "Approximate melting point of carbon steel",
@@ -1605,22 +1661,24 @@ const QUESTIONS = [
     prompt: "Coefficient of thermal expansion of steel",
     units: "µm/m·°C", value: 12, min: 1, max: 50, scale: "linear",
     factoid: "~12 µm/m·°C — close enough to concrete's own rate that reinforced concrete works at all.",
-    qualifier: "typical value; concrete's CTE is itself a 7–13 µm/m·°C range depending on aggregate, so the steel/concrete match is approximate, not exact",
-    source: { name: "Eng-Tips forum, \"Coefficient of Thermal Expansion for Concrete\" (citing US Steel's Atlas for steel, 11.7–13.5 µm/m·°C)", url: "https://www.eng-tips.com/threads/coefficient-of-thermal-expansion-for-concrete.124080/", fetched: "2026-09-16" } },
+    qualifier: "typical value; steels tabulate at ~10.8–12.5 µm/m·°C by grade, and concrete at ~10–14 depending on aggregate, so the steel/concrete match is approximate, not exact",
+    band: [10.8, 12.5],
+    source: { name: "Engineering ToolBox, Linear Thermal Expansion Coefficients (Steel 10.8–12.5; Concrete 13–14; concrete structure 9.8 ×10⁻⁶/K)", url: "https://www.engineeringtoolbox.com/linear-expansion-coefficients-d_95.html", fetched: "2026-09-16" } },
 
   { id: 16, category: "Materials",
     prompt: "Density of reinforced concrete",
     units: "lb/ft³", value: 150, min: 40, max: 500, scale: "linear",
     factoid: "~150 lb/ft³ — 2.4× water. One cubic yard of concrete weighs about two tons.",
     qualifier: "ACI 318's normal-weight design convention; the code's normal-weight band is 135–160 pcf, not a single physical constant",
-    source: { name: "ACI 318-19 §19.2.4 normal-weight concrete definition (135–160 pcf)", url: "https://www.structurepoint.org/publication/pdf/Modification-Factor-Lightweight-Concrete-Types.pdf", fetched: "2026-09-15" } },
+    band: [135, 160],
+    source: { name: "ACI 318-14 Table 19.2.4.2 normal-weight concrete definition (135–160 pcf), as quoted in StructurePoint's lightweight-concrete modification-factor note", url: "https://www.structurepoint.org/publication/pdf/Modification-Factor-Lightweight-Concrete-Types.pdf", fetched: "2026-09-15" } },
 
   /* ---------------- ELECTRICAL ---------------- */
   { id: 17, category: "Electrical",
     prompt: "Nominal voltage of a standard US wall outlet",
     units: "V", value: 120, min: 20, max: 500, scale: "linear",
     factoid: "120 V is the RMS value — the waveform actually swings to ±170 V peak, 60 times a second.",
-    source: { name: "NEMA 5-15R outlet configuration reference (125 V nominal, standard US residential/commercial receptacle)", url: "https://asmr.education/faq/electric-outlets/nema-5-15r-outlet-configuration", fetched: "2026-09-16" } },
+    source: { name: "NEMA 5-15R outlet configuration reference (device rated 15 A at 125 V; 120 V is the nominal US system voltage)", url: "https://asmr.education/faq/electric-outlets/nema-5-15r-outlet-configuration", fetched: "2026-09-16" } },
 
   { id: 18, category: "Electrical",
     prompt: "Smallest standard circuit breaker size in a US home",
@@ -1639,7 +1697,8 @@ const QUESTIONS = [
     prompt: "Cooking (output) power of a typical countertop microwave",
     units: "W", value: 1000, min: 100, max: 4000, scale: "linear",
     factoid: "Most microwaves run 700–1,200 W of cooking power — the one in the break room is probably 1,000.",
-    source: { name: "Whirlpool, \"What Microwave Wattage Do You Need?\" (appliance-manufacturer reference)", url: "https://www.whirlpool.com/blog/kitchen/what-microwave-wattage-do-you-need.html", fetched: "2026-09-16" } },
+    band: [700, 1200],
+    source: { name: "Top Ten Reviews, \"What microwave wattage is best?\" (appliance-expert guidance: 600–700 W entry models, 1,000–1,200 W mainstream; the Whirlpool guide cited earlier now times out or refuses fetches, so it is not linked)", url: "https://www.toptenreviews.com/what-microwave-wattage-is-best", fetched: "2026-09-16" } },
 
   { id: 21, category: "Electrical",
     prompt: "Voltage of a single AA alkaline battery",
@@ -1658,21 +1717,26 @@ const QUESTIONS = [
     units: "mA", value: 100, min: 0.01, max: 10000, scale: "log",
     factoid: "Not a threshold but one point on a curve: IEC 60479-1 sets fibrillation risk by current, duration and path — 80 mA for 10 s is already ~50% risk. Lower is not safe.",
     qualifier: "a rule-of-thumb anchor on a current-duration-path curve; sustained (>1 s) exposure carries meaningful fibrillation risk from as low as ~30 mA, while ~16 mA is the commonly cited let-go threshold and ~20 mA can paralyze the muscles used to breathe",
-    source: { name: "NIH/NCBI StatPearls, \"Electrical Injuries\"; and Wikipedia, \"Electrical injury\" (citing IEC 60479-1)", url: "https://www.ncbi.nlm.nih.gov/books/NBK580528/", fetched: "2026-09-16" } },
+    band: [30, 100],
+    source: { name: "NIH/NCBI StatPearls, \"Electrical Injuries\" (16 mA let-go, 20 mA respiratory paralysis, 100 mA fibrillation)", url: "https://www.ncbi.nlm.nih.gov/books/NBK580528/", fetched: "2026-09-16",
+              also: [{ name: "Wikipedia, \"Electrical injury\" (>1 s across the chest: fibrillation from as low as 30 mA; IEC 60479-1 zones)", url: "https://en.wikipedia.org/wiki/Electrical_injury" },
+                     { name: "IEC 60479-1:2018 §3.3.2 Note 1 (50 % fibrillation probability at 10 s: 80 mA AC), sample pages", url: "https://cdn.standards.iteh.ai/samples/102053/a6ad398bc8e94fc29370ca887ba3cb16/IEC-60479-1-2018.pdf" }] } },
 
   { id: 24, category: "Electrical",
     prompt: "Minimum voltage you can feel as a static shock",
     units: "V", value: 3000, min: 10, max: 1e7, scale: "log",
-    factoid: "Below ~3,000 V you feel nothing; a doorknob zap is 5–25 kV at almost zero energy. Voltage alone isn't danger.",
-    qualifier: "perception threshold reported 2,000–4,000 V depending on humidity, contact area and the specific discharge event",
-    source: { name: "EC&M, \"Electrostatic Discharge: Causes, Effects, and Solutions\" (citing ANSI/ESDA/JEDEC JS-001 and NFPA-77)", url: "https://www.ecmweb.com/content/article/20897138/electrostatic-discharge-causes-effects-and-solutions", fetched: "2026-09-16" } },
+    factoid: "Most people first feel a static shock somewhere in the 2,000–4,000 V range; a doorknob zap is 5–25 kV at almost zero energy. Voltage alone isn't danger.",
+    qualifier: "perception threshold reported 2,000–4,000 V for most people, depending on humidity, contact area and the specific discharge event; sources disagree at the edges (one industry article puts it above 4,000 V)",
+    band: [2000, 4000],
+    source: { name: "Xerox EHS, \"Facts about Electrostatic Discharge\" (\"the threshold for feeling static shocks is in the range of 2,000-4,000 volts\")", url: "https://www.xerox.com/downloads/usa/en/e/ehs_facts_about_esd.pdf", fetched: "2026-09-16",
+              also: [{ name: "EC&M, \"Electrostatic Discharge: Causes, Effects, and Solutions\" (\"only sensitive on ESD levels that exceed 4,000V\"; cites NFPA 77)", url: "https://www.ecmweb.com/content/article/20897138/electrostatic-discharge-causes-effects-and-solutions" }] } },
 
   /* ---------------- FLUIDS & THERMO ---------------- */
   { id: 25, category: "Fluids & Thermo",
     prompt: "How much lower is water's boiling point in Denver (5,280 ft) than at sea level?",
     units: "°F", value: 10, min: 1, max: 50, scale: "linear",
     factoid: "Boiling drops ~2 °F per 1,000 ft of altitude — Denver loses ~10 °F, boiling at ~202 °F, so pasta takes longer.",
-    source: { name: "NIST Chemistry WebBook, Water (saturation pressure–temperature relation)", url: "https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=4", fetched: "2026-09-16" } },
+    source: { name: "Engineering ToolBox, Boiling Point of Water vs. Altitude (5,000 ft → 202.4 °F; 212 − 202.4 = 9.6 °F)", url: "https://www.engineeringtoolbox.com/boiling-points-water-altitude-d_1344.html", fetched: "2026-09-16" } },
 
   { id: 26, category: "Fluids & Thermo",
     prompt: "Water pressure gained per foot of depth",
@@ -1684,74 +1748,84 @@ const QUESTIONS = [
     prompt: "Density of air at sea level",
     units: "kg/m³", value: 1.225, min: 0.1, max: 5, scale: "linear",
     factoid: "1.2 kg/m³ — sounds like nothing, but the air in your classroom weighs more than you do.",
-    qualifier: "ISA reference condition at 15°C, 101.325 kPa; real air density varies ~1.15–1.3 kg/m³ with temperature and humidity",
-    source: { name: "ICAO Doc 7488, Manual of the ICAO Standard Atmosphere", url: "https://news.ncac.mn/uploads/bookSubject/2022-11/6369ec174ab34.pdf", fetched: "2026-09-16" } },
+    qualifier: "ISA reference condition at 15°C, 101.325 kPa; at sea-level pressure, dry air runs ~1.29 kg/m³ at 0°C down to ~1.16 at 30°C",
+    band: [1.164, 1.292],
+    source: { name: "Engineering ToolBox, U.S. Standard Atmosphere (sea level: 15 °C, 1.225 kg/m³)", url: "https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html", fetched: "2026-09-16",
+              also: [{ name: "Engineering ToolBox, Air Density vs. Temperature at 1 atm (0 °C 1.292; 15 °C 1.225; 30 °C 1.164 kg/m³)", url: "https://www.engineeringtoolbox.com/air-density-specific-weight-d_600.html" }] } },
 
   { id: 28, category: "Fluids & Thermo",
     prompt: "Typical city water pressure at your tap",
     units: "psi", value: 60, min: 5, max: 200, scale: "linear",
-    factoid: "Municipal mains deliver 40–80 psi; above 80, plumbing code requires a pressure regulator.",
-    source: { name: "up.codes, \"Minimum Pressure\" (IPC 604.8 / UPC 608.2)", url: "https://up.codes/s/minimum-pressure", fetched: "2026-09-15" } },
+    factoid: "Utilities aim to deliver at least ~40 psi to the property line, and above 80 psi plumbing code requires a pressure regulator — so most taps see 40–80.",
+    band: [40, 80],
+    source: { name: "City of Portland Code 21.30.140, Water Pressure at Service (service goal 40–110 psi at the property line; pressure-reducing device required above 80 psi)", url: "https://www.portland.gov/code/21/30/140", fetched: "2026-09-16",
+              also: [{ name: "up.codes, IRC P2903.3 as served (static water pressure shall be not greater than 80 psi; jurisdiction-routed page)", url: "https://up.codes/s/minimum-pressure" }] } },
 
   { id: 29, category: "Fluids & Thermo",
     prompt: "Latent heat of vaporization of water",
     units: "kJ/kg", value: 2260, min: 200, max: 6000, scale: "linear",
-    factoid: "2,260 kJ/kg — boiling water away takes over 5× the energy of heating it from 0 to 100 °C. It's why sweating works.",
-    source: { name: "NIST Chemistry WebBook, Water (thermophysical properties)", url: "https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=4", fetched: "2026-09-16" } },
+    factoid: "2,260 kJ/kg at the boiling point — boiling water away takes over 5× the energy of heating it from 0 to 100 °C. It's why sweating works.",
+    source: { name: "Engineering ToolBox, Water — Properties vs. Temperature (heat of vaporization 2,256.4 kJ/kg at 100 °C)", url: "https://www.engineeringtoolbox.com/water-properties-d_1573.html", fetched: "2026-09-16" } },
 
   { id: 30, category: "Fluids & Thermo",
     prompt: "Specific heat capacity of liquid water",
     units: "J/g·°C", value: 4.18, min: 0.5, max: 15, scale: "linear",
     factoid: "4.18 J/g·°C — one calorie. Water's huge heat capacity is why coastal cities have mild weather.",
-    source: { name: "NIST Chemistry WebBook, Water (thermophysical properties)", url: "https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=4", fetched: "2026-09-16" } },
+    source: { name: "Engineering ToolBox, Water — Specific Heat vs. Temperature (4.18 kJ/kg·K from 25 °C to 60 °C)", url: "https://www.engineeringtoolbox.com/specific-heat-capacity-water-d_660.html", fetched: "2026-09-16" } },
 
   { id: 31, category: "Fluids & Thermo",
     prompt: "Energy content of one gallon of gasoline",
     units: "kWh", value: 33.7, min: 5, max: 120, scale: "linear",
     factoid: "The EPA 'e-gallon' is 33.7 kWh — roughly one full day of an average US home's electricity in a single gallon.",
-    qualifier: "EPA's MPGe regulatory constant (115,010 BTU/gal); sits inside real gasoline's measured ~32–34 kWh/gal range for both E0 and E10, not below it",
-    source: { name: "EPA, Fuel Economy and EV Range Testing; Wikipedia, \"Gasoline gallon equivalent\"", url: "https://www.epa.gov/greenvehicles/fuel-economy-and-ev-range-testing", fetched: "2026-09-15" } },
+    qualifier: "EPA's MPGe regulatory constant (≈115,000 BTU/gal, lower-heating-value basis); sits inside real gasoline's measured ~33–34 kWh/gal LHV range for both E0 and E10, not below it — on a higher-heating-value basis gasoline is ~35–36 kWh/gal",
+    source: { name: "EPA, Fuel Economy and EV Range Testing (\"33.7 kilowatt-hours\")", url: "https://www.epa.gov/greenvehicles/fuel-economy-and-ev-range-testing", fetched: "2026-09-15",
+              also: [{ name: "AFDC Fuel Properties Comparison (gasoline LHV 112,114–116,090 Btu/gal = 32.9–34.0 kWh; HHV 120,388–124,340 = 35.3–36.4 kWh)", url: "https://afdc.energy.gov/fuels/properties" }] } },
 
   { id: 32, category: "Fluids & Thermo",
     prompt: "Heat output of a resting human body",
     units: "W", value: 100, min: 10, max: 600, scale: "linear",
     factoid: "You idle at ~100 W — a warm light bulb. HVAC engineers literally count room loads in people.",
-    qualifier: "typical value; measured range ~100–120 W depending on body size and activity level",
-    source: { name: "Engineering ToolBox, Metabolic Heat Gain from Persons", url: "https://www.engineeringtoolbox.com/metabolic-heat-persons-d_706.html", fetched: "2026-09-16" } },
+    qualifier: "the ISO/ASHRAE-based table value for an average adult male 'seated at rest'; the same table's next row, 'seated, very light work', is 120 W — body size and activity move it in both directions",
+    source: { name: "Engineering ToolBox, Metabolic Heat Gain from Persons (Seated at rest 100 W; Seated, very light work 120 W)", url: "https://www.engineeringtoolbox.com/metabolic-heat-persons-d_706.html", fetched: "2026-09-16" } },
 
   /* ---------------- EVERYDAY ENGINEERING ---------------- */
   { id: 33, category: "Everyday Engineering",
     prompt: "Weight of a gallon of water",
     units: "lbs", value: 8.34, min: 1, max: 30, scale: "linear",
     factoid: "'A pint's a pound the world around' — plus a little: 8.34 lbs per gallon.",
-    source: { name: "NIST Chemistry WebBook, Water (density at ~62°F)", url: "https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&Mask=4", fetched: "2026-09-16" } },
+    source: { name: "Derivation from item 5: 62.4 lb/ft³ × 231 in³/gal ÷ 1,728 in³/ft³ = 8.34 lb (US gallon; an imperial gallon is ~10 lb). NIST defines the gallon as 231 cubic inches", url: "https://www.nist.gov/how-do-you-measure-it/how-do-you-measure-fuel-gas-pump", fetched: "2026-09-16",
+              also: [{ name: "USGS Water Science School, Water Density (62.366 lb/ft³ at 60 °F, 62.4 at 40–50 °F)", url: "https://www.usgs.gov/special-topics/water-science-school/science/water-density" }] } },
 
   { id: 34, category: "Everyday Engineering",
     prompt: "Proper angle between an extension ladder and the ground",
     units: "°", value: 75, min: 20, max: 90, scale: "linear",
-    factoid: "OSHA's 4-to-1 rule — base out one foot for every four feet up — works out to about 75°.",
-    qualifier: "the governing rule is the 4-to-1 base offset (arctan 4 ≈ 75.5°); 75° is the commonly rounded figure",
-    source: { name: "OSHA 1926.1053, Ladders (4-to-1 base-offset rule)", url: "https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1053", fetched: "2026-09-16" } },
+    factoid: "OSHA's 4-to-1 rule — the base sits out one-quarter of the ladder's working length — works out to about 75°.",
+    qualifier: "OSHA 1926.1053(b)(5)(i) sets the base offset at one-quarter of the ladder's WORKING LENGTH (along the ladder), so the angle is arccos ¼ = 75.5°; the rise-over-run reading (arctan 4 = 76.0°) is a common approximation, and 75° the commonly rounded figure",
+    source: { name: "29 CFR 1926.1053(b)(5)(i), Ladders — via Cornell LII (osha.gov's own copy refuses automated readers)", url: "https://www.law.cornell.edu/cfr/text/29/1926.1053", fetched: "2026-09-16" } },
 
   { id: 35, category: "Everyday Engineering",
     prompt: "Maximum current rating of a 16-gauge extension cord",
     units: "A", value: 13, min: 1, max: 50, scale: "linear",
-    factoid: "Light-duty 16 AWG cords are rated 13 A for a short 2-conductor cord — a 1,500 W heater pulls 12.5 A continuously, past the 80% derate, and the cord becomes the heater.",
+    factoid: "Light-duty 16 AWG cords are rated 13 A with two current-carrying conductors (10 A with three) — a 1,500 W heater pulls 12.5 A continuously, past the 80% derate, and the cord becomes the heater.",
     qualifier: "NEC Table 400.5(A)(1) conditions ampacity on conductor count and ambient temperature, not length; a separate, widely published length-based derating guide (13 A to 25 ft, dropping toward 7–10 A by 50–100 ft) is a manufacturer/practical-safety convention, not the NEC table itself",
-    source: { name: "up.codes, \"Ampacities for Flexible Cords and Flexible Cables\" (NEC Table 400.5(A)(1))", url: "https://up.codes/s/ampacities-for-flexible-cords-and-flexible-cables", fetched: "2026-09-16" } },
+    source: { name: "NEC Table 400.5(A)(1) as rendered by Distributor Wire & Cable (16 AWG: 13 A with 2 current-carrying conductors, 10 A with 3)", url: "https://www.distributorwire.com/blogs/soow-so-cord-ampacity-chart-nec-400-5", fetched: "2026-09-16",
+              also: [{ name: "MSHA, NEC Article 400 excerpt (Table 400-5, 16 AWG: 10 A / 13 A)", url: "https://arlweb.msha.gov/District/DIST_09/Electrical%20test%20materials/ART400.pdf" },
+                     { name: "up.codes, NEC 400.5 Ampacities for Flexible Cords and Flexible Cables (conditions text; the table itself is not served to automated readers)", url: "https://up.codes/s/ampacities-for-flexible-cords-and-flexible-cables" }] } },
 
   { id: 36, category: "Everyday Engineering",
     prompt: "Maximum grade allowed on US Interstate highways",
     units: "%", value: 6, min: 1, max: 25, scale: "linear",
     factoid: "Interstates are capped at 6% grade in mountainous terrain, 3–4% on the flat — runaway-truck ramps exist for what happens past that.",
-    qualifier: "AASHTO's Green Book sets maximum grade by a terrain × design-speed table, not a flat cap; 6% is the commonly cited mountainous-terrain ceiling for Interstate design speeds",
-    source: { name: "TxDOT Roadway Design Manual, Ch. 4.8.1 Grades (terrain × design-speed table, Table 4-11)", url: "https://www.txdot.gov/manuals/des/rdw/chapter-4--basic-design-criteria/4-8-vertical-alignment/4-8-1-grades.html", fetched: "2026-09-16" } },
+    qualifier: "AASHTO's Interstate policy sets maximum grade by a terrain × design-speed table, not a flat cap — Montana's Interstate standards read 3 / 4 / 5% for level / rolling / mountainous at 70 mph, with up to 7% where needed in mountains; 6% is the commonly cited mountainous figure at lower design speeds (the AASHTO table itself is paywalled)",
+    source: { name: "Montana DOT Geometric Design Standards, §2.1 Rural Freeways (Interstate): max grade by terrain, note 8 (up to 7% in mountainous terrain)", url: "https://www.mdt.mt.gov/other/webdata/external/cadd/RDM/STANDARDS/GEOMETRIC-DESIGN-STANDARDS.pdf", fetched: "2026-09-16",
+              also: [{ name: "TxDOT Roadway Design Manual, Ch. 4.8.1 Grades (terrain × design-speed structure, Table 4-11; no Interstate row)", url: "https://www.txdot.gov/manuals/des/rdw/chapter-4--basic-design-criteria/4-8-vertical-alignment/4-8-1-grades.html" }] } },
 
   { id: 37, category: "Everyday Engineering",
     prompt: "Total energy stored in one AA alkaline battery",
     units: "J", value: 13500, min: 100, max: 1e7, scale: "log",
     factoid: "1.5 V × 2,500 mAh ≈ 13.5 kJ (3.7 Wh) — enough energy to lift a small car about one meter.",
-    qualifier: "assumes a typical rated capacity (1,800–3,000 mAh band); actual deliverable energy is also load-dependent",
+    qualifier: "assumes a typical rated capacity (2,000–3,000 mAh, i.e. 10.8–16.2 kJ at 1.5 V); actual deliverable energy is also load-dependent",
+    band: [10800, 16200],
     source: { name: "Pololu, \"Understanding battery capacity: Ah is not A\"", url: "https://www.pololu.com/blog/2/understanding-battery-capacity-ah-is-not-a", fetched: "2026-09-15" } },
 
   { id: 38, category: "Everyday Engineering",
@@ -1772,7 +1846,8 @@ const QUESTIONS = [
     prompt: "Typical cruising altitude of a commercial jet",
     units: "ft", value: 35000, min: 5000, max: 80000, scale: "linear",
     factoid: "~35,000 ft — the air is about ⅓ sea-level density (less drag) while engines still breathe. It's −55 °C outside.",
-    source: { name: "ICAO Doc 7488, Manual of the ICAO Standard Atmosphere (altitude/density/temperature table)", url: "https://news.ncac.mn/uploads/bookSubject/2022-11/6369ec174ab34.pdf", fetched: "2026-09-16" } },
+    source: { name: "Military & Aerospace Electronics, \"Why commercial aircraft cruise around 35,000 feet\" (2026-08-21)", url: "https://www.militaryaerospace.com/commercial-aerospace/news/55399427/why-commercial-aircraft-cruise-around-35000-feet", fetched: "2026-09-16",
+              also: [{ name: "Engineering ToolBox, U.S. Standard Atmosphere (35,000 ft: −65.6 °F, density 0.31× sea level)", url: "https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html" }] } },
 ];
 
 /* Items scored on the log slider — see app.js scoreGuess(). Kept as an
@@ -2154,18 +2229,48 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
     const tight = (units === '°' || units === '%');
     return fmt(v) + (tight ? '' : ' ') + units;
   }
+  /* Band-aware since the 2026-09-16 correction pass. Where an item carries
+     `band: [lo, hi]` — a sourced range its own qualifier or factoid already
+     names — a guess inside the band is exactly right (err 0), and a guess
+     outside it is measured from the NEAREST EDGE rather than from `value`.
+     Before this, item 23's qualifier taught "~30 mA sustained" and the game
+     scored 30 mA WARM and the let-go figure 16 mA COLD; items 12/20/28
+     printed a range in their reveal text and scored both of its ends WARM.
+     The 29 single-valued items are scored exactly as before. The reveal
+     still displays `value`, the single anchor; only the score changes. */
   function scoreGuess(q, guess) {
+    const b = Array.isArray(q.band) && q.band.length === 2 ? q.band : null;
+    const inBand = !!b && guess >= b[0] && guess <= b[1];
+    const ref = !b ? q.value : (inBand ? guess : (guess < b[0] ? b[0] : b[1]));
     let err;
-    if (q.scale === 'log') err = Math.abs(Math.log10(guess / q.value));
-    else err = Math.abs(guess - q.value) / Math.abs(q.value);
+    if (q.scale === 'log') err = Math.abs(Math.log10(guess / ref));
+    else err = Math.abs(guess - ref) / Math.abs(ref);
     const th = SCORING[q.scale === 'log' ? 'log' : 'linear'];
     let band = th.length;
     for (let i = 0; i < th.length; i++) { if (err <= th[i]) { band = i; break; } }
     const normErr = (q.scale === 'log') ? Math.pow(10, err) - 1 : err;
-    const offBy = (q.scale === 'log')
-      ? (Math.round(Math.pow(10, err) * 10) / 10) + '× off'
-      : Math.round(err * 100) + '% off';
-    return { band, err, normErr, offBy, pts: BANDS[band].pts };
+    const tail = b ? ' past the range' : ' off';
+    const offBy = inBand ? 'in range' : ((q.scale === 'log')
+      ? (Math.round(Math.pow(10, err) * 10) / 10) + '×' + tail
+      : Math.round(err * 100) + '%' + tail);
+    return { band, err, normErr, offBy, inBand, pts: BANDS[band].pts };
+  }
+  function bandText(q) {
+    return q.band ? fmt(q.band[0]) + '–' + withUnits(q.band[1], q.units) : '';
+  }
+  /* Expected points of a uniformly random slider position on these
+     questions — the exact mean over all STEPS+1 positions, scored through
+     the same scoreGuess (and the same 3-significant-figure snap) the game
+     applies to a real guess. Used by the debrief as its control. */
+  function randomGuessAvg(qs) {
+    if (!qs.length) return 0;
+    let total = 0;
+    qs.forEach(q => {
+      let s = 0;
+      for (let pos = 0; pos <= STEPS; pos++) s += scoreGuess(q, roundSig(posToValue(q, pos), 3)).pts;
+      total += s / (STEPS + 1);
+    });
+    return total / qs.length;
   }
 
   /* ---------- category colours, assigned automatically ---------- */
@@ -2179,14 +2284,17 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
      from the SAME data.js table the game itself plays from — one canonical
      source of truth for both surfaces, per the back-propagate rule. -------- */
   function renderSources() {
+    const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const anchor = s => s.url
+      ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`
+      : esc(s.name);
     const list = (host, qs) => {
       host.innerHTML = qs.map(q => {
         const s = q.source;
-        const link = s.url
-          ? `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`
-          : s.name;
-        const qual = q.qualifier ? ` <i>(${q.qualifier})</i>` : '';
-        return `<li>${link} — item ${q.id}, "${q.prompt}"${qual}${s.fetched ? ` — checked ${s.fetched}` : ''}</li>`;
+        const also = (s.also || []).map(a => '; ' + anchor(a)).join('');
+        const qual = q.qualifier ? ` <i>(${esc(q.qualifier)})</i>` : '';
+        const band = q.band ? ` — scored as correct anywhere in ${esc(bandText(q))}` : '';
+        return `<li>${anchor(s)}${also} — item ${q.id}, "${esc(q.prompt)}"${qual}${band}${s.fetched ? ` — checked ${s.fetched}` : ''}</li>`;
       }).join('');
     };
     if ($('sources-0')) list($('sources-0'), LINEAR_QUESTIONS);
@@ -2404,10 +2512,20 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
     const isLast = (round.i + 1 >= round.deck.length);
     nextBtn.textContent = isLast ? 'See results' : 'Next';
 
-    /* A4 observation cue — the one-line "what just happened", within one
-       screen of the LOCK IT IN control that caused it. */
-    $('cue-' + suffix).textContent = BANDS[result.band].label + ' — ' + result.offBy +
-      (q.qualifier ? ' (qualifier: ' + (q.qualifier.split(';')[0]) + ')' : '');
+    /* A4 observation cue — the "what just happened", within one screen of the
+       LOCK IT IN control that caused it. The qualifier rides along INTACT:
+       an earlier build cut it at the first semicolon, which on item 23 kept
+       "a rule-of-thumb anchor on a current-duration-path curve" and dropped
+       the 16 / 20 / 30 mA figures that were the point. Where the item is
+       scored against a band, the cue says so and names the band, so the
+       learner can see why an answer that is not the anchor still scored. */
+    const bandNote = q.band
+      ? (result.inBand
+        ? ' Any answer from ' + bandText(q) + ' scores as correct; ' + withUnits(q.value, q.units) + ' is the anchor shown.'
+        : ' Scored from the nearer edge of the accepted ' + bandText(q) + ' range.')
+      : '';
+    $('cue-' + suffix).textContent = BANDS[result.band].label + ' — ' + result.offBy + '.' + bandNote +
+      (q.qualifier ? ' Qualifier: ' + q.qualifier + '.' : '');
 
     /* A2 echo — the captured prediction shown beside the observed result. */
     const echo = $('echo-' + suffix);
@@ -2596,14 +2714,35 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
     if (linAvg === null || logAvg === null) {
       calText.textContent = 'Play both stages first — this fills in once you have answers on both decks.';
     } else {
+      /* The control the verdict needs: what a knowledge-free guess earns on
+         each deck YOU played, computed here by scoring every one of the
+         1,001 slider positions on every question (exact for a uniform
+         random slider, no sampling noise). An earlier build asserted that a
+         higher log average meant "the log slider was more forgiving"; the
+         measured control says the two decks are within a point or two of
+         each other for a random guesser, so the gap is what you knew, not
+         how the deck is scored. */
+      const linRand = randomGuessAvg(G.linear.answers.map(a => a.q));
+      const logRand = randomGuessAvg(G.log.answers.map(a => a.q));
       const linRound = Math.round(linAvg), logRound = Math.round(logAvg);
+      const gap = Math.round(logRand) - Math.round(linRand);
+      const reading = Math.abs(gap) <= 5
+        ? 'the two decks are about equally forgiving to a random guess, so a gap between your averages is knowledge, not the scoring. '
+        : 'on these particular questions the ' + (gap > 0 ? 'log' : 'linear') + ' deck is ' + Math.abs(gap) +
+          ' points more forgiving to a random guess, so discount a gap of that size before reading the rest as knowledge. ';
+      const control = 'A guess made by dragging the slider to a random position would average about <b>' +
+        Math.round(linRand) + '</b> on your linear questions and <b>' + Math.round(logRand) +
+        '</b> on your log ones — ' + reading;
       const verdict = logRound > linRound
-        ? 'The log guesses scored HIGHER on average — getting the order of magnitude right earned more forgiveness than the linear slider gave for an exact percent.'
+        ? 'Your log guesses scored HIGHER on average: you placed the SIZE of those five numbers better than you placed the exact figures on the linear deck.'
         : (logRound < linRound
-          ? 'The linear guesses scored HIGHER on average — the exact-percent scoring rewarded familiar, everyday-scale numbers more than the five order-of-magnitude questions did.'
-          : 'The two decks scored about the same on average — a genuine tie, for whatever that is worth over five log questions.');
+          ? 'Your linear guesses scored HIGHER on average: the everyday-scale numbers were more familiar to you than the sizes of the five order-of-magnitude ones.'
+          : 'The two decks scored about the same on average — a genuine tie.');
+      const sample = G.log.answers.length < 5
+        ? ' With only ' + G.log.answers.length + ' log answer' + (G.log.answers.length === 1 ? '' : 's') + ', one band step moves that average by 5–60 points, so read the direction loosely.'
+        : ' Five log questions is still a small sample — one band step moves that average by up to 20 points.';
       calText.innerHTML = 'Linear average: <b>' + linRound + ' pts/question</b> (' + G.linear.answers.length + ' questions). ' +
-        'Log average: <b>' + logRound + ' pts/question</b> (' + G.log.answers.length + ' questions). ' + verdict;
+        'Log average: <b>' + logRound + ' pts/question</b> (' + G.log.answers.length + ' questions). ' + control + verdict + sample;
     }
     $('cue-3').textContent = 'Debrief computed from ' + allAnswers.length + ' answers this session.';
   }

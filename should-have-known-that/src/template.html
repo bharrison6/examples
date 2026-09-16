@@ -80,7 +80,7 @@
         <h3 id="act-1-heading">Linear estimates</h3>
       </div>
     </div>
-    <p class="panel-lede">Thirty-five questions across five categories, scored by percent error &mdash; pick your set below, or take the full bank.</p>
+    <p class="panel-lede">Thirty-five questions across five categories, scored by percent error &mdash; pick your length and categories below.</p>
 
     <!-- ---- setup sub-panel (shown before / between rounds) ---- -->
     <div class="tv-setup" id="tv-setup">
@@ -191,10 +191,13 @@
       <p class="stage-question">When a guess can be off by a factor of ten, does the exact digit even matter?</p>
       <p class="refresh"><b>Before you start.</b> These five numbers &mdash; copper's resistivity, the
         speed of light, the current that can trigger cardiac fibrillation, the voltage you can feel as
-        a static shock, and the energy in an AA battery &mdash; span <b>orders of magnitude</b>, so
-        stage 1's percent-error scoring would be meaningless here: missing by 10&times; and missing by
-        1.1&times; would score almost the same. A <b>log-scale</b> slider is instead scored on <b>how
-        many times off</b> you are.</p>
+        a static shock, and the energy in an AA battery &mdash; span <b>orders of magnitude</b>, and a
+        linear slider cannot even hold them: copper's 1.7&times;10<sup>&minus;8</sup> &Omega;&middot;m on a
+        linear track from 10<sup>&minus;10</sup> to 10<sup>&minus;4</sup> would sit at <b>step 0 of
+        1,000</b>, indistinguishable from the left end. A <b>log-scale</b> slider gives every power of
+        ten the same width, and is scored on <b>how many times off</b> you are &mdash; so a 2&times; miss
+        and a 20&times; miss are different sizes of wrong, where percent error would call them 100% and
+        1,900% off.</p>
     </div>
     <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 2 learning guide">
@@ -415,8 +418,11 @@
           <span class="panel-kicker"><span class="k-sourced">Sourced</span> all 35 linear values below</span>
           <p>Every number in this stage is a published reference value, a defined constant, a code
             requirement, or an exact unit conversion &mdash; not a measurement this page performs.
-            Fourteen of them ship with a qualifier because a single number would otherwise stand in
-            for a real range, a specified minimum, or a design convention.</p>
+            __QUAL_LINEAR__ of the 35 ship with a qualifier because a single number would otherwise stand in
+            for a typical value, a real range, a specified minimum, or a design convention; __BAND_LINEAR__ of
+            the 35 are also <b>scored against the range the item itself names</b> rather than against a
+            single point (the reveal still shows the one anchor value). These counts are derived from
+            the question bank at build time.</p>
         </div>
         <h3>How it works</h3>
         <div class="details-formula">error = |guess &minus; true| / true &nbsp;&middot;&nbsp; bands at 5% / 15% / 35% / 60%</div>
@@ -433,6 +439,10 @@
             "true" than a measured physical constant, which is exactly what each item's qualifier says.</li>
           <li>Slider endpoints are chosen to be wide enough not to give the answer away; they are not
             themselves a claim about the plausible range of the true value.</li>
+          <li>Where an item carries an accepted range, a guess inside it scores Bullseye and a guess
+            outside it is measured from the nearer edge of the range, not from the anchor &mdash; so the
+            score never punishes an answer the item's own text endorses. The ranges are listed under
+            Sources below, each with the page it came from.</li>
         </ul>
         <h3>Sources</h3>
         <ul id="sources-0"></ul>
@@ -452,9 +462,11 @@
         </div>
         <div class="claim">
           <span class="panel-kicker"><span class="k-sourced">Sourced</span> all five log-scale values below</span>
-          <p>Two of the five &mdash; the cardiac-fibrillation current and the static-shock perception
-            voltage &mdash; are safety-relevant rule-of-thumb figures pulled from a real risk curve or a
-            reported range, not a hard line; both carry a qualifier that says so plainly.</p>
+          <p>__QUAL_LOG__ of the five carry a qualifier. Two of them &mdash; the cardiac-fibrillation current
+            and the static-shock perception voltage &mdash; are safety-relevant rule-of-thumb figures
+            pulled from a real risk curve or a reported range, not a hard line; both carry a qualifier
+            that says so plainly, and both are scored against the range they name (30&ndash;100 mA
+            sustained; 2,000&ndash;4,000 V), so the more conservative reading of each is not penalised.</p>
         </div>
         <h3>How it works</h3>
         <div class="details-formula">error = |log10(guess / true)| &nbsp;&middot;&nbsp; bands at 0.10 / 0.33 / 0.70 / 1.20 decades</div>
@@ -494,7 +506,11 @@
         <ul>
           <li>The comparison needs at least one answer on each deck to mean anything; with only a
             handful of log questions, a single lucky or unlucky guess moves the log average a lot more
-            than it would move the 35-question linear average.</li>
+            than it would move the linear average.</li>
+          <li>The debrief also reports the control: what a slider dragged to a random position would
+            average on the exact questions you played, computed by scoring all 1,001 positions of each.
+            Across the whole bank a random guess earns roughly the same on both decks, so a gap between
+            your two averages is about what you knew, not about one deck being scored more gently.</li>
         </ul>
         <h3>Sources</h3>
         <ul><li>Not applicable &mdash; this stage computes from stage 1 and 2's already-sourced answers rather than citing a new value.</li></ul>
