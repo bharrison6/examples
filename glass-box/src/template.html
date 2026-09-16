@@ -5,74 +5,99 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>How a Language Model Works — Glass Box, live on this device</title>
 <style>
+/* The shared lesson shell's tokens and chrome CSS, injected from
+   ../tools/lesson-shell by build.js. It lands FIRST so this demo's own
+   activity CSS below can override any shell rule without !important. */
+/*__SHELL_CSS__*/
+</style>
+<style>
 /*__CSS__*/
 </style>
 <style>
 /* The presenter guide's own stylesheet, lifted verbatim out of
    src/demo-guide.html by build.js. It lands after the app's CSS on purpose:
-   .guide-scope p and .student-guide-body p have equal specificity, so the
+   .guide-scope p and .lesson-dialog-body p have equal specificity, so the
    guide's own rules must be the later ones to win inside the notes overlay. */
 /*__GUIDE_CSS__*/
 </style>
 </head>
 <body>
-<script>
-/* Read the Reset flags before anything renders — app.js reads document.body's
-   presenter class while it initialises, so the class has to be on by then.
-   Why a URL fragment and not storage: see the Reset block at the foot of this
-   file. The fragment is stripped on arrival so a later manual refresh is an
-   ordinary fresh load. */
-window.GB_FLAGS = new Set(location.hash.replace(/^#/, '').split(',').filter(Boolean));
-if (window.GB_FLAGS.has('presenting')) document.body.classList.add('presenter');
-if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { /* some hosts refuse replaceState on file://; a visible #reset is cosmetic */ } }
-</script>
+<!--__SHELL_STAMP__-->
+<!-- The pre-kit build read Reset flags out of the URL fragment here, because
+     Reset was a page reload. Kit v2's Reset is in place (no reload), so there
+     is no fragment to read and no bootstrap to run: the shell restores its own
+     chrome and app.js restores the activity on `lessonreset`. -->
 
 <header class="top" id="brandbar">
   <div class="topline">
     <div class="brandline">
-      <span class="brand-kicker">AI Learning Lab</span>
+      <span class="brand-kicker">Murray State University &middot; Part one &middot; What AI is</span>
       <h1>How a Language Model Works</h1>
       <div class="msu-brand">Murray State University</div>
     </div>
     <div class="top-tools">
-      <button class="icon-btn presenter-notes-open" id="notes-open" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
-      <button class="icon-btn student-guide-open" id="howto-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
-      <button class="icon-btn" id="glass-settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">⚙</span><span class="icon-label">Settings</span></button>
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
   </div>
-  <nav class="acts" role="tablist" aria-label="Language model lesson stages">
-    <button id="nav1" class="on" role="tab" aria-selected="true" aria-controls="act1" tabindex="0"><span>LLM</span><small>language model</small></button>
-    <button id="nav2" role="tab" aria-selected="false" aria-controls="act2" tabindex="-1"><span>Reasoning</span><small>worked steps</small></button>
-    <button id="nav3" role="tab" aria-selected="false" aria-controls="act3" tabindex="-1"><span>Agents</span><small>tool-using loop</small></button>
+  <!-- No stage here is gated: all three are open from the first load, which is
+       how this demo has always worked. The kit's clamp in selectStage therefore
+       has nothing to clamp, and a #stage-N hash reaches any of the three. -->
+  <nav class="stages" role="tablist" aria-label="Language model lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>LLM</span><small>What does a language model actually predict?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Reasoning</span><small>Do worked steps change what it can compute?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Agents</span><small>What changes when the model can call a tool?</small>
+    </button>
   </nav>
 </header>
 
 <main>
 
-<!-- ══════════════════════════ ACT 1 ══════════════════════════ -->
-<section class="act on" id="act1" role="tabpanel" aria-labelledby="nav1">
-  <section class="stage-intro" aria-labelledby="stage1-title">
+<!-- ══════════════════════════ STAGE 1 ══════════════════════════ -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
     <div class="intro-copy">
-      <span class="eyebrow">LLM · live transformer</span>
-      <h2 id="stage1-title">A model learns to predict what comes next</h2>
-      <p class="frame-question">How can changing thousands of numbers turn random text into recognizable patterns?</p>
+      <span class="eyebrow">Demo 2 of 16 &middot; Part one &middot; Stage 1</span>
+      <h2 id="stage-1-title">A model learns to predict what comes next</h2>
+      <p class="stage-question">How can changing thousands of numbers turn random text into recognizable patterns?</p>
+      <p class="refresh"><b>Before you start.</b> Demo 1 handed forward one idea &mdash; a <b>model</b> is a
+        representation that can be trained &mdash; and ended on the <b>transformer</b>, the one network family
+        behind text, image and audio models alike. This page trains one. It reads text as <b>tokens</b>
+        (here, single characters), and everything it knows sits in its <b>parameters</b>, the numbers training
+        changes. Nothing on this page is pretrained: the model starts as seeded random numbers, on your device.</p>
     </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1 learning guide">
-      <article><span>Try</span><p>Read the untrained sample. Train one era, then compare it with Era 0.</p></article>
-      <article><span>Observe</span><p>Loss falls while the model’s next-token probabilities and writing change.</p></article>
-      <article><span>Takeaway</span><p>Training changes parameters. Inference uses the frozen parameters to predict tokens.</p></article>
+      <article><span>Predict</span><p>This model has 42,458 parameters and trains on one short story. After all
+        four eras, will it write <b>real English sentences</b>, or only <b>English-looking fragments</b>?</p>
+        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="llm">
+          <button type="button" class="predict-btn" data-answer="sentences" aria-pressed="false">Real sentences</button>
+          <button type="button" class="predict-btn" data-answer="fragments" aria-pressed="false">English-looking fragments</button>
+        </div>
+        <span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Train &middot; era 1</b> and watch the loss fall, then read the new
+        sample against Era 0. In <b>Try next-token prediction</b>, change the prompt and the temperature.</p></article>
+      <article><span>Takeaway</span><p>Training changes the parameters; inference runs the frozen parameters
+        forward to score every possible next token. A small model trained on a little text learns the shape of
+        the language long before it learns to say anything true.</p></article>
     </div>
-    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">→</span></button>
   </section>
 
   <div class="workspace-grid llm-workspace">
     <section class="workbench train-workbench" aria-labelledby="train-heading">
       <div class="panel-head">
-        <div><span class="panel-kicker">Live training</span><h3 id="train-heading">Train the model</h3></div>
+        <div><span class="panel-kicker"><span class="k-live">Live</span> backpropagation on this device</span><h3 id="train-heading">Train the model</h3></div>
         <span id="statphase" class="status-pill">untrained</span>
       </div>
       <p class="panel-lede">This small transformer begins with random parameters. Its only training text is one original story.</p>
       <div class="livebox sample-hero" id="livesample"><span class="dim">The untrained sample will appear here.</span></div>
+      <p class="obs-cue" id="cue-1" role="status" aria-live="polite"></p>
       <div class="statline" aria-label="Live training measurements">
         <span>step <b id="statstep">0</b></span>
         <span>loss <b id="statloss">—</b></span>
@@ -91,7 +116,7 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
 
     <section class="workbench prediction-workbench" aria-labelledby="predict-heading">
       <div class="panel-head">
-        <div><span class="panel-kicker">Live inference</span><h3 id="predict-heading">Try next-token prediction</h3></div>
+        <div><span class="panel-kicker"><span class="k-live">Live</span> forward pass, frozen parameters</span><h3 id="predict-heading">Try next-token prediction</h3></div>
       </div>
       <p class="panel-lede">Choose an era, give the model some text, and inspect the eight most likely next characters.</p>
       <label class="field-label" for="pginput">Prompt</label>
@@ -110,7 +135,7 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
 
   <section class="inspection card" aria-labelledby="inspect-heading">
     <div class="inspection-head">
-      <div><span class="panel-kicker">Look inside</span><h3 id="inspect-heading">Inspect the live model</h3></div>
+      <div><span class="panel-kicker"><span class="k-live">Live</span> read off this model&rsquo;s own parameters</span><h3 id="inspect-heading">Inspect the live model</h3></div>
       <p>Each view says which live checkpoint it reads.</p>
     </div>
     <div class="inspect-tabs" role="tablist" aria-label="Model inspection views">
@@ -141,27 +166,57 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
       <p class="note">Attention weights show how strongly one position used earlier positions in this computation. They do not reveal the model’s intent or explain the whole prediction.</p>
     </section>
   </section>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">Era 4 writes much more like the training story than Era 0 did. What changed?</h3>
+    <p class="check-prompt">Answer from what you just watched in <b>Train the model</b> and <b>Inspect the live model</b>.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Right. Training ran backpropagation and Adam over the 42,458 parameters, and the loss readout fell as it did. Inference never changes them &mdash; the sample you read is a frozen era doing a forward pass.">Its parameters &mdash; training changed the numbers</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="No, and this is the misconception most worth losing here. Nothing on this page stores passages to look up: the whole model is 42,458 numbers, and the story is not inside it in any form you could retrieve. Open Trace attention and you can watch it score one next character at a time from those numbers.">It learned to look up passages from the story</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Not quite. The vocabulary and the tokenizer are fixed before training starts &mdash; Tokenize text shows the same 26-character vocabulary at every era. Only the parameters moved.">It was given a bigger vocabulary</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
 </section>
 
-<!-- ══════════════════════════ ACT 2 ══════════════════════════ -->
-<section class="act" id="act2" role="tabpanel" aria-labelledby="nav2" hidden>
-  <section class="stage-intro" aria-labelledby="stage2-title">
+<!-- ══════════════════════════ STAGE 2 ══════════════════════════ -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
     <div class="intro-copy">
-      <span class="eyebrow">Reasoning · measured experiment</span>
-      <h2 id="stage2-title">Worked steps give a model room to compute</h2>
-      <p class="frame-question">Does training on intermediate arithmetic steps change how a small transformer performs?</p>
+      <span class="eyebrow">Demo 2 of 16 &middot; Part one &middot; Stage 2</span>
+      <h2 id="stage-2-title">Worked steps give a model room to compute</h2>
+      <p class="stage-question">Does training on intermediate arithmetic steps change how a small transformer performs?</p>
+      <p class="refresh"><b>Before you start.</b> Stage 1&rsquo;s model predicted one token at a time, and that is
+        still all either model here does. The job gets harder &mdash; three-digit addition &mdash; and the one thing
+        that differs between the two models is the <b>text format</b> they train on: the answer alone, or the
+        <b>worked steps</b> that reach it. Both share the same core width, depth and head count.</p>
     </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 2 learning guide">
-      <article><span>Try</span><p>Train both models, then compare their accuracy and exam answers.</p></article>
-      <article><span>Observe</span><p>The models share a basic architecture, but their training text and exact configurations differ.</p></article>
-      <article><span>Takeaway</span><p>Extra generated steps can support computation; more attempts can help without changing weights.</p></article>
+      <article><span>Predict</span><p>Both models sit the same exam. Which scores higher &mdash; the one trained on
+        <b>answers alone</b>, or the one trained on <b>worked steps</b>?</p>
+        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="reason">
+          <button type="button" class="predict-btn" data-answer="direct" aria-pressed="false">Answers alone</button>
+          <button type="button" class="predict-btn" data-answer="worked" aria-pressed="false">Worked steps</button>
+          <button type="button" class="predict-btn" data-answer="same" aria-pressed="false">About the same</button>
+        </div>
+        <span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Run experiment &middot; train both</b> and read the two exam scores. Then
+        try <b>Run 1, 2, 4, and 8 attempts</b> on frozen weights, and <b>Fine-tune on accepted examples</b>.</p></article>
+      <article><span>Takeaway</span><p>Room to write intermediate steps lets the same machinery reach answers it
+        cannot produce in one jump &mdash; a real, measurable gain on this task, and not the same thing as
+        understanding arithmetic.</p></article>
     </div>
-    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">→</span></button>
   </section>
 
   <section class="workbench reason-main" aria-labelledby="reason-train-heading">
+    <p class="obs-cue" id="cue-2" role="status" aria-live="polite"></p>
     <div class="panel-head">
-      <div><span class="panel-kicker">Live comparison</span><h3 id="reason-train-heading">Train and compare</h3></div>
+      <div><span class="panel-kicker"><span class="k-live">Live</span> both models trained and examined here</span><h3 id="reason-train-heading">Train and compare</h3></div>
     </div>
     <p class="panel-lede">Both are small transformers with the same core width, depth and head count. Their context lengths, seeds and training-step budgets differ to fit each text format.</p>
     <div class="duo">
@@ -200,7 +255,7 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
   <div class="workspace-grid reason-followups">
     <section class="workbench" aria-labelledby="vote-heading">
       <div class="panel-head">
-        <div><span class="panel-kicker">Frozen weights</span><h3 id="vote-heading">Try more attempts</h3></div>
+        <div><span class="panel-kicker"><span class="k-live">Live</span><span class="k-qual">weights frozen &mdash; accuracy bought with attempts, not training</span> sampling from the trained model</span><h3 id="vote-heading">Try more attempts</h3></div>
       </div>
       <p class="panel-lede">An under-trained worked-step model samples several answers. The verifier checks the arithmetic, and a verified answer is selected.</p>
       <p class="measurement">Starting accuracy: <b><span id="midacc">—</span></b></p>
@@ -212,7 +267,7 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
 
     <section class="workbench" aria-labelledby="star-heading">
       <div class="panel-head">
-        <div><span class="panel-kicker">Weights update</span><h3 id="star-heading">Fine-tune on accepted examples</h3></div>
+        <div><span class="panel-kicker"><span class="k-live">Live</span><span class="k-qual">supervised fine-tuning on its own accepted text &mdash; not reinforcement learning</span> the parameters do change here</span><h3 id="star-heading">Fine-tune on accepted examples</h3></div>
       </div>
       <p class="panel-lede">Fresh problems are generated outside the model. Verified chains with the known correct answer become supervised next-token training examples.</p>
       <div class="starbars" id="starbars"></div>
@@ -220,27 +275,55 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
       <p class="note" id="starstatus">Train both models first. Each round samples fresh problems, checks their chains and answers, then fine-tunes on the accepted text.</p>
     </section>
   </div>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">The worked-steps model scores higher than the direct model on the same exam. What does that show?</h3>
+    <p class="check-prompt">Two of these are popular, and they are wrong in opposite directions.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Right, and this is the careful claim. Same core width, depth and head count; the only difference is the text format each one trained on. Writing the intermediate steps gives the same next-token machinery more computation to spend before it has to commit.">Generating intermediate steps gives the same machinery more room to compute</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Too strong. Both models are next-token predictors on three-digit addition and neither has anything you could call comprehension. Note what the fine-tuning activity actually does, too: it trains on its own accepted worked examples by ordinary supervised updates. That is not reinforcement learning, and it is not insight.">The worked-steps model understands arithmetic and the direct model does not</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Wrong in the other direction, and just as common. Both do only predict the next token &mdash; and the worked-steps model still scores measurably higher on the identical exam, which you just ran yourself. &ldquo;Only predicting the next token&rdquo; does not mean &ldquo;computes nothing&rdquo;, and the two scores on this page are the evidence against it.">Nothing really changed &mdash; both only predict the next token, so neither computes anything</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
 </section>
 
-<!-- ══════════════════════════ ACT 3 ══════════════════════════ -->
-<section class="act" id="act3" role="tabpanel" aria-labelledby="nav3" hidden>
-  <section class="stage-intro" aria-labelledby="stage3-title">
+<!-- ══════════════════════════ STAGE 3 ══════════════════════════ -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
     <div class="intro-copy">
-      <span class="eyebrow">Agents · tool-using loop</span>
-      <h2 id="stage3-title">Text becomes action when a loop can call tools</h2>
-      <p class="frame-question">What changes when a model can choose an action, read the result, and continue?</p>
+      <span class="eyebrow">Demo 2 of 16 &middot; Part one &middot; Stage 3</span>
+      <h2 id="stage-3-title">Text becomes action when a loop can call tools</h2>
+      <p class="stage-question">What changes when a model can choose an action, read the result, and continue?</p>
+      <p class="refresh"><b>Before you start.</b> Stages 1 and 2 both ended at text. An <b>agent</b> wraps that
+        text in a <b>loop</b>: name an action, let a <b>tool</b> run it, append the result to the <b>context</b>,
+        repeat. The context is the model&rsquo;s whole working memory and it has a fixed size &mdash; which is the
+        constraint this stage is really about.</p>
     </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 3 learning guide">
-      <article><span>Try</span><p>Choose the actions once. Then watch the scripted policy run the same task.</p></article>
-      <article><span>Observe</span><p>Tool results enter the context. The calculator error becomes information for the next step.</p></article>
-      <article><span>Takeaway</span><p>Tools and a loop add capability. This activity scripts decisions so the mechanism stays inspectable.</p></article>
+      <article><span>Predict</span><p>The same task, but with <b>Visible context</b> set to <b>Tiny</b>. Will the
+        run still finish?</p>
+        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="agent">
+          <button type="button" class="predict-btn" data-answer="finish" aria-pressed="false">Yes, it finishes</button>
+          <button type="button" class="predict-btn" data-answer="stall" aria-pressed="false">No, it loses the goal</button>
+        </div>
+        <span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Watch the scripted policy</b> on the full context. Then set
+        <b>Visible context</b> to <b>Tiny</b>, press <b>Restart run</b>, and watch the same policy again.</p></article>
+      <article><span>Takeaway</span><p>Tools and a loop turn prediction into action, and the context window bounds
+        what the loop can still see &mdash; a run can fail for want of memory, not for want of ability.</p></article>
     </div>
-    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">→</span></button>
   </section>
 
   <section class="workbench agent-workbench" aria-labelledby="agent-heading">
+    <p class="obs-cue" id="cue-3" role="status" aria-live="polite"></p>
     <div class="panel-head">
-      <div><span class="panel-kicker">Fictional pizza world</span><h3 id="agent-heading">Run the agent</h3></div>
+      <div><span class="panel-kicker"><span class="k-live">Live</span><span class="k-qual">the pizza world and the autoplay policy are hand-authored; the tool calls, context growth and truncation are not</span> a real loop over given data</span><h3 id="agent-heading">Run the agent</h3></div>
     </div>
     <div class="task-card"><span>Task</span><p id="goaltext"></p></div>
     <p class="panel-lede">The menus, hours and 8% tax are given exercise data. Search and calculator tools really execute against that local data.</p>
@@ -268,21 +351,42 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
       <div class="rawctx" id="rawctx"></div>
     </details>
   </section>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">On the Tiny context setting the same policy stops without finishing. Why?</h3>
+    <p class="check-prompt">Compare the two runs in <b>Inspect the exact visible context</b>.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Right. Truncation here is real: once the task text falls outside the visible window the loop has nothing left to aim at, and it cannot get it back. The context meter shows the window filling before it happens.">The goal scrolled out of the visible context</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="No. It is the same hand-written policy in both runs, and it finishes on the full context. What changed is what the loop could still see, not any ability it has.">The policy is not smart enough for the task</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="No &mdash; and worth being clear about, because this run contains a genuine tool error on purpose. The calculator really is called with bad syntax once, really returns an error, and the loop really recovers from it. That is not what stops the Tiny run.">The calculator error broke the run</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
 </section>
 
 </main>
 
 <div class="footer">
-  <span>How a Language Model Works · offline teaching lab<span id="modenote"></span></span>
-  <div class="footer-tools"><button type="button" class="footer-link student-guide-open">Guide</button><span aria-hidden="true">·</span><button type="button" class="footer-link" id="presfoot">Presentation mode</button><span aria-hidden="true">·</span><button type="button" class="footer-link presenter-notes-open">Presenter Notes</button></div>
+  <span>Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline<span id="modenote"></span></span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button>
+  </div>
 </div>
 
-<dialog class="student-guide" id="student-guide" aria-labelledby="student-guide-title">
-  <div class="student-guide-head"><h2 id="student-guide-title">Guide<span class="head-sub">how to use this demo</span></h2><form method="dialog"><button aria-label="Close">×</button></form></div>
-  <div class="student-guide-body">
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head"><h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2><form method="dialog"><button type="submit" aria-label="Close">&times;</button></form></div>
+  <div class="lesson-dialog-body">
     <p class="lede">Follow one idea across three stages: a language model predicts tokens, worked steps can support computation, and an agent loop connects text to tools.</p>
+    <p class="note">Demo 2 of 16, Part one. Demo 1 handed forward that a model is a representation that can be trained, and ended on the transformer; this demo trains one. It hands forward that a model reads its context (Demo 5) and that a score is a measurement under conditions (Demo 3).</p>
     <ol>
-      <li><b>LLM.</b> Read the Era 0 sample, press <b>Train</b>, and compare eras. In the next-token workbench, change the prompt, era and temperature. Use <b>Tokenize text</b>, <b>Inspect parameters</b> and <b>Trace attention</b> for deeper inspection.</li>
+      <li><b>LLM.</b> Read the Era 0 sample, press <b>Train &middot; era 1</b>, and compare eras. In the next-token workbench, change the prompt, era and temperature. Use <b>Tokenize text</b>, <b>Inspect parameters</b> and <b>Trace attention</b> for deeper inspection.</li>
       <li><b>Reasoning.</b> Press <b>Run experiment · train both</b> and compare the live exam results. Then try more frozen-model attempts and <b>Fine-tune on accepted examples</b>.</li>
       <li><b>Agents.</b> Choose <b>You choose the actions</b> or <b>Watch the scripted policy</b>. Change <b>Visible context</b>, restart, and observe what the activity can no longer see.</li>
     </ol>
@@ -291,60 +395,148 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
     <h3>Allow time for training</h3>
     <p>LLM eras can take several seconds. The Reasoning experiment can take a few minutes on a phone. Progress measurements update while the page works.</p>
   </div>
-  <form method="dialog" class="student-guide-actions"><button>Start with the LLM</button></form>
+  <form method="dialog" class="lesson-dialog-actions"><button>Start with the LLM</button></form>
 </dialog>
 
-<dialog class="student-guide" id="glass-settings" aria-labelledby="glass-settings-title">
-  <div class="student-guide-head"><h2 id="glass-settings-title">Settings</h2><form method="dialog"><button aria-label="Close">×</button></form></div>
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head"><h2 id="settings-title">Settings</h2><form method="dialog"><button type="submit" aria-label="Close">&times;</button></form></div>
   <!-- CONTRACT.md Required UX: this menu always carries exactly these three,
        labelled exactly Open Presenter Notes, Presentation mode and Reset. -->
-  <div class="student-guide-body" id="settings-menu">
+  <div class="lesson-dialog-body" id="settings-menu">
     <h3>Presenter notes</h3>
     <p class="setnote">The printable session plan, on screen: timings, the beats to hit, the lines
     that land, the misconceptions, and the numbers this seeded run produces.</p>
-    <p><button class="btn presenter-notes-open">Open Presenter Notes</button></p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
     <h3>Presentation mode</h3>
     <p class="setnote">Scales the whole page up one notch for projecting to a room, and puts a
     <b>Notes</b> button in the header for the stage cues.</p>
-    <p><button class="btn ghost" id="presbtn" aria-pressed="false">Presentation mode<span class="state" aria-hidden="true">off</span></button></p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
     <h3>Reset</h3>
-    <p class="setnote">Back to a fresh load — untrained LLM, no eras, and the Reasoning and Agents activities as they started. Presentation mode stays as you set it.</p>
-    <p><button class="btn ghost" id="resetbtn">Reset</button></p>
+    <p class="setnote">Back to the start, without reloading the page: the transformer is untrained
+    again, every era is gone, the two Reasoning models and their exam tables are cleared, and the Agents
+    run is back at turn one with the full context. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
   </div>
-  <form method="dialog" class="student-guide-actions"><button>Done</button></form>
+  <form method="dialog" class="lesson-dialog-actions"><button>Done</button></form>
 </dialog>
 
 <dialog class="details-sheet" id="details" aria-labelledby="details-title">
   <div class="details-drawer">
-    <div class="student-guide-head"><h2 id="details-title">Details<span class="head-sub" id="details-subtitle">LLM</span></h2><form method="dialog"><button aria-label="Close Details">×</button></form></div>
+    <div class="lesson-dialog-head"><h2 id="details-title">Details<span class="head-sub" id="details-subtitle">LLM</span></h2><form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form></div>
     <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
       <section class="details-stage on" data-details-stage="0">
         <span class="eyebrow">What is live</span>
         <h3>A small transformer you can inspect</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> every number on this stage</span>
+          <p>The model is created, trained, sampled and inspected in your browser. The loss, the era
+          samples, the next-token probabilities, the parameter heatmaps and the attention maps are all
+          computed here, on this device, while you watch. Nothing is replayed from a recording.</p>
+        </div>
         <p>The page creates an untrained transformer in JavaScript: character embeddings, position embeddings, two attention-plus-feed-forward blocks, normalization and an output layer. Its <b><span id="a1params2">42,458</span> parameters</b> begin as seeded random numbers and update during training.</p>
         <p>Training repeatedly asks the model to predict the next character in one small original story. Backpropagation computes gradients; Adam uses them to update the parameters. Inference then uses a selected frozen era to produce next-token probabilities.</p>
         <h3>How the pieces fit</h3>
         <p>Tokens become numeric vectors. Causal attention lets each position combine information from earlier positions. Feed-forward layers transform those combined values. The output layer produces one score per possible next token.</p>
         <p>Attention weights are real intermediate values from this model. They show a routing pattern for one computation, not a complete explanation of why the model produced an answer.</p>
         <div class="scale" id="scalebars"></div>
-        <p class="details-note">The comparison above uses published parameter counts for this page, GPT-2 and GPT-3. Parameter count alone does not describe training data, architecture, capability or quality.</p>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span> the GPT-2 and GPT-3 bars</span>
+          <p>This page&rsquo;s own parameter count is computed from the model it just built. The two
+          comparison bars are published figures, cited below. Parameter count alone does not describe
+          training data, architecture, capability or quality &mdash; the bars are there for scale, and
+          for nothing else.</p>
+        </div>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li>One <b>character</b> per token. Production models use much larger word-piece
+          vocabularies, so the tokenizer here is the simplest honest version of the idea, not a
+          miniature of a real one.</li>
+          <li>One short original story as the entire training corpus. Real models train on
+          corpora many orders of magnitude larger, which is most of why they can say true things
+          and this one cannot.</li>
+          <li>Two attention-plus-feed-forward blocks. The <i>shape</i> of the computation is the
+          same as a large decoder-only model; the <i>scale</i> is not, and scale is not a detail.</li>
+          <li>Training is deterministic here (fixed seeds), so the numbers reproduce exactly. A
+          real training run is not reproducible in this way.</li>
+          <li>Attention weights show a routing pattern for one computation. They are not an
+          explanation of why the model produced an answer, and reading them as intent is the most
+          common way to over-interpret this panel.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openai.com/index/gpt-2-1-5b-release/" target="_blank" rel="noopener">OpenAI,
+          &ldquo;GPT-2: 1.5B release&rdquo; (5 November 2019)</a> &mdash; the 1.5-billion-parameter figure
+          for the largest GPT-2: &ldquo;we&rsquo;re releasing the largest version (1.5B parameters) of
+          GPT-2&rdquo;.</li>
+          <li><a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">Brown et al.,
+          &ldquo;Language Models are Few-Shot Learners&rdquo; (arXiv:2005.14165)</a> &mdash; the
+          175-billion-parameter figure for GPT-3: &ldquo;we train GPT-3, an autoregressive language
+          model with 175 billion parameters&rdquo;.</li>
+        </ul>
         <div class="evidence-card"><b>Boundary:</b> model initialization, training, loss, samples, probabilities, parameter heatmaps and attention maps are computed on this device. The page makes no runtime network request and loads no pretrained weights. This tiny character model demonstrates selected mechanisms; it is not a miniature claim about every production language model.</div>
       </section>
 
       <section class="details-stage" data-details-stage="1" hidden>
         <span class="eyebrow">What the comparison tests</span>
         <h3>Direct answers and worked steps</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> both models, both exams</span>
+          <p>Both models are trained here and both sit their exam here. The scores you read are
+          produced by this page while you wait, not looked up.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">one seeded run, reproducible &mdash; not a general result</span> the numbers the guide rehearses</span>
+          <p>Because the seeds are fixed, this activity produces the same figures every time: 54 out
+          of 96 for direct answers against the worked-step model&rsquo;s score, the 1/2/4/8-attempt
+          curve, and the four fine-tuning rounds. Those exact numbers are a property of this seeded
+          exercise on three-digit addition. They are not a prediction about any other task.</p>
+        </div>
         <p>The two arithmetic models use the same transformer family and share core width, depth and attention-head count. They differ in context length, seed and training steps because their target sequences differ. The result is a measured comparison from this seeded activity, not a guarantee that written reasoning always improves an answer.</p>
         <p>The direct-answer model learns text shaped like <code>347+285=632.</code> The worked-step model learns text that includes column sums and carries before the final answer. Both sit the same fixed exam of unseen generated problems.</p>
         <h3>Two different follow-up mechanisms</h3>
         <p><b>More attempts:</b> the page freezes an under-trained worked-step model, samples 1, 2, 4 or 8 chains per problem, verifies the arithmetic, and selects a verified answer. No weights change during this experiment.</p>
         <p><b>Accepted-example fine-tuning:</b> the activity generates fresh problems outside the model, samples chains, checks both the worked arithmetic and the known generated answer, then performs supervised next-token updates on accepted chains. This is STaR-style self-training. It is not policy-gradient reinforcement learning.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li>The task is <b>three-digit addition and nothing else</b>. Every number here is about
+          that task.</li>
+          <li>The two models share core width, depth and head count but differ in context length,
+          seed and training-step budget, because their target text is different lengths. So this is
+          not a perfectly controlled experiment in the format variable alone, and that limit is
+          real.</li>
+          <li>The verifier checks the worked arithmetic and the known answer. It is not a model
+          judging a model.</li>
+          <li>Accepted-example fine-tuning here is <b>supervised</b> next-token training on chains
+          the activity certified. It is STaR-style self-training, not policy-gradient reinforcement
+          learning, and the two are often conflated.</li>
+          <li>The more-attempts activity holds the weights <b>frozen</b>. Whatever it gains is bought
+          with sampling and verification at inference time, not with learning.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>No external figure is displayed on this stage &mdash; every number is computed here, so
+          there is nothing to cite. The mechanism it illustrates is described in the STaR literature;
+          the page makes no claim that rests on a citation.</li>
+        </ul>
         <div class="evidence-card"><b>Boundary:</b> the models train, the exams run, the verifier checks arithmetic, and accepted text updates the model on this device. The exact scores are outcomes from a seeded teaching experiment. The task is narrow three-digit addition.</div>
       </section>
 
       <section class="details-stage" data-details-stage="2" hidden>
         <span class="eyebrow">What the loop does</span>
         <h3>Context → decision → tool → observation</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the tools, the context and the truncation</span>
+          <p>The calculator really evaluates, the search really queries the local data, the transcript
+          really grows, and the context meter really measures it. The tiny-window run really does lose
+          the goal, because the truncation is real arithmetic on real text and not a staged outcome.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">the action choices only &mdash; everything they act on is live</span> the autoplay decision policy</span>
+          <p>Which action gets taken next, in autoplay, comes from a hand-written policy rather than
+          from a model. That includes the deliberate calculator syntax error and the retry after it.
+          The manual mode lets you pick from candidates that same policy generated. This is the one
+          hand-authored mechanism on the stage, and it is here so the loop stays inspectable.</p>
+        </div>
         <div class="loopdia" id="loopdia">
           <div class="lstep" data-k="ctx"><b>context</b>visible text so far</div>
           <div class="lstep" data-k="model"><b>decision</b>chooses a next action</div>
@@ -357,10 +549,27 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
         <p>The automatic decision policy is a hand-written teaching fixture. It deliberately makes one calculator syntax error, reads the error returned by the real calculator, and retries. The manual mode lets you choose from candidate actions generated by that same scripted policy.</p>
         <h3>What the context experiment shows</h3>
         <p>The selected window controls how much text this activity’s policy can see. When early text falls outside a tiny window, the activity loses access to it. A production agent may also use external memory, retrieval, summaries or saved state, so a context window is not its entire possible memory.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li>The pizza world &mdash; menus, opening hours and the 8% tax &mdash; is <b>invented
+          exercise data</b>. No real restaurant, price or tax rate is being asserted.</li>
+          <li>The action policy is hand-written, so this stage shows what an agent loop <i>is</i>, not
+          how well a model chooses inside one.</li>
+          <li>A context window is not an agent&rsquo;s whole possible memory. A production agent may
+          also use retrieval, summaries, external notes or saved state, any of which would change the
+          tiny-window outcome.</li>
+          <li>The loop has a hard turn limit, so the episode always terminates even if the policy
+          chooses badly. A real loop needs that guard too, and does not always have it.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>No external figure is displayed on this stage. The menus, hours and tax rate are
+          invented for the exercise and are labelled as such on the activity itself.</li>
+        </ul>
         <div class="evidence-card"><b>Boundary:</b> the fictional pizza menus, hours and 8% tax are given local exercise data. Tool computation and context behavior are real; the policy is scripted. This demonstrates an agent loop without claiming the tiny activity has general reasoning ability.</div>
       </section>
     </div>
-    <form method="dialog" class="student-guide-actions"><button>Back to activity</button></form>
+    <form method="dialog" class="lesson-dialog-actions"><button>Back to activity</button></form>
   </div>
 </dialog>
 
@@ -368,13 +577,13 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
      body of src/demo-guide.html at the placeholder below, and `node build.js
      --check` fails the moment the two drift. Nothing is fetched: the guide
      travels inside this file. Do not hand-edit the notes here — edit src/demo-guide.html. -->
-<dialog class="student-guide" id="presenter-notes" aria-labelledby="presenter-notes-title">
-  <div class="student-guide-head"><h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2><form method="dialog"><button aria-label="Close">×</button></form></div>
-  <div class="student-guide-body guide-host">
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head"><h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2><form method="dialog"><button type="submit" aria-label="Close">&times;</button></form></div>
+  <div class="lesson-dialog-body guide-host">
 <!--__GUIDE__-->
     <p class="guide-print"><a href="demo-guide.html" target="_blank" rel="noopener">Open the printable copy (demo-guide.html)</a> — the same document, laid out for A4; the PDF beside it is a render of that file.</p>
   </div>
-  <form method="dialog" class="student-guide-actions"><button>Back to the demo</button></form>
+  <form method="dialog" class="lesson-dialog-actions"><button>Back to the demo</button></form>
 </dialog>
 
 <script>
@@ -387,43 +596,14 @@ if (window.GB_FLAGS.size) { try { history.replaceState(null, '', location.href.s
 /*__APP__*/
 </script>
 <script>
-(() => {
-  const guide=document.getElementById('student-guide'),settings=document.getElementById('glass-settings'),notes=document.getElementById('presenter-notes');let opener=null;
-  // Opening a card from inside another one swaps them: nesting two modal
-  // dialogs stacks backdrops and makes Escape ambiguous.
-  const open=(dialog,from)=>{const host=from&&from.closest('dialog[open]');opener=host?document.getElementById('glass-settings-open'):from;if(host)host.close();dialog.showModal();dialog.querySelector('.student-guide-head button').focus()};
-  document.addEventListener('click',event=>{const button=event.target.closest?.('.student-guide-open');if(!button)return;event.preventDefault();open(guide,button)});
-  document.addEventListener('click',event=>{const button=event.target.closest?.('.presenter-notes-open');if(!button)return;event.preventDefault();open(notes,button)});
-  document.getElementById('glass-settings-open').addEventListener('click',event=>open(settings,event.currentTarget));
-  // Every card closes on Escape (native), on the × , on its footer button, and
-  // on a tap outside it.
-  [guide,settings,notes].forEach(dialog=>{dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});dialog.addEventListener('close',()=>{if(opener?.isConnected)opener.focus()})});
-  // The Guide card greets every load; the ? button brings it back any time.
-  // A Reset arrives with the demo already explained, so it stays closed then.
-  if(!guide.open&&!window.GB_FLAGS.has('reset')){opener=document.getElementById('howto-open');guide.showModal();guide.querySelector('.student-guide-actions button').focus()}
-
-  /* ---- Reset: the whole demo, back to a fresh load ----------------------
-     What "fresh" has to undo here: a 42,458-parameter transformer training
-     inside a Web Worker, four frozen era checkpoints, the playground and
-     attention selections, two Act 2 models with their exam tables, the voting
-     curve, the STaR rounds, and Act 3's transcript, tool log and context meter.
-     A hand-written teardown of that is a wide surface where missing one field
-     leaves a presenter with a half-reset page and no way to tell. Reloading is
-     the fresh-load state by construction, and this is one offline file, so the
-     reload is free and touches no network.
-     Two deltas ride in the URL fragment because this demo deliberately writes
-     no storage of any kind: 'reset' keeps the Guide overlay shut (the presenter
-     has already seen it) and 'presenting' puts Presentation mode back, because
-     that is a display preference, not demo state — Reset leaves it alone. */
-  document.getElementById('resetbtn').addEventListener('click',()=>{
-    const flags=['reset'];
-    if(document.body.classList.contains('presenter'))flags.push('presenting');
-    const base=location.href.split('#')[0];
-    try{location.replace(base+'#'+flags.join(','))}catch(e){location.hash=flags.join(',')}
-    location.reload();
-  });
-})();
+/* The lesson shell's behaviour: the four dialogs (swap-not-stack, Escape,
+   backdrop click, focus return), the Guide opening on load, the stage tablist
+   and its keyboard, the #stage-N hash, presentation mode, the A6 check cards
+   and the in-place Reset. This replaced this demo's own hand-written copies of
+   every one of those. The activity's own restore lives in app.js, on the
+   shell's `lessonreset` event. */
+/*__SHELL_JS__*/
 </script>
-<style>@keyframes bh-settle{0%,65%{opacity:.93}100%{opacity:.5}}</style><div class="bh-credit" style="position:fixed;left:8px;bottom:calc(6px + env(safe-area-inset-bottom,0px));z-index:2147483000;pointer-events:none;font:600 10px/1.3 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;color:#ECAC00;background:rgba(0,33,68,.85);border:1px solid rgba(236,172,0,.4);padding:3px 10px;border-radius:999px;letter-spacing:.03em;white-space:normal;max-width:calc(100vw - 16px);animation:bh-settle 9s ease forwards">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
 </body>
 </html>
