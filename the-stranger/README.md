@@ -96,7 +96,7 @@ student never typed** — handed over for free because the prompt signalled a re
   through the levers ending in three *"which lever would fix this?"* questions with written
   feedback on every option, right and wrong. Both modes announce what they change in a banner,
   and either can be reached from the mode switch on the toolbar, from Settings, or with `M`.
-- **Closing slide:** *When AI gives you a bad answer, ask which lever you left unpulled.*
+- **Closing slide:** *When AI gives you a useless answer, ask which lever you left unpulled — when it is wrong, out of date, refusing, or past what it can do, no lever fixes that.*
 
 Keys: `1` `2` `3` levers · `Enter` ask · `Space` skip typing · `H` highlight · `R` replay card ·
 `P` pin · `S` scoreboard · `M` mode · `N` presenter notes · `?` the Guide · `Esc` close
@@ -166,7 +166,7 @@ projector.
 ## Source layout
 
 ```
-index.html                     built, self-contained, 292 KB
+index.html                     built, self-contained, 293 KB
 build.js                       src/ + presenter-sheet.html -> index.html, offline guard, deck parity gate
 presenter-sheet.html           canonical: the printable companion, the PDF, AND the in-app notes
 The-Stranger-Presenter-Sheet.pdf   rendered from it by tools/pdf.mjs
