@@ -675,6 +675,9 @@ function renderSources() {
     const item = el('div', 'source-item');
     item.appendChild(srcChip(id, shortHost(s.u)));
     item.appendChild(el('span', 'src-title', s.t));
+    /* The date THIS page was last opened, per source (2026-09-16 review: one
+       shared constant had re-dated pages nobody re-opened). */
+    if (s.checked) item.appendChild(el('span', 'k-qual', 'opened ' + s.checked));
     box.appendChild(item);
   });
 }
@@ -803,8 +806,13 @@ function runSelfTest() {
      D.CUT.length > 0 && D.CUT.every(c => c.claim && c.why && c.why.length > 40));
   ok('At least two product names are shown as already changed',
      D.CHANGED.length >= 2, String(D.CHANGED.length));
-  ok('The uneven row is labelled unconfirmed rather than asserted',
-     D.UNEVEN.conf === 'unconfirmed', D.UNEVEN.conf);
+  ok('The formerly uneven row cites the product that filled it, and records the miss',
+     D.UNEVEN.conf === 'verified' && D.UNEVEN.src.indexOf('gemini-spark') > -1 && /wrong/i.test(D.UNEVEN.note),
+     D.UNEVEN.conf);
+  ok('Every source carries the ISO date it was last opened, and the page date is the oldest',
+     Object.keys(D.SOURCES).every(id => /^\d{4}-\d{2}-\d{2}$/.test(D.SOURCES[id].checked || '')) &&
+     Object.keys(D.SOURCES).every(id => D.SOURCES[id].checked >= D.CHECKED_ISO),
+     D.CHECKED_ISO);
   ok('The page carries the date it was checked',
      /\d{4}/.test(D.CHECKED_ON) && D.CHECKED_ISO.length === 10, D.CHECKED_ON);
   ok('At least one claim was rechecked and confirmed held, with its own date',

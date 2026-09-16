@@ -45,7 +45,11 @@ are explicitly optional; do not promise a particular score or curve.
 `src/agent.js` provide the three teaching worlds; `src/worker.js` performs
 training off the UI thread where possible. `src/demo-guide.html` is the single
 presenter-notes source; `build.js --check` verifies its embedded copy stays in
-sync with the built page.
+sync with the built page. The page chrome (header, stage tabs, the four dialogs,
+Reset, presentation mode) comes from the shared `../tools/lesson-shell` kit at
+build time and is inlined, so the shipped file is still one self-contained HTML
+document; `check-shell.js` verifies the kit stamp and the template parts.
+`tools/integration.mjs` is a Playwright suite and needs Playwright installed.
 
 Relevant checks after implementation changes are:
 
@@ -53,6 +57,8 @@ Relevant checks after implementation changes are:
 node src/selftest.test.js
 node src/arc.test.js
 node build.js --check
+node ../tools/lesson-shell/check-shell.js glass-box
+node ../tools/build-hub.js --check
 node tools/integration.mjs
 node tools/pdf.mjs --check
 ```
