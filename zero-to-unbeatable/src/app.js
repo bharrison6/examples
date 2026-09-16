@@ -288,9 +288,16 @@ function applyMove(cell) {
     if (g.result === 'win') rec.w++; else if (g.result === 'loss') rec.l++; else rec.d++;
     renderScore();
     if (isRules() && S.depth === 2) {
-      revealPrediction('rules', 'yes', g.result === 'win'
-        ? 'You found one of the lines the exhaustive search finds: two rules can be beaten, and only a person adding rules would change that.'
-        : 'Not this game — but the exhaustive search finds losing lines for a two-rule ladder in both roles. Open Details for the game that shows it, then try the fork.');
+      /* The fact is the search's: a two-rule ladder HAS losing lines in
+         both roles. The learner's game either shows one or it does not;
+         a draw or a loss is not evidence that two rules are enough. */
+      revealPrediction('rules', 'yes', 'The exhaustive search finds losing lines for a two-rule ladder in both roles. ' +
+        (g.result === 'win'
+          ? 'You just played one of them: two rules can be beaten, and only a person adding rules would change that.'
+          : 'Not this game — that is your play, not proof the ladder is safe. Open Details for the game that shows it, then try the fork.'),
+        VERDICT_SEARCH);
+    } else if (S.mode === 'one' && S.era === 1) {
+      revealOne();
     }
   }
 }
@@ -1219,11 +1226,7 @@ async function train() {
   cue(`Era ${era.n} after ${fmt(era.games)} games: ` + (era.verified.safe
     ? 'the exhaustive search finds no losing line in either role — verified unbeatable.'
     : `still beatable — a losing line exists. ${era.changed === null ? '' : fmt(era.changed) + ' positions are now played differently from the last era.'}`), !era.verified.safe);
-  if (era.n === 1) {
-    revealPrediction('one', era.verified.safe ? 'unbeatable' : 'beatable', era.verified.safe
-      ? 'Era 1 is already verified: no losing line in either role after one burst.'
-      : 'Era 1 still has a losing line. The scores moved, but one burst is not enough — keep training and watch for the proof line.');
-  }
+  if (era.n === 1) revealOne();
 }
 
 /* The neural tab has two visible phases. Preparation is ordinary seeded
@@ -1912,13 +1915,62 @@ $$('.predict-btn').forEach(b => b.addEventListener('click', () => {
   echo(key, 'You predicted: <b>' + PREDICT_LABELS[key][b.dataset.answer] + '</b>. Now try it.');
 }));
 /* "You predicted X; the board says Y." Called at the moment the answer
-   exists; silent when no prediction was made. */
-function revealPrediction(key, answerKey, sentence) {
+   exists; silent when no prediction was made.
+
+   `words` names WHAT is agreeing or disagreeing. The default pair is right
+   when the learner watched the answer happen (a measured ratio, a card's
+   definition). It is wrong when the answer is a fact about the model that
+   the learner's own game can neither prove nor refute — "unbeatable" is a
+   verdict of the exhaustive search, and a learner who predicted it and then
+   lost has seen nothing that contradicts them. Those callers pass words
+   that say "the search", and a sentence that separates the two. */
+const VERDICT_DEFAULT = { ok: 'Confirmed.', no: 'Not what happened.' };
+const VERDICT_SEARCH = { ok: 'The search agrees.', no: 'The search says otherwise.' };
+function revealPrediction(key, answerKey, sentence, words) {
   const p = S.predictions[key];
   if (!p) return;
+  const w = words || VERDICT_DEFAULT;
   const ok = answerKey === null ? null : p === answerKey;
   echo(key, 'You predicted <b>' + PREDICT_LABELS[key][p] + '</b>. ' +
-    (ok === null ? '' : ok ? '<span class="ok">Confirmed.</span> ' : '<span class="bad">Not what happened.</span> ') + sentence);
+    (ok === null ? '' : ok ? '<span class="ok">' + w.ok + '</span> ' : '<span class="bad">' + w.no + '</span> ') + sentence);
+}
+
+/* Stage 1b's reveal. The prediction was about ERA 1 — "unbeatable" or
+   "still beatable" after one burst — and that is a property the exhaustive
+   search settles, not the learner's record. "Beatable" means a losing line
+   EXISTS; it does not mean a given player finds it, and losing to a
+   beatable table looks exactly like losing to an unbeatable one. So the
+   sentence always states the search's verdict first, and then, once the
+   learner has played Era 1, says how their own record relates to it — and
+   never lets the record overrule the verdict in either direction. Called
+   when Era 1 is frozen and again after every game against it. */
+function revealOne() {
+  const era = S.eras[1];
+  if (!era || !S.predictions.one) return;
+  const safe = era.verified.safe;
+  const r = era.rec, n = r.w + r.d + r.l;
+  const rec = `${r.w}–${r.d}–${r.l}`;
+  const verdict = safe
+    ? 'Era 1 has <b>no losing line</b> in either role after one burst — verified unbeatable.'
+    : 'Era 1 <b>still has a losing line</b> after one burst, so it is beatable in principle.';
+  let own;
+  if (n === 0) {
+    own = safe
+      ? 'Play it: you cannot win, and a draw is the best result on offer.'
+      : 'Whether you find that line is a separate question from whether it exists. Play it and look.';
+  } else if (safe) {
+    own = r.w > 0
+      ? `Your record against it is ${rec}. A win against a policy the search called safe should not be possible; ` +
+        'Settings → Run the full self-test is the tool for checking that.'
+      : `Your record against it is ${rec}: no wins, which is exactly what no losing line means. ` +
+        'Losing or drawing does not prove it, though — losing to a beatable table looks the same. The search is what settles it.';
+  } else {
+    own = r.w > 0
+      ? `Your record against it is ${rec}: you found a losing line yourself.`
+      : `Your record against it is ${rec}: you have not found the line yet. That says something about your play, ` +
+        'not about the table — a losing line exists whether or not this game found it.';
+  }
+  revealPrediction('one', safe ? 'unbeatable' : 'beatable', verdict + ' ' + own, VERDICT_SEARCH);
 }
 
 /* ------------------------------------------------------------------ *

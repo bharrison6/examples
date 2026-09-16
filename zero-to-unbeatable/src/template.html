@@ -270,12 +270,12 @@
 
   <section class="check" aria-labelledby="check-2-title" data-refutation="true">
     <span class="eyebrow">Check yourself</span>
-    <h3 id="check-2-title">You just beat Era 1 three games running. Did those games change its table?</h3>
+    <h3 id="check-2-title">Does playing the AI above train it?</h3>
     <div class="check-options">
       <button class="check-option correct" type="button" aria-pressed="false"
-        data-feedback="Your games are scored on the record strip, not learned from. Each era is a frozen snapshot; the only thing that writes to the live table is a press of Train the AI.">No &mdash; only the training burst updates the table; your games are scored, not learned from</button>
+        data-feedback="Each era is a frozen snapshot, and the live table changes only during a training burst. That is this demo's design choice, not a law of the method: the same table could have been wired to update after every game you play, and it simply is not. Real products often keep that door open &mdash; open Details for what two vendors say about using what you type to train later versions.">No &mdash; here your games are scored, not learned from; only Train the AI writes to the table</button>
       <button class="check-option wrong" type="button" aria-pressed="false"
-        data-feedback="That is the flawed picture this stage exists to correct. Play Era 1 ten times and then open the change report: its scores are byte-for-byte what they were when the era was frozen. Experience only enters through the training burst.">Yes &mdash; every game it plays is experience it learns from</button>
+        data-feedback="Not in this demo: play Era 1 ten times, open the change report, and its scores are what they were when the era was frozen. The instinct is not wrong in general, though. The table could have been built to learn from you, and some real systems do use what people type to train later versions, usually behind a setting. What is fixed here is a choice; Details names it and cites two vendors.">Yes &mdash; every game it plays is experience it learns from</button>
     </div>
     <p class="check-feedback" role="status" aria-live="polite"></p>
   </section>
@@ -591,6 +591,10 @@
           <span class="panel-kicker"><span class="k-measured">Measured</span> the change report and the era snapshots</span>
           <p>Each era is a frozen copy of the table taken when its burst finished, with the exhaustive check run once on that copy; selecting an older era shows that copy, not the live table.</p>
         </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">two vendors&rsquo; own help pages, fetched 2026-09-16</span> could a real system train on your play?</span>
+          <p>Some do, behind a setting. Claude&rsquo;s privacy centre says it will use your chats and coding sessions to improve its models if <q>you choose to allow us to use your chats and coding sessions to improve Claude</q>; Google&rsquo;s Gemini Apps help says that with its activity setting on, <q>Google uses your activity to provide, develop, and improve its services (including training generative AI models)</q>. Here, nothing you play leaves this page or outlives the record strip. That is the design choice named below, not a limit of reinforcement learning.</p>
+        </div>
         <div class="banner-host" id="banner-one"></div>
         <h3>How it works</h3>
         <p>1b&rsquo;s model is a <b>value table</b>: one stored estimate for each board position, learned by
@@ -606,13 +610,14 @@
           still drive its updates, so its method is reinforcement learning.</p>
         <h3>Assumptions and simplifications</h3>
         <ul>
-          <li>Human play never trains the table; only the app&rsquo;s training burst updates it. That is a design choice so the record strip measures the table rather than changing it.</li>
+          <li>Human play does not train this table; only the app&rsquo;s training burst updates it. That is a design choice so the record strip measures the table rather than changing it &mdash; the same learner could have been wired to update after every game you play.</li>
           <li>Tic-tac-toe is small enough that a table can hold every position (about five and a half thousand). Chess and language cannot be tabulated, which is why larger systems share parameters instead.</li>
           <li>The unbeatable verdict is a property of one frozen era on this game, established by exhaustive search, not by the sampled games the montage shows.</li>
         </ul>
         <h3>Sources</h3>
         <ul>
           <li>The learner and its hyper-parameters are <code>OG.HP</code> in <code>src/engine.js</code> (learning rate, discount, exploration schedule, self-play share); the values are printed under Settings &rarr; About.</li>
+          <li>Training on what users type: <a href="https://privacy.claude.com/en/articles/10023580-is-my-data-used-for-model-training" target="_blank" rel="noopener">Is my data used for model training? &mdash; Claude privacy centre</a> and <a href="https://support.google.com/gemini/answer/13594961" target="_blank" rel="noopener">Gemini Apps Privacy Hub &mdash; Google</a>, both fetched 2026-09-16. Quoted above only as far as each page says; policies change, so read the live page before repeating a specific.</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> a good record against you is not the proof. Only the exhaustive search over every reachable game line, both roles, earns the word unbeatable, and it applies to this one small game.</div>
       </section>
