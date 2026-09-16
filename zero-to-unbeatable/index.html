@@ -5750,6 +5750,7 @@ const S = {
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
   predictions: {},     // Predict-card answers by key: rules, one, net, other, types
+  resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
@@ -7721,9 +7722,24 @@ function setLens(lens) {
     b.setAttribute('aria-pressed', String(on));
   });
 }
-/* A tab was selected. The shell has already shown the panel; this moves
-   the one shared board into that stage's host and repaints it for the
-   mode the stage teaches. Stages 4 and 5 are maps and host nothing. */
+/* A tab was selected. The shell has already shown the panel; this moves the
+   one shared board into that stage's host and repaints it for the mode the
+   stage teaches. Stages 4 and 5 are maps and host nothing.
+
+   THE RESET ORDERING HAZARD (ADOPTING.md §4 step 7). The shell's Reset calls
+   selectStage(0) — which fires `stagechange` — BEFORE it dispatches
+   `lessonreset`, so a handler that renders from activity state renders the
+   PRE-reset state into freshly reset chrome. This demo cannot make
+   `stagechange` chrome-only: the board is one element moved between three
+   stage hosts, so a tab change genuinely has to repaint the activity. So the
+   reset path is made to render EXACTLY ONCE instead, from `lessonreset`:
+   `onReset` (consulted by the shell before anything else, and passed through)
+   raises S.resetting, this handler then does the chrome half only — stage
+   index, lens, and moving the board home — and the `lessonreset` handler
+   lowers the flag and does the single authoritative render. Without the flag
+   the final state is still correct, because `lessonreset` fires last and
+   repaints; the flag is what makes that a guarantee rather than an ordering
+   coincidence, and it stops the stale paint being visible for a frame. */
 function onStage(index) {
   S.stage = index;
   const lens = index >= 4 ? 'types' : 'architecture';
@@ -7741,13 +7757,16 @@ function onStage(index) {
       if (S.training) S.cancelTraining = true;
       S.mode = mode;
       $('#selftest-out').textContent = '';
-      applyMode();
+      if (!S.resetting) applyMode();
     }
   } else if (S.training) {
     S.cancelTraining = true;
   }
 }
 document.addEventListener('stagechange', e => onStage(e.detail.index));
+/* Not a veto: it returns a truthy value so the reset proceeds. It exists only
+   to mark the window in which `stagechange` must not paint (see onStage). */
+window.lessonShell.onReset = () => { S.resetting = true; return true; };
 $$('.lens-btn').forEach(b => b.addEventListener('click', () => window.lessonShell.selectStage(+b.dataset.stage)));
 
 /* Reset, in place (kit v2). The shell has already closed every dialog,
@@ -7779,6 +7798,7 @@ $$('.lens-btn').forEach(b => b.addEventListener('click', () => window.lessonShel
        by renderTrain / renderDepthSeg.
      Not touched: presentation mode and the Guide (the shell's rule). */
 document.addEventListener('lessonreset', () => {
+  S.resetting = false;
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};

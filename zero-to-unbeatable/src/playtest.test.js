@@ -978,19 +978,89 @@ head('7. Step 1 — the hand-written rules');
   check('seven rules and eight rules are the same opponent — rule 8 is the list being tidy',
     sameAt7 && RULES.report(7).safe);
 
-  /* ---- current public documentation names the model and learning axes ---- */
-  const docs = ['README.md', 'src/demo-guide.html', 'demo.json']
-    .map(f => fs.readFileSync(path.join(__dirname, '..', f), 'utf8')).join('\n');
+  /* ---- current public documentation names all three axes ----------------
+     Restructured 2026-09-16: architecture (how a model is built) / training
+     method (how it learns) / model type (what it does). The learner-facing
+     surfaces must name every stage and both lenses, and must NOT still carry
+     the two RETIRED meanings -- "Other model types" as stage 1d's name, or
+     "How they learn" as a tab. The negative half is the point: a rename that
+     left the old strings in the guide would pass a presence-only check. */
+  const docFiles = ['README.md', 'SPEC.md', 'src/demo-guide.html', 'demo.json', 'src/template.html'];
+  /* Source comments are NOT learner-facing, and two of these files carry a
+     comment that explains the restructure by quoting the retired wording. So
+     every needle below is checked against the files with HTML comments
+     stripped -- otherwise a check would fire on its own documentation, which
+     is the probe matching itself rather than the page. */
+  const strip = t => t.replace(/<!--[\s\S]*?-->/g, ' ');
+  const docs = docFiles
+    .map(f => strip(fs.readFileSync(path.join(__dirname, '..', f), 'utf8'))).join('\n');
   const terms = ['1a', '1b', '1c', '1d', 'Symbolic AI (GOFAI)', 'Value table',
-    'Neural Network', 'Other model types', 'How they learn'];
-  check('README, guide, and manifest describe the model examples and learning view',
+    'Neural Network', 'Other architectures & training methods', 'Model architecture',
+    'Model types'];
+  check('the learner-facing surfaces name every stage and both lenses',
     terms.every(t => docs.includes(t)), terms.filter(t => !docs.includes(t)).join(', '));
+  /* The retired meanings. A sentence ABOUT the restructure may legitimately
+     contain the words "how they learn", so each needle below is a string that
+     would mean the OLD STRUCTURE: a tab, a stage name, or the old view id. */
+  const retired = ['Other model types', 'data-view="learn"', '>How they learn<',
+    'separate **How they learn** tab', 'id="learning-overview"', 'How models learn'];
+  const stillThere = retired.filter(t => docs.includes(t));
+  check('no learner-facing surface still carries a retired tab or stage name',
+    stillThere.length === 0, stillThere.join(' | '));
   check('public copy does not promise neural generalisation or unbeatability',
     docs.includes('no automatic unbeatable claim') && docs.includes('not guaranteed playing strength'));
-  const guide = fs.readFileSync(path.join(__dirname, 'demo-guide.html'), 'utf8');
+  const guide = strip(fs.readFileSync(path.join(__dirname, 'demo-guide.html'), 'utf8'));
   check('the guide names visible neural actions in plain language',
     guide.includes('Create learning examples') && guide.includes('Train network') &&
-    guide.includes('held-out error') && guide.includes('network’s layers'));
+    guide.includes('held-out error') && guide.includes('network view'));
+  check('the guide carries the A9 sections and no objective-shaped line',
+    ['Learning goals', 'Where this sits on the path', 'One question for the session',
+      'Misconceptions', 'Discussion questions', 'Presenter controls']
+      .every(h => guide.includes(h)) && (guide.match(/class="mis"/g) || []).length >= 5 &&
+    !/You will be able to/i.test(guide));
+
+  /* ---- the kit retrofit, as far as a static read can see it -------------
+     The browser pass is what proves rendering; these are the structural
+     invariants a later edit could silently break. */
+  const tpl = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf8');
+  const app = fs.readFileSync(path.join(__dirname, 'app.js'), 'utf8');
+  const stages = (tpl.match(/<section class="stage[ "]/g) || []).length;
+  const tabs = (tpl.match(/class="stage-tab/g) || []).length;
+  const checkCards = (tpl.match(/class="check"/g) || []).length;
+  const refutations = (tpl.match(/data-refutation="true"/g) || []).length;
+  check('five kit stages, five tabs, five Details sections, and check cards',
+    stages === 5 && tabs === 5 &&
+    (tpl.match(/class="details-stage/g) || []).length === 5 &&
+    checkCards >= 5 && refutations >= 1,
+    'stages ' + stages + ', tabs ' + tabs + ', checks ' + checkCards + ', refutation ' + refutations);
+  /* A6 asks for at least one item PER STAGE, so it is counted per stage: five
+     cards could all sit on one stage and satisfy a total of five. 1c carries a
+     second item deliberately. */
+  const perStage = tpl.split(/<section class="stage[ "]/).slice(1)
+    .map(part => (part.match(/class="check"/g) || []).length);
+  check('every stage has at least one check item',
+    perStage.length === 5 && perStage.every(n => n >= 1),
+    'per stage: ' + perStage.join(', '));
+  check('every stage carries a question, a refresh line and the three strip labels',
+    (tpl.match(/class="stage-question"/g) || []).length === 5 &&
+    (tpl.match(/class="refresh"/g) || []).length === 5 &&
+    (tpl.match(/<span>Predict<\/span>/g) || []).length === 5 &&
+    (tpl.match(/<span>Try<\/span>/g) || []).length === 5 &&
+    (tpl.match(/<span>Takeaway<\/span>/g) || []).length === 5);
+  check('exactly one tablist: the lens row is not a second one (A1)',
+    (tpl.match(/role="tablist"/g) || []).length === 1);
+  check('the demo implements the kit reset contract (A8)',
+    /addEventListener\('lessonreset'/.test(app));
+  /* ADOPTING.md section 4 step 7: the shell fires stagechange BEFORE
+     lessonreset, so the reset path must paint exactly once. */
+  check('the reset path paints once: onReset raises the flag stagechange checks',
+    /onReset = \(\) => \{ S\.resetting = true/.test(app) &&
+    /if \(!S\.resetting\) applyMode\(\)/.test(app));
+  check('the retired chrome is gone from app.js, not merely unused',
+    !/function openSheet|function closeSheet|function applyView|function selectView|STAGE_COPY/.test(app));
+  check('the engines are untouched by this pass',
+    ['engine.js', 'rules.js', 'net.js', 'ultimate.js'].every(f =>
+      fs.existsSync(path.join(__dirname, f))));
 }
 
 /* ===================================================================== */
