@@ -433,16 +433,6 @@
     renderPlayground();
     renderAttention();
     drawLoss();
-    cue('cue-1', 'Era ' + (eras.length - 1) + ' done \u2014 loss ' + m.loss.toFixed(2) +
-      ' after ' + fmt(m.step) + ' steps. Read the new sample against Era 0 in Compare.');
-    /* TEXT.ERAS is the full era list, so eras.length === TEXT.ERAS.length means
-       every era has been trained and the prediction can be settled. */
-    if (eras.length >= TEXT.ERAS.length) {
-      revealPrediction('llm', 'fragments',
-        'It writes English-looking fragments: the spacing, the letter runs and the short words are ' +
-        'the shape of the language, but it is not saying anything true. 42,458 parameters and one ' +
-        'short story buy the shape, not the content.');
-    }
   });
 
   on('a1.progress', (m) => {
@@ -478,6 +468,16 @@
     renderPlayground();
     renderAttention();
     drawLoss();
+    cue('cue-1', 'Era ' + (eras.length - 1) + ' done \u2014 loss ' + m.loss.toFixed(2) +
+      ' after ' + fmt(m.step) + ' steps. Read the new sample against Era 0 in Compare.');
+    /* TEXT.ERAS is the full era list, so eras.length === TEXT.ERAS.length means
+       every era has been trained and the prediction can be settled. */
+    if (eras.length >= TEXT.ERAS.length) {
+      revealPrediction('llm', 'fragments',
+        'It writes English-looking fragments: the spacing, the letter runs and the short words are ' +
+        'the shape of the language, but it is not saying anything true. 42,458 parameters and one ' +
+        'short story buy the shape, not the content.');
+    }
   });
 
   function renderEraChips() {
