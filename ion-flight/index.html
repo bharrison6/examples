@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="An offline guided time-of-flight mass spectrometer investigation of what a flight-time detector measures.">
 <title>Time-of-Flight Mass Spectrometer · Guided Investigation</title>
-<!-- lesson-shell v1 css:2a8c1906b449 -->
+<!-- lesson-shell v1 css:d13e2bec1db3 -->
 <style>
 
 /* ---- lesson-shell/tokens.css ---- */
@@ -478,9 +478,20 @@ body.has-bottom-bar .bh-credit { display: none; }
    phone <= 480, narrow <= 760, wide > 760, plus the landscape-short case: a
    phone held sideways on a projector table. Demo 1 has it, Demo 2 does not;
    the plan keeps it. */
-@media (max-width: 820px) {
-  /* Clear a bottom control bar the activity may sticky there. */
-  .bh-credit { bottom: calc(62px + var(--safe-b)); }
+/* The pill is position:fixed, so the page scrolls UNDER it and no amount of
+   padding can stop it passing over mid-page content — that is inherent to a
+   standing byline, and is why it takes no pointer event and fades to .5 (Demo
+   1 and Demo 2 both ship it that way). What padding CAN fix is the end of the
+   scroll, where the footer would otherwise sit permanently underneath it. So:
+   reserve that space at phone widths, and keep the pill as LOW as possible.
+
+   An earlier version of this file raised the pill 62px at <= 820px to clear a
+   bottom control bar. That was wrong twice over — it made mid-page overlap
+   worse rather than better (measured at 390px, sitting across the Predict
+   card), and a demo that actually has a bottom bar sets body.has-bottom-bar,
+   which HIDES the pill outright, so nothing needed raising. */
+@media (max-width: 480px) {
+  body { padding-bottom: calc(28px + var(--safe-b)); }
 }
 @media (max-width: 760px) {
   .topline { padding: calc(12px + var(--safe-t)) 14px 9px; }
@@ -849,6 +860,11 @@ body.presenter .path { display: none; }
   </section>
 
   <div class="activity-host" data-activity-host="0">
+   <div class="activity" id="activity">
+    <!-- #activity is the element app.js moves between the three hosts. It has
+         to be INSIDE the host and never the host itself: appending a node into
+         itself throws HierarchyRequestError, and the node suites only PARSE the
+         scripts rather than running them, so nothing but a browser pass sees it. -->
     <!-- ===== THE INSTRUMENT · shared by stages 1–3, relocated by app.js =====
          A3 obligations inside it: every panel and readout carries one of the
          six provenance kickers, and every control says what it changes and
@@ -929,6 +945,7 @@ body.presenter .path { display: none; }
         </div>
       </section>
     </div>
+   </div>
   </div>
   <section class="check" aria-labelledby="check-1-title" data-refutation="true">
     <span class="eyebrow">Check yourself</span>
@@ -2117,7 +2134,9 @@ if (typeof module !== 'undefined') module.exports = IonFlightModel;
 
   /* The instrument is one element shared by stages 1–3; these are the three
      slots it moves between. See the template's note on why it is not copied. */
-  const activity = document.querySelector('.activity-host[data-activity-host="0"] .path').parentNode;
+  /* #activity is a wrapper INSIDE host 0, never the host itself: appending a
+     host into itself throws HierarchyRequestError. */
+  const activity = document.getElementById('activity');
   const hosts = Array.from(document.querySelectorAll('.activity-host'));
 
   function microseconds(seconds, digits) {

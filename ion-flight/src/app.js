@@ -33,7 +33,9 @@
 
   /* The instrument is one element shared by stages 1–3; these are the three
      slots it moves between. See the template's note on why it is not copied. */
-  const activity = document.querySelector('.activity-host[data-activity-host="0"] .path').parentNode;
+  /* #activity is a wrapper INSIDE host 0, never the host itself: appending a
+     host into itself throws HierarchyRequestError. */
+  const activity = document.getElementById('activity');
   const hosts = Array.from(document.querySelectorAll('.activity-host'));
 
   function microseconds(seconds, digits) {
