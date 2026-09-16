@@ -134,8 +134,8 @@ build-time dependency only.
 ## Verifying it
 
 ```
-node test-physics.js                          # 41 checks against the shipped physics
-node test-bundle.js                           # 60 structural checks on the BUILT page
+node test-physics.js                          # 33 checks against the shipped physics
+node test-bundle.js                           # 56 structural checks on the BUILT page
 node build.js --check                         # build parity + PDF freshness
 node ../tools/lesson-shell/check-shell.js fuel-golf
 node ../tools/build-hub.js --check
