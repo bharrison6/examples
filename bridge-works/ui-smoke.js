@@ -4,7 +4,17 @@
    teacher overload demo and the leaderboard. Screenshots land in /tmp.
 
      npm i playwright && node ui-smoke.js
-*/
+
+   PORTED TO THE LESSON SHELL 2026-09-16 BUT NOT YET EXECUTED: Playwright is not
+   installed in this checkout (pre-existing condition, tracked fleet-wide). The
+   port is mechanical — the seven hand-rolled .modal overlays became native
+   <dialog>s (Guide #guide, Settings #settings, Presenter Notes #presenter-notes
+   are the shell's; the debrief, levels, gallery and leaderboard are #bw-*),
+   ".hidden" visibility became dialog[open], the two-tap Reset became the shell's
+   one-click in-place Reset, and presentation mode is body.presenter. Every load
+   test now needs a call committed first (#testcall .call-option) the FIRST time
+   a stage is tested; commitCall() below does that before each test. Treat the
+   first run as a bring-up, not a regression signal. */
 'use strict';
 let chromium;
 try {
@@ -52,10 +62,10 @@ function check(name, cond, detail) {
   await page.waitForTimeout(600);
 
   console.log('[0] The Guide opens on load');
-  const openHelp = async () => (await page.locator('#mHelp:not(.hidden)').count()) === 1;
+  const openHelp = async () => (await page.locator('#guide[open]').count()) === 1;
   check('the Guide is showing on load', await openHelp());
   await page.screenshot({ path: '/tmp/bw-0-help.png' });
-  await page.click('#hpClose');
+  await page.click('#guide .lesson-dialog-head button');
   await page.waitForTimeout(200);
   check('  and the ✕ dismisses it', !(await openHelp()));
 
@@ -78,20 +88,29 @@ function check(name, cond, detail) {
   async function gotoLevel(i) {
     await page.click('#btnLevels');
     await page.waitForTimeout(200);
-    await page.locator('#lvGrid .card').nth(i).click();
+    await page.locator('#lvGrid .gcard').nth(i).click();
     await page.waitForTimeout(350);
     await refreshView();
   }
   async function waitForDebrief(maxWaitMs) {
     const until = Date.now() + (maxWaitMs || 25000);
     while (Date.now() < until) {
-      if (await page.locator('#mDebrief:not(.hidden)').count()) return true;
+      if (await page.locator('#bw-debrief[open]').count()) return true;
       await page.waitForTimeout(200);
     }
     return false;
   }
+  /* The evidence gate: the first load test in a stage waits for a call. Any
+     call unlocks it; 'held' is used so the echo's agree/disagree path varies
+     with the outcome. Later tests in a tested stage are free play and the
+     button is already open, in which case this is harmless. */
+  async function commitCall(which) {
+    const btn = page.locator('#testcall .call-option[data-call="' + (which || 'held') + '"]');
+    if (await btn.count()) { await btn.click(); await page.waitForTimeout(80); }
+  }
   async function runTest(maxWaitMs) {
-    await page.click('#btnTest');
+    await commitCall();
+    await commitCall(); await page.click('#btnTest');
     return waitForDebrief(maxWaitMs);
   }
   const txt = async (sel) => (await page.textContent(sel)).replace(/\s+/g, ' ').trim();
@@ -100,18 +119,18 @@ function check(name, cond, detail) {
   await page.click('#btnLevels');
   await page.waitForTimeout(80);
   check('level cards are native named buttons', await page.evaluate(() => {
-    const c = document.querySelector('#lvGrid .card');
+    const c = document.querySelector('#lvGrid .gcard');
     return c && c.tagName === 'BUTTON' && /Load level 1/.test(c.getAttribute('aria-label'));
   }));
-  await page.locator('#lvGrid .card').first().focus();
+  await page.locator('#lvGrid .gcard').first().focus();
   await page.keyboard.press('Enter');
   await page.waitForTimeout(100);
   check('Enter activates a level card', (await txt('#levelChip')).includes('First Crossing'));
   check('keyboard editing is off by default', await page.evaluate(() => !BWGAME.keyboard && document.getElementById('cv').tabIndex === -1));
-  await page.click('#btnTeacher');
+  await page.click('#settings-open');
   await page.click('#tglKeyboard');
-  await page.click('#tcClose');
-  check('Teacher mode can enable the keyboard cursor', await page.evaluate(() => BWGAME.keyboard && document.getElementById('cv').tabIndex === 0));
+  await page.click('#settings .lesson-dialog-actions button');
+  check('Settings can enable the keyboard cursor', await page.evaluate(() => BWGAME.keyboard && document.getElementById('cv').tabIndex === 0));
   await page.locator('#cv').focus();
   await page.keyboard.press('b');
   await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
@@ -127,7 +146,8 @@ function check(name, cond, detail) {
 
   await drag(5, 0, 8, 0);
   await drag(8, 0, 11, 0);
-  check('deck complete re-enables the test', !(await page.locator('#btnTest').isDisabled()));
+  await commitCall();                        // the gate opens on a call, not on the deck alone
+  check('deck complete (plus a committed call) re-enables the test', !(await page.locator('#btnTest').isDisabled()));
   await drag(8, 0, 8, 1);
   await drag(5, 0, 8, 1);
   await drag(8, 1, 11, 0);
@@ -222,19 +242,19 @@ function check(name, cond, detail) {
   const board = await txt('#bdBody');
   check('a surviving run is saved to the class board', board.includes('Room 12') && board.includes('$962'));
   await page.screenshot({ path: '/tmp/bw-4-board.png' });
-  await page.click('#bdClose');
+  await page.click('#bw-board .game-dialog-head button');
 
   /* --------------------------------- 5. teacher overload -> progressive collapse */
   console.log('\n[5] Teacher demo — overload the same bridge');
-  await page.click('#btnTeacher');
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
   await page.click('#tglOverload');
-  await page.click('#tcClose');
+  await page.click('#settings .lesson-dialog-actions button');
   await page.waitForTimeout(200);
   check('the vehicle picker appears', await page.locator('#vehGroup').isVisible());
   await page.selectOption('#vehSel', 'tipper');  // the crane is longer than a 6 m span
   await page.waitForTimeout(200);
-  await page.click('#btnTest');
+  await commitCall(); await page.click('#btnTest');
   /* watch for the collapse while it is happening, before the debrief covers it */
   let fell = false, brokeCount = 0, debris = 0;
   for (let i = 0; i < 40; i++) {
@@ -259,13 +279,13 @@ function check(name, cond, detail) {
 
   /* every way of dismissing the debrief must hand the canvas back */
   for (const [how, act] of [
-    ['the ✕ button', async () => page.click('#dbClose')],
+    ['the ✕ button', async () => page.click('#bw-debrief .game-dialog-head button')],
     ['a backdrop click', async () => page.mouse.click(20, 450)],
     ['the Escape key', async () => page.keyboard.press('Escape')],
     ['"Back to build"', async () => page.click('#dbRetry')]
   ]) {
-    if (!(await page.locator('#mDebrief:not(.hidden)').count())) {
-      await page.click('#btnTest');
+    if (!(await page.locator('#bw-debrief[open]').count())) {
+      await commitCall(); await page.click('#btnTest');
       await waitForDebrief();
     }
     await act();
@@ -293,7 +313,7 @@ function check(name, cond, detail) {
   check('  with a drawable ghost for each one',
         (await page.evaluate(() => (BWGAME.analysis.modes || []).length)) === 4);
   await page.screenshot({ path: '/tmp/bw-7-ladder.png' });
-  await page.click('#btnTest');
+  await commitCall(); await page.click('#btnTest');
   let collapseFrames = 0, collapseLengthExact = true, collapseRollerFixed = true,
       collapseRollerConstraint = true, collapseRollerSlide = 0;
   for (let i = 0; i < 12; i++) {
@@ -359,14 +379,14 @@ function check(name, cond, detail) {
   console.log('\n[7] Gallery — the Warren alternating pattern on screen');
   await page.click('#btnGallery');
   await page.waitForTimeout(300);
-  check('all four famous trusses are offered', (await page.locator('#glGrid .card').count()) === 4);
+  check('all four famous trusses are offered', (await page.locator('#glGrid .gcard').count()) === 4);
   await page.locator('#glN').fill('6');
   await page.locator('#glN').dispatchEvent('input');
   await page.locator('#glH').fill('4');
   await page.locator('#glH').dispatchEvent('input');
   await page.waitForTimeout(250);
   await page.screenshot({ path: '/tmp/bw-11-gallery.png' });
-  await page.locator('#glGrid .card').nth(2).click();   // Warren
+  await page.locator('#glGrid .gcard').nth(2).click();   // Warren
   await page.waitForTimeout(400);
   const pattern = await page.evaluate(() => {
     const S = BWGAME, a = S.analysis, out = [];
@@ -398,20 +418,18 @@ function check(name, cond, detail) {
 
   /* ------------------------------------------------------ 9. projector mode */
   console.log('\n[9] Projector mode');
-  await page.click('#btnTeacher');
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
-  await page.click('#tglBig');
-  await page.click('#tcClose');
+  await page.click('#presentation-btn');       // the shell closes Settings itself
   await page.waitForTimeout(400);
-  check('large-UI mode applies', await page.evaluate(() => document.body.classList.contains('big')));
+  check('large-UI mode applies', await page.evaluate(() => document.body.classList.contains('presenter')));
   await page.screenshot({ path: '/tmp/bw-14-projector.png' });
 
   /* ------------------------------------------- 10. joints must really join */
   console.log('\n[10] A joint dropped on a member splits it');
-  await page.click('#btnTeacher');            // back to normal UI scale first
+  await page.click('#settings-open');         // back to normal UI scale first
   await page.waitForTimeout(200);
-  await page.click('#tglBig');
-  await page.click('#tcClose');
+  await page.click('#presentation-btn');
   await page.waitForTimeout(400);
   await gotoLevel(0);
   await page.click('#btnClear');
@@ -455,7 +473,7 @@ function check(name, cond, detail) {
   await page.locator('#glN').fill('6'); await page.locator('#glN').dispatchEvent('input');
   await page.locator('#glH').fill('4'); await page.locator('#glH').dispatchEvent('input');
   await page.waitForTimeout(200);
-  await page.locator('#glGrid .card').nth(2).click();
+  await page.locator('#glGrid .gcard').nth(2).click();
   await page.waitForTimeout(400);
   const canon = () => page.evaluate(() => ({
     n: BWGAME.nodes.map((n) => n.x + ',' + n.y).sort().join('|'),
@@ -598,45 +616,45 @@ function check(name, cond, detail) {
   /* ------------------------------ 13. contract UX: Guide, settings, presenter notes */
   console.log('\n[13] Contract UX — Guide, settings menu, presenter notes, reset');
   check('the ? control is named Guide',
-        (await page.locator('#btnHelp').getAttribute('aria-label')) === 'Guide',
-        await page.locator('#btnHelp').getAttribute('aria-label'));
+        (await page.locator('#guide-open').getAttribute('aria-label')) === 'Guide',
+        await page.locator('#guide-open').getAttribute('aria-label'));
   check('  and the overlay it opens is headed Guide',
-        (await txt('#mHelp h2')).trim().startsWith('Guide'), await txt('#mHelp h2'));
-  await page.click('#btnHelp');
+        (await txt('#guide h2')).trim().startsWith('Guide'), await txt('#guide h2'));
+  await page.click('#guide-open');
   await page.waitForTimeout(150);
   check('the ? control reopens the Guide', await openHelp());
   await page.keyboard.press('Escape');
   await page.waitForTimeout(150);
   check('  Escape dismisses it', !(await openHelp()));
-  await page.click('#btnHelp');
+  await page.click('#guide-open');
   await page.waitForTimeout(150);
   await page.mouse.click(8, 450);                 // backdrop, well clear of the sheet
   await page.waitForTimeout(150);
   check('  a tap outside dismisses it', !(await openHelp()));
-  await page.click('#btnHelp');
+  await page.click('#guide-open');
   await page.waitForTimeout(150);
-  await page.click('#hpStart');
+  await page.click('#guide .lesson-dialog-actions button');
   await page.waitForTimeout(150);
   check('  "Start building" dismisses it', !(await openHelp()));
 
-  const openNotes = async () => (await page.locator('#mNotes:not(.hidden)').count()) === 1;
-  await page.click('#btnTeacher');
+  const openNotes = async () => (await page.locator('#presenter-notes[open]').count()) === 1;
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
-  check('the ⚙ button opens a settings menu', (await txt('#mTeacher h2')) === 'Settings');
+  check('the ⚙ button opens a settings menu', (await txt('#settings h2')) === 'Settings');
   /* the contract fixes these three labels exactly; demo-specific options may sit beside them */
   for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
     check('  the menu offers "' + label + '"',
-          (await page.locator('#mTeacher').getByText(label, { exact: true }).count()) >= 1);
+          (await page.locator('#settings').getByText(label, { exact: true }).count()) >= 1);
   }
-  await page.click('#btnNotesOpen');
+  await page.click('#settings .notes-open');
   await page.waitForTimeout(200);
   check('  and opens the presenter notes', await openNotes());
-  const notes = await txt('#mNotes');
+  const notes = await txt('#presenter-notes');
   check('    carrying the session plan', notes.includes('30-minute session plan') && notes.includes('method of joints'));
   check('    and the numbers a presenter needs',
         notes.includes('300 kN') && notes.includes('$180 per joint') && notes.includes('720 kN'));
   /* The notes are not a summary of the guide: they ARE the guide, injected by
-     tools/guide-sync.js. That script's --check proves it byte for byte; this proves
+     build.js. Its --check proves it byte for byte; this proves
      the injected block is what the browser actually renders. The guide is read here
      in node and parsed in the page, so the page itself still fetches nothing. */
   const gSrc = fs.readFileSync(path.join(__dirname, 'teacher-guide.html'), 'utf8');
@@ -647,7 +665,7 @@ function check(name, cond, detail) {
     d.innerHTML = html;
     return d.textContent.replace(/\s+/g, ' ').trim();
   }, gSrc.slice(gA, gB) + '</div>');
-  const notesBody = (await page.textContent('#mNotes .guide-scope')).replace(/\s+/g, ' ').trim();
+  const notesBody = (await page.textContent('#presenter-notes .guide-scope')).replace(/\s+/g, ' ').trim();
   check('    and matching teacher-guide.html word for word', notesBody === guideText,
         notesBody.length + ' vs ' + guideText.length + ' chars');
   await page.screenshot({ path: '/tmp/bw-18-notes.png' });
@@ -655,21 +673,19 @@ function check(name, cond, detail) {
   await page.waitForTimeout(150);
   check('    Escape closes the notes', !(await openNotes()));
 
-  check('the notes shortcut is hidden until presentation mode is on', await page.locator('#btnNotes').isHidden());
-  await page.click('#btnTeacher');
+  check('the notes shortcut is hidden until presentation mode is on', await page.locator('.top-tools .notes-open').isHidden());
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
-  await page.click('#tglBig');
-  await page.click('#tcClose');
+  await page.click('#presentation-btn');
   await page.waitForTimeout(300);
-  check('presentation mode puts a notes button in the top bar', await page.locator('#btnNotes').isVisible());
-  await page.click('#btnNotes');
+  check('presentation mode puts a notes button in the top bar', await page.locator('.top-tools .notes-open').isVisible());
+  await page.click('.top-tools .notes-open');
   await page.waitForTimeout(200);
   check('  and it opens the notes', await openNotes());
   await page.keyboard.press('Escape');
-  await page.click('#btnTeacher');
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
-  await page.click('#tglBig');                 // back to normal scale
-  await page.click('#tcClose');
+  await page.click('#presentation-btn');       // back to normal scale
   await page.waitForTimeout(300);
 
   /* Reset: the contract asks for the demo's fresh-load state, with the Guide closed.
@@ -682,34 +698,35 @@ function check(name, cond, detail) {
   await page.waitForTimeout(900);
   const freshLoad = await page.evaluate(() => ({
     design: localStorage.getItem('bw.design.v1'),
-    keys: ['bw.board.v1', 'bw.design.v1', 'bw.prefs.v1', 'bw.progress.v1']
+    keys: ['bw.design.v1', 'bw.prefs.v1', 'bw.progress.v1', 'bw.lesson.v1']
       .filter((k) => localStorage.getItem(k) !== null)
   }));
-  await page.click('#hpClose');                // the Guide opens on load; put it away
+  await page.click('#guide .lesson-dialog-head button');                // the Guide opens on load; put it away
   await page.waitForTimeout(150);
   /* Move off a first run, so a no-op could not pass this. */
   await gotoLevel(2);
-  await page.click('#btnTeacher');
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
   await page.click('#tglPar');                 // flip a default off
   await page.waitForTimeout(150);
-  await page.click('#btnReset');               // first tap arms
-  await page.waitForTimeout(200);
-  await page.click('#btnReset');               // second tap confirms
+  await page.evaluate(() => { window.__S__ = 'sentinel'; });
+  await page.click('#reset-btn');              // the shell's in-place Reset: one click, no reload
   await page.waitForTimeout(500);
   const fresh = await page.evaluate(() => ({
     li: BWGAME.li, xray: BWGAME.xray, par: BWGAME.showPar, big: BWGAME.big,
     keyboard: BWGAME.keyboard, tool: BWGAME.tool,
-    bodyBig: document.body.classList.contains('big'),
-    notesBtnHidden: document.getElementById('btnNotes').classList.contains('hidden'),
+    bodyBig: document.body.classList.contains('presenter'),
+    sentinel: window.__S__ === 'sentinel',
     design: localStorage.getItem('bw.design.v1'),
-    keys: ['bw.board.v1', 'bw.design.v1', 'bw.prefs.v1', 'bw.progress.v1']
+    keys: ['bw.design.v1', 'bw.prefs.v1', 'bw.progress.v1', 'bw.lesson.v1']
       .filter((k) => localStorage.getItem(k) !== null)
   }));
-  check('Reset returns the demo to its fresh-load state',
+  /* presentation mode is deliberately NOT part of Reset (CONTRACT + kit), and the
+     class leaderboard bw.board.v1 is left alone (orchestrator ruling 2026-09-16),
+     so neither is in this assertion. */
+  check('Reset returns the demo to its fresh-load state, in place',
         fresh.li === 0 && fresh.xray === true && fresh.par === true &&
-        fresh.big === false && fresh.keyboard === false && fresh.tool === 'build' &&
-        !fresh.bodyBig && fresh.notesBtnHidden,
+        fresh.keyboard === false && fresh.tool === 'build' && fresh.sentinel,
         'level ' + (fresh.li + 1) + ', xray ' + fresh.xray + ', par ' + fresh.par +
         ', presentation ' + fresh.big);
   check('  leaving exactly what a fresh load leaves',
@@ -727,25 +744,25 @@ function check(name, cond, detail) {
   console.log('\n[14] Phone viewport');
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(400);
-  await page.click('#btnHelp');
+  await page.click('#guide-open');
   await page.waitForTimeout(250);
-  const hb = await page.locator('#mHelp .sheet').boundingBox();
+  const hb = await page.locator('#guide').boundingBox();
   check('the Guide fits a phone screen', hb.width <= 390 && hb.height <= 844,
         Math.round(hb.width) + 'x' + Math.round(hb.height));
   await page.screenshot({ path: '/tmp/bw-19-phone-help.png' });
-  await page.click('#hpStart');
+  await page.click('#guide .lesson-dialog-actions button');
   await page.waitForTimeout(200);
-  await page.click('#btnTeacher');
+  await page.click('#settings-open');
   await page.waitForTimeout(200);
-  await page.click('#btnNotesOpen');
+  await page.click('#settings .notes-open');
   await page.waitForTimeout(250);
-  const nb = await page.locator('#mNotes .sheet').boundingBox();
+  const nb = await page.locator('#presenter-notes').boundingBox();
   check('  so do the presenter notes', nb.width <= 390, Math.round(nb.width) + ' wide');
   await page.screenshot({ path: '/tmp/bw-20-phone-notes.png' });
   await page.keyboard.press('Escape');
   await page.waitForTimeout(200);
-  check('  the ? control stays reachable', await page.locator('#btnHelp').isVisible());
-  check('  the ⚙ control stays reachable', await page.locator('#btnTeacher').isVisible());
+  check('  the ? control stays reachable', await page.locator('#guide-open').isVisible());
+  check('  the ⚙ control stays reachable', await page.locator('#settings-open').isVisible());
   check('  the attribution stays visible', await page.locator('.bh-credit').isVisible());
   await gotoLevel(0);
   await page.click('#btnClear');

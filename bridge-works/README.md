@@ -1,163 +1,163 @@
 # Truss Bridge Builder
 
-Murray State University · School of Engineering · folder `bridge-works`
+Murray State University · Part four, Example projects · Demo 8 of 16 · folder `bridge-works`
 
-A browser-based truss bridge builder for physics class. Students design a bridge, drive a
-vehicle across it, and compete to build the **cheapest bridge that survives** — and they learn
-statics because the solver is real, not because the game says so.
+A browser-based truss bridge builder for physics and engineering class, on the tour's shared
+lesson shell. Students design a bridge, **call which member goes first**, drive a vehicle across,
+and compete to build the **cheapest bridge that survives** — and they learn statics because the
+solver is real, not because the game says so.
 
 ## Play
 
-Open `index.html` in any browser. Fully offline, no install, no build step, mouse + touch
-(Chromebook-friendly, phone-sized screens included). The **Guide** opens on every load —
-dismiss it with ✕, Escape, a tap outside or **Start building**, and reopen it any time with
-the **?** button in the top bar, whose accessible name is *Guide*.
+Open `index.html` in any browser. One self-contained file, fully offline, no install, mouse + touch
+(Chromebook-friendly, phone-sized screens included). The **Guide** opens on every load; dismiss it
+with **Start with Mechanisms** and reopen it any time with **? Guide** in the header.
 
-Teachers: `teacher-guide.html` is the printable session plan (two letter pages, also included
-pre-rendered as `teacher-guide.pdf`), and it is the *same document* the app shows under
-**⚙ → Open Presenter Notes** — see [Presenter notes are the guide](#presenter-notes-are-the-guide).
-`bridge-works-standalone.html` is the same game as a single file, for handing out on a stick
-or a locked-down machine.
+Four stages wrap one game:
+
+| Stage | Levels | The question |
+|---|---|---|
+| 1 Mechanisms | 1–2 | Why does a flat roadway fold before anything breaks? |
+| 2 Compression buckles | 3 | Why does one member hold 300 kN pulled but 45 kN pushed? |
+| 3 Load paths | 4–5 | Where does the load go when the shape or the supports change? |
+| 4 Sandbox | 6 | Which of your ideas survive a vehicle you pick? (outside the path) |
+
+Each stage carries a stage question, a *Before you start* refresher, a **Predict · Try · Takeaway**
+strip, the activity, a *Notice* line that names what just happened, a **Details** drawer (what is
+live / how it works / assumptions / sources / boundary) and a **Check yourself** card. Stage tabs
+are hash-addressable (`#stage-2`), and picking a level from inside the game moves the tabs with it.
+
+**The call before the test.** The first load test in every stage waits until you commit a call
+under the canvas — *it folds as a mechanism / a compression member buckles / a member tears in
+tension / it holds*. After the crossing the call is echoed against the engine's own record of the
+first failure, in the stage's Predict card and in the debrief. Once a stage has had one called
+test it is **free play**: the button is open, the call is optional, and you can retry a level for
+a lower cost as often as you like. That is the game.
+
+Teachers: `teacher-guide.html` is the printable session plan (also pre-rendered as
+`teacher-guide.pdf`), and it is the *same document* the app shows under **⚙ Settings → Open
+Presenter Notes** — see [One source for the notes](#one-source-for-the-notes).
 
 ## What's real
 
-This is a **direct stiffness** finite element solver, not spring physics.
+This is a **direct stiffness** finite element solver, not spring physics. Every panel on screen
+carries one of the six provenance words; here is the map.
 
-- **2D pin-jointed truss.** Every member is a two-force axial element carrying only tension or
-  compression. Element stiffness matrices `(EA/L)·[c² cs; cs s²]` are rotated into global
-  coordinates and assembled into a global **K**; supports are applied as boundary conditions;
-  **K·u = F** is solved for joint displacements, and member forces follow from the strains.
-- **Statically indeterminate designs solve correctly.** Students pile on extra members, brace
-  every panel twice, and use two pinned abutments. Method of joints cannot solve any of that; a
-  stiffness solve can, because the load splits by stiffness rather than by equilibrium alone.
-- **Mechanisms are detected, not crashed into.** The reduced stiffness matrix is factored by
-  Gaussian elimination with **full pivoting**, which reports the rank honestly. A rank deficiency
-  means the structure can move without straining anything — the null-space vector is extracted
-  from the elimination and the game animates the bridge folding *along that exact direction*, so
-  what the class watches collapse is the real mathematical failure mode.
-- **Compression is the weak direction.** Tension capacity is `σ_y·A = 300 kN` at any length.
-  Compression is Euler buckling, `P_cr = π²EI/L² ≈ 720 kN·m²/L²`, capped at 180 kN — so a 2 m
-  strut holds 180 kN and a 4 m strut holds 45 kN. This is the single fact that makes cheap
-  designs hang the deck instead of propping it.
-- **Progressive collapse.** When a member exceeds its rating it is removed and the structure is
-  **re-solved with what is left**, repeatedly. On a minimal truss the first break is fatal; on a
-  redundant one you get a genuine cascade (buckle → re-solve → tear → re-solve → mechanism).
-- **The moving load is quasi-static.** The vehicle is re-solved from scratch at every position as
-  it crosses; each wheel load is distributed to the two ends of the deck member it stands on by
-  lever arm, the standard tributary distribution to panel points.
-- **Optional dead load** (member steel plus its share of the deck it carries, 900 N/m), lumped half to each end of every member.
+- **Live** — the canvas, the colours, the joint tool, the fold, the debrief. Every member is a
+  two-force axial element; element stiffnesses `(EA/L)·[c² cs; cs s²]` are rotated into global
+  coordinates and assembled into **K**; supports are boundary conditions; **K·u = F** is solved for
+  joint displacements and member forces follow from the strains. Statically indeterminate designs
+  solve correctly, with load split by stiffness. The reduced matrix is factored by Gaussian
+  elimination with **full pivoting**; a rank deficiency means a mechanism, and the null-space vector
+  is projected onto exact member lengths and drawn — the fold the class watches is the real failure
+  mode. The **moving load is quasi-static**: re-solved from scratch at every vehicle position, each
+  wheel shared to its deck member's two joints by lever arm; an overloaded member is removed and the
+  structure **re-solved with what is left**, so failures cascade.
+- **Measured** — the pars. Found offline against this same solver by `test-physics.js`
+  (deterministic — no seed; 86 checks): every par is beatable by a triangulated design and by no
+  un-triangulated ladder at any depth or panel count.
+- **Sourced** — Euler buckling `P_cr = π²EI/L²` (Purdue ME 323 notes), ASTM A36's specified minimum
+  yield of 36 ksi (≈ 250 MPa; a *specified minimum, not typical*), E = 200 GPa (a reference-table
+  value), and the four gallery dates from the patents themselves (Howe 1840, Whipple's bowstring
+  1841, Pratt 1844) plus the Warren patent of 1848 via a STRUCTURE-magazine history. Every source
+  is linked in the Details drawer with the date it was read (2026-09-16).
+- **Reasoned** — the section (12 cm², I = 3.647 × 10⁻⁷ m⁴) and the 7,850 kg/m³ density are the
+  authors' choices, and the drawer says the density is not sourced on the page. Also Reasoned, and
+  stated where the learner meets a failure: **joints never fail here.** This is a steel truss with
+  idealised pins — member buckling and yield are modelled, connection failure is not, and in real
+  structures (especially glued or nailed ones) the connection is often what goes first. That is
+  precisely why the pin-jointed idealisation is the honest choice for a statics lesson.
+- **Illustrative** — the bill (9.42 kg/m at $4.80/kg ≈ $45/m, plus $180 per joint) and the five
+  vehicles. The *shape* of the bill — connections roughly 45% of a typical design, so panel count is
+  a real trade-off — is the teaching point.
 
-Two details worth knowing, because students hit both: a joint dropped in the middle of a straight
-strut would make **K** singular in a pure pin-jointed idealisation, so collinear chains are
-condensed into one equivalent element (springs in series, `EA/L_total` — exact) and the buckling
-length stays the *whole* chain, since an unbraced intermediate pin braces nothing. And a member
-dangling off a half-built structure is pruned as a zero-force member and drawn grey, rather than
-being reported as a collapse.
+Compression capacity is `min(0.6·σ_y·A, π²EI/L²)` = 180 kN capped, 80 kN at 3 m, 45 kN at 4 m,
+over the *whole* unbraced straight run; tension capacity is `σ_y·A` = 300 kN at any length.
+Collinear chains at unloaded joints are condensed into one element (springs in series, exact);
+dangling members are pruned as zero-force and drawn grey.
 
 ## Levels
 
-| # | Level | Span / vehicle | Par | The lesson |
-|---|-------|----------------|-----|------------|
-| 1 | First Crossing | 6 m · car, 30 kN | $1,050 | A flat roadway is a mechanism |
-| 2 | **The Long Gap** | 12 m · car, 30 kN | $2,800 | Opens with a rectangular frame. Test it, watch it fold, add diagonals |
-| 3 | Heavy Haul | 10 m · truck, 125 kN | $2,800 | Capacity, and why long compression members buckle first |
-| 4 | High Water | 12 m · van, 60 kN | $3,100 | Nothing below the deck — through truss or bowstring |
-| 5 | Island Pier | 16 m · truck, 125 kN | $3,600 | A mid-span support beats more steel |
-| 6 | Sandbox | 18 m · your choice | — | Free build, pick any vehicle |
+| # | Level | Span / vehicle | Par | Stage |
+|---|-------|----------------|-----|-------|
+| 1 | First Crossing | 6 m · car, 30 kN | $1,050 | 1 Mechanisms |
+| 2 | The Long Gap | 12 m · car, 30 kN | $2,800 | 1 Mechanisms — opens with a rectangular frame |
+| 3 | Heavy Haul | 10 m · truck, 125 kN | $2,800 | 2 Compression buckles |
+| 4 | High Water | 12 m · van, 60 kN | $3,100 | 3 Load paths — nothing below the deck |
+| 5 | Island Pier | 16 m · truck, 125 kN | $3,600 | 3 Load paths — a mid-span pier |
+| 6 | Sandbox | 18 m · your choice | — | 4 Sandbox |
 
-Costing follows a fabricator's bill rather than a flat rate: **steel by weight** (9.4 kg/m at $4.80/kg,
-about **$45/m**) plus **$180 per joint** for the gusset plate, bolts and labour. Connections come out at
-roughly 45% of a typical design, which makes panel count a real trade-off — bracing a panel you already
-have costs steel only, adding a panel costs a joint too. Abutment bearings are provided by the level.
 Nothing may exceed 4 m. Par is golf-style: survive the crossing for less than par.
 
 ## Teaching features
 
-- **X-ray** parks the test vehicle at mid-span and colours the structure live during the build
-  phase — red tension, blue compression, brighter as it nears its limit — before committing.
-- **Joint tool**: tap any joint to see the force vector of every member meeting there, with the
-  sum printed. It is always `0.0, 0.0`. That panel *is* the method of joints.
-- **Force numbers** overlay in kN.
-- **Debrief** after every test: every member's worst tension and compression, its buckling
-  capacity at its actual unbraced length, the weakest link highlighted, cost vs par, peak sag,
-  and one plain-language sentence about *this* design. A pure mechanism reports which joints ran
-  away and in which direction instead of a table of zeros.
-- **Gallery** of Pratt, Howe, Warren and bowstring at adjustable depth and panel count — load
-  them into the current level and compare where each sends the load.
-- **Leaderboard** per level, stored in the browser, so each machine keeps its own class list.
-- **Settings (⚙)** holds everything a presenter needs:
-  - **Open Presenter Notes** — the teacher guide itself, on screen. Not a summary of it: the same
-    document, generated from the same file (below).
-  - **Presentation mode** — large UI for the back of the room, and it parks a **🗒 Notes** button
-    in the top bar so the guide stays one tap away mid-demo.
-  - **Reset** — the demo back to a first run on this machine: Level 1, default toggles, no saved
-    designs, no progress, empty leaderboard. Two taps to confirm. It does not reopen the Guide.
-  - Alongside those: per-level and whole-board leaderboard resets, display options, keyboard
-    editing, and an option to pick the test vehicle on any level — for showing a class what happens
-    when a bridge that comfortably carried a car meets a 20 tonne crane. Demo runs stay off the
-    leaderboard.
+- **X-ray** parks the level's vehicle at mid-span and colours the structure live during the build —
+  red tension, blue compression, brighter nearer its limit, grey carrying nothing.
+- **Check a joint**: every force meeting at a joint drawn as an arrow, with the sum printed. It is
+  always zero. That panel *is* the method of joints.
+- **Weakest link**, docked under the canvas and always shown: the first failure (member, mode, the
+  force it failed at against its rating, where the vehicle was) — or the busiest member if it held —
+  **read from the test record**, never sampled from live state after the fact.
+- **Debrief** after every test: verdict, your call against the record, cost vs par, every member's
+  worst tension and compression and its buckling capacity at its actual unbraced length, peak sag,
+  one plain-language sentence about *this* design, and **↶ Back to build — try for less** /
+  **Next level →**.
+- **Gallery** of Pratt, Howe, Warren and bowstring at adjustable depth and panel count.
+- **Leaderboard** per level, stored in this browser only.
+- **⚙ Settings**: **Open Presenter Notes**, **Presentation mode**, **Reset**, then Show par
+  budgets, Keyboard editing, pick-the-vehicle demos (demo runs stay off the leaderboard), and the
+  two-step **Class data** clears.
 
-## Presenter notes are the guide
+**Reset** is the shell's in-place reset — no reload. It puts back Level 1 with an empty gap, the
+Draw tool, X-ray on, saved designs and personal bests cleared, every call and check answer
+forgotten, stage 1 — and it **leaves the class leaderboard alone**, because that holds other
+people's results and Reset is one click. *Reset this level's board* / *Reset every board* in
+Settings ask twice and are the only way to clear it. Presentation mode stays as you set it.
 
-`teacher-guide.html` is the single source. It carries two `<style>` blocks: the first is scoped
-entirely to `.guide-scope` and is safe to inject into the app; the second is page chrome for the
-printable file (letter `@page`, the two-column print layout, the point sizes) and never leaves it.
-The body lives in `<div class="guide-scope"> … </div><!-- /guide -->`.
+## One source for the notes
 
-```
-node tools/guide-sync.js           # write that block into index.html between its __GUIDE__ markers
-node tools/guide-sync.js --check   # fail if the copy in index.html has drifted
-node tools/pdf.mjs                 # re-render teacher-guide.pdf from the same file
-node sync-standalone.js            # then refresh the single-file edition
-```
+`src/demo-guide.html` is canonical for three surfaces: the printable `teacher-guide.html` (a
+copy), `teacher-guide.pdf` (a render), and the in-app presenter notes (injected). Its first
+`<style id="guide-css">` block is scoped entirely to `.guide-scope`; the build refuses an unscoped
+rule. **Edit the guide in `src/`, never the shipped copies.**
 
-`guide-sync.js` refuses to inject a stylesheet with an unscoped selector or an at-rule, and
-refuses a guide body carrying anything fetchable, so the app cannot be restyled or taken online
-by an edit to the guide. The guide's colours come from custom properties whose defaults suit
-white paper; `index.html` overrides them on `#mNotes .guide-scope` so one stylesheet reads
-correctly on paper and on the app's navy sheet. **Edit the guide, never the copy in `index.html`.**
-
-## Verifying the physics
+## Build
 
 ```
-node test-physics.js             # shipped solver and level-definition regression suite
-node ui-smoke.js                 # headless Playwright playthrough (test-only setup below)
-node tools/guide-sync.js --check # in-app presenter notes still equal teacher-guide.html
-node sync-standalone.js --check  # single-file edition still equals the shipped sources
+node build.js            # writes index.html and teacher-guide.html from src/ + ../tools/lesson-shell
+node tools/pdf.mjs       # re-renders teacher-guide.pdf (needs Chrome or Edge)
+node build.js --check    # parity: index.html, teacher-guide.html, the notes, PDF freshness, 5 script closers
 ```
 
-`test-physics.js` imports the exact files the browser loads (`physics.js`, `levels.js`) and
-checks solved member forces against hand statics, the indeterminate two-pin case, that a bare
-rectangle is rank-deficient while the same rectangle plus one diagonal is not, that a Warren
-truss's diagonals alternate tension/compression with a fully-tensile bottom chord and
-fully-compressive top chord, that Pratt and Howe diagonals carry opposite signs, that compression
-capacity is below tension capacity at every length and falls as 1/L², that overloading produces a
-multi-member progressive collapse, that reactions carry exactly the applied dead load, and
-that **every level's par is beatable while no un-triangulated ladder survives any level at any
-depth or panel count**.
+`index.html` is **build output**, one self-contained file with zero `<script src>` and zero
+`<link href>`; the shared lesson shell (`../tools/lesson-shell`) is a build-time dependency only.
+The build counts the `</script>` closers in the assembled page and refuses on any number but five,
+with a bait control — a page with too few runs nothing, silently. `physics.js` and `levels.js` stay
+at the demo root, byte-for-byte the pre-shell files, because `test-physics.js` requires them from
+there; `src/game.js` is the browser half and `src/app.js` the lesson layer.
 
-`ui-smoke.js` drives the actual game: it builds a truss by dragging on the canvas, checks the
-running cost, opens the free-body inspector and asserts ΣF = 0, runs a crossing, reads the
-debrief, saves to the leaderboard, overloads the same bridge with a crane and confirms the
-collapse, watches the level-2 frame fold, braces it and confirms it then survives, and loads a
-Warren from the gallery and reads the alternating colour pattern off the live analysis.
+The pre-shell `bridge-works-standalone.html`, `sync-standalone.js` and `tools/guide-sync.js` are
+retired: the built `index.html` *is* the standalone.
 
-It also holds the demo to the repo's UX contract: the Guide opens on load, is dismissible four ways
-and reopens from **?** (whose accessible name is *Guide*); ⚙ opens a settings menu offering
-**Open Presenter Notes**, **Presentation mode** and **Reset**; Reset returns the demo to its
-fresh-load state without reopening the Guide; the notes open from settings and from the top-bar
-shortcut presentation mode adds, and carry the guide's own text; the attribution names author and
-institution; the Guide and the notes fit a 390 × 844 phone and the canvas still draws there; and
-**not one request leaves the folder** — the offline claim is asserted, not assumed.
+## Verifying
 
-With dead load enabled, every live member contributes its lumped load before the solver's
-zero-force-stub cleanup. A loose vertical hanger therefore retains its 900 N/m dead-load share; if its
-geometry cannot route that load through axial members, the solver reports the resulting mechanism
-instead of silently deleting the member.
+```
+node test-physics.js                                  # 86 checks against the shipped solver and levels
+node build.js --check
+node ../tools/lesson-shell/check-shell.js bridge-works
+node ui-smoke.js                                      # headless Playwright playthrough (test-only setup)
+```
 
-The demo itself is build-free and offline: `index.html` is the shipped source, not build output.
-The two scripts under `tools/` and `sync-standalone.js` are maintenance tools — you run them after
-editing the guide or the sources, never to play the game. Browser smoke coverage is optional and
-needs the test-only Playwright setup (`npm install --save-dev playwright`, then `npx playwright
-install chromium`); the smoke script exits loudly when it is unavailable. `tools/pdf.mjs` drives an
-installed Chrome or Edge headless, so it needs no dependency either.
+`test-physics.js` checks solved member forces against hand statics, the indeterminate two-pin case,
+that a bare rectangle is rank-deficient while the same rectangle plus one diagonal is not, that a
+Warren's diagonals alternate with a fully tensile bottom chord, that Pratt and Howe diagonals carry
+opposite signs, that compression capacity falls as 1/L², that overloading produces a progressive
+collapse, that reactions carry exactly the applied dead load, that the fold drawn on screen keeps
+every member at its exact length, and that every par is beatable only by a triangulated design.
+
+`ui-smoke.js` drives the real page — drags on the canvas, commits a call, runs crossings, reads the
+debrief, saves to the leaderboard, overloads a bridge with a crane, loads a Warren from the gallery
+and asserts the Guide, Settings triad, presentation mode, in-place Reset and phone fit. It was
+ported to the lesson shell on 2026-09-16 but **has not yet been executed** here: Playwright is not
+installed in this checkout (`npm install --save-dev playwright && npx playwright install chromium`).
+Treat its first run as a bring-up.
