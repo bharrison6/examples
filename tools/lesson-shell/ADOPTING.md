@@ -8,7 +8,7 @@ tells you:
 > **Adopting the kit is not a reskin.** You are not dropping a stylesheet on top
 > of a demo that already works. You are **deleting** the demo's own dialog,
 > overlay, act-navigation and reset machinery, and **rewiring** its activity to
-> react to two events the shell dispatches. The visual change is the small half.
+> react to the three events the shell dispatches. The visual change is the small half.
 
 That sentence exists because the `two-winters` lane had to infer it by reading
 `ion-flight/src/app.js` line by line and noticing what it does *not* contain.
@@ -72,6 +72,21 @@ Two consequences worth stating, because both were learned the hard way:
 A demo that is *all* navy has usually mislabelled its decision surfaces as
 apparatus; a demo with no navy at all usually has an instrument it has not
 committed to.
+
+**`.workbench` and `.card` carry `margin-bottom: 18px`, for the stacked
+case.** Two panels one above the other space themselves. Put them side by side
+as **children of a grid with `gap`** and that margin is added *to* the gap, so
+the rows come out uneven. The kit cannot see your grid (it does not know your
+class names, and there is no parent selector that says "my parent lays out
+with `gap`"), so this one is yours: zero it, scoped to the grid so a standalone
+panel keeps the fleet spacing —
+
+```css
+.workspace-grid > .workbench, .workspace-grid > .card { margin-bottom: 0; }
+```
+
+— which is exactly what `glass-box` did. Not a kit defect to patch around; a
+documented seam.
 
 ---
 
@@ -195,10 +210,13 @@ in a comment — `two-winters/src/app.js` is the worked example.
 
 ---
 
-## 3. The two events
+## 3. The three events
 
-The shell talks to the demo through exactly two events on `document`. There is
-no other coupling and no configuration object.
+The shell talks to the demo through exactly three events on `document` —
+**`stagechange`**, **`lessonreset`** and **`presentationchange`**. There is no
+other coupling and no configuration object. (Earlier editions of this file
+said "two" and left the third to the delete-checklist in §2; `glass-box`
+counted.)
 
 ### `stagechange` — a tab was selected
 
@@ -231,6 +249,20 @@ and used both):
 | What Reset does | the shell's pre-`app.js` snapshot re-locks it (§4 step 3) — for free, *because* it was authored in markup | your `lessonreset` handler hides the activity again and clears the captured prediction |
 | What the learner sees | a tab they cannot select yet, with a `title` saying why | a stage they can visit, read and predict on, that has not shown its hand |
 
+**A gate consults the persisted evidence it guards, and re-arms only on
+Reset.** (Operator directive on replayability, from `R-fuel-golf`.) Derive
+`gated` from what the learner has actually done — the completion record, the
+saved run, the captured prediction — not from in-memory state alone. A gate
+that re-arms on every page load protects the *tenth* encounter as though it
+were the first: `fuel-golf`'s stage 2 evidence gate re-armed on reload even
+though the completion badge on screen proved the level was escaped, and while
+re-gated, picking the level ran it in the hidden host at 0 px. A gate protects
+the first encounter; the second time through, the evidence is already there
+and the gate should read it. Reset clears the progress it reads, and so
+legitimately re-arms it — that is the one path back to gated, and it is the
+learner's own choice. At least five demos gate, so this is the fleet's shape,
+not one demo's.
+
 A tab gate applied only at runtime (`tab.disabled = true` in `app.js`, nothing
 in the markup) comes back **unlocked** after Reset, because the snapshot was
 taken before your script ran. An evidence gate implemented as a tab gate makes
@@ -241,6 +273,24 @@ mistake is visible to a static check.
 ### `lessonreset` — put your activity back
 
 Required. §4.
+
+### `presentationchange` — the projector toggle moved
+
+```js
+document.addEventListener('presentationchange', e => {
+  const on = e.detail.on;            // true when body.presenter was just applied
+  // re-measure a canvas, switch to your big-UI variant, nothing else
+});
+```
+
+Fires from the header Notes button and the Settings toggle, and once at load
+(the init call runs before your script, so if you need the initial state read
+`document.body.classList.contains('presenter')` directly). The shell has
+already toggled `body.presenter`, resized its own type scale and, since v3,
+held the phone intro disclosure open; your handler is for the things only you
+can do — a canvas that must re-measure its box, a control set that has a
+projector layout. Reset does **not** touch presentation mode (§4), so do not
+undo it from `lessonreset`.
 
 ---
 
@@ -637,7 +687,16 @@ The browser pass must, at minimum:
   suspect box's `getBoundingClientRect().right` inside it. That is how the
   `aspect-ratio` overflow in §2 is caught; it is invisible any other way;
 - exercise **Reset with its control**, per §4 — sentinel on `window`, navigation
-  entries `1 → 1`, and at phone width the intro disclosure back to collapsed.
+  entries `1 → 1`, and at phone width the intro disclosure back to collapsed;
+- **when a source check comes up empty, try the other reader before you write
+  the null.** `get_page_text` silently omits collapsed accordion content
+  (`R-front-doors` nearly shipped a fabricated stale-citation finding on it);
+  `find` false-nulled on an arXiv page where `get_page_text` had the text
+  (`glass-box`). The two fail in opposite directions. **Neither reader alone
+  supports an absence claim** — a null from one is a prompt to run the other,
+  with a positive control on a string you know is on the page, and only a null
+  from both, controlled, is worth writing down (and then in the §5b form:
+  what you checked, where, when).
 
 ## 7. Rebuilding after a kit change
 

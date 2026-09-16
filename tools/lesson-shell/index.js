@@ -77,7 +77,7 @@
 
    ADOPTING.md beside this file is the long version — what the shell owns,
    what the demo owns, what to DELETE when converting a demo that predates the
-   kit, the two events, and the full reset contract. Read it before a retrofit;
+   kit, the three events, and the full reset contract. Read it before a retrofit;
    this head comment is the five-minute version of it.
 
    ---------------------------------------------------------------------------
@@ -300,9 +300,10 @@ function readStamp(html) {
        restores every piece of kit-owned chrome from a snapshot taken at first
        load and then dispatches `lessonreset`.
 
-   What it does NOT own: the activity. A demo's app.js listens for two events
-   on document — `stagechange` to react to a tab change, and `lessonreset` to
-   put its own state back. The second is REQUIRED; see the Reset section below
+   What it does NOT own: the activity. A demo's app.js listens for three events
+   on document — `stagechange` to react to a tab change, `presentationchange`
+   to react to the projector toggle, and `lessonreset` to
+   put its own state back. `lessonreset` is REQUIRED; see the Reset section below
    and ADOPTING.md.
 
    It exposes window.lessonShell =

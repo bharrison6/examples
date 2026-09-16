@@ -50,6 +50,9 @@
       pass vacuously and be worse than its absence, because it would retire
       the reviewer's attention. What 5b buys is that the marked surface cannot
       rot, and that a details-stage cannot ship with no provenance at all.
+      Scope: the learner-facing page minus the injected presenter guide
+      (guide-contract's MARKERS) — the guide is a different document with
+      its own vocabulary and is not drawer prose (glass-box, K4).
 
    6. Zero <script src> and zero <link href> to anything but a same-folder
       hyperlink: the built file is self-contained (CONTRACT.md).
@@ -162,6 +165,22 @@ function stripScripts(html) {
   return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '<script></script>');
 }
 
+/* The injected presenter guide, from guide-contract's opening div to its
+   line-anchored end marker. Both strings are the contract's own (MARKERS in
+   guide-contract.js), so a change there changes this in one place. A file
+   with no guide, or a malformed one, is returned untouched — extractGuide
+   already refuses to build those. */
+const gc = require('./guide-contract.js');
+function stripGuide(html) {
+  const open = gc.MARKERS.guideBodyOpen;
+  const end = gc.MARKERS.guideBodyEnd.trim();
+  const a = html.indexOf(open);
+  if (a < 0) return html;
+  const b = html.indexOf(end, a);
+  if (b < 0) return html;
+  return html.slice(0, a) + '<div class="guide-scope"></div>' + html.slice(b + end.length);
+}
+
 /* Every check is a function returning an array of failure strings. Keeping
    them in one table is what lets --self-test iterate them. */
 const CHECKS = Object.freeze([
@@ -198,8 +217,20 @@ const CHECKS = Object.freeze([
     }
     return out;
   }],
-  ['A5 detail labels', html => {
+  ['A5 detail labels', rawHtml => {
     const out = [];
+    /* THE INJECTED GUIDE IS OUT OF SCOPE. The presenter notes are the printable
+       teacher guide, injected verbatim between guide-contract's two markers.
+       That document has its own vocabulary, and glass-box's guide used
+       `<div class="mis"><div class="claim">…` for the misconception STATEMENT
+       — a plan-mandated card, and a different mechanism that happens to share
+       the kit's class name. Read as drawer prose it "has no provenance
+       kicker", and the lane had to rewrite a correct guide to get green. The
+       scan below is about the learner-facing Details drawer, so the guide
+       region is cut out before anything is matched. --self-test carries the
+       glass-box shape as a must-accept control, and a kicker-less .claim
+       placed AFTER the guide as the potency control. */
+    const html = stripGuide(rawHtml);
     /* Every .details-stage must carry at least one kicker: the drawer's first
        fixed section IS the provenance statement. */
     const stages = html.match(/<section[^>]*class="[^"]*details-stage[^"]*"[\s\S]*?(?=<section[^>]*class="[^"]*details-stage|<\/div>\s*<form method="dialog" class="lesson-dialog-actions")/g) || [];
@@ -490,6 +521,12 @@ function selfTest() {
        own kicker left in place so only the claim check can fire. */
     ['A5 detail labels', 'claim block 0 has no provenance kicker',
       good.replace('<span class="k-reasoned">Reasoned</span>', 'Reasoned')],
+    /* 5b scope potency: the guide is cut out, but a kicker-less .claim that sits
+       OUTSIDE the guide region — after it in the document — must still trip.
+       Without this, "strip the guide" could quietly become "strip the rest". */
+    ['A5 detail labels', 'claim block 1 has no provenance kicker',
+      good.replace('</body>', gc.MARKERS.guideBodyOpen + '<p>notes</p>' + gc.MARKERS.guideBodyEnd +
+        '<div class="claim"><p>unlabelled drawer prose</p></div></body>')],
     /* 5b guard: a nested div makes the claim scan unable to read the block, so
        it must say so rather than pass. */
     ['A5 detail labels', 'nested <div>',
@@ -608,6 +645,15 @@ function selfTest() {
         "<script>document.addEventListener('lessonreset', () => {});" +
         "document.querySelector('.echo').innerHTML = 'observed 1.4 ms';" +
         "document.querySelector('.obs-cue').textContent = 'the heavier ion lands later';</script>")],
+    /* THE GUIDE-SCOPE CONTROL: glass-box's misconception cards, exactly as its
+       guide first shipped them — a nested `.claim` with no kicker, inside the
+       injected guide. The drawer scan must not read it. If this goes noisy the
+       scan has escaped its scope again and will fail a plan-mandated part. */
+    ['A5 detail labels', 'a .mis card with a nested kicker-less .claim inside the injected guide (glass-box)',
+      good.replace('</body>', '<div class="lesson-dialog-body guide-host">' + gc.MARKERS.guideBodyOpen +
+        '<section><h2>Misconceptions to expect</h2>' +
+        '<div class="mis"><div class="claim">It is understanding the story.</div><span>It is predicting tokens.</span></div>' +
+        '</section>' + gc.MARKERS.guideBodyEnd + '</div></body>')],
     ['A6 feedback vocabulary', 'a comment discussing the leaked sentence, which is not a leak',
       good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
         "/* v2 hardcoded 'Not what the detector showed.' here; fixed in v3. */\n" +
