@@ -1,11 +1,18 @@
 /* ==========================================================================
    AI Winters: Boom and Bust — the application.
 
-   Four acts:
-     I   Guess the year — ten sourced claims, date and speaker hidden.
-     II  The two winters — a scrubbable comparison timeline.
-     III Anatomy — historical conditions and current evidence side by side.
-     IV  Rhymes and differences, the cut list, and every source.
+   Four stages, driven by the shared lesson shell's tablist:
+     1  Claims  — ten sourced claims, date and speaker hidden.
+     2  History — a scrubbable comparison timeline.
+     3  Compare — historical conditions and current evidence side by side.
+     4  Today   — rhymes and differences, the cut list, and every source.
+
+   The shell (../tools/lesson-shell, injected at build time) owns the header,
+   the stage tablist, the Guide/Settings/Details dialogs, presentation mode
+   and Reset. This file owns only the activity: rendering the four stages,
+   the live self-test, and the item-level "read more" popovers for a single
+   timeline event or comparison cell (a different mechanism from the shell's
+   own per-stage Details drawer — see item-details below).
 
    No framework, no build-time templating beyond concatenation, no network.
    ========================================================================== */
@@ -16,15 +23,14 @@ const D = DATA, E = ENGINE;
 const $  = s => document.querySelector(s);
 const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 
-/* Session state. Nothing is persisted anywhere — reloading resets the app,
-   and the app stores nothing on the device. */
+/* Session state. Nothing is persisted anywhere — Settings -> Reset triggers a
+   full reload (the shell's own behaviour), which is what actually returns
+   every one of these to its fresh-load value. */
 const S = {
-  act: 1,
   i: 0,                       /* index into D.CARDS */
   answers: {},                /* id -> { year, verdict } */
   pending: { year: 1985, verdict: null },
   revealed: false,
-  presenter: false,
   lens: 0,
   tl: null
 };
@@ -64,7 +70,14 @@ function paras(parent, list) {
   for (const p of list) parent.appendChild(el('p', null, p));
 }
 
-/* ================================ ACT I ================================= */
+/** The observation cue for a stage: a one-line aria-live status naming the
+ *  thing to notice at the moment it becomes true (template part A4). */
+function cue(n, text) {
+  const node = $('#cue-' + n);
+  if (node) node.textContent = text;
+}
+
+/* ================================ STAGE 1 ================================ */
 
 function renderIntro() {
   $('#intro-title').textContent = D.INTRO.title;
@@ -103,6 +116,7 @@ function renderCard() {
      without this the button would happily accept a half-answer. */
   $('#btn-lock').disabled = !S.pending.verdict;
   $('#btn-next-card').hidden = true;
+  cue(1, '');
 
   const sl = $('#year-slider');
   sl.value = String(S.pending.year);
@@ -210,6 +224,10 @@ function renderReveal() {
   w.appendChild(foot);
 
   $('#card-progress').style.width = ((S.i + 1) / D.CARDS.length * 100) + '%';
+
+  /* A4 observation cue: name the thing to notice at the moment it appears. */
+  cue(1, miss === 0 ? 'Exact year — and ' + (right === null ? 'this one is unscored context.' : right ? 'the verdict was right too.' : 'the verdict was not.')
+    : miss + (miss === 1 ? ' year' : ' years') + ' off the actual date' + (right === null ? '.' : right ? ', verdict right.' : ', verdict wrong.'));
 }
 
 function nextCard() {
@@ -270,18 +288,18 @@ function renderScorecard() {
   const again = el('button', 'btn ghost', 'Play again');
   again.addEventListener('click', () => { S.i = 0; S.answers = {}; renderCard(); scrollActTop(); });
   const on = el('button', 'btn primary', 'Now show me the two winters');
-  on.addEventListener('click', () => setAct(2));
+  on.addEventListener('click', () => window.lessonShell.selectStage(1));
   acts.appendChild(again); acts.appendChild(on);
   box.appendChild(acts);
 }
 
-/* ================================ ACT II ================================ */
+/* ================================ STAGE 2 ================================ */
 
 function buildTimeline() {
   if (S.tl) return;
   S.tl = Timeline.create($('#tl'), D);
   S.tl.onHover(showEvent);
-  S.tl.setBig(S.presenter);
+  S.tl.setBig(document.body.classList.contains('presenter'));
 
   const slider = $('#tl-slider');
   slider.addEventListener('input', () => {
@@ -330,7 +348,7 @@ function buildTimeline() {
     mv.appendChild(d);
   }
 
-  window.addEventListener('resize', () => { if (S.act === 2) S.tl.resize(); });
+  window.addEventListener('resize', () => { if (!$('#stage-2').hidden) S.tl.resize(); });
   requestAnimationFrame(() => { S.tl.resize(); syncTimelineChrome(); });
 }
 
@@ -348,6 +366,9 @@ function syncTimelineChrome() {
   const badge = $('#tl-winter');
   badge.hidden = !w;
   if (w) badge.textContent = w.label + ' — ' + w.range;
+  cue(2, w
+    ? 'Inside the ' + w.label.toLowerCase() + ' — ' + w.range + ' (soft-edged).'
+    : String(st.total) + ' events so far, ' + st.withdrawals + ' of them withdrawals.');
 }
 
 function showEvent(ev) {
@@ -377,11 +398,11 @@ function showEvent(ev) {
   box.appendChild(foot);
   const more = el('button', 'btn ghost', 'Event Details');
   more.setAttribute('aria-label', 'Event Details: ' + ev.label);
-  more.addEventListener('click', () => showDetails(ev.label, [E.fmtEventDate(ev.at, ev.p), ev.text], [ev.src]));
+  more.addEventListener('click', () => showItemDetails(ev.label, [E.fmtEventDate(ev.at, ev.p), ev.text], [ev.src]));
   box.appendChild(more);
 }
 
-/* =============================== ACT III ================================ */
+/* ================================ STAGE 3 ================================ */
 
 function renderAnatomy() {
   const box = $('#anatomy'); box.innerHTML = '';
@@ -407,14 +428,15 @@ function renderAnatomy() {
     if (cell.pending) c.appendChild(el('span', 'an-pending', 'Unresolved · ' + cell.pending));
     const button = el('button', 'btn ghost', 'Details');
     button.setAttribute('aria-label', 'Details: ' + title + ' — ' + st.label);
-    button.addEventListener('click', () => showDetails(title + ' · ' + st.label, [cell.body], cell.src, cell.pending));
+    button.addEventListener('click', () => showItemDetails(title + ' · ' + st.label, [cell.body], cell.src, cell.pending));
     c.appendChild(button); cols.appendChild(c);
   });
   r.appendChild(cols); box.appendChild(r);
   box.appendChild(el('p', 'lens-question', 'Discuss: which similarities survive once you account for the differences between these three settings?'));
+  cue(3, 'Comparing the “' + st.label + '” lens across the first winter, the second winter and today.');
 }
 
-/* =============================== ACT IV ================================= */
+/* ================================ STAGE 4 ================================= */
 
 function renderClose() {
   const box = $('#close');
@@ -430,6 +452,7 @@ function renderClose() {
     d.appendChild(el('summary', null, it.head));
     d.appendChild(el('p', null, it.body));
     d.appendChild(srcChip(it.src));
+    d.addEventListener('toggle', () => { if (d.open) cue(4, 'Rhyme opened: ' + it.head); });
     a.appendChild(d);
   }
   two.appendChild(a);
@@ -441,6 +464,7 @@ function renderClose() {
     d.appendChild(el('summary', null, it.head));
     d.appendChild(el('p', null, it.body));
     d.appendChild(srcChip(it.src));
+    d.addEventListener('toggle', () => { if (d.open) cue(4, 'Difference opened: ' + it.head); });
     b.appendChild(d);
   }
   two.appendChild(b);
@@ -481,158 +505,55 @@ function renderClose() {
   box.appendChild(src);
 }
 
-/* ============================== navigation ============================== */
+/* ============================== navigation ==============================
+   The stage tablist, its keyboard handling and hash routing all live in the
+   shared shell (../tools/lesson-shell). This file only reacts to the
+   'stagechange' event the shell dispatches, to build or refresh the stage
+   that just became visible. */
 
-function setAct(n) {
-  S.act = n;
-  $$('.act').forEach(a => { a.hidden = +a.dataset.act !== n; });
-  $$('#actnav button').forEach(b => {
-    const on = +b.dataset.act === n;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-selected', String(on));
-    b.tabIndex = on ? 0 : -1;
-  });
+document.addEventListener('stagechange', e => {
+  const n = e.detail.index + 1; /* 1-based stage number */
   if (n === 2) { buildTimeline(); requestAnimationFrame(() => { S.tl.resize(); syncTimelineChrome(); }); }
   if (n === 3) renderAnatomy();
   if (n === 4) renderClose();
   scrollActTop();
-}
+});
 
 function scrollActTop() {
   window.scrollTo({ top: 0, behavior: 'auto' });
 }
 
-/* =============================== overlays =============================== */
+/* React to the shell's own presentation-mode toggle (Settings, or the header
+   Notes button) rather than owning a checkbox: the shell is now the single
+   place presentation state lives. */
+document.addEventListener('presentationchange', e => {
+  if (S.tl) S.tl.setBig(e.detail.on);
+});
 
-/** The page behind a sheet must not scroll with it — on a phone, dragging the
- *  sheet body otherwise drags the whole article underneath. */
-const modalStack = [];
-function lockScroll() {
-  const top = modalStack[modalStack.length - 1];
-  document.body.style.overflowY = top ? 'hidden' : '';
-  Array.from(document.body.children).forEach(n => {
-    if (n.tagName !== 'SCRIPT') n.inert = !!top && n.id !== top.id;
-  });
-}
-function open(id) {
-  const o = document.getElementById(id);
-  if (modalStack.some(m => m.id === id)) return;
-  modalStack.push({ id, trigger: document.activeElement });
-  o.hidden = false; lockScroll();
-  o.querySelector('.sheet-body').scrollTop = 0;
-  o.querySelector('.sheet-inner').focus();
-}
-function close(id) {
-  const index = modalStack.findIndex(m => m.id === id);
-  if (index < 0) return;
-  const entries = modalStack.splice(index);
-  entries.forEach(m => { document.getElementById(m.id).hidden = true; });
-  lockScroll();
-  const trigger = entries[0].trigger;
-  if (trigger && trigger.isConnected && !trigger.closest('[hidden]')) trigger.focus();
-}
-function showDetails(title, paragraphs, sources = [], pending) {
-  $('#details-title').textContent = title;
-  const body = $('#details-body'); body.innerHTML = '';
+/* ========================= item-level detail popover =====================
+   A SEPARATE mechanism from the shell's #details drawer (which is fixed,
+   per-stage boundary/assumptions/sources content — template part A5). This
+   one shows a single timeline event's full text or a single comparison
+   cell's full explanation: it is part of the ACTIVITY (A3), unchanged from
+   before the retrofit except for its container id, so it does not collide
+   with the shell's own per-stage Details. */
+
+function showItemDetails(title, paragraphs, sources = [], pending) {
+  $('#item-details-title').textContent = title;
+  const body = $('#item-details-body'); body.innerHTML = '';
   paras(body, paragraphs);
   if (pending) body.appendChild(el('p', 'an-pending', 'Unresolved · ' + pending));
   if (sources.length) {
     body.appendChild(el('h3', null, 'Read the evidence'));
     sources.forEach(id => body.appendChild(srcChip(id)));
   }
-  open('details');
+  const dlg = $('#item-details');
+  dlg.showModal();
 }
-const ACT_DETAILS = {
-  claims: ['Read the claim', 'First place the statement in time. Then distinguish a forecast with an outcome and deadline from a dated assessment or untimed ambition. The reveal explains the distinction, names the speaker, and links to the source.', 'There are five time-bounded promises, four context cards, and one warning. Two forecasts remain unresolved. Context and unresolved forecasts do not enter the outcome score.'],
-  history: ['Read the timeline', 'Use the date slider to reveal events over time, or use Previous event and Next event to inspect each event. Select a dot for its date, explanation and source.', 'The six rows separate landmark results from five comparison lenses. They organize the evidence without implying a fixed historical cycle. Expand the supporting notes below the timeline for date boundaries and funding examples.'],
-  compare: ['Compare one lens at a time', 'Choose one of the five lenses. Read the three era headings, then open each era’s Details to inspect the complete explanation and sources.', 'The two unresolved present-day cells describe limits to what the evidence can currently settle. They are not missing scores or predictions of a coming winter.'],
-  today: ['Test the analogy', 'Expand a similarity and a difference. Ask what each source actually establishes, and whether your conclusion still holds when you include both.', 'Use the closing question to name observable evidence that would change your view. Historical parallels can guide questions without settling the outcome.']
-};
-function wireOverlays() {
-  $$('[data-close]').forEach(b => b.addEventListener('click', () => close(b.dataset.close)));
-  $$('[data-details]').forEach(b => b.addEventListener('click', () => {
-    const [title, ...body] = ACT_DETAILS[b.dataset.details]; showDetails(title, body);
-  }));
-  $$('.overlay').forEach(o => o.addEventListener('click', ev => { if (ev.target === o) close(o.id); }));
-  document.addEventListener('keydown', ev => {
-    const top = modalStack[modalStack.length - 1]; if (!top) return;
-    if (ev.key === 'Escape') { ev.preventDefault(); close(top.id); }
-    if (ev.key === 'Tab') {
-      const sheet = document.getElementById(top.id);
-      const focusable = Array.from(sheet.querySelectorAll('button, a[href], input, summary, [tabindex="0"]')).filter(n => !n.disabled && n.getClientRects().length);
-      const first = focusable[0], last = focusable[focusable.length - 1];
-      if (ev.shiftKey && (document.activeElement === first || !focusable.includes(document.activeElement))) { ev.preventDefault(); last?.focus(); }
-      else if (!ev.shiftKey && (document.activeElement === last || !focusable.includes(document.activeElement))) { ev.preventDefault(); first?.focus(); }
-    }
-  });
-  $('#btn-howto').addEventListener('click', () => open('howto'));
-  $('#btn-settings').addEventListener('click', () => open('settings'));
-  $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
-  $('#btn-reset').addEventListener('click', resetDemo);
-  $('#chk-presenter').addEventListener('change', ev => {
-    S.presenter = ev.target.checked;
-    document.body.classList.toggle('presenting', S.presenter);
-    if (S.tl) S.tl.setBig(S.presenter);
-  });
-  $('#btn-selftest').addEventListener('click', runSelfTest);
-}
-
-/* ================================ reset =================================
-   Settings -> Reset. Whole-demo, not per-act: every piece of session state
-   goes back to the value it has on a fresh load, without a reload. Nothing
-   here is persisted (no storage of any kind), so restoring S and the few
-   pieces of DOM that render from it IS a fresh load.
-
-   Two deliberate exceptions, both from the contract:
-     - Presentation mode stays as the presenter set it. It is a projector
-       preference, not demo state; a presenter who reset mid-talk would not
-       want the type to shrink on the projector.
-     - The Guide overlay stays closed. It opens on first load as onboarding;
-       Reset is not re-onboarding, and reopening it would hide the demo the
-       presenter just reset in front of a room.
-   ---------------------------------------------------------------------- */
-
-function resetDemo() {
-  S.i = 0;
-  S.answers = {};
-  S.pending = { year: 1985, verdict: null };
-  S.revealed = false;
-  S.lens = 0;
-  $('#anatomy').innerHTML = '';
-  $('#lens-nav').innerHTML = '';
-  $$('details[open]').forEach(d => { d.open = false; });
-
-  /* Act I, back before the first card. renderCard() re-initialises every
-     control inside #card-body when Begin is pressed again, so hiding the
-     block is enough to undo a half-answered card. */
-  renderIntro();
-  $('#intro').hidden = false;
-  $('#card-body').hidden = true;
-  $('#scorecard').hidden = true;
-
-  /* Act II is built lazily and owns a canvas plus a window resize listener,
-     so rewind it in place; rebuilding would attach a second listener. Its
-     fresh-load cursor is 1 — the whole 1950-2026 span shown. */
-  if (S.tl) {
-    S.tl.select(null);
-    S.tl.setCursor(1);
-    $('#tl-slider').value = '1000';
-    syncTimelineChrome();
-  }
-  showEvent(null);
-
-  /* The self-test panel is output, not state: a fresh load has none. */
-  $('#selftest-out').innerHTML = '';
-
-  /* Close the Settings sheet the button was pressed in, and anything else
-     left open, then release the scroll lock those sheets took. */
-  $$('.overlay').forEach(o => { o.hidden = true; });
-  modalStack.length = 0;
-  lockScroll();
-  $('#btn-settings').focus();
-
-  setAct(1);
-}
+(() => {
+  const dlg = $('#item-details');
+  if (dlg) dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+})();
 
 /* ============================== self-test ===============================
    The proof button. It re-derives, in front of whoever is asking, the
@@ -720,7 +641,6 @@ function runSelfTest() {
 
 function boot() {
   renderIntro();
-  wireOverlays();
 
   $('#btn-begin').addEventListener('click', () => {
     $('#intro').hidden = true;
@@ -737,22 +657,11 @@ function boot() {
 
   $('#btn-lock').addEventListener('click', lockIn);
   $('#btn-next-card').addEventListener('click', nextCard);
+  $('#btn-to-anatomy').addEventListener('click', () => window.lessonShell.selectStage(2));
+  $('#btn-to-now').addEventListener('click', () => window.lessonShell.selectStage(3));
+  $('#btn-selftest').addEventListener('click', runSelfTest);
 
-  $$('#actnav button').forEach(b => b.addEventListener('click', () => setAct(+b.dataset.act)));
-  $('#btn-to-anatomy').addEventListener('click', () => setAct(3));
-  $('#btn-to-now').addEventListener('click', () => setAct(4));
-
-  $$('#actnav button').forEach((b, i) => {
-    b.tabIndex = i === 0 ? 0 : -1;
-    b.addEventListener('keydown', ev => {
-      if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(ev.key)) return;
-      ev.preventDefault();
-      const next = ev.key === 'Home' ? 1 : ev.key === 'End' ? 4 : ((S.act - 1 + (ev.key === 'ArrowRight' ? 1 : 3)) % 4) + 1;
-      setAct(next); $('#actnav button[data-act="' + next + '"]').focus();
-    });
-  });
   showEvent(null);
-  open('howto');
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
