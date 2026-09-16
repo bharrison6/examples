@@ -904,6 +904,12 @@ body.presenter .presenter-only { display: inline-flex; }
 .guide-scope .l2{background:var(--g-l2,#c8f2e0);color:var(--g-l2t,#111)}
 .guide-scope .l3{background:var(--g-l3,#e2d9ff);color:var(--g-l3t,#111)}
 .guide-scope .foot{margin-top:.5em;font-size:.84em;color:var(--g-mute,#777);border-top:1px solid var(--g-line,#ddd);padding-top:.3em;line-height:1.5}
+/* A misconception card: the flawed model stated, then refuted. Refutation text
+   works by naming the wrong idea and flagging it as wrong before correcting it,
+   so the claim is bold and the refutation follows it in the same block. */
+.guide-scope .mis{break-inside:avoid;margin:.3em 0;padding:.35em .5em;font-size:.94em;line-height:1.4;
+  border-left:3px solid var(--g-mute,#999);background:var(--g-panel,#f4f4f4)}
+.guide-scope .mis b{display:block;color:var(--g-head,#111)}
 .guide-scope .page2{margin-top:1.2em}
 .guide-scope .sheet-title{font-size:1.21em;font-weight:700;margin:0 0 .1em;color:var(--g-head,#111)}
 .guide-scope .sheet-sub{font-size:.88em;color:var(--g-mute,#777);margin:0 0 .5em}
@@ -1493,6 +1499,29 @@ body.presenter .presenter-only { display: inline-flex; }
 <div class="cols">
 <div>
 
+<h2>Learning goals</h2>
+<p>The three stage Takeaways, verbatim from the app. Each is a plain claim the activity
+demonstrably shows, and each is what that stage's check-yourself item tests.</p>
+<ol>
+  <li><span class="lev l1">CONTEXT</span> With no context the answer is aimed at everybody, which is
+  another way of saying nobody. Context changes <b>who it is for</b> &mdash; not its length, and not its
+  vocabulary.</li>
+  <li><span class="lev l2">SUCCESS SPEC</span> An unspecified target does not stay unspecified &mdash;
+  something else fills it in, and does not tell you. Saying what finished looks like takes that decision
+  back.</li>
+  <li><span class="lev l3">EXPERT KEYWORDS</span> Asking in a field's vocabulary gets that vocabulary back
+  &mdash; words nobody in the room supplied. That is real. It is also not the same thing as a better
+  answer, and telling those apart is the skill.</li>
+</ol>
+
+<h2>Where this sits on the path</h2>
+<p><b>Demo 5 of 16 &middot; Part three.</b> Demo 2 showed that a model reads its context; here the room
+controls that context, one lever at a time. It hands forward to Demo 6: a perfect prompt in a browser tab
+still cannot touch your files, so the surface decides reach.</p>
+
+<h2>One question for the session</h2>
+<p class="land">&ldquo;Who decided what a good answer to your question looks like?&rdquo;</p>
+
 <h2>The roleplay &mdash; three acts</h2>
 <p style="margin:0 0 .5em">You are the Stranger. A volunteer is the Asker. The app is on the projector
 behind you; run the same states on it as you say them out loud.</p>
@@ -1550,12 +1579,19 @@ classes never drops you into student mode.</p>
   the Asker never typed.</p>
   <p class="land">&ldquo;You didn't know those words. You didn't have to. You only had to point at the
   folder.&rdquo;</p>
+  <p class="beat"><b>Say this before you move on &mdash; it matters.</b> &ldquo;There are no folders. I
+  don't open anything. Your words change which words are likely to come next &mdash; that is Demo 2's
+  machine, doing this.&rdquo; The folders are a memory aid for the room. Left unsaid, the prop teaches a
+  filing-cabinet model of a language model, which contradicts Demo 2 &mdash; this demo's own
+  prerequisite &mdash; and a learner who does Demo 2 then Demo 5 is handed two incompatible machines.</p>
 </div>
 
 <h2>House rules</h2>
 <ol>
-  <li><b>The Stranger is never stupid.</b> The honest failure of a bare prompt is blandness, not garbage.
-  The demo dies the moment the bad answer looks rigged.</li>
+  <li><b>The Stranger is never stupid.</b> In this demo the bare answers are bland, not broken &mdash; we
+  wrote them that way, because the demo dies the moment the bad answer looks rigged. Say it as a rule about
+  the demo, not about models: bare prompts in the wild also produce confident errors, wrong lengths and
+  refusals.</li>
   <li><b>No trick answers.</b> If the prompt supports a good answer, give a good answer.</li>
   <li><b>Every answer gets a number.</b> 1&ndash;10, from the room, out loud, on the board before the next one.</li>
   <li><b>Nobody says &ldquo;the AI is bad at this&rdquo;</b> without naming which lever is off.</li>
@@ -1573,6 +1609,68 @@ classes never drops you into student mode.</p>
   <tr><td class="k">11:00</td><td>Closing slide. Read the line. Stop talking.</td></tr>
 </tbody></table>
 
+<h2>Per stage &mdash; question, predict prompt, expected observation, answer key, teaching limit</h2>
+<table><tbody>
+  <tr><td class="k"><span class="lev l1">1</span></td><td>
+    <b>Question:</b> What changes in the answer when it knows who you are?<br>
+    <b>Predict:</b> adding context changes <i>one</i> dimension &mdash; which one? (length / who it is
+    aimed at / which words) The room commits before you press Ask.<br>
+    <b>Expected observation:</b> the answer becomes aimed at one asker. Length and vocabulary do not move
+    &mdash; that is the point, and the answer lengths are flat across lever counts by design.<br>
+    <b>Answer key:</b> <i>who it is aimed at</i>. The check item's correct option is <b>Context</b>;
+    a room that picks Success spec is told the spec is already doing its job.<br>
+    <b>Teaching limit:</b> a bare prompt is not information-free. &ldquo;Help me get ready for my
+    test&rdquo; already leaks topic, register and age. Do not claim it knows nothing.</td></tr>
+  <tr><td class="k"><span class="lev l2">2</span></td><td>
+    <b>Question:</b> If you never say what a good answer looks like, who decides instead?<br>
+    <b>Predict:</b> lever 2 is off, so the target is unspecified &mdash; what happens to it? (nothing /
+    something else fills it in / it asks you)<br>
+    <b>Expected observation:</b> a target card is dealt, face up, and the answer is written to it. Turn
+    lever 2 on and the deck is struck out inside the lever.<br>
+    <b>Answer key:</b> <i>something else fills it in</i>. Correct option <b>Success spec</b>.<br>
+    <b>Teaching limit:</b> <b>the deck is a teaching device, not a mechanism.</b> A real model does not
+    draw from three named cards; its defaults come from training, are more stable than a card draw, and
+    vary continuously. Say so &mdash; it is in the Details drawer too.</td></tr>
+  <tr><td class="k"><span class="lev l3">3</span></td><td>
+    <b>Question:</b> What do you actually get for asking in the vocabulary of the field?<br>
+    <b>Predict:</b> keywords off gives at most four expert terms &mdash; how many with keywords on?
+    (under five / about ten / fifteen or more)<br>
+    <b>Expected observation:</b> 15&ndash;20 tagged terms, most of them absent from the prompt. Press
+    <b>H</b> and count them aloud.<br>
+    <b>Answer key:</b> <i>fifteen or more</i>. Correct option <b>Expert keywords</b>. The stage also
+    carries the accuracy-brief case (below), whose correct option is <i>the prompt only asked for one kind
+    of finding</i>.<br>
+    <b>Teaching limit:</b> the counter measures <b>vocabulary, not understanding</b>, and the big number
+    is a readout of the author's tag list, not a detector. Ask the room the demo's own question: did the
+    answer get more useful, or just more impressive?</td></tr>
+</tbody></table>
+
+<h2>Misconceptions this demo can leave &mdash; name them, refute them</h2>
+<div class="mis"><b>&ldquo;I watched the model get better as the prompt got better.&rdquo;</b>
+No model ran. All 64 answers were written by hand before the file was saved, and the panel carries a
+permanent <b>Scripted</b> label saying so. What the room watched was an author's four answers, chosen to
+make one lever's effect legible. The claim the demo can honestly make is <i>what a better prompt tends to
+buy you</i>, never <i>what this model did</i>.</div>
+<div class="mis"><b>&ldquo;The rising curve proves more levers make better answers.&rdquo;</b>
+It cannot. The answers were written to improve as levers are pulled, the room scores them, and the mean
+rises &mdash; so the curve measures the room agreeing with the author and could not come out any other
+way. Keep it: making a room commit out loud is good teaching. Do not offer it as evidence, and say which
+it is.</div>
+<div class="mis"><b>&ldquo;If it is not in the prompt box, the AI does not know it.&rdquo;</b>
+False three ways. What it knows <i>in general</i> came from training and is not in the box; almost every
+real product prepends a system prompt the user never sees; and history, retrieved documents and tool
+output enter the context invisibly. The true and useful version: nothing about <i>you and your
+situation</i> reaches it unless you put it there.</div>
+<div class="mis"><b>&ldquo;A bad answer means I left a lever unpulled.&rdquo;</b>
+Sometimes. A lever fixes vague, mis-aimed or wrong-shaped. It does not fix confidently wrong, out of date,
+refusing, or past what the system can do &mdash; and on those, &ldquo;write a better prompt&rdquo; is the
+wrong response. The closing line says both halves; do not shorten it to the first.</div>
+<div class="mis"><b>&ldquo;A careful prompt cannot mislead.&rdquo;</b>
+The accuracy-brief case on stage 3 is a documented counter-example from building this very collection: a
+brief asked for 100% accuracy, every claim that came back was true, and the overall picture was still
+wrong &mdash; because the instruction only asked for one direction of finding. Symmetry is the repair, not
+more care.</div>
+
 <h2>Discussion questions</h2>
 <ol>
   <li>The first answer was accurate. Why was it useless?</li>
@@ -1588,7 +1686,10 @@ classes never drops you into student mode.</p>
 <div class="foot">The app is one HTML file and touches no network. Every answer in it was written by hand
 before the file was saved: there is no model behind the glass. Keys: <b>1 2 3</b> levers &middot;
 <b>Enter</b> ask &middot; <b>Space</b> skip typing &middot; <b>H</b> highlight &middot; <b>R</b> replay card &middot;
-<b>P</b> pin to compare &middot; <b>S</b> scoreboard &middot; <b>M</b> student mode &middot; <b>N</b> these notes.</div>
+<b>P</b> pin to compare. The stage tabs switch levers; <b>Details</b> on each stage carries that stage's
+assumptions, sources and boundary. <b>Settings</b> holds <b>Open Presenter Notes</b>,
+<b>Presentation mode</b> (projector type plus the class score strip, compare, scoreboard and the card
+picker) and <b>Reset</b>, which restores the demo in place without reloading the page.</div>
 
 </div>
 </div>

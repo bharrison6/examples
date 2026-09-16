@@ -41,8 +41,16 @@ watches the prompt grow as the toggles flip.
 
 Eight lever states per scenario. The four states where the success spec is off get **three**
 alternate answers each, one per target card — 16 authored responses per scenario, **64 in
-total, ~25,700 words**, written from a blank page each. No templating: an automated gate fails
-the build if any two of the 64 share more than 5% of their sentences (current worst: **0.00%**).
+total, ~25,700 words**, written from a blank page each. No templating: a gate fails
+`python tools/validate.py` if any two of the 64 share more than 5% of their sentences
+(current worst: **0.00%**).
+
+**Read that precisely.** The gate lives in `tools/validate.py`, which is a separate step run by
+hand before a build. `build.js` never invokes it and never re-derives it, so a clean
+`node build.js --check` is **not** evidence that any content gate holds. This README said "fails
+the build" until 2026-09-16; that was wrong about the mechanism, and the gate is a
+**verbatim-reuse** gate rather than a similarity gate -- it compares normalised sentences for
+exact identity, so two paraphrases of one sentence score as fully distinct.
 
 ### The no-strawman rule
 
@@ -91,22 +99,25 @@ student never typed** — handed over for free because the prompt signalled a re
 - **Scoreboard.** Score each answer 1–10 from the room; the chart plots score against levers
   pulled and the curve climbs across the session on its own.
 - **Compare.** Pin any answer beside the next one for A/B.
-- **Presenter mode** — projector-sized type, class scoring, compare, and a card picker for
-  rehearsal. **Student mode** — self-paced, smaller type, an eight-step guided walkthrough
-  through the levers ending in three *"which lever would fix this?"* questions with written
-  feedback on every option, right and wrong. Both modes announce what they change in a banner,
-  and either can be reached from the mode switch on the toolbar, from Settings, or with `M`.
+- **Presentation mode** (Settings, or the footer) — projector-sized type, a `Notes` button in
+  the header, and the presenter tools: the 1-10 class score strip under each answer, **Pin to
+  compare**, the **Scoreboard**, and the card picker inside lever 2. Off is the student build:
+  smaller type, no class scoring, and the target card always drawn at random.
+- **Check yourself** — each stage closes with a *"which lever would fix this?"* item carrying
+  written feedback on every option, right and wrong, and stage 3 adds the accuracy-brief case.
+  These twelve items were the old student walkthrough's quizzes; they are now the A6 item bank,
+  generated into the built file from `src/learn.json` so there is still one source for them.
 - **Closing slide:** *When AI gives you a useless answer, ask which lever you left unpulled — when it is wrong, out of date, refusing, or past what it can do, no lever fixes that.*
 
-Keys: `1` `2` `3` levers · `Enter` ask · `Space` skip typing · `H` highlight · `R` replay card ·
-`P` pin · `S` scoreboard · `M` mode · `N` presenter notes · `?` the Guide · `Esc` close
-anything.
+Keys: `1` `2` `3` levers · `0` all off · `9` all on · `Enter` ask · `Space` skip typing ·
+`H` highlight · `R` replay card · `P` pin. The stage tabs switch levers and take Arrow/Home/End;
+`Esc` closes any dialog. Keys are ignored while a dialog is open, so the shell owns `Esc`.
 
 ## Theme
 
 Murray State. MSU Blue `#002144` is the surface family, MSU Gold `#ECAC00` the accent and
 lever 1, Lite Blue `#00A4E3` lever 2. Red Orange `#FF4500` is reserved for a genuine failure
-state — this app has exactly one, a wrong answer on a walkthrough quiz — so it never shows up
+state — this app has exactly one, a wrong answer on a check-yourself item — so it never shows up
 as decoration. Lever 3 keeps its violet: it is the third leg of a colour code that is also
 printed on the presenter sheet and on the cut-out target cards, and the paper has no fourth
 ink to give it.
@@ -136,7 +147,7 @@ The authoring pipeline is Python, and is only needed if you change a response:
 ```
 python tools/validate.py    # merges src/content/*.json -> src/content.json, enforces the gates
 node   build.js
-python tools/playtest.py    # drives all 64 states in headless Chromium (needs playwright)
+python tools/playtest.py    # STALE -- see the note below; does not currently run
 ```
 
 `tools/companion.py` is **retired to a signpost**. It used to generate `presenter-sheet.html`
@@ -152,11 +163,15 @@ absent from their own prompt, keyword-off states carry ≤4, no pair of variants
 its sentences, the card shapes hold (dense = no headings or bullets anywhere; listicle = exactly
 ten items), and the markdown stays inside the renderer's subset.
 
-`tools/playtest.py` drives the built file in headless Chromium with the network hard-blocked
-and checks all 64 states render their authored text, the jargon counter equals the tag list
-exactly, every tagged term actually got marked in the DOM, the typewriter is progressive and
-skippable, the card draw replays, and the layout survives a 390×844 phone and a 1920×1080
-projector.
+`tools/playtest.py` is **stale and does not run**, measured 2026-09-16: it opens
+`the-stranger.html` and reads `build/content.json`, and neither path has existed since the demo
+was renamed and its sources moved under `src/`. It also needs Playwright, which this checkout
+does not have. What it was written to check is real and still worth having — all 64 states
+render their authored text, the jargon counter equals the tag list, every tagged term gets
+marked in the DOM, the typewriter is skippable, the card draw replays — but **do not cite it as
+evidence until it is repaired**; it is listed here so nobody mistakes its presence for a passing
+suite. The 2026-09-16 retrofit verified the equivalent properties by driving the built file in a
+real browser over a local static server instead.
 
 > Note on convention: every other demo here builds with `node build.js` alone, and this one
 > does too. The Python tools are additive — content validation and browser acceptance tests
@@ -166,18 +181,25 @@ projector.
 ## Source layout
 
 ```
-index.html                     built, self-contained, 293 KB
-build.js                       src/ + presenter-sheet.html -> index.html, offline guard, deck parity gate
-presenter-sheet.html           canonical: the printable companion, the PDF, AND the in-app notes
-The-Stranger-Presenter-Sheet.pdf   rendered from it by tools/pdf.mjs
-src/app.template.html          all markup, CSS and app code; one __DATA__ and two guide placeholders
+index.html                     built, self-contained, 370 KB
+build.js                       src/ + ../tools/lesson-shell -> index.html; offline guard, deck parity gate
+src/template.html              the markup, on the shared lesson-shell parts (A0-A10)
+src/styles.css                 the ACTIVITY styles only -- the shell's are shared, not copied
+src/app.js                     the activity: levers, prompt, deck, answer, typewriter, meter, scoring
+src/demo-guide.html            CANONICAL presenter sheet: the printable page, the PDF, and the in-app notes
+presenter-sheet.html           generated from src/demo-guide.html (kept as the public URL)
+The-Stranger-Presenter-Sheet.pdf   rendered from presenter-sheet.html by tools/pdf.mjs
+src/cases.json                 authored cases that are not lever fixtures (the accuracy-brief case)
 src/content/<scenario>_on.json the four success-spec-on responses per scenario
 src/content/<scenario>_off.json the twelve success-spec-off responses (4 states x 3 cards)
 src/content.json               merged + gate-checked bundle (generated by tools/validate.py)
 src/scenarios.json             the four questions, their three lever blocks, the 8-card deck
-src/learn.json                 student walkthrough steps, quizzes, the attached essay, closing line
+src/learn.json                 the 12-item check bank, the walkthrough states, the attached essay, closing line
 src/AUTHORING.md               the rules the responses were written to — read this before editing one
 src/essay-draft.md             the student essay attached in all eight states of scenario 4
 tools/pdf.mjs                  presenter-sheet.html -> the PDF, via a system Chrome
-tools/                         validate.py, playtest.py, companion.py (retired signpost)
+tools/                         validate.py, playtest.py (STALE), companion.py (retired signpost)
+../tools/lesson-shell/         the SHARED kit: tokens, shell CSS, shell behaviour, version stamp.
+                               A build-time dependency only -- index.html stays one self-contained
+                               file with zero <script src> and zero <link href>.
 ```
