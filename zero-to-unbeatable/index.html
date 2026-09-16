@@ -7843,11 +7843,13 @@ $$('.family-card').forEach(c => c.addEventListener('click', () => {
 /* Which half of 1d is showing. Two buttons, one card visible at a time;
    the stage's check card and the Details drawer are outside both halves. */
 function renderHalf() {
-  $$('.map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
+  /* Scoped to #map-switch: the 1c board switch reuses the .map-btn look
+     and must not be driven by 1d's state (found in the browser pass). */
+  $$('#map-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
   $('#methods-card').hidden = S.half !== 'methods';
   $('#families-card').hidden = S.half !== 'families';
 }
-$$('.map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
+$$('#map-switch .map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
 
 /* ------------------------------------------------------------------ *
  * Model types — built from src/model-types.js, the dated Hugging Face
