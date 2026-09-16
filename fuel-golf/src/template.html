@@ -1,0 +1,881 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An offline orbital-mechanics game on real integrated Newtonian gravity: seven missions and a sandbox teaching why the same burn buys more energy where you are already fast.">
+<title>Orbital Mechanics Golf · The Oberth Effect</title>
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
+<style>
+/*__CSS__*/
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last in
+     the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University · Part four · Example projects</span>
+      <h1>Orbital Mechanics Golf</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Four stages = the lesson's beats, NOT the eight levels. Stage 1 holds
+       levels 1-2, stage 2 holds 3-5, stage 3 holds 6-7, and the Sandbox sits
+       outside the path with no par and a deep tank.
+
+       TWO GATES, and they are deliberately different mechanisms.
+
+       Stage 3's tab opens DISABLED, right here in the markup rather than only
+       in app.js, because the shell snapshots this chrome before app.js runs and
+       restores it on Reset (ADOPTING.md section 4, step 3): a gate applied only
+       at runtime would come back unlocked. It unlocks once an escape has
+       actually been flown in stage 2 — finite thrust is a correction to an
+       answer you have to have first.
+
+       Stage 2's gate is NOT on its tab. Its tab stays live and
+       hash-addressable; what is gated is the EVIDENCE — the activity does not
+       move into stage 2 until the prediction below it is committed, because
+       "which burn point escapes for less delta-v" is the one question this demo
+       exists to ask and a learner who has already watched the answer cannot be
+       asked it. -->
+  <nav class="stages" role="tablist" aria-label="Orbital mechanics lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Burn at apoapsis</span><small>Which part of an orbit does a burn actually move?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Escape at periapsis</span><small>Which burn point escapes for less &Delta;v?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1" disabled title="Escape at periapsis first — finite thrust is a correction to that answer">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Finite thrust</span><small>If the burn takes hours, when do you light it?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Sandbox</span><small>What happens if you try it your own way?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ============================ STAGE 1 ================================== -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 7 of 16 &middot; Part four &middot; Physics &middot; Stage 1</span>
+      <h2 id="stage-1-title">A burn moves the far side of your orbit</h2>
+      <p class="stage-question">You are at the top of an ellipse and you push forward. Which part of the orbit moves?</p>
+      <p class="refresh"><b>Before you start.</b> <b>Periapsis</b> is the low, fast point of an
+        orbit; <b>apoapsis</b> is the high, slow point. <b>&Delta;v</b> ("delta-vee") is the speed
+        change a burn buys, in metres per second, and it is the whole fuel budget: a tank holds so
+        many m/s and not one more. This is the first demo of Part four, so it carries no handover
+        from Demo 6 &mdash; it is an AI-built classroom tool, and its engine is a real gravity
+        integrator rather than a script.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Burn forward at apoapsis. Does periapsis rise, does apoapsis rise, or do both?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit to a prediction, press <b>&rarr; Ap</b> to warp to apoapsis, then <b>&#128293; Plan burn</b> and read the dotted preview before you spend anything.</p></article>
+      <article><span>Takeaway</span><p>A prograde burn changes the orbit half a revolution away: burn at apoapsis and periapsis rises, burn at periapsis and apoapsis rises.</p></article>
+    </div>
+    <!-- The A2 prediction, captured. Three options, one of them the flawed
+         model the stage exists to break. -->
+    <div class="predict-group" id="predict-1" role="group" aria-labelledby="predict-1-label">
+      <span class="control-label" id="predict-1-label">Commit to a prediction
+        <span class="why">You cannot be wrong at a cost here, and locking an answer first is what makes the measurement mean something.</span></span>
+      <div class="predict-options">
+        <button class="predict-option correct" type="button" aria-pressed="false" data-pick="Periapsis rises">Periapsis rises &mdash; the far side, half an orbit away</button>
+        <button class="predict-option" type="button" aria-pressed="false" data-pick="Apoapsis rises">Apoapsis rises &mdash; where I am burning</button>
+        <button class="predict-option" type="button" aria-pressed="false" data-pick="Both rise">Both rise together</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="0">
+   <!-- ===== A3 THE ACTIVITY ===============================================
+        #activity is the element app.js moves between the four hosts. It has to
+        be INSIDE the host and never the host itself: appending a node into
+        itself is a HierarchyRequestError, which is a defect no build check can
+        see (kit ruling 1, 2026-09-16).
+
+        THE FLIGHT VIEW IS ONE CANVAS, RELOCATED, NOT FOUR. Duplicating it
+        would duplicate #space, #hud, #planner and about forty other ids —
+        invalid, and four places for the game to drift apart. ion-flight's
+        shared instrument is the precedent.
+        ==================================================================== -->
+   <div class="activity" id="activity">
+
+    <section class="workbench" aria-labelledby="act-heading">
+      <div class="panel-head">
+        <div>
+          <span class="panel-kicker"><span class="k-live">Live</span> Newtonian gravity integrated in your browser, this instant</span>
+          <h3 id="act-heading">Flight view</h3>
+        </div>
+      </div>
+      <p class="panel-lede">Earth at true scale &mdash; &mu; = 398,600 km&sup3;/s&sup2;, radius
+        6,371 km. Speeds read in km/s, &Delta;v in m/s, altitudes in km, and orbital periods run
+        hours to days, which is why time&#8209;warp exists.</p>
+
+      <!-- The readout strip. Measured rather than Live: par is a benchmark
+           computed once against this same engine, not a number this frame. -->
+      <div class="flight-readout" aria-label="Mission readout">
+        <span class="panel-kicker kick-inline"><span class="k-live">Live</span> &Delta;v spent, fuel, clock and orbit state, recomputed every frame</span>
+        <div class="chips">
+          <span class="chip" id="levelChip">Level &ndash;</span>
+          <span class="chip par mono">Par <b id="parChip">&ndash;</b></span>
+          <span class="chip mono">&Delta;v used <b id="dvChip">0</b></span>
+          <span id="fuelwrap" class="chip mono">&#9981; <span id="fuelbar"><span id="fuelfill"></span></span> <b id="fuelChip"></b></span>
+          <span class="chip mono hide-sm">Engine <b id="engChip">&infin;</b></span>
+          <span class="chip mono" id="orbitChip" style="display:none"></span>
+          <span class="chip mono hide-sm">&#128336; <b id="clockChip">T+ 0 min</b></span>
+        </div>
+        <span class="panel-kicker kick-inline"><span class="k-measured">Measured</span><span class="k-qual">deterministic &mdash; no seed; re-running test-physics.js reproduces every par</span> the seven pars, found against this exact engine</span>
+      </div>
+
+      <div class="flight-grid">
+        <!-- The bounded flight view. Was position:fixed;inset:0 before the
+             retrofit; the shell owns a scrolling document, so it is a box now
+             and game.js reads its size rather than the window's. -->
+        <div class="flight-stage" id="flight-stage">
+          <canvas id="space" aria-label="Orbital map: Earth, your craft, its trajectory and the mission target ring"></canvas>
+          <div id="hint"><button id="hintClose" title="Dismiss">&times;</button><span id="hintText"></span></div>
+          <div id="toast" role="status" aria-live="polite"></div>
+
+          <div id="planner">
+            <h3>Plan burn &mdash; aim, preview, commit</h3>
+            <div class="modes" id="engineRow" style="display:none">
+              <button data-eng="inf">Engine: &infin;</button>
+              <button data-eng="0.35">0.055 m/s&sup2;</button>
+              <button data-eng="0.08" style="grid-column: span 2">0.013 m/s&sup2; (weak)</button>
+            </div>
+            <div class="modes">
+              <button data-mode="prograde" class="active">&#9650; Prograde</button>
+              <button data-mode="retrograde">&#9660; Retrograde</button>
+              <button data-mode="radialout">&#8657; Radial out</button>
+              <button data-mode="radialin">&#8659; Radial in</button>
+              <button data-mode="free" style="grid-column: span 2">&#10022; Free angle</button>
+            </div>
+            <div class="sliderrow" id="angleRow" style="display:none">
+              <label for="angleSlider">Angle</label>
+              <input type="range" id="angleSlider" min="-180" max="180" value="0" step="1">
+              <output id="angleOut">0&deg;</output>
+            </div>
+            <div class="sliderrow">
+              <label for="dvSlider">&Delta;v (m/s)</label>
+              <input type="range" id="dvSlider" min="0" max="15" value="2" step="0.05">
+              <output id="dvOut">316</output>
+            </div>
+            <div class="finebtns">
+              <button data-fine="-100">&minus;100</button><button data-fine="-10">&minus;10</button>
+              <button data-fine="10">+10</button><button data-fine="100">+100</button>
+            </div>
+            <div id="burncost">Dotted line shows your predicted new trajectory.</div>
+            <div id="predinfo"></div>
+            <div class="aimhint">Drag on the map to aim a free-angle burn. <span class="kbd">Enter</span> commits &middot; <span class="kbd">Esc</span> cancels.</div>
+            <div id="plannerActions">
+              <button id="btnCancelBurn">Cancel</button>
+              <button id="btnCommitBurn" class="primary">COMMIT BURN</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== THE OBERTH INSTRUMENT =====================================
+             The HUD, docked rather than floating, and OPEN on first load. Its
+             bottom row is this demo's observation instrument: "energy gained
+             per 1 delta-v" is numerically the current speed, which is the whole
+             lesson in one bar. Hiding it by default (as the pre-retrofit build
+             did) hid the lesson.
+             ============================================================== -->
+        <div id="hud" class="show">
+          <h4>Physics HUD</h4>
+          <span class="panel-kicker kick-inline"><span class="k-live">Live</span> read off the running simulation each frame</span>
+          <div class="row"><span>Speed v</span><b id="hudV">&ndash;</b></div>
+          <div class="row"><span>Altitude</span><b id="hudAlt">&ndash;</b></div>
+          <div class="row"><span>Spec. energy &epsilon;</span><b id="hudE">&ndash;</b></div>
+          <div class="row"><span>Periapsis</span><b id="hudPe">&ndash;</b></div>
+          <div class="row"><span>Apoapsis</span><b id="hudAp">&ndash;</b></div>
+          <div class="divider"></div>
+          <div class="row hi"><span>Time to periapsis</span><b id="hudTPe">&ndash;</b></div>
+          <div class="row"><span>Time to apoapsis</span><b id="hudTAp">&ndash;</b></div>
+          <div class="row" id="hudBurnRow" style="display:none"><span>Full-tank burn time</span><b id="hudBurnT">&ndash;</b></div>
+          <div id="oberthbarwrap">
+            <div class="cap">Energy gained per 1 &Delta;v (prograde) = <b id="hudOberth">&ndash;</b></div>
+            <div id="oberthbar"><div id="oberthfill"></div></div>
+            <div class="cap" style="margin-top:3px">This is your current speed &mdash; the Oberth multiplier. Watch it surge near periapsis.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- The fictional body's provenance, in HTML beside the frame. The map
+           itself also draws "Moon — fictional" beside it, because a projector
+           audience reads the map, not the caption. app.js shows this only on
+           the two levels that have a moon. -->
+      <p class="moon-note" id="moon-note" hidden>
+        <span class="panel-kicker kick-inline"><span class="k-illustrative">Illustrative</span> the moon on this level is invented</span>
+        Earth is at true scale; this moon is not our Moon. Its orbit radius, mass parameter and
+        size were chosen so that a gravity assist fits one class period. Its <i>gravity</i> is
+        integrated for real &mdash; the body is the invented part.
+      </p>
+
+      <!-- ===== A3 CONTROLS, each with a purpose label ===================== -->
+      <div id="controls">
+        <div class="ctlgroup" id="warpGroup">
+          <span class="control-label">Time warp
+            <span class="why">An orbit here takes hours. Speed time up to get somewhere, and pause to think before you spend fuel.</span></span>
+          <div class="ctlrow">
+            <span class="lbl">TIME</span>
+            <button data-warp="0" title="Pause (Space)">&#9208;</button>
+            <button data-warp="1" class="active">1&times;</button>
+            <button data-warp="10">10&times;</button>
+            <button data-warp="50">50&times;</button>
+            <button data-warp="200">200&times;</button>
+            <span class="sep"></span>
+            <button id="btnToPe" title="Warp to periapsis">&rarr; Pe</button>
+            <button id="btnToAp" title="Warp to apoapsis">&rarr; Ap</button>
+            <span id="leadWrap">
+              <span class="u">lead</span>
+              <input type="text" id="leadInput" value="0" inputmode="decimal" aria-label="Stop this many minutes before the apsis" title="Stop this many minutes BEFORE the apsis">
+              <span class="u">min</span>
+            </span>
+          </div>
+        </div>
+        <div class="ctlgroup">
+          <span class="control-label">View and burn
+            <span class="why">Zoom and pan to see the whole orbit or the close pass. <b>Plan burn</b> previews the new trajectory before any fuel is spent.</span></span>
+          <div class="ctlrow">
+            <span class="lbl">VIEW</span>
+            <button id="zoomOut" title="Zoom out">&minus;</button>
+            <button id="zoomIn" title="Zoom in">+</button>
+            <button id="zoomFit" title="Fit whole orbit">Fit</button>
+            <button id="btnFollow" class="active" title="Camera follows craft (F)">&#8853; Follow</button>
+            <span class="sep"></span>
+            <button id="btnCut" class="danger" style="display:none">&#9986; Cut engine</button>
+            <button id="btnPlanBurn" class="primary">&#128293; Plan burn</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="flight-actions">
+        <span class="control-label">Mission controls
+          <span class="why">The briefing restates the goal and the par. <b>Undo</b> rewinds the last burn and puts the fuel back, so iterating costs nothing.</span></span>
+        <div class="ctlrow">
+          <button id="btnMission" title="Mission briefing (M)">&#128203;<span class="btxt"> Mission</span></button>
+          <button id="btnLevels" title="Level select">&#128506;<span class="btxt"> Levels</span></button>
+          <button id="btnHud" title="Physics HUD (H)" aria-pressed="true" class="active">&#128202;<span class="btxt"> Physics HUD</span></button>
+          <button id="btnUndo" title="Undo last burn (Z)" disabled>&#8630;<span class="btxt"> Undo</span></button>
+          <button id="btnRestart" title="Restart level (R)">&#8635;<span class="btxt"> Restart</span></button>
+        </div>
+      </div>
+    </section>
+
+   </div><!-- /#activity -->
+  </div>
+
+  <p class="obs-cue" id="cue-1" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">Why does a prograde burn at apoapsis round the orbit out?</h3>
+    <p class="check-prompt">You just watched the dotted preview while dragging &Delta;v at the top of the ellipse.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="The burn raises the point half a revolution away, and from apoapsis that point is periapsis. Lift periapsis until it meets apoapsis and the ellipse has become a circle. It is geometry, not efficiency.">Because it raises the point half an orbit away, which from apoapsis is periapsis</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="The opposite is true, and stage 2 measures it. Apoapsis is where you are SLOWEST, so it is where each 1 m/s of &Delta;v buys the LEAST energy. Circularizing works there because of where the burn acts, not because the engine does more good there.">Because apoapsis is where the engine is most efficient</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Nothing about the burn is instantaneous in the sense of acting everywhere. A single impulse changes the orbit's shape by lifting the opposite side; the side you are standing on barely moves.">Because a single burn reshapes the whole orbit at once</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 2 ================================== -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 7 of 16 &middot; Part four &middot; Physics &middot; Stage 2</span>
+      <h2 id="stage-2-title">The same &Delta;v, spent where you are fastest</h2>
+      <p class="stage-question">Escaping Earth needs a fixed amount of energy &mdash; so does it cost the same &Delta;v wherever you burn?</p>
+      <p class="refresh"><b>Before you start.</b> <b>Specific orbital energy</b> is
+        &epsilon; = &frac12;v&sup2; &minus; &mu;/r, and escaping means getting &epsilon; above zero; a
+        very tall ellipse still falls back. A burn adds &Delta;v to your speed, so the kinetic half
+        goes from &frac12;v&sup2; to &frac12;(v+&Delta;v)&sup2; &mdash; a gain of
+        <b>v&middot;&Delta;v + &frac12;&Delta;v&sup2;</b>. The <b>v</b> in that first term is your
+        speed at the instant you burn. Stage 1 showed <i>where</i> a burn acts; this stage is about
+        what it <i>costs</i>.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Level 3 starts on an ellipse with periapsis 11,100 km and apoapsis 70,100 km above the surface. Which burn point escapes for less &Delta;v?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit your prediction, press <b>&rarr; Pe</b> to fall to periapsis, then <b>&#128293; Plan burn</b> and push &Delta;v until the <b>ORBIT</b> chip flips to ESCAPING.</p></article>
+      <article><span>Takeaway</span><p>The same &Delta;v buys energy in proportion to how fast you already are, so escape is cheapest at periapsis: 661 m/s here against 1,835 m/s from apoapsis. That is the Oberth effect.</p></article>
+    </div>
+    <div class="predict-group" id="predict-2" role="group" aria-labelledby="predict-2-label">
+      <span class="control-label" id="predict-2-label">Commit to a prediction to unlock Escape Artist
+        <span class="why">This is the one question the demo exists to ask, so the evidence stays behind it. Being wrong here costs nothing and teaches more.</span></span>
+      <div class="predict-options">
+        <button class="predict-option correct" type="button" aria-pressed="false" data-pick="At periapsis">At periapsis &mdash; low and fast</button>
+        <button class="predict-option" type="button" aria-pressed="false" data-pick="At apoapsis">At apoapsis &mdash; high and slow</button>
+        <button class="predict-option" type="button" aria-pressed="false" data-pick="The same either way">The same either way &mdash; &Delta;v is &Delta;v</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- The activity is relocated here by app.js once the prediction is
+       committed. Until then the gate card below stands in its place. -->
+  <div class="gate-card" id="gate-2">
+    <h3>Escape Artist is behind your prediction</h3>
+    <p>Pick one of the three answers above and the flight view moves here with Level 3 loaded.
+      You can be wrong &mdash; committing first is what turns the next two minutes into a
+      measurement instead of a demonstration.</p>
+  </div>
+  <div class="activity-host" data-activity-host="1"></div>
+
+  <p class="obs-cue" id="cue-2" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Why is the periapsis burn the cheap one?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="The energy a burn adds is v&middot;&Delta;v + &frac12;&Delta;v&sup2;, and the dominant term carries your speed at the moment of the burn. On this orbit that is 6.09 km/s at periapsis against 1.39 km/s at apoapsis, which is the whole 2.77&times; gap.">Because you are moving fastest there, and the energy added is v&middot;&Delta;v + &frac12;&Delta;v&sup2;</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Proximity is not the mechanism. The formula contains v, not r. Being deep in the well matters only because falling there is what made you fast &mdash; a ship moving equally fast far from Earth would gain exactly as much from the same burn.">Because you are closer to Earth, so gravity helps the burn along</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="The engine is identical at both ends of the orbit; this game never changes it within a level. What differs is the speed at which the &Delta;v is delivered, not the engine's efficiency.">Because the engine works better in thicker gravity</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="check" aria-labelledby="check-2b-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2b-title">Level 5's moon flyby adds energy without spending fuel. Is that the Oberth effect?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Two different things. An unpowered assist borrows from the MOON'S orbital motion &mdash; no fuel, and the moon slows imperceptibly in exchange. The Oberth effect is about WHEN you spend fuel. Level 5 is a powered flyby: it uses both.">No &mdash; an unpowered assist borrows the moon's motion; Oberth is about when you spend fuel</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="This is the commonest conflation, and it hides a conservation question. Gravity is conservative: a flyby that changed nothing else could not leave you with more energy. What changes is the moon's orbital motion, which is the thing being borrowed from. An Oberth burn borrows from nothing &mdash; it just spends fuel at the best moment.">Yes &mdash; both are gravity handing you free energy</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 3 ================================== -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 7 of 16 &middot; Part four &middot; Physics &middot; Stage 3</span>
+      <h2 id="stage-3-title">A real engine takes time</h2>
+      <p class="stage-question">Your engine needs hours to deliver its &Delta;v. Where in the orbit should that burn happen?</p>
+      <p class="refresh"><b>Before you start.</b> Stages 1 and 2 assumed an <b>impulsive</b> burn:
+        the whole &Delta;v arriving in one instant, at one speed. A real engine has a fixed
+        <b>acceleration</b> &mdash; 0.055 m/s&sup2; here, then 0.013 &mdash; so the &Delta;v is
+        smeared over an arc of the orbit, and only the part delivered while you are fast earns the
+        full premium stage 2 measured.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>The full burn lasts a noticeable arc. Light it exactly at periapsis, or start before periapsis?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Read <b>Time to periapsis</b> in the HUD and <b>Burn duration</b> in the planner, type a <b>lead</b> in minutes beside <b>&rarr; Pe</b>, then commit.</p></article>
+      <article><span>Takeaway</span><p>Spread over time, a burn is cheapest centred on periapsis &mdash; 775 m/s centred against 919 m/s lit at periapsis &mdash; and with a weak engine six short kicks cost 731 m/s where one long burn costs 1,498.</p></article>
+    </div>
+    <div class="predict-group" id="predict-3" role="group" aria-labelledby="predict-3-label">
+      <span class="control-label" id="predict-3-label">Commit to a prediction
+        <span class="why">Same escape as Level 3, one assumption removed. Say what you think the engine's finite burn time does to the answer.</span></span>
+      <div class="predict-options">
+        <button class="predict-option correct" type="button" aria-pressed="false" data-pick="Start before periapsis">Start before periapsis, so the burn straddles it</button>
+        <button class="predict-option" type="button" aria-pressed="false" data-pick="Light it at periapsis">Light it exactly at periapsis</button>
+        <button class="predict-option" type="button" aria-pressed="false" data-pick="No difference">No difference &mdash; it is the same total &Delta;v</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="2"></div>
+
+  <p class="obs-cue" id="cue-3" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">Why does a long burn lit exactly at periapsis cost more than the same burn centred on it?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="All of it happens after the fast point, so every second of thrust is delivered at a lower speed than the one before. Centre the burn and half of it happens on the way down, while you are still speeding up. Measured on this engine: 919 m/s lit at periapsis against 775 m/s centred.">Because all of it happens after the fast point, at falling speed</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="The engine's efficiency never changes in this game &mdash; a level fixes one acceleration and keeps it. What changes is the speed at which each second of thrust is delivered. This demo also ignores steering losses entirely, which Details spells out.">Because a longer burn wastes more fuel as heat</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Not here. The impulsive ideal for this escape is 661 m/s and finite thrust costs more than that whatever you do &mdash; 775 m/s at best. Timing narrows the loss; it cannot remove it.">Because finite thrust is only expensive if you time it badly</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 4 ================================== -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 7 of 16 &middot; Part four &middot; Physics &middot; Stage 4</span>
+      <h2 id="stage-4-title">The lab bench</h2>
+      <p class="stage-question">No mission and a deep tank &mdash; what does the energy ledger say about a strategy you invent yourself?</p>
+      <p class="refresh"><b>Before you start.</b> The Sandbox sits <b>outside the lesson path</b>:
+        no goal, no par, 200 units of &Delta;v and all three engines selectable in the burn
+        planner. Nothing here is scored. The debrief's <b>show the math</b> panel evaluates
+        &Delta;&epsilon; = v&middot;&Delta;v + &frac12;&Delta;v&sup2; on whatever numbers you
+        actually flew and checks it against the simulation.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Before you fly: how cheaply do you think you can escape from the Sandbox's starting ellipse? Write the number down, then go and beat it.</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Swap engines inside <b>&#128293; Plan burn</b> to compare impulsive against 0.055 and 0.013 m/s&sup2; on the same orbit.</p></article>
+      <article><span>Takeaway</span><p>Every strategy that works, works for one reason: it spends &Delta;v where v is already large.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="3"></div>
+
+  <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">Across all three stages, which single quantity decided every answer?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Your speed at the instant the &Delta;v is spent. Stage 1 placed the burn, stage 2 priced it, stage 3 spread it over time &mdash; and in all three the thing that changed the answer was v in v&middot;&Delta;v.">Your speed at the instant you spend the &Delta;v</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Altitude tracks speed on a given orbit, which is why it LOOKS like the cause. But it is a correlation here, not the mechanism: two orbits can put you at the same altitude at very different speeds, and the burn's energy follows the speed.">How close to Earth you were</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="How much &Delta;v you had left set what was possible, not what was cheap. Level 3 gives you 2,057 m/s precisely so the wasteful apoapsis route still works &mdash; it just costs 1,835 instead of 661.">How much &Delta;v you had left in the tank</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span>Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button>
+  </div>
+</div>
+
+<!-- ===== A7 GUIDE (the shell opens this on load) ========================== -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">One question across four stages: <b>why does the same burn buy more energy in one place than another?</b></p>
+    <p class="note">Where this sits: the first AI-built classroom tool in Part four. Its goal is to
+      make the Oberth effect something you measure rather than something you are told, and its
+      assumptions are one tap away in Details.</p>
+    <ol>
+      <li><b>Burn at apoapsis.</b> Commit a prediction, press <b>&rarr; Ap</b>, then <b>&#128293; Plan burn</b> and watch the dotted preview as you drag &Delta;v.</li>
+      <li><b>Escape at periapsis.</b> Commit the prediction to unlock Level 3, press <b>&rarr; Pe</b>, and burn until the <b>ORBIT</b> chip says ESCAPING.</li>
+      <li><b>Finite thrust.</b> Unlocks once you have escaped. Use the HUD's <b>Time to periapsis</b> and the <b>lead</b> box to start the burn early.</li>
+      <li><b>Sandbox.</b> No goal, deep tank, every engine. Outside the path.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The four tabs switch stages. <b>Details</b> opens the formula, assumptions and sources for
+      the current stage. <b>Guide</b> reopens this card; <b>Settings</b> holds <b>Open Presenter
+      Notes</b>, <b>Presentation mode</b> and <b>Reset</b>. <b>&#8630; Undo</b> rewinds the last
+      burn and refunds the fuel, so nothing is ever wasted by trying.</p>
+    <h3>Time</h3>
+    <p>Twenty minutes for the three lesson stages, most of it on stage 2. Orbits take hours of
+      simulated time, so <b>&rarr; Pe</b> and <b>&rarr; Ap</b> jump you there rather than making
+      you wait.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Burn at apoapsis</button></form>
+</dialog>
+
+<!-- ===== A8 SETTINGS ===================================================== -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen &mdash; the twenty-minute run of show, the Oberth derivation, the misconceptions to catch and the pars.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to the start: Level 1 on the pad, an empty &Delta;v tally, the trajectory
+      and undo stack cleared, time&#8209;warp back to 1&times;, the HUD open, all three predictions
+      forgotten, stage 3 locked again, and the mission badges and saved name cleared. The saved
+      <b>class leaderboards are left alone</b> &mdash; use <i>Clear scores</i> below for those.
+      Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+    <h3>Class data</h3>
+    <p class="setnote">Two narrow controls that Reset deliberately does not touch, because a
+      leaderboard holds other students' entries.</p>
+    <p><button class="btn ghost" type="button" id="clear-scores">Clear scores&hellip;</button></p>
+    <p id="clear-scores-row" class="confirm-row" style="display:none">
+      <b>Really clear every level's leaderboard on this machine?</b>
+      <button class="btn small ghost" type="button" id="clear-scores-no">Cancel</button>
+      <button class="btn small" type="button" id="clear-scores-yes">Yes, clear</button>
+    </p>
+    <p><button class="btn ghost" type="button" id="clear-badges">Clear badges</button></p>
+    <h3>Printable guide</h3>
+    <p class="setnote">The presenter notes above <i>are</i> the complete teacher guide &mdash; same
+      words, one source. This opens the printable copy in a new tab.</p>
+    <p><a class="btn ghost" href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy</a></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ===== A5 DETAILS DRAWER =============================================== -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Burn at apoapsis</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the flight view and the HUD</span>
+          <p>Every position, speed, altitude and energy on screen is integrated in your browser as
+            you watch. Nothing on the map is a recording or a scripted animation: the Oberth
+            advantage is not written into the game, it falls out of the integrator.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span> Earth's &mu; and radius</span>
+          <p>&mu; = 398,600 km&sup3;/s&sup2; and radius 6,371 km, so every number transfers to a
+            real mission. NASA's Earth fact sheet prints GM as 0.39860 &times; 10&sup6;
+            km&sup3;/s&sup2; and the volumetric mean radius as 6371.000 km.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">deterministic &mdash; no seed</span> the seven pars</span>
+          <p>Each par is a &Delta;v budget a skilled pilot can beat, found by running this same
+            physics offline. Level 1's ideal circularization measures 604 m/s against a par of
+            712. The integrator has no random element, so re-running <code>test-physics.js</code>
+            reproduces every figure exactly.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">&Delta;KE = v&middot;&Delta;v + &frac12;&Delta;v&sup2; &nbsp;&middot;&nbsp; &epsilon; = &frac12;v&sup2; &minus; &mu;/r</div>
+        <p>Gravity is planet-centred and Newtonian, integrated with <b>velocity Verlet</b> at a
+          fixed substep &mdash; a symplectic scheme, which is why the orbit does not spiral in
+          from numerical drift: measured energy drift over fifty orbits is 9 &times;
+          10&#8315;&#185;&#8308;. The orbit drawn as a solid line is the integrated path; the
+          dotted preview is the same integrator run forward from the burn you are planning.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Two bodies, plus at most one moon.</b> No sun, no other planets, no J&#8322;
+            oblateness, no third-body perturbations.</li>
+          <li><b>No atmosphere and no drag.</b> A periapsis just above the surface is free here
+            and would not be in reality.</li>
+          <li><b>Burns in stages 1 and 2 are impulsive</b> &mdash; the whole &Delta;v at one
+            instant. Stage 3 removes that assumption; nothing else does.</li>
+          <li><b>&Delta;v is the only cost.</b> There is no mass, no specific impulse and no
+            rocket equation, so the tank is a &Delta;v budget rather than kilograms of propellant.
+            That is the standard mission-planning currency, but it hides the fact that a real
+            ship gets lighter as it burns.</li>
+          <li><b>The craft is a point mass</b> with no orientation, so pointing the engine is
+            free and instant.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html" target="_blank" rel="noopener">NASA NSSDC, Earth Fact Sheet</a>
+            &mdash; read 2026-09-16: "GM (x 10<sup>6</sup> km<sup>3</sup>/s<sup>2</sup>) 0.39860" and
+            "Volumetric mean radius (km) 6371.000", the two constants this simulation uses.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is not a mission planner. It teaches one
+          relationship &mdash; energy gained per unit &Delta;v scales with current speed &mdash;
+          and it deliberately strips away everything that would otherwise compete for attention.
+          Do not use its numbers to plan anything that flies.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the escape test</span>
+          <p>"Escaping" is checked against the integrated state each frame: specific orbital energy
+            &epsilon; above zero <i>and</i> a radius past the system edge. A tall ellipse that
+            crosses the edge with &epsilon; still negative is refused, and the page says why.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">deterministic &mdash; no seed</span> the 661 / 1,835 m/s comparison</span>
+          <p>Both figures are the minimum prograde &Delta;v that escapes from Level 3's orbit,
+            found by bisection against this exact engine: 661 m/s from periapsis, 1,835 m/s from
+            apoapsis, a ratio of 2.77. The simulated periapsis figure also matches the closed-form
+            v<sub>esc</sub> &minus; v<sub>p</sub> to three figures, which is the check that says
+            the integrator and the theory agree.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> Level 5's moon</span>
+          <p>Invented, and the map says so beside it. Its orbit radius, mass parameter and size
+            were chosen so that a useful gravity assist fits inside a class period; our own Moon is
+            both further out and lighter relative to this setup. Its gravity is then integrated for
+            real, including the indirect term (the moon pulls Earth too, so the planet-centred
+            frame is not inertial).</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">&Delta;&epsilon; = v&middot;&Delta;v + &frac12;&Delta;v&sup2;</div>
+        <p>A burn changes only the kinetic term: the potential &minus;&mu;/r is unchanged at the
+          instant of an impulsive burn, because you have not moved. So the energy a given &Delta;v
+          buys is set by <b>v</b>, and v peaks at periapsis. The HUD's "energy gained per 1
+          &Delta;v" readout is therefore numerically just your current speed &mdash; a claim the
+          test suite verifies numerically rather than asserting.</p>
+        <p>The usual next question is where the extra energy comes from. The propellant's chemical
+          energy is fixed; what changes is how it is divided between ship and exhaust. At high
+          speed the engine acts over more distance per second, so more of that energy ends up in
+          the ship and less in the plume left behind.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The burn is impulsive</b> &mdash; instantaneous, at one speed. Real burns are not,
+            which is exactly what stage 3 is for.</li>
+          <li><b>The system edge is a chosen radius</b>, not a physical boundary. It stands in for
+            "far enough that Earth no longer dominates", and each level sets its own.</li>
+          <li><b>The gravity assist is a restricted three-body problem</b>: the moon moves on a
+            fixed circular orbit and the craft never affects it. A real assist perturbs the
+            assisting body, imperceptibly.</li>
+          <li><b>Steering is free.</b> Pointing the ship costs no fuel and no time.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html" target="_blank" rel="noopener">NASA NSSDC, Earth Fact Sheet</a>
+            &mdash; read 2026-09-16: GM 0.39860 &times; 10<sup>6</sup> km<sup>3</sup>/s<sup>2</sup>,
+            volumetric mean radius 6371.000 km.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the 2.77&times; gap is a property of
+          <i>this</i> orbit, not a universal constant. Make the ellipse rounder and the gap
+          shrinks; on a circular orbit there is no periapsis to prefer. What generalises is the
+          direction of the effect, not the size of it.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the powered arc</span>
+          <p>A finite-thrust burn is integrated with <b>RK4</b> while the engine is lit, then the
+            coast returns to velocity Verlet. The planner's burn duration is &Delta;v divided by
+            the engine's acceleration, and the percentage beside it is that duration against your
+            current orbital period &mdash; both read off the live state.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">deterministic &mdash; no seed</span>775 / 919 and 731 / 1,498 m/s</span>
+          <p>On Level 6's 0.055 m/s&sup2; engine, escape costs 775 m/s with the burn centred on
+            periapsis and 919 m/s lit at periapsis. On Level 7's 0.013 m/s&sup2; engine, six kicks
+            of roughly 2.8 hours each cost 731 m/s where one long centred burn costs 1,498. All
+            four are minima found against this engine offline.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">our inference from the measurement above; no specific flown mission sourced here</span> why low-thrust stages use repeated perigee burns</span>
+          <p>The 731-against-1,498 result is the reason the technique exists: if your engine cannot
+            deliver its &Delta;v inside a short arc, splitting it across successive periapsis
+            passes keeps every unit of it near maximum speed. We reason that from the measurement
+            on this page rather than from a flown example &mdash; we did not source a specific
+            mission's burn plan, and a presenter should present it as the principle, not as a
+            citation.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">t<sub>burn</sub> = &Delta;v / a &nbsp;&middot;&nbsp; centre the arc on periapsis</div>
+        <p>Integrate v&middot;&Delta;v over the burn rather than evaluating it once. Every second of
+          thrust is delivered at whatever speed you happen to have then, so the cheapest single
+          burn is the one whose arc is symmetric about the speed peak. Light it at the peak and the
+          entire second half happens on the way back out, at falling speed. When the burn is longer
+          than roughly a third of the orbit, no placement saves it and the answer is to split it.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Steering losses are ignored.</b> The thrust is applied along the chosen direction
+            for the whole burn with no cosine loss from the velocity vector rotating underneath it.
+            This is the largest simplification in the stage and it makes finite thrust look
+            slightly cheaper than it is.</li>
+          <li><b>Thrust and acceleration are constant.</b> No throttling, no mass loss, so no
+            acceleration ramp as the tank empties.</li>
+          <li><b>The engine lights and cuts instantly</b>, with no ignition transient.</li>
+          <li><b>Time&#8209;warp is capped at 10&times; while thrusting</b>, so a long burn is
+            integrated finely enough to be honest rather than fast.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html" target="_blank" rel="noopener">NASA NSSDC, Earth Fact Sheet</a>
+            &mdash; read 2026-09-16: the &mu; and radius the powered arcs are integrated against.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> with steering losses out and the rocket
+          equation out, this stage shows the <i>shape</i> of the finite-thrust penalty, not its
+          size. Treat 775-against-919 as "centring matters and here is roughly how much", not as a
+          figure to carry into a real &Delta;v budget.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What this page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the whole Sandbox, and the debrief's arithmetic</span>
+          <p>Same integrator, same units, no goal and no par. The debrief's <b>show the math</b>
+            panel is not a canned explanation: it re-evaluates v&middot;&Delta;v +
+            &frac12;&Delta;v&sup2; on the burns you actually committed and compares the total
+            against the energy the simulation ended up with, so a discrepancy would show.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span> the Sandbox's moon and its 200-unit tank</span>
+          <p>Both invented for free play. The tank is deep so that an experiment is never cut short
+            by fuel, and the moon is a second fictional body on a different orbit from Level 5's.
+            Neither is meant to correspond to anything.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">&Delta;&epsilon;<sub>total</sub> = &Sigma; (v&middot;&Delta;v + &frac12;&Delta;v&sup2;) &nbsp;+&nbsp; whatever the moon lent you</div>
+        <p>Coasting never changes &epsilon;, because gravity is conservative. So the energy ledger
+          has exactly two kinds of entry: burns, which you paid for, and moon encounters, which you
+          did not. The debrief prints them as a running total, which is what makes an assist
+          visible as a line item rather than as magic.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Nothing here is scored or saved.</b> The Sandbox is outside the lesson path and
+            has no par, so the leaderboard ignores it.</li>
+          <li><b>Every simplification from the other three stages still applies</b> &mdash; no
+            atmosphere, no rocket equation, point mass, free steering.</li>
+          <li><b>The engine choices are the same three</b> the lesson stages use, offered together
+            so they can be compared on one orbit rather than across levels.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://nssdc.gsfc.nasa.gov/planetary/factsheet/earthfact.html" target="_blank" rel="noopener">NASA NSSDC, Earth Fact Sheet</a>
+            &mdash; read 2026-09-16: the &mu; and radius the Sandbox integrates against, unchanged
+            from the lesson stages.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> a cheap escape you find here is cheap
+          <i>in this model</i>. The model has no drag, no mass loss and no steering cost, so a
+          strategy that exploits those absences &mdash; skimming the surface, or turning the ship
+          instantly &mdash; is telling you about the simulation rather than about spaceflight.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- ===== PRESENTER NOTES = THE PRINTABLE GUIDE =========================== -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- ===== THE ACTIVITY'S OWN DIALOGS ======================================
+     Four of them, and they are not duplicates of the shell's per-stage Details
+     drawer (ADOPTING.md section 5): a mission briefing, a level list, a
+     post-flight debrief and a crash screen, each about one flight rather than
+     about the stage. They keep the demo's own ids. Native <dialog>, so Escape,
+     the backdrop, the focus trap and focus return are the platform's job.
+
+     data-lightdismiss on the two informational ones only. The debrief and the
+     crash screen ask for a decision, so a stray tap must not answer for you.
+     ====================================================================== -->
+<dialog class="game-dialog" id="missionModal" data-lightdismiss aria-labelledby="msTitle" aria-describedby="msSubtitle">
+  <div class="box">
+    <div class="eyebrow">Mission briefing</div>
+    <h2 id="msTitle">&ndash;</h2>
+    <p class="big" id="msSubtitle">&ndash;</p>
+    <div class="scorebar">
+      <div class="stat hero"><div class="v" id="msPar">&ndash;</div><div class="k">Par &Delta;v</div></div>
+      <div class="stat"><div class="v" id="msTank">&ndash;</div><div class="k">Tank</div></div>
+      <div class="stat"><div class="v" id="msEngine">&ndash;</div><div class="k">Engine</div></div>
+    </div>
+    <h3>Objective</h3>
+    <p id="msGoal">&ndash;</p>
+    <h3>Flight notes</h3>
+    <p id="msHint">&ndash;</p>
+    <div class="actions"><button id="msClose" class="primary">Fly the mission</button></div>
+  </div>
+</dialog>
+
+<dialog class="game-dialog" id="levelsModal" data-lightdismiss aria-labelledby="levelsTitle" aria-describedby="levelsIntro">
+  <div class="box">
+    <div class="eyebrow">Mission list</div>
+    <h2 id="levelsTitle">&#9971; Orbital Mechanics Golf &mdash; mission list</h2>
+    <p id="levelsIntro">Complete each mission using the least &Delta;v. Par is the fuel-efficient
+      benchmark &mdash; beat it like golf. Picking a level moves the stage tabs with it.</p>
+    <div class="progressbar"><div id="progFill"></div></div>
+    <p style="margin:0" id="progText">&ndash;</p>
+    <div class="levelgrid" id="levelGrid"></div>
+    <div class="actions"><button id="closeLevels">Close</button></div>
+  </div>
+</dialog>
+
+<dialog class="game-dialog" id="debriefModal" aria-labelledby="debriefTitle" aria-describedby="dbVerdict">
+  <div class="box">
+    <div class="eyebrow" id="dbEyebrow">Mission complete</div>
+    <h2 id="debriefTitle">Mission complete</h2>
+    <div class="scorebar">
+      <div class="stat hero"><div class="v" id="dbDv">&ndash;</div><div class="k">&Delta;v used</div></div>
+      <div class="stat"><div class="v" id="dbPar">&ndash;</div><div class="k">Par</div></div>
+      <div class="stat"><div class="v" id="dbScore">&ndash;</div><div class="k">vs par</div></div>
+      <div class="stat"><div class="v" id="dbBurns">&ndash;</div><div class="k">Burns</div></div>
+    </div>
+    <div class="verdict" id="dbVerdict"></div>
+    <h3>Orbital energy vs. time (burns marked &#9650;)</h3>
+    <canvas id="debriefPlot" width="620" height="200"></canvas>
+    <button id="mathToggle">&#9660; Hide the math &mdash; proving the outcome from your inputs</button>
+    <div id="dbMath"></div>
+    <h3>Class leaderboard &mdash; this level</h3>
+    <div id="dbNameRow">
+      <label class="sr-only" for="dbName">Your name</label>
+      <input type="text" id="dbName" maxlength="16" placeholder="Your name">
+      <button id="dbSave" class="primary">Save score</button>
+      <span id="dbSaved">Saved &#10003;</span>
+    </div>
+    <table class="lb"><thead><tr><th>#</th><th>Name</th><th>&Delta;v</th></tr></thead><tbody id="dbLb"></tbody></table>
+    <div class="actions">
+      <button id="dbRetry">&#8635; Retry level</button>
+      <button id="dbNext" class="primary">Next level &rarr;</button>
+      <button id="dbClose">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="game-dialog" id="crashModal" aria-labelledby="crashTitle" aria-describedby="crashMsg">
+  <div class="box">
+    <div class="eyebrow alert">Flight terminated</div>
+    <h2 id="crashTitle">&#128165; Lithobraking detected</h2>
+    <p class="big" id="crashMsg">Your spacecraft hit the planet.</p>
+    <div class="actions">
+      <button id="crashUndo" class="primary">&#8630; Undo last burn</button>
+      <button id="crashRetry">&#8635; Restart level</button>
+    </div>
+  </div>
+</dialog>
+
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+
+<script>
+/*__SHELL_JS__*/
+</script>
+<script>
+/*__GAME__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+</body>
+</html>
