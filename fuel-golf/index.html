@@ -4220,7 +4220,14 @@ requestAnimationFrame(frame);
   let picks = [null, null, null, null];
   let syncing = false;                          // re-entry guard, both directions
   let resetting = false;                        // the flag the kit does not expose
-  let zone = 'none';                            // last apsis zone, for edge triggers
+  /* The A4 cue's edge detector. 'init' rather than 'none' on purpose: every
+     level spawns AT an apsis, so a detector that starts at 'none' sees an
+     immediate transition and fires the apsis cue on load, before the learner
+     has done anything. A4 wants the cue to name the thing to notice at the
+     moment it BECOMES true, and "you are where you started" is not that. The
+     first tick after a level load therefore records the zone silently, and the
+     cue fires only on a genuine arrival after that. */
+  let zone = 'init';
   let lastDv = 0;
 
   const selectedTab = () => Math.max(0, tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'));
@@ -4389,6 +4396,10 @@ requestAnimationFrame(frame);
     if (o.dvUsedMs < lastDv) lastDv = o.dvUsedMs;   // an undo refunded fuel
 
     const now = o.nearPeri ? 'peri' : o.nearApo ? 'apo' : 'none';
+    /* 'init' is the silent first observation after a level load: record where
+       the ship starts without announcing it. Every level spawns at an apsis, so
+       announcing it would put a cue on screen before the learner has acted. */
+    if (zone === 'init') { zone = now; return; }
     if (now !== 'none' && now !== zone) cue(stage, CUE[now][stage](o));
     if (now !== 'burn') zone = now;
   }
@@ -4421,7 +4432,7 @@ requestAnimationFrame(frame);
   G.hooks.onLevelLoad = i => {
     if (moonNote) moonNote.hidden = !G.LEVELS[i].moon;
     lastDv = 0;
-    zone = 'none';
+    zone = 'init';
     if (resetting || syncing) return;
     const want = stageOf(i);
     if (want === selectedTab()) return;
@@ -4499,7 +4510,7 @@ requestAnimationFrame(frame);
 
   document.addEventListener('lessonreset', () => {
     picks = [null, null, null, null];
-    zone = 'none';
+    zone = 'init';
     lastDv = 0;
     PREDICT_STAGES.forEach(stage => {
       const echo = echoFor(stage);
