@@ -704,9 +704,12 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink-on-navy); border-bottom:
   .network-layers > i { display: none; }
   .network-inspector-controls { grid-template-columns: 1fr; }
   .network-diagram { min-height: 150px; }
-  .method-grid, .family-grid, .type-grid { grid-template-columns: 1fr; }
+  /* Specificity, not order: the 3-column base rule sits later in this file
+     (the map-card block), so an equal-specificity override here lost and the
+     cards stayed three-across on a 320px phone (found 2026-09-16). */
+  .map-card .method-grid, .map-card .family-grid, .map-card .type-grid { grid-template-columns: 1fr; }
   .clarifiers { grid-template-columns: 1fr; }
-  .lens-btn small, .map-btn small { display: none; }
+  .lens-btn small, .map-switch .map-btn small { display: none; }  /* .map-switch: outranks the base rule that sits later in this file */
   .predict-btns { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
@@ -721,7 +724,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 @media (orientation: landscape) and (max-height: 560px) {
   #lens-nav { padding: 0 14px 6px; }
   .lens-btn { min-height: 38px; }
-  .lens-btn small, .map-btn small { display: none; }
+  .lens-btn small, .map-switch .map-btn small { display: none; }  /* .map-switch: outranks the base rule that sits later in this file */
   .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
   #board-wrap { margin-bottom: calc(.4 * var(--u)); }
   #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
