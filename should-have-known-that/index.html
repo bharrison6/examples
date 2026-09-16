@@ -600,6 +600,14 @@ body.has-bottom-bar .bh-credit { display: none; }
 }
 .opt small { display: block; font-weight: 600; font-size: .7em; color: var(--ink-3-on-navy); }
 .opt.on { border-color: var(--gold); background: rgba(236,172,0,.2); }
+
+/* ---------- stage 3 Predict: the A2 capture the debrief echoes against ----- */
+.predict-row { display: flex; gap: 8px; margin-top: 8px; }
+.predict-opt {
+  flex: 1; min-height: 38px; border-radius: var(--radius-2); border: 2px solid var(--cream-deep);
+  background: transparent; color: var(--ink); font-weight: 800; cursor: pointer;
+}
+.predict-opt[aria-pressed="true"] { border-color: var(--gold); background: #FFF6DC; color: var(--navy); }
 .chip {
   padding: 10px 14px; border-radius: 999px; border: 2px solid var(--line-on-navy);
   background: rgba(255,255,255,.06); color: var(--ink-2-on-navy); font-weight: 700; cursor: pointer;
@@ -1028,7 +1036,12 @@ body.has-bottom-bar .bh-credit { display: none; }
     </div>
     <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 3 learning guide">
-      <article><span>Predict</span><p>Before reading the numbers below: guess which deck you scored higher on, linear or log.</p><span class="echo" id="echo-3" hidden></span></article>
+      <article><span>Predict</span><p>Before reading the numbers below: guess which deck you scored higher on, linear or log.</p>
+        <div class="predict-row" role="group" aria-label="Which deck scored higher?">
+          <button type="button" class="predict-opt" data-deck="linear" aria-pressed="false">Linear</button>
+          <button type="button" class="predict-opt" data-deck="log" aria-pressed="false">Log</button>
+        </div>
+        <span class="echo" id="echo-3" hidden></span></article>
       <article><span>Try</span><p>Read the <b>linear vs. log average</b> comparison below.</p></article>
       <article><span>Takeaway</span><p>A ranged or code-defined number is still worth a confident guess &mdash; precision and truth are not the same thing.</p></article>
     </div>
@@ -2745,7 +2758,33 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
         'Log average: <b>' + logRound + ' pts/question</b> (' + G.log.answers.length + ' questions). ' + control + verdict + sample;
     }
     $('cue-3').textContent = 'Debrief computed from ' + allAnswers.length + ' answers this session.';
+    echoPrediction();
   }
+
+  /* ---------- stage 3 Predict capture (A2). The card asks "which deck scored
+     higher?"; before this existed nothing captured the answer and #echo-3 was
+     never written. The two buttons record it, and the echo shows the
+     prediction beside the observed direction once the debrief has run. ---- */
+  let predict3 = null;
+  function echoPrediction() {
+    const echo = $('echo-3');
+    if (!echo) return;
+    if (!predict3) { echo.hidden = true; echo.textContent = ''; return; }
+    let observed = '';
+    if (G && G.log && G.log.i >= G.log.deck.length && G.linear.answers.length && G.log.answers.length) {
+      const avg = arr => arr.reduce((s, a) => s + a.pts, 0) / arr.length;
+      const lin = Math.round(avg(G.linear.answers)), lg = Math.round(avg(G.log.answers));
+      observed = lin === lg ? ' Observed: a tie.' : ' Observed: ' + (lg > lin ? 'log' : 'linear') + ' scored higher' +
+        ((lg > lin) === (predict3 === 'log') ? ' — as you predicted.' : ' — not what you predicted.');
+    }
+    echo.hidden = false;
+    echo.textContent = 'You predicted: ' + predict3 + '.' + observed;
+  }
+  document.querySelectorAll('.predict-opt').forEach(b => b.addEventListener('click', () => {
+    predict3 = b.dataset.deck;
+    document.querySelectorAll('.predict-opt').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    echoPrediction();
+  }));
 
   /* ---------- wiring: stage 1 ---------- */
   $('start-btn').addEventListener('click', startLinear);
@@ -2797,10 +2836,14 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
           nothing extra is needed here — listed to say it was checked, not
           because it needs code.
        6. Any pending reveal-animation timers, cancelled — a Reset mid-reveal
-          must not let a queued frame write into freshly reset chrome. */
+          must not let a queued frame write into freshly reset chrome.
+       7. Stage 3's captured prediction (predict3) and the two Predict buttons'
+          aria-pressed state — the kit's snapshot restores #echo-3 itself. */
   document.addEventListener('lessonreset', () => {
     clearTimers();
     G = null;
+    predict3 = null;
+    document.querySelectorAll('.predict-opt').forEach(x => x.setAttribute('aria-pressed', 'false'));
     sel.len = 10; sel.mode = 'solo'; sel.teamCount = 2; sel.cats = new Set(CATS);
     teamNameDefaults.splice(0, teamNameDefaults.length, 'Team 1', 'Team 2', 'Team 3', 'Team 4');
     buildSetup();

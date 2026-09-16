@@ -303,7 +303,12 @@
     </div>
     <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 3 learning guide">
-      <article><span>Predict</span><p>Before reading the numbers below: guess which deck you scored higher on, linear or log.</p><span class="echo" id="echo-3" hidden></span></article>
+      <article><span>Predict</span><p>Before reading the numbers below: guess which deck you scored higher on, linear or log.</p>
+        <div class="predict-row" role="group" aria-label="Which deck scored higher?">
+          <button type="button" class="predict-opt" data-deck="linear" aria-pressed="false">Linear</button>
+          <button type="button" class="predict-opt" data-deck="log" aria-pressed="false">Log</button>
+        </div>
+        <span class="echo" id="echo-3" hidden></span></article>
       <article><span>Try</span><p>Read the <b>linear vs. log average</b> comparison below.</p></article>
       <article><span>Takeaway</span><p>A ranged or code-defined number is still worth a confident guess &mdash; precision and truth are not the same thing.</p></article>
     </div>
