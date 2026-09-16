@@ -52,6 +52,32 @@
   --stream: 420;                /* typewriter rate, characters per second */
 }
 
+/* --- A2 captured prediction ----------------------------------------------
+   The Predict card takes an actual answer, so the observed result can be shown
+   BESIDE the prediction instead of merely asserted in prose. Without this the
+   Predict card is a rhetorical question and the .echo has nothing to compare.
+
+   The text-transform reset is not cosmetic fussiness: the kit styles
+   `.lesson-strip article span` with `text-transform: uppercase` (it is the
+   rule that makes the PREDICT / TRY / TAKEAWAY labels caps), and `.echo` is a
+   <span> inside that article, so the observed-result sentence rendered as
+   "OBSERVED: WHO IT IS AIMED AT." The kit's own `.lesson-strip .echo` rule
+   sets colour and size but never resets the transform. Caught in a browser at
+   1024px; it is on the friction list for kit v3. */
+.lesson-strip .echo { text-transform: none; letter-spacing: normal; font-weight: 400; }
+.lesson-strip .echo b { font-weight: 800; }
+
+.predict-opts { display: grid; gap: 5px; margin-top: 7px; }
+.predict-opt {
+  min-height: 40px; border: 1px solid var(--line); border-radius: var(--radius-2);
+  padding: 6px 10px; background: var(--paper); color: var(--ink);
+  font-size: calc(var(--u) * .76); font-weight: 650; text-align: left;
+  text-transform: none; letter-spacing: normal;
+}
+.predict-opt:hover { border-color: var(--navy); background: var(--cream); }
+.predict-opt[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--paper); font-weight: 850; }
+.predict-opt[aria-pressed="true"]::before { content: "\2713 "; color: var(--gold-deep); font-weight: 900; }
+
 /* --- scenario tabs: INSIDE the activity, not the stage nav ----------------
    The stage tabs (A1) are the three levers. These four are the four questions,
    and they belong to the activity: switching question is not switching lesson
