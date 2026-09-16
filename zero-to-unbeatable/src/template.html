@@ -136,6 +136,17 @@
           <div id="era-strip" hidden></div>
         </section>
 
+        <!-- 1c only: the optional Ultimate extension is one press away on the
+             stage itself, not a button inside a dialog (operator ruling
+             2026-09-16 — "what happened to our ultimate tictactoe?"). Same
+             shape as 1d's switch. app.js shows this only while the stage is
+             1c, and it is not gated on having trained: the ultimate learner
+             is a table seeded from 1b, and reads nothing from the network. -->
+        <div class="map-switch board-switch" role="group" aria-label="Which board to play" id="board-switch" hidden>
+          <button type="button" class="map-btn" data-board="net" aria-pressed="true"><span>Standard board</span><small>the network you train here</small></button>
+          <button type="button" class="map-btn" data-board="ult" aria-pressed="false"><span>Ultimate tic-tac-toe</span><small>optional extension: a learner that cannot see the whole game</small></button>
+        </div>
+
         <!-- ============================ BOARD ========================= -->
         <section id="board-wrap" aria-label="The game">
           <span class="panel-kicker board-kicker"><span class="k-live">Live</span> the opponent computes each reply here, now</span>
@@ -301,7 +312,7 @@
           <button type="button" class="predict-btn" data-answer="higher" aria-pressed="false">Clearly higher</button>
         </div>
         <span class="echo" hidden></span></article>
-      <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score.</p></article>
+      <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score. Optional: switch the board to <b>Ultimate tic-tac-toe</b> for a learner whose inputs leave out part of the game.</p></article>
       <article><span>Takeaway</span><p>Shared weights give the network an answer for a board it never practised on &mdash; which a table simply cannot do &mdash; and training on other boards makes that answer better. The error readings say how close the answer is to the teacher&rsquo;s, not how well it plays.</p></article>
     </div>
   </section>
