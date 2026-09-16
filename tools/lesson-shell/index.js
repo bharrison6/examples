@@ -62,13 +62,23 @@
 
    5. Wire the shell's behaviour with `shell.behaviourScript()` injected at
       the __SHELL_JS__ marker — dialogs, the stage tablist keyboard,
-      presentation mode and the A6 check cards. It needs no configuration
-      beyond the ids partials.html already uses. Your own app.js handles the
-      activity, and calls `window.lessonShell.selectStage(n)` if it wants to
-      drive the tabs itself.
+      presentation mode, the A6 check cards and Reset. It needs no
+      configuration beyond the ids partials.html already uses. Your own app.js
+      handles the activity, and calls `window.lessonShell.selectStage(n)` if it
+      wants to drive the tabs itself.
 
-   6. `node build.js && node tools/pdf.mjs && node build.js --check` and then
+   6. REQUIRED, not optional: your app.js listens for `lessonreset` and puts
+      the activity back to its first-load state. The shell restores only what
+      the kit owns; it cannot know what your activity holds. A demo with no
+      reset handler is an incomplete adoption and check-shell.js fails it.
+
+   7. `node build.js && node tools/pdf.mjs && node build.js --check` and then
       `node ../tools/lesson-shell/check-shell.js <slug>`.
+
+   ADOPTING.md beside this file is the long version — what the shell owns,
+   what the demo owns, what to DELETE when converting a demo that predates the
+   kit, the two events, and the full reset contract. Read it before a retrofit;
+   this head comment is the five-minute version of it.
 
    ---------------------------------------------------------------------------
    THE STAMP. `stamp()` returns an HTML comment carrying the kit version AND a
@@ -86,8 +96,14 @@ const crypto = require('node:crypto');
 
 /* Bump on any change to tokens.css, shell.css or behaviourScript(). The css
    hash catches the change even if this is forgotten; the version is what a
-   human reads in a diff. */
-const VERSION = '1';
+   human reads in a diff.
+
+   v2 (2026-09-16): Reset became in-place — no page reload — and the
+   `lessonreset` event it dispatches is a required part of every demo. The css
+   hash is UNCHANGED by that edit, because the change is entirely in
+   behaviourScript(), which is exactly the case this version number exists to
+   catch. */
+const VERSION = '2';
 
 const DIR = __dirname;
 const read = file => fs.readFileSync(path.join(DIR, file), 'utf8');
@@ -171,18 +187,24 @@ function readStamp(html) {
    What it owns:
      * the three dialogs (Guide, Settings, Details) and the presenter notes,
        with swap-not-stack, Escape, backdrop click and focus return;
-     * the Guide opening on load, unless the page arrived from a Reset;
+     * the Guide opening on load;
      * the stage tablist: click, Arrow/Home/End with roving tabindex, and the
        URL hash (#stage-2). A disabled tab is skipped by the keyboard and
        clamped to by the hash — see the note in selectStage;
      * presentation mode (body.presenter) and the header Notes button;
      * the A6 check cards: aria-pressed, per-option feedback from
-       data-feedback, and nothing scored.
+       data-feedback, and nothing scored;
+     * Reset — IN PLACE, with no page reload (operator ruling 2026-09-16). It
+       restores every piece of kit-owned chrome from a snapshot taken at first
+       load and then dispatches `lessonreset`.
 
-   What it does NOT own: the activity. A demo's app.js listens for the
-   `stagechange` event on document to react to a tab change.
+   What it does NOT own: the activity. A demo's app.js listens for two events
+   on document — `stagechange` to react to a tab change, and `lessonreset` to
+   put its own state back. The second is REQUIRED; see the Reset section below
+   and ADOPTING.md.
 
-   It exposes window.lessonShell = { selectStage, setPresentation, flags }.
+   It exposes window.lessonShell =
+     { selectStage, setPresentation, reset, flags, onReset }.
    --------------------------------------------------------------------------- */
 function behaviourScript() {
   return `
@@ -253,6 +275,27 @@ function behaviourScript() {
   /* ---- A1 stage tablist ------------------------------------------------- */
   const tabs = $$('.stage-tab');
   const panels = $$('section.stage');
+
+  /* ---- the first-load snapshot ------------------------------------------
+     Taken here, before the hash can select a stage and before the demo's own
+     app.js has run at all (the shell's script tag precedes it). Reset RESTORES
+     FROM THIS rather than recomputing, which is what makes an in-place reset
+     honest for a gated demo: the gate comes back exactly as the template
+     authored it, whether or not the demo has a sync function of its own. */
+  const snapshot = {
+    tabs: tabs.map(t => {
+      const mark = $('.stage-mark', t);
+      return {
+        disabled: t.disabled,
+        className: t.className,
+        title: t.getAttribute('title'),
+        mark: mark ? mark.textContent : null
+      };
+    }),
+    echoes: $$('.lesson-strip .echo').map(e => ({ node: e, html: e.innerHTML, hidden: e.hidden })),
+    cues: $$('.obs-cue').map(c => ({ node: c, text: c.textContent, className: c.className })),
+    detailsSubtitle: (($('#details-subtitle') || {}).textContent) || ''
+  };
   function selectStage(index, opts) {
     if (!tabs.length) return;
     /* A gated demo (one that unlocks stage k+1 only after stage k's evidence)
@@ -326,26 +369,103 @@ function behaviourScript() {
     }));
   });
 
-  /* ---- Reset: a fresh load, with presentation mode preserved ------------ */
-  const resetBtn = $('#reset-btn');
-  if (resetBtn) resetBtn.addEventListener('click', () => {
-    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return;
-    const f = ['reset'];
-    if (document.body.classList.contains('presenter')) f.push('presenting');
-    const base = location.href.split('#')[0];
-    try { location.replace(base + '#' + f.join(',')); } catch (e) { location.hash = f.join(','); }
-    location.reload();
-  });
+  /* ---- Reset: IN PLACE, no page reload -----------------------------------
+     Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
+     location.reload(), which was trivially correct and threw the page away to
+     get there: a reload discards a canvas mid-animation, re-runs every boot
+     path, and on a slow projector laptop is a visible blank flash in front of
+     a room. In-place costs a real contract instead, and this is it.
 
-  /* ---- A7: the Guide greets every load; a Reset arrives explained ------- */
-  if (guide && !guide.open && !flags.has('reset')) {
+     THE DIVISION OF LABOUR — the whole contract in one sentence: if the kit
+     named the class, the shell restores it; everything else is the demo's.
+
+     WHAT THE SHELL GUARANTEES, in this order:
+       1. 'onReset()' is consulted first and a 'false' return CANCELS the whole
+          reset — nothing below runs. That is the veto path, unchanged from v1.
+       2. Every open <dialog> closes — not only the shell's four. A demo may
+          own one (two-winters' #item-details), and a dialog still open after a
+          Reset is un-restored state the learner is looking straight at.
+       3. Every stage tab goes back to its first-load chrome from the snapshot:
+          'disabled' (so a gate re-locks), class (so 'complete' marks clear),
+          title, and the .stage-mark glyph.
+       4. Every A6 check card drops its aria-pressed answer and clears its
+          feedback line.
+       5. Every A2 .echo and A4 .obs-cue returns to its snapshotted first-load
+          content. partials.html specifies both as empty on load; the snapshot
+          is used rather than a blanket clear so a demo that authored something
+          there keeps it.
+       6. The A5 Details drawer goes back to showing stage 1, with its
+          subtitle restored.
+       7. selectStage(0) — stage 1, which also fires 'stagechange'.
+       8. The page scrolls to the top.
+       9. 'lessonreset' is dispatched on document.
+
+     WHAT THE SHELL DOES NOT TOUCH, deliberately:
+       * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
+         projector every time would be hostile. CONTRACT.md's wording too.
+       * THE GUIDE. It does not reopen. A reset is not a fresh arrival, and the
+         learner who pressed it has already read it.
+       * THE ACTIVITY. The shell cannot know what a demo holds. That is what
+         step 9 is for.
+
+     WHAT THE DEMO MUST IMPLEMENT — required, not optional:
+
+         document.addEventListener('lessonreset', () => {
+           // every variable your module closes over, back to its initial value
+           // every node your app.js generated, back to its first-load content
+           // then re-render stage 1
+         });
+
+     'lessonreset' fires LAST, after the shell has finished, so the demo has
+     the final word over any node the two both touch. It is not cancelable: the
+     veto lives in onReset(), so there is exactly one place to refuse a reset.
+
+     A demo that ships no handler silently keeps its answers, its generated
+     DOM and its progress through a Reset that visibly moved everything else.
+     check-shell.js fails a built file that carries no handler, with a negative
+     control proving it is not merely matching the dispatch below. */
+  function resetLesson() {
+    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
+    $$('dialog').forEach(d => {
+      if (!d.open) return;
+      try { d.close(); } catch (e) { /* a dialog mid-close; it is already going */ }
+    });
+    tabs.forEach((t, i) => {
+      const s = snapshot.tabs[i];
+      if (!s) return;
+      t.disabled = s.disabled;
+      t.className = s.className;
+      if (s.title === null) t.removeAttribute('title'); else t.setAttribute('title', s.title);
+      const mark = $('.stage-mark', t);
+      if (mark && s.mark !== null) mark.textContent = s.mark;
+    });
+    $$('.check').forEach(card => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      const out = $('.check-feedback', card);
+      if (out) out.innerHTML = '';
+    });
+    snapshot.echoes.forEach(e => { e.node.innerHTML = e.html; e.node.hidden = e.hidden; });
+    snapshot.cues.forEach(c => { c.node.textContent = c.text; c.node.className = c.className; });
+    $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
+    const sub = $('#details-subtitle');
+    if (sub) sub.textContent = snapshot.detailsSubtitle;
+    selectStage(0);
+    try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+    document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
+    return true;
+  }
+  const resetBtn = $('#reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', () => resetLesson());
+
+  /* ---- A7: the Guide greets every load ---------------------------------- */
+  if (guide && !guide.open) {
     opener = $('#guide-open');
     guide.showModal();
     const cta = $('.lesson-dialog-actions button', guide);
     if (cta) cta.focus();
   }
 
-  window.lessonShell = { selectStage, setPresentation, flags, onReset: null };
+  window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
 })();
 `;
 }

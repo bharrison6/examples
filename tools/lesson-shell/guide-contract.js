@@ -48,6 +48,10 @@
      const out = gc.injectOnce(template, marker, text);
      gc.assertNoRuntimeLoads(builtHtml);              // proves itself first
      gc.assertNoExternalRefs(builtHtml, ['demo-guide.html']);
+       // ^ the allow-list is for a SAME-FOLDER file referenced by one of the
+       //   scanned tags. Outbound <a href="https://..."> source links are not
+       //   scanned at all and never need listing — see the note on the
+       //   function itself.
 
    Every function THROWS on failure with a message that names the file concept
    and the fix. A build.js catches nothing: the throw is the refusal.
@@ -186,10 +190,30 @@ function assertNoRuntimeLoads(html) {
   return { controls: BAIT.length, passed: true };
 }
 
-/* Zero <script src> / <link href> to anything off the page. `allow` lists
-   same-folder files the built page may legitimately link to as a HYPERLINK —
-   CONTRACT.md 2026-09-08: an <a href> the reader may choose to follow is not a
-   network call by the page. */
+/* Zero <script src> / <link href> to anything off the page.
+
+   WHAT `allow` IS FOR, because the natural first guess is wrong. Only these
+   tags are scanned at all:
+
+     script, link, img, iframe, source, video, audio, embed, object
+
+   An <a> IS NOT AMONG THEM and never has been. So the Sources list in the A5
+   Details drawer — a screenful of <a href="https://..."> to the papers a demo
+   cites — is invisible to this function, needs no entry in `allow`, and will
+   not refuse your build. Those links are the point of the drawer; a page that
+   could not carry them would be useless.
+
+   `allow` is narrower than that: it lists the same-folder files a SCANNED tag
+   may legitimately reference. In practice that is one entry, 'demo-guide.html',
+   for the printable-copy link in the presenter-notes dialog. If you find
+   yourself adding a URL to `allow`, stop — a scanned tag pointing off the page
+   is the thing this check exists to refuse (CONTRACT.md 2026-09-08: an <a href>
+   the reader may CHOOSE to follow is not a network call by the page; a <script
+   src> or <link href> is one whether they choose it or not).
+
+   The second scan below is the one an <a> cannot escape, and it is deliberately
+   narrow: anything script- or stylesheet-shaped pointing at a remote origin is
+   refused from anywhere in the document, tag list or not. */
 function assertNoExternalRefs(html, allow) {
   const allowed = new Set(allow || []);
   const offenders = [];

@@ -11,6 +11,20 @@
      is caught by check-shell.js, which refuses a built index.html containing
      any of them.
 
+     IDS THE KIT RESERVES. Every id spelled in this file belongs to the shell's
+     own behaviour script, which looks them up by name. Do not reuse one for
+     your own element:
+
+       brandbar  guide  guide-open  guide-title  settings  settings-open
+       settings-title  settings-menu  presenter-notes  presenter-notes-title
+       details  details-title  details-subtitle  presentation-btn
+       presentation-foot  reset-btn
+
+     plus the per-stage tab-N / stage-N / stage-N-title / cue-N / check-N-title
+     family. `details` is the one that has actually bitten — see the A5 note
+     below. check-shell.js refuses a built file that defines any id twice, so a
+     collision fails the build rather than silently half-working.
+
      Order on the page: header (A0) -> stage tablist (A1) -> one section.stage
      per stage, each containing stage intro (A2) + activity (A3/A4) + check
      (A6) -> footer (A0) -> dialogs (A5, A7, A8, notes) -> credit pill (A0).
@@ -225,8 +239,19 @@
 <!-- ===== A8 SETTINGS ======================================================
      The contract triad FIRST, in this order, labelled EXACTLY:
        Open Presenter Notes / Presentation mode / Reset
-     Presentation mode adds the header Notes button and bumps --u. Reset
-     restores fresh-load demo state and LEAVES PRESENTATION MODE ALONE.
+     Presentation mode adds the header Notes button and bumps --u.
+
+     Reset restores fresh-load demo state IN PLACE — no page reload (operator
+     ruling 2026-09-16). It LEAVES PRESENTATION MODE ALONE and does not reopen
+     the Guide. The shell restores what the kit owns and then dispatches
+     `lessonreset`; YOUR app.js must listen for it and restore the activity.
+     That handler is a required part of the template, not an optional extra —
+     see the Reset section of index.js and ADOPTING.md.
+
+     Write the .setnote to say what a learner will actually see come back, in
+     this demo's own nouns ("every answer cleared, stage 1, the timeline
+     rewound"), not the generic sentence.
+
      Demo-specific options follow the triad, never before it.
      ======================================================================== -->
 <dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
@@ -242,7 +267,7 @@
     <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b> button in the header.</p>
     <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
     <h3>Reset</h3>
-    <p class="setnote">Back to a fresh load. Presentation mode stays as you set it.</p>
+    <p class="setnote">Back to the start: WHAT THIS DEMO PUTS BACK, IN ITS OWN NOUNS. Presentation mode stays as you set it.</p>
     <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
   </div>
   <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
@@ -259,6 +284,18 @@
           domain reviewer can name and this list cannot is a defect.
        4. Sources             — every Sourced kicker must resolve to an entry here
        5. Boundary            — .evidence-card: what this demo does NOT claim
+     KNOWN ADOPTION TRAP: TWO DIFFERENT THINGS CALLED "DETAILS". This drawer is
+     PER-STAGE and FIXED — boundary, assumptions, sources for the stage as a
+     whole. It is not a place to show one timeline event, one grid cell or one
+     row. A demo that already has a per-ITEM drill-down has a second, unrelated
+     mechanism that belongs to the activity (A3) and must keep its own dialog
+     and its own id: two-winters uses #item-details, and a "Details" button on
+     each cell whose aria-label names the cell. Do NOT fold the two together —
+     the per-item content would displace the stage's boundary and sources, and
+     reusing the id `details` silently breaks whichever element the shell's
+     querySelector does not reach. check-shell.js fails a duplicate id, but the
+     design decision is yours to get right before it gets there.
+
      DETAIL PROSE NEEDS LABELS TOO. A demo can label every grid cell in its
      activity and leave the drawer's prose unlabeled — and the unlabeled
      surface is exactly where an uncertain claim hides (this is the second
