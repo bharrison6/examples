@@ -12,20 +12,36 @@ offline on school laptops straight off a USB stick or a shared drive.
 
 | File | What it is |
 |---|---|
-| `index.html` | The whole game, instructor guide included — one self-contained file (~388 KB). |
-| `teacher-guide.html` | Printable instructor guide — 75-minute session plan, CPM background, sources. |
-| `Topping-Out-Instructor-Guide.pdf` | The same guide, pre-rendered to Letter. |
+| `index.html` | The whole lesson, session guide included — one self-contained file (~450 KB). |
+| `teacher-guide.html` | Printable **session guide** — the 75-minute running order, the four stages, the five misconceptions, the presenter controls. 2,364 words. |
+| `appendix.html` | The **CPM appendix** — forward/backward pass, the full calls deck, all eleven debrief questions, the measured seeds, the sources and the vocabulary. Linked, never injected. |
+| `Topping-Out-Instructor-Guide.pdf` | The session guide, pre-rendered to Letter. The filename is a public URL and does not change. |
 | `SPEC.md` | The original design brief this was built against. |
-| `src/` | Sources. `teacher-guide.html` here is the canonical guide; the two copies are generated. |
-| `build.js` | Concatenates `src/` into `index.html` and injects the guide into the presenter notes. |
+| `src/` | Sources. `demo-guide.html` is the canonical session guide and `appendix.html` the canonical appendix; the shipped copies are generated. |
+| `build.js` | Assembles `src/` plus the shared lesson shell (`../tools/lesson-shell/`) into `index.html`, and injects the session guide into the presenter notes. |
 | `tools/pdf.mjs` | Renders the guide to the PDF above. |
 
 Teams manage the schedule of the same small commercial building, week by week, against the
 same run of bad luck. Highest profit at completion wins.
 
+The lesson is **four stages** on the shared lesson shell — *Read the schedule · Run a week ·
+Make a call · Debrief*. They are framings of one continuous game rather than four screens, so
+there is a single game board and it moves between the stages as you switch. Stages 2–4 open on
+genuine prerequisites: you cannot run a week before there is a schedule, and there is nothing to
+debrief until a decision has run. A `#stage-N` hash beyond the furthest unlocked stage clamps to
+it rather than routing around the gate.
+
+Each stage opens with its question, a "Before you start" refresh of the one idea it leans on, and
+a **Predict · Try · Takeaway** strip. The Predict card is capturable and the prediction is echoed
+beside the computed answer — stage 2 asks *which activity is critical after this week?* before you
+commit, and the engine answers it when the week runs. Each stage closes with a **Check yourself**
+card whose wrong options state the misconception on purpose and whose feedback names why it is
+wrong. **Details** opens the stage's evidence: what is live, how it works, the assumptions, the
+sources, and what the demo does not claim.
+
 The **Guide** opens on every load — the weekly loop, the three views and the three things that
-cost teams the game, on one sheet. Dismiss it with the button, a tap on the paper around it, or
-Esc; the **?** in the title bar (and on the setup sheet) puts it back up any time.
+cost teams the game, on one sheet. Dismiss it with the button, a click on the backdrop, or Esc;
+the **?** in the header (and on the setup sheet) puts it back up any time.
 
 ## What makes it a real scheduler and not a scripted timeline
 
@@ -224,21 +240,30 @@ against the **no-intervention baseline** — the same seed played by simply lett
 
 **⚙ Settings** sits beside the **?** in the title bar. It always offers the same three things
 first — **Open Presenter Notes**, **Presentation mode** and **Reset** — followed by this demo’s
-own controls: the Guide, a link to the printable instructor guide, an engine self-test that runs
-36 assertions (including the CPM hand calculation) in front of the class, and a leaderboard reset.
+own controls: links to the printable session guide and the CPM appendix, an engine self-test that
+runs 36 assertions (including the CPM hand calculation) in front of the class, and a leaderboard
+reset.
 
-**Open Presenter Notes** shows the instructor guide itself, in full, inside the game: the same
-document as `teacher-guide.html` and the PDF, not a summary of it. It is injected at build time
-from `src/teacher-guide.html`, so there is only one copy to keep current and `node build.js
+**Open Presenter Notes** shows the **session guide** itself, in full, inside the game: the same
+document as `teacher-guide.html` and the PDF, not a summary of it. The CPM background, the whole
+calls deck, every debrief question, the measured seeds, the sources and the vocabulary live in
+`appendix.html`, which is *linked* rather than injected — nine thousand words in a phone-sized
+overlay is not a document. Nothing was dropped in that split, and it is checked rather than
+claimed: `node tools/guide-facts.mjs verify` enumerates the pre-split guide into content units
+and load-bearing tokens and requires every one to land in the session guide, the appendix or
+on-screen UI. It carries its own negative control. It is injected at build time
+from `src/demo-guide.html`, so there is only one copy to keep current and `node build.js
 --check` fails if the app and the printed sheet ever drift apart. Turning Presentation mode on
 also puts a 🎙 shortcut to the notes in the title bar.
 
 **Presentation mode** is the large-type UI, readable from the back of a room — the old projector
 mode. It is a display preference for the machine, not part of a run, so it survives a Reset.
 
-**Reset** returns the machine to the setup sheet exactly as the page opens: no run in progress,
-seed and team cleared, tutorial and Standard selected, every overlay closed and the Guide left
-down. Mid-run it asks first. The leaderboard is not run state — it survives a reload, so it
+**Reset** returns the machine to the setup sheet **in place, with no page reload**: no run in
+progress, seed and team cleared, tutorial and Standard selected, every prediction echo and check
+answer cleared, stages 2–4 re-locked, stage 1 selected, every dialog closed and the Guide left
+down. Mid-run it asks first — and answering no cancels the whole reset rather than leaving it
+half done. The leaderboard is not run state — it survives a reload, so it
 survives a Reset, and has its own control in the same menu for clearing between sections.
 
 Difficulty (Easy / Standard / Hard) scales how often events fire and how hard they hit. The seed
@@ -251,13 +276,13 @@ loop and the views before the competitive run on *Racer Commons — Chestnut Str
 ## Developing
 
 Sources live in `src/` and are concatenated by `build.js` into the single `index.html`. The
-instructor guide is canonical in `src/teacher-guide.html`: `build.js` copies it to the demo root
+session guide is canonical in `src/demo-guide.html`: `build.js` copies it to the demo root
 and lifts its `.guide-scope` body and scoped stylesheet into the app, so the presenter notes, the
 printable page and the PDF are one document from one file. Edit the guide there, never a copy.
 
 ```
 node build.js                  # rebuild index.html from src/, guide and all
-node build.js --check          # fails if index.html or the shipped guide has drifted from src/
+node build.js --check          # fails if index.html, the shipped guide or the appendix has drifted from src/
 node tools/pdf.mjs             # re-render Topping-Out-Instructor-Guide.pdf from the guide
 node tools/pdf.mjs --check     # fails if the PDF is missing or older than the guide
 node src/engine.js --test      # 36 engine assertions (also runs in-browser from the Settings menu)
