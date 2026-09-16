@@ -538,30 +538,6 @@ function runSelfTest() {
   return checks;
 }
 
-/* ---- A6 check cards: correct the shell's wrong-answer prefix ----------------
-   The frozen kit hardcodes ion-flight's own wording into the shared check-card
-   handler: a wrong option is prefixed "Not what the detector showed." There is
-   no detector in this demo — nothing here detects anything — and a page whose
-   subject is saying exactly what an instrument measured cannot assert a
-   measurement that did not happen.
-
-   The kit is frozen (a behaviour change needs an unfreeze plus a rebuild of
-   every merged demo), and all six kit-built demos carry the phrase, so the
-   real fix belongs in the kit at the next unfreeze — it is in this lane's
-   friction list. Until then this corrects it locally. The shell's own listener
-   is registered first, because the shell's script tag precedes this one, so
-   this handler runs after it and rewrites only the prefix it wrote. */
-const CHECK_PREFIX_WRONG = 'Not what the evidence shows.';
-$$('.check').forEach(card => {
-  const out = card.querySelector('.check-feedback');
-  if (!out) return;
-  $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
-    if (btn.classList.contains('correct')) return;
-    const b = out.querySelector('b');
-    if (b && /detector/i.test(b.textContent)) b.textContent = CHECK_PREFIX_WRONG;
-  }));
-});
-
 /* ---- the shell's two events ------------------------------------------------ */
 
 /* `stagechange` is treated as a CHROME event only, per ADOPTING.md section 4

@@ -10,7 +10,6 @@
      * relocating the ONE flight view between the four .activity-host divs;
      * the three captured A2 predictions, their echoes and the two gates;
      * the A4 observation cues, which are edge-triggered off the live state;
-     * the A6 feedback prefix, overridden demo-side (see THE KIT STRING below);
      * the activity half of the in-place Reset.
 
    WHAT IT DELIBERATELY DOES NOT DO
@@ -22,15 +21,7 @@
        what bit the missing-time lane. `stagechange` is treated here as a
        chrome event, and a `resetting` flag (synthesised below, because the kit
        does not yet expose window.lessonShell.resetting) makes that explicit
-       rather than merely true by luck of ordering.
-
-   THE KIT STRING. lesson-shell v2's shared A6 handler hardcodes
-   ion-flight's wording — a wrong option is prefixed "Not what the detector
-   showed." There is no detector in an orbital game. The kit is FROZEN, so the
-   fix belongs on a kit branch and not in this lane; this file re-renders the
-   feedback line after the shell's handler has run, which works because the
-   shell's script is injected before this one and listeners fire in
-   registration order. Recorded in the lane's friction list. */
+       rather than merely true by luck of ordering. */
 (() => {
   'use strict';
 
@@ -286,21 +277,6 @@
     if (now !== 'none' && now !== zone) cue(stage, CUE[now][stage](o));
     zone = now;
   }
-
-  /* ---- A6: the feedback prefix, overridden demo-side --------------------
-     See THE KIT STRING at the top of this file. The shell has already written
-     its own prefix by the time this runs; this replaces the line wholesale. */
-  $$('.check').forEach(card => {
-    const out = card.querySelector('.check-feedback');
-    $$('.check-option').filter(b => card.contains(b)).forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!out) return;
-        out.innerHTML = (btn.classList.contains('correct')
-          ? '<b>Supported.</b> '
-          : '<b>Not what the flight showed.</b> ') + (btn.dataset.feedback || '');
-      });
-    });
-  });
 
   /* ---- the two directions of stage/level sync -------------------------- */
   function enterLevel(i) {

@@ -616,27 +616,6 @@ function showClosing() {
   $('#closing-slide').showModal();
 }
 
-/* ---- A6: correct the shell's hardcoded wrong-answer prefix ----------------
-   The frozen kit writes "Not what the detector showed." for any wrong option
-   (lesson-shell/index.js). There is no detector in this demo and nothing here
-   detects anything, so the sentence asserts a measurement that did not happen.
-   The kit is frozen — a behaviour change needs an unfreeze plus a rebuild of
-   every merged demo — so this corrects it locally and it is on this lane's
-   friction list. Reused from takeoff/src/app.js, which hit the same thing.
-
-   The shell's listener is registered first (its script tag precedes this one),
-   so this handler runs after it and rewrites only the prefix the shell wrote. */
-const CHECK_PREFIX_WRONG = 'Not what this demo showed.';
-$$('.check').forEach(card => {
-  const out = $('.check-feedback', card);
-  if (!out) return;
-  $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
-    if (btn.classList.contains('correct')) return;
-    const b = out.querySelector('b');
-    if (b && /detector/i.test(b.textContent)) b.textContent = CHECK_PREFIX_WRONG;
-  }));
-});
-
 /* ------------------------------------------------------------- wiring ----- */
 function toggle(i) {
   S.bits[i] = S.bits[i] ? 0 : 1;

@@ -50,6 +50,9 @@
       pass vacuously and be worse than its absence, because it would retire
       the reviewer's attention. What 5b buys is that the marked surface cannot
       rot, and that a details-stage cannot ship with no provenance at all.
+      Scope: the learner-facing page minus the injected presenter guide
+      (guide-contract's MARKERS) — the guide is a different document with
+      its own vocabulary and is not drawer prose (glass-box, K4).
 
    6. Zero <script src> and zero <link href> to anything but a same-folder
       hyperlink: the built file is self-contained (CONTRACT.md).
@@ -81,6 +84,28 @@
       and guessing costs more than it buys. Stated rather than papered over —
       a collision created entirely at runtime by app.js is out of reach here
       and belongs to the browser pass.
+
+   WHAT WAS TRIED AND NOT SHIPPED — an absence-claim lint (K4, 2026-09-16).
+   After three absence-claim failures in the fleet program (one of them a demo
+   shipping "One row is uneven, and it stays uneven" against four months of
+   public docs), a warn-only lint for absolute-negative phrasing in visible
+   learner copy was prototyped here and measured against all 14 built demos,
+   with <script>, <style>, comments and <a> stripped. A BROAD word list
+   (never / cannot / nowhere / there is no / does not exist / no version of /
+   stays …) tripped 5/5 bait sentences and 6/8 legitimate ones, and produced
+   183 warnings on a corpus that had already been corrected. A NARROW list
+   tuned to prediction-shaped phrases got false positives down to 2/8 but
+   missed 2/5 of the real failures — and one of its remaining false positives
+   was the fleet's standard self-containment sentence ("This page runs no
+   model and makes no network request"), which is a true, checkable negative
+   that must never warn. There is no regex operating point between those two:
+   the feature that separates "Google has no consumer-plan peer" from "there
+   is no combined score" is WHOSE capability the sentence is about, and that
+   is semantic. A lint that warns 183 times on compliant copy is tuned out on
+   day one, and a lint that misses "Copilot cannot accept tracked changes"
+   retires the reviewer's attention without earning it. The rule itself
+   stands and lives in ADOPTING.md §5b; enforcing it is the L1 reviewer's
+   lens, as it is for 5b's unmarked claims above.
 
    PROVING THE CHECKS ARE POTENT. --self-test runs every check against
    synthetic bait that should trip it, and fails if any check stays silent. A
@@ -140,6 +165,22 @@ function stripScripts(html) {
   return html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '<script></script>');
 }
 
+/* The injected presenter guide, from guide-contract's opening div to its
+   line-anchored end marker. Both strings are the contract's own (MARKERS in
+   guide-contract.js), so a change there changes this in one place. A file
+   with no guide, or a malformed one, is returned untouched — extractGuide
+   already refuses to build those. */
+const gc = require('./guide-contract.js');
+function stripGuide(html) {
+  const open = gc.MARKERS.guideBodyOpen;
+  const end = gc.MARKERS.guideBodyEnd.trim();
+  const a = html.indexOf(open);
+  if (a < 0) return html;
+  const b = html.indexOf(end, a);
+  if (b < 0) return html;
+  return html.slice(0, a) + '<div class="guide-scope"></div>' + html.slice(b + end.length);
+}
+
 /* Every check is a function returning an array of failure strings. Keeping
    them in one table is what lets --self-test iterate them. */
 const CHECKS = Object.freeze([
@@ -176,8 +217,20 @@ const CHECKS = Object.freeze([
     }
     return out;
   }],
-  ['A5 detail labels', html => {
+  ['A5 detail labels', rawHtml => {
     const out = [];
+    /* THE INJECTED GUIDE IS OUT OF SCOPE. The presenter notes are the printable
+       teacher guide, injected verbatim between guide-contract's two markers.
+       That document has its own vocabulary, and glass-box's guide used
+       `<div class="mis"><div class="claim">…` for the misconception STATEMENT
+       — a plan-mandated card, and a different mechanism that happens to share
+       the kit's class name. Read as drawer prose it "has no provenance
+       kicker", and the lane had to rewrite a correct guide to get green. The
+       scan below is about the learner-facing Details drawer, so the guide
+       region is cut out before anything is matched. --self-test carries the
+       glass-box shape as a must-accept control, and a kicker-less .claim
+       placed AFTER the guide as the potency control. */
+    const html = stripGuide(rawHtml);
     /* Every .details-stage must carry at least one kicker: the drawer's first
        fixed section IS the provenance statement. */
     const stages = html.match(/<section[^>]*class="[^"]*details-stage[^"]*"[\s\S]*?(?=<section[^>]*class="[^"]*details-stage|<\/div>\s*<form method="dialog" class="lesson-dialog-actions")/g) || [];
@@ -217,6 +270,166 @@ const CHECKS = Object.freeze([
             "addEventListener('lessonreset', ...) to restore its own activity (or take the whole reset " +
             'over by assigning a non-null window.lessonShell.onReset). Without one, every answer and ' +
             'every node the activity generated survives a Reset. See ADOPTING.md.'];
+  }],
+  /* 10. The A2 phone intro disclosure is present AND has not been made to hide
+     the wrong thing. Three separate properties, reported under one name:
+
+       a) the built file carries the shell's disclosure at all. It is created
+          at RUNTIME by behaviourScript() (partials.html is a reference sheet,
+          not an injected file), so the evidence is in the injected script, not
+          in the markup — which is also why a demo cannot opt out of it.
+       b) it is a NATIVE <details>/<summary>. That is where Enter/Space, the
+          disclosure role and the expanded state come from; a div with a click
+          handler gives a learner on a screen reader nothing.
+       c) NOTHING IN THE neverCollapse LIST IS HIDDEN AT PHONE WIDTH. A
+          collapsible intro that takes the stage question with it defeats its
+          own purpose: the question is the one line that orients, and the whole
+          ruling is about reaching the activity without losing the plot. The
+          scan is scoped to `max-width: 480px` blocks, because the
+          landscape-short block legitimately hides other intro parts. */
+  ['A2 phone intro disclosure', html => {
+    const out = [];
+    const d = shell.INTRO_DISCLOSURE;
+    const scripts = (html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || []).join('\n');
+    if (!scripts.includes(d.className)) {
+      out.push(`no "${d.className}" disclosure in the injected shell script — this file was built ` +
+               'against a shell with no collapsible phone intro (operator ruling 2026-09-16); rebuild');
+    }
+    if (!/createElement\(\s*['"]summary['"]\s*\)/.test(scripts)) {
+      out.push('the intro disclosure is not a native <summary> — keyboard operation and the ' +
+               'expanded state would have to be reimplemented, and a screen reader would get nothing');
+    }
+    /* Scoped scan: only the phone blocks. */
+    const phoneBlocks = [];
+    const re = new RegExp('@media[^{]*max-width:\\s*' + d.breakpointPx + 'px[^{]*\\{', 'g');
+    let m;
+    while ((m = re.exec(html))) {
+      /* Walk braces from the block's opening brace so a nested rule cannot cut
+         the block short. */
+      let depth = 1, i = m.index + m[0].length;
+      for (; i < html.length && depth > 0; i += 1) {
+        if (html[i] === '{') depth += 1;
+        else if (html[i] === '}') depth -= 1;
+      }
+      phoneBlocks.push(html.slice(m.index, i));
+    }
+    const phoneCss = phoneBlocks.join('\n');
+    d.neverCollapse.forEach(sel => {
+      const hide = new RegExp(sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
+        '[^{}]*\\{[^{}]*display\\s*:\\s*none', 'i');
+      if (hide.test(phoneCss)) {
+        out.push(`"${sel}" is hidden at phone width — the collapsible intro must keep it visible; ` +
+                 'collapsing the line that orients the learner defeats the ruling it implements');
+      }
+    });
+    return out;
+  }],
+  /* 11. The shared A6 handler must be DEMO-NEUTRAL. v2 hardcoded one demo's
+     wrong-answer sentence into the shell and shipped it to all eight built
+     demos, so a learner met "Not what the detector showed." in check cards
+     about PLC ladder logic, AI winters and wavelet compression. It survived
+     two pilots and four builds because nothing looked for it. Two properties:
+       a) no sentence from LEAKED_A6 appears in the injected script;
+       b) the handler actually reads a per-card lead, so a demo CAN supply its
+          own wording — without that, neutrality is just a different demo's
+          sentence winning. */
+  ['A6 feedback vocabulary', html => {
+    const out = [];
+    if (!html.includes('check-option')) return out;
+    const scripts = (html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || []).join('\n');
+    /* COMMENTS ARE STRIPPED BEFORE THE BLOCKLIST SCAN, and this is not
+       tidiness — it is the difference between a check and a tautology. The
+       first run of this check failed both rebuilt demos on the kit's OWN
+       comment explaining the leak, which behaviourScript() injects into every
+       built file; takeoff carries a comment documenting it too. A blocklist
+       that matches its own documentation reports a defect that is not there
+       and hides the one that is. The kit's comment was also reworded so the
+       sentence appears nowhere in injected code — both halves, because either
+       alone leaves the check matching prose.
+
+       The strip is deliberately conservative and its limit is stated: a `//`
+       or slash-star sequence inside a string literal would over-strip. That
+       costs a false NEGATIVE (a missed leak), never a false positive, which is
+       the right direction for a check that reds a whole fleet. */
+    const code = scripts
+      .replace(/\/\*[\s\S]*?\*\//g, ' ')
+      .replace(/^[ \t]*\/\/.*$/gm, ' ');
+    shell.LEAKED_A6.forEach(s => {
+      if (code.includes(s)) {
+        out.push(`the shared A6 handler hardcodes a demo-specific sentence: "${s}". Take the lead ` +
+                 "from the card's own data-correct-lead / data-wrong-lead instead — every demo " +
+                 'built on this shell renders it, whatever its subject.');
+      }
+    });
+    if (!/dataset\.wrongLead/.test(code)) {
+      out.push('the shared A6 handler reads no per-card wrong-answer lead (data-wrong-lead), so a ' +
+               'demo cannot supply its own wording and the kit picks the sentence for all of them');
+    }
+    return out;
+  }],
+  /* 12. `.hidden` is a RESERVED kit class as of v3 (shell.css). This check is
+     the price of that claim being safe: the kit overrides `.hidden` with
+     !important, so a demo that means anything else by it would be silently
+     overridden — trading a visible stacking bug for an invisible one. Rather
+     than not claim the name, the collision is made loud.
+
+     Scoped to <style> blocks so JS property access (`if (x.hidden)`,
+     `rows.hidden.at(-1)` — both real in takeoff) cannot be read as CSS. */
+  /* 13. A DEMO MUST NOT WRITE INTO SHELL-OWNED OUTPUT. The coupling the kit
+     exists to eliminate, and the only check here that is about a BOUNDARY
+     rather than a defect.
+
+     Two merged demos independently reached into `.check-feedback` — which
+     ADOPTING.md §1 assigns to the shell — to rewrite the wrong-answer sentence
+     the frozen kit hardcoded: ladder-lab with
+     `out.innerHTML = out.innerHTML.replace(...)`, takeoff by rewriting the
+     <b> lead's textContent. Both were the right call while the kit was frozen.
+     Both go DEAD SILENTLY the moment the kit is fixed: the replace stops
+     matching, the regex stops testing true, and the code still looks live. A
+     doc note cannot catch that; a check can, and it catches the next nine
+     copies rather than these two.
+
+     Note what is deliberately NOT guarded: `.echo` and `.obs-cue`. The A2/A4
+     contract says the activity fills those, so a demo writing them is correct.
+     Guarding them would red every properly built demo.
+
+     THE SHELL'S OWN SCRIPT IS EXCLUDED by its marker comment, because of
+     course it writes these surfaces — it owns them. That exclusion is the
+     check's must-accept control in --self-test; without it this reds the
+     entire fleet. */
+  ['shell-owned output', html => {
+    const out = [];
+    const blocks = html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) || [];
+    const demoBlocks = blocks.filter(b => !shell.SHELL_SCRIPT_MARKER_RE.test(b));
+    shell.SHELL_OWNED_OUTPUT.forEach(surface => {
+      demoBlocks.forEach(b => {
+        if (!b.includes(surface)) return;
+        out.push(`a demo script references "${surface}", which the shell owns (ADOPTING.md §1). ` +
+                 'Post-processing what the shell rendered is the coupling the kit exists to remove, ' +
+                 'and it dies silently when the shell changes. Supply the wording through the card ' +
+                 '(data-correct-lead / data-wrong-lead) instead.');
+      });
+    });
+    return out;
+  }],
+  ['reserved .hidden class', html => {
+    const out = [];
+    const styles = (html.match(/<style\b[^>]*>[\s\S]*?<\/style>/gi) || []).join('\n');
+    const rules = styles.match(/(^|[\s,{}])\.hidden\b[^{}]*\{[^{}]*\}/g) || [];
+    rules.forEach(r => {
+      const body = r.slice(r.indexOf('{') + 1, r.lastIndexOf('}'));
+      /* Anything that is not "display: none" is a redefinition. A demo
+         re-stating display:none (with or without !important) is harmless and
+         must stay quiet — several demos legitimately still carry their own. */
+      const decls = body.split(';').map(d => d.trim()).filter(Boolean);
+      const bad = decls.filter(d => !/^display\s*:\s*none\s*(!important)?$/i.test(d));
+      if (bad.length) {
+        out.push('.hidden is a lesson-shell reserved class (display:none !important) and this file ' +
+                 `redefines it: "${bad.join('; ').slice(0, 70)}". The shell's !important wins, so the ` +
+                 'redefinition would fail silently — rename your class.');
+      }
+    });
+    return out;
   }],
   ['unique ids', html => {
     const seen = new Map();
@@ -258,10 +471,27 @@ function selfTest() {
     '</section></div>\n<form method="dialog" class="lesson-dialog-actions"><button>Back to activity</button></form>',
     '<button id="reset-btn">Reset</button>',
     `<div class="bh-credit">${PILL_TEXT}</div>`,
-    /* The shell's dispatch AND a demo listener, which is the real shape of a
-       built page. The dispatch alone is bait below, not baseline. */
-    '<script>document.dispatchEvent(new CustomEvent(\'lessonreset\'));',
-    'document.addEventListener(\'lessonreset\', () => {});</script>',
+    /* A phone block, the shape shell.css really has: it reveals the intro
+       summary and hides the header icon labels. Bait below adds a rule hiding
+       the stage question to it; a must-accept case below leaves it as is. */
+    '<style>@media (max-width: 480px){ .intro-more > summary { display: flex; }',
+    ' .icon-label { display: none; } }</style>',
+    /* TWO script blocks, because that is the real shape of a built page and
+       one of the v3 checks depends on telling them apart. First the SHELL's,
+       carrying its marker comment — it legitimately writes .check-feedback,
+       and if the 'shell-owned output' check cannot see that it is the shell,
+       it reds every demo in the fleet. */
+    `<script>/* ${shell.SHELL_SCRIPT_MARKER} */`,
+    'document.dispatchEvent(new CustomEvent(\'lessonreset\'));',
+    /* The v3 shell shapes the two new checks read: the runtime-built intro
+       disclosure, and an A6 lead taken from the card rather than the kit. */
+    'const d = document.createElement(\'details\'); d.className = \'intro-more\';',
+    'const sum = document.createElement(\'summary\');',
+    'const fb = card.querySelector(\'.check-feedback\');',
+    'const lead = card.dataset.wrongLead || \'Not quite.\';</script>',
+    /* Then the DEMO's, which must carry the reset listener and must NOT touch
+       shell-owned output. */
+    '<script>document.addEventListener(\'lessonreset\', () => {});</script>',
     '</body></html>'
   ].join('');
   const baseline = checkHtml(good);
@@ -291,6 +521,12 @@ function selfTest() {
        own kicker left in place so only the claim check can fire. */
     ['A5 detail labels', 'claim block 0 has no provenance kicker',
       good.replace('<span class="k-reasoned">Reasoned</span>', 'Reasoned')],
+    /* 5b scope potency: the guide is cut out, but a kicker-less .claim that sits
+       OUTSIDE the guide region — after it in the document — must still trip.
+       Without this, "strip the guide" could quietly become "strip the rest". */
+    ['A5 detail labels', 'claim block 1 has no provenance kicker',
+      good.replace('</body>', gc.MARKERS.guideBodyOpen + '<p>notes</p>' + gc.MARKERS.guideBodyEnd +
+        '<div class="claim"><p>unlabelled drawer prose</p></div></body>')],
     /* 5b guard: a nested div makes the claim scan unable to read the block, so
        it must say so rather than pass. */
     ['A5 detail labels', 'nested <div>',
@@ -308,6 +544,48 @@ function selfTest() {
        baseline-shaped page that must produce NO failure (see below). */
     ['unique ids', 'defined more than once',
       good.replace('<button id="reset-btn">Reset</button>', '<button id="reset-btn">Reset</button><i id="reset-btn"></i>')],
+    /* --- v3 bait: the A2 phone intro disclosure, three properties --------- */
+    /* (a) built against a shell with no disclosure at all — the stale-build
+       case the whole ruling depends on catching. */
+    ['A2 phone intro disclosure', 'was built against a shell with no collapsible phone intro',
+      good.replace("d.className = 'intro-more';", "d.className = 'intro-block';")],
+    /* (b) a div-with-a-click-handler instead of the native element: it looks
+       identical in a screenshot and gives a screen-reader user nothing. */
+    ['A2 phone intro disclosure', 'not a native <summary>',
+      good.replace("document.createElement('summary')", "document.createElement('div')")],
+    /* (c) THE ONE THE RULING IS ABOUT: a collapsed intro that takes the stage
+       question with it. The question is the line that orients; hiding it to
+       win height defeats the purpose of collapsing at all. */
+    ['A2 phone intro disclosure', 'is hidden at phone width',
+      good.replace('.icon-label { display: none; }',
+        '.icon-label { display: none; } .stage-question { display: none; }')],
+    /* --- v3 bait: the A6 wording leak ------------------------------------ */
+    /* The exact defect v2 shipped to all eight demos: one demo's sentence,
+       hardcoded in the SHARED handler. */
+    ['A6 feedback vocabulary', 'hardcodes a demo-specific sentence',
+      good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
+        "const lead = '<b>Not what the detector showed.</b> ';")],
+    /* And the other half: a handler that hardcodes nothing but also offers no
+       way for a demo to supply its own lead is not neutral, it has just picked
+       a different demo's sentence to impose. Feedback supplied, hardcoded
+       string gone, per-card lead still missing — must trip. */
+    ['A6 feedback vocabulary', 'reads no per-card wrong-answer lead',
+      good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
+        "const lead = 'Not quite.'; const body = btn.dataset.feedback;")],
+    /* --- v3 bait: a demo reaching into shell-owned output ----------------- */
+    /* Shaped exactly like the two shims that shipped: ladder-lab's
+       innerHTML.replace and takeoff's <b> textContent rewrite. Both are in a
+       DEMO block, so the marker exclusion must not save them. */
+    ['shell-owned output', 'which the shell owns',
+      good.replace("<script>document.addEventListener('lessonreset', () => {});</script>",
+        "<script>document.addEventListener('lessonreset', () => {});" +
+        "document.querySelectorAll('.check-option').forEach(b => b.addEventListener('click', () => {" +
+        "const o = b.closest('.check').querySelector('.check-feedback');" +
+        "if (o) o.innerHTML = o.innerHTML.replace('x', 'y');}));</script>")],
+    /* --- v3 bait: a demo redefining the reserved .hidden class ------------ */
+    ['reserved .hidden class', 'redefines it',
+      good.replace('.icon-label { display: none; }',
+        '.icon-label { display: none; } } .hidden { display: flex; opacity: .5; } @media (max-width: 480px){')],
     /* Check 9's stripping control: the SAME duplicate, spelled inside a
        <script>, must NOT trip it — otherwise the check is reading JS strings
        as markup and would red every demo that builds HTML at runtime. Asserted
@@ -327,7 +605,59 @@ function selfTest() {
       good.replace("document.addEventListener('lessonreset', () => {});",
         'window.lessonShell.onReset = () => { rewind(); return false; };')],
     ['unique ids', 'the same duplicate id spelled inside a <script> string',
-      good.replace('</body>', '<script>var s = \'<i id="reset-btn"></i>\';</script></body>')]
+      good.replace('</body>', '<script>var s = \'<i id="reset-btn"></i>\';</script></body>')],
+    /* The neverCollapse scan must read ONLY the phone blocks, and must not
+       simply fire on any display:none inside one. `.icon-label` hidden at
+       <=480 is real, shipped, correct shell.css — if this trips, the check is
+       matching the media query rather than the selector. */
+    ['A2 phone intro disclosure', 'a phone block hiding .icon-label, which is correct and shipped', good],
+    /* And the scoping control: the landscape-short block genuinely hides intro
+       parts a phone-portrait block may not. A whole-file scan would red every
+       demo on shipped CSS. */
+    ['A2 phone intro disclosure', 'the landscape-short block hiding intro parts outside the phone block',
+      good.replace('</head>', '<style>@media (orientation: landscape) and (max-height: 560px)' +
+        '{ .stage-question { display: none } }</style></head>')],
+    /* A demo RE-STATING display:none for .hidden is harmless and common —
+       several demos still carry their own copy, and the retrofit does not
+       require deleting it. Must stay quiet or the check reds correct files. */
+    ['reserved .hidden class', 'a demo restating .hidden as display:none !important, which is harmless',
+      good.replace('</head>', '<style>.hidden{display:none !important;}</style></head>')],
+    /* And the scoping control: JS property access spelled `.hidden` is not a
+       CSS rule. Both of these shapes are real in takeoff/index.html, and a
+       whole-file scan would red it. */
+    ['reserved .hidden class', 'JS property access spelled .hidden, which is not a CSS rule',
+      good.replace('</body>', '<script>if (r.hidden) { x = rows.hidden.at(-1).label; }</script></body>')],
+    /* THE SELF-MATCH CONTROL, and the reason it exists: the first run of the
+       A6 blocklist failed both rebuilt demos on the kit's own comment
+       explaining the leak — a check matching its own documentation. A demo or
+       a kit may DISCUSS the leaked sentence in a comment; only executable code
+       may not contain it. If this bait goes noisy the check has become a
+       tautology again. */
+    /* THE EXCLUSION CONTROL, and the reason the check is safe to ship: the
+       shell's OWN block references .check-feedback because it owns it. The
+       baseline `good` page carries exactly that. If this goes noisy the check
+       reds all eleven merged demos on correct code. */
+    ['shell-owned output', "the shell's own block writing .check-feedback, which it owns", good],
+    /* And the demo-owned A2/A4 surfaces the activity is REQUIRED to fill must
+       not be mistaken for shell-owned output. */
+    ['shell-owned output', 'a demo writing .echo and .obs-cue, which the A2/A4 contract assigns to it',
+      good.replace("<script>document.addEventListener('lessonreset', () => {});</script>",
+        "<script>document.addEventListener('lessonreset', () => {});" +
+        "document.querySelector('.echo').innerHTML = 'observed 1.4 ms';" +
+        "document.querySelector('.obs-cue').textContent = 'the heavier ion lands later';</script>")],
+    /* THE GUIDE-SCOPE CONTROL: glass-box's misconception cards, exactly as its
+       guide first shipped them — a nested `.claim` with no kicker, inside the
+       injected guide. The drawer scan must not read it. If this goes noisy the
+       scan has escaped its scope again and will fail a plan-mandated part. */
+    ['A5 detail labels', 'a .mis card with a nested kicker-less .claim inside the injected guide (glass-box)',
+      good.replace('</body>', '<div class="lesson-dialog-body guide-host">' + gc.MARKERS.guideBodyOpen +
+        '<section><h2>Misconceptions to expect</h2>' +
+        '<div class="mis"><div class="claim">It is understanding the story.</div><span>It is predicting tokens.</span></div>' +
+        '</section>' + gc.MARKERS.guideBodyEnd + '</div></body>')],
+    ['A6 feedback vocabulary', 'a comment discussing the leaked sentence, which is not a leak',
+      good.replace("const lead = card.dataset.wrongLead || 'Not quite.';",
+        "/* v2 hardcoded 'Not what the detector showed.' here; fixed in v3. */\n" +
+        "const lead = card.dataset.wrongLead || 'Not quite.';")]
   ];
   for (const [name, what, html] of quiet) {
     const noisy = checkHtml(html).filter(f => f.startsWith(name + ':'));

@@ -11,8 +11,8 @@
 
    Kit classes are not reused for the game's own things: the level and gallery
    cards are .gcard (the kit owns .card), the gallery slider row is .grow (the
-   kit owns .row). No .hidden rule is defined — game.js uses the `hidden`
-   attribute, which shell.css backs, and kit v3 fails a demo redefining .hidden.
+   kit owns .row). No rule for the hidden class is defined — game.js uses the `hidden`
+   attribute, which shell.css backs, and kit v3 fails a demo that redefines the reserved hidden class.
 
    Three groups of rule:
      1. the workbench — toolbar, cost box, the bounded canvas frame and its two
