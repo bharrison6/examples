@@ -1,9 +1,9 @@
 /* Fuel Golf — physics playtest harness.
-   Runs against the SHIPPED game code (game.js exports its physics core).
+   Runs against the SHIPPED game code (src/game.js exports its physics core).
    node test-physics.js
 */
 'use strict';
-const G = require('./game.js');
+const G = require('./src/game.js');
 const { DT, LEVELS, elements, step, startState, propagate, timeToApsis, burnDir, applyBurn } = G;
 
 let failures = 0;
