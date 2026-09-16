@@ -123,7 +123,7 @@ function initialValue(initial, key, index) {
 function render(container, options) {
   const net = options && options.net;
   if (!net) {
-    container.innerHTML = `<div class="network-empty"><h2>Current neural network</h2><p>No network yet. Choose <b>Create learning examples</b> to prepare the frozen table values and initialize real weights.</p></div>`;
+    container.innerHTML = `<div class="network-empty"><span class="panel-kicker"><span class="k-live">Live</span> the current model, read without changing it</span><h3>Current neural network</h3><p>No network yet. Choose <b>Create learning examples</b> to prepare the frozen table values and initialize real weights.</p></div>`;
     return;
   }
   const initial = options.initial || null;
@@ -158,8 +158,8 @@ function render(container, options) {
   const beforeBias = initialValue(initial, def.initialBiasKey, def.initialBiasIndex);
   const biasDelta = Number.isFinite(beforeBias) ? def.bias - beforeBias : NaN;
 
-  container.innerHTML = `<div class="network-view-head"><div><p class="panel-kicker">Actual model · read-only</p>` +
-    `<h2>Current neural network</h2></div><span class="parameter-count">${arch.params.toLocaleString('en-US')} parameters</span></div>` +
+  container.innerHTML = `<div class="network-view-head"><div><span class="panel-kicker"><span class="k-live">Live</span> the actual model, read without changing it</span>` +
+    `<h3>Current neural network</h3></div><span class="parameter-count">${arch.params.toLocaleString('en-US')} parameters</span></div>` +
     `<p class="network-context">These activations describe <b>${esc(options.boardLabel || 'the current board')}</b>. ` +
     `They are an internal calculation for that board, not the score of a candidate move. Use Show move scores to compare candidate afterstates.</p>` +
     `<div class="network-layers"><div><b>${arch.inputs}</b><span>inputs</span><small>27 cell states + 2 turn</small></div>` +

@@ -3,108 +3,203 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Types of AI — demo guide</title>
+<title>Types of AI — presenter guide</title>
+<!--
+  Canonical, printable presenter guide for Types of AI.
+  Demo 1 of 16, Part one ("What AI is") of AI: From Zero to Takeoff.
+
+  This file is the single source of truth for the presenter notes. build.js
+  lifts the stylesheet marked with the id guide-css, and the guide-scope div,
+  out of here verbatim and injects them into index.html, so Settings ->
+  Open Presenter Notes shows exactly this text with no sibling file to go
+  looking for. Edit here; never edit the copy inside index.html.
+
+  Three markers are contractual, and build.js refuses to run unless each one
+  starts a line and occurs exactly once outside a comment: the opening tag of
+  the scoped stylesheet, the opening tag of the guide-scope div, and the
+  closing tag of that div with its trailing marker comment.
+
+  Everything in the scoped stylesheet MUST be scoped to .guide-scope, because
+  it is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the unnamed block after it, which is not
+  extracted.
+
+  Structure follows template part A9: header; Learning goals (the stage
+  Takeaways verbatim — never "you will be able to", per the operator
+  amendment); Where this sits on the path; one question for the session; per
+  stage Question / Predict prompt / Activity / Expected observation /
+  Check-yourself answer key / Teaching limit; Misconceptions as .mis cards;
+  Discussion questions; Presenter controls; footer.
+-->
+<style id="guide-css">
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #805800; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say { border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px; margin: 0 0 .9em; font-style: italic; opacity: .95; }
+.guide-scope .goals { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope .goals li { margin-bottom: 8px; }
+.guide-scope .beat { color: #805800; font-weight: 800; font-variant-numeric: tabular-nums; }
+.guide-scope .mis { border-left: 3px solid #b98cff; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 0 0 10px; background: rgba(185, 140, 255, .08); }
+.guide-scope .mis b { display: block; color: #5a3e8c; }
+.guide-scope .mis span { display: block; margin-top: 4px; }
+.guide-scope .key { border: 1px solid rgba(143,163,192,0.35); border-radius: 6px; padding: 8px 12px; margin: 0 0 .9em; font-size: .92em; }
+.guide-scope .key b { color: #1C704D; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+</style>
 <style>
-@page { size:A4 portrait; margin:12mm; }
-.guide { --navy:#002144; --gold:#ECAC00; --ink:#172433; --muted:#526577; font:10.4pt/1.42 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:#fff; max-width:190mm; margin:16px auto; padding:8mm 10mm; }
-.guide * { box-sizing:border-box; }
-.guide header { border-bottom:4px solid var(--navy); padding-bottom:10px; margin-bottom:16px; }
-.guide .eyebrow { color:var(--navy); font-size:.78em; font-weight:800; letter-spacing:.16em; text-transform:uppercase; }
-.guide h1 { color:var(--navy); margin:.2em 0; font-size:2em; }
-.guide h1 small { display:block; color:var(--muted); font-size:.48em; letter-spacing:.08em; text-transform:uppercase; }
-.guide h2 { color:var(--navy); border-bottom:2px solid var(--gold); padding-bottom:3px; margin:1.2em 0 .5em; font-size:1.15em; }
-.guide h3 { color:var(--navy); margin:1em 0 .3em; font-size:1em; }
-.guide p,.guide li { margin:.35em 0; }
-.guide ol,.guide ul { padding-left:1.35em; }
-.guide .say { background:#fff7e4; border-left:4px solid var(--gold); padding:.55em .75em; font-style:italic; }
-.guide .note { border:1px solid #c8d3df; border-radius:6px; padding:.6em .75em; color:var(--muted); }
-.guide .meta { color:var(--muted); }
-.guide footer { border-top:1px solid #c8d3df; color:var(--muted); font-size:.82em; margin-top:1.4em; padding-top:.6em; }
-@media print { .guide { margin:0; max-width:none; padding:0; font-size:9.5pt; } .guide .page-break { break-before:page; } }
+/* Standalone printable page only — not extracted into the app. */
+body { margin: 0; background: #fff; color: #14181f; font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+.page { max-width: 46rem; margin: 0 auto; padding: 32px 22px 56px; }
+@media print { body { font-size: 10.5pt; } .page { padding: 0; max-width: none; } @page { size: A4 portrait; margin: 14mm; } }
 </style>
 </head>
 <body>
-<div class="guide">
-<header>
-  <div class="eyebrow">Murray State University</div>
-  <h1>Types of AI<small>Demo 1 · model representations and learning methods · 20 minutes</small></h1>
-  <p class="meta"><b>You need:</b> one browser and the demo’s <code>index.html</code>. It works offline. Start with a fresh page; use Settings → Presentation mode to project, Open Presenter Notes for this guide in the app, and Open printable PDF when a handout helps.</p>
-</header>
+<div class="page">
+<div class="guide-scope">
+<div class="g-head">
+  <div class="g-kicker">Murray State University · Presenter guide</div>
+  <h1>Types of AI</h1>
+  <div class="g-sub">Demo 1 of 16 · Part one · What AI is · 20 minutes</div>
+  <p><b>You need:</b> one browser and the demo&rsquo;s <code>index.html</code>; it works offline. Start from a fresh page or press Settings &rarr; Reset. Settings &rarr; Presentation mode scales the page for a projector; Open Presenter Notes shows this guide in the app.</p>
+</div>
 
-<section>
-<h2>The question for all 20 minutes</h2>
-<p><b>How is a strategy represented, and how did it get there?</b> Choose <b>Model types</b> to reveal A–D. A–C compare written rules, a value table, and shared neural-network weights on one game; D introduces other families. The top-level <b>How they learn</b> tab explains training methods.</p>
-<p class="say">“A model is how the strategy is represented. A learning method is how its adjustable parts change.”</p>
-</section>
+<h2>Learning goals</h2>
+<p>Each stage&rsquo;s Takeaway, as the learner reads it:</p>
+<ol class="goals">
+  <li><b>1a.</b> This opponent&rsquo;s skill came from a person: changing its rules changes its play, and playing more games changes nothing.</li>
+  <li><b>1b.</b> Reinforcement learning stores experience as a separate score for each position; only an exhaustive search over every game line, not a good record, earns the word unbeatable.</li>
+  <li><b>1c.</b> A network&rsquo;s error measures fit to its training targets; held-out error shows how that fit carries to positions it never practised, and neither is a playing-strength guarantee.</li>
+  <li><b>1d.</b> Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</li>
+  <li><b>Model types.</b> A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside; one neural-network family, the transformer, sits behind text, image, audio, video and multimodal types alike.</li>
+</ol>
 
-<section>
-<h2>1a · Symbolic AI (GOFAI) — 4 minutes</h2>
+<h2>Where this sits on the path</h2>
+<p>Demo 1 of 16 opens Part one. Nothing comes before it. It hands forward one idea to Demo 2 (How a Language Model Works): a model is a representation that can be trained, and <i>architecture</i>, <i>training method</i> and <i>model type</i> are three separate questions to ask of any AI.</p>
+
+<h2>One question for the session</h2>
+<p><b>Where does an AI&rsquo;s skill come from?</b> Three models play the same board and each got its skill a different way. The top lens sorts models two ways: <b>Model architecture</b> (how it is built and trained &mdash; 1a to 1d) and <b>Model types</b> (what it does).</p>
+<p class="say">&ldquo;Architecture is how it is built. Training method is how it learns. Type is the job. Keep asking which one someone means.&rdquo;</p>
+
+<h2>1a · Symbolic AI (GOFAI) &mdash; 4 minutes</h2>
 <h3>Question</h3>
-<p>Can an opponent be skilled when it has never learned from a game?</p>
+<p>Can a program play well without ever learning?</p>
+<h3>Predict prompt</h3>
+<p>Ask the room to press a prediction: with only the <b>First 2</b> rules on, can you beat it? Take a show of hands before anyone plays.</p>
 <h3>Activity</h3>
 <ol>
-<li>Open <b>1a Symbolic AI (GOFAI)</b> and play a few moves against All 8.</li>
-<li>Point to the highlighted rule after each reply. Switch to First 2 and invite the room to find a fork, then return to All 8.</li>
-<li>Open <b>Details</b> for the exhaustive policy evidence and the explanation of GOFAI.</li>
+  <li><span class="beat">0:00</span> Press <b>First 2 rules</b>. Play one game; invite the room to find the fork. The Notice line and the panel name the rule that answered each move.</li>
+  <li><span class="beat">1:30</span> Press <b>All 8 rules</b> and play again. Point at the rule that fires each turn.</li>
+  <li><span class="beat">3:00</span> Open <b>Details</b>: the proof line reports the exhaustive search over every game playable against the ladder.</li>
 </ol>
 <h3>Expected observation</h3>
-<p>The opponent can explain a move by naming a rule. All 8 has no losing line because the app checks the whole policy, not because it won a few demonstrations.</p>
+<p>Two rules lose to a fork; eight rules have no losing line. The opponent explains every move by naming a rule, and nothing about it changes however many games are played.</p>
+<div class="key"><b>Check answer:</b> a person wrote every rule and its priority; playing did not change them. The wrong option (&ldquo;it learned the rules by playing&rdquo;) is refuted by First 2 losing the same fork forever.</div>
 <h3>Teaching limit</h3>
-<p>GOFAI means Good Old-Fashioned Artificial Intelligence. These rules form a decision list: a matching rule chooses a move; otherwise the next rule is checked. It can be drawn as a decision tree. Here people wrote the tests; trees can also be learned.</p>
-</section>
+<p>GOFAI means Good Old-Fashioned Artificial Intelligence. This decision list can be drawn as a tree; here people wrote the tests, whereas decision trees can also be learned. Say &ldquo;this small example&rdquo;, not &ldquo;symbolic AI&rdquo;.</p>
 
-<section>
-<h2>1b · Value table — 5 minutes</h2>
+<h2>1b · Value table &mdash; 5 minutes</h2>
 <h3>Question</h3>
-<p>What changes when an opponent keeps a score for positions it has experienced?</p>
+<p>Can experience alone teach a blank table to play?</p>
+<h3>Predict prompt</h3>
+<p>After one burst of 5,000 games, will Era 1 be unbeatable or still beatable? Press a prediction.</p>
 <h3>Activity</h3>
 <ol>
-<li>Open <b>1b Value table</b>. In Era 0, use <b>Show move scores</b>; every score begins at zero.</li>
-<li>Play one short game, then run a training burst. Read the change report below the training controls for recorded scores before and after that burst.</li>
-<li>Select earlier and later eras: the report compares each selected era with its predecessor. Era 0 shows the untrained baseline. <b>Details</b> supplies the policy-check evidence.</li>
+  <li><span class="beat">0:00</span> In Era 0 press <b>Show move scores</b>: every square reads 0.00. Play one short game; it moves at random.</li>
+  <li><span class="beat">1:00</span> Press <b>Train the AI</b>. Read the change report under the training controls: recorded scores before and after the burst.</li>
+  <li><span class="beat">2:30</span> Train again until the Notice line says <i>verified unbeatable</i> (usually burst 3 to 5). Switch the <b>Opponent era</b> back to Era 0 and forward again: the report follows the selection.</li>
+  <li><span class="beat">4:00</span> Open <b>Details</b> for the proof line.</li>
 </ol>
 <h3>Expected observation</h3>
-<p>The model is a table; the learning method is reinforcement learning. Game outcomes and estimates of later replies update separate position scores. Practice can therefore change its choices.</p>
+<p>Era 1 is still beatable; the scores moved but a losing line remains. A later era has no losing line in either role. Human play never changes the table; only the burst does.</p>
+<div class="key"><b>Check answer:</b> no &mdash; only the training burst updates the table; your games are scored, not learned from. Each era is a frozen snapshot.</div>
 <h3>Teaching limit</h3>
-<p>Human play does not train this table. Only the app’s training burst updates it. The table also has one separate score per position, so it does not automatically carry what it learned to a different situation.</p>
-</section>
+<p>The table has one separate score per position, so it carries nothing to a different situation. Tic-tac-toe is small enough to tabulate; chess and language are not, which is why the next stage shares parameters.</p>
 
-<section class="page-break">
-<h2>1c · Neural Network — 7 minutes</h2>
+<h2>1c · Neural Network &mdash; 6 minutes</h2>
 <h3>Question</h3>
-<p>Can adjustable numbers reused across many boards approximate the scores a table learned?</p>
+<p>Can one set of shared weights score boards it never practised on?</p>
+<h3>Predict prompt</h3>
+<p>After training, will held-out error be about the same as practised error, or clearly higher? Press a prediction; the reveal quotes the measured numbers.</p>
 <h3>Activity</h3>
 <ol>
-<li>Open <b>1c Neural Network</b> and choose <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its estimates become frozen teaching targets.</li>
-<li>Inspect the network’s layers and a connection’s numeric weight. Choose <b>Train network</b>, then compare the weight with its initial value.</li>
-<li>Compare training error, held-out error, and the separate playing score. Use <b>Show move scores</b> to inspect predictions for legal moves.</li>
+  <li><span class="beat">0:00</span> Press <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its estimates freeze as targets. This is the one slow step.</li>
+  <li><span class="beat">1:30</span> In the network view, pick a connection layer and a neuron; read one weight and its initialized value.</li>
+  <li><span class="beat">2:30</span> Press <b>Train network</b>. Compare the weight with its initial value, then the practised and held-out errors, then the separate playing score. <b>Show move scores</b> shows predictions for legal moves.</li>
+  <li><span class="beat">5:00</span> Optional: from <b>Details</b>, open the Ultimate tic-tac-toe extension to show a representation that cannot see the whole game.</li>
 </ol>
 <h3>Expected observation</h3>
-<p>This feedforward multilayer perceptron uses supervised learning. Backpropagation calculates how weights affect error; normalized gradient updates adjust them. Shared weights influence many positions. Neuron activations are responses to an input, not stored weights; a positive weight does not mean a good move.</p>
+<p>The network is a feedforward multilayer perceptron (29 inputs, 28 and 18 ReLU units, one output) fitted by supervised learning to targets another model produced. Backpropagation supplies gradients; updates are normalized gradient steps. Shared weights give an answer for a held-out position; the error readings say how close, and neither is playing strength.</p>
+<div class="key"><b>Check answers:</b> error measures agreement with the frozen table&rsquo;s scores, which are themselves estimates; play is measured separately. 1b stores one number per position; 1c reuses 1,381 shared parameters for every board.</div>
 <h3>Teaching limit</h3>
-<p>Lower error means closer agreement with the teacher, not guaranteed playing strength. People chose the inputs and learning procedure. During play the network calculates its own scores without consulting the frozen table. It is trained with gradients, not evolutionary selection.</p>
-<p class="note">A fresh teacher can leave an unvisited position at its initial score of zero. That is a limit of the examples, not proof that the position is neutral in perfect tic-tac-toe.</p>
-<p class="say">“A neural network is a model used in machine learning. Here it learns a compact approximation of another learner’s experience.”</p>
-</section>
+<p>Lower error means closer agreement with the teacher, not guaranteed playing strength; no automatic unbeatable claim is made. A position the fresh teacher never visited stays at zero &mdash; a limit of the examples, not proof the position is neutral. During play the network calculates its own scores without consulting the frozen table. Activations are responses to a board, not stored weights; a positive weight is not a good move.</p>
 
-<section>
-<h2>Other models and how they learn — 4 minutes</h2>
-<p><b>D · Other model types</b> introduces linear models, decision trees, ensembles, nearest neighbors, support-vector machines, and probabilistic models. Search/planning is explained separately as a problem-solving approach.</p>
-<p>Open the unlettered <b>How they learn</b> tab. Supervised learning uses example targets; unsupervised learning finds structure without target labels; self-supervised learning creates targets from the data; reinforcement learning uses action rewards; semi-supervised learning combines labeled and unlabeled examples. These approaches can be combined.</p>
-<p>Self-play is not the same as self-supervision. B uses reinforcement learning; C uses supervised targets produced by B’s algorithm. A neural network can use other learning methods too.</p>
-</section>
+<h2>1d · Other architectures &amp; training methods &mdash; 3 minutes</h2>
+<h3>Question</h3>
+<p>What else can a model be, and how else can it learn?</p>
+<h3>Predict prompt</h3>
+<p>Which of 1a, 1b, 1c learned by supervised learning? Press a prediction, then press the <b>Supervised learning</b> card to check.</p>
+<h3>Activity</h3>
+<ol>
+  <li><span class="beat">0:00</span> Press each <b>training method</b> card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
+  <li><span class="beat">1:30</span> Read the <b>architecture</b> cards: linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
+</ol>
+<h3>Expected observation</h3>
+<p>Architecture and training method are separate columns. 1c is a network trained by supervised learning; a network could equally be trained by reinforcement, and a table could be fitted to supervised targets.</p>
+<div class="key"><b>Check answer:</b> no &mdash; the network is an architecture; supervised learning is how this one was trained.</div>
+<h3>Teaching limit</h3>
+<p>The cards are textbook categories, not a complete catalogue, and real systems combine them. Self-play is not self-supervision: 1b learns from rewards. Gradient training is not evolution.</p>
 
-<section>
-<h2>Close with evidence, not a winner</h2>
+<h2>Model types &mdash; 3 minutes</h2>
+<h3>Question</h3>
+<p>If &ldquo;type&rdquo; means the job, what goes in and what comes out?</p>
+<h3>Predict prompt</h3>
+<p>An image-to-text model: what comes out? Press a prediction, then open the <b>Image-to-Text</b> card.</p>
+<h3>Activity</h3>
+<ol>
+  <li><span class="beat">0:00</span> Switch the top lens to <b>Model types</b>. Press three cards the room will recognise: text generation, text-to-speech, speech-to-text (automatic speech recognition). Each shows what goes in and comes out, then the catalogue&rsquo;s own definition.</li>
+  <li><span class="beat">1:30</span> Press <b>Image-to-3D</b>: the job people call image-to-mesh. Follow <b>Browse models</b> on one card if you are online; the demo itself never fetches.</li>
+  <li><span class="beat">2:30</span> Scroll to the whole catalogue: every type Hugging Face lists, in its groups, with the model count on the fetch date.</li>
+</ol>
+<h3>Expected observation</h3>
+<p>A type is named by its input and output. Text generation and image-to-text are different types that can share one architecture family; tabular types are the visible exception, where the catalogue names tree and boosting libraries. The link back to 1c: a small network scoring boards is the same idea as the networks behind most of these types.</p>
+<div class="key"><b>Check answer:</b> not necessarily &mdash; type is the job; one transformer may generate text and another caption images.</div>
+<h3>Teaching limit</h3>
+<p>The taxonomy and the counts are Hugging Face&rsquo;s, fetched on the date shown on the stage; counts move daily. Other catalogues cut the jobs differently. The stage does not run any of these models.</p>
+
+<h2>Misconceptions</h2>
+<div class="mis"><b>&ldquo;A program that plays well must have learned.&rdquo;</b><span>1a plays unbeatable tic-tac-toe with no learning at all. Skill can be written down by a person; learning is one way to get it, not the definition of AI.</span></div>
+<div class="mis"><b>&ldquo;A long run of draws proves it is unbeatable.&rdquo;</b><span>Sampled games can miss a line. The app calls an era unbeatable only after searching every reachable game line in both roles. Open Details for the counts.</span></div>
+<div class="mis"><b>&ldquo;Playing against the table trains it.&rdquo;</b><span>Human play is scored, not learned from. Only Train the AI updates the live table, and every era is a frozen copy.</span></div>
+<div class="mis"><b>&ldquo;Low error means it plays well.&rdquo;</b><span>Error is agreement with a teacher whose estimates are imperfect. The playing score is a separate, fixed-seed measurement, and this tab never claims unbeatable.</span></div>
+<div class="mis"><b>&ldquo;Neural network is a kind of learning.&rdquo;</b><span>It is an architecture. 1c&rsquo;s network was fitted by supervised learning; the same weights could be trained by reinforcement. Press the method cards in 1d.</span></div>
+<div class="mis"><b>&ldquo;Same architecture, same type.&rdquo;</b><span>Type is the job. Hugging Face files transformers under text generation, image-to-text, speech recognition and more. Ask what goes in and what comes out.</span></div>
+
+<h2>Discussion questions</h2>
 <ul>
-<li>Which model stores separate values, and which shares weights?</li>
-<li>Why does lower held-out error not prove unbeatable play?</li>
+  <li>Which model stores separate values, and which shares weights? What does each choice make easy and hard?</li>
+  <li>Why does lower held-out error not prove unbeatable play? What measurement would?</li>
+  <li>Name an AI product you use. Which type is it, what might its architecture be, and how do you think it was trained? Which of the three can you actually tell from the outside?</li>
+  <li>The Ultimate extension: what information does the inherited representation leave out, and why can more training not put it back?</li>
 </ul>
-<p>Optional Ultimate tic-tac-toe explores missing inputs: shared weights cannot supply omitted facts about a board’s place in the larger game or where a move sends the opponent.</p>
-<p class="note">Reopen Guide with the header’s Guide button. Settings also offers Open Presenter Notes, Presentation mode, and Reset; Reset returns the full demonstration to its initial state.</p>
-</section>
 
-<footer>Bryant Harrison · Murray State University · Types of AI · single-file offline demo · no accounts or runtime network requests</footer>
+<h2>Presenter controls</h2>
+<ul>
+  <li><b>Guide</b> (header) reopens the learner card. <b>Settings</b> has Open Presenter Notes, Presentation mode and Reset, then a playing preference, a rehearsal seed, the self-test and About.</li>
+  <li><b>Reset</b> is in place: stage 1a, All 8 rules, move scores hidden, Era 0, records and predictions cleared, type cards closed. Presentation mode and the playing preference stay.</li>
+  <li><b>Rehearsal seed:</b> type a seed and press Reset; training then unfolds identically, so a rehearsal matches the lesson.</li>
+  <li><b>Run the full self-test</b> re-runs the exhaustive search on the selected stage and prints it in Settings and the console.</li>
+  <li>Deep links: <code>#stage-1</code> to <code>#stage-5</code>; the older <code>#rules</code>, <code>#learning</code>, <code>#neural</code> still work.</li>
+</ul>
+
+<div class="g-foot">Bryant Harrison · Murray State University · Types of AI · single-file offline demo · no accounts or runtime network requests · the Model types stage links out to huggingface.co, fetched 2026-09-16</div>
 </div><!-- /guide -->
+</div>
 </body>
 </html>

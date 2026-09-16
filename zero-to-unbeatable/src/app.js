@@ -2,9 +2,13 @@
    Zero to Unbeatable — user interface
 
    Owns: the game you play, the training montage, the era ledger, the
-   brain inspector and the explainers. All of the learning lives in
+   brain inspector, the two map stages (1d and Model types), and the
+   demo's half of the lesson shell's contract — the `stagechange` and
+   `lessonreset` listeners at the bottom. All of the learning lives in
    engine.js; nothing in this file touches the value table except to
-   read it for display.
+   read it for display. The shell (../tools/lesson-shell, injected before
+   this file) owns the header, the stage tablist, the dialogs, the check
+   cards and Reset's kit-owned half; nothing here shows or hides a stage.
    ===================================================================== */
 
 (function () {
@@ -23,7 +27,9 @@ const S = {
      right: a thing a person wrote, then a thing that wrote itself, then
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
-  view: 'action',       // reading lens: model in action or cross-cutting learning methods
+  stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
+  predictions: {},     // Predict-card answers by key: rules, one, net, other, types
+  method: null,        // stage 1d: the training-method card that is pressed
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -59,61 +65,6 @@ const S = {
 const isUlt   = () => S.mode === 'ult';
 const isRules = () => S.mode === 'rules';
 const isNet   = () => S.mode === 'net';
-const isOther = () => S.mode === 'other';
-
-const STAGE_COPY = {
-  rules: {
-    kicker: 'Model 1a · hand-written symbolic rules', title: 'Symbolic AI (GOFAI)',
-    details: 'Model 1a · Symbolic AI (GOFAI)',
-    question: 'Can a program play well without learning?',
-    try: 'Play a round and watch which rule it uses. Switch to First 2, then compare with All 8.',
-    observe: 'Changing the rules changes its play. Playing more games does not.',
-    takeaway: 'A person supplied its strategy; this opponent never learns from experience.'
-  },
-  one: {
-    kicker: 'Model 1b · tabular model', title: 'Value table',
-    details: 'Model 1b · Value table',
-    question: 'Can experience improve its choices?',
-    try: 'Show move scores in Era 0. Train 5,000 games, then compare the new era with Era 0.',
-    observe: 'Game outcomes change the scores attached to board positions.',
-    takeaway: 'Reinforcement learning stores experience as a separate value estimate for each position.'
-  },
-  net: {
-    kicker: 'Model 1c · shared weights', title: 'Neural Network',
-    details: 'Model 1c · Neural Network',
-    question: 'Can a feedforward network use shared weights to score many positions?',
-    try: 'Create learning examples. Inspect one weight, train, then compare Current, Initialized, and Change.',
-    observe: 'One update changes shared weights used across many boards. Held-out positions stay out of training.',
-    takeaway: 'Error measures fit to frozen table estimates; playing results are a separate check.'
-  },
-  ult: {
-    kicker: 'Optional extension · missing information', title: 'Ultimate tic-tac-toe',
-    details: 'Optional extension · Ultimate tic-tac-toe',
-    question: 'What happens when the learner cannot see the whole game?',
-    try: 'Play a match, turn on move scores, and notice which global facts are absent.',
-    observe: 'The learner sees each small board, but not its location or where a move sends the opponent.',
-    takeaway: 'More training cannot recover information the representation leaves out.'
-  },
-  other: {
-    kicker: 'Model 1d · a wider map', title: 'Other model types',
-    details: 'Model 1d · Other model types',
-    question: 'What other forms can a learned model take?',
-    try: 'Compare what each family stores or calculates, then open How they learn.',
-    observe: 'A model family and a learning method answer different questions.',
-    takeaway: 'This list widens the map; it is not an exhaustive catalog of AI.'
-  }
-};
-
-function renderStageIntro() {
-  const c = STAGE_COPY[S.mode] || STAGE_COPY.rules;
-  $('#stage-kicker').textContent = c.kicker;
-  $('#stage-title').textContent = c.title;
-  $('#stage-question').textContent = c.question;
-  $('#stage-try').textContent = c.try;
-  $('#stage-observe').textContent = c.observe;
-  $('#stage-takeaway').textContent = c.takeaway;
-  $('#details-sub').textContent = c.details;
-}
 
 function ultimateReportAvailable() {
   return UI_STATE.canOpenUltimateLearnedReport(S);
@@ -233,9 +184,12 @@ function resetAll(resetStage) {
   $('#selftest-out').textContent = '';
   if (resetStage) {
     S.mode = 'rules';
-    S.view = 'action';
-    history.replaceState(null, '', location.pathname + location.search + '#rules');
+    S.burst = OG.HP.burst;
+    S.burstU = ULT.HPU.burst;
+    S.neuralBurst = 50000;
   }
+  S.match = null;
+  S.focus = 0;
   S.ruleRec = {};
   S.ruleCounts = {};
   RULES.DEPTHS.forEach(d => resetRuleTally(d.n));
@@ -332,6 +286,11 @@ function applyMove(cell) {
     const rec = currentRec();
     if (g.result === 'win') rec.w++; else if (g.result === 'loss') rec.l++; else rec.d++;
     renderScore();
+    if (isRules() && S.depth === 2) {
+      revealPrediction('rules', 'yes', g.result === 'win'
+        ? 'You found one of the lines the exhaustive search finds: two rules can be beaten, and only a person adding rules would change that.'
+        : 'Not this game — but the exhaustive search finds losing lines for a two-rule ladder in both roles. Open Details for the game that shows it, then try the fork.');
+    }
   }
 }
 
@@ -771,6 +730,9 @@ function renderRuleFired() {
     return;
   }
   el.className = d.ruleId === 0 ? 'nofire' : '';
+  cue(d.ruleId === 0
+    ? `No rule applied: rules ${S.depth + 1}–8 are switched off, so it played a free square at random.`
+    : `Rule ${d.ruleId} answered you — ${d.rule.name}. The list decided; nothing was learned.`, d.ruleId === 0);
   const head = d.ruleId === 0
     ? `<b>No rule</b> <span class="rf-off">rules ${S.depth + 1}–8 are switched off</span>`
     : `<b>Rule ${d.ruleId} · ${d.rule.name}</b>`;
@@ -939,6 +901,16 @@ function renderEraStrip() {
     `<b class="w">${e[key].w}</b>–<b class="d">${e[key].d}</b>–<b class="l">${e[key].l}</b></span>`).join('');
 }
 
+/* What to notice about the era on screen, for the value-table stage. */
+function eraCue() {
+  const e = currentEra();
+  if (!e) return '';
+  if (e.n === 0) return 'Era 0 knows nothing: every value in its table is zero, so every legal move ties and it picks at random.';
+  return `Era ${e.n} after ${fmt(e.games)} games: ` + (e.verified.safe
+    ? 'no losing line in either role — verified unbeatable.'
+    : 'still beatable — a losing line exists.');
+}
+
 function renderTrain() {
   /* Step 1 has nothing to train: the skill is already in the file. */
   $('#train-panel').hidden = isRules();
@@ -951,6 +923,14 @@ function renderTrain() {
     $('#burst-seg').innerHTML = sizes.map(b => `<button data-b="${b}" class="${b === S.neuralBurst ? 'on' : ''}" aria-pressed="${b === S.neuralBurst}">${fmt(b)}</button>`).join('');
     $$('#burst-seg button').forEach(b => b.addEventListener('click', () => { S.neuralBurst = +b.dataset.b; renderTrain(); }));
     $('#burst-seg').setAttribute('aria-label', 'Neural-network training updates');
+    if (m && m.updates > 0) {
+      const ratio = m.trainMse > 0 ? m.heldMse / m.trainMse : 1;
+      cue(`Held-out error ${m.heldMse.toFixed(3)} vs practised ${m.trainMse.toFixed(3)} after ${fmt(m.updates)} updates. Lower is closer to the frozen teacher; neither number is playing strength.`);
+      revealPrediction('net', ratio > 1.5 ? 'higher' : 'same',
+        `Measured: held-out ${m.heldMse.toFixed(3)}, practised ${m.trainMse.toFixed(3)} (ratio ${ratio.toFixed(2)}; this demo calls it clearly higher above 1.5×). Train more and watch whether the gap moves.`);
+    } else if (m) {
+      cue(`Examples ready: ${fmt(m.train)} practised, ${fmt(m.held)} held out. The weights are still random — press Train network.`);
+    }
     $('#train-stats').innerHTML = !m
       ? `<p class="help"><b>Preparation is explicit.</b> A fresh copy of the 1b algorithm plays 20,000 seeded games, freezes its current estimates, then keeps some board positions out of training to check the network later. No labels come from a solved-game oracle.</p>`
       : `<div class="st"><span class="n">${fmt(m.params)}</span><span class="k">parameters</span></div>` +
@@ -1001,8 +981,21 @@ function losingGameHTML(g) {
       : '');
 }
 
+/* The proof line lives in the kit's Details drawer, inside the "What is
+   live" section of the stage it belongs to. One .banner element per host,
+   created on first use; the other hosts are emptied so a stale proof from
+   another stage is never one drawer-open away. */
+function bannerEl() {
+  const key = isRules() ? 'rules' : (isNet() || isUlt()) ? 'net' : 'one';
+  ['rules', 'one', 'net'].forEach(k => { if (k !== key) $('#banner-' + k).innerHTML = ''; });
+  const host = $('#banner-' + key);
+  let el = $('.banner', host);
+  if (!el) { el = document.createElement('div'); el.className = 'banner'; host.appendChild(el); }
+  return el;
+}
+
 function renderBanner() {
-  const el = $('#banner');
+  const el = bannerEl();
   const top = currentEra();
 
   /* ---- Step 1: the same search, run on the hand-written ladder ---- */
@@ -1046,12 +1039,6 @@ function renderBanner() {
     return;
   }
 
-  if (isOther()) {
-    el.hidden = true;
-    el.innerHTML = '';
-    return;
-  }
-
   if (isNet()) {
     el.hidden = false; el.classList.add('quiet');
     if (!S.neural) {
@@ -1071,9 +1058,10 @@ function renderBanner() {
     setTimeout(() => {
       const b = $('#btn-ultimate');
       if (b) b.addEventListener('click', () => {
-        closeSheet('details');
+        $('#details').close();
         S.mode = 'ult';
         applyMode();
+        cue('Ultimate tic-tac-toe: the learner scores each small board but cannot see where it sits or where a move sends you.', true);
       });
     }, 0);
     return;
@@ -1227,6 +1215,14 @@ async function train() {
   renderEraSelect(); renderTrain(); renderBanner();
   newGame(); renderScore();
   renderLearnedPanel();
+  cue(`Era ${era.n} after ${fmt(era.games)} games: ` + (era.verified.safe
+    ? 'the exhaustive search finds no losing line in either role — verified unbeatable.'
+    : `still beatable — a losing line exists. ${era.changed === null ? '' : fmt(era.changed) + ' positions are now played differently from the last era.'}`), !era.verified.safe);
+  if (era.n === 1) {
+    revealPrediction('one', era.verified.safe ? 'unbeatable' : 'beatable', era.verified.safe
+      ? 'Era 1 is already verified: no losing line in either role after one burst.'
+      : 'Era 1 still has a losing line. The scores moved, but one burst is not enough — keep training and watch for the proof line.');
+  }
 }
 
 /* The neural tab has two visible phases. Preparation is ordinary seeded
@@ -1379,7 +1375,7 @@ async function trainUlt() {
   newGame(); renderScore();
   buildLearnedUlt(era, S.eras[era.n - 1]);
   $('#btn-learned').hidden = false;
-  openSheet('learned');
+  $('#learned').showModal();
 }
 
 /* ------------------------------------------------------------------ *
@@ -1663,46 +1659,6 @@ function buildLearnedUlt(era, before) {
 }
 
 /* ------------------------------------------------------------------ *
- * Sheets
- * ------------------------------------------------------------------ */
-
-let sheetOpener = null;
-function focusables(root) { return $$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])', root).filter(x => !x.disabled); }
-function openSheet(id, opener) {
-  const sheet = $('#' + id);
-  sheetOpener = opener || document.activeElement;
-  $('#app').inert = true; $('#app').setAttribute('aria-hidden', 'true');
-  sheet.hidden = false;
-  if (id === 'details') {
-    document.body.classList.add('details-open');
-    $('.details-body', sheet).scrollTop = 0;
-  }
-  /* the print rules key off this, so printing while the notes are open
-     prints the notes and nothing else */
-  if (id === 'notes') { document.body.classList.add('notes-open'); $('#notes-body').scrollTop = 0; }
-  const target = focusables(sheet)[0]; if (target) target.focus();
-}
-function closeSheet(id) {
-  const sheet = $('#' + id); sheet.hidden = true;
-  if (id === 'notes') document.body.classList.remove('notes-open');
-  if (id === 'details') document.body.classList.remove('details-open');
-  if (!$$('.overlay.sheet').some(x => !x.hidden)) { $('#app').inert = false; $('#app').removeAttribute('aria-hidden'); }
-  if (sheetOpener && document.contains(sheetOpener) && !sheetOpener.disabled) sheetOpener.focus();
-  sheetOpener = null;
-}
-$$('[data-close]').forEach(b => b.addEventListener('click', () => closeSheet(b.dataset.close)));
-$$('.overlay.sheet').forEach(o => o.addEventListener('click', e => { if (e.target === o) closeSheet(o.id); }));
-document.addEventListener('keydown', e => {
-  const sheet = $$('.overlay.sheet').find(x => !x.hidden); if (!sheet) return;
-  if (e.key === 'Escape') { e.preventDefault(); closeSheet(sheet.id); return; }
-  if (e.key !== 'Tab') return;
-  const items = focusables(sheet); if (!items.length) return;
-  const first = items[0], last = items[items.length - 1];
-  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-});
-
-/* ------------------------------------------------------------------ *
  * Self-test — the proof, on demand, in the console and on screen
  * ------------------------------------------------------------------ */
 
@@ -1844,158 +1800,26 @@ $('#about-text').innerHTML =
   `${Math.round(OG.HP.mixSelfPlay * 100)}% self-play, ` +
   `${Math.round(OG.HP.exploringStarts * 100)}% dealt starts.`;
 
-/* Reader-facing explanations keep model representation and learning method
-   separate. The algorithms and measurements remain in their model modules. */
-const SYMBOLIC_HOW = `
-<h4>What GOFAI means</h4>
-<p><b>Good Old-Fashioned Artificial Intelligence</b>, or GOFAI, is a historical name for
-the symbolic AI tradition: programs that work with human-defined symbols, relationships, and
-rules. This demo's short hand-written priority list is one simple example, not the whole tradition.</p>
-<h4>How this rule chain chooses</h4>
-<p>The ordered list acts like a chain of decision tests. If a test answers yes, it selects that
-action. If it answers no, the program continues to the next test. A person wrote every test and
-its priority, so playing games does not revise this policy.</p>
-<h4>Symbolic does not mean unlearned</h4>
-<p>Decision trees also route examples through tests, but their questions and branches can be
-learned from data. The representation and the way it was produced are separate facts: this
-particular chain was written by a person.</p>
-<h4>What the evidence says</h4>
-<p>The exhaustive policy check follows every reachable response, including tied choices. It can
-show that this fixed policy has no losing line on this small game; it does not claim that symbolic
-systems are always best or that later models inevitably replace them.</p>`;
-
-const TABLE_HOW = `
-<h4>What the model is</h4>
-<p>1b's model is a <b>value table</b>: one stored estimate for each board position. This demo learns
-those position values through <b>tabular reinforcement learning</b>. After actions lead to wins,
-losses, draws, and later replies, rewards move the relevant estimates.</p>
-<h4>What a person supplies</h4>
-<p>Learning still has design choices made by people: the board representation, which game
-outcomes count as rewards, and the update rule. It is not given a rule that says “take the centre”
-or “block a row.”</p>
-<h4>How to read a score</h4>
-<p>A positive score means the resulting board has tended to work out well for the player who just
-moved; a negative score means the opposite. It is a learned priority, not a spoken reason. <b>Show
-move scores</b> makes those priorities visible square by square.</p>
-<h4>Why it explores</h4>
-<p>Early in training it sometimes tries a random legal move. That produces experience about choices
-it would otherwise ignore. As practice grows, it relies more often on its strongest current score.</p>
-<h4>Model and learning method are different axes</h4>
-<p>A value table is a model representation; reinforcement learning is how this one changes. The
-Neural Network is another model, fitted here with supervised learning. Open <b>How they learn</b>
-for five common, overlapping learning setups. Self-play does not make this self-supervised: even
-when the table plays itself, game rewards still drive its updates.</p>`;
-const NEURAL_HOW = `
-<h4>What the model is</h4>
-<p>This is a <b>feedforward multilayer perceptron</b>: information moves from 29 inputs through
-two hidden layers of 28 and 18 ReLU units to one linear score. The 29 inputs encode each of nine
-squares as empty, X, or O, plus whose turn it is. The displayed score is clamped to −1 through +1
-when read. It is not given rules for rows, forks, or the centre.</p>
-<h4>How it learns</h4>
-<p>A fresh 1b value table first learns through 20,000 seeded reinforcement-learning games. Those
-learned estimates are frozen as target examples. The network then uses <b>supervised learning</b>
-to fit them; targets can come from another model rather than a person. The targets are not
-perfect-game answers, and a position the fresh table never visits can remain at its initial value
-of zero even when a solver would value it differently.</p>
-<p>Backpropagation computes how small changes to each weight would affect squared prediction error.
-The optimizer adjusts the current weights along that gradient, normalized by the squared length of
-the output gradient. It aims to reduce error; it does not evolve a population of candidate networks.</p>
-<h4>How to read the evidence</h4>
-<p>One error is calculated from examples used for practice. The other is calculated from positions
-kept out of training. Related rotations and reflections stay together, so a near-copy cannot quietly
-turn the second number into a repeat of the first. Lower error is closer to the frozen learner; it
-does not guarantee a good answer on every new board.</p>
-<h4>What is playing</h4>
-<p>For each legal move, the app forms the resulting board and runs a forward pass through the
-network weights. It chooses from the best predicted boards. The frozen table is not consulted while
-you play, and a good score against random play is reported separately from the two error readings.</p>
-<p>The live inspector shows the current network's real weights, biases, and activations. A weight is
-a connection strength; an activation is a signal for the current board; neither is automatically
-the goodness of a move. <b>Show move scores</b> compares candidate afterstates separately.</p>`;
-
-const ULTIMATE_HOW = `
-<h4>A representation-limit extension</h4>
-<p>Ultimate tic-tac-toe adds global information: a small board's place in the meta-grid and the
-board a square sends the opponent to. The inherited one-board value table leaves those facts out.</p>
-<p>A Neural Network given the same incomplete inputs would omit those facts too. Changing the model
-family cannot recover information the representation never supplies.</p>`;
-
-const OTHER_HOW = `
-<h4>A wider map, not a complete catalog</h4>
-<p>Linear and logistic models, learned decision trees, ensembles, nearest neighbors,
-support-vector machines, and probabilistic models are other ways to represent patterns. The model
-cards summarize what each representation stores or computes.</p>
-<h4>Where search and planning fit</h4>
-<p>Search and planning explore possible actions or future states. They are AI problem-solving
-approaches rather than another statistical model family, and they can use models to evaluate the
-possibilities they explore.</p>`;
-
 /* ------------------------------------------------------------------ *
  * Wiring
  * ------------------------------------------------------------------ */
 
-/* One place decides what each step shows. Everything it hides is
-   [hidden], so a step never pays for the panels of another step -- which
-   is what keeps the TRAIN button above the fold in step 2 with a
-   full-height rule ladder living in the same column. */
-function applyView() {
-  const learning = S.view === 'learn', other = isOther();
-  $$('#lens-seg button').forEach(button => {
-    const on = button.dataset.view === S.view;
-    button.classList.toggle('on', on);
-    button.setAttribute('aria-selected', String(on));
-    button.tabIndex = on ? 0 : -1;
-  });
-  $('#stage-nav').hidden = learning;
-  $('#stage-intro').hidden = learning || other;
-  $('#col-a').hidden = learning || other;
-  $('#col-b').hidden = learning || other;
-  $('#other-models').hidden = learning || !other;
-  $('#learning-overview').hidden = !learning;
-}
-
-function scrollToViewStart() {
-  const target = S.view === 'learn' ? $('#learning-overview')
-    : (isOther() ? $('#other-models') : $('#stage-intro'));
-  const top = target.getBoundingClientRect().top + window.scrollY - $('#brandbar').offsetHeight - 12;
-  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
-}
-
-function selectView(view) {
-  if (S.view === view) return false;
-  S.view = view;
-  applyView();
-  scrollToViewStart();
-  return true;
-}
-
+/* One place decides what each playable mode shows. Everything it hides is
+   [hidden], so a mode never pays for the panels of another -- which is what
+   keeps the TRAIN button above the fold in 1b with a full-height rule
+   ladder living in the same column. The shell shows and hides STAGES;
+   this shows and hides the activity's panels within the moved block. */
 function applyMode() {
-  const ult = isUlt(), rules = isRules(), other = isOther();
-  const primaryMode = ult ? 'net' : S.mode;
-  $$('#mode-seg button').forEach(x => {
-    const on = x.dataset.mode === primaryMode;
-    x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); x.setAttribute('aria-selected', String(on));
-    x.tabIndex = on ? 0 : -1;
-  });
+  const ult = isUlt(), rules = isRules();
   document.body.classList.toggle('step-rules', rules);
   document.body.classList.toggle('step-ult', ult);
-  document.body.classList.toggle('step-other', other);
-  $('#how-title').textContent = rules ? 'How this symbolic model works'
-    : isNet() ? 'How the neural network works'
-    : ult ? 'How the representation works'
-    : other ? 'How other model families fit the map'
-    : 'How the value table learns';
-  const howStart = $('.sheet-foot [data-close="howto"]', $('#howto'));
-  if (howStart) howStart.textContent = isNet() ? 'Explore the Neural Network'
-    : rules ? 'Play the symbolic rules' : other ? 'Explore other models' : 'Explore the value table';
-  $('#how-body').innerHTML = rules ? SYMBOLIC_HOW : isNet() ? NEURAL_HOW
-    : ult ? ULTIMATE_HOW : other ? OTHER_HOW : TABLE_HOW;
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
-  $('#era-select').hidden = rules || isNet() || other;
-  $('#opp-row').hidden = rules || isNet() || other;
+  $('#era-select').hidden = rules || isNet();
+  $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
-  $('#btn-brain').hidden = rules || other;
+  $('#btn-brain').hidden = rules;
+  $('.ctl-brain').hidden = rules;
   $('#btn-learned').hidden = !ult || !ultimateReportAvailable();
   if (ultimateReportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   if (rules && S.brain) {          // the inspector reads a value table; there is not one here
@@ -2006,57 +1830,18 @@ function applyMode() {
   }
   if (ult) maybeSeed();
   if (rules) renderDepthSeg();
+  /* The cue belongs to the mode on screen; a rule that fired in 1a must not
+     sit under 1b's board. renderTrain and renderRuleFired repaint it. */
+  cue(isRules() ? '' : ult ? 'Ultimate tic-tac-toe: the learner scores each small board but cannot see where it sits or where a move sends you.'
+    : isNet() ? '' : eraCue());
   /* renderRuleFired belongs here and not only in newGame(): a match has
      no rule commentary to draw, so leaving step 1 for step 3 used to
      strand the panel on screen, and on a phone that pushed TRAIN below
      the fold. One place decides what a step shows; this is it. */
-  renderStageIntro(); renderEraSelect(); renderTrain(); renderLearnedPanel(); renderRulesPanel(); renderRuleFired();
-  renderBanner(); renderScore(); applyView();
-  if (other) renderNetworkInspector();
-  else newGame();
+  renderEraSelect(); renderTrain(); renderLearnedPanel(); renderRulesPanel(); renderRuleFired();
+  renderBanner(); renderScore(); renderNetworkInspector();
+  newGame();
 }
-
-$$('#mode-seg button').forEach(btn => btn.addEventListener('click', () => {
-  if (S.mode === btn.dataset.mode) return;
-  if (S.training) S.cancelTraining = true;
-  S.mode = btn.dataset.mode;
-  $('#selftest-out').textContent = '';
-  applyMode();
-}));
-$$('#mode-seg button').forEach(btn => btn.addEventListener('keydown', e => {
-  const tabs = $$('#mode-seg button');
-  const i = tabs.indexOf(e.currentTarget);
-  let next = null;
-  if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
-  else if (e.key === 'ArrowLeft') next = (i + tabs.length - 1) % tabs.length;
-  else if (e.key === 'Home') next = 0;
-  else if (e.key === 'End') next = tabs.length - 1;
-  if (next === null) return;
-  e.preventDefault();
-  const chosen = tabs[next];
-  if (S.training) S.cancelTraining = true;
-  S.mode = chosen.dataset.mode;
-  $('#selftest-out').textContent = '';
-  applyMode();
-  chosen.focus();
-}));
-
-$$('#lens-seg button').forEach(btn => btn.addEventListener('click', () => {
-  selectView(btn.dataset.view);
-}));
-$$('#lens-seg button').forEach(btn => btn.addEventListener('keydown', e => {
-  const tabs = $$('#lens-seg button');
-  const i = tabs.indexOf(e.currentTarget);
-  let next = null;
-  if (e.key === 'ArrowRight') next = (i + 1) % tabs.length;
-  else if (e.key === 'ArrowLeft') next = (i + tabs.length - 1) % tabs.length;
-  else if (e.key === 'Home') next = 0;
-  else if (e.key === 'End') next = tabs.length - 1;
-  if (next === null) return;
-  e.preventDefault();
-  selectView(tabs[next].dataset.view);
-  tabs[next].focus({ preventScroll: true });
-}));
 
 $('#btn-train').addEventListener('click', () => {
   if (isNet() && S.training) { S.cancelTraining = true; return; }
@@ -2076,6 +1861,7 @@ $('#era-select').addEventListener('change', e => {
   S.era = +e.target.value;
   $('#selftest-out').textContent = '';
   renderScore(); renderTrain(); renderLearnedPanel(); renderBanner();
+  if (!isUlt()) cue(eraCue());
   $('#btn-learned').hidden = !isUlt() || !ultimateReportAvailable();
   if (ultimateReportAvailable()) $('#btn-learned').textContent = `Review Era ${S.era} changes`;
   newGame();
@@ -2084,62 +1870,222 @@ $('#btn-learned').addEventListener('click', e => {
   if (!ultimateReportAvailable()) return;
   const era = currentEra(), prev = S.eras[S.era - 1];
   buildLearnedUlt(era, prev);
-  openSheet('learned', e.currentTarget);
+  $('#learned').showModal();
 });
-$('#btn-settings').addEventListener('click', e => openSheet('settings', e.currentTarget));
-$('#btn-details').addEventListener('click', e => {
-  renderBanner();
-  openSheet('details', e.currentTarget);
-});
-/* The instructions have one home and two doors: the ? in the brand bar,
-   which is on screen at every size, and the entry in Settings. Both land
-   on the same sheet, so there is nothing to keep in step. */
-const openHowto = () => openSheet('howto', $('#btn-howto'));
-$('#btn-howto').addEventListener('click', openHowto);
-$('#btn-howto-2').addEventListener('click', () => { closeSheet('settings'); openHowto(); });
-$('#btn-notes').addEventListener('click', e => { closeSheet('settings'); openSheet('notes', e.currentTarget); });
-$('#btn-print-notes').addEventListener('click', () => window.print());
+/* The shell opens the Details drawer; the proof line inside it is kept
+   fresh here so it reflects the era and ladder on screen at that moment. */
+document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('.details-trigger')) renderBanner();
+}, true);
 $('#btn-selftest').addEventListener('click', () => {
   $('#selftest-out').textContent = 'working…';
   setTimeout(selfTest, 30);
 });
-$('#chk-presenter').addEventListener('change', e =>
-  document.body.classList.toggle('presenter', e.target.checked));
 $('#chk-first').addEventListener('change', e => { S.alwaysFirst = e.target.checked; });
 $('#in-seed').addEventListener('change', e => { S.seed = e.target.value.trim(); });
-$('#btn-reset').addEventListener('click', () => {
+
+/* ------------------------------------------------------------------ *
+ * The observation cue (A4) and the Predict cards (A2)
+ * ------------------------------------------------------------------ */
+
+/* One cue for the three playable stages, because it is one board. */
+function cue(text, warm) {
+  const el = $('#cue-play');
+  el.textContent = text;
+  el.classList.toggle('cue-warm', !!warm);
+}
+
+const PREDICT_LABELS = {
+  rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
+  one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
+  net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
+  other: { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' },
+  types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
+};
+function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
+function echo(key, html) { const e = echoEl(key); e.innerHTML = html; e.hidden = false; }
+$$('.predict-btn').forEach(b => b.addEventListener('click', () => {
+  const group = b.parentElement, key = group.dataset.predict;
+  $$('.predict-btn', group).forEach(x => x.setAttribute('aria-pressed', 'false'));
+  b.setAttribute('aria-pressed', 'true');
+  S.predictions[key] = b.dataset.answer;
+  echo(key, 'You predicted: <b>' + PREDICT_LABELS[key][b.dataset.answer] + '</b>. Now try it.');
+}));
+/* "You predicted X; the board says Y." Called at the moment the answer
+   exists; silent when no prediction was made. */
+function revealPrediction(key, answerKey, sentence) {
+  const p = S.predictions[key];
+  if (!p) return;
+  const ok = answerKey === null ? null : p === answerKey;
+  echo(key, 'You predicted <b>' + PREDICT_LABELS[key][p] + '</b>. ' +
+    (ok === null ? '' : ok ? '<span class="ok">Confirmed.</span> ' : '<span class="bad">Not what happened.</span> ') + sentence);
+}
+
+/* ------------------------------------------------------------------ *
+ * Stage 1d — the training-method cards
+ * ------------------------------------------------------------------ */
+
+const USES_LABEL = { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' };
+const METHOD_CUE = {
+  supervised: '1c: the network fits frozen scores that a fresh 1b table produced — inputs paired with targets, and the targets came from another model.',
+  reinforcement: '1b: the table updates a position value after each win, loss and draw it plays in training — rewards, not targets.',
+  none: '1a: eight rules are fixed text; nothing in it is fitted, and the only way its play changes is switching rules on or off.',
+  unsupervised: 'none of the three: no playable model here looks for structure without a target or a reward.',
+  'self-supervised': 'none of the three: 1b plays itself, but it learns from game rewards, so that is reinforcement learning, not self-supervision.',
+  'semi-supervised': 'none of the three: nothing here mixes a small labelled set with a larger unlabelled one.'
+};
+function renderMethods() {
+  $$('.method-card').forEach(c => {
+    const on = c.dataset.method === S.method;
+    c.setAttribute('aria-pressed', String(on));
+    const uses = c.dataset.uses.split(',').filter(Boolean).map(k => USES_LABEL[k]).join(' · ');
+    $('.uses', c).textContent = on ? uses : '';
+  });
+  const out = $('#cue-4');
+  if (!S.method) { out.textContent = ''; return; }
+  const card = $('.method-card[data-method="' + S.method + '"]');
+  out.textContent = $('b', card).textContent + ' → ' + METHOD_CUE[S.method];
+}
+$$('.method-card').forEach(c => c.addEventListener('click', () => {
+  S.method = S.method === c.dataset.method ? null : c.dataset.method;
+  renderMethods();
+  if (S.method === 'supervised') {
+    revealPrediction('other', '1c', 'Supervised learning lights up 1c: its targets were frozen table scores. 1b learned from rewards; 1a was never trained.');
+  }
+}));
+
+/* ------------------------------------------------------------------ *
+ * Model types — built from src/model-types.js, the dated Hugging Face
+ * catalogue. Nothing here fetches; the links are the learner's to follow.
+ * ------------------------------------------------------------------ */
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function renderTypes() {
+  const T = MODEL_TYPES;
+  $('#types-qual').textContent = 'Hugging Face task catalogue, fetched ' + T.FETCHED;
+  $('#types-title').textContent = T.FEATURED.length === 12 ? 'Twelve types you will meet first' : T.FEATURED.length + ' types you will meet first';
+  $('#type-grid').innerHTML = T.FEATURED.map(f =>
+    `<details class="type-card" data-slug="${f.slug}"><summary><b>${esc(f.name)}</b>` +
+    `<span class="io"><i>${esc(f.in)}</i> in &rarr; <i>${esc(f.out)}</i> out</span>` +
+    (f.also ? `<span class="also">also called: ${esc(f.also)}</span>` : '') + `</summary>` +
+    `<div class="body"><q>${esc(f.quote)}</q>` +
+    `<span class="n">${fmt(f.n)} models filed under ${esc(f.name)} on ${T.FETCHED} · group: ${esc(f.group)}</span>` +
+    `<a href="${f.models}" target="_blank" rel="noopener">Browse models of this type on Hugging Face &rarr;</a> ` +
+    `<a href="${f.page}" target="_blank" rel="noopener">Task page &rarr;</a></div></details>`).join('');
+  $('#all-types-lede').textContent = `${T.count} types in ${T.GROUPS.length} groups, in the catalogue's own order, with the model count each carried on ${T.FETCHED}. The hub listed ${fmt(T.SOURCES.hubTotal)} models in total that day.`;
+  $('#type-groups').innerHTML = T.GROUPS.map(g =>
+    `<h4>${esc(g.name)}</h4><div class="type-chips">` + g.tasks.map(t =>
+      `<a class="type-chip" href="${T.modelsUrl(t.slug)}" target="_blank" rel="noopener" aria-label="${esc(t.name)}, ${fmt(t.n)} models on Hugging Face">${esc(t.name)}<small>${fmt(t.n)}</small></a>`).join('') + '</div>').join('');
+  $$('.type-card').forEach(d => d.addEventListener('toggle', () => {
+    if (!d.open) return;
+    const f = T.FEATURED.find(x => x.slug === d.dataset.slug);
+    $('#cue-5').textContent = `${f.name}: ${f.in} in, ${f.out} out. That is the whole definition of the type; it says nothing about what is inside.`;
+    if (f.slug === 'image-to-text') {
+      revealPrediction('types', 'words', 'Image-to-text takes an image in and puts text out — a caption, or the text printed in the picture (the catalogue\u2019s own definition).');
+    }
+  }));
+}
+renderTypes();
+
+/* ------------------------------------------------------------------ *
+ * The shell's two events
+ * ------------------------------------------------------------------ */
+
+const PLAYABLE = ['rules', 'one', 'net'];
+function setLens(lens) {
+  document.body.dataset.lens = lens;
+  $$('.lens-btn').forEach(b => {
+    const on = b.dataset.lens === lens;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+/* A tab was selected. The shell has already shown the panel; this moves
+   the one shared board into that stage's host and repaints it for the
+   mode the stage teaches. Stages 4 and 5 are maps and host nothing. */
+function onStage(index) {
+  S.stage = index;
+  const lens = index >= 4 ? 'types' : 'architecture';
+  const lensChanged = document.body.dataset.lens !== lens;
+  setLens(lens);
+  if (lensChanged && document.activeElement && document.activeElement.classList.contains('stage-tab')
+      && !document.activeElement.offsetParent) {
+    $('.lens-btn[data-lens="' + lens + '"]').focus();
+  }
+  if (index < 3) {
+    const host = $('#host-' + (index + 1)), act = $('#activity');
+    if (act.parentElement !== host) host.appendChild(act);
+    const mode = (index === 2 && isUlt()) ? 'ult' : PLAYABLE[index];
+    if (mode !== S.mode) {
+      if (S.training) S.cancelTraining = true;
+      S.mode = mode;
+      $('#selftest-out').textContent = '';
+      applyMode();
+    }
+  } else if (S.training) {
+    S.cancelTraining = true;
+  }
+}
+document.addEventListener('stagechange', e => onStage(e.detail.index));
+$$('.lens-btn').forEach(b => b.addEventListener('click', () => window.lessonShell.selectStage(+b.dataset.stage)));
+
+/* Reset, in place (kit v2). The shell has already closed every dialog,
+   restored the tabs, the check cards, the .echo lines and the .obs-cue
+   lines, sent the drawer back to stage 1, selected stage 1 (which ran
+   onStage(0) above: board moved home, mode 'rules', applyMode) and scrolled
+   to the top. This is the half only this file can know about.
+
+   THE ENUMERATION, written before the handler:
+     S.* — every property resetAll(true) already rewound for the old
+       in-place reset (this demo never reloaded): the rng streams, the live
+       agents, the neural model and teacher session, the era list, era,
+       records, depth, brain, lastRule, lastLearned, humanFirstNext, and
+       the burst sizes and the ultimate match/focus added for this pass.
+       S.seed is READ from the seed field (a rehearsal seed is the reason
+       Reset exists), S.alwaysFirst is a preference and stays.
+     S.predictions, S.method, S.stage — the fields this pass added.
+     Generated DOM: every .predict-btn's aria-pressed; every .method-card's
+       aria-pressed and .uses text (renderMethods); every .type-card
+       <details> closed; #cue-4 and #cue-5 (renderMethods empties #cue-4;
+       #cue-5 is a .obs-cue and the shell restored it); the three
+       #banner-* hosts (renderBanner via applyMode repaints the current one
+       and empties the others); #learned-body and the learned subtitle;
+       #network-view's dataset.layer / dataset.neuron (the inspector's
+       build-once state) and its innerHTML (repainted by applyMode);
+       #selftest-out (resetAll); #montage hidden (resetAll).
+     Form controls: #in-seed keeps its value on purpose; #era-select is
+       rebuilt by renderEraSelect; the burst and depth segments are rebuilt
+       by renderTrain / renderDepthSeg.
+     Not touched: presentation mode and the Guide (the shell's rule). */
+document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
+  S.predictions = {};
+  S.method = null;
+  $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
+  $$('.type-card').forEach(d => { d.open = false; });
+  $('#learned-body').innerHTML = '';
+  $('#learned-sub').textContent = '';
+  const nv = $('#network-view');
+  delete nv.dataset.layer; delete nv.dataset.neuron;
+  renderMethods();
   resetAll(true);
-  closeSheet('settings');
-});
-
-/* Deep links keep the public one-page URL while selecting a real stage. */
-function modeFromHash() {
-  const h = location.hash.toLowerCase();
-  if (h === '#rules') return 'rules';
-  if (h === '#learning') return 'one';
-  if (h === '#neural') return 'net';
-  return null;
-}
-window.addEventListener('hashchange', () => {
-  const mode = modeFromHash();
-  if (!mode || mode === S.mode) return;
-  if (S.training) S.cancelTraining = true;
-  S.mode = mode; applyMode();
 });
 
 /* ------------------------------------------------------------------ */
 
-const hashMode = modeFromHash();
-if (hashMode) S.mode = hashMode;
 resetAll();
 renderScore();
-/* Shown on every load, not once per browser: this thing is handed to a
-   new person constantly, and nothing about the app is remembered between
-   loads anyway. Escape, a tap on the backdrop or either button closes
-   it, and the ? in the brand bar brings it back. */
-openHowto();
+renderMethods();
+/* The shell may already have selected a stage from a #stage-N hash before
+   this script ran, and the old public deep links (#rules, #learning,
+   #neural) are honoured through the flags the shell parsed. */
+{
+  const F = window.lessonShell.flags;
+  const legacy = F.has('neural') ? 2 : F.has('learning') ? 1 : F.has('rules') ? 0 : null;
+  if (legacy !== null) window.lessonShell.selectStage(legacy);
+  else onStage(Math.max(0, $$('.stage-tab').findIndex(t => t.getAttribute('aria-selected') === 'true')));
+}
 console.log('[Zero to Unbeatable] ready. Era 0 knows nothing: every value in its table is zero, ' +
             'so every legal move ties and it picks uniformly at random.');
 
