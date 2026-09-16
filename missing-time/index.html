@@ -1,73 +1,1232 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gaps in the Rock Record</title>
-<style>
-:root{--navy:#002144;--gold:#ecac00;--blue:#00a4e3;--ink:#172b42;--muted:#50687b;--paper:#f4f8fa;--line:#c5d5df;--wash:#e9f5fa;--red:#9a6700}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}button{font:inherit;cursor:pointer}.top{background:var(--navy);color:#fff;padding:15px clamp(16px,5vw,60px);display:flex;justify-content:space-between;gap:14px;align-items:center}.eyebrow{margin:0;color:#f8d573;text-transform:uppercase;letter-spacing:.08em;font-size:.76rem;font-weight:800}.top h1{margin:2px 0;font-size:clamp(1.35rem,3vw,2rem)}.actions{display:flex;gap:8px}.icon{width:40px;height:40px;border:1px solid #8eb4cd;border-radius:50%;background:transparent;color:#fff;font-weight:900}.wrap{max-width:1180px;margin:auto;padding:22px clamp(16px,5vw,60px) 45px}.panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 3px 14px #0021440b}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:18px}.lead{font-size:1.07rem;margin:5px 0 12px}.factbar{display:flex;gap:9px;flex-wrap:wrap}.fact{background:var(--wash);border-left:4px solid var(--blue);border-radius:5px;padding:8px 10px;font-size:.88rem}.fact strong{display:block;color:var(--navy)}.mission{background:var(--navy);color:#fff}.mission p{color:#dcebf4}.select{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.select button,.choice,.sample{border:1px solid var(--line);background:#fff;color:var(--navy);border-radius:8px;padding:8px 10px;font-weight:750}.select button.active{background:var(--blue);border-color:var(--blue);color:#002144}.work{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}.section-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.column{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fafcfd}.column h3{margin:0;padding:10px 12px;background:#e9f5fa;color:var(--navy);font-size:1rem}.rock{padding:12px;min-height:250px;display:flex;flex-direction:column-reverse;gap:3px}.layer{position:relative;min-height:38px;padding:7px 8px;border:1px solid #6d8799;border-radius:4px;color:#132735;font-size:.84rem;font-weight:750;background:repeating-linear-gradient(135deg,#b8dbe9 0 7px,#d8eff7 7px 14px)}.layer:nth-child(3n+2){background:repeating-linear-gradient(0deg,#eed489 0 5px,#fff1bd 5px 10px)}.layer:nth-child(3n){background:repeating-linear-gradient(45deg,#d6b0a0 0 6px,#f5d4c8 6px 12px)}.layer span{display:block;font-weight:500;font-size:.76rem}.layer button{float:right;font-size:.72rem;padding:3px 5px;margin-left:5px}.gap{border-top:3px dashed var(--red);height:13px;margin:3px 0;color:#8c2c00;font-size:.72rem;display:none}.gap.show{display:block}.timebox{margin-top:14px;background:#fff8df;border-left:4px solid var(--gold);padding:10px 12px;border-radius:5px;font-size:.9rem}.timebox[hidden]{display:none}.button{border:0;background:var(--gold);color:#1b2a35;padding:10px 12px;border-radius:8px;font-weight:850}.subtle{margin-top:9px;color:var(--muted);font-size:.86rem}.ledger{margin-top:18px}.ledger ul{list-style:none;padding:0;margin:8px 0;display:grid;gap:7px}.ledger li{background:var(--wash);border-left:4px solid var(--blue);padding:8px 10px;font-size:.9rem}.ledger li.empty{border-left-color:#a7bbc8;color:var(--muted)}.reasoning{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}.choice{width:100%;text-align:left;margin:6px 0}.choice:hover{border-color:var(--blue)}.feedback{background:#fff8df;border-left:4px solid var(--gold);padding:10px 12px;border-radius:5px;margin-top:10px;min-height:48px}.boundary{font-size:.9rem;color:var(--muted)}.overlay[hidden],.menu[hidden]{display:none}.overlay{position:fixed;z-index:5;inset:0;background:#001a2dbe;display:grid;place-items:center;padding:18px}.dialog{position:relative;max-width:650px;background:#fff;border-radius:14px;padding:22px;box-shadow:0 20px 60px #0008}.close{float:right;border:0;background:var(--navy);color:#fff;border-radius:6px;padding:7px 10px}.menu{position:absolute;right:16px;top:64px;width:300px;z-index:4;background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px;box-shadow:0 12px 28px #00214444}.menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:8px;color:var(--navy);font-weight:750}.menu label{display:flex;gap:8px;align-items:center;padding:6px;font-weight:750}.presentation .mission{display:none}.presentation .hero{grid-template-columns:1fr}.presentation .work{grid-template-columns:1fr}.presentation .panel{box-shadow:none}footer{margin-top:22px;color:var(--muted);font-size:.85rem}@media(max-width:760px){.hero,.work,.reasoning{grid-template-columns:1fr}.section-grid{grid-template-columns:1fr}.top{align-items:flex-start}.rock{min-height:190px}.presentation .work{grid-template-columns:1fr}}
-.work{grid-template-columns:1fr}.section-grid.single{grid-template-columns:1fr}.linked{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 16px 5px}.linked figure{margin:0;min-width:0}.linked figcaption{font-size:.9rem;font-weight:800;color:#002144;text-align:center}.linked svg{display:block;width:100%;height:360px;background:#fff;border:1px solid #d4e1e8}.linked svg text{font-size:12px!important}.sample-row{display:flex;flex-wrap:wrap;gap:7px;padding:9px 16px 14px;border-top:1px solid #c5d5df}.sample-row .sample{font-size:.86rem;padding:7px 9px}@media(max-width:760px){.linked{grid-template-columns:1fr;gap:10px;padding:10px 7px 2px}.linked svg{height:300px}.linked svg text{font-size:12px!important}}
-.fine{font-size:.8em;color:var(--muted);font-weight:600}
-.menu-item{display:flex;gap:8px;align-items:center;width:100%;text-align:left;font-weight:750;color:var(--navy);background:transparent;border:0;border-radius:7px;padding:9px 8px;margin:0}button.menu-item:hover,button.menu-item:focus-visible{background:var(--wash)}.menu-item+.menu-item{margin-top:2px}
-.dialog.notes-dialog{max-width:900px;width:100%;max-height:88vh;overflow:auto}.notes-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}.notes-head h2{margin:0;color:var(--navy)}.notes-head .sub{margin:3px 0 0;color:var(--muted);font-size:.88rem}.notes-head .close{float:none;flex-shrink:0}
-@media(max-width:760px){.menu{right:10px;left:10px;width:auto}.dialog{padding:16px}}
-/* Presenter-notes styling, lifted verbatim from the guide-css stylesheet of
-   teacher-guide.html by build.js. Every rule there is .guide-scope-scoped. */
-/* GUIDE_CSS: BEGIN */) plus the .guide-scope div out of this file and injects both into
-  index.html, so Settings -> Open Presenter Notes shows this document with nothing fetched
-  at runtime. Edit this file; `node build.js --check` fails if index.html has drifted from it.
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#002144">
+<meta name="description" content="Sample synthetic rock layers, reveal supplied chronology anchors for a missing interval, and practice conclusions that stop where the local evidence stops.">
+<title>Gaps in the Rock Record</title>
+<!--
+  Gaps in the Rock Record (missing-time) — a single-file, offline rock-record
+  and preservation investigation. Demo 15 of 16, Part four (Example projects),
+  Geology, in AI: From Zero to Takeoff.
 
-  Every rule in the guide-css stylesheet MUST be scoped to .guide-scope: it is injected into
-  the running app, where a page-level rule would repaint the demo. build.js refuses the
-  build if a bare body/html/* rule appears there.
+  Three stages, one per authored case in src/model.js: a continuous section
+  (does a last appearance settle extinction?), a cut bank (does a gap explain
+  its own cause, and where do removed fossils go?), and a paired-section
+  comparison (does a second section settle what a first section's gap means?).
 
-  The SECOND stylesheet is standalone page/print chrome. It never ships to the app; it is
-  where the letter-size print sizing and the page break live.
+  The three cases share one investigation mechanism (sample layers, reveal
+  supplied chronology, choose a warranted conclusion, reveal the authored
+  history), so ONE shared #investigation instrument is moved between the three
+  stage hosts by src/app.js rather than tripling the markup and the render
+  code — see the note in src/app.js above moveActivityTo(). Each stage keeps
+  its own stage-intro, Predict guess capture and Check-yourself card, which
+  are genuinely stage-specific.
+
+  Built against the shared lesson shell at ../tools/lesson-shell (build-time
+  only — see build.js). Companion: demo-guide.html, shipped as
+  teacher-guide.html. model.js is the tested production model, bundled
+  verbatim — see test-model.js.
 -->
-<style id="guide-css">
-.guide-scope{color:#172b42;font-size:.95rem;line-height:1.5}
-.guide-scope .head{border-bottom:5px solid #ecac00;padding-bottom:9px;margin-bottom:6px}
-.guide-scope h1{margin:0;color:#002144;font-size:1.5rem}
-.guide-scope .sub{margin:4px 0 0;color:#526a7e;font-size:.9rem}
-.guide-scope h2{color:#002144;font-size:1.05rem;margin:16px 0 6px;padding-bottom:4px;border-bottom:1px solid #00a4e3;break-after:avoid}
-.guide-scope p{margin:0 0 .7em}
-.guide-scope ul,.guide-scope ol{padding-left:20px;margin:0 0 .8em}
-.guide-scope li{margin-bottom:4px}
-.guide-scope .lead{font-size:1rem}
-.guide-scope .box{margin:9px 0;padding:9px 11px;border-left:5px solid #00a4e3;background:#eef8fc}
-.guide-scope .warning{border-left-color:#ecac00;background:#fff6d9}
-.guide-scope .scroll{overflow-x:auto;max-width:100%}
-.guide-scope table{width:100%;border-collapse:collapse;margin:7px 0;font-size:.85rem;min-width:420px}
-.guide-scope th,.guide-scope td{padding:5px 6px;border:1px solid #b8cad8;text-align:left;vertical-align:top}
-.guide-scope th{background:#002144;color:#fff}
-.guide-scope code{background:#e8eef2;padding:1px 3px}
-.guide-scope .foot{margin-top:14px;padding-top:7px;border-top:1px solid #b8cad8;color:#526a7e;font-size:.8rem}
-.guide-scope a{color:#00618c}
-/* GUIDE_CSS: END */
-</style></head><body>
-<header class="top"><div><p class="eyebrow">Murray State University · AI Fellows</p><h1>Gaps in the Rock Record</h1></div><div class="actions"><button class="icon" id="helpButton" aria-label="Guide" title="Guide">?</button><button class="icon" id="settingsButton" aria-label="Settings" title="Settings" aria-haspopup="true" aria-expanded="false">⚙</button></div></header>
-<div class="menu" id="settingsMenu" hidden aria-label="Settings"><button type="button" class="menu-item" id="notesButton">Open Presenter Notes</button><label class="menu-item"><input type="checkbox" id="presentationToggle"> Presentation mode</label><button type="button" class="menu-item" id="resetButton">Reset</button></div>
-<main class="wrap"><section class="hero"><div class="panel"><p class="eyebrow" style="color:#006d9d">A bounded rock-record investigation</p><p class="lead">Rock thickness and elapsed time are different measurements. Inspect surviving layers, compare rock with supplied time evidence, then decide what the visible evidence does and does not support.</p><div class="factbar"><div class="fact"><strong>Myr since start</strong>One Myr is one million years in this authored model.</div><div class="fact"><strong>Metres (m)</strong>Layer height records surviving rock thickness.</div><div class="fact"><strong>Specimens</strong>Sampling reveals only fossils in surviving rock.</div></div></div><aside class="panel mission"><p class="eyebrow">Investigation</p><h2 id="caseTitle">Case 1</h2><p id="casePrompt"></p><div class="select" id="casePicker"></div></aside></section>
-<section class="work"><div class="panel"><h2>1. Compare preserved rock and model time</h2><p class="subtle">The linked views read the same ledger: left is surviving rock height above base in metres; right is model time in Myr since start. Select <strong>sample</strong> to reveal specimen marks at their real surviving positions.</p><div class="section-grid" id="columns"></div></div><div class="panel"><h2>2. Show supplied age evidence</h2><p>Chronology anchors are explicit synthetic evidence inputs. The model assumes constant-rate deposition within each surviving layer; age uncertainty and internal hiatuses are omitted.</p><button class="button" id="showGapsButton">Show supplied age evidence</button><div class="timebox" id="timeEvidence" hidden aria-live="polite"></div><p class="boundary" id="evidenceHint">A local gap says that rock from an interval is absent here. It does not by itself say why, and an unsampled layer is not an observed fossil absence.</p></div></section>
-<section class="panel ledger"><h2>Evidence ledger</h2><p id="ledgerIntro">No samples or chronology evidence recorded yet.</p><ul id="ledgerList"><li class="empty">Evidence will stay visible here as you act.</li></ul></section>
-<section class="reasoning"><div class="panel"><h2>3. Choose a warranted conclusion</h2><p>Choose the claim that follows from the evidence currently visible. This is feedback on the claim, not a mastery score.</p><div id="conclusions"></div><div class="feedback" id="conclusionFeedback" aria-live="polite">Collect evidence first. The authored history remains hidden until you choose to reveal it.</div><button class="button" id="revealButton" hidden>Reveal this authored history</button><div class="timebox" id="revealBox" hidden></div></div><div class="panel"><h2>Inference boundaries</h2><ul><li>A local last observation is not a global extinction claim.</li><li>A hiatus can form without erosion.</li><li>Equal rock thickness does not mean equal elapsed time.</li><li>Two local sections cannot certify global extinction.</li></ul><p class="boundary">This is a small authored preservation model, not a basin simulator. It has no reworking, fossil transport, dating uncertainty, or global distribution model.</p></div></section>
-<footer>Created by Bryant Harrison · Murray State University · Offline classroom activity. Synthetic model inspired by preservation/occurrence-event teaching contexts including StratPal; no faculty endorsement is claimed.</footer></main>
-<div class="overlay" id="howOverlay" role="dialog" aria-modal="true" aria-labelledby="howTitle"><div class="dialog"><button class="close" data-close="howOverlay">Start</button><h2 id="howTitle">Guide <span class="fine">· how to investigate missing time</span></h2><ol><li>Choose a numbered investigation. Its hidden authored history is not named before reveal.</li><li>Sample one or more surviving layers. A sample can show specimens, or no observed specimens; neither changes the rock record.</li><li>Select <strong>Show supplied age evidence</strong>. The exact Myr span comes from explicitly labelled synthetic chronology anchors bracketing the rock, never from thickness alone.</li><li>Use only the visible evidence to select a conclusion. Then reveal the authored history and compare it with what was warranted.</li></ol><p><strong>Keep quantities separate:</strong> Myr since start is elapsed model time; metres are surviving rock thickness.</p><p class="boundary">Reopen this with <strong>?</strong>. <strong>⚙ Settings</strong> offers <strong>Open Presenter Notes</strong>, <strong>Presentation mode</strong> and <strong>Reset</strong>.</p></div></div>
+<!-- lesson-shell v2 css:d13e2bec1db3 -->
+<style>
 
-<!-- PRESENTER NOTES. The body and the stylesheet above are lifted verbatim from
-     teacher-guide.html by build.js, so this overlay, the printable page and the PDF
-     are one document from one source; `node build.js --check` fails if they drift. -->
-<div class="overlay" id="notesOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="notesTitle"><div class="dialog notes-dialog"><div class="notes-head"><div><h2 id="notesTitle">Presenter Notes</h2><p class="sub">The printable teacher guide, on screen</p></div><button class="close" data-close="notesOverlay">Close</button></div>
-<!-- GUIDE: BEGIN --><div class="guide-scope">
-<header class="head"><h1>Gaps in the Rock Record</h1><p class="sub">Missing Time · teacher and presenter guide · bounded rock-record investigation · Murray State University</p></header>
-<section><h2>Purpose and learning target</h2><p class="lead">Students compare surviving rock thickness in metres with elapsed model time in Myr since start. They use labelled synthetic chronology anchors, not thickness, to make a local missing interval visible and limit claims to evidence.</p><div class="box"><strong>Target claim:</strong> a local gap means rock from an interval is absent here. It does not by itself identify cause, prove an extinction boundary, or turn a local fossil absence into a global one.</div><p>One Myr is one million years in this authored model. Metres record surviving rock height. Sampling reveals specimens only in surviving rock and never alters the record.</p></section>
-<section><h2>Current app flow</h2><ol><li>Select Case 1, 2, or 3 and inspect surviving rock; the time mapping and gaps remain hidden at first.</li><li>Sample surviving layers; the sample ledger stays visible.</li><li>Select <strong>Show supplied age evidence</strong>. Only then do supplied base/top ages for every surviving layer, the assumed within-layer linear mapping, and any missing-interval display appear.</li><li>Choose a warranted conclusion, then reveal the authored history.</li></ol><p><strong>Controls:</strong> the <strong>Guide</strong> overlay opens at launch; the <strong>?</strong> button reopens it. <strong>⚙ Settings</strong> offers <strong>Open Presenter Notes</strong> (this guide, on screen), <strong>Presentation mode</strong> (a stripped, projector-sized layout), and <strong>Reset</strong> (back to Case 1 with the evidence ledger, supplied ages and reveal cleared). Reset leaves Presentation mode as you set it. This app does not calculate time from thickness.</p></section>
-<section><h2>Three authored investigations</h2><div class="scroll"><table><thead><tr><th>Case</th><th>Evidence task</th><th>Warranted conclusion</th></tr></thead><tbody><tr><td>1. Section A</td><td>Sample middle and top rock, then show supplied ages for A’s surviving layers.</td><td>No missing interval is represented under the supplied chronology and within-layer continuity assumption; a local last observation does not establish global extinction.</td></tr><tr><td>2. Section B</td><td>Show supplied ages and sample Red siltstone adjacent below the gap plus Cross-bedded sand above it.</td><td>A visible local gap does not identify its cause or establish an extinction boundary.</td></tr><tr><td>3. Sections C and D</td><td>Show supplied chronology at both C and D; sample below C’s gap and D’s Green mudstone.</td><td>D preserves material from the interval missing at C. A blank is not a global fossil absence.</td></tr></tbody></table></div></section>
-<section><h2>Chronology evidence and units</h2><p>Supplied synthetic base and top ages for every surviving layer establish the displayed model-time placement, under an explicit constant-rate linear mapping within each surviving layer. Fossil times are mapped from that supplied chronology; they are not independently measured dates. The left view is surviving height above base in metres; the time view is model Myr since start. Equal thickness does not mean equal elapsed time, and an unsampled layer is not an observed fossil absence.</p><div class="box warning"><strong>Scope of the mapping:</strong> dating uncertainty and unresolved internal hiatuses are omitted. Case 3 uses Section C ages bracketing C’s pause and Section D ages at the base and top of D’s Green mudstone. C and D carry the comparison; do not infer the interval from column height.</div></section>
-<section class="page-break"><h2>Authored model and reveal boundaries</h2><p>The model deposits layers at stated constant rates, can pause deposition, erodes top-down, then resumes deposition. Specimens stay at authored positions only while their rock survives. A removed specimen is not moved to a hiatus boundary.</p><div class="scroll"><table><thead><tr><th>Case</th><th>Authored reveal</th><th>Teaching point</th></tr></thead><tbody><tr><td>1</td><td>Asteria’s synthetic lifetime ends at 3.40 Myr, inside Green mudstone.</td><td>Hidden truth does not make a local sample proof of global extinction.</td></tr><tr><td>2</td><td>Erosion removes 15.00 m of Pale limestone and 10.00 m from Red siltstone.</td><td>Removed fossils are absent from surviving rock.</td></tr><tr><td>3</td><td>C has a 2.00 Myr pause while D accumulates Green mudstone.</td><td>A specimen at D was never moved into C’s hiatus.</td></tr></tbody></table></div><p>This is a small authored preservation model, not a basin simulator. It omits reworking, transport, dating uncertainty, sampling statistics, facies correlation, and global distribution.</p></section>
-<section><h2>Suggested facilitation</h2><ul><li>Ask what observation could distinguish a local disappearance from extinction.</li><li>Have students name chronology anchors before interpreting a gap.</li><li>For Case 2, point out that erosion removes top-down, including specimens in removed deposits.</li><li>For Case 3, ask what the second local section changes and what it cannot prove.</li></ul><p>Conclusion feedback is not a mastery score. It only reports whether the selected statement follows from visible authored evidence.</p></section>
-<section><h2>Source context and attribution</h2><p>StratPal, <a href="https://mindthegap-erc.github.io/StratPal/articles/event_data.html">Event data</a>, for occurrence-event and preservation context. This activity retains authored synthetic specimens in surviving rock; it does not treat event-data transformations as a specimen-preservation algorithm.</p><p>Created by Bryant Harrison · Murray State University. The source is teaching context, not a current assignment or endorsement.</p></section>
-<p class="foot"><strong>Gaps in the Rock Record</strong> (folder <code>missing-time</code>) · Bryant Harrison · Murray State University · Offline authored teaching model. Offline at runtime: no external scripts, styles, fonts, images, data, or AI service. Links are optional reader-initiated source citations. This HTML file is the canonical guide source.</p>
-</div><!-- GUIDE: END -->
-</div></div>
+/* ---- lesson-shell/tokens.css ---- */
+/* ===========================================================================
+   lesson-shell / tokens.css — the palette and type contract, part A0.
+
+   ONE :root block, named identically in every demo. A reviewer greps the built
+   index.html for these names and must find every one of them, so a demo that
+   needs a colour the kit does not have adds a NEW token in its own stylesheet;
+   it never renames or drops one of these.
+
+   Arrangement (plan A0, chosen over Demo 1's navy-panels-on-cream because the
+   launcher and every post-2026-09-09 demo already use it, and dark panels wash
+   out at the edges of a projector):
+
+     cream / paper   the page
+     navy            "live machine" surfaces — a workbench, a sim canvas frame,
+                     a live readout
+     gold            the primary action, and the lesson-strip rule
+     lite            the second data series and focus rings
+     warm            genuine failure states ONLY (Murray State brand guide says
+                     use Red Orange sparingly; CONTRACT.md repeats it)
+
+   Palette source: the Murray State brand guide — Blue #002144 (PMS 289),
+   Gold #ECAC00 (PMS 123), Lite Blue #00A4E3 (PMS 2995), Red Orange #FF4500.
+   =========================================================================== */
+
+:root {
+  /* --- the A0 required set. Every name below appears in every demo. ------- */
+  --u: 1rem;              /* type unit; everything scales off it */
+  --navy: #002144;        /* brand */
+  --gold: #ECAC00;        /* brand */
+  --lite: #00A4E3;        /* brand accent — second series, focus rings */
+  --warm: #FF4500;        /* brand accent — genuine failure states only */
+  --paper: #FFFDF8;       /* page */
+  --cream: #F7F0E3;       /* secondary surface */
+  --ink: #14273A;         /* body text on paper/cream */
+  --ink-2: #40556A;       /* secondary text */
+  --ink-3: #65788A;       /* tertiary text, notes */
+  --line: #C6D1D8;        /* hairlines on light surfaces */
+
+  /* --- derived shades the shell CSS needs. Also fleet-wide, also stable. -- */
+  --navy-2: #07345D;      /* raised navy surface inside a workbench */
+  --navy-deep: #01182C;   /* code/readout wells inside a workbench */
+  --cream-deep: #EBE0CA;  /* card borders on cream */
+  --gold-deep: #9F6700;   /* gold as TEXT on paper — 4.6:1, passes AA */
+  --gold-lite: #FFD76A;   /* gold as text on navy */
+  --lite-soft: #D9EFF8;   /* lite blue wash */
+  --lite-deep: #007EB5;   /* lite blue as text on paper — 4.6:1 */
+  --bad: #C63F1D;         /* a wrong answer, a contradicted prediction */
+  --bad-soft: #FDE8E1;
+  --ok: #1C704D;          /* a supported prediction */
+  --ok-soft: #E0F5EE;
+  --ink-on-navy: #F6FBFF; /* body text on a navy surface */
+  --ink-2-on-navy: #D7E5EF;
+  --ink-3-on-navy: #B8CBD8;
+  --line-on-navy: rgba(255, 255, 255, .30);
+  --radius: 16px;
+  --radius-2: 10px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  color-scheme: light;
+}
+
+/* Presentation mode changes --u and nothing else. One value fleet-wide:
+   Demo 1 shipped 1.25rem and Demo 2 shipped 1.18rem; the plan picks 1.2. */
+body.presenter { --u: 1.2rem; }
+
+/* Very short portrait screens — an iPhone SE 1st gen is 320x568 — get the whole
+   layout down a notch rather than letting the activity push the primary action
+   off the bottom. .94rem keeps every tap target over 40px. body.presenter
+   out-specifies this, so presentation mode still wins. */
+@media (orientation: portrait) and (max-height: 660px) {
+  :root { --u: .94rem; }
+}
+
+/* ---- lesson-shell/shell.css ---- */
+/* ===========================================================================
+   lesson-shell / shell.css — the lesson parts that WRAP any activity.
+
+   Loaded after tokens.css and BEFORE the demo's own stylesheet, so a demo can
+   override any rule here without !important. Nothing in this file styles an
+   activity: no canvas, no game board, no workbench internals. It styles the
+   parts the template names — A0 header and footer, A1 stage tablist, A2 stage
+   intro and lesson strip, A3's kicker vocabulary, A4's observation cue, A5's
+   Details drawer, A6's check card, A7/A8's dialogs, and the credit pill.
+
+   CLASS VOCABULARY — a demo uses these names or the reviewer's grep fails:
+
+     .top .topline .brandline .brand-kicker .msu-brand .top-tools .icon-btn
+     .stages .stage-tab                        (A1, role=tablist)
+     section.stage .stage.on                   (A1, role=tabpanel)
+     .stage-intro .intro-copy .eyebrow .stage-question .refresh
+     .lesson-strip                             (A2, exactly 3 articles)
+     .details-trigger
+     .panel-kicker + .k-live .k-measured .k-sourced .k-scripted .k-illustrative
+     .control-label                            (A3)
+     .obs-cue                                  (A4)
+     .details-sheet .details-drawer .details-body .details-stage .evidence-card
+     .check .check-options .check-option .check-feedback   (A6)
+     .lesson-dialog .lesson-dialog-head .lesson-dialog-body .lesson-dialog-actions
+     .btn .btn.ghost .btn.small
+     .footer .footer-tools .footer-link
+     .bh-credit
+   =========================================================================== */
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--cream); }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font: 400 var(--u)/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+[hidden] { display: none !important; }
+button, input, select, summary, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .48; cursor: not-allowed; }
+/* Every interactive thing clears the 38px touch floor CONTRACT.md's "touch
+   works" is checked against. */
+button, input, select, summary, a[href], [role="button"], [tabindex]:not([tabindex="-1"]) { min-height: 38px; }
+button:focus-visible, input:focus-visible, select:focus-visible,
+summary:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--lite);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- A0 header + A1 stage navigation -------------------------------
+   The header is sticky so a presenter can always reach Guide, Settings and the
+   stage tabs. One measure (1180px) for the header, the tablist and main, so the
+   kicker, the tabs and the stage question all share a left edge. */
+.top {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--cream) 94%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--navy) 16%, transparent);
+  backdrop-filter: blur(12px);
+}
+.topline, .stages, main { max-width: 1180px; margin: 0 auto; }
+.topline { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: calc(14px + var(--safe-t)) 22px 10px; }
+.brandline { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline; min-width: 0; }
+/* The kicker is `Murray State University · <tour part label>` — one spelling
+   fleet-wide, taken from tours/*.json, never an invented collection name. */
+.brand-kicker {
+  grid-column: 1 / -1;
+  color: var(--gold-deep); font-size: calc(var(--u) * .68); font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.brandline h1 {
+  margin: 2px 0 0; color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2.6vw, 2.25rem); line-height: 1.03;
+}
+.msu-brand { color: var(--ink-2); font-size: calc(var(--u) * .72); font-weight: 750; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.top-tools { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+/* Icon buttons carry a VISIBLE text label at >=480px; the icon alone is the
+   phone affordance. The accessible name stays on the button either way. */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 40px; border: 1px solid var(--navy); border-radius: 999px;
+  padding: 5px 11px; color: var(--navy); background: var(--paper);
+  font-size: calc(var(--u) * .78); font-weight: 800;
+}
+.icon-btn:hover { background: var(--navy); color: #fff; }
+/* The header Notes button exists only in presentation mode (A8). */
+.top-tools .notes-open { display: none; }
+body.presenter .top-tools .notes-open { display: inline-flex; }
+
+/* A1: one tab per stage, short name + a question subtitle that ends in "?".
+   auto-fit means 2, 3 or 4 stages all work with no per-demo override. */
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; padding: 0 22px 12px; }
+.stage-tab {
+  min-height: 52px; border: 1px solid var(--line); border-radius: 12px;
+  padding: 6px 9px; background: var(--paper); color: var(--ink-2);
+  font-weight: 800; line-height: 1.1; text-align: center;
+}
+.stage-tab span, .stage-tab small { display: block; }
+.stage-tab small { margin-top: 4px; color: var(--ink-3); font-size: calc(var(--u) * .68); font-weight: 650; }
+.stage-tab[aria-selected="true"] { border-color: var(--navy); background: var(--navy); color: #fff; box-shadow: inset 0 -4px 0 var(--gold); }
+.stage-tab[aria-selected="true"] small { color: var(--ink-2-on-navy); }
+/* A locked stage is dimmed but still announces why (title/aria-description on
+   the button); it is not removed, so the learner sees the whole route. */
+.stage-tab:disabled { opacity: .55; }
+.stage-tab .stage-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.45em; height: 1.45em; margin: 0 auto 2px; border-radius: 999px;
+  background: var(--cream-deep); color: var(--navy); font-size: calc(var(--u) * .72);
+}
+.stage-tab[aria-selected="true"] .stage-mark { background: var(--gold); color: var(--navy); }
+.stage-tab.complete .stage-mark { background: var(--ok); color: #fff; }
+
+/* ---------- A2 stage intro and lesson strip ------------------------------- */
+main { padding: 20px 22px 74px; }
+section.stage { display: none; }
+section.stage.on { display: block; }
+.stage-intro {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 22px;
+  padding: 22px; margin-bottom: 18px;
+  border: 1px solid var(--cream-deep); border-radius: var(--radius); background: var(--paper);
+}
+.intro-copy { max-width: 720px; }
+.eyebrow, .panel-kicker {
+  color: var(--gold-deep); font-size: calc(var(--u) * .72); font-weight: 850;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.stage-intro h2 {
+  margin: 5px 0 7px; color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 3vw, 2.35rem); line-height: 1.08;
+}
+/* The stage question is the first readable line after the nav (L3 pass
+   criterion). Exactly one question per stage — two is split attention. */
+.stage-question { margin: 0; color: var(--ink-2); font-size: calc(var(--u) * 1.02); }
+/* "Before you start": two or three sentences of prerequisite refresh, no more.
+   Bold every key term on first use and define it in place. */
+.refresh { margin: 11px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .92); }
+.refresh b, .refresh strong { color: var(--navy); }
+.details-trigger {
+  align-self: start; min-height: 42px; border: 1px solid var(--navy);
+  border-radius: 999px; padding: 7px 13px; color: var(--navy);
+  background: transparent; font-weight: 800;
+}
+.details-trigger:hover { background: var(--navy); color: #fff; }
+/* Three cards, fixed labels: Predict · Try · Takeaway. */
+.lesson-strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lesson-strip article { min-width: 0; border-left: 3px solid var(--gold); padding: 7px 10px; background: var(--cream); }
+.lesson-strip article span {
+  display: block; color: var(--navy); font-size: calc(var(--u) * .72);
+  font-weight: 850; letter-spacing: .08em; text-transform: uppercase;
+}
+.lesson-strip p { margin: 3px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .8); }
+/* Where the activity captured the prediction, the observed result is echoed
+   beside it inside the Predict card. */
+.lesson-strip .echo { display: block; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--cream-deep); color: var(--ink); font-size: calc(var(--u) * .78); }
+.lesson-strip .echo b { color: var(--navy); }
+
+/* ---------- A3 provenance kickers and control labels ----------------------
+   SIX WORDS, and they are the only vocabulary. A claim on screen without one
+   of them is a defect (plan A3 / lens L1).
+
+     Live         computed here, now
+     Measured     computed here earlier and stored — say when, say the seed
+     Sourced      a published number — cite it in Details
+     Reasoned     the authors' own judgement, from the criteria the page shows
+     Scripted     a teaching fixture standing in for what a live system would
+                  have produced — say what is fixed
+     Illustrative invented numbers — say so
+
+   Reasoned was added on orchestrator ruling 2026-09-15, on evidence from the
+   front-doors accuracy audit. It is NOT a fold of Scripted: Scripted stands in
+   for a live system's output (the-stranger's 64 hand-written answers are the
+   type case), while Reasoned is judgement the authors own, derived from stated
+   criteria (front-doors' 28 job verdicts). Different mechanisms, so they
+   split. Without it, an honest "we could not confirm this" had to be rendered
+   as Illustrative — i.e. as INVENTED, which is a worse claim than the truth.
+
+   Reasoned reads neutral slate deliberately: a learner must not mistake a
+   judgement for a citation, so it shares nothing with Sourced's gold. */
+.k-live, .k-measured, .k-sourced, .k-reasoned, .k-scripted, .k-illustrative {
+  display: inline-block; border-radius: 999px; padding: 2px 8px;
+  font-size: calc(var(--u) * .64); font-weight: 850;
+  letter-spacing: .09em; text-transform: uppercase; white-space: nowrap;
+}
+.k-live { background: var(--ok-soft); color: var(--ok); }
+.k-measured { background: var(--lite-soft); color: var(--lite-deep); }
+.k-sourced { background: var(--cream-deep); color: var(--gold-deep); }
+.k-reasoned { background: #E3EAF0; color: #38546B; box-shadow: inset 0 0 0 1px #B9C8D4; }
+.k-scripted { background: #EEE6F5; color: #5A3E8C; }
+.k-illustrative { background: var(--bad-soft); color: var(--bad); }
+/* On a navy surface the same six read light. */
+.workbench .k-live, .navy-surface .k-live { background: rgba(255,255,255,.16); color: #9EE7C8; }
+.workbench .k-measured, .navy-surface .k-measured { background: rgba(255,255,255,.16); color: #8FD8F5; }
+.workbench .k-sourced, .navy-surface .k-sourced { background: rgba(255,255,255,.16); color: var(--gold-lite); }
+.workbench .k-reasoned, .navy-surface .k-reasoned { background: rgba(255,255,255,.16); color: #C6D6E3; box-shadow: inset 0 0 0 1px rgba(255,255,255,.34); }
+.workbench .k-scripted, .navy-surface .k-scripted { background: rgba(255,255,255,.16); color: #D3BCF2; }
+.workbench .k-illustrative, .navy-surface .k-illustrative { background: rgba(255,255,255,.16); color: #FFB49B; }
+
+/* AN HONESTY QUALIFIER, not a label. One optional free-text rider appended to
+   a provenance label, subordinate to it, never replacing it. The demo supplies
+   its own string; the kit deliberately does not enumerate the kinds, because
+   two audits produced four different kinds in two days:
+
+     Sourced · unconfirmed since 2026-09-08        staleness
+     Sourced · typical, range 250–400 MPa          one point in a real spread
+     Sourced · specified minimum, not typical      the value is a floor
+     Sourced · IRC 2021 — differs under IBC        code- and edition-dependent
+     Measured · seed 41                            which run produced it
+
+   Why a rider and not a second label: an unconfirmed published figure is still
+   Sourced. Demoting it to Illustrative would say it was invented, which is a
+   worse claim than the truth. Same for a range — a real spread reported at one
+   point is still a sourced measurement, honestly narrowed.
+
+   It wraps rather than pushing the panel wide: some riders are a clause, not a
+   word, and a phone at 320px must not scroll sideways. The LABEL stays nowrap. */
+.k-qual {
+  display: inline; margin-left: 5px;
+  color: var(--ink-3); font-size: calc(var(--u) * .66); font-weight: 650;
+  font-style: italic; letter-spacing: .02em;
+  white-space: normal; text-transform: none;
+}
+.k-qual::before { content: "· "; font-style: normal; }
+.workbench .k-qual, .navy-surface .k-qual { color: var(--ink-3-on-navy); }
+
+/* A claim-bearing prose block inside the Details drawer. The audit's second
+   structural finding was that a demo can label its grid cells and leave its
+   detail prose unlabeled — and that unlabeled surface is exactly where the one
+   uncertain claim lives. So detail prose that carries a claim is wrapped in
+   .claim and MUST open with a kicker; check-shell.js enforces that on any
+   block marked .claim. It cannot enforce it on prose nobody marked — see the
+   note at the head of check-shell.js. */
+.claim { margin: 0 0 12px; padding: 9px 11px 10px; border-left: 3px solid var(--line); border-radius: 0 var(--radius-2) var(--radius-2) 0; background: var(--cream); }
+.claim > .panel-kicker { display: block; margin-bottom: 4px; }
+.claim > p:last-child { margin-bottom: 0; }
+
+/* A3: every control says what changes and WHY you would change it. The label
+   sits at the control, never in a legend elsewhere (spatial contiguity). */
+.control-label { display: block; margin: 2px 0 5px; color: var(--ink-2); font-size: calc(var(--u) * .78); font-weight: 800; }
+.control-label .why { display: block; color: var(--ink-3); font-size: calc(var(--u) * .88); font-weight: 500; }
+.workbench .control-label, .navy-surface .control-label { color: var(--ink-2-on-navy); }
+.workbench .control-label .why, .navy-surface .control-label .why { color: var(--ink-3-on-navy); }
+
+/* ---------- A4 observation cue -------------------------------------------
+   One aria-live line that names the thing to notice at the moment it becomes
+   true. Must appear within one screen of the control that caused it. */
+.obs-cue {
+  display: flex; align-items: center; gap: 9px; min-height: 40px;
+  margin: 12px 0; padding: 8px 12px;
+  border-left: 4px solid var(--lite); border-radius: var(--radius-2);
+  background: var(--lite-soft); color: var(--ink);
+  font-size: calc(var(--u) * .88);
+}
+.obs-cue::before { content: "Notice"; color: var(--lite-deep); font-size: calc(var(--u) * .66); font-weight: 850; letter-spacing: .09em; text-transform: uppercase; flex: 0 0 auto; }
+.obs-cue:empty { display: none; }
+.obs-cue.cue-warm { border-left-color: var(--gold); background: #FFF6DC; }
+.obs-cue.cue-warm::before { color: var(--gold-deep); }
+
+/* ---------- generic surfaces a wrapped activity can reuse ----------------- */
+.card { min-width: 0; margin-bottom: 18px; border: 1px solid var(--cream-deep); border-radius: var(--radius); padding: 20px; background: var(--paper); color: var(--ink); }
+.workbench { min-width: 0; margin-bottom: 18px; border: 1px solid var(--navy); border-radius: var(--radius); padding: 20px; background: var(--navy); color: var(--ink-on-navy); box-shadow: 0 9px 24px rgba(0, 33, 68, .12); }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 9px; flex-wrap: wrap; }
+.panel-head h3 { margin: 3px 0 0; color: inherit; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.25); line-height: 1.12; }
+.workbench .panel-kicker { color: var(--gold-lite); }
+.panel-lede { margin: 0 0 14px; color: var(--ink-2); font-size: calc(var(--u) * .88); }
+.workbench .panel-lede { color: var(--ink-2-on-navy); }
+.note { color: var(--ink-3); font-size: calc(var(--u) * .78); }
+.workbench .note { color: var(--ink-3-on-navy); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; border: 1px solid var(--gold); border-radius: var(--radius-2);
+  padding: 9px 14px; background: var(--gold); color: var(--navy); font-weight: 850;
+}
+.btn:hover:not(:disabled) { background: #FFD05A; border-color: #FFD05A; }
+.btn.ghost { border-color: var(--navy); background: transparent; color: var(--navy); }
+.btn.ghost:hover:not(:disabled) { background: var(--navy); color: #fff; }
+.workbench .btn.ghost { border-color: var(--line-on-navy); color: #fff; }
+.workbench .btn.ghost:hover:not(:disabled) { background: #fff; border-color: #fff; color: var(--navy); }
+.btn.small { min-height: 40px; padding: 7px 11px; font-size: calc(var(--u) * .82); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+
+/* ---------- A6 check yourself --------------------------------------------
+   One or two items per stage, answerable from what was just observed, with
+   written feedback for EVERY option. At least one refutation item per demo:
+   it states the flawed model and the feedback names why it is wrong. */
+.check { margin: 18px 0 0; border: 1px solid var(--cream-deep); border-left: 4px solid var(--navy); border-radius: var(--radius); padding: 18px 20px; background: var(--paper); }
+.check h3 { margin: 4px 0 4px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.18); }
+.check .check-prompt { margin: 0 0 11px; color: var(--ink); }
+.check-options { display: grid; gap: 8px; }
+.check-option {
+  min-height: 46px; border: 1px solid var(--line); border-radius: var(--radius-2);
+  padding: 9px 13px; background: var(--paper); color: var(--ink);
+  font-weight: 650; text-align: left;
+}
+.check-option:hover:not(:disabled) { border-color: var(--navy); background: var(--cream); }
+.check-option[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--cream); font-weight: 800; }
+.check-option.correct[aria-pressed="true"] { border-color: var(--ok); background: var(--ok-soft); }
+.check-option.wrong[aria-pressed="true"] { border-color: var(--bad); background: var(--bad-soft); }
+.check-feedback { margin: 11px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .9); }
+.check-feedback:empty { display: none; }
+.check-feedback b { color: var(--navy); }
+/* Peer Instruction: in presentation mode the item goes large and the feedback
+   stays hidden until the room has voted and someone taps. */
+body.presenter .check .check-prompt { font-size: calc(var(--u) * 1.12); }
+body.presenter .check-option { font-size: calc(var(--u) * 1.02); }
+
+/* ---------- A5 Details drawer, and A7/A8 dialogs --------------------------
+   A5 is a right-side drawer; A7 (Guide), A8 (Settings) and the presenter notes
+   are centred cards. `margin: auto` is what centres a <dialog> whose width is
+   constrained — without it the card sits against the left edge at >=1024px
+   (this is task-glass-box-dialog-centering, fixed here once for the fleet). */
+body.details-open { overflow: hidden; }
+.details-sheet { inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0; border: 0; background: transparent; }
+.details-sheet::backdrop, .lesson-dialog::backdrop { background: rgba(0, 33, 68, .36); backdrop-filter: blur(2px); }
+.details-sheet[open] { display: flex; justify-content: flex-end; }
+.details-drawer { display: flex; flex-direction: column; width: min(510px, 46vw); height: 100%; background: var(--paper); color: var(--ink); box-shadow: -18px 0 48px rgba(0, 33, 68, .24); }
+.details-body { flex: 1; overflow: auto; padding: 22px; }
+.details-body h3 { margin: 16px 0 6px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.2); }
+.details-body h3:first-of-type { margin-top: 4px; }
+.details-body p { margin: 0 0 11px; color: var(--ink-2); }
+.details-body ul, .details-body ol { margin: 0 0 11px; padding-left: 21px; color: var(--ink-2); }
+.details-body li { margin: 4px 0; }
+.details-note { color: var(--ink-3) !important; font-size: calc(var(--u) * .8); }
+.details-stage { display: none; }
+.details-stage.on { display: block; }
+.details-formula { margin: 10px 0; padding: 11px; border-radius: var(--radius-2); background: var(--navy); color: #fff; font: 800 calc(var(--u) * 1.1) Georgia, "Times New Roman", serif; text-align: center; }
+/* The closing Boundary card: what this demo does NOT claim. */
+.evidence-card { margin-top: 14px; border: 1px solid var(--cream-deep); border-left: 4px solid var(--gold); border-radius: 9px; padding: 11px; background: var(--cream); color: var(--ink-2); font-size: calc(var(--u) * .86); }
+.evidence-card b { color: var(--navy); }
+
+.lesson-dialog {
+  width: min(680px, calc(100% - 32px)); max-height: min(88dvh, 800px);
+  margin: auto; padding: 0;
+  border: 1px solid var(--navy); border-top: 5px solid var(--gold); border-radius: 14px;
+  background: var(--paper); color: var(--ink); box-shadow: 0 24px 70px rgba(0, 33, 68, .3);
+}
+.lesson-dialog[open] { display: flex; flex-direction: column; }
+.lesson-dialog-head, .details-drawer .lesson-dialog-head { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: var(--navy); color: #fff; }
+.lesson-dialog-head h2 { flex: 1; margin: 0; color: #fff; font-size: calc(var(--u) * 1.18); }
+.lesson-dialog-head .head-sub { display: block; margin-top: 2px; color: var(--gold-lite); font-size: calc(var(--u) * .7); letter-spacing: .08em; text-transform: uppercase; }
+.lesson-dialog-head button { min-width: 40px; min-height: 40px; border: 1px solid var(--gold); border-radius: 8px; background: var(--gold); color: var(--navy); font-weight: 900; }
+.lesson-dialog-body { flex: 1; min-height: 0; overflow: auto; padding: 17px 19px 10px; }
+.lesson-dialog-body h3 { margin: 15px 0 5px; color: var(--navy); }
+.lesson-dialog-body p { margin: 0 0 10px; }
+.lesson-dialog-body ol, .lesson-dialog-body ul { padding-left: 22px; }
+.lesson-dialog-body li { margin: 5px 0; }
+.lesson-dialog-body .lede, .lesson-dialog-body .setnote { color: var(--ink-2); }
+.lesson-dialog-body .btn { width: 100%; }
+.lesson-dialog-actions { display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
+.lesson-dialog-actions button { min-height: 44px; border: 1px solid var(--navy); border-radius: 8px; padding: 8px 16px; background: var(--navy); color: #fff; font-weight: 800; }
+/* The presenter notes are the printable guide, injected at build time. The
+   guide's own scoped stylesheet lands after this file, so it wins inside here. */
+.guide-host { padding-top: 14px; }
+.guide-host .guide-scope { zoom: 1; }
+.guide-host .guide-scope .page-break { break-before: auto; page-break-before: auto; padding-top: 0; }
+.guide-host .guide-scope header, .guide-host .guide-scope .g-head { display: block; }
+.guide-print { margin: 14px 0 4px; border-top: 1px solid var(--line); padding-top: 10px; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+.guide-print a, .footer-link { color: var(--lite-deep); }
+
+/* ---------- A0 footer and the credit pill --------------------------------- */
+.footer { padding: 24px 22px 78px; color: var(--ink-3); font-size: calc(var(--u) * .78); text-align: center; }
+.footer-tools { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.footer-link { min-height: 36px; border: 0; background: transparent; font-weight: 750; text-decoration: underline; }
+
+/* ONE spec fleet-wide (plan A0, closing task-shared-credit-pill-design).
+   Text is exactly "Bryant Harrison · Murray State University" — provenance
+   belongs in demo.json built_with, not on the glass. Fixed in px, not --u, so
+   presentation mode does not blow it up on a projector. It never takes a
+   pointer event, and it hides whenever a modal or a bottom control bar is
+   open, so it cannot sit over a control. */
+.bh-credit {
+  position: fixed; left: 8px; bottom: calc(6px + var(--safe-b)); z-index: 30;
+  max-width: calc(100vw - 16px);
+  pointer-events: none;
+  font: 600 10px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--gold); background: rgba(0, 33, 68, .85);
+  border: 1px solid rgba(236, 172, 0, .4);
+  padding: 3px 10px; border-radius: 999px; letter-spacing: .03em;
+  animation: bh-settle 9s ease forwards;
+}
+@keyframes bh-settle { 0%, 65% { opacity: .93 } 100% { opacity: .5 } }
+body:has(dialog[open]) .bh-credit,
+body.has-bottom-bar .bh-credit { display: none; }
+@media print { .bh-credit { display: none !important; } }
+
+/* ---------- breakpoints ---------------------------------------------------
+   phone <= 480, narrow <= 760, wide > 760, plus the landscape-short case: a
+   phone held sideways on a projector table. Demo 1 has it, Demo 2 does not;
+   the plan keeps it. */
+/* The pill is position:fixed, so the page scrolls UNDER it and no amount of
+   padding can stop it passing over mid-page content — that is inherent to a
+   standing byline, and is why it takes no pointer event and fades to .5 (Demo
+   1 and Demo 2 both ship it that way). What padding CAN fix is the end of the
+   scroll, where the footer would otherwise sit permanently underneath it. So:
+   reserve that space at phone widths, and keep the pill as LOW as possible.
+
+   An earlier version of this file raised the pill 62px at <= 820px to clear a
+   bottom control bar. That was wrong twice over — it made mid-page overlap
+   worse rather than better (measured at 390px, sitting across the Predict
+   card), and a demo that actually has a bottom bar sets body.has-bottom-bar,
+   which HIDES the pill outright, so nothing needed raising. */
+@media (max-width: 480px) {
+  body { padding-bottom: calc(28px + var(--safe-b)); }
+}
+@media (max-width: 760px) {
+  .topline { padding: calc(12px + var(--safe-t)) 14px 9px; }
+  .stages { padding: 0 14px 10px; }
+  main { padding: 15px 14px 68px; }
+  .stage-intro { grid-template-columns: 1fr; padding: 17px; }
+  .details-trigger { justify-self: start; }
+  .lesson-strip { grid-template-columns: 1fr; }
+  .details-drawer { width: min(620px, 100vw); }
+  .check { padding: 15px 16px; }
+}
+@media (max-width: 480px) {
+  .brandline { grid-template-columns: 1fr; }
+  .msu-brand { white-space: normal; }
+  .topline { align-items: start; }
+  .top-tools { gap: 4px; }
+  .icon-btn { min-width: 40px; padding: 5px 8px; }
+  .icon-label { display: none; }
+  .stages { gap: 5px; }
+  .stage-tab { min-height: 50px; font-size: calc(var(--u) * .82); }
+  .stage-tab small { font-size: calc(var(--u) * .6); }
+  .lesson-strip { gap: 7px; }
+  .stage-intro h2 { font-size: 1.65rem; }
+  .card, .workbench { padding: 15px; }
+  .lesson-dialog { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-left: 0; border-right: 0; }
+  .lesson-dialog-body { padding: 14px 14px 44px; }
+  .details-drawer { width: 100vw; }
+  /* The page must not scroll sideways at 320px. Anything wider than the
+     viewport inside a stage is the demo's job to make scrollable itself. */
+  .footer { padding: 20px 14px 72px; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .top { position: static; }
+  .topline { padding: 8px 14px 6px; }
+  .brandline h1 { font-size: 1.25rem; }
+  .stages { padding: 0 14px 7px; }
+  .stage-tab { min-height: 42px; }
+  .stage-tab small { display: none; }
+  main { padding: 10px 14px 44px; }
+  /* Keep the question and the Predict card; the title, the refresh line and
+     the other two cards cost more height than they earn here. */
+  .stage-intro { padding: 11px 13px; margin-bottom: 10px; gap: 8px 14px; }
+  .stage-intro h2, .stage-intro .eyebrow, .stage-intro .refresh { display: none; }
+  .stage-question { font-size: calc(var(--u) * .94); }
+  .lesson-strip { grid-template-columns: 1fr; gap: 4px; }
+  .lesson-strip article:not(:first-child) { display: none; }
+  .lesson-strip article:first-child { display: grid; grid-template-columns: 4.5rem 1fr; gap: .5rem; align-items: baseline; }
+  .obs-cue { margin: 7px 0; min-height: 34px; }
+  .check { margin-top: 10px; padding: 11px 13px; }
+  .footer { padding: 12px 14px 40px; }
+}
+
+/* ---------- required accessibility blocks (A0) ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  html { scroll-behavior: auto; }
+}
+@media (prefers-contrast: more) {
+  :root { --ink-2: #26394D; --ink-3: #33475C; --line: #6D8496; --cream-deep: #C9BC9F; --ink-2-on-navy: #EDF5FB; --ink-3-on-navy: #DCE9F3; }
+  .stage-tab, .check-option, .icon-btn { border-width: 2px; }
+  .lesson-strip article { border-left-width: 5px; }
+}
+
+
+</style>
+<style>
+/* Gaps in the Rock Record — ACTIVITY styles only. The shell owns the header,
+   stage nav, stage-intro, lesson-strip, dialogs, Details drawer, check cards,
+   credit pill and every generic control reset — see ../tools/lesson-shell.
+   Everything here is namespaced `mt-` so it cannot collide with a class the
+   kit already uses (ADOPTING.md's rename-on-collision warning). */
+
+.mt-investigation-host:empty { min-height: 0; }
+
+/* ---- linked rock/time columns ------------------------------------------- */
+.mt-columns { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 12px 0; }
+.mt-column { min-width: 0; border-radius: var(--radius-2); overflow: hidden; background: rgba(255,255,255,.06); }
+.mt-column h4 { margin: 0; padding: 8px 10px; background: rgba(255,255,255,.1); color: #fff; font-size: calc(var(--u) * .84); font-weight: 800; }
+.mt-linked { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; }
+.mt-linked figure { margin: 0; min-width: 0; }
+.mt-linked figcaption { margin: 0 0 3px; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .7); font-weight: 750; text-align: center; text-transform: uppercase; letter-spacing: .04em; }
+.mt-linked svg { display: block; width: 100%; height: 220px; background: rgba(255,255,255,.9); border-radius: 6px; }
+.mt-linked svg text { font-size: 8px; }
+.mt-sample-row { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 10px 10px; }
+.mt-sample {
+  min-height: 38px; border: 1px solid var(--line-on-navy); border-radius: 7px;
+  padding: 6px 9px; background: transparent; color: #fff; font-size: calc(var(--u) * .78); font-weight: 750;
+}
+.mt-sample:hover { background: rgba(255,255,255,.14); }
+.mt-sample[aria-pressed="true"] { background: var(--gold); border-color: var(--gold); color: var(--navy); }
+
+/* ---- Predict guess capture, inside the lesson-strip Predict card -------- */
+.mt-predict-btns { display: inline-flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
+.mt-guess { min-height: 34px; border: 1px solid var(--navy); border-radius: 7px; padding: 5px 9px; background: var(--paper); color: var(--navy); font-size: calc(var(--u) * .78); font-weight: 750; }
+.mt-guess:hover:not(:disabled) { background: var(--navy); color: #fff; }
+.mt-guess[aria-pressed="true"] { background: var(--navy); color: #fff; }
+.mt-guess:disabled { opacity: .55; }
+
+/* ---- supplied age evidence + reveal boxes ------------------------------- */
+.mt-timebox { margin-top: 10px; border-left: 4px solid var(--gold); border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 10px 12px; background: var(--cream); color: var(--ink); font-size: calc(var(--u) * .88); }
+.mt-timebox hr { margin: 8px 0; border: 0; border-top: 1px solid var(--cream-deep); }
+
+/* ---- evidence ledger ----------------------------------------------------- */
+.mt-ledger-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.mt-ledger-list li { border-left: 4px solid var(--lite); border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 7px 10px; background: var(--cream); font-size: calc(var(--u) * .86); }
+.mt-ledger-list li.mt-ledger-empty { border-left-color: var(--line); color: var(--ink-3); }
+
+/* ---- warranted-conclusion choices ---------------------------------------- */
+.mt-conclusions { display: grid; gap: 8px; margin: 10px 0; }
+.mt-choice {
+  width: 100%; text-align: left; min-height: 44px; border: 1px solid var(--line);
+  border-radius: var(--radius-2); padding: 9px 11px; background: var(--paper); color: var(--ink);
+  font-size: calc(var(--u) * .9); font-weight: 700;
+}
+.mt-choice:hover:not(:disabled) { border-color: var(--navy); background: var(--cream); }
+.mt-conclusion-feedback { border-left: 4px solid var(--gold); border-radius: 0 var(--radius-2) var(--radius-2) 0; padding: 9px 11px; background: var(--cream); color: var(--ink-2); font-size: calc(var(--u) * .9); min-height: 20px; }
+.mt-conclusion-feedback b { color: var(--navy); }
+
+@media (max-width: 760px) {
+  .mt-linked { grid-template-columns: 1fr; }
+  .mt-linked svg { height: 190px; }
+}
+
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #805800; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say { border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px; margin: 0 0 .9em; font-style: italic; opacity: .95; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .goals { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope .goals li { margin-bottom: 8px; }
+.guide-scope .mis { border-left: 3px solid #b98cff; border-radius: 0 6px 6px 0; padding: 8px 12px; margin: 0 0 10px; background: rgba(185, 140, 255, .08); }
+.guide-scope .mis b { display: block; color: #5a3e8c; }
+.guide-scope .mis span { display: block; margin-top: 4px; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University &middot; Part four &middot; Geology</span>
+      <h1>Gaps in the Rock Record</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Three stages, ungated: the three cases are independent investigations
+       with no unlock sequence (confirmed by reading model.js — no progression
+       concept). A learner may visit them in any order. -->
+  <nav class="stages" role="tablist" aria-label="Gaps in the Rock Record lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Section A</span><small>Does a last appearance settle extinction?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Section B</span><small>Does a gap explain its own cause?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Sections C &amp; D</span><small>Does a second section settle it?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- =========================== STAGE 1 &middot; Section A ================= -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage 1</span>
+      <h2 id="stage-1-title">A continuous section. Does absence mean extinction?</h2>
+      <p class="stage-question">Does a species' last appearance in sampled rock mark where it went extinct?</p>
+      <p class="refresh"><b>Before you start.</b> Two measurements stay separate throughout this activity:
+        <b>rock thickness</b> in metres records surviving strata, and <b>model time</b> in <b>Myr</b>
+        (one Myr is one million years) is the elapsed clock this authored model runs on. A <b>fossil
+        specimen</b> marks where and when it was buried &mdash; not a full record of the organism's
+        whole existence.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Guess before you sample: does finding where a fossil stops appearing settle whether the species went extinct there?
+        <span class="mt-predict-btns" role="group" aria-label="Your guess for Section A">
+          <button class="mt-guess" type="button" data-stage="0" data-guess="yes">Yes, it settles it</button>
+          <button class="mt-guess" type="button" data-stage="0" data-guess="no">No, it doesn&rsquo;t</button>
+        </span></p><span class="echo" id="echo-1" hidden></span></article>
+      <article><span>Try</span><p>Press <b>sample</b> on every surviving layer in Section A, then <b>Show supplied age evidence</b> to see the section's Myr chronology.</p></article>
+      <article><span>Takeaway</span><p>A local last observation in sampled rock is where the record stops, not a proven extinction moment.</p></article>
+    </div>
+  </section>
+
+  <div class="mt-investigation-host" id="investigation-host-1"></div>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">Asteria is sampled in the lower two units of Section A but not in Gold sandstone above them. Does that alone establish that Asteria went globally extinct partway up the section?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="No. The sampled section only shows a local last observation &mdash; where this one investigation's evidence stops. Global distribution, sampling completeness elsewhere, and a dating method are not part of what a single local section can show.">No &mdash; a local last observation is not a global extinction record</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="That treats a sampling limit as a biological fact. Once a fossil stops appearing in ONE section's surviving rock, all it establishes is that this section's record ends there &mdash; not that the organism itself ended everywhere at that moment.">Yes &mdash; once a fossil stops appearing, the organism is extinct</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- =========================== STAGE 2 &middot; Section B ================= -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage 2</span>
+      <h2 id="stage-2-title">A missing interval, and where its fossils went.</h2>
+      <p class="stage-question">Is a rock gap always someone's last moment, and do a gap's missing fossils end up sitting at its boundary?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>contact</b> is the surface between two rock units. Where
+        rock &mdash; and therefore time &mdash; is missing across it, that missing interval is a
+        <b>hiatus</b>. Section B's hiatus is produced by an authored <b>erosion</b> event, which
+        <b>deletes</b> rock (and any fossils inside it) rather than moving it anywhere. Section A handed
+        forward that a local record has an edge; here the edge is a gap rather than the top of the
+        section.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Guess before you look: once you find rock missing here, will the surviving evidence also tell you why it is missing?
+        <span class="mt-predict-btns" role="group" aria-label="Your guess for Section B">
+          <button class="mt-guess" type="button" data-stage="1" data-guess="yes">Yes, it will</button>
+          <button class="mt-guess" type="button" data-stage="1" data-guess="no">No, it won&rsquo;t</button>
+        </span></p><span class="echo" id="echo-2" hidden></span></article>
+      <article><span>Try</span><p>Press <b>Show supplied age evidence</b> to reveal the gap, then <b>sample</b> Red siltstone and Cross-bedded sand on either side of it.</p></article>
+      <article><span>Takeaway</span><p>Erosion deletes rock and its fossils outright; nothing is relocated to the boundary that erosion leaves behind.</p></article>
+    </div>
+  </section>
+
+  <div class="mt-investigation-host" id="investigation-host-2"></div>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Erosion removed the top of Red siltstone and all of Pale limestone in Section B. Are the fossils that were once in that removed rock now sitting at today's contact, waiting to be found there?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="No. Reveal shows the erosion event deletes the removed rock and every fossil inside it (see revealBox); nothing is relocated to where the contact now sits. A learner sampling the contact surface itself would find nothing from the removed interval.">No &mdash; erosion deletes the removed rock and its fossils; nothing moves to the boundary</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="That is what this model specifically does not do. The authored erosion event subtracts thickness (and any fossil inside the removed thickness) from the top of each layer it crosses; it does not relocate anything downward to where erosion stopped.">Yes &mdash; the fossils get pushed down to where the erosion stopped</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- =========================== STAGE 3 &middot; Sections C &amp; D ========= -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage 3</span>
+      <h2 id="stage-3-title">Two sections, one gap between them.</h2>
+      <p class="stage-question">Does a second section that keeps depositing through a first section's gap settle what the gap means?</p>
+      <p class="refresh"><b>Before you start.</b> Sections C and D start identically, then diverge: C has a
+        <b>pause</b> (no deposition, but no erosion either &mdash; a hiatus with a different cause than
+        Section B's), while D keeps accumulating rock through that same span. Stage 2 showed one cause
+        of a gap; this stage's pause shows a second, equally valid one.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Guess before you compare: if Section D preserves fossils from exactly the span missing at C, does that settle the question for the species everywhere?
+        <span class="mt-predict-btns" role="group" aria-label="Your guess for Sections C and D">
+          <button class="mt-guess" type="button" data-stage="2" data-guess="yes">Yes, it settles it</button>
+          <button class="mt-guess" type="button" data-stage="2" data-guess="no">No, it doesn&rsquo;t</button>
+        </span></p><span class="echo" id="echo-3" hidden></span></article>
+      <article><span>Try</span><p><b>Show supplied age evidence</b> for both sections, then <b>sample</b> below C's gap and the matching Green mudstone layer in D.</p></article>
+      <article><span>Takeaway</span><p>A second section can show what a gap hides locally, but two local sections still cannot certify a global claim.</p></article>
+    </div>
+  </section>
+
+  <div class="mt-investigation-host" id="investigation-host-3"></div>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">Section D preserves fossils from exactly the span missing at Section C. Do these two local sections, compared, prove a global claim about where the species lived?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="No. Comparing C and D shows that D's local record was not blank during C's pause &mdash; it does not extend to a claim about anywhere the activity did not sample. Two local sections are still two local sections, however informative the comparison is.">No &mdash; two local sections are not a global sample, however informative</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Comparing two sections is more evidence than one, but it is still local evidence from two named places. It shows the gap at C is not evidence of absence everywhere &mdash; it does not upgrade to a general, global claim.">Yes &mdash; comparing two sections is enough to settle a global claim</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span><b>Gaps in the Rock Record</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; synthetic model inspired by preservation/occurrence-event teaching contexts including StratPal; no faculty endorsement is claimed</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="teacher-guide.html" target="_blank" rel="noopener">Printable guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE &middot; opens on load ═════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to investigate missing time</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">A rock column always has less time in it than it looks like it should. <b>Where did the missing time go, and what can you honestly conclude from what survived?</b></p>
+    <p class="note">Where this sits: this is one of ten Part-four example projects &mdash; an AI-built classroom tool whose goal is a bounded rock-record inference, its engine is a live synthetic ledger, and its assumptions are one tap away.</p>
+    <ol>
+      <li><b>Section A.</b> Press <b>sample</b> on each surviving layer, then <b>Show supplied age evidence</b> to see the section's chronology.</li>
+      <li><b>Section B.</b> Reveal the gap, then sample the surviving rock immediately below and above it.</li>
+      <li><b>Sections C &amp; D.</b> Reveal chronology for both, then sample below C's gap and the matching layer in D.</li>
+      <li>In every stage, choose a <b>warranted conclusion</b> from the visible evidence, then <b>reveal</b> the authored history to compare.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The stage tabs switch sections. <b>Details</b> opens the ledger model, the constant-rate mapping,
+      and the assumptions for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> has
+      <b>Open Presenter Notes</b>, <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Time</h3>
+    <p>Eight to twelve minutes for all three sections; about three minutes each if run separately.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Section A</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS &middot; the contract triad ═════════ -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen: the learning goals, the ledger model in
+      presenter terms, per-section teaching notes and a misconceptions bank. This is the printable
+      guide itself, not a summary of it.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b>
+      button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to a fresh load: Section A selected, every guess and sample cleared in all
+      three sections, supplied age evidence and revealed histories hidden again, and every conclusion
+      unchosen. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS &middot; one section per stage ═══════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Section A</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live, and what is fixed</span>
+        <h3>The evidence display is computed here; the case history is a fixed teaching fixture</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the columns, the ledger and the evidence-readiness check</span>
+          <p>Every time you sample a layer or reveal supplied ages, the linked rock/time views, the
+            evidence ledger, and whether a conclusion is allowed yet are all recomputed here from
+            Section A's authored ledger. Nothing is looked up.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> Section A's case history itself</span>
+          <p>The layer sequence, deposition rates, fossil placements and the authored reveal text are a
+            hand-authored teaching fixture standing in for a real stratigraphic section &mdash; not a
+            simulation that could have come out differently.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">depth in a layer (m) = rate (m/Myr) &times; elapsed time in that layer (Myr)</div>
+        <p>Each layer deposits at a stated constant rate. A sample reveals only the specimens whose
+          position survives; specimen ages are placed directly on the authored timeline, then mapped to
+          a depth using that layer's own rate. Chronology anchors mark each surviving layer's base and
+          top in Myr; the model checks that every anchor agrees with the rock-derived mapping before it
+          will show it.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>You never derive an exact Myr value from thickness yourself.</b> The only source of an
+            exact time value anywhere in this activity is the supplied chronology anchors revealed by
+            <b>Show supplied age evidence</b> &mdash; mirroring how real geologic ages come from
+            independent dating evidence, not from measuring a bed and assuming a rate.</li>
+          <li><b>Deposition is constant-rate within each layer.</b> A real bed's rate can vary; this
+            model holds it fixed so the mapping is exact rather than approximate.</li>
+          <li><b>No dating uncertainty and no measurement error are modeled.</b> A supplied Myr value is
+            exact here; a real radiometric or biostratigraphic age carries a stated error bar this
+            activity omits.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>This stage cites no external figures: every number is either computed live from the
+          authored ledger or is part of the hand-authored fixture itself. The activity's event/occurrence
+          framing takes inspiration from preservation/occurrence-event teaching contexts including
+          StratPal (see the footer); that is context, not a data source for any number shown here.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> this model does not simulate global species
+          distribution, transport, or a real dating method. "Extinction" here is only ever a local
+          last-appearance in one authored section, and equal rock thickness in this section's own three
+          layers does not mean equal elapsed time &mdash; each layer's own rate decides that.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live, and what is fixed</span>
+        <h3>The gap and its removed material are computed here; the erosion event itself is authored</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the gap's Myr span and which fossils the erosion removed</span>
+          <p>Once you reveal Section B's chronology, the size of the gap and exactly which specimens the
+            erosion event removed (versus which survive) are computed here from the ledger, not looked
+            up or pre-rendered.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> Section B's erosion event and its removed thickness</span>
+          <p>That an erosion event occurred, how much rock it removed, and from which layers, are fixed
+            teaching-fixture facts &mdash; authored so this stage has a gap with a knowable, revealable
+            cause, rather than an unexplained one.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">removed thickness is subtracted top-down until the authored erosion amount is used up</div>
+        <p>The erosion event removes rock starting from the top of the section downward, deleting whole
+          layers first and then partially eating into the next one. Any fossil whose position falls
+          inside the removed thickness is deleted along with that rock &mdash; it is not moved to a new
+          position.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Erosion deletes; it does not relocate.</b> A removed fossil is gone from the surviving
+            column, not repositioned at the resulting contact &mdash; the Check-yourself item on this
+            stage tests exactly this.</li>
+          <li><b>The gap's cause is authored, not inferred.</b> In a real section you would need
+            independent evidence to tell an erosional hiatus from a non-depositional one; here the
+            reveal simply states which one this case is.</li>
+          <li><b>A hiatus does not require erosion in general.</b> This case's gap happens to be
+            erosional; Stage 3's Section C pause shows a gap with no erosion at all. Do not generalize
+            from one case to "every gap means erosion."</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>No external figures are cited on this stage; the gap size and removed-thickness figures
+          are computed live from the authored ledger described above.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> this model does not simulate real erosional
+          processes, reworking, or where eroded sediment and its fossils physically go after removal
+          &mdash; it only tracks what stays in the column and what the ledger records as deleted.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live, and what is fixed</span>
+        <h3>The comparison is computed here; both sections' histories are fixed</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> both sections' evidence ledgers and the readiness check that requires both before a conclusion is offered</span>
+          <p>Section C's pause and Section D's continued deposition are read from each section's own
+            ledger as you sample and reveal chronology; the requirement that you have evidence from BOTH
+            sections before choosing a conclusion is enforced here, not merely suggested.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the paired case histories for C and D</span>
+          <p>That C pauses for exactly 2.00 Myr while D keeps depositing Green mudstone through the same
+            span is an authored pairing, built so the comparison has a clean, revealable answer.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">a pause records elapsed time with zero deposited thickness &mdash; a second, non-erosional cause of a gap</div>
+        <p>A <code>pause</code> event advances the model clock without adding rock, producing a hiatus
+          with no erosion involved at all &mdash; the model's second mechanism for "missing time," distinct
+          from Stage 2's erosion.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Two local sections are not a global or basin-scale survey.</b> The comparison shows what
+            a second local section can and cannot add to a first section's gap; it is not a rule for how
+            many sections settle a claim in general.</li>
+          <li><b>The two sections are given identical starting rock</b> so the pause and the
+            fossil-in-D comparison are the only variable; a real paired-section study would need to
+            establish correlation between sections independently.</li>
+          <li><b>No sampling-density or facies-correlation limits are modeled</b> beyond what each
+            section's own layer list already represents.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>No external figures are cited on this stage; the comparison is computed live from the
+          two authored ledgers described above.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> two authored local sections are not a basin-scale or
+          global survey. This stage shows what local absence can and cannot support when a second local
+          section is available &mdash; it is not evidence that any two sections, in general, are enough
+          to certify a global claim.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Presenter notes ARE the printable guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<div class="guide-scope">
+
+  <div class="g-head">
+    <div class="g-kicker">Demo 15 of 16 &middot; Part four &middot; Geology &middot; 8&ndash;12 min full, ~3 min per section</div>
+    <h1>Gaps in the Rock Record &mdash; Teacher Guide</h1>
+    <div class="g-sub">
+      One HTML file, offline, no AI at runtime. You need: a screen to project or share; no
+      other materials.
+    </div>
+  </div>
+
+  <h2>Learning goals</h2>
+  <p>Not stated objectives &mdash; what the activity itself demonstrably shows, one per stage:</p>
+  <ol class="goals">
+    <li>A local last observation in sampled rock is where the record stops, not a proven extinction moment.</li>
+    <li>Erosion deletes rock and its fossils outright; nothing is relocated to the boundary that erosion leaves behind.</li>
+    <li>A second section can show what a gap hides locally, but two local sections still cannot certify a global claim.</li>
+  </ol>
+
+  <h2>Where this sits on the path</h2>
+  <p>
+    This is one of ten Part-four example projects: an AI-built classroom tool whose goal is a
+    bounded rock-record inference, whose engine is a live synthetic ledger computed as you
+    sample, and whose assumptions &mdash; no dating uncertainty, no global distribution model, no
+    fossil relocation &mdash; are one tap away in Details. It does not build on a specific
+    earlier demo in the tour; it applies the tour's own discipline (name the goal, expose the
+    assumptions, keep the evidence available) to a rock column instead of a model.
+  </p>
+
+  <h2>One question for the session</h2>
+  <p><b>How much time does the rock in front of you actually show, and how much is missing?</b>
+    Surviving rock and elapsed time are different measurements, and this activity never lets you
+    compute one from the other by eye &mdash; only supplied chronology evidence fixes an exact
+    Myr value.</p>
+  <p class="say">
+    The one sentence to land: <b>a local rock record can only ever tell you where ITS evidence
+    stops</b> &mdash; not where the organism, the deposition, or the story actually ended.
+  </p>
+
+  <h2>The shape of the session</h2>
+  <div class="scroll">
+  <table>
+    <tr><th>Stage</th><th>What happens</th><th>Time</th></tr>
+    <tr><td><b>1 &mdash; Section A</b></td><td>A continuous three-layer record. Sample every layer, reveal supplied ages, and test whether a fossil's last appearance settles extinction.</td><td>~3 min</td></tr>
+    <tr><td><b>2 &mdash; Section B</b></td><td>An erosional gap. Reveal the missing interval, sample above and below it, and test whether the gap explains its own cause.</td><td>~3 min</td></tr>
+    <tr><td><b>3 &mdash; Sections C &amp; D</b></td><td>A paired comparison: C pauses, D keeps depositing. Sample both to test what a second section can and cannot settle.</td><td>~3&ndash;4 min</td></tr>
+  </table>
+  </div>
+
+  <h2>Stage 1 &mdash; Section A</h2>
+  <p><b>Question.</b> Does a species' last appearance in sampled rock mark where it went
+    extinct?</p>
+  <p><b>Predict prompt.</b> Before sampling, guess: does finding where a fossil stops appearing
+    settle whether the species went extinct there?</p>
+  <p><b>Activity.</b> Sample all three layers in Section A (Blue mudstone, Green mudstone, Gold
+    sandstone), then press <b>Show supplied age evidence</b>. Asteria appears in the lower two
+    layers and nowhere above; ask the room what that absence does and does not prove before
+    choosing a conclusion.</p>
+  <p><b>Expected observation.</b> Every layer samples cleanly with no gap in this section (the
+    evidence ledger and the linked time view both confirm a continuous 6 Myr record); the
+    "warranted" conclusion is available only after middle and top are sampled and the chronology
+    is shown.</p>
+  <p><b>Check-yourself answer key.</b> "Does Asteria's absence above Blue and Green mudstone
+    settle global extinction?" &mdash; No: a local last observation is not a global extinction
+    record.</p>
+  <p><b>Teaching limit.</b> This section has no missing interval at all; it is here to establish
+    the extinction-inference limit before Stage 2 adds a genuine gap.</p>
+
+  <h2>Stage 2 &mdash; Section B</h2>
+  <p><b>Question.</b> Is a rock gap always someone's last moment, and do a gap's missing fossils
+    end up sitting at its boundary?</p>
+  <p><b>Predict prompt.</b> Before looking, guess: once you find rock missing here, will the
+    surviving evidence also tell you why it is missing?</p>
+  <p><b>Activity.</b> Press <b>Show supplied age evidence</b> first so the gap is visible, then
+    sample Red siltstone (below) and Cross-bedded sand (above). Reveal the authored history and
+    have the room compare "what the gap alone showed" against "what erosion actually did."</p>
+  <p><b>Expected observation.</b> The reveal states the erosion event removed 15.00 m of Pale
+    limestone entirely and 10.00 m from the top of Red siltstone, taking their fossils with it
+    &mdash; nothing from the removed rock reappears at today's contact.</p>
+  <p><b>Check-yourself answer key.</b> "Are the removed fossils now sitting at the contact?"
+    &mdash; No: erosion deletes rock and fossils; nothing relocates to the boundary.</p>
+  <p><b>Teaching limit.</b> This section's gap happens to be erosional; a gap does not require
+    erosion in general (Section C's pause in Stage 3 has none at all). Do not let the room
+    generalize "every gap is erosion" from this one case.</p>
+
+  <h2>Stage 3 &mdash; Sections C and D</h2>
+  <p><b>Question.</b> Does a second section that keeps depositing through a first section's gap
+    settle what the gap means?</p>
+  <p><b>Predict prompt.</b> Before comparing, guess: if Section D preserves fossils from exactly
+    the span missing at C, does that settle the question for the species everywhere?</p>
+  <p><b>Activity.</b> Reveal supplied chronology for both C and D, then sample below C's gap and
+    the matching Green mudstone layer in D. The evidence-readiness check requires samples and
+    chronology from BOTH sections before offering a conclusion &mdash; point this out as a
+    deliberate gate, not a bug.</p>
+  <p><b>Expected observation.</b> D's Green mudstone preserves a fossil from exactly the 2.00 Myr
+    span that C's pause leaves blank; the room should see this as "D fills in what C cannot show,"
+    not as proof that the species was present everywhere during that span.</p>
+  <p><b>Check-yourself answer key.</b> "Do C and D together prove a global claim?" &mdash; No: two
+    local sections are not a global sample, however informative.</p>
+  <p><b>Teaching limit.</b> The two sections are given identical starting rock so the pause is the
+    only variable; a real paired-section study would need to establish correlation between
+    sections independently, which this activity does not model.</p>
+
+  <h2>Misconceptions</h2>
+  <div class="mis"><b>"Once a fossil stops appearing, the organism is extinct."</b>
+    <span>No. A local last observation is where a section's own evidence stops, not where the
+    organism itself ended everywhere (Stage 1).</span></div>
+  <div class="mis"><b>"Equal rock thickness means equal elapsed time."</b>
+    <span>No. Section A's own three layers deposit at different rates (10, 7 and 8 m/Myr) over
+    the identical 2 Myr each, so they come out different thicknesses for the same elapsed time
+    (Stage 1).</span></div>
+  <div class="mis"><b>"A rock gap always means erosion happened."</b>
+    <span>No. Section B's gap is erosional, but Section C's pause in Stage 3 is a gap with no
+    erosion at all &mdash; non-deposition is a separate, equally valid cause (Stages 2&ndash;3).</span></div>
+  <div class="mis"><b>"Two sections that compare well together certify a global claim."</b>
+    <span>No. Comparing Sections C and D is more evidence than either alone, but it is still two
+    named local places, not a global or basin-scale survey (Stage 3).</span></div>
+
+  <h2>Discussion questions</h2>
+  <ul>
+    <li>Section A's three layers each took 2 Myr to deposit but came out different thicknesses.
+      What would go wrong if you tried to read elapsed time directly off a ruler held against the
+      rock?</li>
+    <li>Section B's contact would look the same on the surviving rock whether the missing time
+      came from erosion or from a long pause. What additional, real-world evidence would let a
+      geologist tell those two apart, that this activity does not model?</li>
+    <li>If Section D's rock at the matching interval had ALSO been missing, would that change what
+      you could conclude about Section C's gap? Why or why not?</li>
+  </ul>
+
+  <h2>Questions you will get</h2>
+  <h3>&ldquo;Doesn&rsquo;t the app already know the real history? Why hide it?&rdquo;</h3>
+  <p>
+    It does &mdash; every case has an authored reveal. The point of hiding it until a conclusion
+    is chosen is to force the claim to rest on the VISIBLE evidence, not on knowing the answer key.
+    That is also why choosing a conclusion is not scored: it is feedback on the claim, not a test
+    of memorised history.
+  </p>
+  <h3>&ldquo;Why can&rsquo;t I just measure the rock and compute the missing time myself?&rdquo;</h3>
+  <p>
+    Because that is the specific habit this activity is built to interrupt. The only source of an
+    exact Myr value anywhere on screen is <b>Show supplied age evidence</b> &mdash; a stand-in for
+    independent chronological evidence (radiometric dates, correlated marker beds) that a real
+    geologist would need. Nothing here lets you derive an exact age from thickness and an assumed
+    rate.
+  </p>
+  <h3>&ldquo;Is this how real geologic gaps work?&rdquo;</h3>
+  <p>
+    Only in outline. This is a small authored teaching fixture: it omits reworking, transport,
+    dating uncertainty, sampling statistics, facies correlation and any global distribution model.
+    Each stage's Details drawer states its own boundary plainly &mdash; open one in front of the
+    room if this question comes up.
+  </p>
+
+  <h2>Presenter controls</h2>
+  <ul>
+    <li>Turn on <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
+    <li>Between rooms, <b>Settings &rarr; Reset</b> puts the demo back to its start <b>in place
+      &mdash; no page reload</b>: every guess and sample cleared in all three sections, supplied
+      age evidence and revealed histories hidden again, every conclusion unchosen, and Section A
+      selected. Presentation mode stays on so the projector does not change under you.</li>
+    <li>The app saves nothing anywhere, so an ordinary page reload resets it too (a reload is
+      simply a more disruptive way to reach the same state Reset reaches in place).</li>
+    <li>No network is needed at any point. If the room's wifi is down, nothing changes.</li>
+  </ul>
+
+  <h2>The buttons, top right</h2>
+  <ul>
+    <li><b>?</b> &mdash; <b>Guide</b>: the short how-to panel that opens on first load,
+      reopenable at any point. (Not this document.)</li>
+    <li><b>&#9881;</b> &mdash; <b>Settings</b>: <b>Open Presenter Notes</b> (this document, on
+      screen), <b>Presentation mode</b>, and <b>Reset</b>.</li>
+  </ul>
+
+  <div class="g-foot">
+    Gaps in the Rock Record &mdash; Bryant Harrison, Murray State University. This is a small
+    authored teaching model, not a basin simulator or a method for establishing real extinction.
+    Its event/occurrence framing was developed with reference to the StratPal event-data
+    tutorial; this demo preserves authored synthetic specimens rather than treating
+    occurrence-event transformations as a specimen-preservation algorithm. No faculty endorsement
+    is claimed.
+  </div>
+
+</div>
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing: the shell defines window.lessonShell (dialogs,
+     the stage tablist, presentation mode, check cards, in-place Reset) before
+     app.js, which listens for the shell's 'stagechange' and 'lessonreset'
+     events and calls window.lessonShell.selectStage() only if it needs to
+     drive the tabs itself (it does not). model.js has no shell dependency and
+     loads first so app.js can use MissingTimeModel immediately. -->
 <script>
-/* MISSING_TIME_MODEL: BEGIN */
 /* Missing Time's dependency-free authored rock-record model. Bundled verbatim into index.html. */
 const MissingTimeModel = (() => {
   'use strict';
@@ -270,29 +1429,683 @@ const MissingTimeModel = (() => {
 
 if (typeof module !== 'undefined') module.exports = MissingTimeModel;
 
-/* MISSING_TIME_MODEL: END */
-</script><script>
-(() => { 'use strict'; const M=MissingTimeModel; const el=id=>document.getElementById(id); let caseId='continuous-record', actions=[];
-/* Captured from the markup before anything mutates it, so Settings -> Reset and the case
-   picker restore the literal first-load copy without a second hard-coded string to drift. */
-const FIRST_LOAD={caseId:caseId, feedback:el('conclusionFeedback').textContent};
-/* One code path for "start this case over on fresh evidence": the case picker and
-   Settings -> Reset both go through it. */
-function freshCase(id){caseId=id;actions=[];el('timeEvidence').hidden=true;el('timeEvidence').textContent='';el('revealBox').hidden=true;el('revealBox').textContent='';el('revealButton').hidden=true;el('conclusionFeedback').textContent=FIRST_LOAD.feedback;render()}
-function setMenu(open){el('settingsMenu').hidden=!open;el('settingsButton').setAttribute('aria-expanded',String(open))}
-const labels={ 'continuous-record':['A local last observation in continuous sampled rock cannot establish global extinction.','A local absence proves global extinction.','Equal rock thickness means equal elapsed time.'], 'cut-bank':['The local gap does not identify its cause or establish an extinction boundary.','Every hiatus must have erosion.','A fossil can be moved to the erosion boundary after its layer is removed.'], 'paired-sections':['The second local section preserves an interval missing at the first.','The first section’s blank proves a global fossil absence.','Two sections certify global extinction.']};
-function current(){return M.compiledCase(caseId)} function act(value){if(!actions.includes(value))actions.push(value);renderEvidence()} function renderPicker(){el('casePicker').innerHTML=M.CASES.map((item,i)=>'<button class="'+(item.id===caseId?'active':'')+'" data-case="'+item.id+'">Case '+(i+1)+'</button>').join('');el('casePicker').querySelectorAll('button').forEach(b=>b.onclick=()=>freshCase(b.dataset.case))}
-function renderColumns(){const data=current(),H=210,B=220,T=10;const fill=['#b8dbe9','#fff1bd','#f5d4c8'];const svg=(section,kind)=>{const ready=actions.includes('chronology:'+section.id);if(kind==='time'&&!ready)return '<svg viewBox="0 0 170 240" role="img" aria-label="'+section.label+' model time awaiting supplied chronology"><line x1="28" y1="'+T+'" x2="28" y2="'+B+'" stroke="#7897aa" stroke-dasharray="4 3"/><text x="40" y="104" font-size="10" fill="#50687b">Chronology not</text><text x="40" y="120" font-size="10" fill="#50687b">yet supplied</text><text x="40" y="143" font-size="8" fill="#50687b">Show supplied age</text><text x="40" y="155" font-size="8" fill="#50687b">evidence to scale time</text></svg>';const total=kind==='rock'?section.thicknessM:section.elapsedMyr;const y=value=>B-value/total*H;const interval=layer=>kind==='rock'?{lo:layer.baseM,hi:layer.baseM+layer.survivingThicknessM}:{lo:layer.startMyr,hi:layer.startMyr+layer.survivingThicknessM/layer.rateMPerMyr};let marks='<line x1="28" y1="'+T+'" x2="28" y2="'+B+'" stroke="#002144"/><text x="4" y="13" font-size="9" fill="#38566e">'+''+'</text><text x="2" y="'+(B+10)+'" font-size="8" fill="#38566e">0</text><text x="1" y="'+(T+8)+'" font-size="8" fill="#38566e">'+total.toFixed(1)+'</text>';section.layers.forEach((layer,index)=>{const r=interval(layer),top=y(r.hi),height=Math.max(2,y(r.lo)-top);marks+='<rect x="38" y="'+top.toFixed(2)+'" width="72" height="'+height.toFixed(2)+'" fill="'+fill[index%fill.length]+'" stroke="#456176"/><text x="114" y="'+(top+Math.min(12,height/2)).toFixed(2)+'" font-size="8" fill="#243a4b">'+(layer.label==='Cross-bedded sand'?'Cross-bed':layer.label.split(' ')[0])+'</text>';if(actions.includes('sample:'+section.id+':'+layer.id)){layer.fossils.forEach(f=>{const value=kind==='rock'?layer.baseM+f.depthFromBaseM:f.timeMyr;marks+='<circle cx="74" cy="'+y(value).toFixed(2)+'" r="4" fill="#002144" stroke="#ecac00" stroke-width="2"/>'})}});if(kind==='rock'&&ready)section.gaps.forEach(g=>{marks+='<line x1="34" y1="'+y(g.depthM).toFixed(2)+'" x2="114" y2="'+y(g.depthM).toFixed(2)+'" stroke="#9a6700" stroke-width="3"/><text x="116" y="'+(y(g.depthM)+3).toFixed(2)+'" font-size="10" fill="#805b00">contact</text>'});if(kind==='time'){section.gaps.forEach(g=>{const top=y(g.toMyr),height=y(g.fromMyr)-top;marks+='<rect x="38" y="'+top.toFixed(2)+'" width="72" height="'+height.toFixed(2)+'" fill="#fff1bd" stroke="#9a6700" stroke-dasharray="4 3"/><text x="114" y="'+(top+height/2).toFixed(2)+'" font-size="8" fill="#8c2c00">'+g.durationMyr.toFixed(1)+' gap</text>'});section.chronology.forEach(a=>{marks+='<line x1="32" y1="'+y(a.modelMyr).toFixed(2)+'" x2="114" y2="'+y(a.modelMyr).toFixed(2)+'" stroke="#ecac00" stroke-width="2"/><text x="116" y="'+(y(a.modelMyr)+3).toFixed(2)+'" font-size="8" fill="#805b00">'+a.modelMyr.toFixed(1)+'</text>'})}return '<svg viewBox="0 0 170 240" role="img" aria-label="'+section.label+' '+(kind==='rock'?'surviving rock height above base in metres':'model time in Myr since start')+'">'+marks+'</svg>'};el('columns').className='section-grid '+(data.sections.length===1?'single':'');el('columns').innerHTML=data.sections.map(section=>'<article class="column"><h3>'+section.label+'</h3><div class="linked"><figure><figcaption>surviving rock · m</figcaption>'+svg(section,'rock')+'</figure><figure><figcaption>model time · Myr</figcaption>'+svg(section,'time')+'</figure></div><div class="sample-row">'+section.layers.map(layer=>'<button class="sample" data-sample="'+section.id+':'+layer.id+'" aria-label="Sample '+section.label+' '+layer.label+'">sample '+layer.label+'</button>').join('')+'</div></article>').join('');el('columns').querySelectorAll('[data-sample]').forEach(button=>button.onclick=()=>{const [sectionId,layerId]=button.dataset.sample.split(':');const result=M.sampleLayer(caseId,sectionId,layerId);act('sample:'+sectionId+':'+layerId);const names=result.specimens.length?result.specimens.map(s=>s.species+' at '+s.depthM.toFixed(2)+' m above base').join('; '):'No specimens observed in this sampled surviving layer.';act('note:'+sectionId+':'+layerId+':'+names);renderColumns()})}
-function showGaps(){const data=current();const items=data.sections.map(section=>{act('chronology:'+section.id);section.gaps.forEach(gap=>act('gap:'+gap.id));const anchors=section.chronology.map(a=>a.label+' = '+a.modelMyr.toFixed(2)+' Myr').join('; ');const gaps=section.gaps.length?section.gaps.map(gap=>gap.durationMyr.toFixed(2)+' Myr missing between '+gap.fromMyr.toFixed(2)+' and '+gap.toMyr.toFixed(2)+' Myr').join('; '):'no missing interval in this authored section';return '<strong>'+section.label+'</strong>: supplied anchors '+anchors+'. Result: '+gaps+'.'});el('timeEvidence').innerHTML=items.join('<hr>');el('timeEvidence').hidden=false;renderColumns()}
-function renderEvidence(){const notes=actions.filter(value=>value.startsWith('note:')).map(value=>value.slice(5));const chronologies=actions.filter(value=>value.startsWith('chronology:')).length;const entries=(chronologies?['Supplied age evidence displayed for '+chronologies+' section(s).']:[]).concat(notes.map(note=>'Sample — '+note));el('ledgerIntro').textContent=entries.length?'Visible evidence stays here while you compare the linked rock and time views.':'No samples or age evidence recorded yet.';el('ledgerList').innerHTML=entries.length?entries.map(note=>'<li>'+note+'</li>').join(''):'<li class="empty">Evidence will stay visible here as you act.</li>';}
-function renderConclusions(){el('conclusions').innerHTML=labels[caseId].map((label,index)=>'<button class="choice" data-conclusion="'+index+'">'+label+'</button>').join('');el('conclusions').querySelectorAll('button').forEach(button=>button.onclick=()=>{const status=M.evidenceStatus(caseId,actions);const good=Number(button.dataset.conclusion)===0;if(status.kind!=='ready'){el('conclusionFeedback').textContent=status.text;return}el('conclusionFeedback').textContent=good?'Supported by the visible evidence: '+status.text:'That claim reaches beyond the visible evidence. '+status.text;el('revealButton').hidden=false;})}
-function render(){const item=M.getCase(caseId);el('caseTitle').textContent='Case '+(M.CASES.findIndex(x=>x.id===caseId)+1);el('casePrompt').textContent=caseId==='continuous-record'?'Can sampled rock support a global extinction claim?':item.prompt;el('evidenceHint').textContent=caseId==='cut-bank'?'To compare this local gap, show supplied age evidence, then sample Red siltstone below the contact and Cross-bedded sand above it. A gap alone does not identify its cause.':'A local gap says that rock from an interval is absent here. It does not by itself say why, and an unsampled layer is not an observed fossil absence.';renderPicker();renderColumns();renderEvidence();renderConclusions()}
-el('showGapsButton').onclick=showGaps;el('revealButton').onclick=()=>{el('revealBox').textContent=M.getCase(caseId).reveal;el('revealBox').hidden=false};el('helpButton').onclick=()=>{setMenu(false);el('notesOverlay').hidden=true;el('howOverlay').hidden=false};el('settingsButton').onclick=()=>setMenu(el('settingsMenu').hidden);el('notesButton').onclick=()=>{setMenu(false);el('howOverlay').hidden=true;el('notesOverlay').hidden=false;el('notesOverlay').querySelector('.dialog').scrollTop=0};
-/* Reset returns the demo to its fresh-load state: Case 1, an empty evidence ledger, the
-   supplied-age and reveal boxes hidden and emptied, the first-load conclusion copy, and
-   both overlays and the menu closed. Presentation mode is a presenter display preference,
-   not demo state, so it is deliberately left as the presenter set it. */
-el('resetButton').onclick=()=>{setMenu(false);el('howOverlay').hidden=true;el('notesOverlay').hidden=true;freshCase(FIRST_LOAD.caseId)};
-el('presentationToggle').onchange=e=>document.body.classList.toggle('presentation',e.target.checked);document.querySelectorAll('[data-close]').forEach(button=>button.onclick=()=>el(button.dataset.close).hidden=true);document.addEventListener('keydown',event=>{if(event.key!=='Escape')return;if(!el('notesOverlay').hidden)el('notesOverlay').hidden=true;else if(!el('howOverlay').hidden)el('howOverlay').hidden=true;else if(!el('settingsMenu').hidden)setMenu(false)});render();
+</script>
+<script>
+
+/* lesson-shell v2 behaviour — dialogs, stage tablist, presentation
+   mode, check cards. Injected by build.js; do not edit in the built file. */
+(() => {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const flags = new Set(location.hash.replace(/^#/, '').split(',').filter(Boolean));
+  const hashStage = (() => {
+    for (const f of flags) { const m = /^stage-(\d+)$/.exec(f); if (m) return Number(m[1]) - 1; }
+    return null;
+  })();
+  /* Presentation mode has to be on the body before the activity initialises,
+     so it is read here and not after. The fragment is stripped on arrival so a
+     later manual refresh is an ordinary fresh load. */
+  if (flags.has('presenting')) document.body.classList.add('presenter');
+  if (flags.size) { try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { /* some hosts refuse replaceState on file://; a visible fragment is cosmetic */ } }
+
+  /* ---- dialogs ---------------------------------------------------------- */
+  const guide = $('#guide'), settings = $('#settings'), notes = $('#presenter-notes'), details = $('#details');
+  let opener = null;
+  /* Opening a card from inside another one SWAPS them: nesting two modal
+     dialogs stacks backdrops and makes Escape ambiguous. */
+  const open = (dialog, from) => {
+    if (!dialog) return;
+    const host = from && from.closest && from.closest('dialog[open]');
+    opener = host ? $('#settings-open') : from;
+    if (host) host.close();
+    dialog.showModal();
+    const head = $('.lesson-dialog-head button', dialog);
+    if (head) head.focus();
+  };
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.guide-open');
+    if (!b) return; e.preventDefault(); open(guide, b);
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.notes-open');
+    if (!b) return; e.preventDefault(); open(notes, b);
+  });
+  const settingsOpen = $('#settings-open');
+  if (settingsOpen) settingsOpen.addEventListener('click', e => open(settings, e.currentTarget));
+  [guide, settings, notes, details].filter(Boolean).forEach(d => {
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => { if (opener && opener.isConnected) opener.focus(); });
+  });
+  /* A5: the Details trigger in the stage intro, and reopenable from anywhere. */
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.details-trigger');
+    if (!b || !details) return;
+    e.preventDefault();
+    const k = b.dataset.details || '0';
+    $$('.details-stage', details).forEach(s => {
+      const on = s.dataset.detailsStage === k;
+      s.classList.toggle('on', on); s.hidden = !on;
+    });
+    const sub = $('#details-subtitle');
+    const tab = $$('.stage-tab')[Number(k)];
+    if (sub && tab) sub.textContent = ($('span:not(.stage-mark)', tab) || {}).textContent || '';
+    opener = b;
+    details.showModal();
+    const head = $('.lesson-dialog-head button', details);
+    if (head) head.focus();
+  });
+
+  /* ---- A1 stage tablist ------------------------------------------------- */
+  const tabs = $$('.stage-tab');
+  const panels = $$('section.stage');
+
+  /* ---- the first-load snapshot ------------------------------------------
+     Taken here, before the hash can select a stage and before the demo's own
+     app.js has run at all (the shell's script tag precedes it). Reset RESTORES
+     FROM THIS rather than recomputing, which is what makes an in-place reset
+     honest for a gated demo: the gate comes back exactly as the template
+     authored it, whether or not the demo has a sync function of its own. */
+  const snapshot = {
+    tabs: tabs.map(t => {
+      const mark = $('.stage-mark', t);
+      return {
+        disabled: t.disabled,
+        className: t.className,
+        title: t.getAttribute('title'),
+        mark: mark ? mark.textContent : null
+      };
+    }),
+    echoes: $$('.lesson-strip .echo').map(e => ({ node: e, html: e.innerHTML, hidden: e.hidden })),
+    cues: $$('.obs-cue').map(c => ({ node: c, text: c.textContent, className: c.className })),
+    detailsSubtitle: (($('#details-subtitle') || {}).textContent) || ''
+  };
+  function selectStage(index, opts) {
+    if (!tabs.length) return;
+    /* A gated demo (one that unlocks stage k+1 only after stage k's evidence)
+       clamps here rather than unlocking: the prediction-before-evidence gate
+       IS the pedagogy, and a hash must not route around it. The clamp is
+       silent by design; the tab stays visible and disabled so the learner
+       still sees the whole route. */
+    let i = Math.max(0, Math.min(tabs.length - 1, index));
+    while (i > 0 && tabs[i].disabled) i -= 1;
+    tabs.forEach((t, k) => {
+      const on = k === i;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    /* Clear the hidden attribute as well as toggling the class. shell.css
+       carries [hidden] { display: none !important } and NO .stage or .stage.on
+       display rule, so panel visibility rests entirely on the attribute: a
+       class-only toggle leaves every non-first stage pinned shut by the
+       !important, whatever the class says. ion-flight shipped exactly that way
+       - stages 2-4 unreachable - and no node suite, build --check, check-shell
+       or build-hub --check could see it. Found by the two-winters lane (P2),
+       2026-09-16. */
+    panels.forEach((p, k) => {
+      const on = k === i;
+      p.classList.toggle('on', on);
+      p.hidden = !on;
+    });
+    if (opts && opts.focus) tabs[i].focus();
+    document.dispatchEvent(new CustomEvent('stagechange', { detail: { index: i } }));
+    return i;
+  }
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectStage(i));
+    tab.addEventListener('keydown', e => {
+      const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (step) {
+        e.preventDefault();
+        let j = i;
+        do { j = (j + step + tabs.length) % tabs.length; } while (tabs[j].disabled && j !== i);
+        selectStage(j, { focus: true });
+      } else if (e.key === 'Home') { e.preventDefault(); selectStage(0, { focus: true }); }
+      else if (e.key === 'End') { e.preventDefault(); selectStage(tabs.length - 1, { focus: true }); }
+    });
+  });
+  if (hashStage !== null) selectStage(hashStage);
+
+  /* ---- A8 presentation mode --------------------------------------------- */
+  function setPresentation(on) {
+    document.body.classList.toggle('presenter', on);
+    $$('#presentation-btn, #presentation-foot').forEach(b => {
+      b.setAttribute('aria-pressed', String(on));
+      b.classList.toggle('active', on);
+    });
+    document.dispatchEvent(new CustomEvent('presentationchange', { detail: { on } }));
+  }
+  $$('#presentation-btn, #presentation-foot').forEach(b => b.addEventListener('click', () => {
+    setPresentation(!document.body.classList.contains('presenter'));
+    if (settings && settings.open) settings.close();
+  }));
+  setPresentation(document.body.classList.contains('presenter'));
+
+  /* ---- A6 check cards: feedback for every option, nothing scored -------- */
+  $$('.check').forEach(card => {
+    const out = $('.check-feedback', card);
+    $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      if (out) out.innerHTML = (btn.classList.contains('correct') ? '<b>Supported.</b> ' : '<b>Not what the detector showed.</b> ')
+        + (btn.dataset.feedback || '');
+    }));
+  });
+
+  /* ---- Reset: IN PLACE, no page reload -----------------------------------
+     Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
+     location.reload(), which was trivially correct and threw the page away to
+     get there: a reload discards a canvas mid-animation, re-runs every boot
+     path, and on a slow projector laptop is a visible blank flash in front of
+     a room. In-place costs a real contract instead, and this is it.
+
+     THE DIVISION OF LABOUR — the whole contract in one sentence: if the kit
+     named the class, the shell restores it; everything else is the demo's.
+
+     WHAT THE SHELL GUARANTEES, in this order:
+       1. 'onReset()' is consulted first and a 'false' return CANCELS the whole
+          reset — nothing below runs. That is the veto path, unchanged from v1.
+       2. Every open <dialog> closes — not only the shell's four. A demo may
+          own one (two-winters' #item-details), and a dialog still open after a
+          Reset is un-restored state the learner is looking straight at.
+       3. Every stage tab goes back to its first-load chrome from the snapshot:
+          'disabled' (so a gate re-locks), class (so 'complete' marks clear),
+          title, and the .stage-mark glyph.
+       4. Every A6 check card drops its aria-pressed answer and clears its
+          feedback line.
+       5. Every A2 .echo and A4 .obs-cue returns to its snapshotted first-load
+          content. partials.html specifies both as empty on load; the snapshot
+          is used rather than a blanket clear so a demo that authored something
+          there keeps it.
+       6. The A5 Details drawer goes back to showing stage 1, with its
+          subtitle restored.
+       7. selectStage(0) — stage 1, which also fires 'stagechange'.
+       8. The page scrolls to the top.
+       9. 'lessonreset' is dispatched on document.
+
+     WHAT THE SHELL DOES NOT TOUCH, deliberately:
+       * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
+         projector every time would be hostile. CONTRACT.md's wording too.
+       * THE GUIDE. It does not reopen. A reset is not a fresh arrival, and the
+         learner who pressed it has already read it.
+       * THE ACTIVITY. The shell cannot know what a demo holds. That is what
+         step 9 is for.
+
+     WHAT THE DEMO MUST IMPLEMENT — required, not optional:
+
+         document.addEventListener('lessonreset', () => {
+           // every variable your module closes over, back to its initial value
+           // every node your app.js generated, back to its first-load content
+           // then re-render stage 1
+         });
+
+     'lessonreset' fires LAST, after the shell has finished, so the demo has
+     the final word over any node the two both touch. It is not cancelable: the
+     veto lives in onReset(), so there is exactly one place to refuse a reset.
+
+     A demo that ships no handler silently keeps its answers, its generated
+     DOM and its progress through a Reset that visibly moved everything else.
+     check-shell.js fails a built file that carries no handler, with a negative
+     control proving it is not merely matching the dispatch below. */
+  function resetLesson() {
+    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
+    $$('dialog').forEach(d => {
+      if (!d.open) return;
+      try { d.close(); } catch (e) { /* a dialog mid-close; it is already going */ }
+    });
+    tabs.forEach((t, i) => {
+      const s = snapshot.tabs[i];
+      if (!s) return;
+      t.disabled = s.disabled;
+      t.className = s.className;
+      if (s.title === null) t.removeAttribute('title'); else t.setAttribute('title', s.title);
+      const mark = $('.stage-mark', t);
+      if (mark && s.mark !== null) mark.textContent = s.mark;
+    });
+    $$('.check').forEach(card => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      const out = $('.check-feedback', card);
+      if (out) out.innerHTML = '';
+    });
+    snapshot.echoes.forEach(e => { e.node.innerHTML = e.html; e.node.hidden = e.hidden; });
+    snapshot.cues.forEach(c => { c.node.textContent = c.text; c.node.className = c.className; });
+    $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
+    const sub = $('#details-subtitle');
+    if (sub) sub.textContent = snapshot.detailsSubtitle;
+    selectStage(0);
+    try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+    document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
+    return true;
+  }
+  const resetBtn = $('#reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', () => resetLesson());
+
+  /* ---- A7: the Guide greets every load ---------------------------------- */
+  if (guide && !guide.open) {
+    opener = $('#guide-open');
+    guide.showModal();
+    const cta = $('.lesson-dialog-actions button', guide);
+    if (cta) cta.focus();
+  }
+
+  window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
 })();
-</script></body></html>
+
+</script>
+<script>
+/* Gaps in the Rock Record — view layer.
+   Reads MissingTimeModel (src/model.js, unchanged); reacts to the shell's
+   `stagechange` and `lessonreset` events; owns nothing the shell already
+   owns (dialogs, stage tabs, presentation mode, the .check cards).
+
+   ONE SHARED INSTRUMENT, THREE HOSTS. The three stages are three cases from
+   MissingTimeModel.CASES and they share one investigation mechanism: sample a
+   surviving layer, reveal supplied chronology, watch the linked rock/time
+   views and the evidence ledger, choose a warranted conclusion, reveal the
+   authored history. Rather than tripling that markup and its render code
+   per stage (ADOPTING.md's boundary sentence cuts the other way here — this
+   is the demo's OWN activity, and the three cases are the same mechanism
+   with different data, exactly the shape ion-flight's shared #activity
+   element handles by moving between stage hosts), #investigation is built
+   ONCE and moved into whichever stage's empty host div is active. Progress
+   (samples, revealed chronology, a chosen conclusion) is kept PER CASE in
+   `byCase`, independent of which stage is currently showing, so switching
+   tabs is ordinary navigation and does not discard evidence — only Settings
+   -> Reset does that. What stays genuinely per-stage, and is therefore NOT
+   moved: the stage-intro's Predict guess buttons/echo, and the Check
+   Yourself card (both authored once per stage, never rebuilt).
+*/
+(() => {
+  'use strict';
+  const M = MissingTimeModel;
+  const byId = id => document.getElementById(id);
+  const CASE_IDS = M.CASES.map(c => c.id);
+
+  const SECTION_LABEL = ['Section A', 'Section B', 'Sections C and D'];
+  const SECTION_LEDE = [
+    'Left: surviving rock height above base in metres for Section A. Right: model time in Myr since start. Sample a layer to reveal specimen marks at their real surviving position.',
+    'Left: surviving rock height above base in metres for Section B. Right: model time in Myr since start. Sample a layer to reveal specimen marks at their real surviving position.',
+    'Left: surviving rock height above base in metres. Right: model time in Myr since start. Both sections share the same axes so a gap at one and continued rock at the other are directly comparable.'
+  ];
+  const DEFAULT_EVIDENCE_HINT = 'A local gap says that rock from an interval is absent here. It does not by itself say why, and an unsampled layer is not an observed fossil absence.';
+  const CUT_BANK_EVIDENCE_HINT = 'To compare this local gap, show supplied age evidence, then sample Red siltstone below the contact and Cross-bedded sand above it. A gap alone does not identify its cause.';
+  const DEFAULT_FEEDBACK = 'Collect evidence first. The authored history remains hidden until you choose to reveal it.';
+
+  /* Verbatim from the pre-kit build: the three conclusion choices per case,
+     in the original order (index 0 is always the warranted one). Case texts
+     are preserved unchanged per the work order. */
+  const LABELS = {
+    'continuous-record': [
+      'A local last observation in continuous sampled rock cannot establish global extinction.',
+      'A local absence proves global extinction.',
+      'Equal rock thickness means equal elapsed time.'
+    ],
+    'cut-bank': [
+      'The local gap does not identify its cause or establish an extinction boundary.',
+      'Every hiatus must have erosion.',
+      'A fossil can be moved to the erosion boundary after its layer is removed.'
+    ],
+    'paired-sections': [
+      'The second local section preserves an interval missing at the first.',
+      'The first section’s blank proves a global fossil absence.',
+      'Two sections certify global extinction.'
+    ]
+  };
+
+  const GUESS_TEXT = { yes: n => n, no: n => n }; // labels come from the button itself
+
+  /* ---- per-case progress, independent of which stage is showing --------- */
+  function freshCaseState() {
+    return { actions: [], feedback: DEFAULT_FEEDBACK, concluded: false, revealed: false, cue: '' };
+  }
+  let byCase = {};
+  CASE_IDS.forEach(id => { byCase[id] = freshCaseState(); });
+
+  /* guesses[stageIndex] = { value: 'yes'|'no', label: button text } | null */
+  let guesses = [null, null, null];
+
+  let currentStageIndex = 0;
+
+  /* ---- pure helpers over the model, no side effects ---------------------- */
+  function current(caseId) { return M.compiledCase(caseId); }
+
+  function act(caseId, value) {
+    const list = byCase[caseId].actions;
+    if (!list.includes(value)) list.push(value);
+  }
+
+  /* ======================= building #investigation ======================= */
+  function buildInvestigation() {
+    const el = document.createElement('div');
+    el.className = 'mt-investigation';
+    el.id = 'investigation';
+    el.innerHTML =
+      '<section class="workbench" aria-labelledby="act-heading">' +
+        '<div class="panel-head"><div>' +
+          '<span class="panel-kicker"><span class="k-live">Live</span> positions, gaps and evidence status, computed here from the ledger as you act</span>' +
+          '<h3 id="act-heading">Inspect <span id="section-label"></span></h3>' +
+        '</div></div>' +
+        '<p class="panel-lede" id="section-lede"></p>' +
+        '<div class="mt-columns" id="columns"></div>' +
+        '<label class="control-label" for="showGapsButton">Show supplied age evidence' +
+          '<span class="why">Reveals this case’s synthetic chronology anchors — the only source of an exact Myr value anywhere in this activity.</span></label>' +
+        '<button class="btn ghost small" type="button" id="showGapsButton">Show supplied age evidence</button>' +
+        '<div class="mt-timebox" id="timeEvidence" hidden aria-live="polite"></div>' +
+        '<p class="note" id="evidenceHint"></p>' +
+        '<p class="obs-cue" id="cue-core" role="status" aria-live="polite"></p>' +
+      '</section>' +
+      '<section class="card" aria-labelledby="ledger-heading">' +
+        '<span class="panel-kicker"><span class="k-live">Live</span> stays visible as you act; nothing here changes the authored rock history</span>' +
+        '<h3 id="ledger-heading">Evidence ledger</h3>' +
+        '<p id="ledgerIntro">No samples or chronology evidence recorded yet.</p>' +
+        '<ul class="mt-ledger-list" id="ledgerList"><li class="mt-ledger-empty">Evidence will stay visible here as you act.</li></ul>' +
+      '</section>' +
+      '<section class="card" aria-labelledby="conclude-heading">' +
+        '<span class="panel-kicker"><span class="k-scripted">Scripted</span> hand-authored case history — fixed teaching fixture, no model runs here</span>' +
+        '<h3 id="conclude-heading">Choose a warranted conclusion</h3>' +
+        '<p>Choose the claim that follows from the evidence currently visible. This is feedback on the claim, not a mastery score.</p>' +
+        '<div class="mt-conclusions" id="conclusions"></div>' +
+        '<div class="mt-conclusion-feedback" id="conclusionFeedback" aria-live="polite">' + DEFAULT_FEEDBACK + '</div>' +
+        '<button class="btn ghost small" type="button" id="revealButton" hidden>Reveal this authored history</button>' +
+        '<div class="mt-timebox" id="revealBox" hidden></div>' +
+      '</section>';
+    el.addEventListener('click', onInvestigationClick);
+    return el;
+  }
+  const investigationEl = buildInvestigation();
+
+  function moveActivityTo(stageIndex) {
+    const host = byId('investigation-host-' + (stageIndex + 1));
+    if (host && investigationEl.parentElement !== host) host.appendChild(investigationEl);
+  }
+
+  /* ======================= rendering one case ============================= */
+  function renderColumns(caseId) {
+    const data = current(caseId);
+    const H = 210, B = 220, T = 10;
+    const fill = ['#b8dbe9', '#fff1bd', '#f5d4c8'];
+    const actions = byCase[caseId].actions;
+    const svg = (section, kind) => {
+      const ready = actions.includes('chronology:' + section.id);
+      if (kind === 'time' && !ready) {
+        return '<svg viewBox="0 0 170 240" role="img" aria-label="' + section.label + ' model time awaiting supplied chronology">' +
+          '<line x1="28" y1="' + T + '" x2="28" y2="' + B + '" stroke="#7897aa" stroke-dasharray="4 3"/>' +
+          '<text x="40" y="104" font-size="10" fill="#50687b">Chronology not</text>' +
+          '<text x="40" y="120" font-size="10" fill="#50687b">yet supplied</text>' +
+          '<text x="40" y="143" font-size="8" fill="#50687b">Show supplied age</text>' +
+          '<text x="40" y="155" font-size="8" fill="#50687b">evidence to scale time</text></svg>';
+      }
+      const total = kind === 'rock' ? section.thicknessM : section.elapsedMyr;
+      const y = value => B - value / total * H;
+      const interval = layer => kind === 'rock'
+        ? { lo: layer.baseM, hi: layer.baseM + layer.survivingThicknessM }
+        : { lo: layer.startMyr, hi: layer.startMyr + layer.survivingThicknessM / layer.rateMPerMyr };
+      let marks = '<line x1="28" y1="' + T + '" x2="28" y2="' + B + '" stroke="#002144"/>' +
+        '<text x="2" y="' + (B + 10) + '" font-size="8" fill="#38566e">0</text>' +
+        '<text x="1" y="' + (T + 8) + '" font-size="8" fill="#38566e">' + total.toFixed(1) + '</text>';
+      section.layers.forEach((layer, index) => {
+        const r = interval(layer), top = y(r.hi), height = Math.max(2, y(r.lo) - top);
+        marks += '<rect x="38" y="' + top.toFixed(2) + '" width="72" height="' + height.toFixed(2) + '" fill="' + fill[index % fill.length] + '" stroke="#456176"/>' +
+          '<text x="114" y="' + (top + Math.min(12, height / 2)).toFixed(2) + '" font-size="8" fill="#243a4b">' +
+          (layer.label === 'Cross-bedded sand' ? 'Cross-bed' : layer.label.split(' ')[0]) + '</text>';
+        if (actions.includes('sample:' + section.id + ':' + layer.id)) {
+          layer.fossils.forEach(f => {
+            const value = kind === 'rock' ? layer.baseM + f.depthFromBaseM : f.timeMyr;
+            marks += '<circle cx="74" cy="' + y(value).toFixed(2) + '" r="4" fill="#002144" stroke="#ecac00" stroke-width="2"/>';
+          });
+        }
+      });
+      if (kind === 'rock' && ready) {
+        section.gaps.forEach(g => {
+          marks += '<line x1="34" y1="' + y(g.depthM).toFixed(2) + '" x2="114" y2="' + y(g.depthM).toFixed(2) + '" stroke="#9a6700" stroke-width="3"/>' +
+            '<text x="116" y="' + (y(g.depthM) + 3).toFixed(2) + '" font-size="10" fill="#805b00">contact</text>';
+        });
+      }
+      if (kind === 'time') {
+        section.gaps.forEach(g => {
+          const top = y(g.toMyr), height = y(g.fromMyr) - top;
+          marks += '<rect x="38" y="' + top.toFixed(2) + '" width="72" height="' + height.toFixed(2) + '" fill="#fff1bd" stroke="#9a6700" stroke-dasharray="4 3"/>' +
+            '<text x="114" y="' + (top + height / 2).toFixed(2) + '" font-size="8" fill="#8c2c00">' + g.durationMyr.toFixed(1) + ' gap</text>';
+        });
+        section.chronology.forEach(a => {
+          marks += '<line x1="32" y1="' + y(a.modelMyr).toFixed(2) + '" x2="114" y2="' + y(a.modelMyr).toFixed(2) + '" stroke="#ecac00" stroke-width="2"/>' +
+            '<text x="116" y="' + (y(a.modelMyr) + 3).toFixed(2) + '" font-size="8" fill="#805b00">' + a.modelMyr.toFixed(1) + '</text>';
+        });
+      }
+      return '<svg viewBox="0 0 170 240" role="img" aria-label="' + section.label + ' ' +
+        (kind === 'rock' ? 'surviving rock height above base in metres' : 'model time in Myr since start') + '">' + marks + '</svg>';
+    };
+    byId('columns').innerHTML = data.sections.map(section =>
+      '<article class="mt-column"><h4>' + section.label + '</h4>' +
+      '<div class="mt-linked">' +
+        '<figure><figcaption>surviving rock &middot; m</figcaption>' + svg(section, 'rock') + '</figure>' +
+        '<figure><figcaption>model time &middot; Myr</figcaption>' + svg(section, 'time') + '</figure>' +
+      '</div>' +
+      '<div class="mt-sample-row">' + section.layers.map(layer =>
+        '<button class="mt-sample" type="button" data-sample="' + section.id + ':' + layer.id + '" aria-pressed="' +
+        (actions.includes('sample:' + section.id + ':' + layer.id) ? 'true' : 'false') + '" aria-label="Sample ' + section.label + ' ' + layer.label + '">sample ' + layer.label + '</button>'
+      ).join('') + '</div></article>'
+    ).join('');
+  }
+
+  function renderEvidenceHint(caseId) {
+    byId('evidenceHint').textContent = caseId === 'cut-bank' ? CUT_BANK_EVIDENCE_HINT : DEFAULT_EVIDENCE_HINT;
+  }
+
+  /* Pure: builds the "supplied age evidence" HTML from whatever chronology has
+     already been revealed for this case (does not itself reveal anything or
+     mutate actions), so it can be called on every renderCase to keep
+     #timeEvidence in sync with per-case progress when a stage is revisited. */
+  function timeEvidenceHtml(caseId) {
+    const data = current(caseId);
+    const actions = byCase[caseId].actions;
+    const items = data.sections
+      .filter(section => actions.includes('chronology:' + section.id))
+      .map(section => {
+        const anchors = section.chronology.map(a => a.label + ' = ' + a.modelMyr.toFixed(2) + ' Myr').join('; ');
+        const gaps = section.gaps.length
+          ? section.gaps.map(gap => gap.durationMyr.toFixed(2) + ' Myr missing between ' + gap.fromMyr.toFixed(2) + ' and ' + gap.toMyr.toFixed(2) + ' Myr').join('; ')
+          : 'no missing interval in this authored section';
+        return '<strong>' + section.label + '</strong>: supplied anchors ' + anchors + '. Result: ' + gaps + '.';
+      });
+    return items.join('<hr>');
+  }
+
+  function renderLedger(caseId) {
+    const actions = byCase[caseId].actions;
+    const notes = actions.filter(v => v.startsWith('note:')).map(v => v.slice(5));
+    const chronologies = actions.filter(v => v.startsWith('chronology:')).length;
+    const entries = (chronologies ? ['Supplied age evidence displayed for ' + chronologies + ' section(s).'] : []).concat(notes.map(note => 'Sample — ' + note));
+    byId('ledgerIntro').textContent = entries.length
+      ? 'Visible evidence stays here while you compare the linked rock and time views.'
+      : 'No samples or age evidence recorded yet.';
+    byId('ledgerList').innerHTML = entries.length
+      ? entries.map(note => '<li>' + note + '</li>').join('')
+      : '<li class="mt-ledger-empty">Evidence will stay visible here as you act.</li>';
+  }
+
+  function renderConclusions(caseId) {
+    byId('conclusions').innerHTML = LABELS[caseId].map((label, index) =>
+      '<button class="mt-choice" type="button" data-conclusion="' + index + '">' + label + '</button>'
+    ).join('');
+  }
+
+  function updateEcho(stageIndex, caseId) {
+    const echo = byId('echo-' + (stageIndex + 1));
+    if (!echo || !guesses[stageIndex]) return;
+    echo.hidden = false;
+    const status = M.evidenceStatus(caseId, byCase[caseId].actions);
+    echo.innerHTML = 'You guessed: <b>' + guesses[stageIndex].label + '</b>. ' +
+      (status.kind === 'ready' ? 'Visible evidence: ' + status.text : 'Still gathering — ' + status.text);
+  }
+
+  /* NOTE ON ORDERING: renderCase() deliberately does NOT call updateEcho().
+     The shell's own selectStage(0) — part of its Reset sequence — fires
+     `stagechange` BEFORE `lessonreset` (see index.js's resetLesson: step 7
+     precedes step 9), and this app's `stagechange` listener calls
+     renderCase() for whichever stage that lands on. At that moment `guesses`
+     still holds its PRE-reset values (this handler's own lessonreset clears
+     them, but that has not fired yet) — so if renderCase() called
+     updateEcho() here, a Reset would re-populate the very .echo element the
+     shell just correctly hid via its first-load snapshot. Calling
+     updateEcho() only from the four interaction handlers below, never from
+     renderCase()/stagechange, means nothing re-touches .echo except an
+     actual user action, so it cannot resurrect stale content mid-reset.
+     Found and fixed during the browser pass — see ADOPTING.md's warning that
+     an in-place reset is correct only if the enumeration is complete. */
+  function renderCase(stageIndex) {
+    const caseId = CASE_IDS[stageIndex];
+    const cs = byCase[caseId];
+    byId('section-label').textContent = SECTION_LABEL[stageIndex];
+    byId('section-lede').textContent = SECTION_LEDE[stageIndex];
+    renderColumns(caseId);
+    renderEvidenceHint(caseId);
+    renderLedger(caseId);
+    renderConclusions(caseId);
+    const teHtml = timeEvidenceHtml(caseId);
+    byId('timeEvidence').hidden = !teHtml;
+    byId('timeEvidence').innerHTML = teHtml;
+    byId('conclusionFeedback').textContent = cs.feedback;
+    byId('revealButton').hidden = !cs.concluded;
+    byId('revealBox').hidden = !cs.revealed;
+    if (cs.revealed) byId('revealBox').textContent = M.getCase(caseId).reveal;
+    const cue = byId('cue-core');
+    cue.textContent = cs.cue;
+    cue.className = 'obs-cue';
+  }
+
+  /* ======================= interaction handlers ============================ */
+  function onSample(caseId, stageIndex, sectionId, layerId) {
+    const result = M.sampleLayer(caseId, sectionId, layerId);
+    act(caseId, 'sample:' + sectionId + ':' + layerId);
+    const names = result.specimens.length
+      ? result.specimens.map(s => s.species + ' at ' + s.depthM.toFixed(2) + ' m above base').join('; ')
+      : 'No specimens observed in this sampled surviving layer.';
+    act(caseId, 'note:' + sectionId + ':' + layerId + ':' + result.label + ' — ' + names);
+    byCase[caseId].cue = result.label + ': ' + names;
+    renderCase(stageIndex);
+    updateEcho(stageIndex, caseId);
+  }
+
+  function onShowGaps(caseId, stageIndex) {
+    const data = current(caseId);
+    data.sections.forEach(section => {
+      act(caseId, 'chronology:' + section.id);
+      section.gaps.forEach(gap => act(caseId, 'gap:' + gap.id));
+    });
+    const totalGapMyr = data.sections.reduce((sum, s) => sum + s.gaps.reduce((a, g) => a + g.durationMyr, 0), 0);
+    byCase[caseId].cue = totalGapMyr > 0
+      ? 'Supplied age evidence revealed — ' + totalGapMyr.toFixed(2) + ' Myr missing in total. See the evidence panel above.'
+      : 'Supplied age evidence revealed — no missing interval in this authored section.';
+    renderCase(stageIndex);
+    updateEcho(stageIndex, caseId);
+  }
+
+  function onChoose(caseId, stageIndex, conclusionIndex) {
+    const status = M.evidenceStatus(caseId, byCase[caseId].actions);
+    if (status.kind !== 'ready') {
+      byCase[caseId].feedback = status.text;
+      renderCase(stageIndex);
+      updateEcho(stageIndex, caseId);
+      return;
+    }
+    const good = conclusionIndex === 0;
+    byCase[caseId].feedback = good
+      ? 'Supported by the visible evidence: ' + status.text
+      : 'That claim reaches beyond the visible evidence. ' + status.text;
+    byCase[caseId].concluded = true;
+    renderCase(stageIndex);
+    updateEcho(stageIndex, caseId);
+  }
+
+  function onReveal(caseId, stageIndex) {
+    byCase[caseId].revealed = true;
+    renderCase(stageIndex);
+  }
+
+  function onInvestigationClick(e) {
+    const caseId = CASE_IDS[currentStageIndex];
+    const sampleBtn = e.target.closest('.mt-sample');
+    if (sampleBtn) {
+      const [sectionId, layerId] = sampleBtn.dataset.sample.split(':');
+      onSample(caseId, currentStageIndex, sectionId, layerId);
+      return;
+    }
+    if (e.target.closest('#showGapsButton')) { onShowGaps(caseId, currentStageIndex); return; }
+    const choiceBtn = e.target.closest('.mt-choice');
+    if (choiceBtn) { onChoose(caseId, currentStageIndex, Number(choiceBtn.dataset.conclusion)); return; }
+    if (e.target.closest('#revealButton')) { onReveal(caseId, currentStageIndex); return; }
+  }
+
+  /* ---- the Predict guess buttons, one pair per stage, static (never moved) */
+  document.querySelectorAll('.mt-guess').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const stageIndex = Number(btn.dataset.stage);
+      const group = btn.closest('.mt-predict-btns');
+      group.querySelectorAll('.mt-guess').forEach(b => { b.setAttribute('aria-pressed', String(b === btn)); b.disabled = true; });
+      guesses[stageIndex] = { value: btn.dataset.guess, label: btn.textContent.trim() };
+      if (stageIndex === currentStageIndex) updateEcho(stageIndex, CASE_IDS[stageIndex]);
+    });
+  });
+
+  /* ======================= stage wiring ===================================== */
+  document.addEventListener('stagechange', e => {
+    const i = e.detail.index;
+    if (i < 0 || i >= CASE_IDS.length) return;
+    currentStageIndex = i;
+    moveActivityTo(i);
+    renderCase(i);
+  });
+
+  function initialStageIndex() {
+    const tabs = Array.from(document.querySelectorAll('.stage-tab'));
+    const i = tabs.findIndex(t => t.getAttribute('aria-selected') === 'true');
+    return i > -1 ? i : 0;
+  }
+
+  /* ===========================================================================
+     RESET. Kit v2: the shell restores its own chrome (stage 1, the cleared
+     check cards, the closed dialogs, and the .echo / .obs-cue lines back to
+     their empty first-load content) and then dispatches `lessonreset`.
+     Everything below is the half the shell cannot know about.
+
+     THE ENUMERATION:
+       1. byCase[*] — every case's actions list, feedback text, concluded
+          flag and revealed flag, all back to freshCaseState().
+       2. guesses[0..2] — back to null, and the six .mt-guess buttons
+          re-enabled with aria-pressed cleared (the shell has no idea these
+          exist; they are not .echo or .obs-cue elements).
+       3. currentStageIndex — back to 0, and #investigation moved back to
+          stage 1's host and re-rendered from the now-fresh case 0 state.
+     #cue-core and every #echo-N are .obs-cue / .echo, so the shell already
+     restored their DOM text to empty; they are listed here only so the next
+     reader does not go looking for a second reset of them. ========================================================================= */
+  document.addEventListener('lessonreset', () => {
+    CASE_IDS.forEach(id => { byCase[id] = freshCaseState(); });
+    guesses = [null, null, null];
+    document.querySelectorAll('.mt-guess').forEach(b => { b.disabled = false; b.setAttribute('aria-pressed', 'false'); });
+    currentStageIndex = 0;
+    moveActivityTo(0);
+    renderCase(0);
+  });
+
+  /* The veto hook stays available and stays unused: this demo has nothing to
+     refuse a reset for. Left as null deliberately — with the handler
+     above, the contract is met. */
+  window.lessonShell.onReset = null;
+
+  /* ---- start-up ------------------------------------------------------------
+     The shell has already run and may have selected a stage from a #stage-N
+     hash, but only dispatches 'stagechange' when it does so — a plain
+     fresh load never fires it. So the first paint reads whichever tab the
+     shell settled on rather than assuming stage 1. */
+  currentStageIndex = initialStageIndex();
+  moveActivityTo(currentStageIndex);
+  renderCase(currentStageIndex);
+})();
+
+</script>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
