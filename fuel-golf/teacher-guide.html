@@ -79,15 +79,15 @@
     <p class="g-sub">Teacher and presenter guide · Orbital mechanics and the Oberth effect, taught by a fuel gauge</p>
     <h1>Orbital Mechanics Golf</h1>
     <p class="g-meta">Demo 7 of 16 · Part four, Example projects · 20 minutes for stages 1–3, plus the Sandbox</p>
-    <p class="small"><strong>You need:</strong> <code>index.html</code> open in any modern browser, on a
-      projector or on each student's phone. No network, no install, no accounts. Nothing is fetched at
-      run time and nothing leaves the machine. Chromebook-friendly.</p>
+    <p class="small"><strong>You need:</strong> <code>index.html</code> open in any modern browser —
+      projector or phone. No network, no install, no accounts; nothing is fetched at run time and
+      nothing leaves the machine. Chromebook-friendly.</p>
   </div>
 
   <h2 id="g-goals">Learning goals</h2>
-  <p>One per stage, in the words the learner reads on the Takeaway card. There is nothing else to
-    state and nothing to read out: these are what the stage demonstrates, and the check-yourself item
-    at the foot of each stage tests exactly them.</p>
+  <p>One per stage, in the words the learner reads on the Takeaway card. Nothing else to state and
+    nothing to read out: each is what its stage demonstrates, and each stage's check-yourself item
+    tests exactly that.</p>
   <ul class="goal">
     <li><strong>Burn at apoapsis.</strong> A prograde burn changes the orbit half a revolution away:
       burn at apoapsis and periapsis rises, burn at periapsis and apoapsis rises.</li>
@@ -102,42 +102,40 @@
   </ul>
 
   <h2 id="g-path">Where this sits on the path</h2>
-  <p>The first of the ten AI-built classroom tools in Part four, and the first of the two that are
-    games. It carries no handover from Demo 6: what Part four has in common is not a chain of ideas
-    but a discipline — each tool starts from a learning goal, exposes its assumptions, and makes its
-    evidence available for challenge. This one's engine is a real gravity integrator, which is why
-    the central result can be measured rather than asserted.</p>
+  <p>The first of Part four's ten AI-built classroom tools, and the first of its two games. It
+    carries no handover from Demo 6: what Part four shares is not a chain of ideas but a discipline —
+    each tool starts from a learning goal, exposes its assumptions, and makes its evidence available
+    for challenge. This one's engine is a real gravity integrator, which is why its central result
+    can be measured rather than asserted.</p>
 
   <h2 id="g-question">One question for the session</h2>
-  <p>Ask it before anyone touches a control, and come back to it at the debrief.</p>
+  <p>Ask it before anyone touches a control; return to it at the debrief.</p>
   <div class="say">"Escaping Earth needs a fixed amount of energy. You have a fixed tank. So does it
     matter <em>where</em> in the orbit you spend it?"</div>
-  <p>Most of the room will say no, and the arithmetic they have — Δv is Δv — supports them. Stage 2
-    is 20 minutes of them finding out that the question was about energy, not about speed.</p>
+  <p>Most of the room says no, and the arithmetic they have — Δv is Δv — supports them. Stage 2 is
+    them finding out the question was about energy, not speed.</p>
 
   <h2>Running it</h2>
   <p>Open <strong>⚙ Settings → Presentation mode</strong> first: it scales the page for the back row
-    and puts a <strong>🎤 Notes</strong> button in the header. The <strong>Guide</strong> card opens
-    on load and explains the controls; dismiss it with <em>Start with Burn at apoapsis</em>.</p>
+    and adds a <strong>🎤 Notes</strong> button. The <strong>Guide</strong> card opens on load and
+    explains the controls.</p>
   <ul>
-    <li><span class="time">0–3 min</span>Stage 1 on the projector together. Take the room's
-      prediction by show of hands before you commit one on screen. Fly Level 1: <strong>→ Ap</strong>,
-      <strong>🔥 Plan burn</strong>, drag Δv, read the dotted preview, commit. Vocabulary as you go:
-      periapsis (low, fast), apoapsis (high, slow), prograde.</li>
-    <li><span class="time">3–8 min</span>Students take stages 1 in pairs, Levels 1 and 2. Point them
-      at the <strong>Physics HUD</strong>'s bottom row — "energy gained per 1 Δv" — and ask them to
-      watch it as the ship falls.</li>
+    <li><span class="time">0–3 min</span>Stage 1 together on the projector. Take the room's
+      prediction by show of hands first. Fly Level 1: <strong>→ Ap</strong>, <strong>🔥 Plan
+      burn</strong>, drag Δv, read the dotted preview, commit. Vocabulary as you go: periapsis
+      (low, fast), apoapsis (high, slow), prograde.</li>
+    <li><span class="time">3–8 min</span>Students fly Levels 1–2 in pairs, watching the
+      <strong>Physics HUD</strong>'s bottom row — "energy gained per 1 Δv" — as the ship falls.</li>
     <li><span class="time">8–16 min</span>The main event: stage 2, <strong>Level 3 "Escape
-      Artist"</strong>. The stage will not hand over the flight view until a prediction is committed;
-      that is deliberate, and it is worth saying so out loud. Par is 791 m/s and the tank holds 2,057,
-      so the wasteful route still works — it just costs. When someone makes par, have them say
-      <em>where</em> they burned and what the HUD read at the time.</li>
-    <li><span class="time">16–19 min</span>Debrief on the projector from a student's energy-vs-time
-      plot and the <strong>show the math</strong> panel under it, which evaluates
-      Δε = v·Δv + ½Δv² on that student's own numbers and checks it against the simulation. The burn
-      is a vertical jump in ε, and it is taller when v was larger for the <em>same</em> Δv.</li>
+      Artist"</strong>. The stage withholds the flight view until a prediction is committed; say so
+      out loud. Par is 791 m/s and the tank holds 2,057, so the wasteful route still works — it just
+      costs. When someone makes par, have them say <em>where</em> they burned.</li>
+    <li><span class="time">16–19 min</span>Debrief from a student's energy-vs-time plot and the
+      <strong>show the math</strong> panel under it, which evaluates Δε = v·Δv + ½Δv² on their own
+      numbers and checks it against the simulation. The burn is a vertical jump in ε, taller when v
+      was larger for the <em>same</em> Δv.</li>
     <li><span class="time">19–20 min</span>Post the leaderboard. Stage 3 unlocks once a student has
-      escaped, and Levels 6–7 make a good second session or homework.</li>
+      escaped; Levels 6–7 make a second session or homework.</li>
   </ul>
 
   <h2 class="page-break">Stage by stage</h2>
@@ -152,18 +150,18 @@
   <p>Level 1 circularizes an ellipse; Level 2 raises apoapsis into a band. The two together are the
     stage, because between them they show the rule in both directions.</p>
   <h4>Expected observation</h4>
-  <p>The dotted preview lifts the <em>far</em> side of the orbit while the near side barely moves.
-    The observation cue fires at each apsis with the speed there — around 1.4 km/s at apoapsis on
-    Level 3's orbit — and names it as the minimum energy-per-Δv point.</p>
+  <p>The dotted preview lifts the <em>far</em> side while the near side barely moves. The observation
+    cue fires at each apsis with the speed there, naming apoapsis as the minimum energy-per-Δv
+    point.</p>
   <h4>Check-yourself answer key</h4>
   <p><strong>Because it raises the point half an orbit away, which from apoapsis is periapsis.</strong>
     The two wrong options are "apoapsis is where the engine is most efficient" (the refutation item;
     the opposite is true and stage 2 measures it) and "a single burn reshapes the whole orbit at
     once".</p>
   <h4>Teaching limit</h4>
-  <p>Do not let this stage become the lesson. It is vocabulary and geometry; nothing about cost has
-    been established yet, and a student who leaves stage 1 thinking apoapsis is "the good place to
-    burn" has acquired the misconception stage 2 exists to break.</p>
+  <p>Do not let this stage become the lesson. It is vocabulary and geometry; nothing about cost is
+    established yet, and a student who leaves thinking apoapsis is "the good place to burn" has
+    acquired the misconception stage 2 exists to break.</p>
 
   <h3>Stage 2 — Escape at periapsis <span class="small">(Levels 3–5)</span></h3>
   <h4>Question</h4>
@@ -173,14 +171,14 @@
     Which burn point escapes for less Δv? <strong>The flight view does not appear until this is
     answered.</strong></p>
   <h4>Activity</h4>
-  <p><strong>→ Pe</strong> to fall to periapsis, <strong>🔥 Plan burn</strong>, push Δv until the
-    <strong>ORBIT</strong> chip flips from BOUND to ESCAPING. Then have them undo and try it from
-    apoapsis with the same tank, which is the comparison the stage is built on. Levels 4 and 5 are the
-    same idea applied to a transfer and to a powered flyby.</p>
+  <p><strong>→ Pe</strong>, <strong>🔥 Plan burn</strong>, push Δv until the <strong>ORBIT</strong>
+    chip flips from BOUND to ESCAPING. Then have them undo and try it from apoapsis on the same tank:
+    that comparison is the stage. Levels 4 and 5 apply the same idea to a transfer and a powered
+    flyby.</p>
   <h4>Expected observation</h4>
-  <p>661 m/s from periapsis; 1,835 m/s from apoapsis; a factor of 2.77. Both figures are minima found
-    against this exact engine. The HUD's "energy gained per 1 Δv" reads 6.09 km/s at periapsis and
-    1.39 at apoapsis — the same numbers, seen as they happen.</p>
+  <p>661 m/s from periapsis, 1,835 from apoapsis, a factor of 2.77 — both minima found against this
+    exact engine. The HUD's "energy gained per 1 Δv" reads 6.09 km/s at periapsis and 1.39 at
+    apoapsis: the same numbers, seen as they happen.</p>
   <h4>Check-yourself answer key</h4>
   <p>Item 1: <strong>because you are moving fastest there, and the energy added is
     v·Δv + ½Δv².</strong> The refutation option is "because you are closer to Earth" — see
@@ -197,16 +195,16 @@
   <h4>Predict prompt</h4>
   <p>The full burn lasts a noticeable arc. Light it exactly at periapsis, or start before periapsis?</p>
   <h4>Activity</h4>
-  <p>Levels 1–5 use impulsive burns; 6 and 7 give the engine 0.055 and 0.013 m/s². Point students at
-    three readouts and they can compute an ignition point instead of guessing: the HUD's
-    <strong>Time to periapsis</strong>, the planner's <strong>Burn duration</strong>, and the
-    <strong>lead</strong> box beside <strong>→ Pe</strong>, which stops the warp that many minutes
-    short of the apsis. This stage is locked until a student has escaped in stage 2.</p>
+  <p>Levels 1–5 use impulsive burns; 6 and 7 give the engine 0.055 and 0.013 m/s². Three readouts let
+    students compute an ignition point instead of guessing: the HUD's <strong>Time to
+    periapsis</strong>, the planner's <strong>Burn duration</strong>, and the <strong>lead</strong>
+    box beside <strong>→ Pe</strong>, which stops the warp that many minutes short. Locked until a
+    student has escaped in stage 2.</p>
   <h4>Expected observation</h4>
-  <p>Level 6: 775 m/s with the burn centred on periapsis, 919 m/s lit at periapsis, against an
-    impulsive ideal of 661 — so finite thrust always costs something, and timing decides how much.
-    Level 7's engine is weak enough that one long burn smears around most of the orbit and costs
-    1,498 m/s, where six kicks of roughly 2.8 hours each cost 731.</p>
+  <p>Level 6: 775 m/s centred on periapsis, 919 lit at periapsis, against an impulsive ideal of 661 —
+    finite thrust always costs something and timing decides how much. Level 7's engine is weak enough
+    that one long burn smears round most of the orbit for 1,498 m/s, where six kicks of roughly 2.8
+    hours each cost 731.</p>
   <h4>Check-yourself answer key</h4>
   <p><strong>Because all of it happens after the fast point, at falling speed.</strong> The refutation
     option is "a longer burn wastes more fuel as heat" — see Misconception 4.</p>
@@ -216,11 +214,10 @@
     matters, and roughly this much".</p>
 
   <h3>Stage 4 — Sandbox <span class="small">(outside the path)</span></h3>
-  <p>No goal, no par, 200 units of Δv, all three engines selectable, and a second fictional moon.
-    Nothing is scored or saved. Its Predict card asks for a number rather than a button: how cheaply
-    do you think you can escape? Write it down, then beat it. Its check-yourself item is the
-    synthesis one — which single quantity decided every answer across the three stages — and the
-    answer is your speed at the instant you spend the Δv.</p>
+  <p>No goal, no par, 200 units of Δv, all three engines selectable, a second fictional moon, nothing
+    scored. Its Predict card asks for a number rather than a button — how cheaply do you think you
+    can escape? — and its check-yourself item is the synthesis one: which single quantity decided
+    every answer across the three stages. The answer is your speed at the instant you spend the Δv.</p>
 
   <h2 class="page-break">The physics</h2>
   <p>An impulsive burn changes speed by Δv along the velocity, so kinetic energy per unit mass goes
@@ -230,19 +227,18 @@
     Gravitational potential is unchanged at that instant — you have not moved — so the whole
     difference between a cheap burn and an expensive one is the v in that term. On an ellipse, speed
     peaks at periapsis.</p>
-  <p>The HUD's "energy gained per 1 Δv" readout is therefore numerically just your current speed, and
-    it is worth asking a calculus class to differentiate ½v² and see why.</p>
+  <p>The HUD's "energy gained per 1 Δv" readout is therefore numerically just your current speed —
+    worth asking a calculus class to differentiate ½v² and see why.</p>
   <p><strong>Where does the extra energy come from?</strong> The propellant's chemical energy is
-    fixed. What changes is how it divides between the ship and the exhaust: at high speed the engine
-    acts over more distance per second, so more of that energy ends up in the ship and less in the
-    plume left behind.</p>
+    fixed; what changes is how it divides between ship and exhaust. At high speed the engine acts
+    over more distance per second, so more of it ends up in the ship and less in the plume.</p>
 
   <h2>Misconceptions to catch</h2>
   <div class="mis"><b>Misconception 1:</b> "The burn is better at periapsis because you are
     <em>closer</em> to the planet." Proximity is not the mechanism — <strong>speed</strong> is.
     Δε = v·Δv + ½Δv² contains v, not r. Being deep in the well matters only because falling there is
-    what made the ship fast; a ship moving equally fast far from the planet would gain just as much
-    from the same burn. This is the wrong option on stage 2's first check item.</div>
+    what made the ship fast; a ship equally fast far from the planet gains just as much from the same
+    burn. It is the wrong option on stage 2's first check item.</div>
   <div class="mis"><b>Misconception 2:</b> "The Oberth effect is the same as a gravity assist." An
     <strong>unpowered assist</strong> (Level 5's moon) takes energy from the <em>moon's orbital
     motion</em> — no fuel, and the moon slows imperceptibly in exchange. An <strong>Oberth
@@ -253,10 +249,10 @@
     and it is the third wrong option in stage 2.</div>
   <div class="mis"><b>Misconception 4:</b> "A long burn costs more because the engine wastes fuel."
     The engine never changes within a level. What changes is the speed at which each second of thrust
-    is delivered. Stage 3's refutation item is exactly this.</div>
-  <div class="mis"><b>Misconception 5:</b> "A very tall ellipse has escaped." It has not: escape is
-    ε > 0, not a distance. A student who crosses the system edge while still bound gets told so on
-    screen, with their actual ε quoted, because the geometry is genuinely misleading.</div>
+    is delivered. It is stage 3's refutation item.</div>
+  <div class="mis"><b>Misconception 5:</b> "A very tall ellipse has escaped." Escape is ε > 0, not a
+    distance. A student who crosses the system edge while still bound is told so on screen, with
+    their actual ε quoted, because the geometry is genuinely misleading.</div>
 
   <h2>Discussion questions</h2>
   <ol>
@@ -272,14 +268,10 @@
       approach should it burn, and does the same argument run backwards?</li>
     <li>Could you escape with a radial-out burn? Try it, then explain from the formula why pushing
       "straight up" wastes fuel.</li>
-    <li>Level 7's six kicks cost half what one long burn costs. What does that suggest about a
-      spacecraft whose engine is even weaker — and what eventually limits how far you can push the
-      idea?</li>
   </ol>
 
   <h2>Numbers, and where each one comes from</h2>
-  <p>Every figure in this guide and in the demo is one of three things, and the demo labels each of
-    them on its face.</p>
+  <p>Every figure in the demo carries one of these labels on its face.</p>
   <div class="scroll">
   <table>
     <thead><tr><th>Quantity</th><th>Value</th><th>Provenance</th></tr></thead>
@@ -300,41 +292,39 @@
   </table>
   </div>
   <div class="box warning"><strong>Do not quote these numbers as spaceflight figures.</strong> The
-    model has no atmosphere, no mass loss and so no rocket equation, no steering cost and no
-    third-body perturbations beyond the one fictional moon. It is built to isolate one relationship,
-    and it strips away everything that would compete with it.</div>
+    model has no atmosphere, no mass loss and so no rocket equation, no steering cost, and no
+    third-body perturbation beyond the one fictional moon. It isolates one relationship by stripping
+    away everything that would compete with it.</div>
 
   <h2>Presenter controls</h2>
   <ul>
     <li><strong>⚙ Settings</strong> holds the three presenter controls in order — <strong>Open
       Presenter Notes</strong> (this page, on screen), <strong>Presentation mode</strong> (larger
       type plus a header Notes button) and <strong>Reset</strong>.</li>
-    <li><strong>Reset</strong> puts the lesson back to a first load in place, with no page reload:
-      Level 1 on the pad, an empty Δv tally, the trajectory and undo stack cleared, warp back to 1×,
-      the HUD open, all three predictions forgotten, stage 3 locked again, and the mission badges and
-      saved name cleared. It deliberately leaves two things alone: <strong>presentation mode</strong>,
-      because re-shrinking the projector between rooms would be hostile, and the saved
-      <strong>class leaderboards</strong>, because those hold other students' entries. Use
-      <em>Clear scores</em> for those, which asks first.</li>
+    <li><strong>Reset</strong> restores a first load in place, with no page reload: Level 1 on the
+      pad, an empty Δv tally, trajectory and undo stack cleared, warp back to 1×, the HUD open, all
+      three predictions forgotten, stage 3 locked again, badges and saved name cleared. It leaves two
+      things alone on purpose: <strong>presentation mode</strong>, since re-shrinking the projector
+      between rooms would be hostile, and the saved <strong>class leaderboards</strong>, which hold
+      other students' entries — use <em>Clear scores</em>, which asks first.</li>
     <li><strong>Keys:</strong> <code>Space</code> pause · <code>B</code> burn planner ·
       <code>Enter</code> commit · <code>Esc</code> cancel · <code>Z</code> undo · <code>X</code> cut
       engine · <code>,</code> <code>.</code> warp down/up · <code>P</code> / <code>A</code> warp to
       Pe / Ap · <code>H</code> HUD · <code>F</code> follow camera · <code>M</code> briefing ·
       <code>R</code> restart level · <code>?</code> Guide · <code>N</code> Presenter Notes.</li>
-    <li><strong>Undo</strong> rewinds the last burn and refunds the fuel, and it is offered again
-      after a crash. Students should iterate, not restart.</li>
+    <li><strong>Undo</strong> rewinds the last burn and refunds the fuel, and is offered again after
+      a crash. Students should iterate, not restart.</li>
     <li>The four stage tabs jump between the lesson's beats; picking a level from <strong>🗺
-      Levels</strong> moves the tabs with it. A <code>#stage-3</code> link in a lesson plan will
-      clamp to the furthest unlocked stage rather than routing around the gate.</li>
+      Levels</strong> moves the tabs with it. A <code>#stage-3</code> link clamps to the furthest
+      unlocked stage rather than routing around the gate.</li>
   </ul>
 
   <div class="g-foot"><strong>Orbital Mechanics Golf</strong> · Bryant Harrison · Murray State
     University · Offline teaching game. Open <code>index.html</code> to play. Physics:
-    velocity-Verlet coasts with RK4 powered arcs; all level pars are verified against the shipped
-    physics by <code>test-physics.js</code> and the built page by <code>test-bundle.js</code>.
-    <code>src/demo-guide.html</code> is the canonical source of this document; the shipped
-    <code>teacher-guide.html</code>, the PDF beside it, and the in-app presenter notes are all
-    generated from it at build time.</div>
+    velocity-Verlet coasts with RK4 powered arcs, verified by <code>test-physics.js</code>; the built
+    page by <code>test-bundle.js</code>. <code>src/demo-guide.html</code> is the canonical source of
+    this document — the shipped <code>teacher-guide.html</code>, the PDF, and the in-app presenter
+    notes are generated from it at build time.</div>
 
 </div><!-- /guide -->
 </body>
