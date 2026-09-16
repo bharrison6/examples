@@ -2967,10 +2967,20 @@ function commitBurn() {
   if (dv <= 0.001) return;
   pushUndo();
   const el0 = elements(lvl, S);
+  /* The PRE-burn orbit, recorded at commit time for the debrief to read later.
+     vpe0 is that orbit's periapsis speed from vis-viva at rp; `at` is where on
+     it the burn was lit, using the same 4% radius bands the A4 cue uses. Once
+     the ship has escaped, the world no longer holds this orbit — sampling it
+     at debrief time is what printed 1.91 km/s for an orbit whose periapsis ran
+     at 6.08 (R-fuel-golf F1). Bookkeeping, not physics: S is untouched. */
+  const vpe0 = Math.sqrt(Math.max(0, 2 * (el0.eps + lvl.mu / el0.rp)));
+  const at0 = (el0.rp > 0 && el0.r <= el0.rp * 1.04) ? 'peri'
+            : (el0.bound && el0.r >= el0.ra * 0.96) ? 'apo' : 'mid';
+  const where = { rp0: el0.rp, vpe0: isFinite(vpe0) ? vpe0 : el0.v, at: at0 };
   if (isFinite(engine)) {
     // finite thrust: burn executes over time in the main loop
-    const entry = { t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode,
-                    finite: true, aEng: engine, eps0: el0.eps };
+    const entry = Object.assign({ t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode,
+                    finite: true, aEng: engine, eps0: el0.eps }, where);
     burnLog.push(entry);
     activeBurn = { mode: plan.mode, angle: plan.angle * Math.PI / 180, a: engine, dvRemaining: dv, entry };
     hidePlanner();
@@ -2983,8 +2993,8 @@ function commitBurn() {
   applyBurn(S, dir.x * dv, dir.y * dv);
   fuel -= dv; dvUsed += dv;
   const el1 = elements(lvl, S);
-  burnLog.push({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode,
-                 finite: false, vDotDv, eps0: el0.eps, eps1: el1.eps, h1: el1.h });
+  burnLog.push(Object.assign({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode,
+                 finite: false, vDotDv, eps0: el0.eps, eps1: el1.eps, h1: el1.h }, where));
   logEnergy(true);
   computeCurPath();
   hidePlanner();
@@ -3078,24 +3088,44 @@ function logEnergy(force) {
 }
 
 /* ---------- debrief ---------- */
+/* The verdict is written from the burn RECORD, never from the world as it looks
+   at debrief time. The previous version compared the burn speed against
+   max(every burn speed, current speed): after an escape the current speed is the
+   hyperbola's tail, so an apoapsis burn at 2.07 km/s (the slowest point) was
+   "deep and fast … Textbook Oberth", and an orbit whose periapsis ran at 6.08
+   km/s was said to "peak near 1.91". commitBurn() now records the pre-burn
+   orbit's periapsis speed (vpe0) and where the burn was lit (at), and this reads
+   those. A burn at periapsis earns the Oberth line; a burn anywhere else is told
+   plainly that it spent Δv where v was low, and what periapsis actually ran. */
 function debriefSentence() {
-  const el = elements(lvl, S);
   const overPar = dvUsed > lvl.par + 0.05;
   if (!burnLog.length) return 'No burns — a free ride.';
   const main = burnLog.reduce((a, b) => (b.dv > a.dv ? b : a));
-  const vmax = Math.max(...burnLog.map(b => b.v), el.v);
-  const highSpeedFrac = main.v / vmax;
-  let s = '';
-  if (!overPar) {
-    s = `Under par with ${fmtMS(dvUsed)}. Your biggest burn (${fmtMS(main.dv)}) came at ${uKMS(main.v).toFixed(2)} km/s — `;
-    s += highSpeedFrac > 0.75
-      ? 'deep and fast in the gravity well, so the v·Δv term of ΔKE = v·Δv + ½Δv² did most of the work. Textbook Oberth.'
-      : 'and the mission geometry let you get away with it. Try the same mission burning only at periapsis and watch the margin grow.';
+  const vpe = (isFinite(main.vpe0) && main.vpe0 > 0) ? main.vpe0 : main.v;
+  const at = main.at || (main.v >= vpe * 0.98 ? 'peri' : 'mid');
+  const V = uKMS(main.v).toFixed(2), PE = uKMS(vpe).toFixed(2);
+  const head = overPar ? `Over par (${fmtMS(dvUsed)} vs ${fmtMS(lvl.par)}).` : `Under par with ${fmtMS(dvUsed)}.`;
+  let s;
+  if (main.finite) {
+    /* v is the Δv-weighted mean over the arc (endBurn); `at` is where it was lit. */
+    const centred = at !== 'peri' && main.v / vpe > 0.85;
+    s = `${head} Your biggest burn (${fmtMS(main.dv)}) ran at a Δv-weighted mean of ${V} km/s on an orbit whose periapsis speed was ${PE} km/s — `;
+    s += at === 'peri'
+      ? 'it was lit right at periapsis, so the whole arc ran on the way back out at falling speed. A burn that starts at the speed peak spends its second half below it.'
+      : centred
+        ? 'the arc straddled the speed peak, so most of the Δv landed close to maximum speed. That is the finite-thrust form of the Oberth effect.'
+        : 'much of the arc happened well off the speed peak, where each unit of Δv bought less energy (ΔKE = v·Δv + ½Δv²).';
+  } else if (at === 'peri') {
+    s = `${head} Your biggest burn (${fmtMS(main.dv)}) came at ${V} km/s — at periapsis, the fastest point on the orbit you were on, so the v·Δv term of ΔKE = v·Δv + ½Δv² did most of the work. `;
+    s += overPar
+      ? 'The place was right, so the excess is in the amount or the direction: more Δv than the goal needed, or some of it spent off-prograde fighting your own orbit. Preview burns with the dotted line and spend Δv in as few, well-placed burns as possible.'
+      : 'Textbook Oberth.';
   } else {
-    s = `Over par (${fmtMS(dvUsed)} vs ${fmtMS(lvl.par)}). Your biggest burn happened at ${uKMS(main.v).toFixed(2)} km/s while this orbit peaks near ${uKMS(vmax).toFixed(2)} km/s at periapsis — `;
-    s += highSpeedFrac < 0.75
-      ? 'burning where you were slow means each m/s of Δv bought little energy (ΔKE = v·Δv + ½Δv²). The same burn at periapsis buys far more.'
-      : 'the direction or timing spent energy fighting your own orbit. Preview burns with the dotted line and spend Δv in as few, well-placed burns as possible.';
+    const where = at === 'apo' ? 'at apoapsis, the slowest point on that orbit' : 'away from periapsis';
+    s = `${head} Your biggest burn (${fmtMS(main.dv)}) came at ${V} km/s, ${where}, while that orbit ran ${PE} km/s at periapsis — so you spent Δv where v was low, and each m/s of it bought less energy than the same m/s would have at periapsis (ΔKE = v·Δv + ½Δv²). `;
+    s += overPar
+      ? 'The same burn at periapsis buys far more.'
+      : 'The mission geometry is what made it pay anyway.';
   }
   return s + (lvl.debriefIdeal ? ' ' + lvl.debriefIdeal : '');
 }
@@ -4229,6 +4259,13 @@ requestAnimationFrame(frame);
      cue fires only on a genuine arrival after that. */
   let zone = 'init';
   let lastDv = 0;
+  /* A finite burn's summary is owed once the game settles it. Keyed off the
+     record rather than off "did dv grow since the last poll", because the final
+     increment can round to 0 m/s and the summary would then never fire. */
+  let finitePending = false;
+  /* Stage 2's gate, opened by the learner's own act: picking a stage-2 level
+     from the game's Levels list is itself the choice (R-fuel-golf F3). */
+  let gate2Open = false;
 
   const selectedTab = () => Math.max(0, tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'));
 
@@ -4260,11 +4297,22 @@ requestAnimationFrame(frame);
      committed the flight view does not move in, and the gate card stands in
      its place. While gated the view is parked back in host 0, which is inside
      a hidden panel — game.js's draw() guard covers exactly that, so the
-     simulation keeps running and only the painting stops. */
-  function gated(stage) { return stage === 1 && !picks[1]; }
+     simulation keeps running and only the painting stops.
+
+     The gate protects the FIRST encounter, not the tenth (operator directive:
+     replayable, like a game). It consults the evidence it guards: a persisted
+     Escape Artist badge proves the level was flown, so on a revisit stage 2 is
+     free play. Reset clears the badges, so Reset re-arms it — that is correct.
+     The storage read is last in the chain so the 250 ms poll pays it only
+     while the gate is actually in question. */
+  function escapedBefore() {
+    const p = G.progress();
+    return Boolean(p[3] && p[3].done);
+  }
+  function gated(stage) { return stage === 1 && !picks[1] && !gate2Open && !escapedBefore(); }
 
   function place(stage) {
-    if (gate2) gate2.hidden = Boolean(picks[1]);
+    if (gate2) gate2.hidden = !gated(1);
     const host = gated(stage) ? hosts[0] : hosts[stage];
     if (host && activity.parentNode !== host) host.appendChild(activity);
     G.remeasure();
@@ -4375,33 +4423,51 @@ requestAnimationFrame(frame);
        reported a 6.08 km/s burn as a 2.21 km/s one, which inverts the lesson.
        A finite-thrust burn is still accumulating until endBurn() settles it, so
        it gets a provisional line and the summary once it is done. */
-    if (o.dvUsedMs > lastDv) {
-      const spent = o.dvUsedMs - lastDv;
-      lastDv = o.dvUsedMs;
-      const b = G.lastBurn();
-      if (b && !b.settled) {
-        cue(stage, 'Engine lit &mdash; <b>' + spent.toLocaleString('en-US') + ' m/s</b> delivered so far. ' +
-          'Watch the speed while it burns: the &Delta;v arriving now is worth whatever v is <i>now</i>.', true);
-      } else {
-        const atV = b ? b.vKms : o.vKms;
-        cue(stage, 'Burn committed: <b>' + (b ? b.dvMs : spent).toLocaleString('en-US') + ' m/s</b> spent at ' +
-          (b && b.finite ? 'a &Delta;v-weighted mean of ' : 'v = ') + atV.toFixed(2) + ' km/s. ' +
-          'Specific orbital energy &epsilon; is now <b>' + o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
-          (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
-                   : '<b>above zero: you are escaping.</b>'), true);
-      }
+    const b = G.lastBurn();
+    const burnSummary = () => {
+      const atV = b ? b.vKms : o.vKms;
+      cue(stage, 'Burn committed: <b>' + (b ? b.dvMs : o.dvUsedMs).toLocaleString('en-US') + ' m/s</b> spent at ' +
+        (b && b.finite ? 'a &Delta;v-weighted mean of ' : 'v = ') + atV.toFixed(2) + ' km/s. ' +
+        'Specific orbital energy &epsilon; is now <b>' + o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
+        (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
+                 : '<b>above zero: you are escaping.</b>'), true);
+      finitePending = false;
       zone = 'burn';
+    };
+    if (o.dvUsedMs > lastDv) {
+      lastDv = o.dvUsedMs;
+      if (b && !b.settled) {
+        /* The CUMULATIVE for this burn, read from the record — the HUD counts
+           the same number up. The per-poll increment was what printed
+           "106 m/s delivered so far" on every poll (R-fuel-golf F4). */
+        finitePending = true;
+        cue(stage, 'Engine lit &mdash; <b>' + b.dvMs.toLocaleString('en-US') + ' m/s</b> delivered so far. ' +
+          'Watch the speed while it burns: the &Delta;v arriving now is worth whatever v is <i>now</i>.', true);
+        zone = 'burn';
+      } else {
+        burnSummary();
+      }
       return;
     }
-    if (o.dvUsedMs < lastDv) lastDv = o.dvUsedMs;   // an undo refunded fuel
+    if (o.dvUsedMs < lastDv) {                       // an undo refunded fuel
+      lastDv = o.dvUsedMs;
+      finitePending = false;                         // the record it awaited is gone
+    }
+    if (finitePending && b && b.settled) { burnSummary(); return; }
 
     const now = o.nearPeri ? 'peri' : o.nearApo ? 'apo' : 'none';
-    /* 'init' is the silent first observation after a level load: record where
-       the ship starts without announcing it. Every level spawns at an apsis, so
-       announcing it would put a cue on screen before the learner has acted. */
-    if (zone === 'init') { zone = now; return; }
+    /* Two sentinels, both silent. 'init' is the first observation after a
+       level load: every level spawns at an apsis, so announcing it would put a
+       cue on screen before the learner has acted. 'burn' is the first
+       observation after a burn cue: a tangential burn leaves the ship AT an
+       apsis of its new orbit, so a same-position re-evaluation is not an
+       arrival, and letting it fire overwrote "Burn committed: 712 m/s…" with
+       "Periapsis: v = 6.78 km/s" ~540 ms later on essentially every burn
+       (R-fuel-golf F2). The burn cue therefore holds until the learner acts
+       again or the ship genuinely leaves for, and arrives at, another apsis. */
+    if (zone === 'init' || zone === 'burn') { zone = now; return; }
     if (now !== 'none' && now !== zone) cue(stage, CUE[now][stage](o));
-    if (now !== 'burn') zone = now;
+    zone = now;
   }
 
   /* ---- A6: the feedback prefix, overridden demo-side --------------------
@@ -4433,14 +4499,31 @@ requestAnimationFrame(frame);
     if (moonNote) moonNote.hidden = !G.LEVELS[i].moon;
     lastDv = 0;
     zone = 'init';
+    finitePending = false;
     if (resetting || syncing) return;
     const want = stageOf(i);
-    if (want === selectedTab()) return;
+    /* Loading a stage-2 level from the game's own Levels list is the learner's
+       choice, and it opens the evidence gate. Before this, a re-gated stage 2
+       ran Level 3 in the hidden host (canvas 0 px, gate card showing) and the
+       attempt was discarded on the next tab click (R-fuel-golf F3). */
+    if (want === 1) gate2Open = true;
+    /* The game framed this level against the box it had at load time. If the
+       flight view was hidden then (parked in host 0 behind a gate card), that
+       box was 0 px and loadLevel fell back to a phantom 900x600 — so once it is
+       placed somewhere visible, re-frame through the game's own fit control,
+       which is what a fresh load does: fit + camera home. */
+    const wasHidden = activity.offsetParent === null;
+    if (want === selectedTab()) {
+      place(want);
+      if (wasHidden && activity.offsetParent !== null) { const z = document.getElementById('zoomFit'); if (z) z.click(); }
+      return;
+    }
     if (tabs[want] && tabs[want].disabled) return;     // do not route around a gate
     if (gated(want)) return;
     syncing = true;
     try { window.lessonShell.selectStage(want); } finally { syncing = false; }
     place(want);
+    if (wasHidden && activity.offsetParent !== null) { const z = document.getElementById('zoomFit'); if (z) z.click(); }
   };
 
   G.hooks.onSucceed = (levelIndex, dvUsedVu, par) => {
@@ -4491,10 +4574,12 @@ requestAnimationFrame(frame);
      ENUMERATED:
        1. picks[0..3]      -> null, and the three prediction button groups'
                               aria-pressed and .selected cleared with them.
-       2. zone, lastDv     -> the A4 cue edge detectors, or the first tick
-                              after a Reset fires a phantom "burn committed"
+       2. zone, lastDv, finitePending -> the A4 cue edge detectors, or the first
+                              tick after a Reset fires a phantom "burn committed"
                               cue from a delta-v total that no longer exists.
-       3. gate-2's card    -> visible again, because picks[1] is null again.
+       3. gate-2's card    -> visible again: picks[1] is null again, gate2Open
+                              is false again, and resetActivity() clears the
+                              badge the gate also consults.
        4. the activity's host -> back to host 0. It is ONE element that moves;
                               leaving it parked in stage 2's or 3's host would
                               show stage 1 with an empty panel.
@@ -4512,6 +4597,8 @@ requestAnimationFrame(frame);
     picks = [null, null, null, null];
     zone = 'init';
     lastDv = 0;
+    finitePending = false;
+    gate2Open = false;                 // and G.resetActivity() below clears the badge the gate also consults
     PREDICT_STAGES.forEach(stage => {
       const echo = echoFor(stage);
       if (echo) echo.className = 'echo';

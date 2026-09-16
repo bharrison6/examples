@@ -541,10 +541,20 @@ function commitBurn() {
   if (dv <= 0.001) return;
   pushUndo();
   const el0 = elements(lvl, S);
+  /* The PRE-burn orbit, recorded at commit time for the debrief to read later.
+     vpe0 is that orbit's periapsis speed from vis-viva at rp; `at` is where on
+     it the burn was lit, using the same 4% radius bands the A4 cue uses. Once
+     the ship has escaped, the world no longer holds this orbit — sampling it
+     at debrief time is what printed 1.91 km/s for an orbit whose periapsis ran
+     at 6.08 (R-fuel-golf F1). Bookkeeping, not physics: S is untouched. */
+  const vpe0 = Math.sqrt(Math.max(0, 2 * (el0.eps + lvl.mu / el0.rp)));
+  const at0 = (el0.rp > 0 && el0.r <= el0.rp * 1.04) ? 'peri'
+            : (el0.bound && el0.r >= el0.ra * 0.96) ? 'apo' : 'mid';
+  const where = { rp0: el0.rp, vpe0: isFinite(vpe0) ? vpe0 : el0.v, at: at0 };
   if (isFinite(engine)) {
     // finite thrust: burn executes over time in the main loop
-    const entry = { t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode,
-                    finite: true, aEng: engine, eps0: el0.eps };
+    const entry = Object.assign({ t: S.t, dv: 0, r: el0.r, v: el0.v, vSum: 0, mode: plan.mode,
+                    finite: true, aEng: engine, eps0: el0.eps }, where);
     burnLog.push(entry);
     activeBurn = { mode: plan.mode, angle: plan.angle * Math.PI / 180, a: engine, dvRemaining: dv, entry };
     hidePlanner();
@@ -557,8 +567,8 @@ function commitBurn() {
   applyBurn(S, dir.x * dv, dir.y * dv);
   fuel -= dv; dvUsed += dv;
   const el1 = elements(lvl, S);
-  burnLog.push({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode,
-                 finite: false, vDotDv, eps0: el0.eps, eps1: el1.eps, h1: el1.h });
+  burnLog.push(Object.assign({ t: S.t, dv, r: el0.r, v: el0.v, mode: plan.mode,
+                 finite: false, vDotDv, eps0: el0.eps, eps1: el1.eps, h1: el1.h }, where));
   logEnergy(true);
   computeCurPath();
   hidePlanner();
@@ -652,24 +662,44 @@ function logEnergy(force) {
 }
 
 /* ---------- debrief ---------- */
+/* The verdict is written from the burn RECORD, never from the world as it looks
+   at debrief time. The previous version compared the burn speed against
+   max(every burn speed, current speed): after an escape the current speed is the
+   hyperbola's tail, so an apoapsis burn at 2.07 km/s (the slowest point) was
+   "deep and fast … Textbook Oberth", and an orbit whose periapsis ran at 6.08
+   km/s was said to "peak near 1.91". commitBurn() now records the pre-burn
+   orbit's periapsis speed (vpe0) and where the burn was lit (at), and this reads
+   those. A burn at periapsis earns the Oberth line; a burn anywhere else is told
+   plainly that it spent Δv where v was low, and what periapsis actually ran. */
 function debriefSentence() {
-  const el = elements(lvl, S);
   const overPar = dvUsed > lvl.par + 0.05;
   if (!burnLog.length) return 'No burns — a free ride.';
   const main = burnLog.reduce((a, b) => (b.dv > a.dv ? b : a));
-  const vmax = Math.max(...burnLog.map(b => b.v), el.v);
-  const highSpeedFrac = main.v / vmax;
-  let s = '';
-  if (!overPar) {
-    s = `Under par with ${fmtMS(dvUsed)}. Your biggest burn (${fmtMS(main.dv)}) came at ${uKMS(main.v).toFixed(2)} km/s — `;
-    s += highSpeedFrac > 0.75
-      ? 'deep and fast in the gravity well, so the v·Δv term of ΔKE = v·Δv + ½Δv² did most of the work. Textbook Oberth.'
-      : 'and the mission geometry let you get away with it. Try the same mission burning only at periapsis and watch the margin grow.';
+  const vpe = (isFinite(main.vpe0) && main.vpe0 > 0) ? main.vpe0 : main.v;
+  const at = main.at || (main.v >= vpe * 0.98 ? 'peri' : 'mid');
+  const V = uKMS(main.v).toFixed(2), PE = uKMS(vpe).toFixed(2);
+  const head = overPar ? `Over par (${fmtMS(dvUsed)} vs ${fmtMS(lvl.par)}).` : `Under par with ${fmtMS(dvUsed)}.`;
+  let s;
+  if (main.finite) {
+    /* v is the Δv-weighted mean over the arc (endBurn); `at` is where it was lit. */
+    const centred = at !== 'peri' && main.v / vpe > 0.85;
+    s = `${head} Your biggest burn (${fmtMS(main.dv)}) ran at a Δv-weighted mean of ${V} km/s on an orbit whose periapsis speed was ${PE} km/s — `;
+    s += at === 'peri'
+      ? 'it was lit right at periapsis, so the whole arc ran on the way back out at falling speed. A burn that starts at the speed peak spends its second half below it.'
+      : centred
+        ? 'the arc straddled the speed peak, so most of the Δv landed close to maximum speed. That is the finite-thrust form of the Oberth effect.'
+        : 'much of the arc happened well off the speed peak, where each unit of Δv bought less energy (ΔKE = v·Δv + ½Δv²).';
+  } else if (at === 'peri') {
+    s = `${head} Your biggest burn (${fmtMS(main.dv)}) came at ${V} km/s — at periapsis, the fastest point on the orbit you were on, so the v·Δv term of ΔKE = v·Δv + ½Δv² did most of the work. `;
+    s += overPar
+      ? 'The place was right, so the excess is in the amount or the direction: more Δv than the goal needed, or some of it spent off-prograde fighting your own orbit. Preview burns with the dotted line and spend Δv in as few, well-placed burns as possible.'
+      : 'Textbook Oberth.';
   } else {
-    s = `Over par (${fmtMS(dvUsed)} vs ${fmtMS(lvl.par)}). Your biggest burn happened at ${uKMS(main.v).toFixed(2)} km/s while this orbit peaks near ${uKMS(vmax).toFixed(2)} km/s at periapsis — `;
-    s += highSpeedFrac < 0.75
-      ? 'burning where you were slow means each m/s of Δv bought little energy (ΔKE = v·Δv + ½Δv²). The same burn at periapsis buys far more.'
-      : 'the direction or timing spent energy fighting your own orbit. Preview burns with the dotted line and spend Δv in as few, well-placed burns as possible.';
+    const where = at === 'apo' ? 'at apoapsis, the slowest point on that orbit' : 'away from periapsis';
+    s = `${head} Your biggest burn (${fmtMS(main.dv)}) came at ${V} km/s, ${where}, while that orbit ran ${PE} km/s at periapsis — so you spent Δv where v was low, and each m/s of it bought less energy than the same m/s would have at periapsis (ΔKE = v·Δv + ½Δv²). `;
+    s += overPar
+      ? 'The same burn at periapsis buys far more.'
+      : 'The mission geometry is what made it pay anyway.';
   }
   return s + (lvl.debriefIdeal ? ' ' + lvl.debriefIdeal : '');
 }
