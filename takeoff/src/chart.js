@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Undershoot — the chart.
+   The Pace of AI Progress — the chart.
 
    One canvas. It draws the known data, takes a dragged forecast, then
    animates the truth over the top of it.
@@ -39,7 +39,7 @@ function create(canvas) {
     twistOn: false,
     twistT: 0,
     w: 0, h: 0, dpr: 1,
-    pad: { l: 58, r: 18, t: 22, b: 40 },
+    pad: { l: 58, r: 18, t: 30, b: 40 },
     big: false,
     axisEnd: 0,      /* injected by the app; see setAxisEnd */
     onDraw: null,
@@ -102,8 +102,10 @@ function setRound(st, r) {
      usable band, and is staged behind the reveal where it would not. */
   const axisEnd = st.axisEnd || 0;
   const bandFraction = (st.tGuess - splitOf(r)) / (axisEnd - st.t0);
-  if (axisEnd > st.t1 && bandFraction >= 0.2) {
-    st.t1 = axisEnd;
+  if (axisEnd > st.tGuess && bandFraction >= 0.2) {
+    /* A hair past the snapshot so the boundary rule and the last dot are
+       never welded to the frame. */
+    st.t1 = axisEnd + (axisEnd - st.t0) * 0.02;
   }
   /* The axis this round STARTS at. reset() restores to this rather than to
      tGuess — restoring to tGuess silently undid the extension above, because
@@ -145,7 +147,9 @@ function resize(st) {
   /* Left and bottom carry an axis TITLE as well as tick labels — the first
      version had neither, and a chart whose y axis is unlabelled is asking the
      room to guess at a quantity it has not been told the name of. */
-  st.pad = { l: 82 * s, r: 18 * s, t: 20 * s, b: 58 * s };
+  /* The top gutter carries the series-boundary label (see boundary()), so
+     it is taller than a bare tick gutter would need. */
+  st.pad = { l: 82 * s, r: 18 * s, t: 30 * s, b: 58 * s };
   st.fs = (st.big ? 15 : 11.5);
   render(st);
 }
@@ -298,6 +302,7 @@ function render(st) {
   if (st.phase !== 'idle') guessLine(st);
   if (st.revealT > 0) truthLine(st);
   if (st.twistOn) twistLine(st);
+  boundary(st);
   axes(st);
 
   ctx.restore();
@@ -381,7 +386,7 @@ function knownSeries(st) {
   const { ctx } = st;
   const pts = st.round.shown;
 
-  if (st.round.id === 'metr') band(st, pts, 'rgba(232,237,245,0.09)');
+  if (pts.some(p => p.lo != null)) band(st, pts, 'rgba(232,237,245,0.09)');
 
   ctx.strokeStyle = C.ink;
   ctx.lineWidth = st.big ? 3.5 : 2.5;
@@ -445,7 +450,7 @@ function truthLine(st) {
   const pts = st.round.shown.concat(st.round.hidden);
   const sweepX = px(st, st.tSplit) + (px(st, st.tGuess) - px(st, st.tSplit)) * st.revealT;
 
-  if (st.round.id === 'metr') {
+  if (pts.some(p => p.lo != null)) {
     ctx.save();
     ctx.beginPath(); ctx.rect(st.pad.l, st.pad.t, sweepX - st.pad.l, plotH(st)); ctx.clip();
     band(st, pts, 'rgba(236,172,0,0.13)');
@@ -469,27 +474,60 @@ function truthLine(st) {
     if (px(st, E.t(p.date)) <= sweepX + 0.5) dot(st, E.t(p.date), p.value, C.truth, p.label, true);
   }
 
-  /* Where the series stops before the axis does, say so on the chart. An empty
-     stretch of plot with no explanation reads as an oversight; labelled, it is
-     the most honest thing here. */
-  if (st.round.endNote && st.revealT > 0.98) {
-    const last = pts[pts.length - 1];
-    const lx = px(st, E.t(last.date)), ly = py(st, st.scale.to(last.value));
-    const edge = st.w - st.pad.r;
-    if (edge - lx > 60) {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(143,163,192,0.35)';
-      ctx.setLineDash([3, 5]); ctx.lineWidth = 1.25;
-      ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(edge - 6, ly); ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = `600 ${st.fs}px system-ui, -apple-system, sans-serif`;
-      ctx.fillStyle = 'rgba(143,163,192,0.85)';
-      ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
-      const text = st.round.endNote;
-      if (ctx.measureText(text).width < edge - lx - 12) ctx.fillText(text, edge - 8, ly - 7);
-      ctx.restore();
+}
+
+/** Where the series stops, say so on the chart — always.
+
+    The first version drew the end note only when there were 60px of axis to
+    the right of the last point AND only after the reveal, and it read
+    st.axisEnd, which the app never set. So on every round at every ordinary
+    width the note never rendered, and a learner saw a series ending in 2025
+    on a page stamped 2026 with nothing to say so (accuracy audit, 2026-09-15,
+    risk #1). Now the axis always runs to the snapshot date (the app wires
+    setAxisEnd before the first setRound), the stretch between the last
+    published point and the snapshot is hatched, a dashed rule marks the ask
+    date, and the end note is drawn in the top gutter where it cannot collide
+    with anything, wrapped to whatever room the hatched stretch has and
+    right-aligned to the axis edge when it has none. */
+function boundary(st) {
+  const r = st.round;
+  if (!r) return;
+  const { ctx } = st;
+  const x = px(st, st.tGuess);
+  const edge = st.w - st.pad.r;
+  const top = st.pad.t, bottom = st.pad.t + plotH(st);
+  ctx.save();
+  /* the unplotted stretch, hatched */
+  if (edge - x > 2) {
+    ctx.beginPath(); ctx.rect(x, top, edge - x, bottom - top); ctx.clip();
+    ctx.strokeStyle = 'rgba(143,163,192,0.16)';
+    ctx.lineWidth = 1;
+    for (let d = x - (bottom - top); d < edge; d += 9) {
+      ctx.beginPath(); ctx.moveTo(d, bottom); ctx.lineTo(d + (bottom - top), top); ctx.stroke();
     }
   }
+  ctx.restore();
+  ctx.save();
+  /* the rule where the published series ends */
+  ctx.strokeStyle = 'rgba(232,237,245,0.55)';
+  ctx.setLineDash([3, 4]); ctx.lineWidth = 1.25;
+  ctx.beginPath(); ctx.moveTo(x, top - 4); ctx.lineTo(x, bottom); ctx.stroke();
+  ctx.setLineDash([]);
+  /* the label, in the top gutter */
+  const text = (r.endNote || 'Series ends here') + ' · snapshot ' + E.fmtDate(st.axisEnd || st.tGuess);
+  const fs = Math.max(9.5, st.fs - 1);
+  ctx.font = `600 ${fs}px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = 'rgba(232,237,245,0.82)';
+  ctx.textBaseline = 'bottom';
+  const w = ctx.measureText(text).width;
+  if (x + 6 + w <= edge) { ctx.textAlign = 'left'; ctx.fillText(text, x + 6, top - 5); }
+  else if (w <= edge - st.pad.l) { ctx.textAlign = 'right'; ctx.fillText(text, edge, top - 5); }
+  else {
+    /* phone widths: two lines, the note on one and the snapshot on the other */
+    ctx.textAlign = 'right';
+    ctx.fillText(r.endNote || 'Series ends here', edge, top - 5);
+  }
+  ctx.restore();
 }
 
 /** ARC-AGI-2 drawn as a second, lower series once the first has landed. */

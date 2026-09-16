@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Undershoot — engine.
+   The Pace of AI Progress — engine.
 
    Pure functions: date and value scaling, the guess curve, and the scoring
    that turns "the line you drew" into "the factor you were out by". No DOM,
@@ -294,45 +294,11 @@ function medianRatio(results) {
   return rs.length % 2 ? rs[m] : (rs[m - 1] + rs[m]) / 2;
 }
 
-function medianMiss(results) {
-  const rs = results.map(r => r.miss == null ? Math.max(r.ratio, 1 / r.ratio) : r.miss)
-    .filter(r => isFinite(r)).sort((a, b) => a - b);
-  if (!rs.length) return null;
-  const m = Math.floor(rs.length / 2);
-  return rs.length % 2 ? rs[m] : (rs[m - 1] + rs[m]) / 2;
-}
-
-/* ---- doubling time ------------------------------------------------------- */
-
-/** Least-squares fit of log2(value) against time, returned as days per
- *  doubling. Used to state METR's trend from the plotted points rather than
- *  quoting a number the chart does not support. */
-function doublingDays(points) {
-  const pts = points.filter(p => p.value > 0);
-  if (pts.length < 2) return null;
-  const xs = pts.map(p => t(p.date) / DAY);
-  const ys = pts.map(p => Math.log2(p.value));
-  const n = xs.length;
-  const mx = xs.reduce((a, b) => a + b, 0) / n;
-  const my = ys.reduce((a, b) => a + b, 0) / n;
-  let num = 0, den = 0;
-  for (let i = 0; i < n; i++) { num += (xs[i] - mx) * (ys[i] - my); den += (xs[i] - mx) ** 2; }
-  if (den === 0 || num === 0) return null;
-  return 1 / (num / den);
-}
-
-/* ---- timeline helpers ---------------------------------------------------- */
-
-/** Releases per rolling window, used by Act II to show cadence rather than
- *  asserting it. */
-function cadence(models, windowDays) {
-  const w = (windowDays || 90) * DAY;
-  return models.map(m => {
-    const at = t(m.d);
-    const n = models.filter(o => { const d = at - t(o.d); return d >= 0 && d < w; }).length;
-    return { date: m.d, at, count: n };
-  });
-}
+/* ---- the invented forecast scenario --------------------------------------
+   The trend-fitting helpers that used to live here (doublingDays, cadence)
+   were removed 2026-09-16: neither was called, and a least-squares doubling
+   fit is exactly the extrapolation this demo teaches against. METR's own
+   doubling times are quoted from METR, not fitted here. */
 
 /** Deliberately invented score rules; no relationship to benchmark data. */
 function scenarios(years) {
@@ -348,8 +314,7 @@ return {
   t, isoOf, fmtDate, fmtValue, fmtMinutes, round, clamp,
   makeScale, ticks, niceStep, timeTicks, tickLabel, durationTicks, fmtDurationTick,
   GUESS_N, emptyGuess, paint, guessDrawn, guessComplete, guessAt,
-  score, medianRatio, medianMiss, allPoints, finalValue, isFalling,
-  doublingDays, cadence, DAY
+  score, medianRatio, allPoints, finalValue, isFalling, DAY
 };
 })();
 
