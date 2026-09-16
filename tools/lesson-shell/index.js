@@ -117,11 +117,19 @@ const crypto = require('node:crypto');
      6. The shared A6 check-card handler no longer hardcodes one demo's
         wrong-answer sentence. It reads the lead from the card's own
         data-correct-lead / data-wrong-lead, defaulting to demo-neutral words.
-        v2 shipped ion-flight's "Not what the detector showed." into all eight
-        built demos, so every learner met a sentence about a mass-spectrometer
+        v2 shipped ion-flight's "Not what the detector showed." into every
+        built demo, so learners met a sentence about a mass-spectrometer
         detector in check cards that had nothing to do with detectors.
-   The css hash DOES change this time (2 and 3 both touch shell.css), which is
-   what forces the fleet rebuild. That is intended. */
+        (Measured at 8 demos when this was written; the count rises with each
+        merge and is a floor, not a total. The fix is count-independent.)
+     7. `.hidden` becomes a RESERVED kit class backed by a real rule. Five
+        demos had independently written the identical
+        `.hidden { display: none !important }`, and a retrofit that correctly
+        deletes the demo's chrome stylesheet took the rule with it while the
+        JS kept toggling the class — panels rendered stacked, with every
+        static check green. check-shell.js fails a demo that redefines it.
+   The css hash DOES change this time (2, 3 and 7 all touch shell.css), which
+   is what forces the fleet rebuild. That is intended. */
 const VERSION = '3';
 
 const DIR = __dirname;

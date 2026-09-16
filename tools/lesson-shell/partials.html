@@ -25,6 +25,22 @@
      below. check-shell.js refuses a built file that defines any id twice, so a
      collision fails the build rather than silently half-working.
 
+     ONE RESERVED CLASS, as of v3: `.hidden`. The kit backs it with
+     `display: none !important`, because five demos had each written that exact
+     rule for themselves and a retrofit that deletes the demo's chrome
+     stylesheet takes it away while the JS keeps toggling the class. Do not
+     redefine it; check-shell.js fails a build that does. Prefer the `hidden`
+     ATTRIBUTE in new markup and new code — it is the platform's, it says the
+     right thing to assistive technology, and the kit covers it too.
+
+     THE A2 STAGE INTRO IS COLLAPSIBLE AT PHONE WIDTH and you do not mark that
+     up here (v3, operator ruling 2026-09-16). The shell wraps `.lesson-strip`
+     in a <details class="intro-more"> at runtime and closes it at <=480px.
+     Author the intro exactly as shown below; see ADOPTING.md §4b for what the
+     disclosure assumes about your markup — chiefly that `.stage-question` is
+     never hidden at phone width and that your prediction echo lives in `.echo`
+     inside the strip.
+
      Order on the page: header (A0) -> stage tablist (A1) -> one section.stage
      per stage, each containing stage intro (A2) + activity (A3/A4) + check
      (A6) -> footer (A0) -> dialogs (A5, A7, A8, notes) -> credit pill (A0).
@@ -176,8 +192,17 @@
        model the stage could leave, and its feedback names why it is wrong.
        Mark it data-refutation="true" so a reviewer can find it.
        No score is kept unless the demo already keeps one.
+
+       THE FEEDBACK LEAD IS YOURS (v3). The shell writes a bold lead and then
+       your data-feedback. It takes that lead from data-correct-lead /
+       data-wrong-lead on THIS section, defaulting to the demo-neutral
+       "Correct." and "Not quite." Set your own where your demo has a better
+       word for it. Until v3 the kit hardcoded one demo's sentence — "Not what
+       the detector showed." — into the shared handler, and it rendered in
+       every built demo whatever its subject; check-shell.js now fails that.
        ==================================================================== -->
-  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true"
+           data-correct-lead="Correct." data-wrong-lead="Not quite.">
     <span class="eyebrow">Check yourself</span>
     <h3 id="check-1-title">ONE RETRIEVAL QUESTION FROM THIS STAGE?</h3>
     <p class="check-prompt">OPTIONAL ONE-LINE SETUP.</p>
