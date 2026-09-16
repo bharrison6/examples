@@ -785,8 +785,11 @@ body.has-bottom-bar .bh-credit { display: none; }
 .st-row.bad { color: var(--bad); }
 .st-row em { grid-column: 2; color: var(--ink-3); font-style: normal; }
 
-/* ---- presentation mode ---------------------------------------------------- */
-body.presenter #chart-wrap { height: 460px; }
+/* ---- presentation mode ----------------------------------------------------
+   The chart's height is NOT set here. fitChart() in app.js measures it and
+   writes an inline height, which beats any rule in this file; its floor is
+   presenter-aware instead. A `body.presenter #chart-wrap { height: ... }`
+   rule here looked like it worked and never applied. */
 body.presenter .bar-row { margin: 13px 0; }
 
 /* ---- widths --------------------------------------------------------------- */
@@ -3874,7 +3877,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = Chart;
 const E = ENGINE;
 const D = DATA;
 const $  = s => document.querySelector(s);
-const $$ = s => Array.from(document.querySelectorAll(s));
+const $$ = (s, root) => Array.from((root || document).querySelectorAll(s));
 
 /* ---- state ------------------------------------------------------------------
    Every property is enumerated in resetActivity() below. */
@@ -3918,10 +3921,24 @@ function boot() {
   loadRound(0);
 }
 
-/* The one layout rule this activity enforces: the chart and the Reveal
-   button are both reachable without scrolling on the round as it first
-   appears. Everything above the chart varies in height, so the chart's height
-   is measured rather than declared. */
+/* The chart's height is measured, not declared, because everything above it
+   varies: the stage intro, the lesson strip and the round's own explanation
+   all wrap differently at every width.
+
+   WHAT THIS RULE USED TO CLAIM, and why the claim is gone. Before the kit
+   retrofit this function enforced "the chart and the Reveal button are both
+   reachable without scrolling". Measured 2026-09-16 against the kit's A2
+   block: at 1024x768 the Reveal row lands at y=1217 and at 1440x900 at
+   y=1220, so the rule no longer holds at either - the template's stage intro
+   plus lesson strip is ~550-880px tall before the activity starts, and the
+   only way to satisfy the old rule would be to shrink the chart to a sliver.
+   The floor wins instead and the page scrolls, which is the right trade. The
+   comment says so rather than asserting an invariant the code cannot keep.
+
+   The floor is presenter-aware: in presentation mode `avail` is almost always
+   negative at this scroll depth, so the floor is what actually governs the
+   height, and a projector needs the larger chart. (A `body.presenter` CSS
+   rule cannot do this job - the inline height this function sets wins.) */
 function fitChart() {
   const wrap = $('#chart-wrap');
   const row  = $('#draw-row');
@@ -3936,7 +3953,7 @@ function fitChart() {
               + 26;
   const avail = window.innerHeight - top - below;
   const max = S.big ? 620 : 500;
-  const floor = window.innerWidth < 860 ? 300 : 340;
+  const floor = window.innerWidth < 860 ? (S.big ? 360 : 300) : (S.big ? 460 : 340);
   wrap.style.height = Math.round(E.clamp(avail, floor, max)) + 'px';
 }
 
@@ -4368,6 +4385,30 @@ function runSelfTest() {
   checks.forEach(c => console.log((c.pass ? 'PASS  ' : 'FAIL  ') + c.name + (c.detail ? '  — ' + c.detail : '')));
   return checks;
 }
+
+/* ---- A6 check cards: correct the shell's wrong-answer prefix ----------------
+   The frozen kit hardcodes ion-flight's own wording into the shared check-card
+   handler: a wrong option is prefixed "Not what the detector showed." There is
+   no detector in this demo — nothing here detects anything — and a page whose
+   subject is saying exactly what an instrument measured cannot assert a
+   measurement that did not happen.
+
+   The kit is frozen (a behaviour change needs an unfreeze plus a rebuild of
+   every merged demo), and all six kit-built demos carry the phrase, so the
+   real fix belongs in the kit at the next unfreeze — it is in this lane's
+   friction list. Until then this corrects it locally. The shell's own listener
+   is registered first, because the shell's script tag precedes this one, so
+   this handler runs after it and rewrites only the prefix it wrote. */
+const CHECK_PREFIX_WRONG = 'Not what the evidence shows.';
+$$('.check').forEach(card => {
+  const out = card.querySelector('.check-feedback');
+  if (!out) return;
+  $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
+    if (btn.classList.contains('correct')) return;
+    const b = out.querySelector('b');
+    if (b && /detector/i.test(b.textContent)) b.textContent = CHECK_PREFIX_WRONG;
+  }));
+});
 
 /* ---- the shell's two events ------------------------------------------------ */
 
