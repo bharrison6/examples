@@ -1061,6 +1061,16 @@ head('7. Step 1 — the hand-written rules');
     (tpl.match(/<span>Takeaway<\/span>/g) || []).length === 5);
   check('exactly one tablist: the lens row is not a second one (A1)',
     (tpl.match(/role="tablist"/g) || []).length === 1);
+  /* 2026-09-16: 1d's half-switch and 1c's board switch share the .map-btn
+     look. Their handlers and renderers must be scoped by container, or one
+     drives the other (found in the browser pass: pressing Ultimate ran
+     renderHalf with S.half undefined and lit both board buttons). */
+  check('the two .map-btn switches are wired by container, never by bare class',
+    !/\$\$\('\.map-btn'\)/.test(app) &&
+    /\$\$\('#map-switch \.map-btn'\)/.test(app) && /\$\$\('#board-switch \.map-btn'\)/.test(app) &&
+    (tpl.match(/id="map-switch"/g) || []).length === 1 && (tpl.match(/id="board-switch"/g) || []).length === 1);
+  check('the 1d Predict card is gone and ultimate is reachable from a visible control, not a Details button',
+    !/id="btn-ultimate"/.test(app) && /data-board="ult"/.test(tpl));
   check('the demo implements the kit reset contract (A8)',
     /addEventListener\('lessonreset'/.test(app));
   /* ADOPTING.md section 4 step 7: the shell fires stagechange BEFORE
