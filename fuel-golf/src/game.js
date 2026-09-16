@@ -1331,9 +1331,21 @@ function syncHud() {
   $('oberthfill').style.width = Math.max(4, Math.min(100, (el.v - vSeen.min) / span * 100)) + '%';
 }
 
-/* ---------- main loop ---------- */
+/* ---------- main loop ----------
+   frame() is the loop; stepFrame() is one frame's worth of work. The split is a
+   pure extraction and changes nothing about what runs or in what order — it
+   exists so that ONE frame can be driven without re-queuing another, which is
+   the only way a headless or backgrounded check can advance this simulation at
+   all: requestAnimationFrame does not tick in a hidden or behind-window browser
+   pane (measured 0 frames in 1.5 s, with document.visibilityState reporting
+   "hidden"), and every physics step, every HUD reading and the goal check all
+   live inside this function. window.fuelGolf.stepFrame exposes it. */
 let lastFrame = performance.now();
 function frame(now) {
+  stepFrame(now);
+  requestAnimationFrame(frame);
+}
+function stepFrame(now) {
   const dtReal = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
 
@@ -1395,7 +1407,6 @@ function frame(now) {
     syncOrbitChip();
     $('clockChip').textContent = 'T+ ' + fmtDur(S.t);
   }
-  requestAnimationFrame(frame);
 }
 
 /* ---------- rendering ---------- */
@@ -1660,7 +1671,28 @@ window.fuelGolf = {
   levelIndex: () => LEVELS.indexOf(lvl),
   resetActivity,
   remeasure: resize,
+  /* A TEST HOOK, not a game control. Runs exactly one frame's work and does
+     NOT re-queue the loop, so calling it on a live page cannot double-run the
+     simulation. Nothing in the game calls it. */
+  stepFrame,
   progress: getProgress,
+  /* The last burn AS THE GAME RECORDED IT, not as the world looks now. For an
+     impulsive burn `v` is the speed at the instant of the kick; for a finite
+     burn endBurn() replaces it with the delta-v-weighted mean speed over the
+     arc. Reading it live instead is wrong by however far the ship has coasted,
+     which on an escape is most of the way to the system edge. */
+  lastBurn() {
+    const e = burnLog[burnLog.length - 1];
+    if (!e) return null;
+    return {
+      dvMs: uMS(e.dv),
+      vKms: uKMS(e.v),
+      finite: Boolean(e.finite),
+      settled: !e.finite || e.dur !== undefined,
+      durTu: e.dur === undefined ? null : e.dur,
+      epsAfterKm: e.eps1 === undefined ? null : uEPS(e.eps1)
+    };
+  },
   /* The live Oberth reading. dε/dΔv for a prograde burn IS the current speed —
      the HUD claim that test-physics.js check [5] verifies numerically — so this
      is a read of the running simulation, not a second model of it. It also
