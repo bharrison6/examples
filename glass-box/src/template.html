@@ -66,11 +66,11 @@
       <span class="eyebrow">Demo 2 of 16 &middot; Part one &middot; Stage 1</span>
       <h2 id="stage-1-title">A model learns to predict what comes next</h2>
       <p class="stage-question">How can changing thousands of numbers turn random text into recognizable patterns?</p>
-      <p class="refresh"><b>Before you start.</b> Demo 1 left you with a <b>model</b> as a thing whose skill
-        has a source &mdash; a person&rsquo;s rules, or training. This one is a <b>transformer</b>, and it
-        is trained. It reads text as <b>tokens</b> (here, single characters), and everything it knows sits in
-        its <b>parameters</b>, the numbers training changes. Nothing on this page is pretrained: the model
-        starts as seeded random numbers, on your device.</p>
+      <p class="refresh"><b>Before you start.</b> Demo 1 handed forward one idea &mdash; a <b>model</b> is a
+        representation that can be trained &mdash; and ended on the <b>transformer</b>, the one network family
+        behind text, image and audio models alike. This page trains one. It reads text as <b>tokens</b>
+        (here, single characters), and everything it knows sits in its <b>parameters</b>, the numbers training
+        changes. Nothing on this page is pretrained: the model starts as seeded random numbers, on your device.</p>
     </div>
     <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1 learning guide">
@@ -384,8 +384,9 @@
   <div class="lesson-dialog-head"><h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2><form method="dialog"><button type="submit" aria-label="Close">&times;</button></form></div>
   <div class="lesson-dialog-body">
     <p class="lede">Follow one idea across three stages: a language model predicts tokens, worked steps can support computation, and an agent loop connects text to tools.</p>
+    <p class="note">Demo 2 of 16, Part one. Demo 1 handed forward that a model is a representation that can be trained, and ended on the transformer; this demo trains one. It hands forward that a model reads its context (Demo 5) and that a score is a measurement under conditions (Demo 3).</p>
     <ol>
-      <li><b>LLM.</b> Read the Era 0 sample, press <b>Train</b>, and compare eras. In the next-token workbench, change the prompt, era and temperature. Use <b>Tokenize text</b>, <b>Inspect parameters</b> and <b>Trace attention</b> for deeper inspection.</li>
+      <li><b>LLM.</b> Read the Era 0 sample, press <b>Train &middot; era 1</b>, and compare eras. In the next-token workbench, change the prompt, era and temperature. Use <b>Tokenize text</b>, <b>Inspect parameters</b> and <b>Trace attention</b> for deeper inspection.</li>
       <li><b>Reasoning.</b> Press <b>Run experiment · train both</b> and compare the live exam results. Then try more frozen-model attempts and <b>Fine-tune on accepted examples</b>.</li>
       <li><b>Agents.</b> Choose <b>You choose the actions</b> or <b>Watch the scripted policy</b>. Change <b>Visible context</b>, restart, and observe what the activity can no longer see.</li>
     </ol>
