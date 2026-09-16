@@ -28,9 +28,11 @@ const S = {
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
-  predictions: {},     // Predict-card answers by key: rules, one, net, other, types
+  predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
+  family: null,        // stage 1d: the architecture-family card that is pressed
+  half: 'methods',     // stage 1d: which of its two halves is showing
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -288,9 +290,16 @@ function applyMove(cell) {
     if (g.result === 'win') rec.w++; else if (g.result === 'loss') rec.l++; else rec.d++;
     renderScore();
     if (isRules() && S.depth === 2) {
-      revealPrediction('rules', 'yes', g.result === 'win'
-        ? 'You found one of the lines the exhaustive search finds: two rules can be beaten, and only a person adding rules would change that.'
-        : 'Not this game — but the exhaustive search finds losing lines for a two-rule ladder in both roles. Open Details for the game that shows it, then try the fork.');
+      /* The fact is the search's: a two-rule ladder HAS losing lines in
+         both roles. The learner's game either shows one or it does not;
+         a draw or a loss is not evidence that two rules are enough. */
+      revealPrediction('rules', 'yes', 'The exhaustive search finds losing lines for a two-rule ladder in both roles. ' +
+        (g.result === 'win'
+          ? 'You just played one of them: two rules can be beaten, and only a person adding rules would change that.'
+          : 'Not this game — that is your play, not proof the ladder is safe. Open Details for the game that shows it, then try the fork.'),
+        VERDICT_SEARCH);
+    } else if (S.mode === 'one' && S.era === 1) {
+      revealOne();
     }
   }
 }
@@ -926,7 +935,18 @@ function renderTrain() {
     $('#burst-seg').setAttribute('aria-label', 'Neural-network training updates');
     if (m && m.updates > 0) {
       const ratio = m.trainMse > 0 ? m.heldMse / m.trainMse : 1;
-      cue(`Held-out error ${m.heldMse.toFixed(3)} vs practised ${m.trainMse.toFixed(3)} after ${fmt(m.updates)} updates. Lower is closer to the frozen teacher; neither number is playing strength.`);
+      /* The generalisation evidence and the fit evidence arrive together.
+         Read alone, "held-out 0.5 vs practised 0.4" says the network is
+         WORSE on unseen boards — the lookup-table intuition in the demo's
+         own voice. What proves the shared weights carry is that held-out
+         error FELL from its untrained baseline, on positions no update
+         ever touched. Checkpoint 0 is recorded when the model is created
+         (recordNeuralCheckpoint in trainNeural), so it is present here. */
+      const b0 = S.neural.checkpoints.get(0);
+      const fell = b0 && b0.metrics.heldMse > m.heldMse;
+      cue(`On positions kept out of training, error went from ${b0 ? b0.metrics.heldMse.toFixed(3) : '?'} untrained to ${m.heldMse.toFixed(3)} after ${fmt(m.updates)} updates` +
+        (fell ? ' — it fell, and no update ever saw those boards. ' : ' — it did not fall this time. ') +
+        `Practised error is ${m.trainMse.toFixed(3)}. Lower is closer to the frozen teacher; neither number is playing strength.`);
       revealPrediction('net', ratio > 1.5 ? 'higher' : 'same',
         `Measured: held-out ${m.heldMse.toFixed(3)}, practised ${m.trainMse.toFixed(3)} (ratio ${ratio.toFixed(2)}; this demo calls it clearly higher above 1.5×). Train more and watch whether the gap moves.`);
     } else if (m) {
@@ -1055,16 +1075,7 @@ function renderBanner() {
       `<p><b>Prediction error:</b> MSE is the average squared difference between a predicted score and the frozen example’s score; zero means an exact match. On practiced examples it went from ${baseline.metrics.trainMse.toFixed(3)} before training to ${m.trainMse.toFixed(3)} now. On positions kept out of training it went from ${baseline.metrics.heldMse.toFixed(3)} to ${m.heldMse.toFixed(3)}. Related rotations and reflections stay together.</p>` +
       `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} won, ${baseline.play.draws} drawn, ${baseline.play.losses} lost; now: ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
       `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
-      `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
-    setTimeout(() => {
-      const b = $('#btn-ultimate');
-      if (b) b.addEventListener('click', () => {
-        $('#details').close();
-        S.mode = 'ult';
-        applyMode();
-        cue('Ultimate tic-tac-toe: the learner scores each small board but cannot see where it sits or where a move sends you.', true);
-      });
-    }, 0);
+      `<p>The optional <b>Ultimate tic-tac-toe</b> extension is the second button above the board: a table learner inherited from 1b, playing a game its inputs cannot fully see.</p>`;
     return;
   }
 
@@ -1219,11 +1230,7 @@ async function train() {
   cue(`Era ${era.n} after ${fmt(era.games)} games: ` + (era.verified.safe
     ? 'the exhaustive search finds no losing line in either role — verified unbeatable.'
     : `still beatable — a losing line exists. ${era.changed === null ? '' : fmt(era.changed) + ' positions are now played differently from the last era.'}`), !era.verified.safe);
-  if (era.n === 1) {
-    revealPrediction('one', era.verified.safe ? 'unbeatable' : 'beatable', era.verified.safe
-      ? 'Era 1 is already verified: no losing line in either role after one burst.'
-      : 'Era 1 still has a losing line. The scores moved, but one burst is not enough — keep training and watch for the proof line.');
-  }
+  if (era.n === 1) revealOne();
 }
 
 /* The neural tab has two visible phases. Preparation is ordinary seeded
@@ -1816,6 +1823,10 @@ function applyMode() {
   document.body.classList.toggle('step-ult', ult);
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
+  /* The board switch belongs to stage 1c: it shows for the network and
+     for the ultimate extension it opens, and for nothing else. */
+  $('#board-switch').hidden = !(isNet() || ult);
+  $$('#board-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.board === S.mode)));
   $('#era-select').hidden = rules || isNet();
   $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
@@ -1848,6 +1859,17 @@ $('#btn-train').addEventListener('click', () => {
   if (isNet() && S.training) { S.cancelTraining = true; return; }
   train();
 });
+/* 1c's board switch. Not gated on having trained: the ultimate learner is
+   S.liveU, a table seeded from 1b's table by maybeSeed() inside applyMode,
+   and nothing in its path reads S.neural. Switching mid-training stops the
+   burst first, as a stage change does. */
+$$('#board-switch .map-btn').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.board === S.mode) return;
+  if (S.training) S.cancelTraining = true;
+  S.mode = b.dataset.board;
+  $('#selftest-out').textContent = '';
+  applyMode();
+}));
 $('#btn-stop-training').addEventListener('click', () => { S.cancelTraining = true; });
 $('#btn-newgame').addEventListener('click', newGame);
 function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }
@@ -1900,7 +1922,6 @@ const PREDICT_LABELS = {
   rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
   one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
   net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
-  other: { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' },
   types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
 };
 function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
@@ -1913,13 +1934,62 @@ $$('.predict-btn').forEach(b => b.addEventListener('click', () => {
   echo(key, 'You predicted: <b>' + PREDICT_LABELS[key][b.dataset.answer] + '</b>. Now try it.');
 }));
 /* "You predicted X; the board says Y." Called at the moment the answer
-   exists; silent when no prediction was made. */
-function revealPrediction(key, answerKey, sentence) {
+   exists; silent when no prediction was made.
+
+   `words` names WHAT is agreeing or disagreeing. The default pair is right
+   when the learner watched the answer happen (a measured ratio, a card's
+   definition). It is wrong when the answer is a fact about the model that
+   the learner's own game can neither prove nor refute — "unbeatable" is a
+   verdict of the exhaustive search, and a learner who predicted it and then
+   lost has seen nothing that contradicts them. Those callers pass words
+   that say "the search", and a sentence that separates the two. */
+const VERDICT_DEFAULT = { ok: 'Confirmed.', no: 'Not what happened.' };
+const VERDICT_SEARCH = { ok: 'The search agrees.', no: 'The search says otherwise.' };
+function revealPrediction(key, answerKey, sentence, words) {
   const p = S.predictions[key];
   if (!p) return;
+  const w = words || VERDICT_DEFAULT;
   const ok = answerKey === null ? null : p === answerKey;
   echo(key, 'You predicted <b>' + PREDICT_LABELS[key][p] + '</b>. ' +
-    (ok === null ? '' : ok ? '<span class="ok">Confirmed.</span> ' : '<span class="bad">Not what happened.</span> ') + sentence);
+    (ok === null ? '' : ok ? '<span class="ok">' + w.ok + '</span> ' : '<span class="bad">' + w.no + '</span> ') + sentence);
+}
+
+/* Stage 1b's reveal. The prediction was about ERA 1 — "unbeatable" or
+   "still beatable" after one burst — and that is a property the exhaustive
+   search settles, not the learner's record. "Beatable" means a losing line
+   EXISTS; it does not mean a given player finds it, and losing to a
+   beatable table looks exactly like losing to an unbeatable one. So the
+   sentence always states the search's verdict first, and then, once the
+   learner has played Era 1, says how their own record relates to it — and
+   never lets the record overrule the verdict in either direction. Called
+   when Era 1 is frozen and again after every game against it. */
+function revealOne() {
+  const era = S.eras[1];
+  if (!era || !S.predictions.one) return;
+  const safe = era.verified.safe;
+  const r = era.rec, n = r.w + r.d + r.l;
+  const rec = `${r.w}–${r.d}–${r.l}`;
+  const verdict = safe
+    ? 'Era 1 has <b>no losing line</b> in either role after one burst — verified unbeatable.'
+    : 'Era 1 <b>still has a losing line</b> after one burst, so it is beatable in principle.';
+  let own;
+  if (n === 0) {
+    own = safe
+      ? 'Play it: you cannot win, and a draw is the best result on offer.'
+      : 'Whether you find that line is a separate question from whether it exists. Play it and look.';
+  } else if (safe) {
+    own = r.w > 0
+      ? `Your record against it is ${rec}. A win against a policy the search called safe should not be possible; ` +
+        'Settings → Run the full self-test is the tool for checking that.'
+      : `Your record against it is ${rec}: no wins, which is exactly what no losing line means. ` +
+        'Losing or drawing does not prove it, though — losing to a beatable table looks the same. The search is what settles it.';
+  } else {
+    own = r.w > 0
+      ? `Your record against it is ${rec}: you found a losing line yourself.`
+      : `Your record against it is ${rec}: you have not found the line yet. That says something about your play, ` +
+        'not about the table — a losing line exists whether or not this game found it.';
+  }
+  revealPrediction('one', safe ? 'unbeatable' : 'beatable', verdict + ' ' + own, VERDICT_SEARCH);
 }
 
 /* ------------------------------------------------------------------ *
@@ -1950,10 +2020,45 @@ function renderMethods() {
 $$('.method-card').forEach(c => c.addEventListener('click', () => {
   S.method = S.method === c.dataset.method ? null : c.dataset.method;
   renderMethods();
-  if (S.method === 'supervised') {
-    revealPrediction('other', '1c', 'Supervised learning lights up 1c: its targets were frozen table scores. 1b learned from rewards; 1a was never trained.');
-  }
 }));
+
+/* The other half of 1d: the architecture families, along the axis the
+   stage's own refresh line defines -- what a model STORES and how it
+   COMPUTES an answer. These restate the card text under the same Reasoned
+   kicker; no figure and no external claim is made. */
+const FAMILY_CUE = {
+  linear:   { stores: 'one learned coefficient per input feature, plus an offset', computes: 'a weighted sum of the features — squashed into a probability for the logistic kind' },
+  tree:     { stores: 'a tree of learned yes/no questions with an answer at each leaf', computes: 'the route one example takes down the tree, one question at a time' },
+  ensemble: { stores: 'many trees, or a sequence of them', computes: 'a combination of their answers — a vote or an average, or a running total of corrections' },
+  knn:      { stores: 'the training examples themselves', computes: 'a distance from the new example to each stored one, then an answer from the closest few' },
+  svm:      { stores: 'a boundary, pinned by the examples nearest to it and their weights', computes: 'which side of the boundary a new example falls, and how far from it' },
+  bayes:    { stores: 'probabilities — what was believed before, and how each kind of evidence shifts it', computes: 'an updated probability once the evidence arrives' }
+};
+function renderFamilies() {
+  $$('.family-card').forEach(c => {
+    const on = c.dataset.family === S.family;
+    c.setAttribute('aria-pressed', String(on));
+    $('.holds', c).textContent = on ? 'stores · computes — below' : '';
+  });
+  const out = $('#cue-4b');
+  if (!S.family) { out.textContent = ''; return; }
+  const card = $('.family-card[data-family="' + S.family + '"]'), f = FAMILY_CUE[S.family];
+  out.textContent = $('b', card).textContent + ' → stores ' + f.stores + '; computes ' + f.computes + '.';
+}
+$$('.family-card').forEach(c => c.addEventListener('click', () => {
+  S.family = S.family === c.dataset.family ? null : c.dataset.family;
+  renderFamilies();
+}));
+/* Which half of 1d is showing. Two buttons, one card visible at a time;
+   the stage's check card and the Details drawer are outside both halves. */
+function renderHalf() {
+  /* Scoped to #map-switch: the 1c board switch reuses the .map-btn look
+     and must not be driven by 1d's state (found in the browser pass). */
+  $$('#map-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
+  $('#methods-card').hidden = S.half !== 'methods';
+  $('#families-card').hidden = S.half !== 'families';
+}
+$$('#map-switch .map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
 
 /* ------------------------------------------------------------------ *
  * Model types — built from src/model-types.js, the dated Hugging Face
@@ -2090,14 +2195,14 @@ document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};
-  S.method = null;
+  S.method = null; S.family = null; S.half = 'methods';
   $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
   $$('.type-card').forEach(d => { d.open = false; });
   $('#learned-body').innerHTML = '';
   $('#learned-sub').textContent = '';
   const nv = $('#network-view');
   delete nv.dataset.layer; delete nv.dataset.neuron;
-  renderMethods();
+  renderMethods(); renderFamilies(); renderHalf();
   resetAll(true);
 });
 
@@ -2105,7 +2210,7 @@ document.addEventListener('lessonreset', () => {
 
 resetAll();
 renderScore();
-renderMethods();
+renderMethods(); renderFamilies(); renderHalf();
 /* The shell may already have selected a stage from a #stage-N hash before
    this script ran, and the old public deep links (#rules, #learning,
    #neural) are honoured through the flags the shell parsed. */

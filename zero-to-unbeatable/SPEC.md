@@ -96,7 +96,7 @@ beside Guide, contains Open Presenter Notes, Presentation mode, and Reset, then
 the playing preference, the rehearsal seed, the self-test and About. Reset is IN
 PLACE with no page reload: the shell restores the chrome it owns and dispatches
 `lessonreset`, and the demo's handler restores stage 1a on the architecture lens,
-All 8 rules, hidden move scores, Era 0 with every later era and the network
+First 2 rules, hidden move scores, Era 0 with every later era and the network
 discarded, the records, the rule tallies, the burst sizes, every prediction and
 method selection, and closes every type card. Presentation mode and the playing
 preference are deliberately left alone. Because the shell fires `stagechange`
