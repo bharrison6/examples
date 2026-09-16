@@ -645,6 +645,14 @@ body.presenter { --fs: 1.2; }
   position: relative;
   aspect-ratio: 4 / 3;
   min-height: 268px;
+  /* max-width is load-bearing, not belt-and-braces. With `aspect-ratio` set, a
+     `min-height` can drive the USED WIDTH: 268px of forced height times 4/3 is
+     a 357px box, which overflowed a 320px viewport by 67px (measured at
+     320x720, docScrollWidth 387). Clamping the width instead lets the box go
+     taller than 4:3 on a narrow phone, which is the right way round — the map
+     stays inside the screen and simply becomes squarer. */
+  max-width: 100%;
+  min-width: 0;
   background: #000a14;
   border: 1px solid var(--line-on-navy);
   border-radius: var(--radius-2);
@@ -3749,9 +3757,21 @@ function syncHud() {
   $('oberthfill').style.width = Math.max(4, Math.min(100, (el.v - vSeen.min) / span * 100)) + '%';
 }
 
-/* ---------- main loop ---------- */
+/* ---------- main loop ----------
+   frame() is the loop; stepFrame() is one frame's worth of work. The split is a
+   pure extraction and changes nothing about what runs or in what order — it
+   exists so that ONE frame can be driven without re-queuing another, which is
+   the only way a headless or backgrounded check can advance this simulation at
+   all: requestAnimationFrame does not tick in a hidden or behind-window browser
+   pane (measured 0 frames in 1.5 s, with document.visibilityState reporting
+   "hidden"), and every physics step, every HUD reading and the goal check all
+   live inside this function. window.fuelGolf.stepFrame exposes it. */
 let lastFrame = performance.now();
 function frame(now) {
+  stepFrame(now);
+  requestAnimationFrame(frame);
+}
+function stepFrame(now) {
   const dtReal = Math.min(0.05, (now - lastFrame) / 1000);
   lastFrame = now;
 
@@ -3813,7 +3833,6 @@ function frame(now) {
     syncOrbitChip();
     $('clockChip').textContent = 'T+ ' + fmtDur(S.t);
   }
-  requestAnimationFrame(frame);
 }
 
 /* ---------- rendering ---------- */
@@ -4078,7 +4097,28 @@ window.fuelGolf = {
   levelIndex: () => LEVELS.indexOf(lvl),
   resetActivity,
   remeasure: resize,
+  /* A TEST HOOK, not a game control. Runs exactly one frame's work and does
+     NOT re-queue the loop, so calling it on a live page cannot double-run the
+     simulation. Nothing in the game calls it. */
+  stepFrame,
   progress: getProgress,
+  /* The last burn AS THE GAME RECORDED IT, not as the world looks now. For an
+     impulsive burn `v` is the speed at the instant of the kick; for a finite
+     burn endBurn() replaces it with the delta-v-weighted mean speed over the
+     arc. Reading it live instead is wrong by however far the ship has coasted,
+     which on an escape is most of the way to the system edge. */
+  lastBurn() {
+    const e = burnLog[burnLog.length - 1];
+    if (!e) return null;
+    return {
+      dvMs: uMS(e.dv),
+      vKms: uKMS(e.v),
+      finite: Boolean(e.finite),
+      settled: !e.finite || e.dur !== undefined,
+      durTu: e.dur === undefined ? null : e.dur,
+      epsAfterKm: e.eps1 === undefined ? null : uEPS(e.eps1)
+    };
+  },
   /* The live Oberth reading. dε/dΔv for a prograde burn IS the current speed —
      the HUD claim that test-physics.js check [5] verifies numerically — so this
      is a read of the running simulation, not a second model of it. It also
@@ -4322,15 +4362,27 @@ requestAnimationFrame(frame);
     const stage = selectedTab();
     if (gated(stage)) return;
 
-    /* a burn was committed since the last tick */
+    /* A burn was spent since the last tick. THE SPEED COMES FROM THE GAME'S
+       BURN LOG, never from the live state: this poll runs up to 250 ms late and
+       an escaping ship has already slowed a long way by then. Reading it live
+       reported a 6.08 km/s burn as a 2.21 km/s one, which inverts the lesson.
+       A finite-thrust burn is still accumulating until endBurn() settles it, so
+       it gets a provisional line and the summary once it is done. */
     if (o.dvUsedMs > lastDv) {
       const spent = o.dvUsedMs - lastDv;
       lastDv = o.dvUsedMs;
-      cue(stage, 'Burn committed: <b>' + spent.toLocaleString('en-US') + ' m/s</b> spent at v = ' +
-        o.vKms.toFixed(2) + ' km/s. Specific orbital energy &epsilon; is now <b>' +
-        o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
-        (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
-                 : '<b>above zero: you are escaping.</b>'), true);
+      const b = G.lastBurn();
+      if (b && !b.settled) {
+        cue(stage, 'Engine lit &mdash; <b>' + spent.toLocaleString('en-US') + ' m/s</b> delivered so far. ' +
+          'Watch the speed while it burns: the &Delta;v arriving now is worth whatever v is <i>now</i>.', true);
+      } else {
+        const atV = b ? b.vKms : o.vKms;
+        cue(stage, 'Burn committed: <b>' + (b ? b.dvMs : spent).toLocaleString('en-US') + ' m/s</b> spent at ' +
+          (b && b.finite ? 'a &Delta;v-weighted mean of ' : 'v = ') + atV.toFixed(2) + ' km/s. ' +
+          'Specific orbital energy &epsilon; is now <b>' + o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
+          (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
+                   : '<b>above zero: you are escaping.</b>'), true);
+      }
       zone = 'burn';
       return;
     }

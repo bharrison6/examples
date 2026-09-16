@@ -85,6 +85,14 @@ body.presenter { --fs: 1.2; }
   position: relative;
   aspect-ratio: 4 / 3;
   min-height: 268px;
+  /* max-width is load-bearing, not belt-and-braces. With `aspect-ratio` set, a
+     `min-height` can drive the USED WIDTH: 268px of forced height times 4/3 is
+     a 357px box, which overflowed a 320px viewport by 67px (measured at
+     320x720, docScrollWidth 387). Clamping the width instead lets the box go
+     taller than 4:3 on a narrow phone, which is the right way round — the map
+     stays inside the screen and simply becomes squarer. */
+  max-width: 100%;
+  min-width: 0;
   background: #000a14;
   border: 1px solid var(--line-on-navy);
   border-radius: var(--radius-2);

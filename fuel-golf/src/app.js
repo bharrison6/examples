@@ -209,15 +209,27 @@
     const stage = selectedTab();
     if (gated(stage)) return;
 
-    /* a burn was committed since the last tick */
+    /* A burn was spent since the last tick. THE SPEED COMES FROM THE GAME'S
+       BURN LOG, never from the live state: this poll runs up to 250 ms late and
+       an escaping ship has already slowed a long way by then. Reading it live
+       reported a 6.08 km/s burn as a 2.21 km/s one, which inverts the lesson.
+       A finite-thrust burn is still accumulating until endBurn() settles it, so
+       it gets a provisional line and the summary once it is done. */
     if (o.dvUsedMs > lastDv) {
       const spent = o.dvUsedMs - lastDv;
       lastDv = o.dvUsedMs;
-      cue(stage, 'Burn committed: <b>' + spent.toLocaleString('en-US') + ' m/s</b> spent at v = ' +
-        o.vKms.toFixed(2) + ' km/s. Specific orbital energy &epsilon; is now <b>' +
-        o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
-        (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
-                 : '<b>above zero: you are escaping.</b>'), true);
+      const b = G.lastBurn();
+      if (b && !b.settled) {
+        cue(stage, 'Engine lit &mdash; <b>' + spent.toLocaleString('en-US') + ' m/s</b> delivered so far. ' +
+          'Watch the speed while it burns: the &Delta;v arriving now is worth whatever v is <i>now</i>.', true);
+      } else {
+        const atV = b ? b.vKms : o.vKms;
+        cue(stage, 'Burn committed: <b>' + (b ? b.dvMs : spent).toLocaleString('en-US') + ' m/s</b> spent at ' +
+          (b && b.finite ? 'a &Delta;v-weighted mean of ' : 'v = ') + atV.toFixed(2) + ' km/s. ' +
+          'Specific orbital energy &epsilon; is now <b>' + o.epsKm.toFixed(2) + ' km&sup2;/s&sup2;</b> &mdash; ' +
+          (o.bound ? 'still negative, so the orbit is <b>bound</b> and will fall back.'
+                   : '<b>above zero: you are escaping.</b>'), true);
+      }
       zone = 'burn';
       return;
     }
