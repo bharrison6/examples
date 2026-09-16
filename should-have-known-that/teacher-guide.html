@@ -1,192 +1,287 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Engineering Trivia — Teacher Guide</title>
-<!--
-  Canonical, printable teacher guide for Engineering Trivia (folder: should-have-known-that).
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Engineering Trivia — Should Have Known That — Teacher Guide</title>
+  <!--
+    Canonical, printable teacher and presenter guide for this demo. build.js lifts
+    the tagged style block and the .guide-scope div out of here verbatim and
+    injects them into index.html, so Settings -> Open Presenter Notes shows exactly
+    this document with no sibling file to fetch. Edit here; never edit the copy
+    inside index.html. node build.js --check fails if the two have drifted.
 
-  This file is the SINGLE SOURCE for the presenter notes. tools/guide-sync.js lifts the
-  <style id="guide-css"> block and the .guide-scope div out of here verbatim and writes
-  them into index.html between the __GUIDE_CSS__ / __GUIDE__ markers, so Settings ->
-  Open Presenter Notes shows exactly this text with no sibling file to fetch. Edit here;
-  never edit the copy inside index.html. tools/pdf.mjs renders the PDF from this same
-  file. `node tools/guide-sync.js --check` fails when the two have drifted.
-
-  Everything in the <style id="guide-css"> block MUST be scoped to .guide-scope, because
-  it is injected into an app that has its own stylesheet — no bare element or body rules,
-  and no at-rules (guide-sync refuses both). Its colours come from custom properties whose
-  defaults suit white paper; the app overrides them on `#ov-notes .guide-scope` so the same
-  stylesheet reads on navy. Page-level styles for this printable file — the @page box, the
-  two-column print layout and the point sizes — live in the SECOND <style> block, which is
-  not extracted.
--->
+    THE MARKERS MUST START THEIR LINES AT COLUMN ZERO — see
+    tools/lesson-shell/guide-contract.js. Every rule in the tagged block must be
+    scoped to .guide-scope. Page-level chrome for the standalone printable file
+    lives in the second, untagged style block, which is not extracted.
+  -->
 <style id="guide-css">
-.guide-scope {
-  --guide-accent: #002144;
-  --guide-rule: #ECAC00;
-  --guide-strong: #0e1622;
-  --guide-muted: #4a5a72;
-  --guide-line: #b9c4d6;
-  --guide-line-soft: #d5dde8;
-  --guide-box-bg: #f4f7fc;
-  --guide-hook: #00A4E3;
-  --guide-hook-ink: #00679b;
-  --guide-warn: #FF4500;
-  --guide-warn-ink: #c33600;
-  --guide-th-bg: #002144;
-  --guide-th-ink: #ffffff;
-  --guide-code-bg: #eef2f8;
-  color: inherit;
-}
-.guide-scope .g-head { border-bottom: 3px solid var(--guide-rule); padding-bottom: 6px; margin-bottom: 10px; }
-.guide-scope .brandline { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .78em;
-  letter-spacing: .16em; font-weight: 700; color: var(--guide-accent); text-transform: uppercase; }
-.guide-scope h1 { font-size: 1.5em; line-height: 1.15; color: var(--guide-accent); }
-.guide-scope .g-sub { font-size: .92em; color: var(--guide-muted); font-style: italic; }
-.guide-scope h2 { font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: 1.02em;
-  text-transform: uppercase; letter-spacing: .08em; color: var(--guide-accent);
-  margin: 1.15em 0 .4em; break-after: avoid; border-left: 3px solid var(--guide-rule); padding-left: 6px; }
-.guide-scope h2:first-child { margin-top: 0; }
-.guide-scope p { margin: .45em 0; }
-.guide-scope ul, .guide-scope ol { margin: .3em 0 .7em 1.2em; }
-.guide-scope li { margin: .24em 0; }
-.guide-scope b { color: var(--guide-strong); }
-.guide-scope .time { display: inline-block; min-width: 5.4em; font-weight: 700;
-  font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .95em; color: var(--guide-accent); }
-.guide-scope .box { border: 1px solid var(--guide-line); border-left: 3px solid var(--guide-accent);
-  background: var(--guide-box-bg); padding: .5em .75em; margin: .6em 0; border-radius: 3px; break-inside: avoid; }
-.guide-scope .box.hook { border-left-color: var(--guide-hook); }
-.guide-scope .box.hook b.tag { color: var(--guide-hook-ink); }
-.guide-scope .box.warn { border-left-color: var(--guide-warn); }
-.guide-scope .box.warn b.tag { color: var(--guide-warn-ink); }
-.guide-scope table.bands { width: 100%; border-collapse: collapse; margin: .5em 0 .6em;
-  font-size: .94em; break-inside: avoid; }
-.guide-scope table.bands th { background: var(--guide-th-bg); color: var(--guide-th-ink); text-align: left;
-  padding: .25em .4em; font-family: "Segoe UI", Helvetica, Arial, sans-serif; font-size: .88em;
-  letter-spacing: .05em; text-transform: uppercase; }
-.guide-scope table.bands td { border-bottom: 1px solid var(--guide-line-soft); padding: .25em .4em; vertical-align: top; }
-.guide-scope table.bands td.b { font-weight: 700; font-family: "Segoe UI", Helvetica, Arial, sans-serif; white-space: nowrap; }
-.guide-scope .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px;
-  margin-right: 4px; vertical-align: baseline; }
-.guide-scope code { font-family: Consolas, "Courier New", monospace; font-size: .92em;
-  background: var(--guide-code-bg); border: 1px solid var(--guide-line-soft); border-radius: 2px; padding: 0 3px; }
-.guide-scope .g-foot { margin-top: .9em; border-top: 1px solid var(--guide-line);
-  padding-top: .4em; font-size: .92em; color: var(--guide-muted); }
+.guide-scope { color: #172b42; }
+.guide-scope .g-head { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
+.guide-scope h1 { margin: 0; color: #002144; font-size: 2.3em; line-height: 1.05; }
+.guide-scope .g-sub { margin: 5px 0 0; color: #526a7e; }
+.guide-scope .g-meta { margin: 6px 0 0; color: #002144; font-weight: 700; font-size: .95em; }
+.guide-scope h2 { margin: 15px 0 6px; color: #002144; font-size: 1.4em; break-after: avoid; }
+.guide-scope h3 { margin: 11px 0 4px; color: #006a98; font-size: 1.1em; break-after: avoid; }
+.guide-scope p { margin: 5px 0; }
+.guide-scope ul, .guide-scope ol { margin: 5px 0 8px 20px; padding: 0; }
+.guide-scope li { margin: 4px 0; }
+.guide-scope .lead { font-size: 1.1em; }
+.guide-scope .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
+.guide-scope .warning { background: #fff6d9; border-left-color: #ecac00; }
+.guide-scope .say { margin: 8px 0; padding: 8px 11px; background: #f7f0e3; border-left: 5px solid #002144; font-style: italic; break-inside: avoid; }
+.guide-scope .mis { margin: 8px 0; padding: 9px 11px; background: #fdf1ec; border-left: 5px solid #c63f1d; break-inside: avoid; }
+.guide-scope .mis b { color: #9a2f13; }
+.guide-scope .goal { margin: 5px 0 5px 20px; padding: 0; }
+.guide-scope table.bands { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
+.guide-scope th, .guide-scope td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
+.guide-scope th { color: white; background: #002144; font-size: .9em; }
+.guide-scope .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: baseline; }
+.guide-scope .small { font-size: .9em; color: #526a7e; }
+.guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+.guide-scope a { color: #006a98; }
+.guide-scope .page-break { break-before: page; page-break-before: always; }
+.guide-scope .g-foot { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: .85em; }
 </style>
-<style>
-/* Printable page only — not extracted into the app. Page chrome, the two-column
-   print layout, and the point sizes that keep this on two letter pages. */
-@page { size: letter; margin: 0.45in; }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: Georgia, "Times New Roman", serif;
-  color: #16202e; font-size: 8.5pt; line-height: 1.25;
-  max-width: 7.6in; margin: 0 auto; padding: 12px;
-}
-.guide-scope .cols { column-count: 2; column-gap: 0.28in; }
-.guide-scope .g-head { display: flex; justify-content: space-between; align-items: baseline; }
-.guide-scope .brandline { font-size: 7.4pt; letter-spacing: 1.6px; }
-.guide-scope h1 { font-size: 17pt; }
-.guide-scope .g-sub { font-size: 9pt; }
-.guide-scope h2 { font-size: 9.6pt; letter-spacing: 0.8px; margin: 9px 0 4px; padding-left: 5px; }
-.guide-scope p { margin: 4px 0; }
-.guide-scope ul, .guide-scope ol { margin: 3px 0 5px 15px; }
-.guide-scope li { margin: 2.5px 0; }
-.guide-scope .time { min-width: 52px; font-size: 8.6pt; }
-.guide-scope .box { padding: 6px 9px; margin: 6px 0; }
-.guide-scope table.bands { font-size: 8pt; margin: 5px 0 6px; }
-.guide-scope table.bands th { font-size: 7.4pt; padding: 3px 5px; letter-spacing: .5px; }
-.guide-scope table.bands td { padding: 3px 5px; }
-.guide-scope .g-foot { margin-top: 8px; padding-top: 4px; font-size: 8pt; }
-@media screen { body { background: #fff; box-shadow: 0 0 18px rgba(0,0,0,0.15); margin: 20px auto; } }
-@media screen and (max-width: 600px) {
-  body { width: 100%; max-width: none; margin: 0; padding: 16px 12px 28px; font-size: 10.5pt; overflow-wrap: anywhere; box-shadow: none; }
-  .guide-scope .g-head { display: block; }
-  .guide-scope .g-sub { display: block; margin-top: 4px; }
-  .guide-scope .cols { column-count: 1; }
-  .guide-scope h2 { font-size: 10.5pt; margin-top: 14px; }
-  .guide-scope table.bands { display: block; max-width: 100%; overflow-x: auto; }
-}
-</style>
+  <style>
+    /* Standalone printable page only — not extracted into the app. */
+    @page { size: letter; margin: .5in; }
+    * { box-sizing: border-box; }
+    body { max-width: 7.5in; margin: 0 auto; color: #172b42; font: 9.5pt/1.36 Arial, sans-serif; }
+    @media screen {
+      body { margin: 24px auto; padding: .5in; background: white; box-shadow: 0 0 24px #0003; }
+    }
+    @media (max-width: 680px) {
+      body { margin: 0; padding: 18px; box-shadow: none; font-size: 11pt; }
+      .guide-scope .page-break { break-before: auto; page-break-before: auto; }
+    }
+  </style>
 </head>
 <body>
 <div class="guide-scope">
   <div class="g-head">
-    <div>
-      <div class="brandline">Murray State University &middot; Bryant Harrison</div>
-      <h1>&#127919; Engineering Trivia &mdash; Teacher Guide</h1>
-    </div>
-    <div class="g-sub">Should Have Known That &middot; number sense, taught by a slider</div>
+    <p class="g-sub">Teacher and presenter guide &middot; Slider-based estimation trivia for engineering number sense</p>
+    <h1>Engineering Trivia &mdash; Should Have Known That</h1>
+    <p class="g-meta">Demo 11 of 16 &middot; Part four, Example projects &middot; 15&ndash;20 minutes</p>
+    <p class="small"><strong>You need:</strong> <code>index.html</code> open in any modern browser, phone
+      or projector. No network, no install, no accounts. Nothing is fetched at runtime, so it works with
+      the wi-fi off.</p>
   </div>
 
-<div class="cols">
-  <h2>What this teaches</h2>
-  <p>Forty verified numbers an engineer is expected to carry without looking up &mdash; <b>8 each</b> across Statics &amp; Mechanics, Materials, Electrical, Fluids &amp; Thermo, and Everyday Engineering. Students never type an answer; they <b>drag a slider</b> and commit. That single design choice is the pedagogy: a slider forces a magnitude out of someone who would otherwise say "I don't know," and a committed wrong answer is what makes the correction stick. Every reveal ends with a one-line <b>"you should have known that because&hellip;"</b> anchor, so the number leaves with a reason attached rather than as trivia. Runs offline in any browser &mdash; open <b>index.html</b>, phone or projector, nothing to install.</p>
+  <section aria-labelledby="g-goals">
+    <h2 id="g-goals">Learning goals</h2>
+    <p class="small">One per stage, in the learner's own words &mdash; these are the three Takeaway cards
+      on screen, verbatim.</p>
+    <ol class="goal">
+      <li>A confident guess you commit to is what makes a correction stick &mdash; a shrug does not.</li>
+      <li>On a log scale, the order of magnitude is most of the answer &mdash; and item 23's rule-of-thumb
+        number is a single point standing in for a whole risk curve.</li>
+      <li>A ranged or code-defined number is still worth a confident guess &mdash; precision and truth are
+        not the same thing.</li>
+    </ol>
+  </section>
 
-  <h2>How it is scored</h2>
-  <p>Thirty-five questions use a <b>linear</b> slider scored on <b>percent error</b>. Five use a <b>logarithmic</b> slider, marked <code>LOG SCALE</code> on screen, scored on <b>how many times off</b> you are: copper resistivity, the speed of light, the current that stops a heart, the voltage you can feel as a static shock, and the energy in an AA battery. Those five span orders of magnitude, so percent error would be meaningless &mdash; getting the right power of ten is the skill being tested.</p>
+  <section aria-labelledby="g-path">
+    <h2 id="g-path">Where this sits on the path</h2>
+    <p>An AI-built classroom tool from Part four: its goal is number-sense calibration, its engine is a
+      live-scored slider running entirely on the device, and its assumptions &mdash; which of its 40
+      values are single facts versus ranges, minimums, or code conventions &mdash; are one tap away in
+      each stage's Details drawer.</p>
+  </section>
 
-  <table class="bands">
-    <tr><th>Band</th><th>Linear</th><th>Log</th><th>Pts</th></tr>
-    <tr><td class="b"><span class="sw" style="background:#ECAC00"></span>Bullseye</td><td>within 5%</td><td>1.26&times;</td><td>100</td></tr>
-    <tr><td class="b"><span class="sw" style="background:#F6D77A"></span>Close</td><td>within 15%</td><td>2.1&times;</td><td>75</td></tr>
-    <tr><td class="b"><span class="sw" style="background:#00A4E3"></span>Warm</td><td>within 35%</td><td>5&times;</td><td>40</td></tr>
-    <tr><td class="b"><span class="sw" style="background:#8CC9E6"></span>Cold</td><td>within 60%</td><td>16&times;</td><td>10</td></tr>
-    <tr><td class="b"><span class="sw" style="background:#FF4500"></span>Way Off</td><td>past that</td><td>past that</td><td>0</td></tr>
-  </table>
-  <p>Gold bands mean the student had the number, blue means they didn't, red means they weren't in the neighborhood. Thresholds live in the <code>SCORING</code> object at the bottom of <code>index.html</code> if you want a harsher or gentler curve.</p>
+  <section aria-labelledby="g-question">
+    <h2 id="g-question">One question for the session</h2>
+    <p class="say">"If you had to bet, not guess &mdash; how close is your gut, really, to the numbers you
+      already use?"</p>
+  </section>
 
-  <h2>20-minute session plan</h2>
-  <ul>
-    <li><span class="time">0&ndash;2 min</span>Project the game (&#9881; &rarr; <b>Presentation mode</b> for projector-sized type). Pick one category and <b>5 questions</b>. Play the first one yourself, out loud, and be wrong on purpose &mdash; it sets the tone that guessing is the assignment.</li>
-    <li><span class="time">2&ndash;5 min</span><b>Poll before every lock-in.</b> Hands up for higher, hands up for lower, then press LOCK IT IN. Public commitment before the reveal is the whole mechanism; a guess nobody said out loud costs nothing to be wrong about.</li>
-    <li><span class="time">5&ndash;14 min</span>Switch to <b>teams</b> (2&ndash;4, pass-and-play on one device, or one device per team) and run <b>10 questions</b> each. Read the "because&hellip;" line aloud after every reveal &mdash; do not narrate over the animation, it only takes about two seconds.</li>
-    <li><span class="time">14&ndash;18 min</span>Debrief from the end screen's <b>"Should have known that"</b> card, which names the game's biggest miss. Ask that team to say what number they <i>thought</i> it was and why. The wrong mental model is more useful to the room than the right answer.</li>
-    <li><span class="time">18&ndash;20 min</span>Replay one category &mdash; <b>PLAY AGAIN</b> from the end screen, or <b>&#9881; &rarr; Reset</b> for a clean start screen. Scores jump, and that jump is the point: one exposure with a reason attached is most of what it takes to keep a number.</li>
-  </ul>
+  <section aria-labelledby="g-s1">
+    <h2 id="g-s1">Stage 1 &middot; Linear estimates</h2>
+    <p><b>Question.</b> Which of the numbers an engineer is supposed to carry around can you actually
+      place by feel?</p>
+    <p><b>Predict.</b> Drag the slider to where you think each of 35 numbers sits, before the truth is
+      revealed.</p>
+    <p><b>Activity (timed beats).</b> <span class="time">0&ndash;2 min</span>Pick a length (5/10/15),
+      categories, and solo or teams; play the first one yourself, wrong on purpose, to set the tone.
+      <span class="time">2&ndash;10 min</span>Poll before every lock-in if presenting to a room: hands up
+      for higher, hands up for lower, then press <b>LOCK IT IN</b>. Read the "because&hellip;" line aloud
+      after each reveal.</p>
+    <p><b>Expected observation.</b> The band badge (Bullseye/Close/Warm/Cold/Way&nbsp;Off) and the
+      "you vs. truth" markers on the track; the observation cue names the band and the miss size.</p>
+    <p><b>Check-yourself answer key.</b> "It's a specified minimum &mdash; real steel usually tests
+      higher" is correct; "it's the average strength" is the flawed model item 10 exists to break.</p>
+    <p><b>Teaching limit.</b> Percent-error scoring only makes sense while the true value and the guess
+      are on the same, roughly-linear scale &mdash; which is exactly what breaks in stage 2.</p>
+  </section>
 
-  <h2>Solo vs team mode</h2>
-  <p><b>Solo</b> is the homework and self-quiz mode: one player, a final score out of 100 per question, and the same two end cards. <b>Teams</b> (2&ndash;4) is the classroom mode. Name the teams on the start screen &mdash; it costs twenty seconds and buys you the hour. The game then hands the device around: a turn card names who is up, a strip across the top carries the running score, and every team answers the same number of questions.</p>
-  <p>The pool is split evenly, so the question count per team is capped at pool &divide; teams. With all five categories on and four teams, that is 40 &divide; 4 = <b>10 questions each</b>. The note under the start button tells you the real number before you commit &mdash; if you switch categories off, watch it shrink.</p>
+  <section aria-labelledby="g-s2">
+    <h2 id="g-s2">Stage 2 &middot; Log estimates</h2>
+    <p><b>Question.</b> When a guess can be off by a factor of ten, does the exact digit even matter?</p>
+    <p><b>Predict.</b> Commit to a power of ten first, on all five log-scale items (resistivity, the
+      speed of light, the cardiac-fibrillation current, the static-shock voltage, and AA battery energy).</p>
+    <p><b>Activity.</b> <span class="time">10&ndash;14 min</span>Play all five; ask the room to say a
+      power of ten out loud before each lock-in rather than a specific number.</p>
+    <p><b>Expected observation.</b> A big absolute miss can still land Bullseye if the order of magnitude
+      is right &mdash; the opposite of stage 1's intuition.</p>
+    <p><b>Check-yourself answer key.</b> "No &mdash; 100 mA is one point on a risk curve, not a safety
+      line" is correct; treating 40 mA as automatically safe because it is under 100 mA is the
+      refutation item's flawed model.</p>
+    <p><b>Teaching limit.</b> The game cannot show WHY the curve looks the way it does (current &times;
+      duration &times; path) &mdash; only that a single number understates it. The Details drawer names
+      the shape; it does not re-derive IEC 60479-1's curve.</p>
+  </section>
 
-  <div class="box warn"><b class="tag">One device or many?</b> Pass-and-play on a single phone keeps the room together and is the intended mode. If each team has its own device, run the same category and length on all of them and compare end screens &mdash; but the question order is shuffled per device, so the scores are comparable only in aggregate, not question by question.</div>
+  <section aria-labelledby="g-s3">
+    <h2 id="g-s3">Stage 3 &middot; Debrief</h2>
+    <p><b>Question.</b> Were your log guesses or your linear guesses closer?</p>
+    <p><b>Predict.</b> Guess which deck scored higher before reading the comparison.</p>
+    <p><b>Activity.</b> <span class="time">14&ndash;18 min</span>Read the linear-vs-log average aloud;
+      debrief from the "should have known that" card &mdash; ask that team or student what they thought
+      the number was and why. The wrong mental model is more useful than the right answer.</p>
+    <p><b>Expected observation.</b> An average-points comparison computed live from this session's own
+      answers &mdash; nothing here is precomputed.</p>
+    <p><b>Teaching limit.</b> Five log questions is a small sample; one lucky or unlucky guess swings that
+      average far more than the 35-question linear average moves. Say this out loud before reading the
+      comparison as if it were a strong result.</p>
+    <p class="small"><span class="time">18&ndash;20 min</span><b>Play again</b> from the debrief, or
+      <b>&#9881; &rarr; Reset</b> for a clean start between class periods.</p>
+  </section>
 
-  <h2>Discussion prompts</h2>
-  <ol>
-    <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Both are in the bank. Ask the room to derive one from the other (62.4 &divide; 144 in&sup2;/ft&sup2;). One number they already had was two numbers they thought they didn't.</li>
-    <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it takes to feel a static shock? A doorknob zap is 5&ndash;25 kV and harmless. It is the current, not the voltage, that kills. Say plainly that 100 mA is a rule of thumb and not a safe/unsafe line: IEC 60479-1 puts fibrillation risk on a curve over current, duration and path, and well under 100 mA is already dangerous.</li>
-    <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs 70 GPa; density 7,850 vs 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical &mdash; the real choice is cost, buckling and joining.</li>
-    <li><b>What if steel and concrete expanded at different rates?</b> They both run near 12 &micro;m/m&middot;&deg;C. Every summer would crack the building. Reinforced concrete works on a coincidence.</li>
-    <li><b>Did the steel melt?</b> Carbon steel melts near 1,500 &deg;C, but it softens enough to fail far below that. Good for separating "melted" from "failed" in students' vocabulary.</li>
-    <li><b>A36 is named after its own answer</b> &mdash; the 36 is the yield strength in ksi (&asymp;250 MPa). How many other "memorized" numbers are printed on the spec sheet name?</li>
-    <li><b>One gallon of gasoline is 33.7 kWh</b> &mdash; roughly a full day of an average US home's electricity. Best single number in the bank for an energy conversation.</li>
-    <li><b>Why did the log questions go so badly?</b> Because they are not recall questions. Tell the class this in advance; it lowers the cost of guessing and makes the failure informative instead of embarrassing.</li>
-  </ol>
+  <section aria-labelledby="g-mis">
+    <h2 id="g-mis">Misconceptions this bank can leave, refuted</h2>
+    <div class="mis"><b>Misconception: "100 mA is the safe/unsafe line for shock."</b> It is a
+      rule-of-thumb anchor on a current&times;duration&times;path curve (IEC 60479-1); sustained exposure
+      carries meaningful fibrillation risk from well below 100 mA. Item 23's qualifier and stage 2's
+      refutation check both name this directly &mdash; it is the single highest-stakes item in the bank.</div>
+    <div class="mis"><b>Misconception: "A36's 250 MPa is what the steel actually measures."</b> It is
+      ASTM A36/A36M's specified MINIMUM; real mill-certified steel commonly tests higher. Stage 1's check
+      item exists to break exactly this substitution of a floor for a fact.</div>
+    <div class="mis"><b>Misconception: "7&frac34; in risers are the code, full stop."</b> That figure is
+      the IRC's residential cap; the IBC's general means-of-egress cap is 7 in, and only Exception 3 for
+      dwelling units raises it to match. Carrying the residential number into a commercial context applies
+      the wrong code to the wrong building type.</div>
+    <div class="mis"><b>Misconception: "13 A is safe for any 16-gauge extension cord."</b> NEC Table
+      400.5(A)(1) sets 13 A by conductor count and ambient temperature, not length; a widely used
+      practical derating guide drops well below 13 A for a long cord run. The bank's own factoid already
+      warns a 1,500 W heater is close to the derated limit &mdash; a long cord makes it worse, not the
+      same.</div>
+  </section>
 
-  <div class="box hook"><b class="tag">Reading a Way Off:</b> a Way Off on a <b>linear</b> question is a fact the student does not have. A Way Off on a <b>log</b> question is a bigger problem &mdash; they do not know what <i>size</i> the answer is. Say the difference out loud; it is the single most transferable idea in the game.</div>
+  <section aria-labelledby="g-discuss">
+    <h2 id="g-discuss">Discussion prompts</h2>
+    <ol>
+      <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Ask the room to derive one from the
+        other (62.4 &divide; 144 in&sup2;/ft&sup2;).</li>
+      <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it
+        takes to feel a static shock? It is the current, not the voltage, that kills; say plainly that
+        100 mA is a rule of thumb, not a safe/unsafe line.</li>
+      <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs. 70 GPa; density
+        7,850 vs. 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical
+        &mdash; the real choice is cost, buckling, and joining.</li>
+      <li><b>What if steel and concrete expanded at different rates?</b> Every summer would crack the
+        building &mdash; reinforced concrete works on an approximate coincidence, not an exact one.</li>
+      <li><b>A36 is named after its own answer</b> &mdash; the 36 is the specified minimum yield strength
+        in ksi. How many other "memorized" numbers are printed on the spec sheet's name, and how many of
+        those are minimums rather than typicals?</li>
+      <li><b>A single number can be right AND still teach the wrong lesson.</b> Every one of the 40
+        values in this bank checks out against a real source &mdash; but 17 of them ship with a qualifier
+        because a bare number would have implied more precision than the world actually has. Ask the room
+        to name one more everyday "fact" that is really a range, a floor, or a design convention.</li>
+      <li><b>One gallon of gasoline is 33.7 kWh</b> &mdash; roughly a full day of an average US home's
+        electricity, and (per this build's re-sourcing) a genuinely accurate figure for real gasoline, not
+        a lowball regulatory number.</li>
+      <li><b>Why did the log questions go so badly (or so well)?</b> Because they are not recall
+        questions &mdash; getting the size of the number right is the actual skill.</li>
+    </ol>
+    <div class="box hook"><b>Reading a Way Off:</b> a Way Off on a <b>linear</b> question is a fact the
+      student does not have. A Way Off on a <b>log</b> question means they do not know what <i>size</i>
+      the answer is &mdash; say the difference out loud; it is the most transferable idea in the game.</div>
+  </section>
 
-  <h2>Editing the question bank</h2>
-  <p>Every question is one object in a commented array at the top of <code>index.html</code> &mdash; search for <b>QUESTION BANK</b>. The fields are <code>id</code>, <code>category</code>, <code>prompt</code>, <code>units</code>, <code>value</code> (the true answer), <code>min</code>/<code>max</code> (slider endpoints), <code>scale</code> (<code>"linear"</code> or <code>"log"</code>) and <code>factoid</code> (the "because&hellip;" line). Edit in place with any text editor; the game itself has no build step.</p>
-  <ul>
-    <li>New categories appear on the start screen and get a color <b>automatically</b> &mdash; just type a new <code>category</code> string.</li>
-    <li>Keep the true value <b>off-center</b> in [min, max], and keep the range wide enough that the endpoints don't give the answer away.</li>
-    <li>Use <code>"log"</code> whenever plausible student guesses span orders of magnitude. Both <code>min</code> and <code>max</code> must be greater than zero on a log slider.</li>
-    <li>Always write the <code>factoid</code>. A number without a reason is trivia, and trivia does not survive the week.</li>
-  </ul>
-  <p>One region of <code>index.html</code> is generated: the presenter notes, between the <code>__GUIDE__</code> markers. They are this guide, injected by <code>tools/guide-sync.js</code>, so the on-screen notes and the printed page cannot disagree. Edit <code>teacher-guide.html</code>, then run <code>node tools/guide-sync.js</code> and <code>node tools/pdf.mjs</code>.</p>
+  <section aria-labelledby="g-scoring">
+    <h2 id="g-scoring">How it is scored</h2>
+    <p>Thirty-five linear questions score on <b>percent error</b>; five log questions (stage 2) score on
+      <b>decades off</b> &mdash; <code>|log10(guess/true)|</code>.</p>
+    <table class="bands">
+      <tr><th>Band</th><th>Linear</th><th>Log</th><th>Pts</th></tr>
+      <tr><td><span class="sw" style="background:#ECAC00"></span>Bullseye</td><td>within 5%</td><td>1.26&times;</td><td>100</td></tr>
+      <tr><td><span class="sw" style="background:#F6D77A"></span>Close</td><td>within 15%</td><td>2.1&times;</td><td>75</td></tr>
+      <tr><td><span class="sw" style="background:#00A4E3"></span>Warm</td><td>within 35%</td><td>5&times;</td><td>40</td></tr>
+      <tr><td><span class="sw" style="background:#8CC9E6"></span>Cold</td><td>within 60%</td><td>16&times;</td><td>10</td></tr>
+      <tr><td><span class="sw" style="background:#FF4500"></span>Way Off</td><td>past that</td><td>past that</td><td>0</td></tr>
+    </table>
+    <p class="small">Because both scales share this one point table, stage 3's linear-vs-log comparison
+      uses average points per question rather than the raw percent/decades numbers, which are not
+      directly comparable.</p>
+  </section>
 
-  <h2>Classroom logistics</h2>
-  <ul>
-    <li><b>Nothing to install and nothing saved.</b> One file, no network, no accounts, no stored state &mdash; and <b>&#9881; &rarr; Reset</b> puts the game back to a fresh load between class periods without reloading the page.</li>
-    <li><b>&#9881; Settings</b> holds <b>Open Presenter Notes</b> (this guide, on screen), <b>Presentation mode</b> and <b>Reset</b>. <b>?</b> is the <b>Guide</b> button: the same overlay opens on every load, so students who arrive late can read the rules themselves, and <b>?</b> reopens it any time.</li>
-    <li><b>Keys:</b> <b>Enter</b> or <b>Space</b> locks in a guess and advances the reveal. <b>Esc</b> closes any popup. Everything else is touch.</li>
-    <li>The reveal runs about <b>two seconds</b>: the truth marker slides out from under the guess, the band lands, then the "because&hellip;" line fades in and NEXT appears. Budget roughly 30&ndash;45 seconds per question with discussion.</li>
-  </ul>
-</div>
+  <section aria-labelledby="g-edit">
+    <h2 id="g-edit">Editing the question bank</h2>
+    <p>The bank now lives in <code>src/data.js</code> (moved out of <code>index.html</code> for this
+      retrofit) &mdash; each entry carries <code>id</code>, <code>category</code>, <code>prompt</code>,
+      <code>units</code>, <code>value</code>, <code>min</code>/<code>max</code>, <code>scale</code>
+      (<code>"linear"</code>/<code>"log"</code>), <code>factoid</code>, and now an optional
+      <code>qualifier</code> plus a <code>source</code> object (<code>name</code>, <code>url</code>,
+      <code>fetched</code>). Edit <code>src/data.js</code>, then run <code>node build.js</code>. A value
+      with no qualifier is presented as a single, unhedged fact &mdash; add one whenever a new question is
+      really a range, a specified minimum, or a code/edition-dependent figure, per the standing "research,
+      not memory" rule: back it with an actual source before shipping it, or mark it unverified.</p>
+  </section>
 
-  <div class="g-foot"><b>Murray State University &middot; Bryant Harrison</b> &middot; Engineering Trivia (Should Have Known That) is an offline single-file web game &mdash; open <code>index.html</code> to play, <code>teacher-guide.html</code> to reprint this page. 40 questions, 8 per category; 5 logarithmic sliders; bands at 5/15/35/60% linear and 1.26/2.1/5/16&times; log.</div>
+  <section aria-labelledby="g-controls">
+    <h2 id="g-controls">Presenter controls</h2>
+    <ul>
+      <li><b>&#9881; Settings</b> holds <b>Open Presenter Notes</b> (this guide), <b>Presentation mode</b>
+        (projector-sized type), and <b>Reset</b> (back to stage 1's setup screen, both later stages
+        re-locked, presentation mode left as you set it).</li>
+      <li><b>Stage tabs</b> switch stages; stages 2 and 3 stay locked until the stage before them is
+        played through &mdash; the tabs stay visible so the room sees the whole route.</li>
+      <li><b>Details</b> (in each stage's intro) opens that stage's sources, formula, assumptions, and
+        boundary statement.</li>
+      <li><b>Keys:</b> <code>Enter</code>/<code>Space</code> lock in a guess and advance the reveal;
+        <code>Esc</code> closes any open dialog.</li>
+    </ul>
+  </section>
+
+  <div class="page-break"></div>
+  <section aria-labelledby="g-sources">
+    <h2 id="g-sources">Sources (session-fetched, not recalled)</h2>
+    <p class="small">Every one of the 40 taught values carries its own citation in the app's Details
+      drawer (per stage); this is the standards-body / primary-source subset, re-checked for this
+      retrofit rather than carried over from memory:</p>
+    <ul>
+      <li>BIPM, <a href="https://www.bipm.org/en/committees/cg/cgpm/3-1901/resolution-2">3rd CGPM (1901)
+        Resolution 2</a> &mdash; the defined value of standard gravity.</li>
+      <li>NIH/NCBI StatPearls, <a href="https://www.ncbi.nlm.nih.gov/books/NBK580528/">Electrical
+        Injuries</a> &mdash; the current thresholds behind item 23's qualifier.</li>
+      <li>up.codes, <a href="https://up.codes/s/ampacities-for-flexible-cords-and-flexible-cables">NEC
+        Table 400.5(A)(1)</a> and <a href="https://up.codes/s/stair-treads-and-risers">IRC/IBC stair
+        tread and riser requirements</a>.</li>
+      <li>OSHA, <a href="https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1053">1926.1053,
+        Ladders</a>.</li>
+      <li>TxDOT Roadway Design Manual, <a href="https://www.txdot.gov/manuals/des/rdw/chapter-4--basic-design-criteria/4-8-vertical-alignment/4-8-1-grades.html">Ch.
+        4.8.1 Grades</a> &mdash; the terrain&times;design-speed structure behind item 36's qualifier.</li>
+      <li>CPSC Publication 5098, <a href="https://www.cpsc.gov/s3fs-public/5098.pdf">Tap Water Scalds</a>.</li>
+      <li>NIST Chemistry WebBook, <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&amp;Mask=4">Water</a>
+        &mdash; thermophysical properties behind items 25, 29, 30 and 33.</li>
+      <li>ICAO Doc 7488, <a href="https://news.ncac.mn/uploads/bookSubject/2022-11/6369ec174ab34.pdf">Manual
+        of the ICAO Standard Atmosphere</a> &mdash; items 27 and 40.</li>
+    </ul>
+    <p class="small">The full 40-row table (value, qualifier, source, date checked) is in
+      <code>src/data.js</code> and in this retrofit's return report; some lower-stakes items (exact unit
+      conversions, defined SI constants) are cited to a well-established secondary reference
+      (Engineering ToolBox, Wikipedia quoting a standard's own language, AmesWeb material tables) where
+      the underlying standard itself is paywalled (ASTM, AISC, ACI) — named by designation in the app's
+      Details drawer either way.</p>
+  </section>
+
+  <div class="g-foot"><strong>Engineering Trivia (Should Have Known That)</strong> &middot; Bryant
+    Harrison &middot; Murray State University &middot; Offline single-file web game. Open
+    <code>index.html</code> to play. <code>src/demo-guide.html</code> is the canonical source of this
+    document; the shipped <code>teacher-guide.html</code>, the PDF beside it, and the in-app presenter
+    notes are all generated from it at build time.</div>
+
 </div><!-- /guide -->
 </body>
 </html>
