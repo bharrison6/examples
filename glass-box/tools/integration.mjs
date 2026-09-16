@@ -39,22 +39,22 @@ ok(true, 'worker boots and the newborn model reports in');
 // offering exactly Open Presenter Notes, Presentation mode and Reset ----
 // Runs first because these are modal: everything after needs them dismissed.
 const isOpen = (id) => page.$eval('#' + id, (el) => el.open);
-ok(await isOpen('student-guide'), 'the Guide overlay is shown on load');
+ok(await isOpen('guide'), 'the Guide overlay is shown on load');
 await page.keyboard.press('Escape');
 await page.waitForTimeout(60);
-ok(!(await isOpen('student-guide')), 'Escape dismisses it');
-await page.click('#howto-open');
-ok(await isOpen('student-guide'), 'the always-visible ? control reopens it');
-ok(await page.$eval('#howto-open', (el) => el.getAttribute('aria-label')) === 'Guide',
+ok(!(await isOpen('guide')), 'Escape dismisses it');
+await page.click('#guide-open');
+ok(await isOpen('guide'), 'the always-visible ? control reopens it');
+ok(await page.$eval('#guide-open', (el) => el.getAttribute('aria-label')) === 'Guide',
   'and that control is named exactly "Guide"');
-ok(/^\s*Guide/.test(await page.$eval('#student-guide-title', (el) => el.textContent)),
+ok(/^\s*Guide/.test(await page.$eval('#guide-title', (el) => el.textContent)),
   'the overlay heading reads "Guide"');
-await page.click('#student-guide .student-guide-actions button');
+await page.click('#guide .lesson-dialog-actions button');
 await page.waitForTimeout(60);
-ok(!(await isOpen('student-guide')), 'and its footer button closes it again');
+ok(!(await isOpen('guide')), 'and its footer button closes it again');
 
-await page.click('#glass-settings-open');
-ok(await isOpen('glass-settings'), 'the settings button opens a settings menu');
+await page.click('#settings-open');
+ok(await isOpen('settings'), 'the settings button opens a settings menu');
 // Scoped to the menu block on purpose. The presenter notes are now the guide
 // itself, and the guide's own prose names all three of these labels — a
 // document-wide search would be matching its own answer key.
@@ -64,13 +64,13 @@ const menu = await page.$eval('#settings-menu', (el) => ({
 }));
 ok(menu.guideInside === false, 'the settings block carries none of the injected guide text');
 ok(menu.labels.includes('Open Presenter Notes'), 'settings offers Open Presenter Notes', JSON.stringify(menu.labels));
-ok(/^Presentation mode(on|off)?$/.test(menu.labels.find((l) => l.startsWith('Presentation mode')) || ''),
-  'settings offers Presentation mode (state rides in an aria-hidden badge)', JSON.stringify(menu.labels));
+ok(menu.labels.includes('Presentation mode'),
+  'settings offers Presentation mode (state rides in aria-pressed)', JSON.stringify(menu.labels));
 ok(menu.labels.includes('Reset'), 'settings offers Reset', JSON.stringify(menu.labels));
 
-await page.click('#glass-settings .presenter-notes-open');
+await page.click('#settings .notes-open');
 await page.waitForTimeout(60);
-ok(await isOpen('presenter-notes') && !(await isOpen('glass-settings')),
+ok(await isOpen('presenter-notes') && !(await isOpen('settings')),
   'Presenter Notes open from settings (and replace it rather than stacking)');
 const notesTxt = await page.$eval('#presenter-notes .guide-scope', (el) => el.textContent);
 ok(/LLM/.test(notesTxt) && /Reasoning/.test(notesTxt) && /Agents/.test(notesTxt) && /Start fresh: the untrained model is useful evidence/.test(notesTxt),
@@ -80,25 +80,24 @@ ok(notesTxt.trim().split(/\s+/).length > 700,
 await page.keyboard.press('Escape');
 await page.waitForTimeout(60);
 
-await page.click('#glass-settings-open');
-await page.click('#presbtn');
+await page.click('#settings-open');
+await page.click('#presentation-btn');
 ok(await page.evaluate(() => document.body.classList.contains('presenter')), 'presentation mode engages');
-ok(await page.$eval('#presbtn', (el) => el.getAttribute('aria-pressed')) === 'true' &&
-   await page.$eval('#presbtn .state', (el) => el.textContent.trim()) === 'on',
-  'and the control reports its state without changing its label');
-await page.click('#presbtn');   // back to normal scale before the size audits
+ok(await page.$eval('#presentation-btn', (el) => el.getAttribute('aria-pressed')) === 'true',
+  'and the control reports its state in aria-pressed without changing its label');
+await page.click('#presentation-btn');   // back to normal scale before the size audits
 await page.keyboard.press('Escape');
 await page.waitForTimeout(60);
-ok(await page.isVisible('#howto-open') && await page.isVisible('#glass-settings-open'),
+ok(await page.isVisible('#guide-open') && await page.isVisible('#settings-open'),
   'both controls stay visible in the sticky header');
-const tabLabels = await page.$$eval('nav.acts [role="tab"]', (els) => els.map((el) => el.querySelector('span').textContent.trim()));
+const tabLabels = await page.$$eval('nav.stages [role="tab"]', (els) => els.map((el) => el.querySelector('span:not(.stage-mark)').textContent.trim()));
 ok(JSON.stringify(tabLabels) === JSON.stringify(['LLM', 'Reasoning', 'Agents']),
   'the primary tabs name the three learning stages', JSON.stringify(tabLabels));
-await page.click('#act1 .details-trigger');
+await page.click('#stage-1 .details-trigger');
 ok(await isOpen('details') && await page.$eval('#details-subtitle', (el) => el.textContent.trim()) === 'LLM',
   'Details opens the evidence drawer for the current stage');
 await page.keyboard.press('Escape');
-ok(await page.$eval('#act1 .details-trigger', (el) => el === document.activeElement),
+ok(await page.$eval('#stage-1 .details-trigger', (el) => el === document.activeElement),
   'closing Details returns focus to its trigger');
 ok(/Bryant Harrison/.test(await page.$eval('.bh-credit', (el) => el.textContent)) &&
    /Murray State University/.test(await page.$eval('.bh-credit', (el) => el.textContent)),
@@ -145,7 +144,7 @@ ok(goldSpans > 0, 'tapping a character lights up real attention weights');
 
 if (!QUICK) {
   console.log('Act 2 (full training — the long part)');
-  await page.click('#nav2');
+  await page.click('#tab-2');
   const t2 = Date.now();
   await page.click('#a2trainbtn');
   await page.waitForFunction(() => !document.getElementById('votebtn').disabled, null, { timeout: 420000 });
@@ -183,7 +182,7 @@ if (!QUICK) {
 }
 
 console.log('Act 3');
-await page.click('#nav3');
+await page.click('#tab-3');
 await page.click('#agmode-auto');
 await page.waitForFunction(() => document.querySelector('#transcript .turn.final'), null, { timeout: 60000 });
 const finalTxt = await page.$eval('#transcript .turn.final', (el) => el.textContent);
@@ -210,7 +209,7 @@ ok(netRequests.length === 0, 'zero network requests of any kind');
 // in every act rather than sampling three favourable buttons.
 const interactiveSelector = 'button,input,select,summary,a[href],[role="button"],[tabindex]:not([tabindex="-1"])';
 let undersized = [], interactiveCount = 0;
-for (const nav of ['nav1', 'nav2', 'nav3']) {
+for (const nav of ['tab-1', 'tab-2', 'tab-3']) {
   await page.click('#' + nav);
   await page.waitForTimeout(50);
   const audit = await page.evaluate((selector) => Array.from(document.querySelectorAll(selector)).map((el, i) => {
@@ -223,7 +222,7 @@ for (const nav of ['nav1', 'nav2', 'nav3']) {
   undersized = undersized.concat(audit.filter(x => x.width < 36 || x.height < 36).map(x => ({ act: nav, ...x })));
 }
 ok(undersized.length === 0, `all ${interactiveCount} visible interactive targets across three acts are >=36px`, JSON.stringify(undersized));
-await page.click('#nav1');
+await page.click('#tab-1');
 await page.click('[data-inspect="parameters"]');
 const pmapTargets = await page.$$eval('#pmap button.prow', els => els.map(el => el.getBoundingClientRect().height));
 await page.click('[data-inspect="attention"]');
@@ -254,7 +253,7 @@ const loss2 = await page2.$eval('#statloss', (el) => parseFloat(el.textContent))
 ok(loss2 < 2.6, `era 1 trains on the main thread, loss ${loss2}`);
 ok(Math.abs(loss2 - loss) < 1e-9, `and to the same displayed loss as the worker run (${loss2} vs ${loss})`);
 if (!QUICK) {
-  await page2.click('#nav2');
+  await page2.click('#tab-2');
   await page2.click('#a2trainbtn');
   await page2.waitForFunction(() => !document.getElementById('starbtn').disabled, null, { timeout: 420000 });
   await page2.evaluate(() => {
@@ -270,27 +269,30 @@ if (!QUICK) {
 ok(errors2.length === 0, 'no page errors in fallback mode (' + errors2.slice(0, 1).join('') + ')');
 await page2.close();
 
-// ---- Reset, last: it reloads the page, so nothing may depend on state after it ----
+// ---- Reset, last. In place as of lesson-shell v2: no reload, so a sentinel on
+// window must survive it, or the assertions below prove nothing about the handler ----
 console.log('reset');
-await page.click('#nav3');
-await page.click('#glass-settings-open');
-await page.click('#resetbtn');
+await page.click('#tab-3');
+await page.evaluate(() => { window.__gbSentinel = 'planted'; });
+await page.click('#settings-open');
+await page.click('#reset-btn');
 await page.waitForFunction(() => document.getElementById('livesample').textContent.includes('era 0'), null, { timeout: 30000 });
 const afterReset = await page.evaluate(() => ({
-  act1: document.getElementById('act1').classList.contains('on'),
+  act1: document.getElementById('stage-1').classList.contains('on') && !document.getElementById('stage-1').hidden,
   eras: document.querySelectorAll('#erachips .chip').length,
-  guideOpen: document.getElementById('student-guide').open,
-  settingsOpen: document.getElementById('glass-settings').open,
+  guideOpen: document.getElementById('guide').open,
+  settingsOpen: document.getElementById('settings').open,
   presenter: document.body.classList.contains('presenter'),
-  hash: location.hash
+  sentinel: window.__gbSentinel,
+  navigations: performance.getEntriesByType('navigation').length
 }));
 ok(afterReset.act1 && afterReset.eras <= 1, 'Reset returns the whole demo to its fresh-load state', JSON.stringify(afterReset));
 ok(afterReset.guideOpen === false && afterReset.settingsOpen === false, 'and leaves the overlays closed');
-ok(afterReset.hash === '', 'and strips its own flag from the URL');
+ok(afterReset.sentinel === 'planted' && afterReset.navigations === 1, 'and did it in place: the window sentinel survived and no navigation happened');
 // Presentation mode is a presenter display preference, not demo state.
-await page.click('#glass-settings-open');
-await page.click('#presbtn');
-await page.click('#resetbtn');
+await page.click('#settings-open');
+await page.click('#presentation-btn');
+await page.click('#reset-btn');
 await page.waitForFunction(() => document.getElementById('livesample').textContent.includes('era 0'), null, { timeout: 30000 });
 ok(await page.evaluate(() => document.body.classList.contains('presenter')), 'and leaves Presentation mode as it found it');
 
