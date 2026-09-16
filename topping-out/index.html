@@ -1402,6 +1402,29 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   body:not(.m-site) #left { display: none; }
   #right { padding-bottom: 58px; }
   #view-host { padding-bottom: 58px; }
+  /* A KIT HEADER COLLISION, repaired demo-side because the kit is frozen.
+     shell.css lays .msu-brand out beside the h1 and .top-tools to its right.
+     Measured with getBoundingClientRect at a 546px viewport in presentation
+     mode: .msu-brand (183-395) overlapped .top-tools (235-517), so "MURRAY
+     STATE UNIVERSITY" printed underneath the Notes / Guide / Settings
+     buttons. Absent at 1024 and at 1440, so it is a narrow-width fault only.
+     Nothing is lost by dropping it here: the .brand-kicker directly above
+     already reads "Murray State University - Part four - Example projects",
+     so the institution is still named twice on screen (kicker and footer).
+     Reported for kit v3 — it is shell-owned markup and affects every demo
+     that adopts the kit, not only this one. */
+  .msu-brand { display: none; }
+
+  /* A0: the credit pill is position:fixed at the bottom-left, and under 820px
+     this demo puts its SITE / MEETING bar there instead. Measured overlap at a
+     546px viewport: the pill's box (8,515)-(238,536) sat on top of the stage 1
+     Details button (32,487)-(138,529), so the pill covered a live control —
+     which plan A0 forbids outright ("pill never overlaps a control in any
+     screenshot"). A0's own remedy is to hide it while a bottom control bar is
+     up; this is that rule, keyed on the demo's own bar because the demo is
+     what knows the bar is there. Attribution is not lost: the footer carries
+     "Bryant Harrison · Murray State University" in full. */
+  .bh-credit { display: none; }
   #m-nav {
     display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
     background: var(--blue); border-top: 3px solid var(--gold);
