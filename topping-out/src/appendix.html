@@ -547,13 +547,15 @@ class what behaviour a $2,000-a-day LD would produce instead is a better five mi
 number.</p>
 
 <p class="note"><span class="prov">Measured</span><span class="prov">qualifier: computed from the engine's
-own CPM on 2026-09-16, one crew per activity, no overtime</span> Unimpeded, the network runs <b>89 working
+own CPM and the playtest harness at build, <!--@fact measured-date-->2026-09-16<!--/@fact-->; one crew per activity, no overtime</span> Unimpeded, the network runs <b>89 working
 days against a 134-day contract</b> &mdash; <b>45 working days, 63 calendar days</b>, of cushion, which
 sounds generous until the deck goes to work on it. On the seeds in &sect;6, a team that absorbs everything
-and never intervenes finishes two to four and a half weeks late and averages about $185,000, going
-<i>negative</i> on two of the eight. A team that reads float, prices its calls, orders manpower ahead of
-need and only fights the weather when the exposed work has no float averages about $351,000. The whole game
-lives in that gap.</p>
+and never intervenes finishes <!--@fact passive-late-lo-->4<!--/@fact--> to <!--@fact passive-late-hi-->32<!--/@fact--> calendar days late and averages
+<!--@fact passive-avg-->$2,604<!--/@fact--> &mdash; break-even, near enough &mdash; going <i>negative</i> on <!--@fact passive-neg-n-->three<!--/@fact--> of the
+<!--@fact seeds-n-->eight<!--/@fact-->. A team that reads float, prices its calls, orders manpower ahead of need and only fights the
+weather when the exposed work has no float averages <!--@fact thoughtful-avg-->$114,531<!--/@fact-->. The whole game lives in that gap,
+and the gap is wider than earlier printings said: the figures here are the harness's own output, written
+by the build.</p>
 
 <p class="note"><b>Correction carried in this edition.</b> Earlier printings said &ldquo;89 working days
 against a 126-day contract &mdash; 53 calendar days of cushion&rdquo; and gave the contract as 176 calendar
@@ -589,14 +591,14 @@ It recovers &mdash; slowly &mdash; which makes &ldquo;rest the sub&rdquo; a real
 <!-- ============================ 4. THE CALLS ============================ -->
 <h2><span class="num">4</span> The calls &mdash; decide now, find out later</h2>
 
-<p>A call is a judgment made <i>before</i> the work, whose consequence lands somewhere else. There are nine
-in <i>Racer Commons</i> and two in the tutorial. Each offers two or three options; each carries a price you
+<p>A call is a judgment made <i>before</i> the work, whose consequence lands somewhere else. There are <!--@fact calls-main-word-->sixteen<!--/@fact-->
+in <i>Racer Commons</i> and <!--@fact calls-tutorial-word-->three<!--/@fact--> in the tutorial. Each offers two or three options; each carries a price you
 pay this week &mdash; money, sometimes days &mdash; and an <b>exposure</b>: the probability the deferred
 consequence fires. Nothing is hidden. The card prints the exposure as a percentage and names the activity
 where it will show up, so it is a priced bet with the odds on it, which is what a real one is.</p>
 
 <table class="tight">
-  <caption>Two of the nine &mdash; the option you buy is the bar the roll has to clear</caption>
+  <caption>Two of the <!--@fact calls-main-n-->16<!--/@fact--> &mdash; the option you buy is the bar the roll has to clear</caption>
   <thead>
     <tr><th style="width:26%">The call, and where it lands</th><th>What you can buy</th><th class="n" style="width:15%">Price today</th><th class="n" style="width:12%">Exposure</th></tr>
   </thead>
@@ -850,20 +852,25 @@ one where absorbing everything finishes late enough to hurt but not so late that
 it.</p>
 
 <table class="tight">
-  <caption><span class="prov">Measured</span> Four measured starting points, all on Standard &mdash; defaults means absorb everything and take every free option</caption>
-  <thead><tr><th>Seed</th><th class="n">Wks</th><th class="n">Finish vs contract</th><th class="n">Defaults</th><th class="n">Judgment</th><th>Character</th></tr></thead>
+  <caption><span class="prov">Measured</span> The harness's <!--@fact seeds-n-->eight<!--/@fact--> seeds, all on Standard, measured by the build on <!--@fact measured-date-->2026-09-16<!--/@fact--> &mdash; <i>defaults</i> means absorb everything and take every free option; <i>judgment</i> is the harness's reference player. The Character column is written by rule from the two rows beside it.</caption>
+  <thead><tr><th>Seed</th><th class="n">Wks</th><th class="n">Defaults vs contract</th><th class="n">Defaults</th><th class="n">Wks</th><th class="n">Judgment vs contract</th><th class="n">Judgment</th><th>Character</th></tr></thead>
   <tbody>
-    <tr><td>MSU-1</td><td class="n">29</td><td class="n">27 days late</td><td class="n">$55,400</td><td class="n">$254,525</td><td>Middle of the road. Good first run.</td></tr>
-    <tr><td>CMGT-201</td><td class="n">30</td><td class="n">28 days late</td><td class="n">$26,700</td><td class="n">$525,200</td><td>Judgment pays most here &mdash; half a million of spread.</td></tr>
-    <tr><td>TOPPING</td><td class="n">30</td><td class="n">31 days late</td><td class="n">&minus;$75,550</td><td class="n">$116,088</td><td>Punishing. The defaults lose real money.</td></tr>
-    <tr class="hi"><td>CALLOWAY</td><td class="n">28</td><td class="n">14 days late</td><td class="n">$283,300</td><td class="n">$245,550</td><td>Rewards nerve: the cheap calls come in. Best debrief seed on the sheet.</td></tr>
+<!--@fact seed-table-rows-->    <tr><td>MSU-2601</td><td class="n">29</td><td class="n">13 days late</td><td class="n">$101,030</td><td class="n">28</td><td class="n">6 days late</td><td class="n">$219,540</td><td>Middle of the road. Good first run.</td></tr>
+    <tr><td>TOPPING</td><td class="n">28</td><td class="n">4 days late</td><td class="n">$189,705</td><td class="n">26</td><td class="n">10 days early</td><td class="n">$291,147</td><td>The one where a well-played job beats the contract date and collects the bonus.</td></tr>
+    <tr><td>FALL26</td><td class="n">30</td><td class="n">18 days late</td><td class="n">&minus;$66,095</td><td class="n">29</td><td class="n">11 days late</td><td class="n">$48,916</td><td>The defaults lose real money; judgment recovers it.</td></tr>
+    <tr><td>WK7</td><td class="n">30</td><td class="n">21 days late</td><td class="n">&minus;$124,984</td><td class="n">28</td><td class="n">7 days late</td><td class="n">$90,898</td><td>The defaults lose real money; judgment recovers it. Widest spread on the sheet.</td></tr>
+    <tr><td>BLUE</td><td class="n">29</td><td class="n">14 days late</td><td class="n">$4,342</td><td class="n">28</td><td class="n">7 days late</td><td class="n">$105,972</td><td>Middle of the road. Good first run.</td></tr>
+    <tr><td>GOLD</td><td class="n">32</td><td class="n">32 days late</td><td class="n">&minus;$350,637</td><td class="n">30</td><td class="n">21 days late</td><td class="n">&minus;$165,670</td><td>Punishing: even judgment loses money here. Not a first-run seed.</td></tr>
+    <tr><td>CMGT-201</td><td class="n">29</td><td class="n">12 days late</td><td class="n">$1,617</td><td class="n">28</td><td class="n">7 days late</td><td class="n">$72,223</td><td>Middle of the road. Good first run.</td></tr>
+    <tr class="hi"><td>CALLOWAY</td><td class="n">28</td><td class="n">4 days late</td><td class="n">$265,852</td><td class="n">28</td><td class="n">4 days late</td><td class="n">$253,221</td><td>Rewards nerve: the free options clear their thresholds, so the team that spent nothing beats the team that covered. Best debrief seed on the sheet.</td></tr><!--/@fact-->
   </tbody>
 </table>
 
-<p>Across eight measured seeds the defaults average about $185,000 and go negative on two; judgment averages
-about $351,000 and wins on six of the eight. Well-played runs land between 24 and 28 weeks, and the best
-finish observed was <b>118 working days, eight working days inside the contract</b> &mdash; so the early
-bonus is reachable, though nobody has come near the 20-day cap.</p>
+<p>Across the <!--@fact seeds-n-->eight<!--/@fact--> seeds the defaults average <!--@fact passive-avg-->$2,604<!--/@fact--> and go negative on <!--@fact passive-neg-n-->three<!--/@fact-->; judgment
+averages <!--@fact thoughtful-avg-->$114,531<!--/@fact--> and wins on <!--@fact thoughtful-wins-n-->seven<!--/@fact--> of the <!--@fact seeds-n-->eight<!--/@fact-->. Well-played runs land between
+<!--@fact thoughtful-weeks-lo-->26<!--/@fact--> and <!--@fact thoughtful-weeks-hi-->30<!--/@fact--> weeks; the defaults between <!--@fact passive-weeks-lo-->28<!--/@fact--> and <!--@fact passive-weeks-hi-->32<!--/@fact-->. The best
+finish observed was <b><!--@fact thoughtful-best-end-wd-->126<!--/@fact--> working days, <!--@fact thoughtful-best-inside-wd-->eight<!--/@fact--> working days inside the contract</b>, on
+<!--@fact thoughtful-early-n-->one<!--/@fact--> of the <!--@fact seeds-n-->eight<!--/@fact--> seeds &mdash; so the early bonus is reachable, though nobody has come near the 20-day cap.</p>
 
 <p><b>Some seeds reward caution and some punish it, and that is a feature.</b> On CALLOWAY the free options
 happen to clear their thresholds, so the team that spent nothing on the calls beats the team that covered
@@ -905,7 +912,7 @@ checks&rdquo;. <code>node src/engine.js --test</code> reports <b>36 passed, 0 fa
 <p>The usual failure is a team that deliberates every week. Plenty of weeks carry a clear forecast, no open
 call and one card that misses their live work fronts entirely; those should commit in seconds. Tell the room
 at the checkpoint: read the news, ask whether it touches anything with zero or one day of float, and if it
-does not, commit. Save the deliberation for the nine calls, the weather weeks with critical work exposed,
+does not, commit. Save the deliberation for the <!--@fact calls-main-n-->16<!--/@fact--> calls, the weather weeks with critical work exposed,
 and the two or three weeks where manpower has to be ordered before the need is visible.</p>
 
 <!-- ============================ 8. VOCABULARY ============================ -->
