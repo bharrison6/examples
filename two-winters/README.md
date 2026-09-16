@@ -1,6 +1,7 @@
 # AI Winters: Boom and Bust
 
-**Has this happened before?** — the fifth demo in *AI: From Zero to Takeoff*.
+**Has this happened before?** — Demo 4 of 16, Part two ("Where it is going"), in
+*AI: From Zero to Takeoff* (`tours/zero-to-takeoff.json`).
 (Folder and URL stay `two-winters`; the two winters are still what it is about.)
 
 `takeoff` ends with the room having considered AI gains alongside limits and measurement
@@ -24,18 +25,18 @@ sample of optimists, pessimists, or the field.
 
 ---
 
-## The four acts
+## The four stages
 
-| Act | What it is | Time |
+| Stage | What it is | Time |
 |-----|-----------|------|
-| **I — Guess the year** | Ten curated, sourced claims, 1950–2024, speaker and date hidden. Score five time-bounded forecasts; classify four assessments or untimed ambitions without grading them against the future. | 7–9 min |
-| **II — The two winters** | A scrubbable 1950–2026 timeline in six rows: landmark results plus five comparison lenses. It shows different pathways, not a fixed sequence. | 3–4 min |
-| **III — Compare** | Choose one lens, then inspect three era cards. Each Details panel holds the full explanation and named sources. Two present questions remain openly unresolved. | 2–3 min |
-| **IV — Today** | Expand a similarity beside a difference; supporting cut and source lists open on request. | 2–3 min |
+| **1 — Claims** | Ten curated, sourced claims, 1950–2024, speaker and date hidden. Score five time-bounded forecasts; classify four assessments or untimed ambitions without grading them against the future. | 7–9 min |
+| **2 — History** | A scrubbable 1950–2026 timeline in six rows: landmark results plus five comparison lenses. It shows different pathways, not a fixed sequence. | 3–4 min |
+| **3 — Compare** | Choose one lens, then inspect three era cards. Each Details panel holds the full explanation and named sources. Two present questions remain openly unresolved. | 2–3 min |
+| **4 — Today** | Expand a similarity beside a difference; supporting cut and source lists open on request. | 2–3 min |
 
 ### The five comparison lenses
 
-The lanes in Act II and selected lens in Act III make causes comparable. They do **not** assert that
+The lanes in Stage 2 and selected lens in Stage 3 make causes comparable. They do **not** assert that
 every contraction follows this order or that the present is completing a third cycle:
 
 1. **Claims and ambitions** — what people said the technology could soon do.
@@ -53,16 +54,16 @@ readable on screen at **Settings → Open Presenter Notes** so you never need a 
 window. It is the same file, injected at build time, not a summary of it. Short version:
 
 - **Presentation mode** (Settings) enlarges everything for a projector.
-- **Settings → Reset** returns the whole demo to a fresh load between rooms — answers
-  cleared, Act I back at its opening screen, timeline rewound — without a reload, and
-  leaves Presentation mode on.
+- **Settings → Reset** returns the whole demo to a fresh load between rooms — a real
+  reload, so answers, Stage 1, and the timeline all return to their fresh-load state —
+  and leaves Presentation mode on (the shell carries it across the reload).
 - **The `?` button is Guide** — the short how-to panel, which opens on first load.
 - **Do the first two cards yourself, out loud.** Then hand it over. Ask for a show of
   hands on the year *before* dragging the slider. The room being wrong together is the
   experience.
 - **Short of time?** Keep four cards: Simon & Newell 1957, ALPAC 1966, Schank & Minsky
-  1984, Amodei 2024. Use ALPAC to explain assessment versus forecast, then skip to Act III.
-- **In Act II, do not narrate a cycle.** Drag slowly and ask what differs between the two
+  1984, Amodei 2024. Use ALPAC to explain assessment versus forecast, then skip to Stage 3.
+- **In Stage 2, do not narrate a cycle.** Drag slowly and ask what differs between the two
   historical pathways under each comparison lens.
 - **If someone asks where this came from**, open **Settings → Run the self-test** in front
   of them. It re-derives live that every claim resolves to a declared source, that no
@@ -82,7 +83,7 @@ something a sceptic can go and check.
     scholarship. Used where the primary is a printed book, a paywall, or a page scan.
 - No source URL is a journal or organisation homepage; the test suite enforces that every
   URL points at a specific page.
-- **What could not be sourced was cut, and the cuts are on the page.** Act IV lists seven
+- **What could not be sourced was cut, and the cuts are on the page.** Stage 4 lists seven
   claims that were researched and left out, with the reason for each — including a dollar
   figure for XCON's savings at Digital (sources disagree, and the primary is paywalled)
   and an unsupported claim that ALPAC predicted machine translation would never work.
@@ -105,15 +106,19 @@ McCorduck 2004 — the historian is named on the claim itself.
 
 ## Building
 
-Sources live in `src/`. `index.html` is the committed build output; do not edit it.
+Sources live in `src/`. `index.html` is the committed build output; do not edit it. The
+build also reads the shared lesson shell at `../tools/lesson-shell/` (tokens, shell CSS,
+dialog/tablist/presentation-mode behaviour) — a build-time-only dependency; the shipped
+`index.html` stays one self-contained file (see `build.js`'s own head comment).
 
 ```bash
-node build.js            # writes index.html and presenter-guide.html
-node build.js --check    # verifies both match the canonical build; writes nothing
-node src/playtest.test.js   # dataset + engine tests
-node src/contract.test.js   # built index.html against CONTRACT.md's Required UX
-node tools/pdf.mjs       # regenerates Two-Winters-Presenter-Guide.pdf
-node tools/pdf.mjs --check  # verifies the guide parses and the PDF exists
+node build.js                              # writes index.html and presenter-guide.html
+node build.js --check                      # verifies both match the canonical build; writes nothing
+node src/playtest.test.js                  # dataset + engine tests
+node src/contract.test.js                  # built index.html against CONTRACT.md's Required UX
+node ../tools/lesson-shell/check-shell.js two-winters   # kit adoption: tokens, parts, kickers, self-contained
+node tools/pdf.mjs                         # regenerates Two-Winters-Presenter-Guide.pdf
+node tools/pdf.mjs --check                 # verifies the guide parses and the PDF exists
 ```
 
 `build.js` refuses to write a file containing an external `src` or `href` on any
@@ -126,13 +131,13 @@ resource-loading tag, so a stray CDN reference fails the build rather than shipp
 | `src/data.js` | Every claim, source, comparison lens, and cut-list entry. The only file with facts in it. |
 | `SPEC.md` | Teaching objective, historical guardrails, interaction model, and verification contract. |
 | `src/engine.js` | Pure functions: dates, the year scale, the scoring. No DOM. |
-| `src/timeline.js` | The Act II canvas — lanes, winter bands, scrubber. Hand-rolled 2d context. |
-| `src/app.js` | Controller: the four acts, the overlays, the live self-test. |
-| `src/styles.css` | Phone-first. |
-| `src/template.html` | The shell. `build.js` fills four placeholders. |
-| `src/presenter-guide.html` | **Canonical** presenter guide. Its `<style id="guide-css">` block and its `.guide-scope` div are lifted into the app so the on-screen notes and the printable guide cannot drift. Both markers must start a line and occur exactly once outside a comment, or `build.js` refuses to run. |
-| `src/playtest.test.js` | 86 checks on the data and the engine. Run before committing. |
-| `src/contract.test.js` | Checks the built `index.html` against CONTRACT.md's Required UX: the Guide button and overlay, the three Settings labels (asserted inside the Settings block only, never against the injected guide text), and a clean guide injection. |
+| `src/timeline.js` | The Stage 2 canvas — lanes, winter bands, scrubber. Hand-rolled 2d context. |
+| `src/app.js` | The four stages' own rendering, the live self-test, and the item-level "read more" popovers for a single timeline event or comparison cell. The header, stage tablist, and the Guide/Settings/Details/Presenter-Notes dialogs are the shared lesson shell's, not this file's. |
+| `src/styles.css` | The activity's own styles only — the shared shell owns the chrome. |
+| `src/template.html` | The app shell markup, built against `../tools/lesson-shell/partials.html`'s vocabulary. `build.js` fills the shell's placeholders plus this demo's own JS bundle marker. |
+| `src/demo-guide.html` | **Canonical** presenter guide (renamed from `presenter-guide.html`, kept as the shipped output filename in `demo.json`). Its `<style id="guide-css">` block and its `.guide-scope` div are lifted into the app so the on-screen notes and the printable guide cannot drift. Both markers must start a line and occur exactly once outside a comment, or `build.js` refuses to run. |
+| `src/playtest.test.js` | 81 checks on the data and the engine. Run before committing. |
+| `src/contract.test.js` | Checks the built `index.html` against CONTRACT.md's Required UX against the shared shell's markup: the Guide button and dialog, the four Settings labels (asserted inside the Settings dialog only, never against the injected guide text), the Reset handler, and a clean guide injection (re-using `../tools/lesson-shell/guide-contract.js`'s own extraction). |
 | `tools/pdf.mjs` | Guide → PDF. Prefers Playwright, falls back to a system Chrome or Edge. |
 
 ### The PDF tool differs from its neighbours
@@ -172,16 +177,19 @@ Then: `node src/playtest.test.js && node build.js && node src/contract.test.js`.
 
 ## Contract compliance
 
+Built against the shared lesson shell at `../tools/lesson-shell/` (fleet-wide template;
+see `plan-demo-fleet-format-alignment` in the memory store for the full template).
+
 | Item | State |
 |------|-------|
-| Guide overlay on load, dismissible, reopenable from the `?` button (named **Guide**) | yes |
-| Settings menu offering **Open Presenter Notes**, **Presentation mode**, **Reset** | yes — plus this demo's own **Run the self-test** |
-| **Reset** returns the whole demo to fresh-load state | yes — answers, act, timeline cursor and self-test output; Presentation mode is left alone by design |
-| Presenter notes openable in-app, and identical to the printable guide | yes — injected from `src/presenter-guide.html` at build time; `node build.js --check` fails on drift |
-| Murray State theme | yes — navy `#002144`, gold `#ECAC00`, sky `#00A4E3` |
+| Guide dialog on load, dismissible, reopenable from the `?` button (named **Guide**) | yes — shell-owned |
+| Settings menu offering **Open Presenter Notes**, **Presentation mode**, **Reset** | yes, shell-owned — plus this demo's own **Run the self-test** |
+| **Reset** returns the whole demo to fresh-load state | yes — a full reload (shell-owned); Presentation mode is carried across it by design |
+| Presenter notes openable in-app, and identical to the printable guide | yes — injected from `src/demo-guide.html` at build time; `node build.js --check` fails on drift |
+| Murray State theme | yes — kit tokens: navy `#002144`, gold `#ECAC00`, lite blue `#00A4E3` |
 | Red-orange `#FF4500` reserved for genuine failure states | yes — a wrong verdict, the "money leaves" stage, a failed self-test check, an unresolved source. Nothing else. |
-| Attribution visible | yes, in the footer on every act |
-| Mobile | phone-first; verified at 320px with zero horizontal overflow and no tap target under 36px, in all four acts, in both normal and presenter mode |
+| Attribution visible | yes, in the footer on every stage and the credit pill |
+| Mobile | phone-first; verified at 320px with zero horizontal overflow and no tap target under 36px, in all four stages, in both normal and presenter mode |
 | Offline, no runtime inference | yes — zero external `src`/`href` in the shipped file, enforced by the build |
 
 ---
