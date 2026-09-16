@@ -5,272 +5,767 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Construction Scheduling — Topping Out</title>
 <!--
-  Construction Scheduling (“Topping Out”) — a deterministic, offline
-  construction scheduling game for construction management teaching.
+  Construction Scheduling (“Topping Out”) — Demo 10 of 16, Part four of
+  AI: From Zero to Takeoff. A deterministic, offline construction scheduling
+  game for construction management teaching, on the shared lesson shell.
 
-  Single file: open it in any modern browser. No build step, no server,
-  no network. Same seed = same project and same event sequence for every
-  team, so a class leaderboard measures decisions rather than luck.
+  Single file: open it in any modern browser. No build step at runtime, no
+  server, no network, no inference. Same seed = same project and same event
+  sequence for every team, so a class leaderboard measures decisions rather
+  than luck.
 
-  Companion: teacher-guide.html (printable session plan).
-  Sources live in src/ and are concatenated by build.js.
+  ---------------------------------------------------------------------------
+  ONE ACTIVITY, FOUR STAGES — the structural decision this template makes.
+
+  Most demos in the fleet have one panel of content per stage. This one does
+  not: it is a single continuous 75-minute game, and all four of its stages —
+  Read the schedule, Run a week, Make a call, Debrief — need the SAME live
+  board. Duplicating the board would mean four game instances; putting it in
+  one stage would leave the other three empty.
+
+  So there is exactly one #board-host, and app.js MOVES it between the four
+  stages' .board-slot elements on `stagechange`. The stages are lesson
+  framings around one activity, which is what plan §A1 means by "a game with
+  one activity has stages = its lesson beats, not its levels".
+
+  ADOPTING.md §4 step 6 anticipates this: "anything you appended to the DOM in
+  a place the shell does not manage, including an element you MOVED between
+  hosts" is on the reset enumeration, and app.js's lessonreset handler moves
+  it back to stage 1.
+
+  ---------------------------------------------------------------------------
+  THE GATES. Stages 2–4 open on genuine prerequisites, not artificial locks:
+  you cannot run a week before there is a schedule, and you cannot debrief a
+  decision before one has run. `disabled` is authored HERE, in the markup, and
+  not only in app.js — the shell snapshots tab state before app.js runs, so a
+  gate applied solely at runtime would come back UNLOCKED after a Reset
+  (ADOPTING.md §4 step 3).
+
+  Companions: teacher-guide.html (the printable session guide, injected here as
+  the presenter notes) and appendix.html (the CPM background — linked, never
+  injected). Sources live in src/ and are assembled by build.js.
 -->
+<!--__SHELL_STAMP__-->
 <style>
+/* ---- the shared lesson shell: tokens.css + shell.css --------------------
+   From ../tools/lesson-shell. One canonical copy, pointed at; inlined here
+   at build time so the shipped file stays self-contained. */
+/*__SHELL_CSS__*/
+</style>
+<style>
+/* ---- this demo's ACTIVITY styles ----------------------------------------
+   After the shell's, so any shell rule can be overridden without !important.
+   Chrome the shell now draws — header, stage nav, stage intro, lesson strip,
+   overlays, generic button and focus resets — has been deleted from here. */
 /*__CSS__*/
-
-/* The instructor guide’s own typography, scoped to .guide-scope and lifted
-   verbatim from src/teacher-guide.html by build.js. The presenter notes and
-   the printable guide are one document from one source. */
+</style>
+<style>
+/* ---- the session guide's own typography, scoped to .guide-scope ---------
+   Lifted verbatim from src/demo-guide.html by build.js. Last, because
+   .guide-scope p and .lesson-dialog-body p have equal specificity and the
+   guide's rules must be the later ones to win inside the notes. */
 /*__GUIDE_CSS__*/
 </style>
 </head>
 <body>
 
-<!-- ============================ SETUP ============================ -->
-<div id="setup">
-  <div id="setup-inner"></div>
-</div>
-
-<!-- ============================= APP ============================= -->
-<div id="app" hidden>
-  <header id="topbar">
-    <div id="brand"><span class="msu"><svg width="13" height="13" viewBox="0 0 20 20"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE</span><span class="t1">CONSTRUCTION SCHEDULING</span><span class="t2">TOPPING OUT · RACER CONSTRUCTION MGMT</span></div>
-    <div id="project-block"></div>
-    <div id="hud"></div>
-    <div id="topbar-actions">
-      <button class="btn icon ghost" id="btn-notes-top" title="Open Presenter Notes" aria-label="Open Presenter Notes">🎙</button>
-      <button class="btn icon ghost" id="btn-howto" title="Guide" aria-label="Guide">?</button>
-      <button class="btn sm ghost" id="btn-instructor" title="Settings" aria-label="Settings">⚙ Settings</button>
+<!-- ============================ A0 HEADER + A1 STAGE TABLIST ============ -->
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University &middot; Part four &middot; Example projects</span>
+      <h1>Construction Scheduling</h1>
+      <div class="msu-brand">Murray State University</div>
     </div>
-  </header>
-
-  <main id="panes">
-    <section id="left">
-      <div id="view-tabs">
-        <button data-view="4d" class="active">4D View</button>
-        <button data-view="gantt">Gantt</button>
-        <button data-view="network">Network</button>
-        <span class="spacer"></span>
-        <span class="legend">
-          <span><i class="crit"></i>critical path</span>
-          <span><i class="norm"></i>has float</span>
-          <span><i class="flt"></i>float tail</span>
-          <span><i class="fix"></i>cure / hold</span>
-        </span>
-      </div>
-      <div id="view-host"></div>
-    </section>
-
-    <section id="right">
-      <div id="meeting">
-        <div id="meeting-head"></div>
-        <div id="meeting-body"></div>
-        <div id="meeting-foot"></div>
-      </div>
-    </section>
-  </main>
-</div>
-
-<!-- ========================== OVERLAYS ===========================
-     #howto opens on every load, over the setup sheet. Dismiss with the
-     button, a tap on the paper around it, or Esc; reopen from ? in the
-     title bar or on the setup sheet. -->
-<div class="overlay" id="howto" hidden>
-  <div class="modal brief" role="dialog" aria-modal="true" aria-labelledby="howto-title">
-    <div class="modal-head navy">
-      <div>
-        <div class="msu-line"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div>
-        <h2 id="howto-title">Guide</h2>
-        <div class="sub">HOW TO PLAY · PRECONSTRUCTION BRIEFING · SHEET HT-01</div>
-      </div>
-      <button class="btn x" data-close="howto" aria-label="Close">✕</button>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
     </div>
-    <div class="modal-body">
-      <p class="lede">You are the general contractor on a small commercial building, and the clock is
-      the contract. Highest profit at completion wins. Everybody in the room enters the
-      <b>same seed code</b>, so the weather, the late deliveries and every roll are identical for
-      every team — the only variable is what you decide.</p>
+  </div>
+  <nav class="stages" role="tablist" aria-label="Lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>READ THE SCHEDULE</span><small>Where is this job&rsquo;s float, and which chain has none?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1"
+            disabled title="Start the job first — there is no week to run until there is a schedule">
+      <span class="stage-mark" aria-hidden="true">2</span><span>RUN A WEEK</span><small>What does one week actually change?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1"
+            disabled title="Commit one week first — a call is answered against a live schedule">
+      <span class="stage-mark" aria-hidden="true">3</span><span>MAKE A CALL</span><small>What are you buying when you answer a call?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1"
+            disabled title="Commit one week first — there is nothing to debrief until a decision has run">
+      <span class="stage-mark" aria-hidden="true">4</span><span>DEBRIEF</span><small>Was that a good decision, or a good outcome?</small>
+    </button>
+  </nav>
+</header>
 
-      <h3>One turn is one week — Monday, 7 a.m.</h3>
-      <ol class="steps">
-        <li><b>The news.</b> This week's cards: weather, late deliveries, slipping subs, failed
-        inspections, RFIs. Written with flavour, stated mechanically.</li>
-        <li><b>Decisions.</b> Answer the calls on the table, put crews on work fronts, order or
-        release a crew, authorise overtime, expedite a delivery, work through the rain or stand
-        down. The preview shows the projected finish and profit <i>before</i> you commit.</li>
-        <li><b>Commit.</b> One button. No undo.</li>
-        <li><b>The week runs.</b> Five working days animate on the site, costs tick, progress
-        happens or it doesn't.</li>
-      </ol>
+<main id="lesson">
 
-      <h3>Three ways to look at the same job</h3>
-      <div class="row"><div class="k">4D cutaway</div><div>A section through the building driven by
-        real progress. The finished job is drawn as a faint ghost and work fills it in. Crews stand
-        on the floor they are working — a stacked floor looks crowded and turns red.</div></div>
-      <div class="row"><div class="k">Gantt</div><div>Bars from early start to early finish, a thin
-        tail out to late finish for float, critical work in red, cure and inspection holds hatched,
-        today and the contract date both marked.</div></div>
-      <div class="row"><div class="k">Network</div><div>The precedence diagram: relationship type
-        and lag on every arrow, the driving path thick and red. It is computed every week, never
-        declared — so it moves, and the game says so when it does.</div></div>
-
-      <h3>Three things that cost teams the game</h3>
-      <ul class="watch">
-        <li><span class="rule">Float is shared, not spare.</span> Total float belongs to the whole
-        chain; spend it on one activity and the ones behind it no longer have it. Read the float
-        column before you decide anything.</li>
-        <li><span class="rule">Not answering a call is answering it.</span> Every call defaults to
-        its first option, which is always free and always the most exposed.</li>
-        <li><span class="rule">Cure and inspection holds cannot be compressed.</span> No crew count,
-        no overtime, no expediting fee shortens them. Ever.</li>
-      </ul>
-
-      <div class="phone">On a phone the job folds into two tabs — <b>SITE</b> for the drawings and
-      <b>MEETING</b> for the news, the decisions and the commit button. Tap any underlined term for
-      what it means.</div>
+<!-- ============================ STAGE 1 ================================= -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 10 of 16 &middot; Part four &middot; Construction Management &middot; Stage 1</span>
+      <h2 id="stage-1-title">Read the schedule</h2>
+      <p class="stage-question">Where is this job&rsquo;s float, and which chain has none?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>network diagram</b> is the job written as
+        activities with predecessors and durations. <b>Total float</b> is how many working days an
+        activity can slip before the whole project slips; the chain with none is the
+        <b>critical path</b>. Nothing here is declared critical &mdash; it is computed, every week,
+        from the live state of the job.</p>
     </div>
-    <div class="modal-foot split">
-      <span class="foot-note">ESC OR TAP OUTSIDE TO CLOSE · REOPEN WITH ? ANY TIME</span>
-      <button class="btn primary" data-close="howto">Got it — start the job</button>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details for Read the schedule">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Before you open the Gantt: <b>which chain do you think has zero float</b> &mdash; and how much cushion does the job have against its contract?</p><span class="echo" hidden></span><div class="predict-slot" id="predict-1"></div></article>
+      <article><span>Try</span><p>Type a seed, press <b>Start the job</b>, then read the <b>Gantt</b> and <b>Network</b> views before you commit anything.</p></article>
+      <article><span>Takeaway</span><p>Float is computed, not declared, and the chain with none is the one that sets the finish date.</p></article>
     </div>
+  </section>
+  <div class="board-slot" data-slot="0"></div>
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">An activity shows 9 days of total float and 1 day of free float. What may you safely spend?</h3>
+    <p class="check-prompt">This is MEP rough-in on Level 1 at baseline. Read both numbers before you answer.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="One day. Free float is the part that is yours alone &mdash; past it, Level 2 rough-in cannot start when it wanted to, even though the finish date has not moved yet.">One day &mdash; the free float</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="This is the misconception the stage exists to break: total float belongs to the whole chain and is consumed by whoever spends it first. Spend nine days here and the activities behind you have none left for the card that has not landed yet.">Nine days &mdash; float is free time you can spend casually</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Not quite &mdash; this activity genuinely does have slack. The point is not that float is untouchable, it is that only one of those two numbers is yours to spend without moving somebody else.">Nothing &mdash; float is never safe to spend</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 2 ================================= -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 10 of 16 &middot; Part four &middot; Construction Management &middot; Stage 2</span>
+      <h2 id="stage-2-title">Run a week</h2>
+      <p class="stage-question">What does one week actually change?</p>
+      <p class="refresh"><b>Before you start.</b> One turn is one week &mdash; five working days,
+        Monday 7 a.m. <b>THE NEWS</b> reveals the week&rsquo;s events, you make decisions, and
+        <b>Commit</b> is irreversible. Afterwards the engine re-solves the whole network against what
+        really happened: completed work pinned to its real dates, work in progress anchored to its
+        real start.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details for Run a week">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p><b>Which activity is critical after this week?</b> Answer before you commit &mdash; the engine recomputes the critical path afterwards and will tell you.</p><span class="echo" hidden></span><div class="predict-slot" id="predict-2"></div></article>
+      <article><span>Try</span><p>Read <b>THE NEWS</b>, put your crews on work fronts, then press <b>Commit the week</b> and watch the five days run.</p></article>
+      <article><span>Takeaway</span><p>The critical path is re-solved every Monday against what actually happened, so it moves under you.</p></article>
+    </div>
+  </section>
+  <div class="board-slot" data-slot="1"></div>
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">A failed inspection adds three days to a hold. You authorise 60-hour weeks. What happens to the three days?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Nothing. Cure and inspection holds burn exactly one working day per working day &mdash; no crew count, no overtime level and no expediting fee touches them. What is left to you is sequence, not speed.">Nothing &mdash; holds are non-compressible</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="This is the misconception: overtime always accelerates. It genuinely does at first &mdash; a 60-hour week delivers 1.50&times; in week one. But it cannot accelerate a hold at all, and by week 4 a sustained 60-hour crew is at 0.930 of a straight-time week while still billing 1.75&times;.">They come back &mdash; overtime accelerates anything</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Half right, and the wrong half. A second crew does buy about 44% off a normal activity&rsquo;s duration &mdash; but not off a hold, and you would be paying the premium for nothing.">Two of the three, if you also add a crew</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 3 ================================= -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 10 of 16 &middot; Part four &middot; Construction Management &middot; Stage 3</span>
+      <h2 id="stage-3-title">Make a call</h2>
+      <p class="stage-question">What are you buying when you answer a call?</p>
+      <p class="refresh"><b>Before you start.</b> A <b>call</b> is a judgment made before the work,
+        whose consequence lands somewhere else. Each option shows a <b>price you pay this week</b> and
+        an <b>exposure</b> &mdash; the probability the deferred consequence fires. Nothing is hidden,
+        and nothing defaults to safe: every call defaults to its <i>first</i> option, which is always
+        free and always the most exposed.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details for Make a call">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Before you choose: <b>what do you think the free option costs you</b>, in dollars, given where the float is right now?</p><span class="echo" hidden></span><div class="predict-slot" id="predict-3"></div></article>
+      <article><span>Try</span><p>Answer the call on the table &mdash; compare <b>price today</b> against <b>exposure</b> &mdash; then <b>Commit the week</b>.</p></article>
+      <article><span>Takeaway</span><p>A call is a priced bet with its odds printed on it; every team faces the same roll, so what differs is the exposure you bought.</p></article>
+    </div>
+  </section>
+  <div class="board-slot" data-slot="2"></div>
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">Rain is forecast. Is working through it a good buy?</h3>
+    <p class="check-prompt">One rain day: $2,600 and a 16% chance of placing something you take back out.</p>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Right &mdash; and the question is not the forecast, it is the float column. Standing down on roofing with six days of float is free. Standing down on foundation walls at zero float is a week of liquidated damages.">You cannot tell until you know what work is exposed</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="This is the misconception: weather delays everything equally. Rain days stop only weather-flagged work &mdash; earthwork, concrete placement, roofing and envelope. The same &ldquo;ground is soup&rdquo; card costs three critical days in week 3 and exactly nothing in week 18.">Yes &mdash; rain delays the whole job, so always buy the days back</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Not as a rule. At 16% on one day it is often the cheapest thing on the card &mdash; if the exposed work is driving the finish. The decision is float-dependent, not price-dependent.">No &mdash; $2,600 is never worth one day</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ============================ STAGE 4 ================================= -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 10 of 16 &middot; Part four &middot; Construction Management &middot; Stage 4</span>
+      <h2 id="stage-4-title">Debrief</h2>
+      <p class="stage-question">Was that a good decision, or a good outcome?</p>
+      <p class="refresh"><b>Before you start.</b> The debrief prints one row per call &mdash; what you
+        chose, what it cost, the <b>exposure</b> you carried and <b>the roll</b> it was judged against.
+        The roll is a hash of the seed and the call&rsquo;s identifier and nothing else, so
+        <b>every team on your seed faced the identical roll</b>. What differed is the bar it had to
+        clear.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details for Debrief">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Before you open it: <b>will your calls table read mostly &ldquo;covered&rdquo; or mostly &ldquo;got away with it&rdquo;?</b></p><span class="echo" hidden></span><div class="predict-slot" id="predict-4"></div></article>
+      <article><span>Try</span><p>Press <b>Open the debrief</b> and read the <b>Outcome</b> column against the <b>Exposure</b> column, not against the profit.</p></article>
+      <article><span>Takeaway</span><p>A decision is graded on what it was worth the Monday you made it, not on how the roll landed.</p></article>
+    </div>
+  </section>
+  <p class="stage-action">
+    <button class="btn primary" type="button" id="btn-open-debrief">Open the debrief</button>
+    <span class="why">One row per call: what you chose, what it cost, the exposure you carried and the roll it was judged against.</span>
+  </p>
+  <div class="board-slot" data-slot="3"></div>
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">A team took the free option at 45% exposure, the roll went their way, and they topped the leaderboard. How do you grade the call?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="&ldquo;Got away with it&rdquo; &mdash; the demo&rsquo;s own verdict for that box. Price it on the Monday they decided: a 45% chance of a three-day hold and $8,500 is an expected cost they chose to carry, and the roll every other team was handed happened to land above the line.">They got away with it &mdash; the decision was still exposed</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="This is the misconception, and the most expensive habit on the list: a good outcome means it was a good call. The job keeps rewarding it right up until it does not. Same seed, same roll &mdash; a team that bought the exposure down to 3% made the better decision and may well have scored less.">Good call &mdash; it worked, and the score proves it</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="Too strong the other way. Carrying exposure can be correct: if the branch the hold lands on still has float, the free option is genuinely the cheapest thing on the card. What makes it gradeable is whether they knew that when they chose.">Bad call &mdash; never carry exposure you can buy down</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<!-- ============================ THE ACTIVITY ============================
+     ONE board, moved between the four .board-slot elements by app.js on
+     `stagechange`. It starts in stage 1's slot; app.js moves it back there on
+     `lessonreset`.
+
+     #setup is the setup sheet (seed, team, project, difficulty) and #app is
+     the running job. They are the demo's own first-load gate: #app is hidden
+     until a seed is entered, which is also what re-locks stages 2–4.
+     ==================================================================== -->
+<div id="board-host">
+
+  <!-- ---------------------------- SETUP ---------------------------- -->
+  <div id="setup">
+    <div id="setup-inner"></div>
+  </div>
+
+  <!-- ----------------------------- APP ----------------------------- -->
+  <div id="app" hidden>
+    <!-- The brand and the Guide/Settings/Notes buttons that used to live here
+         are the shell's now. What is left is activity readout: which project
+         and seed is running, and the live HUD. -->
+    <header id="topbar">
+      <div id="project-block"></div>
+      <div id="hud"></div>
+    </header>
+
+    <main id="panes">
+      <section id="left">
+        <div id="view-tabs" role="group" aria-label="Views of the same job">
+          <button data-view="4d" class="active" type="button">4D View</button>
+          <button data-view="gantt" type="button">Gantt</button>
+          <button data-view="network" type="button">Network</button>
+          <span class="spacer"></span>
+          <span class="legend">
+            <span><i class="crit"></i>critical path</span>
+            <span><i class="norm"></i>has float</span>
+            <span><i class="flt"></i>float tail</span>
+            <span><i class="fix"></i>cure / hold</span>
+          </span>
+        </div>
+        <!-- A3: the three views are one job seen three ways, and the kicker
+             says what kind of claim each is. All three are Live — computed
+             from the current state of this run, every week. -->
+        <p class="panel-kicker"><span class="k-live">Live</span> recomputed from this run&rsquo;s real progress every week &mdash; nothing here is a stored picture</p>
+        <div id="view-host"></div>
+      </section>
+
+      <section id="right">
+        <div id="meeting">
+          <div id="meeting-head"></div>
+          <div id="meeting-body"></div>
+          <div id="meeting-foot"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- A4: the observation cue. One aria-live line naming the thing to
+         notice at the moment it becomes true — the week's result, and above
+         all the week the critical path moved. Empty on load; :empty hides it. -->
+    <p class="obs-cue" id="cue-board" role="status" aria-live="polite"></p>
   </div>
 </div>
 
-<!-- Presenter Notes. Everything between the head and the foot is generated by
-     build.js from src/teacher-guide.html — the same file that ships as the
-     printable guide and is rendered to PDF. Edit the guide, never this copy;
-     `node build.js --check` fails if the two drift apart. -->
-<div class="overlay" id="presenter" hidden>
-  <div class="modal notes" role="dialog" aria-modal="true" aria-labelledby="presenter-title">
-    <div class="modal-head navy">
-      <div>
-        <div class="msu-line"><svg width="13" height="13" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 4 A 7.6 8.2 0 1 0 16 4" stroke="#ECAC00" stroke-width="3.6" fill="none" stroke-linecap="round"/></svg>MURRAY STATE UNIVERSITY</div>
-        <h2 id="presenter-title">Presenter Notes</h2>
-        <div class="sub">THE INSTRUCTOR GUIDE IN FULL · SHEET IG-01</div>
-      </div>
-      <button class="btn x" data-close="presenter" aria-label="Close">✕</button>
+<!-- ============================ A0 FOOTER =============================== -->
+<div class="footer">
+  <span>Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button>
+  </div>
+</div>
+
+<!-- ============================ A7 GUIDE ================================ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">You are the general contractor and the clock is the contract. What was that
+      decision worth on the Monday you made it?</p>
+    <p class="note">Where this sits: Demo 10 of 16, Part four. Part four applies the same habit
+      &mdash; predict, run it, let the result correct you &mdash; inside a real discipline. This is
+      the scheduling case, and it needs network diagrams, not any of the AI demos.</p>
+    <ol>
+      <li><b>Read the schedule.</b> Everyone enters the <b>same seed code</b>, so the weather and
+        every roll are identical for every team. Press <b>Start the job</b>, then read the float
+        column before deciding anything.</li>
+      <li><b>Run a week.</b> Predict which activity will be critical, then <b>Commit the week</b>.
+        No undo, ever.</li>
+      <li><b>Make a call.</b> Answer what is on the table. Not answering is answering &mdash; every
+        call defaults to its free, most exposed option.</li>
+      <li><b>Debrief.</b> Grade the decision, not the outcome.</li>
+    </ol>
+    <h3>Three ways to look at the same job</h3>
+    <p><b>4D cutaway</b> &mdash; a section through the building driven by real progress. The finished
+      job is drawn as a faint dashed ghost and work fills it in; crews stand on the floor they are
+      working, so a stacked floor looks crowded and turns red.
+      <b>Gantt</b> &mdash; bars from early start to early finish, a thin tail out to late finish for
+      float, critical work in red, cure and inspection holds hatched, today and the contract date
+      both marked.
+      <b>Network</b> &mdash; the precedence diagram, with relationship type and lag on every arrow
+      and the driving path thick and red. It is computed every week, never declared, so it moves and
+      the game says so when it does.</p>
+    <h3>Three things that cost teams the game</h3>
+    <ul>
+      <li><b>Float is shared, not spare.</b> Spend it on one activity and the ones behind it no
+        longer have it.</li>
+      <li><b>Not answering is answering.</b> The default is always the most exposed option.</li>
+      <li><b>Cure and inspection holds cannot be compressed.</b> No crew count, no overtime, no fee.
+        Ever.</li>
+    </ul>
+    <h3>Getting around</h3>
+    <p>The stage tabs switch stages; stages 2&ndash;4 open once there is a schedule to run.
+      <b>Details</b> opens the evidence and limits for the current stage. <b>Guide</b> reopens this
+      card; <b>Settings</b> has <b>Open Presenter Notes</b>, <b>Presentation mode</b> and
+      <b>Reset</b>. On a phone the job folds into <b>SITE</b> and <b>MEETING</b> tabs. Tap any
+      underlined term for what it means.</p>
+    <h3>Time</h3>
+    <p>A full session is 75 minutes: 11 minutes of tutorial, 33 of competitive run, 12 of debrief.
+      The tutorial alone is about 10 minutes. The printable
+      <a href="teacher-guide.html" target="_blank" rel="noopener">session guide</a> has the running
+      order; the <a href="appendix.html" target="_blank" rel="noopener">CPM appendix</a> has the
+      background.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Read the schedule</button></form>
+</dialog>
+
+<!-- ============================ A8 SETTINGS ============================= -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The session guide on screen &mdash; the same document as the printable sheet
+      and the PDF, not a summary of it. Running order, the four stages, the five misconceptions and
+      the presenter controls.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+
+    <h3>Presentation mode</h3>
+    <p class="setnote">Projector mode: large UI, the schedule and the computed critical path readable
+      from the back row, and a <b>Notes</b> button in the header. Turn it on for THE NEWS each week so
+      the whole room reads the same card, and for the leaderboard at minute 59.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+
+    <h3>Reset</h3>
+    <p class="setnote">Back to the setup sheet in place, with no page reload: no run in progress, seed
+      and team cleared, every prediction echo and check answer cleared, stages 2&ndash;4 re-locked,
+      stage 1 selected. Presentation mode and the leaderboard are not demo state and survive it, the
+      same way they survive a reload. Mid-run it asks first.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+
+    <h3>Printable guide and appendix</h3>
+    <p class="setnote">The session guide as a printable sheet, with a PDF beside it; and the CPM
+      appendix &mdash; the derivations, the full calls deck, every debrief question, the measured
+      seeds, the sources and the vocabulary.</p>
+    <p><a class="btn" href="teacher-guide.html" target="_blank" rel="noopener">Printable session guide</a>
+       <a class="btn" href="appendix.html" target="_blank" rel="noopener">CPM appendix</a></p>
+
+    <h3>Engine self-test</h3>
+    <p class="setnote">36 assertions run live &mdash; the tutorial CPM against the hand calculation,
+      determinism, the non-compressible holds, the weather boundary in both directions, and the two
+      checks that hold the calls fair. If a student says the software is wrong, run this in front of
+      the class.</p>
+    <p><button class="btn ghost" type="button" id="btn-selftest">Run the engine self-test</button></p>
+
+    <h3>Leaderboard</h3>
+    <p class="setnote">Scores are held on this machine and survive a reload and a Reset. Clear them
+      between sections so a second section starts on an empty board.</p>
+    <p><button class="btn ghost" type="button" id="btn-lb-clear">Clear the leaderboard on this computer</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ============================ A5 DETAILS DRAWER ======================= -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Read the schedule</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
     </div>
-    <div class="modal-body">
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <!-- ---- stage 1 ---- -->
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>What the page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the schedule, the float column and the critical path</span>
+          <p>A precedence-diagram CPM is solved from <code>src/data.js</code> every turn. Nothing is
+            marked critical in the data file; criticality falls out of the arithmetic below.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span><span class="k-qual">a plausible small-commercial pro forma, not a real project&rsquo;s numbers</span> the contract, the money and the durations</span>
+          <p><i>Racer Commons</i> is invented: 38 activities, a $4,450,000 contract, 134 working days.
+            The figures are chosen so that schedule rather than cost-cutting dominates the score.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Forward: ES = max over predecessors (FS: EF+lag &middot; SS: ES+lag &middot; FF: EF+lag&minus;duration) &nbsp;|&nbsp; EF = ES + duration</div>
+        <div class="details-formula">Backward: LF = min over successors (FS: LS&minus;lag &middot; SS: LS&minus;lag+duration &middot; FF: LF&minus;lag) &nbsp;|&nbsp; LS = LF &minus; duration</div>
+        <div class="details-formula">Total float = LS &minus; ES &nbsp;&nbsp;(shared along the chain)</div>
+        <div class="details-formula">Free float = earliest successor ES &minus; your EF &nbsp;&nbsp;(yours alone; always &le; total float)</div>
+        <p>Walk the network in topological order for the forward pass and in reverse for the backward
+          pass. The largest early finish is the project duration. <b>Total float and free float are
+          different quantities</b>, and students collapse them into &ldquo;spare time&rdquo; at their
+          own cost: at baseline MEP rough-in on Level 1 carries 9 days of total float and 1 of free
+          float.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Float is measured to the project&rsquo;s own computed finish, so it is never
+            negative.</b> A job twelve days behind shows no &minus;12; performance against the
+            contract is reported separately in calendar days. Students who have seen negative float
+            in P6 need this said out loud.</li>
+          <li>Days are numbered from 0 and finish is exclusive, so EF = ES + duration. Textbook
+            tables numbering days 1&ndash;<i>n</i> read one higher on EF and LF.</li>
+          <li>Cure and inspection holds are modelled as activities rather than lags, so you can see
+            them sitting on the critical path.</li>
+          <li>Durations are crew-days of work, not fixed calendar durations: they shorten with crews
+            and stretch when a trade is starved.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>The CPM itself is standard precedence-diagramming method, not a cited result. The
+            engine is checked against a hand calculation instead &mdash; all sixty numbers of the
+            ten-activity tutorial network, printed in the
+            <a href="appendix.html" target="_blank" rel="noopener">CPM appendix &sect;1</a>.</li>
+          <li><a href="appendix.html" target="_blank" rel="noopener">Appendix &sect;8</a> is the
+            printable vocabulary; the hover glossary in the game is the authoritative copy.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is a teaching schedule, not a scheduling
+          tool. It does no resource levelling, no cost loading, no per-activity calendars and no
+          holiday calendars, and it will not tell you anything about a real project.</div>
+      </section>
+
+      <!-- ---- stage 2 ---- -->
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What the page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the week&rsquo;s progress and the re-solved critical path</span>
+          <p>Committing a week advances five working days, then re-solves the network: completed
+            activities pinned to the dates they actually happened, work in progress anchored to its
+            real start with remaining duration recomputed from the crews now on it, and nothing not
+            yet started able to begin before today.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span><span class="k-qual">the shape is the classic crash curve; the three steps are chosen to show it</span> the crashing premium</span>
+          <p>Marginal crew output runs 1.00, 0.80, 0.65, so two crews deliver 1.80 crew-days a day,
+            not 2.00 &mdash; about <b>44% off the duration for 100% more labour</b>. Always
+            available, never free, worth it only on the driving chain.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span><span class="k-qual">25% per crew over, floored at 35% &mdash; a teachable shape, not a measured loss</span> trade stacking</span>
+          <p>Past a zone&rsquo;s cap, <i>everyone</i> in it loses 25% per crew over. Four crews in a
+            two-crew zone deliver 2.0 crew-days a day &mdash; what two deliver, for twice the money.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">50 hr: 1.25&times; hours, 2 weeks grace, then &times;0.90 per week, floor 0.75 &mdash; cost 1.375&times; from week 1</div>
+        <div class="details-formula">60 hr: 1.50&times; hours, 1 week grace, then &times;0.85 per week, floor 0.62 &mdash; cost 1.750&times; from week 1</div>
+        <p><b>Both halves of this, please.</b> Overtime genuinely accelerates at first: 1.25&times;
+          and 1.50&times; in week one are real, and a two-week burst on a driving activity is good
+          play. But the premium never decays and the efficiency does &mdash; by week 5 a 50-hour crew
+          produces <b>0.938</b> of a straight-time week at <b>1.375&times;</b> the cost, and a
+          sustained 60-hour crew settles at <b>0.930</b> at <b>1.75&times;</b>. And neither touches a
+          hold.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>One week back at straight time resets the streak completely.</b> Real recovery is
+            gradual and the literature does not support instant reset. Students will find this and
+            alternate weeks to farm the grace period.</li>
+          <li>The <b>0.62</b> floor for sustained 60-hour weeks is an authored choice, not a quoted
+            figure &mdash; see the Reasoned note in the appendix. Taking the literature&rsquo;s 66%
+            literally would make sixty-hour weeks <i>better</i> than fifty-hour weeks, which is the
+            wrong lesson.</li>
+          <li>Adding a crew takes two weeks&rsquo; notice, and the mobilization charge lands when you
+            order, not when they arrive. Releasing one is immediate and free.</li>
+          <li>Fatigue, absenteeism, turnover and the quality rework that sustained overtime causes
+            are not modelled at all &mdash; only the productivity number is.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://trid.trb.org/View/206774" target="_blank" rel="noopener">Business
+            Roundtable, Report C-2, <i>Scheduled Overtime Effect on Construction Projects</i>
+            (Nov 1980)</a> &mdash; TRB catalogue record, checked 2026-09-16. Operations above 60
+            hours weekly for over two months &ldquo;reduce productivity and increase labor costs
+            without meaningful schedule benefits&rdquo;.</li>
+          <li><a href="https://www.construction-institute.org/effects-of-scheduled-overtime-on-labor-productivity-a-quantitative-analysis" target="_blank" rel="noopener">CII
+            SD-98 (Aug 1994) &mdash; Thomas &amp; Raynar, later ASCE JCEM 123(2) 1997</a>, checked
+            2026-09-16: &ldquo;Work weeks of 5 and 6 days show losses of efficiency of 12 and 14
+            percent&rdquo;, from 121 weeks across four projects; and &ldquo;about 25 percent of the
+            time efficiency is not impaired for durations of 2 to 4 weeks&rdquo; &mdash; which is
+            where the grace period comes from.</li>
+          <li><a href="appendix.html" target="_blank" rel="noopener">Appendix &sect;2</a> has the full
+            week-by-week table, the MCAA Bulletin OT1 comparison, and what each source could and
+            could not be verified for.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the productivity numbers are a teachable shape
+          calibrated to agree with the literature&rsquo;s <i>direction</i>, not a prediction of any
+          real crew&rsquo;s output. Do not take a multiplier off this screen into an estimate.</div>
+      </section>
+
+      <!-- ---- stage 3 ---- -->
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What the page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the roll each call is judged against</span>
+          <p>This is the mechanism the whole fairness claim rests on, and until this edition it was
+            documented only in the instructor guide &mdash; a learner could not see that the rolls
+            were seeded. <b>The roll is a hash of the seed and the call&rsquo;s identifier, and
+            nothing else</b>: not the week you answered, not the order you played, not anything any
+            team did.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span><span class="k-qual">a hand-authored deck of nine calls with their option prices</span> the calls and the event deck</span>
+          <p>Every call, its options, its prices and its exposures are written by hand in
+            <code>src/data.js</code>. The deck is fixed; what varies between teams is only which
+            options they buy.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-illustrative">Illustrative</span><span class="k-qual">chosen so the arithmetic is teachable at the board</span> the exposure percentages</span>
+          <p>45%, 40%, 14%, 3% and the rest are picked so that buying exposure down is sometimes
+            right and sometimes waste, and so a first-year can price it in their head.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">roll = hash(seed, callId) &nbsp;&rarr;&nbsp; the consequence fires when roll &lt; the exposure of the option you bought</div>
+        <div class="details-formula">Weather damage = min(0.62, 0.16 &times; rain days)</div>
+        <p>Two teams both looking at 0.31: the one that bought the exposure down to 3% is covered,
+          the one that left it at 45% is not. What separates them is a decision made in week 1, not a
+          die thrown in week 9. Two engine self-tests hold this &mdash; identical rolls across two
+          games on a seed, and rolls unchanged after a whole game played differently.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The &#9888; UNSAFE backfill option is not presented as a trade-off, and that is
+            deliberate.</b> Every other call is a legitimate judgment with defensible answers on both
+            sides. This one is not: an unbraced, uncured foundation wall with fill on one side only is
+            loaded in a direction nobody designed for, and when one lets go it rotates in on whoever
+            is standing in the excavation. It is an OSHA excavation and structural-stability
+            violation before it is a schedule decision. It stays in the deck because schedule
+            pressure producing an unsafe shortcut is not hypothetical in this industry, and it is
+            cheaper to meet in a classroom. Presenting it as a balanced option would teach that the
+            cost is dollars and days, when the cost is a person.</li>
+          <li>Exposure is a stated probability against a seeded roll, not a model of real
+            construction risk.</li>
+          <li>Expediting always buys back <i>some</i> of a delay and never all of it &mdash; recovery
+            is capped one day short of the delay at every difficulty. It is not an undo button.</li>
+          <li>Rain days stop only weather-flagged work: earthwork, concrete placement, roofing and
+            envelope. Steel erection carries no flag, so the wind-advisory card leaves the crane
+            alone &mdash; a boundary drawn for teachability, and real erectors do stand down in
+            40&nbsp;mph gusts.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>The calls are authored scenarios, not cited cases. What is checked is internal: engine
+            self-tests assert that no expedite buys back more days than the delay cost, that every
+            call explains its jargon in plain words, and that unsafe options are rare, flagged and
+            never the only way through.</li>
+          <li><a href="appendix.html" target="_blank" rel="noopener">Appendix &sect;4</a> prints the
+            deck, the two-by-two that grades a call, and the procurement pre-buys.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the demo does not claim these probabilities are
+          real construction risk rates. It claims only that deciding under a stated exposure, and
+          being graded on the decision rather than the roll, is the habit worth building.</div>
+      </section>
+
+      <!-- ---- stage 4 ---- -->
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>What the page actually computes</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> your profit, your cash curve and every call&rsquo;s verdict</span>
+          <p>Score is profit: contract plus change orders, less buyout, labour, general conditions,
+            event and call costs, expedite fees and hiring, less liquidated damages, plus bonus. The
+            calls table and the cash S-curve are computed from this run&rsquo;s actual decisions.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-measured">Measured</span><span class="k-qual">from the engine&rsquo;s own CPM, 2026-09-16, one crew per activity, no overtime</span> the do-nothing baseline</span>
+          <p>Unimpeded this network runs <b>89 working days against the 134-day contract</b> &mdash;
+            45 working days, 63 calendar days, of cushion. Across eight measured seeds, absorbing
+            everything averages about $185,000 and goes negative on two; playing judgment averages
+            about $351,000.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span> the four verdicts</span>
+          <p><i>Covered</i>, <i>unlucky</i>, <i>got away with it</i> and <i>went against you</i> are
+            the authors&rsquo; grading scheme, derived from the two things the page already knows:
+            what exposure you carried, and how the roll landed. They are a judgement about how to
+            grade a decision, not a measurement.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Profit = contract + change orders &minus; buyout &minus; labour &minus; GC &minus; event/call/expedite/hiring &minus; LDs + bonus</div>
+        <div class="details-formula">A week late = $123,200 &nbsp;|&nbsp; a week early = $36,400 &nbsp;&rarr;&nbsp; a 3.4:1 asymmetry</div>
+        <p>The verdicts are a two-by-two of <i>did you buy the exposure down</i> against <i>did the
+          roll go your way</i>, and the diagonal is the lesson. A good decision can have a bad
+          outcome and a bad decision can have a good one.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Liquidated damages at $14,000 a calendar day on a $4.45M job are steeper than most
+            real contracts this size</b>, where LDs sit nearer actual carrying cost. They are set
+            there so schedule rather than cost-cutting dominates the score. Ask the class what a
+            $2,000-a-day LD would produce instead.</li>
+          <li>The cash model is a simplification: monthly pay applications, ~30-day payment, 5%
+            retainage, and a line of credit at an illustrative ~9.4% APR. <i>Profitable</i> and
+            <i>solvent</i> are not the same thing, which is the point of carrying it.</li>
+          <li>Score is profit alone. Safety, quality and the client relationship are not in the
+            number &mdash; which is exactly why the unsafe-call block prints <i>above</i> the
+            profit.</li>
+          <li>The leaderboard is local to this machine and survives a reload and a Reset.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li>The money model is an authored pro forma, labelled Illustrative on the stage 1 drawer.
+            Nothing in it is a cited figure.</li>
+          <li><a href="appendix.html" target="_blank" rel="noopener">Appendix &sect;3 and &sect;6</a>
+            carry the money table, the measured seeds and all eleven debrief questions.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> a high score here is evidence that a team read
+          float and priced its calls on this seed. It is not evidence they would run a real job well,
+          and it is not a claim that profit is the right way to grade construction management.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- ============== PRESENTER NOTES = THE PRINTABLE SESSION GUIDE ==========
+     build.js injects the .guide-scope body of src/demo-guide.html here and its
+     scoped stylesheet in <head>. One source, nothing fetched, and
+     `node build.js --check` fails the moment the two drift apart. DO NOT
+     hand-edit the notes here — edit src/demo-guide.html.
+
+     The CPM appendix is deliberately NOT injected; it is linked below and from
+     Settings. Injecting 8,700 words into a phone-sized overlay is what the
+     split exists to prevent, and build.js --check asserts it has not happened.
+     ======================================================================== -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable session guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
 <!--__GUIDE__-->
-    </div>
-    <div class="modal-foot split">
-      <span class="foot-note">ESC TO CLOSE · THE SAME DOCUMENT AS THE PRINTABLE GUIDE</span>
-      <a class="btn" href="teacher-guide.html" target="_blank" rel="noopener">📄 Printable guide</a>
-      <button class="btn primary" data-close="presenter">Close</button>
-    </div>
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a>
+      &mdash; the same document, laid out for print; the PDF beside it is a render of that file.
+      The <a href="appendix.html" target="_blank" rel="noopener">CPM appendix (appendix.html)</a> is
+      the background sheet: derivations, the full calls deck, every debrief question, the measured
+      seeds, the sources and the vocabulary.</p>
   </div>
-</div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
 
-<!-- Settings. The first three fields are the contract set, labelled exactly:
-     Open Presenter Notes, Presentation mode, Reset. The rest are this demo’s
-     own controls and sit below them. -->
-<div class="overlay" id="instructor" hidden>
-  <div class="modal" style="max-width:520px">
-    <div class="modal-head">
-      <div><h2>⚙ Settings</h2><div class="sub">NOTES · PRESENTATION · RESET · GUIDE · SELF-TEST</div></div>
-      <button class="btn x" data-close="instructor" aria-label="Close">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="field">
-        <label>Presenter notes</label>
-        <button class="btn" id="btn-notes" aria-label="Open Presenter Notes"><span aria-hidden="true">🎙 </span>Open Presenter Notes</button>
-        <div class="help">
-          The instructor guide in full, inside the app — the same document as the printable
-          guide and the PDF, not a summary of it. Running order, the CPM background, the calls,
-          the misconceptions and every debrief question.
-        </div>
-      </div>
-      <div class="field">
-        <label>Presentation mode</label>
-        <label class="chk"><input type="checkbox" id="chk-big2"> Presentation mode</label>
-        <div class="help">
-          Also known as projector mode: large UI, readable from the back of the room, and a 🎙
-          shortcut to the notes in the title bar. Turn it on for THE NEWS each week so the whole
-          room reads the same card, and for the leaderboard at minute 59.
-        </div>
-      </div>
-      <div class="field">
-        <label>Reset</label>
-        <button class="btn danger" id="btn-reset">Reset</button>
-        <div class="help">
-          Back to the setup sheet exactly as the page opens — no run in progress, seed and team
-          cleared, ready for the next section to type its own seed and difficulty. Presentation
-          mode and the leaderboard are not demo state and survive it, the same way they survive a
-          reload.
-        </div>
-      </div>
-      <div class="field">
-        <label>Guide</label>
-        <button class="btn" id="btn-howto2">? Show the Guide</button>
-        <div class="help">
-          The weekly loop and the three views, on one sheet. It opens on every load; this puts it
-          back up on the projector when a team asks mid-session.
-        </div>
-      </div>
-      <div class="field">
-        <label>Printable instructor guide</label>
-        <a class="btn" href="teacher-guide.html" target="_blank">📄 Open the printable guide</a>
-        <div class="help">
-          The same document the presenter notes show, as a printable sheet with a PDF beside it.
-        </div>
-      </div>
-      <div class="field">
-        <label>Engine self-test</label>
-        <button class="btn" id="btn-selftest">🧪 Run the engine self-test</button>
-        <div class="help">
-          36 assertions run live — the CPM hand calculation, determinism, the non-compressible
-          holds. If a student says the software is wrong, run this in front of the class.
-        </div>
-      </div>
-      <div class="field">
-        <label>Leaderboard</label>
-        <button class="btn danger" id="btn-lb-reset2">Clear the leaderboard on this computer</button>
-        <div class="help">
-          Scores are held on this machine and survive a reload and a Reset. Clear them between
-          sections so a second section starts on an empty board.
-        </div>
-      </div>
-    </div>
-    <div class="modal-foot"><button class="btn primary" data-close="instructor">Close</button></div>
+<!-- ============================ THE DEMO'S OWN DIALOGS ==================
+     These are A3 — part of the activity, not duplicates of the kit's A5
+     Details drawer. ADOPTING.md §5: the kit's #details is PER-STAGE and fixed
+     (what is live, how it works, assumptions, sources, boundary); these two
+     are per-run outputs of the engine, and they keep their own ids. Both are
+     native <dialog> so the shell's Reset closes them along with its own four.
+     ==================================================================== -->
+<dialog class="lesson-dialog" id="debrief-sheet" aria-labelledby="debrief-sheet-title">
+  <div class="lesson-dialog-head">
+    <h2 id="debrief-sheet-title">Debrief<span class="head-sub" id="debrief-head-sub"></span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
   </div>
-</div>
+  <div class="lesson-dialog-body" id="debrief-body"></div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
 
-<div class="overlay" id="debrief" hidden>
-  <div class="modal">
-    <div class="modal-head">
-      <div><h2>Debrief</h2><div class="sub" id="debrief-head-sub"></div></div>
-      <button class="btn" id="btn-debrief-close">Close</button>
-    </div>
-    <div class="modal-body" id="debrief-body"></div>
+<dialog class="lesson-dialog" id="selftest-sheet" aria-labelledby="selftest-sheet-title">
+  <div class="lesson-dialog-head">
+    <h2 id="selftest-sheet-title">Engine self-test<span class="head-sub">CPM vs hand calculation &middot; determinism &middot; model bounds</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
   </div>
-</div>
-
-<div class="overlay" id="selftest" hidden>
-  <div class="modal" style="max-width:720px">
-    <div class="modal-head">
-      <div><h2>Engine self-test</h2><div class="sub">CPM VS HAND CALCULATION · DETERMINISM · MODEL BOUNDS</div></div>
-    </div>
-    <div class="modal-body">
-      <div id="selftest-body"></div>
-      <div id="selftest-sum"></div>
-    </div>
-    <div class="modal-foot"><button class="btn primary" data-close="selftest">Close</button></div>
+  <div class="lesson-dialog-body">
+    <p class="panel-kicker"><span class="k-live">Live</span> every assertion below runs in your browser when you press the button &mdash; nothing here is a stored result</p>
+    <div id="selftest-body"></div>
+    <div id="selftest-sum"></div>
   </div>
-</div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Close</button></form>
+</dialog>
 
+<!-- Phone panel switch and the two transient layers. These are fixed-position
+     and belong to the activity, but they sit at body level rather than inside
+     #board-host, so moving the board between stages cannot take them along or
+     reparent a visible tooltip mid-animation. -->
 <nav id="m-nav" aria-label="Panels">
-  <button id="m-site" data-m="site">▦ SITE</button>
-  <button id="m-meet" data-m="meet" class="on">☰ MEETING</button>
+  <button id="m-site" data-m="site" type="button">&#9638; SITE</button>
+  <button id="m-meet" data-m="meet" class="on" type="button">&#9776; MEETING</button>
 </nav>
+<div id="tip" role="tooltip"></div>
+<div id="toast" role="status" aria-live="polite"></div>
 
-<div id="tip"></div>
-<div id="toast"></div>
+<!-- ============================ A0 CREDIT PILL ========================== -->
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
 
 <script>
-/*__JS__*/
+/* The shell first, and that ordering is contractual: it takes its first-load
+   snapshot of every kit-owned element — including the `disabled` gates on
+   tabs 2–4 — before the demo's own script has run. */
+/*__SHELL_JS__*/
 </script>
-<!-- Attribution — styled in styles.css (.bh-credit) so the mobile rule can
-     lift it clear of the SITE / MEETING tab bar. -->
-<div class="bh-credit">Bryant Harrison &middot; Murray State University &middot; built with the three amigos &mdash; Claude, Codex &amp; Gemini</div>
+<script>
+/*__TOPPING_OUT_ENGINE__*/
+</script>
+<script>
+/*__APP__*/
+</script>
 </body>
 </html>
