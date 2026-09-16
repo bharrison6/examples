@@ -1,0 +1,455 @@
+/* fuel-golf — the ACTIVITY's styles. Injected AFTER the lesson shell's, so
+   anything here can override a shell rule without !important.
+
+   Nothing in this file styles lesson chrome. The header, the stage tablist,
+   the stage intros, the lesson strip, the observation cue, the Details drawer,
+   the check cards, the four shell dialogs, the footer and the credit pill are
+   all the kit's, and every rule this demo used to carry for them was deleted
+   rather than left in to fight (ADOPTING.md section 2). What is left is the
+   flight view and the four dialogs the activity owns.
+
+   Three groups of rule and nothing else:
+     1. the flight view — the bounded canvas frame, the readout strip, the
+        docked HUD, the burn planner, the control groups;
+     2. the A2 prediction groups and the stage-2 gate card, which are lesson
+        parts the kit does not draw because it does not know a demo may capture
+        a prediction as a button group;
+     3. .game-dialog — the mission briefing, the level list, the debrief and
+        the crash screen, as native <dialog> on a navy surface. */
+
+:root {
+  /* Functional (physics) colours, deliberately distinct from the brand chrome:
+     a burn direction is information, not decoration. The kit has no token for
+     these, so they are added here rather than by renaming one of its own. */
+  --prograde: #4ade80;
+  --retro: #fb923c;
+  --radial: #22d3ee;
+  --good: #4ade80;
+  --warn: var(--gold);
+  --bad: var(--warm);
+  /* The game's internals were authored against a unitless scale factor. The
+     kit scales type with --u instead, so --fs tracks it: one number in two
+     places rather than every size in the file rewritten. */
+  --fs: 1;
+}
+body.presenter { --fs: 1.2; }
+
+/* ===================== 1. THE FLIGHT VIEW ============================== */
+
+.activity { min-width: 0; }
+.activity-host { min-width: 0; }
+
+.flight-readout {
+  margin: 10px 0 12px;
+  padding: 10px 12px;
+  background: var(--navy-deep);
+  border: 1px solid var(--line-on-navy);
+  border-radius: var(--radius-2);
+}
+.flight-readout .chips { display: flex; flex-wrap: wrap; gap: 7px; margin: 7px 0; }
+/* A kicker sitting on its own line above or below what it labels, rather than
+   in a .panel-head. Same vocabulary, same colours, just inline. */
+.panel-kicker.kick-inline { display: inline-flex; margin: 0 0 2px; }
+
+.chip {
+  background: rgba(255, 255, 255, .07);
+  border: 1px solid var(--line-on-navy);
+  border-radius: 999px;
+  padding: 4px 11px;
+  font-size: calc(12.5px * var(--fs));
+  color: var(--ink-2-on-navy);
+  white-space: nowrap;
+}
+.chip b { color: var(--ink-on-navy); }
+.chip.par { border-color: rgba(236, 172, 0, .5); }
+.chip.par b { color: var(--gold-lite); }
+.chip.mono b { font-variant-numeric: tabular-nums; }
+#fuelwrap { display: flex; align-items: center; gap: 7px; }
+#fuelbar {
+  width: calc(96px * var(--fs)); height: calc(11px * var(--fs));
+  background: #001730; border: 1px solid var(--line-on-navy);
+  border-radius: 999px; overflow: hidden;
+}
+#fuelfill { height: 100%; width: 100%; background: linear-gradient(90deg, var(--lite), var(--gold)); transition: width .25s; }
+
+/* The canvas beside its instrument. One column under 900px, because a 210px
+   HUD next to a 120px map is worse than the two stacked. */
+.flight-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 900px) {
+  .flight-grid { grid-template-columns: minmax(0, 1fr) minmax(212px, 258px); }
+}
+
+/* The bounded flight view. This box is what game.js's vw()/vh() measure, and
+   a ResizeObserver on the canvas turns any change here into a re-measure. */
+.flight-stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  min-height: 268px;
+  background: #000a14;
+  border: 1px solid var(--line-on-navy);
+  border-radius: var(--radius-2);
+  overflow: hidden;
+  touch-action: none;
+}
+@media (min-width: 760px) { .flight-stage { aspect-ratio: 16 / 10; } }
+#space { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+#space.grabbing { cursor: grabbing; }
+#space.aiming { cursor: crosshair; }
+
+/* ---- the Oberth instrument, docked ----
+   Bottom row first in importance: "energy gained per 1 delta-v" is the demo's
+   A4 reading and the bar under it is the demo's A4 cue made visual. */
+#hud {
+  display: none;
+  align-self: start;
+  background: var(--navy-deep);
+  border: 1px solid var(--line-on-navy);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius-2);
+  padding: 11px 13px;
+  font-variant-numeric: tabular-nums;
+}
+#hud.show { display: block; }
+#hud h4 {
+  margin: 0 0 4px;
+  color: var(--gold-lite); font-size: calc(10.5px * var(--fs));
+  text-transform: uppercase; letter-spacing: .15em; font-weight: 800;
+}
+#hud .row { display: flex; justify-content: space-between; gap: 12px; font-size: calc(12.5px * var(--fs)); padding: 2px 0; }
+#hud .row span { color: var(--ink-3-on-navy); }
+#hud .row b { color: var(--ink-on-navy); }
+#hud .row.hi b { color: var(--gold-lite); }
+#hud .divider { height: 1px; background: var(--line-on-navy); margin: 6px 0; }
+#oberthbarwrap { margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line-on-navy); }
+#oberthbarwrap .cap { font-size: calc(10.5px * var(--fs)); color: var(--ink-3-on-navy); margin-bottom: 3px; line-height: 1.4; }
+#oberthbarwrap .cap b { color: var(--gold-lite); font-size: calc(12.5px * var(--fs)); }
+#oberthbar { height: calc(9px * var(--fs)); background: #001730; border-radius: 999px; overflow: hidden; border: 1px solid var(--line-on-navy); }
+#oberthfill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--lite), var(--gold)); }
+
+/* ---- overlays that belong to the frame, not the page ----
+   All three were position:fixed before the retrofit. They are absolute inside
+   .flight-stage now, so they travel with the view when it is relocated. */
+#hint {
+  position: absolute; left: 8px; right: 8px; top: 8px;
+  display: none; line-height: 1.5;
+  background: rgba(0, 24, 50, .95);
+  border: 1px solid var(--line-on-navy);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--radius-2);
+  padding: 10px 34px 10px 13px;
+  font-size: calc(12.5px * var(--fs)); color: var(--ink-on-navy);
+  max-height: 46%; overflow-y: auto;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .45);
+}
+#hint.show { display: block; }
+#hintClose {
+  position: absolute; top: 2px; right: 2px; padding: 2px 7px; min-height: 0;
+  background: transparent; border: none; color: var(--ink-3-on-navy);
+  font-size: calc(15px * var(--fs));
+}
+#hintClose:hover { color: var(--gold-lite); }
+
+#toast {
+  position: absolute; left: 50%; top: 8px; transform: translateX(-50%);
+  display: none; z-index: 3;
+  background: var(--navy); border: 1px solid var(--gold);
+  border-radius: 999px; padding: 6px 16px;
+  font-size: calc(12.5px * var(--fs)); font-weight: 700; color: var(--gold-lite);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
+}
+#toast.show { display: block; }
+
+#planner {
+  position: absolute; right: 8px; bottom: 8px; z-index: 4;
+  width: min(330px, calc(100% - 16px));
+  max-height: calc(100% - 16px); overflow-y: auto;
+  display: none;
+  background: rgba(0, 24, 50, .97);
+  border: 1px solid var(--line-on-navy);
+  border-top: 3px solid var(--gold);
+  border-radius: var(--radius-2); padding: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, .5);
+}
+#planner.show { display: block; }
+#planner h3 {
+  margin: 0 0 8px;
+  font-size: calc(11px * var(--fs)); color: var(--gold-lite);
+  text-transform: uppercase; letter-spacing: .13em; font-weight: 800;
+}
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 9px; }
+.modes button { padding: 8px 6px; }
+.modes button[data-mode="prograde"].active { background: var(--prograde); color: #012a12; border-color: var(--prograde); }
+.modes button[data-mode="retrograde"].active { background: var(--retro); color: #2a1402; border-color: var(--retro); }
+.modes button[data-mode="radialout"].active,
+.modes button[data-mode="radialin"].active { background: var(--radial); color: #002028; border-color: var(--radial); }
+.modes button[data-mode="free"].active { background: var(--lite); color: #001b39; border-color: var(--lite); }
+.sliderrow { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+.sliderrow label { font-size: calc(11.5px * var(--fs)); color: var(--ink-3-on-navy); width: calc(58px * var(--fs)); }
+.sliderrow input[type=range] { flex: 1; min-width: 0; accent-color: var(--gold); }
+.sliderrow output {
+  width: calc(70px * var(--fs)); text-align: right; font-variant-numeric: tabular-nums;
+  font-weight: 700; color: var(--gold-lite);
+}
+.finebtns { display: flex; gap: 4px; }
+.finebtns button { flex: 1; padding: 4px 6px; font-size: calc(11.5px * var(--fs)); }
+#plannerActions { display: flex; gap: 8px; margin-top: 10px; }
+#plannerActions button { flex: 1; padding: 10px; }
+#burncost { font-size: calc(11.5px * var(--fs)); color: var(--ink-3-on-navy); margin-top: 8px; line-height: 1.5; }
+#burncost b { color: var(--ink-on-navy); }
+#predinfo { font-size: calc(12px * var(--fs)); margin-top: 6px; font-weight: 700; line-height: 1.45; color: var(--ink-on-navy); }
+.aimhint {
+  font-size: calc(10.5px * var(--fs)); color: var(--ink-3-on-navy); margin-top: 7px;
+  padding-top: 7px; border-top: 1px dashed var(--line-on-navy);
+}
+
+/* ---- the control groups ---- */
+#controls { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; align-items: flex-start; }
+.ctlgroup {
+  flex: 1 1 280px; min-width: 0;
+  background: var(--navy-2); border: 1px solid var(--line-on-navy);
+  border-radius: var(--radius-2); padding: 9px 10px;
+}
+.ctlrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.ctlgroup .lbl {
+  color: var(--gold-lite); font-size: calc(9.5px * var(--fs)); margin: 0 3px;
+  letter-spacing: .12em; font-weight: 800;
+}
+.ctlgroup .sep { width: 1px; align-self: stretch; background: var(--line-on-navy); margin: 0 2px; }
+#leadWrap { display: none; align-items: center; gap: 4px; }
+#leadWrap.show { display: flex; }
+#leadInput {
+  width: calc(52px * var(--fs)); background: #001730; color: var(--ink-on-navy);
+  border: 1px solid var(--line-on-navy); border-radius: 6px; padding: 4px 6px;
+  font-size: calc(12px * var(--fs)); text-align: right; font-variant-numeric: tabular-nums;
+}
+#leadWrap .u { color: var(--ink-3-on-navy); font-size: calc(11px * var(--fs)); }
+
+.flight-actions { margin-top: 12px; }
+
+/* The activity's own buttons, scoped so they cannot reach the shell's chrome.
+   The kit styles .btn; these are bare <button> elements inside the workbench
+   and the game dialogs, and they keep the game's own compact look. */
+.workbench button:not(.btn),
+.game-dialog button {
+  font-family: inherit;
+  background: rgba(255, 255, 255, .08); color: var(--ink-on-navy);
+  border: 1px solid var(--line-on-navy); border-radius: 8px;
+  padding: 6px 12px; font-size: calc(13px * var(--fs));
+  min-width: 40px; min-height: 40px;
+  transition: border-color .12s, background .12s;
+}
+.workbench button:not(.btn):hover:not(:disabled),
+.game-dialog button:hover:not(:disabled) { border-color: var(--gold); }
+.workbench button.primary,
+.game-dialog button.primary { background: var(--gold); color: #001b39; font-weight: 800; border-color: var(--gold); }
+.workbench button.primary:hover:not(:disabled),
+.game-dialog button.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.workbench button.active { background: var(--gold); color: #001b39; border-color: var(--gold); font-weight: 700; }
+.workbench button.danger,
+.game-dialog button.danger { color: #FFB49B; border-color: rgba(255, 69, 0, .5); }
+
+.btxt { display: inline; }
+
+.moon-note {
+  margin: 10px 0 0; padding: 9px 12px;
+  background: rgba(255, 180, 155, .10);
+  border: 1px solid rgba(255, 180, 155, .34);
+  border-radius: var(--radius-2);
+  font-size: calc(12.5px * var(--fs)); line-height: 1.55; color: var(--ink-2-on-navy);
+}
+.moon-note .panel-kicker { display: flex; margin-bottom: 4px; }
+
+/* ===================== 2. THE A2 PREDICTION GROUPS ====================== */
+
+/* The kit draws the lesson strip but not a capture control, because it cannot
+   know a demo will capture its prediction as a button group. These sit under
+   the strip, on the cream stage-intro surface. */
+.predict-group { margin-top: 14px; }
+.predict-options { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.predict-option {
+  flex: 1 1 210px;
+  text-align: left; padding: 10px 13px;
+  background: var(--paper); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-2);
+  font: inherit; font-size: calc(var(--u) * .92); font-weight: 600;
+}
+.predict-option:hover { border-color: var(--navy); }
+.predict-option[aria-pressed="true"] {
+  background: var(--navy); color: #fff; border-color: var(--navy);
+  box-shadow: inset 0 -4px 0 var(--gold);
+}
+/* No right/wrong colouring on the button itself: a prediction is not an answer
+   and colouring it would tell the learner the result before the flight does. */
+
+.echo { display: block; margin-top: 7px; font-size: calc(var(--u) * .84); line-height: 1.5; }
+.echo-right { color: var(--ok); }
+.echo-wrong { color: var(--bad); }
+.echo b { color: inherit; }
+
+.gate-card {
+  margin: 0 0 18px; padding: 18px 20px;
+  background: var(--cream); border: 1px dashed var(--navy);
+  border-radius: var(--radius);
+}
+.gate-card h3 { margin: 0 0 6px; font-family: Georgia, "Times New Roman", serif; color: var(--navy); }
+.gate-card p { margin: 0; color: var(--ink-2); }
+
+/* ===================== 3. THE ACTIVITY'S OWN DIALOGS ==================== */
+
+/* Native <dialog>. margin:auto is the explicit centring fix — a dialog with a
+   max-height and no margin pins to the top of the viewport in some engines,
+   which is the defect task-glass-box-dialog-centering records. */
+.game-dialog {
+  margin: auto;
+  max-width: min(700px, 94vw);
+  max-height: 90vh;
+  padding: 0; border: 0; background: transparent; overflow: visible;
+}
+.game-dialog::backdrop { background: rgba(0, 10, 20, .78); }
+.game-dialog .box {
+  background: var(--navy); color: var(--ink-on-navy);
+  border: 1px solid var(--line-on-navy);
+  border-top: 4px solid var(--gold);
+  border-radius: var(--radius); padding: 22px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+}
+.game-dialog .eyebrow { color: var(--gold-lite); }
+.game-dialog .eyebrow.alert { color: #FFB49B; }
+.game-dialog h2 { margin: 2px 0 4px; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.5); color: #fff; }
+.game-dialog h3 {
+  font-size: calc(11px * var(--fs)); color: var(--gold-lite); margin: 16px 0 6px;
+  text-transform: uppercase; letter-spacing: .12em; font-weight: 800;
+}
+.game-dialog p { color: var(--ink-2-on-navy); font-size: calc(13px * var(--fs)); line-height: 1.58; margin: 6px 0; }
+.game-dialog p.big { color: var(--ink-on-navy); font-size: calc(14.5px * var(--fs)); }
+.game-dialog p b { color: var(--ink-on-navy); }
+.game-dialog .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+.game-dialog .actions button { padding: 10px 16px; }
+.game-dialog input[type=text] {
+  background: #001730; color: var(--ink-on-navy); border: 1px solid var(--line-on-navy);
+  border-radius: 8px; padding: 9px 11px; font-size: calc(13px * var(--fs));
+  width: calc(170px * var(--fs));
+}
+.game-dialog input[type=text]:focus { outline: none; border-color: var(--gold); }
+
+.progressbar {
+  height: 6px; background: #001730; border-radius: 999px; overflow: hidden;
+  border: 1px solid var(--line-on-navy); margin: 10px 0 4px;
+}
+.progressbar div { height: 100%; background: var(--gold); width: 0%; transition: width .3s; }
+
+.levelgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: 10px; margin-top: 12px; }
+.levelcard {
+  background: var(--navy-2); border: 1px solid var(--line-on-navy);
+  border-radius: 12px; padding: 12px; position: relative;
+  transition: border-color .12s, transform .12s;
+  display: block; width: 100%; text-align: left;
+}
+.levelcard:hover, .levelcard:focus-visible { border-color: var(--gold); transform: translateY(-2px); }
+.levelcard.done { border-left: 3px solid var(--prograde); }
+.levelcard.current { border-color: var(--gold); }
+.levelcard h4 { margin: 0 0 4px; font-size: calc(13.5px * var(--fs)); padding-right: 22px; color: #fff; }
+.levelcard .meta { font-size: calc(11.5px * var(--fs)); color: var(--ink-3-on-navy); line-height: 1.45; }
+.levelcard .best { font-size: calc(11.5px * var(--fs)); color: var(--prograde); margin-top: 5px; font-weight: 700; }
+.levelcard .badge { position: absolute; top: 10px; right: 10px; font-size: calc(13px * var(--fs)); }
+.levelcard .badge.par { color: var(--gold-lite); }
+
+#debriefPlot {
+  width: 100%; height: 200px; background: #000c1a; border-radius: 10px;
+  border: 1px solid var(--line-on-navy); margin: 10px 0;
+}
+.scorebar { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+.scorebar .stat {
+  background: var(--navy-2); border: 1px solid var(--line-on-navy);
+  border-radius: 10px; padding: 9px 15px; flex: 1; min-width: 104px;
+}
+.scorebar .stat .v { font-size: calc(19px * var(--fs)); font-weight: 800; font-variant-numeric: tabular-nums; color: #fff; }
+.scorebar .stat .k {
+  font-size: calc(9.5px * var(--fs)); color: var(--ink-3-on-navy); text-transform: uppercase;
+  letter-spacing: .11em; font-weight: 700; margin-top: 2px;
+}
+.scorebar .stat.hero { border-color: rgba(236, 172, 0, .5); }
+.scorebar .stat.hero .v { color: var(--gold-lite); }
+
+.verdict {
+  border-left: 3px solid var(--prograde); padding: 9px 13px;
+  background: rgba(74, 222, 128, .09); border-radius: 6px; margin: 10px 0;
+  font-size: calc(13.5px * var(--fs)); line-height: 1.55;
+}
+.verdict.bad { border-color: var(--gold); background: rgba(236, 172, 0, .1); }
+
+.mathcard {
+  background: var(--navy-2); border: 1px solid var(--line-on-navy);
+  border-left: 3px solid var(--lite); border-radius: 8px;
+  padding: 10px 12px; margin: 8px 0;
+  font-size: calc(12.5px * var(--fs)); line-height: 1.65;
+  font-variant-numeric: tabular-nums;
+}
+.mathcard .mhead { color: #8FD8F5; font-weight: 800; margin-bottom: 4px; }
+.mathcard .ok { color: var(--prograde); font-weight: 700; }
+.mathcard .warnc { color: var(--gold-lite); }
+.mathcard .dim { color: var(--ink-3-on-navy); }
+.mathcard.ledger { border-left-color: var(--gold); }
+.mathcard.ledger .mhead { color: var(--gold-lite); }
+.mathcard .mono { font-family: ui-monospace, Consolas, monospace; font-size: calc(12px * var(--fs)); }
+#mathToggle {
+  width: 100%; text-align: left; margin-top: 4px;
+  border-color: rgba(236, 172, 0, .5); color: var(--gold-lite); font-weight: 700;
+}
+#dbMath.collapsed { display: none; }
+
+table.lb { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: calc(13px * var(--fs)); }
+table.lb th, table.lb td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line-on-navy); }
+table.lb th {
+  color: var(--gold-lite); font-weight: 800; font-size: calc(10px * var(--fs));
+  text-transform: uppercase; letter-spacing: .11em;
+}
+table.lb td.dv { font-variant-numeric: tabular-nums; color: var(--prograde); font-weight: 700; }
+table.lb tr.you td { background: rgba(236, 172, 0, .1); }
+
+#dbNameRow { display: flex; gap: 8px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+#dbSaved { color: var(--prograde); display: none; font-weight: 700; }
+
+.kbd {
+  background: #001730; border: 1px solid var(--line-on-navy); border-radius: 5px;
+  padding: 1px 7px; font-size: calc(11px * var(--fs)); font-weight: 700; color: var(--gold-lite);
+}
+
+/* The two class-data confirmations in Settings, which sit on the shell's light
+   dialog surface rather than in the workbench. */
+.confirm-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.confirm-row b { color: var(--bad); }
+
+/* ===================== RESPONSIVE + PREFERENCES ========================= */
+
+@media (max-width: 760px) {
+  .btxt { display: none; }
+  .hide-sm { display: none; }
+  .chip { font-size: calc(11px * var(--fs)); padding: 3px 8px; }
+  #fuelbar { width: calc(64px * var(--fs)); }
+  .ctlgroup { flex-basis: 100%; padding: 8px; }
+  .ctlgroup .lbl { display: none; }
+  /* The planner fills the frame's width on a phone rather than covering the
+     right half of a map that is only 300px across. */
+  #planner { left: 8px; right: 8px; width: auto; max-height: calc(100% - 16px); }
+  .game-dialog .box { padding: 16px; }
+  .scorebar .stat { padding: 7px 11px; min-width: 84px; }
+  .predict-option { flex-basis: 100%; }
+}
+
+/* A phone held sideways under a projector table: the map would otherwise take
+   the whole screen and push the stage question out of reach. */
+@media (orientation: landscape) and (max-height: 560px) {
+  .flight-stage { aspect-ratio: auto; height: 62vh; min-height: 200px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fuelfill, #oberthfill, .progressbar div, .levelcard { transition: none; }
+}
+
+@media (prefers-contrast: more) {
+  .chip, #hud, .flight-readout, .ctlgroup, .flight-stage { border-color: #fff; }
+  #hud .row span, #burncost, .aimhint, #oberthbarwrap .cap,
+  .levelcard .meta, .scorebar .stat .k { color: #fff; }
+}
