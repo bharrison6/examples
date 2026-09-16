@@ -234,6 +234,35 @@ const INTRO_DISCLOSURE = Object.freeze({
 const A6_LEADS = Object.freeze({ correct: 'Correct.', wrong: 'Not quite.' });
 const LEAKED_A6 = Object.freeze(['Not what the detector showed.']);
 
+/* SHELL-OWNED OUTPUT SURFACES a demo's own script must not write into. The
+   boundary is already stated in ADOPTING.md §1 — "A6 check cards:
+   aria-pressed, per-option feedback, no score" is the shell's — so a demo
+   writing `.check-feedback` is a boundary violation by definition, not merely
+   a smell.
+
+   This exists because two merged demos did exactly that, independently, to
+   work around the hardcoded wrong-answer sentence while the kit was frozen:
+   ladder-lab post-processed the feedback with an innerHTML.replace() and
+   takeoff rewrote the <b> lead's textContent. Both were the RIGHT call at the
+   time — the kit was frozen and the sentence was wrong on screen — and both
+   become dead code the moment the kit is fixed, in the silent way: the
+   replace simply stops matching and still looks like it works.
+
+   Note `.echo` and `.obs-cue` are deliberately NOT here. The A2/A4 contract
+   says the ACTIVITY fills those, so a demo writing them is correct.
+
+   SHELL_SCRIPT_MARKER is how check-shell.js tells the shell's own injected
+   <script> (which of course writes these surfaces) from the demo's. */
+const SHELL_OWNED_OUTPUT = Object.freeze(['check-feedback']);
+const SHELL_SCRIPT_MARKER = `lesson-shell v${VERSION} behaviour`;
+/* VERSION-AGNOSTIC on purpose. check-shell.js uses this, not the string above,
+   to decide "is this the shell's own script block". A version-pinned marker
+   would fail to recognise the shell inside a file built by an OLDER kit, and
+   would then blame the SHELL's legitimate use of a shell-owned surface on the
+   demo — noisy, and misleading exactly when a stale build is what you are
+   diagnosing. */
+const SHELL_SCRIPT_MARKER_RE = /lesson-shell v[0-9a-zA-Z.]+ behaviour/;
+
 function css() {
   return '\n/* ---- lesson-shell/tokens.css ---- */\n' + read('tokens.css') +
          '\n/* ---- lesson-shell/shell.css ---- */\n' + read('shell.css') + '\n';
@@ -432,15 +461,18 @@ function behaviourScript() {
   setPresentation(document.body.classList.contains('presenter'));
 
   /* ---- A6 check cards: feedback for every option, nothing scored --------
-     THE LEAD COMES FROM THE CARD, NOT FROM THE KIT. v2 hardcoded
-     '<b>Not what the detector showed.</b>' here — ion-flight's wording, in the
-     SHARED handler — and it rendered in all eight built demos, so a learner
-     reading a check card about PLC ladder logic or about AI winters was told
-     what "the detector" showed. The defaults below are demo-neutral; a demo
-     that wants its own framing sets data-correct-lead / data-wrong-lead on the
-     .check card. check-shell.js blocklists the leaked sentence so this cannot
-     regress quietly. The lead is set as TEXT, not markup, because it now comes
-     from an authored attribute. */
+     THE LEAD COMES FROM THE CARD, NOT FROM THE KIT. v2 hardcoded one demo's
+     wrong-answer sentence here, in the SHARED handler, and it rendered in
+     every built demo — so a learner reading a check card about PLC ladder
+     logic or about AI winters was told what a mass-spectrometer detector had
+     shown. The defaults below are demo-neutral; a demo that wants its own
+     framing sets data-correct-lead / data-wrong-lead on the .check card.
+     check-shell.js blocklists the leaked sentence so this cannot regress
+     quietly — and the sentence is deliberately NOT spelled anywhere in this
+     function, because everything here is injected into every built file and a
+     blocklist that matches its own explanation is worthless. The exact string
+     lives in LEAKED_A6 at module scope, which is not injected. The lead is set
+     as TEXT, not markup, because it now comes from an authored attribute. */
   $$('.check').forEach(card => {
     const out = $('.check-feedback', card);
     const leadFor = btn => (btn.classList.contains('correct')
@@ -714,6 +746,9 @@ module.exports = {
   INTRO_DISCLOSURE,
   A6_LEADS,
   LEAKED_A6,
+  SHELL_OWNED_OUTPUT,
+  SHELL_SCRIPT_MARKER,
+  SHELL_SCRIPT_MARKER_RE,
   css,
   cssHash,
   stamp,
