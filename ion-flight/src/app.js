@@ -624,11 +624,50 @@
     byId('cue-4').textContent = '';
   }
 
-  /* ---- Reset means fresh load -------------------------------------------
-     The shell reloads the page with a fragment that keeps the Guide shut and
-     preserves presentation mode, which is the only reliable way to restore a
-     surface this wide. This hook exists so a future demo-local reset can veto
-     the reload; ion-flight does not need to, so it returns nothing. */
+  /* ---- Reset, in place ---------------------------------------------------
+     Kit v2: the shell restores its own chrome (stage 1, the re-locked gate,
+     the cleared check cards, the closed dialogs, the .obs-cue and .echo lines)
+     and then dispatches `lessonreset`. Everything below is the half the shell
+     cannot know about.
+
+     THE ENUMERATION. A reload used to make this correct for free; in place it
+     is correct only if the list is complete, so the list is written out rather
+     than summarised:
+
+       1. lessonState — stepIndex, unlockedThrough, predictions, completed,
+          runRevision. The model already has a RESET action, so this is the
+          model's own initial value, not a second definition of it here.
+       2. runtime.phase / startMs / elapsedS / frameId / runToken. cancelRun
+          bumps the token AND cancels the pending animation frame, so a run in
+          flight when Reset is pressed cannot land afterwards and re-complete a
+          stage that was just cleared. This is the one piece of reset state
+          with a race in it.
+       3. runtime.advancedMode, and the stage-4 chrome that mirrors it: both
+          mode buttons' .active and aria-pressed, #width-result hidden again,
+          #comparison-body emptied, #width-canvas cleared.
+       4. The shared #activity element's host. It is ONE element that moves
+          between stages 1-3; leaving it parked in stage 3's host would show
+          stage 1 with an empty panel.
+       5. Everything renderCurrentStep() drives — #finding, #next-button,
+          #replay-button, #run-button's label and disabled state, #run-hint,
+          the sample list, the prediction buttons, the A2 echo, the tab marks.
+
+     #cue-core and #cue-4 are both .obs-cue, so the shell restores them; they
+     are listed here only so the next reader does not go looking. */
+  document.addEventListener('lessonreset', () => {
+    cancelRun('ready');
+    lessonState = M.reduceLessonState(lessonState, { type: 'RESET' });
+    setAdvancedMode('absolute');
+    byId('comparison-body').innerHTML = '';
+    const widthCanvas = byId('width-canvas');
+    widthCanvas.getContext('2d').clearRect(0, 0, widthCanvas.width, widthCanvas.height);
+    moveActivityTo(0);
+    renderCurrentStep();
+  });
+
+  /* The veto hook stays available and stays unused: ion-flight has nothing to
+     refuse a reset for. Left as null deliberately, not by omission — with the
+     handler above, the contract is met. */
   window.lessonShell.onReset = null;
 
   byId('run-button').addEventListener('click', runCurrentExperiment);
