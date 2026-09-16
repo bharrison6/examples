@@ -142,6 +142,14 @@ In this order, when `#reset-btn` is pressed:
    content.
 6. **The A5 Details drawer** goes back to stage 1, subtitle restored.
 7. **`selectStage(0)`** — stage 1. This also fires `stagechange`.
+   **Ordering hazard**: this `stagechange` fires *before* step 9, so a
+   `stagechange` handler that renders from your activity state will render
+   the *pre-reset* state into freshly reset chrome (missing-time hit exactly
+   this: a stale Predict echo resurrected mid-reset). Do not render activity
+   state from `stagechange`; render it from your interaction handlers and
+   from your `lessonreset` handler. If you must, check
+   `window.lessonShell.resetting` — not yet provided; until it is, treat
+   `stagechange` as a chrome event only.
 8. **The page scrolls to the top.**
 9. **`lessonreset` is dispatched.**
 
