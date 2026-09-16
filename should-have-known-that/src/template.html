@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An offline slider-based estimation trivia game: guess 40 engineering numbers, linear then logarithmic, and see how well-calibrated your gut is.">
+<title>Engineering Trivia — Should Have Known That</title>
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
+<style>
+/*__CSS__*/
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University &middot; Part four &middot; Example projects</span>
+      <h1>Engineering Trivia &mdash; Should Have Known That</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1 / ruling 2 (gating beats hash routing). Stage 2 opens locked because
+       the deck for stage 1 has to be PLAYED to produce the evidence stage 3's
+       debrief compares — committing to guesses is the evidence, exactly like a
+       gated investigation demo, just built from a trivia bank instead of a
+       model. Stage 3 opens locked for the same reason, one level deeper. -->
+  <nav class="stages" role="tablist" aria-label="Engineering Trivia lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Linear estimates</span><small>Which numbers can you nail by feel?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1" disabled>
+      <span class="stage-mark" aria-hidden="true">2</span><span>Log estimates</span><small>Can you get the order of magnitude right?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1" disabled>
+      <span class="stage-mark" aria-hidden="true">3</span><span>Debrief</span><small>Were your log guesses or linear guesses closer?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- =========================== STAGE 1 · Linear estimates ================== -->
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 11 of 16 &middot; Part four &middot; Engineering &middot; Stage 1</span>
+      <h2 id="stage-1-title">Drag first. Trust your gut.</h2>
+      <p class="stage-question">Which of the numbers an engineer is supposed to carry around can you actually place by feel?</p>
+      <p class="refresh"><b>Before you start.</b> Thirty-five numbers here are scored by <b>percent
+        error</b> &mdash; how close your guess sits to the true value on an ordinary ruler. A
+        <b>slider</b> forces a number out of you before you can hedge with "I don't know," and a
+        guess you committed to is what makes the correction stick.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Drag the slider to where you think each number sits, before you can see how close you were.</p><span class="echo" id="echo-1" hidden></span></article>
+      <article><span>Try</span><p>Press <b>LOCK IT IN</b> to reveal the true value and see the size of your miss.</p></article>
+      <article><span>Takeaway</span><p>A confident guess you commit to is what makes a correction stick &mdash; a shrug does not.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" aria-labelledby="act-1-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker" id="kicker-1"><span class="k-sourced">Sourced</span> <span class="k-qual" id="qual-1" hidden></span> <span id="kicker-note-1">the value you are about to guess</span></span>
+        <h3 id="act-1-heading">Linear estimates</h3>
+      </div>
+    </div>
+    <p class="panel-lede">Thirty-five questions across five categories, scored by percent error &mdash; pick your set below, or take the full bank.</p>
+
+    <!-- ---- setup sub-panel (shown before / between rounds) ---- -->
+    <div class="tv-setup" id="tv-setup">
+      <label class="control-label" for="len-row">Game length
+        <span class="why">How many linear questions this round draws from your chosen categories.</span></label>
+      <div class="btn-row" id="len-row" role="group" aria-label="Game length"></div>
+
+      <label class="control-label" for="cat-row">Categories
+        <span class="why">Toggle a category off to focus a round; the pool size updates live.</span></label>
+      <div class="chip-row" id="cat-row" role="group" aria-label="Categories"></div>
+
+      <label class="control-label" for="mode-row">Mode
+        <span class="why">Solo scores just you; Teams passes one device around a room.</span></label>
+      <div class="btn-row" id="mode-row" role="group" aria-label="Mode"></div>
+
+      <div id="team-setup" class="hidden">
+        <label class="control-label" for="teamcount-row">How many teams?
+          <span class="why">2&ndash;4 teams share the pool evenly; the note below shows the real per-team count.</span></label>
+        <div class="btn-row" id="teamcount-row" role="group" aria-label="Team count"></div>
+        <div class="team-names" id="team-names"></div>
+      </div>
+
+      <p class="tv-note" id="start-note"></p>
+      <button id="start-btn" class="btn primary big">Start linear estimates</button>
+    </div>
+
+    <!-- ---- turn banner (pass-and-play; shown only in Teams mode) ---- -->
+    <div class="tv-turn hidden" id="tv-turn">
+      <span class="turn-kicker">Pass it to</span>
+      <div class="turn-team" id="turn-team"></div>
+      <div class="turn-progress" id="turn-progress"></div>
+      <button id="turn-go" class="btn primary big">We're ready</button>
+    </div>
+
+    <!-- ---- play sub-panel ---- -->
+    <div class="tv-play hidden" id="tv-play-1">
+      <div class="tv-topbar">
+        <span class="pill" id="q-counter-1"></span>
+        <span class="pill cat" id="q-category-1"></span>
+        <span class="pill score" id="q-score-1"></span>
+      </div>
+      <div class="team-strip hidden" id="team-strip-1"></div>
+
+      <div id="guess-panel-1" class="tv-guess">
+        <p class="prompt" id="q-prompt-1"></p>
+        <div class="value-wrap"><span id="value-display-1"></span><span id="value-units-1"></span></div>
+        <div class="slider-zone">
+          <input type="range" id="slider-1" min="0" max="1000" value="500" step="1" aria-label="Drag to set your guess">
+          <div class="range-labels">
+            <span id="range-min-1"></span>
+            <span class="scale-tag hidden" id="scale-tag-1">LOG SCALE</span>
+            <span id="range-max-1"></span>
+          </div>
+        </div>
+        <button id="lock-btn-1" class="btn primary big">Lock it in</button>
+      </div>
+
+      <div id="reveal-panel-1" class="tv-reveal hidden">
+        <div class="track-wrap">
+          <div class="track">
+            <div class="marker guess" id="mk-guess-1"><span class="mk-label">YOU</span></div>
+            <div class="marker truth" id="mk-truth-1"><span class="mk-label">TRUTH</span></div>
+          </div>
+        </div>
+        <div class="rev-values"><span class="rv you" id="rv-you-1"></span><span class="rv truth" id="rv-truth-1"></span></div>
+        <div class="band-badge" id="band-badge-1"></div>
+        <div class="points" id="points-1"></div>
+        <div class="factoid" id="factoid-1"></div>
+        <button id="next-btn-1" class="btn primary big">Next</button>
+      </div>
+    </div>
+
+    <!-- ---- stage-complete summary (linear deck only) ---- -->
+    <div class="tv-stage-done hidden" id="stage1-done">
+      <div class="end-kicker">Linear estimates &mdash; done</div>
+      <div id="end-scores-1" class="end-scores"></div>
+      <div class="end-cards">
+        <div class="end-card best" id="best-card-1"></div>
+        <div class="end-card worst" id="worst-card-1"></div>
+      </div>
+      <button id="continue-2" class="btn primary big">Continue to log estimates</button>
+    </div>
+
+    <p class="obs-cue" id="cue-1" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="check" aria-labelledby="check-1-title">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">A code says A36 steel's yield strength is 250 MPa (36 ksi). Is that the average strength a real A36 beam tests at?</h3>
+    <p class="check-prompt">Item 10 in the bank &mdash; think back to your guess before picking.</p>
+    <div class="check-options">
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="That is the flawed model this item exists to break. 36 ksi / 250 MPa is ASTM A36's SPECIFIED MINIMUM, not a typical measured value &mdash; real mill-certified A36 commonly tests well above it, which is exactly why the bank's kicker on item 10 says &ldquo;specified minimum, not typical.&rdquo;">It's the average strength real A36 measures at</button>
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Right. 250 MPa is the floor ASTM A36/A36M guarantees, not the number a mill certificate usually reports &mdash; treating a specified minimum as if it were a typical value is one of the more common ways an engineer overstates how conservative a design number already is.">It's a specified minimum &mdash; real steel usually tests higher</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+
+<!-- =========================== STAGE 2 · Log estimates ====================== -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 11 of 16 &middot; Part four &middot; Engineering &middot; Stage 2</span>
+      <h2 id="stage-2-title">Same slider. Different kind of wrong.</h2>
+      <p class="stage-question">When a guess can be off by a factor of ten, does the exact digit even matter?</p>
+      <p class="refresh"><b>Before you start.</b> These five numbers &mdash; copper's resistivity, the
+        speed of light, the current that can trigger cardiac fibrillation, the voltage you can feel as
+        a static shock, and the energy in an AA battery &mdash; span <b>orders of magnitude</b>, so
+        stage 1's percent-error scoring would be meaningless here: missing by 10&times; and missing by
+        1.1&times; would score almost the same. A <b>log-scale</b> slider is instead scored on <b>how
+        many times off</b> you are.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Commit to the right power of ten first &mdash; the exact digits are worth far less here than in stage 1.</p><span class="echo" id="echo-2" hidden></span></article>
+      <article><span>Try</span><p>Press <b>LOCK IT IN</b> on each of the five log-scale questions.</p></article>
+      <article><span>Takeaway</span><p>On a log scale, the order of magnitude is most of the answer &mdash; and item 23's rule-of-thumb number is a single point standing in for a whole risk curve.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" aria-labelledby="act-2-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker" id="kicker-2"><span class="k-sourced">Sourced</span> <span class="k-qual" id="qual-2" hidden></span> <span id="kicker-note-2">the value you are about to guess</span></span>
+        <h3 id="act-2-heading">Log estimates</h3>
+      </div>
+    </div>
+    <p class="panel-lede">All five log-scale questions in the bank, scored by decades off (10&times; the error to the power of ten), not percent.</p>
+
+    <div class="tv-turn hidden" id="tv-turn-2">
+      <span class="turn-kicker">Pass it to</span>
+      <div class="turn-team" id="turn-team-2"></div>
+      <div class="turn-progress" id="turn-progress-2"></div>
+      <button id="turn-go-2" class="btn primary big">We're ready</button>
+    </div>
+
+    <div id="tv-play-2" class="tv-play">
+      <div class="tv-topbar">
+        <span class="pill" id="q-counter-2"></span>
+        <span class="pill cat" id="q-category-2"></span>
+        <span class="pill score" id="q-score-2"></span>
+      </div>
+      <div class="team-strip hidden" id="team-strip-2"></div>
+
+      <div id="guess-panel-2" class="tv-guess">
+        <p class="prompt" id="q-prompt-2"></p>
+        <div class="value-wrap"><span id="value-display-2"></span><span id="value-units-2"></span></div>
+        <div class="slider-zone">
+          <input type="range" id="slider-2" min="0" max="1000" value="500" step="1" aria-label="Drag to set your guess">
+          <div class="range-labels">
+            <span id="range-min-2"></span>
+            <span class="scale-tag" id="scale-tag-2">LOG SCALE</span>
+            <span id="range-max-2"></span>
+          </div>
+        </div>
+        <button id="lock-btn-2" class="btn primary big">Lock it in</button>
+      </div>
+
+      <div id="reveal-panel-2" class="tv-reveal hidden">
+        <div class="track-wrap">
+          <div class="track">
+            <div class="marker guess" id="mk-guess-2"><span class="mk-label">YOU</span></div>
+            <div class="marker truth" id="mk-truth-2"><span class="mk-label">TRUTH</span></div>
+          </div>
+        </div>
+        <div class="rev-values"><span class="rv you" id="rv-you-2"></span><span class="rv truth" id="rv-truth-2"></span></div>
+        <div class="band-badge" id="band-badge-2"></div>
+        <div class="points" id="points-2"></div>
+        <div class="factoid" id="factoid-2"></div>
+        <button id="next-btn-2" class="btn primary big">Next</button>
+      </div>
+    </div>
+
+    <div class="tv-stage-done hidden" id="stage2-done">
+      <div class="end-kicker">Log estimates &mdash; done</div>
+      <div id="end-scores-2" class="end-scores"></div>
+      <div class="end-cards">
+        <div class="end-card best" id="best-card-2"></div>
+        <div class="end-card worst" id="worst-card-2"></div>
+      </div>
+      <button id="continue-3" class="btn primary big">Continue to debrief</button>
+    </div>
+
+    <p class="obs-cue" id="cue-2" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Item 23 shows 100 mA as the rule-of-thumb cardiac-fibrillation current. If your actual exposure is 40 mA, are you safe?</h3>
+    <p class="check-prompt">Think about what the reveal text on item 23 actually said.</p>
+    <div class="check-options">
+      <button class="check-option wrong" type="button" aria-pressed="false"
+              data-feedback="This is exactly the wrong inference a single-number threshold invites &mdash; and exactly why item 23 carries a qualifier instead of standing alone. Fibrillation risk is a curve over current, duration and path, not a threshold at 100 mA; sustained exposure carries meaningful risk from well below that anchor.">Yes &mdash; 40 mA is under the 100 mA number, so it's safe</button>
+      <button class="check-option correct" type="button" aria-pressed="false"
+              data-feedback="Right. 100 mA is a rule-of-thumb ANCHOR on a current&times;duration&times;path risk curve, not a safe/unsafe line. Sustained low-current exposure is still dangerous &mdash; which is the entire reason this item ships with a qualifier instead of a bare number.">No &mdash; 100 mA is one point on a risk curve, not a safety line</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+
+<!-- =========================== STAGE 3 · Debrief ============================ -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 11 of 16 &middot; Part four &middot; Engineering &middot; Stage 3</span>
+      <h2 id="stage-3-title">Add it up.</h2>
+      <p class="stage-question">Were your log guesses or your linear guesses actually closer?</p>
+      <p class="refresh"><b>Before you start.</b> The bank's own scoring bands already put linear
+        percent-error and log decades-off on the <b>same 100/75/40/10/0-point scale</b>, so the average
+        points per question on each deck is a fair way to compare two differently-shaped kinds of
+        wrong &mdash; a raw percent and a raw multiplicative factor are not directly comparable, but the
+        points they earn are.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Before reading the numbers below: guess which deck you scored higher on, linear or log.</p><span class="echo" id="echo-3" hidden></span></article>
+      <article><span>Try</span><p>Read the <b>linear vs. log average</b> comparison below.</p></article>
+      <article><span>Takeaway</span><p>A ranged or code-defined number is still worth a confident guess &mdash; precision and truth are not the same thing.</p></article>
+    </div>
+  </section>
+
+  <section class="workbench" aria-labelledby="act-3-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-live">Live</span> computed from this session's own answers</span>
+        <h3 id="act-3-heading">Debrief</h3>
+      </div>
+    </div>
+    <p class="panel-lede">Final scores, the sharpest and should-have-known guesses of the whole game, and the linear-vs-log comparison.</p>
+
+    <div id="debrief-scores" class="end-scores"></div>
+    <div class="end-cards">
+      <div class="end-card best" id="best-card-3"></div>
+      <div class="end-card worst" id="worst-card-3"></div>
+    </div>
+    <div class="panel" id="calibration-panel">
+      <h4>Linear vs. log, head to head</h4>
+      <p id="calibration-text">Play both stages first &mdash; this fills in once you have answers on both decks.</p>
+    </div>
+
+    <button id="again-btn" class="btn primary big">Play again</button>
+
+    <p class="obs-cue" id="cue-3" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span>Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button>
+  </div>
+</div>
+
+
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">Forty numbers an engineer is expected to carry without looking up &mdash; can you place them by feel?</p>
+    <p class="note">Where this sits: Part four's example projects apply an AI-built classroom tool with its
+      goal, engine and assumptions all one tap away &mdash; this one is a calibration game for number sense.</p>
+    <ol>
+      <li><b>Linear estimates.</b> Pick your length, categories and mode, then press <b>Start linear
+        estimates</b>; drag the slider and press <b>Lock it in</b> for each question.</li>
+      <li><b>Log estimates.</b> Unlocks once stage 1 is complete &mdash; five questions that span orders
+        of magnitude, scored differently on purpose.</li>
+      <li><b>Debrief.</b> Unlocks once stage 2 is complete &mdash; final scores and the linear-vs-log
+        comparison.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The stage tabs switch stages, but stages 2 and 3 stay locked until you have played the one before
+      &mdash; the tabs stay visible so you can see the whole route. <b>Details</b> opens the evidence and
+      sources for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> has <b>Open Presenter
+      Notes</b>, <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Time</h3>
+    <p>A 10-question linear round plus the 5-question log round runs about 15&ndash;20 minutes with
+      discussion; solo or 2&ndash;4 team pass-and-play on one device.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with linear estimates</button></form>
+</dialog>
+
+
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable session plan, on screen.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to stage 1's setup screen: no game in progress, every category on, solo mode,
+      stages 2 and 3 re-locked, and both check cards cleared. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Linear estimates</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>Every value is a citation; the scoring is computed here</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> your guess, the band and the points</span>
+          <p>The slider position, the percent-error calculation, the band you land in, and the points
+            you earn are all computed in your browser the moment you lock in a guess.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span> all 35 linear values below</span>
+          <p>Every number in this stage is a published reference value, a defined constant, a code
+            requirement, or an exact unit conversion &mdash; not a measurement this page performs.
+            Fourteen of them ship with a qualifier because a single number would otherwise stand in
+            for a real range, a specified minimum, or a design convention.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">error = |guess &minus; true| / true &nbsp;&middot;&nbsp; bands at 5% / 15% / 35% / 60%</div>
+        <p>Percent error is the fraction your guess misses the true value by. Below 5% is Bullseye
+          (100 pts); past 60% is Way Off (0 pts). The full table is in the printable guide.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li>Every value is a <b>typical or reference figure for its category</b>, not a measurement of
+            one specific real object &mdash; a real beam, a real cord, a real gallon will differ,
+            sometimes by a lot, depending on grade, brand, or conditions.</li>
+          <li>Several values are <b>design conventions fixed by a code</b> rather than physical averages
+            (steel's E = 200 GPa, concrete's 150 pcf design weight, A36's 36 ksi minimum yield) &mdash;
+            using the code number is correct engineering practice, but it is a different kind of
+            "true" than a measured physical constant, which is exactly what each item's qualifier says.</li>
+          <li>Slider endpoints are chosen to be wide enough not to give the answer away; they are not
+            themselves a claim about the plausible range of the true value.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul id="sources-0"></ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage does not claim any value is a single,
+          universal physical constant unless its qualifier is empty &mdash; a qualifier present means the
+          real world carries a range, a floor, or a code dependency that one slider cannot show.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>Five numbers that span orders of magnitude</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> your guess, the decades-off calculation and the band</span>
+          <p>Same computation as stage 1, on a log scale: the guess and truth are compared as
+            <code>log10(guess / true)</code>, so a 2&times; miss and a 20&times; miss are different
+            distances even though both are "one digit off" in a linear sense.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span> all five log-scale values below</span>
+          <p>Two of the five &mdash; the cardiac-fibrillation current and the static-shock perception
+            voltage &mdash; are safety-relevant rule-of-thumb figures pulled from a real risk curve or a
+            reported range, not a hard line; both carry a qualifier that says so plainly.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">error = |log10(guess / true)| &nbsp;&middot;&nbsp; bands at 0.10 / 0.33 / 0.70 / 1.20 decades</div>
+        <p>0.10 decades &asymp; 1.26&times; off; 1.20 decades &asymp; 15.85&times; off. The same
+          Bullseye&ndash;Way&nbsp;Off point scale applies, so a linear score and a log score are
+          comparable in points even though the underlying error metric is not the same shape.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li>A log slider forgives a large absolute miss as long as the order of magnitude is close
+            &mdash; that is deliberate, not a bug: the pedagogy is "get the power of ten right," not
+            "get the exact figure right."</li>
+          <li>Item 23's 100 mA and item 24's 3,000 V are both single points standing in for a real
+            curve or a reported range &mdash; the qualifier names what the single number leaves out.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul id="sources-1"></ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage does not claim the five safety-adjacent
+          numbers are safe/unsafe thresholds &mdash; item 23 in particular is a rule-of-thumb anchor on a
+          risk curve, stated as such in its own reveal text and check-yourself item.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>The debrief is computed from this session's own answers</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the score comparison and the sharpest/should-have-known cards</span>
+          <p>Every number in the debrief &mdash; final scores, the sharpest guess, the biggest miss, and
+            the linear-vs-log average &mdash; is computed from the answers this session actually locked
+            in. Nothing here is precomputed or looked up.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">avg points (linear deck) vs. avg points (log deck)</div>
+        <p>Both decks are scored on the same 100/75/40/10/0 point bands (see stages 1 and 2), so their
+          average points-per-question are directly comparable even though a raw percent-error and a raw
+          decades-off number are not.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li>The comparison needs at least one answer on each deck to mean anything; with only a
+            handful of log questions, a single lucky or unlucky guess moves the log average a lot more
+            than it would move the 35-question linear average.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul><li>Not applicable &mdash; this stage computes from stage 1 and 2's already-sourced answers rather than citing a new value.</li></ul>
+        <div class="evidence-card"><b>Boundary:</b> "closer" here means higher average points under this
+          bank's own scoring bands, not a claim about which scale is objectively easier to estimate on
+          in general.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="teacher-guide.html" target="_blank" rel="noopener">Open the printable copy (teacher-guide.html)</a> &mdash; the same document, laid out for print; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+
+<script>
+/*__DATA__*/
+</script>
+<script>
+/*__SHELL_JS__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Engineering Trivia — Should Have Known That — Teacher Guide</title>
+  <!--
+    Canonical, printable teacher and presenter guide for this demo. build.js lifts
+    the tagged style block and the .guide-scope div out of here verbatim and
+    injects them into index.html, so Settings -> Open Presenter Notes shows exactly
+    this document with no sibling file to fetch. Edit here; never edit the copy
+    inside index.html. node build.js --check fails if the two have drifted.
+
+    THE MARKERS MUST START THEIR LINES AT COLUMN ZERO — see
+    tools/lesson-shell/guide-contract.js. Every rule in the tagged block must be
+    scoped to .guide-scope. Page-level chrome for the standalone printable file
+    lives in the second, untagged style block, which is not extracted.
+  -->
+<style id="guide-css">
+.guide-scope { color: #172b42; }
+.guide-scope .g-head { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
+.guide-scope h1 { margin: 0; color: #002144; font-size: 2.3em; line-height: 1.05; }
+.guide-scope .g-sub { margin: 5px 0 0; color: #526a7e; }
+.guide-scope .g-meta { margin: 6px 0 0; color: #002144; font-weight: 700; font-size: .95em; }
+.guide-scope h2 { margin: 15px 0 6px; color: #002144; font-size: 1.4em; break-after: avoid; }
+.guide-scope h3 { margin: 11px 0 4px; color: #006a98; font-size: 1.1em; break-after: avoid; }
+.guide-scope p { margin: 5px 0; }
+.guide-scope ul, .guide-scope ol { margin: 5px 0 8px 20px; padding: 0; }
+.guide-scope li { margin: 4px 0; }
+.guide-scope .lead { font-size: 1.1em; }
+.guide-scope .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
+.guide-scope .warning { background: #fff6d9; border-left-color: #ecac00; }
+.guide-scope .say { margin: 8px 0; padding: 8px 11px; background: #f7f0e3; border-left: 5px solid #002144; font-style: italic; break-inside: avoid; }
+.guide-scope .mis { margin: 8px 0; padding: 9px 11px; background: #fdf1ec; border-left: 5px solid #c63f1d; break-inside: avoid; }
+.guide-scope .mis b { color: #9a2f13; }
+.guide-scope .goal { margin: 5px 0 5px 20px; padding: 0; }
+.guide-scope table.bands { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
+.guide-scope th, .guide-scope td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
+.guide-scope th { color: white; background: #002144; font-size: .9em; }
+.guide-scope .sw { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: baseline; }
+.guide-scope .small { font-size: .9em; color: #526a7e; }
+.guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+.guide-scope a { color: #006a98; }
+.guide-scope .page-break { break-before: page; page-break-before: always; }
+.guide-scope .g-foot { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: .85em; }
+</style>
+  <style>
+    /* Standalone printable page only — not extracted into the app. */
+    @page { size: letter; margin: .5in; }
+    * { box-sizing: border-box; }
+    body { max-width: 7.5in; margin: 0 auto; color: #172b42; font: 9.5pt/1.36 Arial, sans-serif; }
+    @media screen {
+      body { margin: 24px auto; padding: .5in; background: white; box-shadow: 0 0 24px #0003; }
+    }
+    @media (max-width: 680px) {
+      body { margin: 0; padding: 18px; box-shadow: none; font-size: 11pt; }
+      .guide-scope .page-break { break-before: auto; page-break-before: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="guide-scope">
+  <div class="g-head">
+    <p class="g-sub">Teacher and presenter guide &middot; Slider-based estimation trivia for engineering number sense</p>
+    <h1>Engineering Trivia &mdash; Should Have Known That</h1>
+    <p class="g-meta">Demo 11 of 16 &middot; Part four, Example projects &middot; 15&ndash;20 minutes</p>
+    <p class="small"><strong>You need:</strong> <code>index.html</code> open in any modern browser, phone
+      or projector. No network, no install, no accounts. Nothing is fetched at runtime, so it works with
+      the wi-fi off.</p>
+  </div>
+
+  <section aria-labelledby="g-goals">
+    <h2 id="g-goals">Learning goals</h2>
+    <p class="small">One per stage, in the learner's own words &mdash; these are the three Takeaway cards
+      on screen, verbatim.</p>
+    <ol class="goal">
+      <li>A confident guess you commit to is what makes a correction stick &mdash; a shrug does not.</li>
+      <li>On a log scale, the order of magnitude is most of the answer &mdash; and item 23's rule-of-thumb
+        number is a single point standing in for a whole risk curve.</li>
+      <li>A ranged or code-defined number is still worth a confident guess &mdash; precision and truth are
+        not the same thing.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="g-path">
+    <h2 id="g-path">Where this sits on the path</h2>
+    <p>An AI-built classroom tool from Part four: its goal is number-sense calibration, its engine is a
+      live-scored slider running entirely on the device, and its assumptions &mdash; which of its 40
+      values are single facts versus ranges, minimums, or code conventions &mdash; are one tap away in
+      each stage's Details drawer.</p>
+  </section>
+
+  <section aria-labelledby="g-question">
+    <h2 id="g-question">One question for the session</h2>
+    <p class="say">"If you had to bet, not guess &mdash; how close is your gut, really, to the numbers you
+      already use?"</p>
+  </section>
+
+  <section aria-labelledby="g-s1">
+    <h2 id="g-s1">Stage 1 &middot; Linear estimates</h2>
+    <p><b>Question.</b> Which of the numbers an engineer is supposed to carry around can you actually
+      place by feel?</p>
+    <p><b>Predict.</b> Drag the slider to where you think each of 35 numbers sits, before the truth is
+      revealed.</p>
+    <p><b>Activity (timed beats).</b> <span class="time">0&ndash;2 min</span>Pick a length (5/10/15),
+      categories, and solo or teams; play the first one yourself, wrong on purpose, to set the tone.
+      <span class="time">2&ndash;10 min</span>Poll before every lock-in if presenting to a room: hands up
+      for higher, hands up for lower, then press <b>LOCK IT IN</b>. Read the "because&hellip;" line aloud
+      after each reveal.</p>
+    <p><b>Expected observation.</b> The band badge (Bullseye/Close/Warm/Cold/Way&nbsp;Off) and the
+      "you vs. truth" markers on the track; the observation cue names the band and the miss size.</p>
+    <p><b>Check-yourself answer key.</b> "It's a specified minimum &mdash; real steel usually tests
+      higher" is correct; "it's the average strength" is the flawed model item 10 exists to break.</p>
+    <p><b>Teaching limit.</b> Percent-error scoring only makes sense while the true value and the guess
+      are on the same, roughly-linear scale &mdash; which is exactly what breaks in stage 2.</p>
+  </section>
+
+  <section aria-labelledby="g-s2">
+    <h2 id="g-s2">Stage 2 &middot; Log estimates</h2>
+    <p><b>Question.</b> When a guess can be off by a factor of ten, does the exact digit even matter?</p>
+    <p><b>Predict.</b> Commit to a power of ten first, on all five log-scale items (resistivity, the
+      speed of light, the cardiac-fibrillation current, the static-shock voltage, and AA battery energy).</p>
+    <p><b>Activity.</b> <span class="time">10&ndash;14 min</span>Play all five; ask the room to say a
+      power of ten out loud before each lock-in rather than a specific number.</p>
+    <p><b>Expected observation.</b> A big absolute miss can still land Bullseye if the order of magnitude
+      is right &mdash; the opposite of stage 1's intuition.</p>
+    <p><b>Check-yourself answer key.</b> "No &mdash; 100 mA is one point on a risk curve, not a safety
+      line" is correct; treating 40 mA as automatically safe because it is under 100 mA is the
+      refutation item's flawed model.</p>
+    <p><b>Teaching limit.</b> The game cannot show WHY the curve looks the way it does (current &times;
+      duration &times; path) &mdash; only that a single number understates it. The Details drawer names
+      the shape; it does not re-derive IEC 60479-1's curve.</p>
+  </section>
+
+  <section aria-labelledby="g-s3">
+    <h2 id="g-s3">Stage 3 &middot; Debrief</h2>
+    <p><b>Question.</b> Were your log guesses or your linear guesses closer?</p>
+    <p><b>Predict.</b> Guess which deck scored higher before reading the comparison.</p>
+    <p><b>Activity.</b> <span class="time">14&ndash;18 min</span>Read the linear-vs-log average aloud;
+      debrief from the "should have known that" card &mdash; ask that team or student what they thought
+      the number was and why. The wrong mental model is more useful than the right answer.</p>
+    <p><b>Expected observation.</b> An average-points comparison computed live from this session's own
+      answers &mdash; nothing here is precomputed.</p>
+    <p><b>Teaching limit.</b> Five log questions is a small sample; one lucky or unlucky guess swings that
+      average far more than the 35-question linear average moves. Say this out loud before reading the
+      comparison as if it were a strong result.</p>
+    <p class="small"><span class="time">18&ndash;20 min</span><b>Play again</b> from the debrief, or
+      <b>&#9881; &rarr; Reset</b> for a clean start between class periods.</p>
+  </section>
+
+  <section aria-labelledby="g-mis">
+    <h2 id="g-mis">Misconceptions this bank can leave, refuted</h2>
+    <div class="mis"><b>Misconception: "100 mA is the safe/unsafe line for shock."</b> It is a
+      rule-of-thumb anchor on a current&times;duration&times;path curve (IEC 60479-1); sustained exposure
+      carries meaningful fibrillation risk from well below 100 mA. Item 23's qualifier and stage 2's
+      refutation check both name this directly &mdash; it is the single highest-stakes item in the bank.</div>
+    <div class="mis"><b>Misconception: "A36's 250 MPa is what the steel actually measures."</b> It is
+      ASTM A36/A36M's specified MINIMUM; real mill-certified steel commonly tests higher. Stage 1's check
+      item exists to break exactly this substitution of a floor for a fact.</div>
+    <div class="mis"><b>Misconception: "7&frac34; in risers are the code, full stop."</b> That figure is
+      the IRC's residential cap; the IBC's general means-of-egress cap is 7 in, and only Exception 3 for
+      dwelling units raises it to match. Carrying the residential number into a commercial context applies
+      the wrong code to the wrong building type.</div>
+    <div class="mis"><b>Misconception: "13 A is safe for any 16-gauge extension cord."</b> NEC Table
+      400.5(A)(1) sets 13 A by conductor count and ambient temperature, not length; a widely used
+      practical derating guide drops well below 13 A for a long cord run. The bank's own factoid already
+      warns a 1,500 W heater is close to the derated limit &mdash; a long cord makes it worse, not the
+      same.</div>
+  </section>
+
+  <section aria-labelledby="g-discuss">
+    <h2 id="g-discuss">Discussion prompts</h2>
+    <ol>
+      <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Ask the room to derive one from the
+        other (62.4 &divide; 144 in&sup2;/ft&sup2;).</li>
+      <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it
+        takes to feel a static shock? It is the current, not the voltage, that kills; say plainly that
+        100 mA is a rule of thumb, not a safe/unsafe line.</li>
+      <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs. 70 GPa; density
+        7,850 vs. 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical
+        &mdash; the real choice is cost, buckling, and joining.</li>
+      <li><b>What if steel and concrete expanded at different rates?</b> Every summer would crack the
+        building &mdash; reinforced concrete works on an approximate coincidence, not an exact one.</li>
+      <li><b>A36 is named after its own answer</b> &mdash; the 36 is the specified minimum yield strength
+        in ksi. How many other "memorized" numbers are printed on the spec sheet's name, and how many of
+        those are minimums rather than typicals?</li>
+      <li><b>A single number can be right AND still teach the wrong lesson.</b> Every one of the 40
+        values in this bank checks out against a real source &mdash; but 17 of them ship with a qualifier
+        because a bare number would have implied more precision than the world actually has. Ask the room
+        to name one more everyday "fact" that is really a range, a floor, or a design convention.</li>
+      <li><b>One gallon of gasoline is 33.7 kWh</b> &mdash; roughly a full day of an average US home's
+        electricity, and (per this build's re-sourcing) a genuinely accurate figure for real gasoline, not
+        a lowball regulatory number.</li>
+      <li><b>Why did the log questions go so badly (or so well)?</b> Because they are not recall
+        questions &mdash; getting the size of the number right is the actual skill.</li>
+    </ol>
+    <div class="box hook"><b>Reading a Way Off:</b> a Way Off on a <b>linear</b> question is a fact the
+      student does not have. A Way Off on a <b>log</b> question means they do not know what <i>size</i>
+      the answer is &mdash; say the difference out loud; it is the most transferable idea in the game.</div>
+  </section>
+
+  <section aria-labelledby="g-scoring">
+    <h2 id="g-scoring">How it is scored</h2>
+    <p>Thirty-five linear questions score on <b>percent error</b>; five log questions (stage 2) score on
+      <b>decades off</b> &mdash; <code>|log10(guess/true)|</code>.</p>
+    <table class="bands">
+      <tr><th>Band</th><th>Linear</th><th>Log</th><th>Pts</th></tr>
+      <tr><td><span class="sw" style="background:#ECAC00"></span>Bullseye</td><td>within 5%</td><td>1.26&times;</td><td>100</td></tr>
+      <tr><td><span class="sw" style="background:#F6D77A"></span>Close</td><td>within 15%</td><td>2.1&times;</td><td>75</td></tr>
+      <tr><td><span class="sw" style="background:#00A4E3"></span>Warm</td><td>within 35%</td><td>5&times;</td><td>40</td></tr>
+      <tr><td><span class="sw" style="background:#8CC9E6"></span>Cold</td><td>within 60%</td><td>16&times;</td><td>10</td></tr>
+      <tr><td><span class="sw" style="background:#FF4500"></span>Way Off</td><td>past that</td><td>past that</td><td>0</td></tr>
+    </table>
+    <p class="small">Because both scales share this one point table, stage 3's linear-vs-log comparison
+      uses average points per question rather than the raw percent/decades numbers, which are not
+      directly comparable.</p>
+  </section>
+
+  <section aria-labelledby="g-edit">
+    <h2 id="g-edit">Editing the question bank</h2>
+    <p>The bank now lives in <code>src/data.js</code> (moved out of <code>index.html</code> for this
+      retrofit) &mdash; each entry carries <code>id</code>, <code>category</code>, <code>prompt</code>,
+      <code>units</code>, <code>value</code>, <code>min</code>/<code>max</code>, <code>scale</code>
+      (<code>"linear"</code>/<code>"log"</code>), <code>factoid</code>, and now an optional
+      <code>qualifier</code> plus a <code>source</code> object (<code>name</code>, <code>url</code>,
+      <code>fetched</code>). Edit <code>src/data.js</code>, then run <code>node build.js</code>. A value
+      with no qualifier is presented as a single, unhedged fact &mdash; add one whenever a new question is
+      really a range, a specified minimum, or a code/edition-dependent figure, per the standing "research,
+      not memory" rule: back it with an actual source before shipping it, or mark it unverified.</p>
+  </section>
+
+  <section aria-labelledby="g-controls">
+    <h2 id="g-controls">Presenter controls</h2>
+    <ul>
+      <li><b>&#9881; Settings</b> holds <b>Open Presenter Notes</b> (this guide), <b>Presentation mode</b>
+        (projector-sized type), and <b>Reset</b> (back to stage 1's setup screen, both later stages
+        re-locked, presentation mode left as you set it).</li>
+      <li><b>Stage tabs</b> switch stages; stages 2 and 3 stay locked until the stage before them is
+        played through &mdash; the tabs stay visible so the room sees the whole route.</li>
+      <li><b>Details</b> (in each stage's intro) opens that stage's sources, formula, assumptions, and
+        boundary statement.</li>
+      <li><b>Keys:</b> <code>Enter</code>/<code>Space</code> lock in a guess and advance the reveal;
+        <code>Esc</code> closes any open dialog.</li>
+    </ul>
+  </section>
+
+  <div class="page-break"></div>
+  <section aria-labelledby="g-sources">
+    <h2 id="g-sources">Sources (session-fetched, not recalled)</h2>
+    <p class="small">Every one of the 40 taught values carries its own citation in the app's Details
+      drawer (per stage); this is the standards-body / primary-source subset, re-checked for this
+      retrofit rather than carried over from memory:</p>
+    <ul>
+      <li>BIPM, <a href="https://www.bipm.org/en/committees/cg/cgpm/3-1901/resolution-2">3rd CGPM (1901)
+        Resolution 2</a> &mdash; the defined value of standard gravity.</li>
+      <li>NIH/NCBI StatPearls, <a href="https://www.ncbi.nlm.nih.gov/books/NBK580528/">Electrical
+        Injuries</a> &mdash; the current thresholds behind item 23's qualifier.</li>
+      <li>up.codes, <a href="https://up.codes/s/ampacities-for-flexible-cords-and-flexible-cables">NEC
+        Table 400.5(A)(1)</a> and <a href="https://up.codes/s/stair-treads-and-risers">IRC/IBC stair
+        tread and riser requirements</a>.</li>
+      <li>OSHA, <a href="https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1053">1926.1053,
+        Ladders</a>.</li>
+      <li>TxDOT Roadway Design Manual, <a href="https://www.txdot.gov/manuals/des/rdw/chapter-4--basic-design-criteria/4-8-vertical-alignment/4-8-1-grades.html">Ch.
+        4.8.1 Grades</a> &mdash; the terrain&times;design-speed structure behind item 36's qualifier.</li>
+      <li>CPSC Publication 5098, <a href="https://www.cpsc.gov/s3fs-public/5098.pdf">Tap Water Scalds</a>.</li>
+      <li>NIST Chemistry WebBook, <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&amp;Mask=4">Water</a>
+        &mdash; thermophysical properties behind items 25, 29, 30 and 33.</li>
+      <li>ICAO Doc 7488, <a href="https://news.ncac.mn/uploads/bookSubject/2022-11/6369ec174ab34.pdf">Manual
+        of the ICAO Standard Atmosphere</a> &mdash; items 27 and 40.</li>
+    </ul>
+    <p class="small">The full 40-row table (value, qualifier, source, date checked) is in
+      <code>src/data.js</code> and in this retrofit's return report; some lower-stakes items (exact unit
+      conversions, defined SI constants) are cited to a well-established secondary reference
+      (Engineering ToolBox, Wikipedia quoting a standard's own language, AmesWeb material tables) where
+      the underlying standard itself is paywalled (ASTM, AISC, ACI) — named by designation in the app's
+      Details drawer either way.</p>
+  </section>
+
+  <div class="g-foot"><strong>Engineering Trivia (Should Have Known That)</strong> &middot; Bryant
+    Harrison &middot; Murray State University &middot; Offline single-file web game. Open
+    <code>index.html</code> to play. <code>src/demo-guide.html</code> is the canonical source of this
+    document; the shipped <code>teacher-guide.html</code>, the PDF beside it, and the in-app presenter
+    notes are all generated from it at build time.</div>
+
+</div><!-- /guide -->
+</body>
+</html>
