@@ -1,83 +1,151 @@
+#!/usr/bin/env node
+/* Build missing-time/index.html from src/ plus the shared lesson shell.
+
+     src/template.html    the app shell markup
+     src/styles.css       the ACTIVITY styles (the lesson shell's are shared)
+     src/app.js           the view layer: three stages sharing one instrument
+     src/model.js         the rock-record ledger model, also used by test-model.js
+     src/demo-guide.html  the canonical printable teacher guide
+     ../tools/lesson-shell/   tokens, shell CSS, shell behaviour, version stamp
+
+   THE SHARED KIT IS A BUILD-TIME DEPENDENCY ONLY. Its CSS and behaviour are
+   inlined here, so the shipped index.html is still one self-contained file
+   with zero <script src> and zero <link href>. CONTRACT.md's self-containment
+   requirement is about the built file; it says the build must be reproducible
+   from the committed sources and does not require them to live in this folder
+   (orchestrator ruling, 2026-09-15). The build stamps the output with a hash
+   of the kit's CSS, so this demo goes red if the kit changes under it.
+
+   ONE SOURCE FOR THE NOTES. src/demo-guide.html is canonical for three
+   surfaces: the printable page shipped as teacher-guide.html, the rendered
+   teacher-guide.pdf, and the app's Settings -> Open Presenter Notes overlay.
+   Its scoped stylesheet and its .guide-scope body are lifted verbatim and
+   injected, so nothing is fetched at runtime and --check fails the moment any
+   surface drifts. The shipped filename stays teacher-guide.html because it is
+   a public URL (demo.json -> guide).
+
+     node build.js           writes index.html and teacher-guide.html
+     node build.js --check   verifies both against the canonical build, and
+                             that the PDF is no older than the guide; writes
+                             nothing, exits 1 on any drift
+*/
 'use strict';
-
-/* Gaps in the Rock Record (missing-time) build.
-   `node build.js`         writes index.html
-   `node build.js --check` verifies index.html matches the canonical build, writes nothing
-
-   Two sources, injected verbatim so there is nothing to keep in sync by hand:
-     - model.js           into the model marker (the tested model, verbatim, so the page
-                          and test-model.js can never disagree)
-     - teacher-guide.html into the guide markers: its `guide-css` stylesheet and its
-                          .guide-scope body become the in-app presenter notes
-
-   teacher-guide.html is canonical and stays canonical: it is the printable guide, the
-   source of teacher-guide.pdf (tools/pdf.mjs), and the source of the notes overlay. There
-   is no second copy to drift, and --check fails if index.html has fallen behind it. */
-
 const fs = require('node:fs');
 const path = require('node:path');
+const shell = require('../tools/lesson-shell');
+const gc = require('../tools/lesson-shell/guide-contract');
+
 const here = __dirname;
-const CHECK = process.argv.includes('--check');
-const read = file => fs.readFileSync(path.join(here, file), 'utf8');
+const S = f => fs.readFileSync(path.join(here, 'src', f), 'utf8');
+const die = msg => { console.error(msg); process.exit(1); };
 
 const MODEL_MARKER = '/*__MISSING_TIME_MODEL__*/';
-const GUIDE_CSS_MARKER = '/*__GUIDE_CSS__*/';
-const GUIDE_MARKER = '<!--__GUIDE__-->';
+const paths = {
+  index: path.join(here, 'index.html'),
+  srcGuide: path.join(here, 'src', 'demo-guide.html'),
+  guideOut: path.join(here, 'teacher-guide.html'),
+  pdfOut: path.join(here, 'teacher-guide.pdf')
+};
 
-const template = read('app.template.html');
-const model = read('model.js');
-const guideSrc = read('teacher-guide.html');
+function buildHtml() {
+  const guideSrc = S('demo-guide.html');
+  /* Line-anchored, unique markers and the scope-leak parse both live in the
+     kit now (guide-contract.js) — the exact discipline this demo's own
+     pre-kit build.js warned about in its own head comment: a plain
+     indexOf('<style>') would have started inside a comment that merely
+     names the marker. */
+  const guide = gc.extractGuide(guideSrc);
 
-/* Locate the guide stylesheet by an explicit id, never by indexOf('<style>'): the guide's
-   head comment talks about its own stylesheets, and a bare search would start inside that
-   comment and ship a broken first rule. */
-const CSS_OPEN = '<style id="guide-css">';
-const cssStart = guideSrc.indexOf(CSS_OPEN);
-const cssEnd = cssStart < 0 ? -1 : guideSrc.indexOf('</style>', cssStart);
-const bodyStart = guideSrc.indexOf('<div class="guide-scope">');
-const bodyEnd = guideSrc.indexOf('</div><!-- /guide -->');
-if (cssStart < 0 || cssEnd < 0 || bodyStart < 0 || bodyEnd < 0) throw new Error('Guide markers are missing in teacher-guide.html (need <style id="guide-css"> ... </style> and <div class="guide-scope"> ... </div><!-- /guide -->).');
-const guideCss = guideSrc.slice(cssStart + CSS_OPEN.length, cssEnd);
-const guideHtml = guideSrc.slice(bodyStart, bodyEnd) + '</div>';
+  let html = S('template.html');
+  const markers = [
+    shell.MARKERS.stamp,
+    shell.MARKERS.shellCss,
+    shell.MARKERS.appCss,
+    shell.MARKERS.guideCss,
+    shell.MARKERS.shellJs,
+    shell.MARKERS.app,
+    shell.MARKERS.guide,
+    MODEL_MARKER
+  ];
+  gc.assertPlaceholders(html, markers);
 
-/* The stylesheet is injected into the running app, so a page-level rule there would
-   repaint the demo. Refuse the build rather than ship it. */
-if (/^\s*(?:body|html|\*|:root)\s*[,{]/m.test(guideCss)) throw new Error('The guide stylesheet leaks a page-level rule into the app; scope every rule to .guide-scope.');
-if (/<\/style/i.test(guideCss)) throw new Error('The guide stylesheet must not contain a style close tag.');
-if (/<\/script/i.test(guideHtml)) throw new Error('The guide body must not contain a script close tag.');
+  /* Each injection is exactly-once and uses a function replacement, because a
+     dollar-sign substitution pattern in the injected text would otherwise be
+     eaten by String.replace. injectOnce does both. */
+  html = gc.injectOnce(html, shell.MARKERS.stamp, shell.stamp());
+  html = gc.injectOnce(html, shell.MARKERS.shellCss, shell.css());
+  html = gc.injectOnce(html, shell.MARKERS.appCss, S('styles.css'));
+  html = gc.injectOnce(html, shell.MARKERS.guideCss, guide.css);
+  html = gc.injectOnce(html, MODEL_MARKER, S('model.js'));
+  html = gc.injectOnce(html, shell.MARKERS.shellJs, shell.behaviourScript());
+  html = gc.injectOnce(html, shell.MARKERS.app, S('app.js'));
+  html = gc.injectOnce(html, shell.MARKERS.guide, guide.html);
 
-/* String.replace substitutes only the FIRST occurrence, so a marker that also appeared in
-   a comment would silently swallow the payload. Require exactly one of each. */
-const occurrences = (haystack, needle) => haystack.split(needle).length - 1;
-for (const marker of [MODEL_MARKER, GUIDE_CSS_MARKER, GUIDE_MARKER]) {
-  const n = occurrences(template, marker);
-  if (n !== 1) throw new Error('app.template.html must contain exactly one ' + marker + '; found ' + n + '.');
+  /* The one permitted reference is the hyperlink to the printable guide
+     sitting beside index.html. CONTRACT.md 2026-09-08: an <a href> the reader
+     may choose to follow is not a network call by the page. */
+  gc.assertNoExternalRefs(html, ['teacher-guide.html']);
+  /* And nothing may be fetched at runtime. The scan strips comments, which is
+     what makes it able to miss things, so it proves itself on synthetic bait
+     before its silence is believed. */
+  const control = gc.assertNoRuntimeLoads(html);
+
+  return { html, guideSrc, guideHtml: guide.html, control };
 }
 
-/* Replacements are functions, not strings: `$&`, `` $` ``, `$'` and `$$` inside the model
-   or the guide would otherwise be eaten by String.replace's substitution patterns. */
-const output = template
-  .replace(MODEL_MARKER, () => '/* MISSING_TIME_MODEL: BEGIN */\n' + model + '\n/* MISSING_TIME_MODEL: END */')
-  .replace(GUIDE_CSS_MARKER, () => '/* GUIDE_CSS: BEGIN */' + guideCss + '/* GUIDE_CSS: END */')
-  .replace(GUIDE_MARKER, () => '<!-- GUIDE: BEGIN -->' + guideHtml + '<!-- GUIDE: END -->');
+function main(argv) {
+  const unknown = argv.filter(a => a !== '--check');
+  if (unknown.length) die('Unknown build option: ' + unknown.join(', '));
+  const { html, guideSrc, guideHtml, control } = buildHtml();
+  const checkOnly = argv.includes('--check');
 
-/* A single offline file means a single file: nothing may be fetched at runtime.
-   Reader-initiated <a href> source citations inside the guide are not runtime assets and
-   are deliberately not matched here. */
-const offenders = [];
-output.replace(/<(?:script|link|img|iframe|source|video|audio|embed|object)\b[^>]*>/gi, tag => {
-  if (/\b(?:src|href|data)\s*=\s*["']?(?!#)[^"'>\s]+/i.test(tag) && !/data:/i.test(tag)) offenders.push(tag.slice(0, 90));
-  return tag;
-});
-if (offenders.length) throw new Error('Build refuses to ship an external runtime reference:\n  ' + offenders.join('\n  '));
+  if (!checkOnly) {
+    fs.writeFileSync(paths.index, html);
+    fs.copyFileSync(paths.srcGuide, paths.guideOut);
+    console.log('built index.html (' + Math.round(html.length / 1024) + ' KB) and teacher-guide.html');
+    console.log('  lesson-shell ' + shell.stamp());
+    console.log('  presenter notes injected from src/demo-guide.html: ' +
+      guideHtml.replace(/<[^>]*>/g, ' ').split(/\s+/).filter(Boolean).length + ' words');
+    console.log('  runtime-load scan passed, proved on ' + control.controls + ' positive controls');
+    console.log('NOTE: if the guide changed, re-render the PDF: node tools/pdf.mjs');
+    return 0;
+  }
 
-const indexPath = path.join(here, 'index.html');
-
-if (CHECK) {
-  if (!fs.existsSync(indexPath) || fs.readFileSync(indexPath, 'utf8') !== output) throw new Error('index.html is not the reproducible bundle. Run: node build.js');
-  console.log('PASS  index.html is reproducibly built from app.template.html + model.js + teacher-guide.html');
-  console.log('PASS  in-app presenter notes and teacher-guide.html come from one source; no drift');
-} else {
-  fs.writeFileSync(indexPath, output);
-  console.log('Built index.html from model.js, teacher-guide.html and app.template.html.');
+  const same = (file, want) => fs.existsSync(file) && fs.readFileSync(file, 'utf8') === want;
+  if (!same(paths.index, html)) {
+    console.error('build parity MISMATCH -- index.html differs from the canonical build. Run: node build.js');
+    console.error('(the in-app presenter notes are generated from src/demo-guide.html, and the shell CSS');
+    console.error(' comes from ../tools/lesson-shell, so a change to either requires a rebuild)');
+    return 1;
+  }
+  if (!same(paths.guideOut, guideSrc)) {
+    console.error('build parity MISMATCH -- teacher-guide.html differs from src/demo-guide.html. Run: node build.js');
+    return 1;
+  }
+  if (!fs.readFileSync(paths.index, 'utf8').includes(guideHtml)) {
+    console.error('build parity MISMATCH -- the in-app presenter notes are not the guide body. Run: node build.js');
+    return 1;
+  }
+  /* The PDF is a render, not a copy, so it cannot be compared byte for byte.
+     Freshness is the pin that is available: it must not predate the guide it
+     is a picture of. Two seconds of slack absorbs a fresh checkout, which
+     stamps every file at about the same instant. */
+  if (!fs.existsSync(paths.pdfOut)) {
+    console.error('build parity MISMATCH -- teacher-guide.pdf is missing. Run: node tools/pdf.mjs');
+    return 1;
+  }
+  const lag = fs.statSync(paths.srcGuide).mtimeMs - fs.statSync(paths.pdfOut).mtimeMs;
+  if (lag > 2000) {
+    console.error('build parity MISMATCH -- teacher-guide.pdf is older than src/demo-guide.html by ' +
+      (lag / 1000).toFixed(0) + 's. Run: node tools/pdf.mjs');
+    return 1;
+  }
+  console.log('build parity OK -- index.html, teacher-guide.html and the in-app presenter notes all derive');
+  console.log('build parity OK -- from src/demo-guide.html, and the PDF is no older than it; no files written');
+  console.log('build parity OK -- lesson-shell ' + shell.stamp());
+  return 0;
 }
+
+module.exports = { buildHtml, paths, MODEL_MARKER };
+
+if (require.main === module) process.exitCode = main(process.argv.slice(2));
