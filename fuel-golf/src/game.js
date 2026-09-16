@@ -6,6 +6,31 @@
    advantage emerges from the integrator.
    The physics + level definitions are exported for Node so the test
    harness (test-physics.js) exercises EXACTLY the shipped code.
+
+   ---------------------------------------------------------------------
+   2026-09-16, lesson-shell v2 retrofit. The physics core below this line
+   and the eight level definitions are UNCHANGED. What changed in the
+   browser half is the VIEWPORT SOURCE and the DIALOG PRIMITIVE, and
+   nothing else about the loop:
+
+     * the canvas used to be `position:fixed; inset:0`, so every
+       screen-space calculation read window.innerWidth/innerHeight. The
+       lesson shell owns a scrolling document with a sticky header, a stage
+       tablist, per-stage intros and check cards, so the flight view is now
+       a BOUNDED box inside a navy .workbench. vw()/vh() read that box; a
+       ResizeObserver on it drives resize(), which also covers the shell
+       relocating the activity between stage hosts and presentation mode
+       changing --u.
+     * the seven hand-rolled `.modal` divs became native <dialog>. The
+       shell owns four of them (Guide, Settings, Presenter Notes, Details);
+       the four the ACTIVITY owns (mission, levels, debrief, crash) keep
+       their own ids and are opened with showModal(). anyModalOpen() now
+       asks for `dialog[open]`, which is what keeps PAUSE working: the sim
+       still only advances when nothing is open over it.
+
+   The loop itself (frame) is untouched apart from one guard that skips
+   draw() when the canvas has no layout box. Levels, pars, keys, undo and
+   the HUD readings are the same numbers they always were.
    ===================================================================== */
 'use strict';
 
@@ -313,7 +338,11 @@ function showHint(text, ms) {
   $('hint').classList.add('show');
   if (ms) setTimeout(() => { if (el.textContent === text) $('hint').classList.remove('show'); }, ms);
 }
-function anyModalOpen() { return !!document.querySelector('.modal.show'); }
+/* PAUSE, and how it survived the retrofit. The sim advances only when nothing
+   is open over the flight view, and that is now true of the shell's dialogs as
+   well as the activity's own: the Guide that opens on load, Details, Settings
+   and Presenter Notes all freeze the ship exactly as the old modals did. */
+function anyModalOpen() { return !!document.querySelector('dialog[open]'); }
 
 /* ---------- game state ---------- */
 let lvl = null;            // current level object
@@ -345,18 +374,27 @@ let dragging = null;       // {mode:'pan'|'aim', ...} active pointer gesture
 let toastTimer = null;
 const PROG_KEY = 'fuelgolf_progress';
 
+/* ---------- the flight view's own box ----------
+   The single change that made this game fit inside the lesson shell. Every
+   screen-space number below used to come from window.innerWidth/innerHeight;
+   it now comes from the canvas's own CSS box, so the view can sit in a bounded
+   navy frame inside a scrolling document and be relocated between stage hosts
+   without the world drifting off centre. */
+const vw = () => canvas.clientWidth;
+const vh = () => canvas.clientHeight;
 function resize() {
-  canvas.width = window.innerWidth * devicePixelRatio;
-  canvas.height = window.innerHeight * devicePixelRatio;
+  const w = vw(), h = vh();
+  if (w <= 0 || h <= 0) return;          // inside a hidden stage panel: nothing to size
+  canvas.width = Math.round(w * devicePixelRatio);
+  canvas.height = Math.round(h * devicePixelRatio);
   ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
-  layoutPanels();
 }
-/* keep the HUD clear of the top bar however many rows it wraps to */
-function layoutPanels() {
-  const tb = $('topbar');
-  if (!tb) return;
-  // phones dock the HUD to the bottom via CSS; wider screens sit it under the bar
-  $('hud').style.top = window.innerWidth <= 700 ? '' : (tb.offsetHeight + 8) + 'px';
+/* A ResizeObserver rather than only a window resize listener, because three of
+   the four things that change this box are not window resizes: the shell moving
+   the activity into another stage host, presentation mode changing --u, and the
+   responsive stack at 760px. */
+if (typeof ResizeObserver !== 'undefined') {
+  new ResizeObserver(() => resize()).observe(canvas);
 }
 window.addEventListener('resize', resize); resize();
 
@@ -369,6 +407,12 @@ function makeStars() {
 makeStars();
 
 /* ---------- level lifecycle ---------- */
+/* ---------- the lesson layer's hooks ----------
+   app.js fills these in. game.js calls them and never reaches upward itself,
+   so the game still runs with app.js absent — which is what test-physics.js and
+   the static bundle test rely on. */
+const hooks = {};
+
 function loadLevel(i) {
   lvl = LEVELS[i];
   S = startState(lvl);
@@ -383,7 +427,7 @@ function loadLevel(i) {
   $('btnCut').style.display = 'none';
   syncEngineRow();
   plan = { mode: 'prograde', angle: 0, dv: Math.min(2, fuel) };
-  targetZoom = zoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
+  targetZoom = zoom = Math.min(vw() || 900, vh() || 600) / lvl.view;
   epsStart = elements(lvl, S).eps;
   undoStack = [];
   // start framed on the whole system (Earth centred) — follow is an opt-in tool
@@ -394,6 +438,8 @@ function loadLevel(i) {
   syncTop(); syncWarpButtons(); hidePlanner();
   showHint(lvl.hint, 16000);
   closeModal('levelsModal'); closeModal('debriefModal'); closeModal('crashModal');
+  resize();
+  if (hooks.onLevelLoad) hooks.onLevelLoad(i);
 }
 
 function computeCurPath() {
@@ -592,6 +638,7 @@ function succeed() {
   $('btnCut').style.display = 'none';
   succeededAt = S.t;
   markComplete(lvl.id, dvUsed, lvl.par);
+  if (hooks.onSucceed) hooks.onSucceed(LEVELS.indexOf(lvl), dvUsed, lvl.par);
   showDebrief();
 }
 
@@ -807,88 +854,38 @@ $('dbSave').addEventListener('click', () => {
   if (rank === 1) toast('🏆 New class best on this level!');
 });
 
-/* ---------- modals ---------- */
-const modalOpeners = new Map();
-const backgroundA11y = new Map();
-function dialogFocusables(modal) {
-  return [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')]
-    .filter(el => !el.hidden && el.getClientRects().length);
-}
-function setBackgroundInert(inert) {
-  [...document.body.children].filter(el => !el.classList.contains('modal')).forEach(el => {
-    if (inert) {
-      if (!backgroundA11y.has(el)) backgroundA11y.set(el, el.getAttribute('aria-hidden'));
-      el.inert = true;
-      el.setAttribute('aria-hidden', 'true');
-    } else {
-      el.inert = false;
-      const old = backgroundA11y.get(el);
-      if (old === null || old === undefined) el.removeAttribute('aria-hidden'); else el.setAttribute('aria-hidden', old);
-    }
-  });
-  if (!inert) backgroundA11y.clear();
-}
-function focusModal(modal) {
-  const target = modal.querySelector('[data-dialog-initial]') || dialogFocusables(modal)[0] || modal;
-  // A long dialog must open at its beginning. Focusing a control that sits near
-  // the bottom (the how-to popup's "Fly", the notes' guide button) would
-  // otherwise scroll the reader straight past the part that explains things —
-  // badly wrong on a phone, where every dialog overflows.
-  target.focus({ preventScroll: true });
-  const box = modal.querySelector('.box');
-  if (box) box.scrollTop = 0;
-}
-function openModal(id, opener) {
-  const modal = $(id);
-  modal.tabIndex = -1;
-  if (!modal.classList.contains('show')) {
-    const candidate = opener || document.activeElement;
-    modalOpeners.set(id, candidate && candidate !== document.body ? candidate : null);
-    modal.classList.add('show');
-  }
-  setBackgroundInert(true);
-  focusModal(modal);
+/* ---------- the activity's own dialogs ----------
+   Four of them: the mission briefing, the level list, the debrief and the crash
+   screen. They are part of the ACTIVITY, not duplicates of the shell's
+   per-stage Details drawer (ADOPTING.md section 5), so they keep their own ids
+   and their own openers. Everything the sixty lines that used to be here did by
+   hand — the backdrop, Escape, the focus trap, inerting the page, returning
+   focus on close — a native <dialog> does, which is why they went.
+
+   Two things are still ours: not throwing when something asks to open a dialog
+   that is already open, and backdrop dismissal for the two that are purely
+   informational. The debrief and the crash screen are deliberately NOT
+   backdrop-dismissible: they ask for a decision (retry / undo / next), so a
+   stray tap must not answer for you. */
+function openModal(id) {
+  const d = $(id);
+  if (!d || d.open) return;
+  d.showModal();
+  const body = d.querySelector('.box');
+  if (body) body.scrollTop = 0;
 }
 function closeModal(id) {
-  const modal = $(id);
-  if (!modal.classList.contains('show')) return;
-  modal.classList.remove('show');
-  const stillOpen = document.querySelector('.modal.show');
-  if (stillOpen) { focusModal(stillOpen); return; }
-  setBackgroundInert(false);
-  const opener = modalOpeners.get(id);
-  modalOpeners.delete(id);
-  // A detached opener is not a valid restoration point; Help is the safe
-  // boot/no-opener fallback.
-  const restore = opener && opener.isConnected && !opener.closest('.modal') ? opener : $('btnHelp');
-  if (restore) restore.focus();
+  const d = $(id);
+  if (d && d.open) d.close();
 }
-document.addEventListener('keydown', (e) => {
-  const modal = document.querySelector('.modal.show');
-  if (!modal) return;
-  if (e.key === 'Escape') {
-    e.preventDefault(); e.stopPropagation(); closeModal(modal.id); return;
-  }
-  if (e.key !== 'Tab') return;
-  const focusables = dialogFocusables(modal);
-  if (!focusables.length) { e.preventDefault(); modal.focus(); return; }
-  const first = focusables[0], last = focusables[focusables.length - 1];
-  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-}, true);
-/* Tap/click the dimmed backdrop to dismiss the informational dialogs. The
-   debrief and the crash screen are deliberately left out — those ask for a
-   decision (retry / undo / next), so a stray tap must not answer for you. */
-document.querySelectorAll('.modal[data-lightdismiss]').forEach((m) => {
-  m.addEventListener('pointerdown', (e) => { if (e.target === m) closeModal(m.id); });
+document.querySelectorAll('dialog[data-lightdismiss]').forEach((m) => {
+  m.addEventListener('pointerdown', (e) => { if (e.target === m) m.close(); });
 });
 $('dbRetry').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
 $('dbNext').addEventListener('click', () => loadLevel(Math.min(LEVELS.indexOf(lvl) + 1, LEVELS.length - 1)));
 $('dbClose').addEventListener('click', () => closeModal('debriefModal'));
 $('crashRetry').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
 $('btnRestart').addEventListener('click', () => loadLevel(LEVELS.indexOf(lvl)));
-$('btnHelp').addEventListener('click', () => openModal('helpModal'));
-$('closeHelp').addEventListener('click', () => closeModal('helpModal'));
 
 /* levels modal */
 /* ---------- progress ---------- */
@@ -953,75 +950,112 @@ $('hintClose').addEventListener('click', () => $('hint').classList.remove('show'
 $('btnLevels').addEventListener('click', () => { renderLevelGrid(); openModal('levelsModal'); });
 $('closeLevels').addEventListener('click', () => closeModal('levelsModal'));
 
-/* settings modal */
-$('btnTeacher').addEventListener('click', () => {
-  // never reopen onto a confirmation somebody walked away from
-  $('resetConfirmRow').style.display = 'none';
-  $('resetAllConfirmRow').style.display = 'none';
-  openModal('teacherModal');
-});
-$('closeTeacher').addEventListener('click', () => closeModal('teacherModal'));
-$('tgProjector').addEventListener('click', () => {
-  const on = document.body.classList.toggle('projector');
-  setProjectorLabel(on);
-  store.set('fuelgolf_projector', on);
-});
-function setProjectorLabel(on) {
-  $('tgProjector').textContent = on ? 'On' : 'Off';
-  $('tgProjector').setAttribute('aria-pressed', on ? 'true' : 'false');
-}
+/* Settings, Presenter Notes, Presentation mode and Reset all belong to the
+   lesson shell now. The forty lines that used to be here — a projector toggle
+   persisted to localStorage, a notes opener, a Settings dialog of its own —
+   are deleted rather than duplicated (ADOPTING.md section 2).
 
-/* Presenter Notes — the printable teacher guide, injected into #notesModal from
-   teacher-guide.html by tools/guide-sync.js. Nothing is fetched to show them. */
-function showNotes() {
-  const opener = document.activeElement;
-  closeModal('teacherModal');
-  openModal('notesModal', opener && opener.id === 'tgNotes' ? $('btnTeacher') : opener);
-}
-$('tgNotes').addEventListener('click', showNotes);
-$('btnNotes').addEventListener('click', showNotes);
-$('closeNotes').addEventListener('click', () => closeModal('notesModal'));
-/* ---------- Reset (whole demo) ----------
-   Puts the page back where a fresh load leaves it: Level 1 on the pad, nothing
-   saved on this machine, every panel closed. Two things are deliberately NOT
-   touched. Presentation mode is a presenter's display preference, not demo
-   state, so a reset between class periods does not throw the projector back to
-   small type. And the Guide overlay, which a real first load opens, stays shut —
-   the presenter has just been in Settings and does not need the how-to. */
-function resetDemo() {
-  LEVELS.forEach(L => store.del(LB_KEY(L.id)));
+   One line survives, and it is load-bearing: presentation mode changes --u,
+   which changes this box, which changes every screen-space number in draw(). */
+document.addEventListener('presentationchange', () => resize());
+/* ---------- Reset: the ACTIVITY half, in place, no reload ----------
+   Kit v2 dispatches `lessonreset` last and app.js calls this from it. The shell
+   has already restored everything the kit named; this restores the flight view.
+
+   THE ENUMERATION, walked rather than summarised, because an in-place reset is
+   correct only if the list is complete and every omission fails quietly:
+
+     1. loadLevel(0) is the bulk of it, and it is the level loader the game
+        already had: lvl, S, fuel, dvUsed, phase, trail, energyLog, burnLog,
+        lastELog, succeededAt, predPath, engine, activeBurn, warnedFallback,
+        orbitChipState, plan, zoom/targetZoom, epsStart, undoStack, the camera,
+        follow, #btnCut, the engine row, the chips, the warp buttons, the
+        planner (hidden) and level 1's hint. Reusing it means there is one
+        definition of "first load" rather than a second one here that can drift.
+     2. vSeen — the min/max speed window the Oberth bar normalises against.
+        loadLevel does NOT touch it, so without this line the bar comes back
+        scaled to a previous level's speeds: it reads wrong while looking fine.
+     3. The planner chrome that `plan` alone does not describe: the mode
+        buttons' .active, #angleRow's display, #angleSlider's value, and
+        #predinfo, which computePredPath fills with innerHTML.
+     4. Form controls, which never re-assert their template value on their own:
+        #leadInput and the debrief's #dbName.
+     5. Nodes filled with innerHTML that start empty: #dbLb (the leaderboard
+        rows), #dbMath, #levelGrid, #progText.
+     6. Collapsible chrome: #dbMath's .collapsed and #mathToggle's label.
+     7. Transients with a timer behind them: the toast (and its pending
+        timeout, or the reset is followed two seconds later by a stale
+        message) and the hint banner.
+     8. The HUD, open on first load here because the Oberth bar inside it is
+        this demo's A4 observation instrument.
+     9. Persisted state: the mission badges and the saved name go, because a
+        fresh machine has neither AND because stage 3's gate is derived from
+        badge state — leaving them would leave that gate unlocked over freshly
+        re-locked chrome. The per-level LEADERBOARDS deliberately survive; the
+        reason is on #clear-scores below.
+    10. The #debriefPlot bitmap, cleared so nothing from the last run can show
+        behind a fresh plot.
+    11. #crashUndo's display, which crashed() hides when the undo stack is
+        empty and nothing else puts back.
+
+   The starfield is not on the list: makeStars() is decorative and a genuine
+   fresh load randomises it, so "restoring" it would be restoring noise. */
+function resetActivity() {
   store.del(PROG_KEY);
   store.del('fuelgolf_name');
-  $('dbName').value = '';
-  document.querySelectorAll('.modal.show').forEach(m => closeModal(m.id));
-  $('resetConfirmRow').style.display = 'none';
-  $('resetAllConfirmRow').style.display = 'none';
-  // transient UI loadLevel() does not own
-  $('hud').classList.remove('show');
-  $('btnHud').classList.remove('active');
+  clearTimeout(toastTimer);
+  $('toast').classList.remove('show');
   $('hint').classList.remove('show');
+  $('dbName').value = '';
+  $('dbSaved').style.display = 'none';
+  $('dbLb').innerHTML = '';
+  $('dbMath').innerHTML = '';
+  $('dbMath').classList.remove('collapsed');
+  $('mathToggle').textContent = '▼ Hide the math — proving the outcome from your inputs';
+  $('crashUndo').style.display = '';
+  $('leadInput').value = '0';
+  $('predinfo').innerHTML = '';
+  $('angleSlider').value = 0;
+  $('angleRow').style.display = 'none';
+  document.querySelectorAll('.modes [data-mode]').forEach(x => x.classList.toggle('active', x.dataset.mode === 'prograde'));
+  const plot = $('debriefPlot');
+  plot.getContext('2d').clearRect(0, 0, plot.width, plot.height);
+  vSeen = { min: Infinity, max: -Infinity };
+  setHud(true);
   renderLevelGrid();
-  loadLevel(0);            // also resets camera, warp, engine, undo stack, Δv
-  toast('Reset to a fresh start');
+  loadLevel(0);
 }
-$('tgResetAll').addEventListener('click', () => { $('resetAllConfirmRow').style.display = 'flex'; });
-$('tgResetAllNo').addEventListener('click', () => { $('resetAllConfirmRow').style.display = 'none'; });
-$('tgResetAllYes').addEventListener('click', resetDemo);
 
-$('tgReset').addEventListener('click', () => { $('resetConfirmRow').style.display = 'flex'; });
-$('tgResetNo').addEventListener('click', () => { $('resetConfirmRow').style.display = 'none'; });
-$('tgResetYes').addEventListener('click', () => {
+/* The two narrow, destructive class-data controls stay demo-specific options
+   under the Settings triad, each behind its own confirmation. Reset does NOT
+   fold them in: a leaderboard holds OTHER students' entries, and a one-click
+   unconfirmed wipe of another period's scores is a worse failure than a Reset
+   that leaves persisted class data alone. */
+function confirmRow(rowId, show) { $(rowId).style.display = show ? 'flex' : 'none'; }
+$('clear-scores').addEventListener('click', () => confirmRow('clear-scores-row', true));
+$('clear-scores-no').addEventListener('click', () => confirmRow('clear-scores-row', false));
+$('clear-scores-yes').addEventListener('click', () => {
   LEVELS.forEach(L => store.del(LB_KEY(L.id)));
-  $('resetConfirmRow').style.display = 'none';
+  confirmRow('clear-scores-row', false);
+  $('dbLb').innerHTML = '';
+  renderLevelGrid();
   toast('Leaderboards cleared');
 });
-if (store.get('fuelgolf_projector', false)) { document.body.classList.add('projector'); setProjectorLabel(true); }
-
-/* HUD toggle */
-$('btnHud').addEventListener('click', () => {
-  $('hud').classList.toggle('show');
-  $('btnHud').classList.toggle('active');
+$('clear-badges').addEventListener('click', () => {
+  store.del(PROG_KEY);
+  renderLevelGrid();
+  if (hooks.onProgressChange) hooks.onProgressChange();
+  toast('Mission badges cleared');
 });
+
+/* HUD toggle. Open by default now: the Oberth bar inside it is this demo's A4
+   observation instrument, so hiding it on load would hide the lesson. */
+function setHud(on) {
+  $('hud').classList.toggle('show', on);
+  $('btnHud').classList.toggle('active', on);
+  $('btnHud').setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+$('btnHud').addEventListener('click', () => setHud(!$('hud').classList.contains('show')));
 
 /* ---------- warp & apsis controls ---------- */
 function syncWarpButtons() {
@@ -1068,34 +1102,39 @@ $('btnFollow').addEventListener('click', () => setFollow(!follow));
 $('zoomIn').addEventListener('click', () => targetZoom *= 1.35);
 $('zoomOut').addEventListener('click', () => targetZoom /= 1.35);
 $('zoomFit').addEventListener('click', () => {
-  targetZoom = Math.min(window.innerWidth, window.innerHeight) / lvl.view;
+  targetZoom = Math.min(vw() || 900, vh() || 600) / lvl.view;
   camX = 0; camY = 0; setFollow(false);
 });
 canvas.addEventListener('wheel', (e) => { e.preventDefault(); targetZoom *= e.deltaY < 0 ? 1.12 : 1 / 1.12; }, { passive: false });
 
 /* pointer gestures: drag = pan, or aim the burn while the planner is open */
 function screenToWorld(px, py) {
-  return { x: camX + (px - window.innerWidth / 2) / zoom, y: camY + (py - window.innerHeight / 2) / zoom };
+  return { x: camX + (px - vw() / 2) / zoom, y: camY + (py - vh() / 2) / zoom };
 }
+/* Pointer events carry viewport coordinates and the canvas is no longer the
+   viewport, so every gesture is translated into the canvas's own box first. */
+function localX(e) { return e.clientX - canvas.getBoundingClientRect().left; }
+function localY(e) { return e.clientY - canvas.getBoundingClientRect().top; }
 canvas.addEventListener('pointerdown', (e) => {
   if (e.pointerType === 'touch' && e.isPrimary === false) return;
   canvas.setPointerCapture(e.pointerId);
   if (phase === 'planning') {
     dragging = { mode: 'aim' };
-    aimAt(e.clientX, e.clientY);
+    aimAt(localX(e), localY(e));
   } else {
-    dragging = { mode: 'pan', px: e.clientX, py: e.clientY, moved: false };
+    dragging = { mode: 'pan', px: localX(e), py: localY(e), moved: false };
     canvas.classList.add('grabbing');
   }
 });
 canvas.addEventListener('pointermove', (e) => {
   if (!dragging) return;
-  if (dragging.mode === 'aim') { aimAt(e.clientX, e.clientY); return; }
-  const dx = (e.clientX - dragging.px) / zoom, dy = (e.clientY - dragging.py) / zoom;
-  if (Math.abs(e.clientX - dragging.px) + Math.abs(e.clientY - dragging.py) > 3) {
+  const lx = localX(e), ly = localY(e);
+  if (dragging.mode === 'aim') { aimAt(lx, ly); return; }
+  const dx = (lx - dragging.px) / zoom, dy = (ly - dragging.py) / zoom;
+  if (Math.abs(lx - dragging.px) + Math.abs(ly - dragging.py) > 3) {
     if (!dragging.moved) { dragging.moved = true; setFollow(false); }
     camX -= dx; camY -= dy;
-    dragging.px = e.clientX; dragging.py = e.clientY;
+    dragging.px = lx; dragging.py = ly;
   }
 });
 function endDrag(e) {
@@ -1192,8 +1231,8 @@ document.addEventListener('keydown', (e) => {
   const k = e.key.toLowerCase();
   // Esc closes whatever is on top
   if (k === 'escape') {
-    const open = document.querySelector('.modal.show');
-    if (open) { closeModal(open.id); return; }
+    // A native <dialog> closes itself on Escape, so only the planner is ours.
+    if (anyModalOpen()) return;
     if (phase === 'planning') { hidePlanner(); return; }
     return;
   }
@@ -1211,8 +1250,11 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'p') { warpToApsis('pe'); }
   else if (k === 'a') { warpToApsis('ap'); }
   else if (k === 'r') { loadLevel(LEVELS.indexOf(lvl)); }
-  else if (k === 'n') { showNotes(); }
-  else if (k === '?' || k === '/') { e.preventDefault(); openModal('helpModal', $('btnHelp')); }
+  // N (Presenter Notes) and ? (Guide) are the shell's keys now: it owns both
+  // dialogs, so the demo routes the keystroke at the shell's own control
+  // rather than opening a second copy of either.
+  else if (k === 'n') { const b = document.querySelector('.notes-open'); if (b) b.click(); }
+  else if (k === '?' || k === '/') { e.preventDefault(); const b = document.querySelector('.guide-open'); if (b) b.click(); }
 });
 
 /* new top-bar + modal wiring */
@@ -1223,11 +1265,7 @@ $('mathToggle').addEventListener('click', () => {
   const hidden = m.classList.toggle('collapsed');
   $('mathToggle').textContent = (hidden ? '▶ Show' : '▼ Hide') + ' the math — proving the outcome from your inputs';
 });
-$('tgResetProg').addEventListener('click', () => {
-  store.del(PROG_KEY);
-  renderLevelGrid();
-  toast('Mission progress cleared');
-});
+
 
 /* ---------- top bar ---------- */
 function syncTop() {
@@ -1346,19 +1384,26 @@ function frame(now) {
     const k = Math.min(1, dtReal * 6);
     camX += (S.x - camX) * k; camY += (S.y - camY) * k;
   }
-  draw();
-  syncHud();
-  syncOrbitChip();
-  $('clockChip').textContent = 'T+ ' + fmtDur(S.t);
+  /* The one guard the shell made necessary. The activity is a single element
+     the shell's stage navigation relocates between hosts, so for the moments it
+     sits inside a panel that is `hidden` the canvas has no layout box: W2S()
+     would divide a zero width and draw() would burn a frame painting nothing.
+     The simulation above still advances; only the painting is skipped. */
+  if (vw() > 0 && vh() > 0) {
+    draw();
+    syncHud();
+    syncOrbitChip();
+    $('clockChip').textContent = 'T+ ' + fmtDur(S.t);
+  }
   requestAnimationFrame(frame);
 }
 
 /* ---------- rendering ---------- */
 function W2S(x, y) {
-  return [window.innerWidth / 2 + (x - camX) * zoom, window.innerHeight / 2 + (y - camY) * zoom];
+  return [vw() / 2 + (x - camX) * zoom, vh() / 2 + (y - camY) * zoom];
 }
 function draw() {
-  const w = window.innerWidth, h = window.innerHeight;
+  const w = vw(), h = vh();
   ctx.clearRect(0, 0, w, h);
   // deep-space backdrop (MSU navy vignette)
   const bg = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.75);
@@ -1408,6 +1453,18 @@ function draw() {
     ctx.beginPath(); ctx.arc(mx, my, mr, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#6b7a9c';
     ctx.beginPath(); ctx.arc(mx - mr * 0.25, my + mr * 0.15, mr * 0.3, 0, Math.PI * 2); ctx.fill();
+    /* The provenance kicker ON THE MAP. This body is not our Moon: its orbit
+       radius, mass parameter and size are chosen so that a gravity assist fits
+       one class period. Earth is at true scale on the same screen, so a learner
+       reading kilometres off the HUD would otherwise have no way to tell that
+       one of the two objects is invented. The HTML kicker beside the frame says
+       the same thing at greater length; this is the one a projector audience
+       actually reads. */
+    ctx.fillStyle = 'rgba(255,180,155,0.95)';
+    ctx.font = '600 11px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Moon — fictional', mx, my - mr - 7);
+    ctx.textAlign = 'left';
   }
 
   // trail
@@ -1590,9 +1647,46 @@ function drawRing(rIn, rOut, fill, edge, label) {
   }
 }
 
-/* ---------- boot ---------- */
+
+/* ---------- the surface app.js drives ----------
+   Deliberately small. The lesson layer needs to know which level is loaded, to
+   load one, to be told when a level loads or completes, to read the live Oberth
+   number for its A4 cue, and to put the activity back on Reset. It gets exactly
+   that, and no access to the integrator. */
+window.fuelGolf = {
+  LEVELS,
+  hooks,
+  loadLevel,
+  levelIndex: () => LEVELS.indexOf(lvl),
+  resetActivity,
+  remeasure: resize,
+  progress: getProgress,
+  /* The live Oberth reading. dε/dΔv for a prograde burn IS the current speed —
+     the HUD claim that test-physics.js check [5] verifies numerically — so this
+     is a read of the running simulation, not a second model of it. It also
+     reports whether the ship is within 4% of periapsis (or apoapsis) radius,
+     which is what the A4 cue fires on. */
+  oberth() {
+    if (!lvl || !S) return null;
+    const el = elements(lvl, S);
+    return {
+      vKms: uKMS(el.v),
+      epsKm: uEPS(el.eps),
+      dvUsedMs: uMS(dvUsed),
+      nearPeri: el.rp > 0 && el.r <= el.rp * 1.04,
+      nearApo: el.bound && el.r >= el.ra * 0.96,
+      bound: el.eps <= 0,
+      levelId: lvl.id
+    };
+  }
+};
+
+/* ---------- boot ----------
+   The Guide is NOT opened here any more: the shell opens its own #guide on
+   load (A7), so a second opener would fight it. setHud(true) replaces the
+   former hidden-by-default HUD, because the Oberth bar is the A4 instrument. */
+setHud(true);
 loadLevel(0);
-openModal('helpModal');
 requestAnimationFrame(frame);
 
 })();
