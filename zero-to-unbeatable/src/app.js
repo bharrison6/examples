@@ -28,11 +28,12 @@ const S = {
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
-  predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
+  predictions: {},     // Predict-card answers by key: rules, one, net (1d and Model types have no Predict: they are maps)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
   family: null,        // stage 1d: the architecture-family card that is pressed
-  half: 'methods',     // stage 1d: which of its two halves is showing
+  half: 'methods',     // stage 1d: which of its three parts is showing
+  nochange: null,      // stage 1d: the no-weight-change card that is pressed
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -1921,8 +1922,7 @@ function cue(text, warm) {
 const PREDICT_LABELS = {
   rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
   one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
-  net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
-  types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
+  net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' }
 };
 function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
 function echo(key, html) { const e = echoEl(key); e.innerHTML = html; e.hidden = false; }
@@ -1998,8 +1998,12 @@ function revealOne() {
 
 const USES_LABEL = { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' };
 const METHOD_CUE = {
-  supervised: '1c: the network fits frozen scores that a fresh 1b table produced — inputs paired with targets, and the targets came from another model.',
-  reinforcement: '1b: the table updates a position value after each win, loss and draw it plays in training — rewards, not targets.',
+  /* The "in this demo" answer lives HERE and nowhere on the card face
+     (operator, 2026-09-16: the Supervised card's visible text gave away what
+     pressing it reveals). A card shows the general definition, an example
+     and its "used for" line; the press writes which playable model used it. */
+  supervised: '1c: the network fits frozen scores that a fresh 1b table produced — inputs paired with targets, and the targets came from another model, not a person. A student fitting a teacher\u2019s outputs is the shape of distillation.',
+  reinforcement: '1b: the table updates a position value after each win, loss and draw it plays in training, including games against itself — rewards, not targets.',
   none: '1a: eight rules are fixed text; nothing in it is fitted, and the only way its play changes is switching rules on or off.',
   unsupervised: 'none of the three: no playable model here looks for structure without a target or a reward.',
   'self-supervised': 'none of the three: 1b plays itself, but it learns from game rewards, so that is reinforcement learning, not self-supervision.',
@@ -2049,14 +2053,41 @@ $$('.family-card').forEach(c => c.addEventListener('click', () => {
   S.family = S.family === c.dataset.family ? null : c.dataset.family;
   renderFamilies();
 }));
-/* Which half of 1d is showing. Two buttons, one card visible at a time;
-   the stage's check card and the Details drawer are outside both halves. */
+/* The third part of 1d: ways behaviour changes while the trained
+   parameters do not. The cards carry the Sourced general claim; the press
+   writes the Reasoned line about this demo, read from its code:
+   rules.js forkCells / rule 4 try each empty square on a copy of the board
+   (a look-ahead redone every turn, nothing fitted), and OG.verifyPolicyRole
+   in engine.js is a CHECKER of a policy -- it never chooses a move in play,
+   so this line must not say the demo's search changes how anything plays. */
+const NOCHANGE_CUE = {
+  context: 'nothing in this demo reads a prompt. The nearest case is 1b\u2019s question: its eras are frozen, so a different result against one comes from how the game went, not from anything it learned.',
+  retrieval: 'nothing in this demo looks anything up in an outside store. 1b\u2019s table is read on every move, but it is the model\u2019s own learned values, not an external memory.',
+  search: '1a. Rules 3 and 4 try each empty square on a copy of the board and count the threats it would make — a small look-ahead, redone every turn, with nothing learned. The exhaustive search elsewhere in this demo is different: it checks a player for losing lines and never picks a move.'
+};
+function renderNochange() {
+  $$('.nochange-card').forEach(c => {
+    const on = c.dataset.nochange === S.nochange;
+    c.setAttribute('aria-pressed', String(on));
+    $('.holds', c).textContent = on ? 'in this demo — below' : '';
+  });
+  const out = $('#cue-4c');
+  if (!S.nochange) { out.textContent = ''; return; }
+  const card = $('.nochange-card[data-nochange="' + S.nochange + '"]');
+  out.textContent = $('b', card).textContent + ' → in this demo: ' + NOCHANGE_CUE[S.nochange];
+}
+$$('.nochange-card').forEach(c => c.addEventListener('click', () => {
+  S.nochange = S.nochange === c.dataset.nochange ? null : c.dataset.nochange;
+  renderNochange();
+}));
+/* Which part of 1d is showing. Three buttons, one card visible at a time;
+   the stage's check card and the Details drawer are outside all of them. */
+const HALVES = { methods: '#methods-card', families: '#families-card', nochange: '#nochange-card' };
 function renderHalf() {
   /* Scoped to #map-switch: the 1c board switch reuses the .map-btn look
      and must not be driven by 1d's state (found in the browser pass). */
   $$('#map-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
-  $('#methods-card').hidden = S.half !== 'methods';
-  $('#families-card').hidden = S.half !== 'families';
+  Object.entries(HALVES).forEach(([half, sel]) => { $(sel).hidden = S.half !== half; });
 }
 $$('#map-switch .map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
 
@@ -2086,10 +2117,19 @@ function renderTypes() {
     if (!d.open) return;
     const f = T.FEATURED.find(x => x.slug === d.dataset.slug);
     $('#cue-5').textContent = `${f.name}: ${f.in} in, ${f.out} out. That is the whole definition of the type; it says nothing about what is inside.`;
-    if (f.slug === 'image-to-text') {
-      revealPrediction('types', 'words', 'Image-to-text takes an image in and puts text out — a caption, or the text printed in the picture (the catalogue\u2019s own definition).');
-    }
   }));
+  /* Beyond one catalogue: built from T.BEYOND, each link the model's own
+     page as recorded in the data, never typed into the markup. Always open
+     (no press): the example and its link are the content. A stand-in card
+     says so on its face. */
+  $('#beyond-grid').innerHTML = T.BEYOND.map(b =>
+    `<article class="type-card beyond-card"><b>${esc(b.type)}</b>` +
+    `<span class="io"><i>${esc(b.in)}</i> in &rarr; <i>${esc(b.out)}</i> out</span>` +
+    `<span class="also">example: ${esc(b.example)} (${esc(b.org)})` +
+    (b.standIn ? ' &mdash; one current example of the type' : '') + `</span>` +
+    `<div class="body"><q>${esc(b.quote)}</q>` +
+    `<span class="n"><span class="k-sourced">Sourced</span> fetched ${esc(b.fetched)}</span>` +
+    `<a href="${esc(b.url)}" target="_blank" rel="noopener">${esc(b.example)} &mdash; its own page &rarr;</a></div></article>`).join('');
 }
 renderTypes();
 
@@ -2195,14 +2235,14 @@ document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};
-  S.method = null; S.family = null; S.half = 'methods';
+  S.method = null; S.family = null; S.nochange = null; S.half = 'methods';
   $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
   $$('.type-card').forEach(d => { d.open = false; });
   $('#learned-body').innerHTML = '';
   $('#learned-sub').textContent = '';
   const nv = $('#network-view');
   delete nv.dataset.layer; delete nv.dataset.neuron;
-  renderMethods(); renderFamilies(); renderHalf();
+  renderMethods(); renderFamilies(); renderNochange(); renderHalf();
   resetAll(true);
 });
 
@@ -2210,7 +2250,7 @@ document.addEventListener('lessonreset', () => {
 
 resetAll();
 renderScore();
-renderMethods(); renderFamilies(); renderHalf();
+renderMethods(); renderFamilies(); renderNochange(); renderHalf();
 /* The shell may already have selected a stage from a #stage-N hash before
    this script ran, and the old public deep links (#rules, #learning,
    #neural) are honoured through the flags the shell parsed. */

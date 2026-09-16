@@ -141,7 +141,55 @@ FEATURED.forEach(f => {
 
 const count = GROUPS.reduce((a, g) => a + g.tasks.length, 0);
 
-const api = { FETCHED, SOURCES, GROUPS, FEATURED, count, modelsUrl, taskUrl, bySlug };
+/* BEYOND ONE CATALOGUE (operator, 2026-09-16: "it shouldn't just be hugging
+   face models"). The Hub list above is one platform's catalogue of what
+   people upload; several of the most talked-about models are not on it, or
+   are not filed under one of its tasks. One card per type, each with a named
+   example linked to that model's OWN page (lab, vendor or paper -- never
+   huggingface.co), and `quote` copied from that page on `fetched`. `in` /
+   `out` are this demo's plain words for the quote, kept to what it states.
+
+   Two examples stand in for releases the operator saw but did not name
+   (character animation; free-viewpoint video). They are examples of the
+   TYPE, verified on their own pages, not claims to be the model the
+   operator meant. Dropped for the eight-card cap, not for sourcing:
+   GNoME (materials) and AlphaZero (game playing). */
+const BEYOND = [
+  { type: 'Interactive world model', example: 'Genie 3', org: 'Google DeepMind',
+    url: 'https://deepmind.google/models/genie/', fetched: '2026-09-16',
+    in: 'a text description of a place', out: 'a photorealistic world you can move around in, generated as you go',
+    quote: 'Genie 3 is a general-purpose world model. It uses simple text descriptions to generate photorealistic environments that can be explored in real-time.' },
+  { type: 'Video generation with sound', example: 'Veo 3.1', org: 'Google DeepMind',
+    url: 'https://deepmind.google/models/veo/', fetched: '2026-09-16',
+    in: 'a written prompt', out: 'a video clip, with sound effects, ambient noise and dialogue generated alongside it',
+    quote: 'Veo 3 lets you add sound effects, ambient noise, and even dialogue to your creations – generating all audio natively.' },
+  { type: 'Robot control (vision-language-action)', example: 'Gemini Robotics', org: 'Google DeepMind',
+    url: 'https://deepmind.google/models/gemini-robotics/', fetched: '2026-09-16',
+    in: 'what the robot sees, plus an instruction in words', out: 'motor commands that move the robot',
+    quote: 'Our most advanced vision-language-action model (VLA) that converts vision and language input into motor control, enabling a robot to take action.' },
+  { type: 'Protein structure prediction', example: 'AlphaFold', org: 'Google DeepMind and Isomorphic Labs',
+    url: 'https://deepmind.google/science/alphafold/', fetched: '2026-09-16',
+    in: 'a protein, as its chain of amino acids', out: 'a predicted 3-D structure — AlphaFold 3 also predicts how molecules interact',
+    quote: "Google DeepMind and Isomorphic Labs introduce AlphaFold 3, which predicts the structure and interactions of all of life's molecules." },
+  { type: 'Weather forecasting', example: 'GenCast', org: 'Google DeepMind',
+    url: 'https://deepmind.google/blog/gencast-predicts-weather-and-the-risks-of-extreme-conditions-with-sota-accuracy/', fetched: '2026-09-16',
+    in: 'the most recent state of the weather', out: 'an ensemble of 50 or more possible forecasts, up to 15 days ahead',
+    quote: '…a GenCast forecast comprises an ensemble of 50 or more predictions, each representing a possible weather trajectory.' },
+  { type: 'Background removal (video matting)', example: 'NVIDIA Broadcast', org: 'NVIDIA',
+    url: 'https://www.nvidia.com/en-us/geforce/broadcasting/broadcast-app/', fetched: '2026-09-16',
+    in: 'live webcam video', out: 'the same video with the background removed, replaced or blurred',
+    quote: 'Background Removal, Replacement, and Blur allow you to customize your background without the need for expensive equipment' },
+  { type: 'Performance-driven character animation', example: 'Wan-Animate', org: 'Tongyi Lab, Alibaba',
+    url: 'https://humanaigc.github.io/wan-animate/', fetched: '2026-09-16', standIn: true,
+    in: 'a picture of a character, plus an ordinary video of a performer', out: 'a video of that character making the performer’s movements and expressions',
+    quote: "Wan-Animate can animate any character based on a performer's video, precisely replicating the performer's facial expressions and movements to generate highly realistic character videos." },
+  { type: 'Free-viewpoint (4D) video', example: '4C4D: 4 Camera 4D Gaussian Splatting', org: 'Zhou, Yang, Han et al., CVPR 2026',
+    url: 'https://arxiv.org/abs/2604.04063', fetched: '2026-09-16', standIn: true,
+    in: 'videos of one moving scene from as few as four portable cameras', out: 'a 4-D scene that can be watched from viewpoints no camera stood at',
+    quote: 'This paper tackles the challenge of recovering 4D dynamic scenes from videos captured by as few as four portable cameras.' }
+];
+
+const api = { FETCHED, SOURCES, GROUPS, FEATURED, BEYOND, count, modelsUrl, taskUrl, bySlug };
 if (typeof module !== 'undefined' && module.exports) module.exports = api;
 else root.MODEL_TYPES = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this);
