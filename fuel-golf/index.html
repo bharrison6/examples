@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="An offline orbital-mechanics game on real integrated Newtonian gravity: seven missions and a sandbox teaching why the same burn buys more energy where you are already fast.">
 <title>Orbital Mechanics Golf · The Oberth Effect</title>
-<!-- lesson-shell v2 css:d13e2bec1db3 -->
+<!-- lesson-shell v3 css:5f6336bcbaf8 -->
 <style>
 
 /* ---- lesson-shell/tokens.css ---- */
@@ -111,6 +111,13 @@ body.presenter { --u: 1.2rem; }
      .btn .btn.ghost .btn.small
      .footer .footer-tools .footer-link
      .bh-credit
+     .intro-more                               (A2 phone disclosure, v3;
+                                                built by behaviourScript())
+
+   RESERVED, NOT VOCABULARY: `.hidden`. The kit backs it with
+   `display: none !important` (see the rule beside `[hidden]` below) so that a
+   retrofit which deletes the demo's own chrome stylesheet cannot take the rule
+   with it. A demo must not redefine it; check-shell.js fails one that does.
    =========================================================================== */
 
 * { box-sizing: border-box; }
@@ -122,6 +129,28 @@ body {
   font: 400 var(--u)/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 [hidden] { display: none !important; }
+/* A RESERVED KIT CLASS (v3), and the kit's one deliberate claim on a generic
+   author-space name. Added because five demos had independently written this
+   exact rule — bridge-works, should-have-known-that and the-stranger, all
+   spelling it `display: none !important` — and a retrofit that correctly
+   deletes the demo's own chrome stylesheet (ADOPTING.md §2) takes the rule with
+   it while the demo's JS keeps toggling the class. should-have-known-that
+   shipped straight into that: setup / turn / play panels rendered stacked, with
+   `build.js --check`, `check-shell` and `build-hub --check` all green, because
+   the markup and the contract were both correct. Five identical independent
+   copies of one rule is a missing kit primitive, not a coincidence.
+
+   `!important` is load-bearing, not defensive: without it a panel carrying its
+   own later `display: grid` wins on equal specificity and the class does
+   nothing — which is the exact case that fails.
+
+   THE PRICE, STATED: this is the one place the kit overrides a demo without
+   the demo being able to take it back unprefixed, so it is declared reserved
+   in ADOPTING.md rather than claimed quietly, and check-shell.js fails any
+   demo that defines `.hidden` as anything other than display:none. Prefer the
+   `hidden` ATTRIBUTE in new code — it is the platform's, it carries the right
+   semantics to assistive tech, and the rule above already covers it. */
+.hidden { display: none !important; }
 button, input, select, summary, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { opacity: .48; cursor: not-allowed; }
@@ -243,8 +272,34 @@ section.stage.on { display: block; }
 .lesson-strip p { margin: 3px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .8); }
 /* Where the activity captured the prediction, the observed result is echoed
    beside it inside the Predict card. */
-.lesson-strip .echo { display: block; margin-top: 5px; padding-top: 5px; border-top: 1px dashed var(--cream-deep); color: var(--ink); font-size: calc(var(--u) * .78); }
+/* text-transform is EXPLICITLY reset here, not merely omitted. `.echo` is a
+   span inside .lesson-strip article, and the card-label rule above styles
+   `.lesson-strip article span` — so without this the echo INHERITS the label's
+   uppercase and a captured prediction renders SHOUTING. Found by the
+   zero-to-unbeatable lane, which had to patch it demo-side; it belongs here.
+   letter-spacing is reset for the same reason. */
+.lesson-strip .echo {
+  display: block; margin-top: 5px; padding-top: 5px;
+  border-top: 1px dashed var(--cream-deep); color: var(--ink);
+  font-size: calc(var(--u) * .78);
+  font-weight: 400; text-transform: none; letter-spacing: normal;
+}
 .lesson-strip .echo b { color: var(--navy); }
+
+/* ---------- A2 phone intro disclosure (v3) --------------------------------
+   Operator ruling 2026-09-16, "collapsible intro at phone width". The
+   <details class="intro-more"> is BUILT BY behaviourScript() at runtime around
+   the lesson strip — partials.html is a reference sheet, not an injected file,
+   so markup there would reach only demos adopted after this change. See the
+   intro-disclosure section of index.js for why, and for what never collapses.
+
+   ABOVE 480px THIS IS INERT. The summary is display:none and the element is
+   held open, so the <details> is a transparent wrapper sitting in exactly the
+   grid cell .lesson-strip used to occupy: same geometry, no toggle chrome, and
+   nothing added to the accessibility tree. Desktop is unchanged by
+   construction rather than by inspection. */
+.stage-intro > .intro-more { grid-column: 1 / -1; margin: 0; }
+.intro-more > summary { display: none; }
 
 /* ---------- A3 provenance kickers and control labels ----------------------
    SIX WORDS, and they are the only vocabulary. A claim on screen without one
@@ -504,6 +559,47 @@ body.has-bottom-bar .bh-credit { display: none; }
   .check { padding: 15px 16px; }
 }
 @media (max-width: 480px) {
+  /* ---- A2 intro disclosure: the phone affordance ------------------------
+     The ONLY width at which the toggle exists. `phone` on the kit's own scale,
+     and the width at which the measurement says the intro stops fitting: at
+     320 the full intro is 726-775px against a 568-578px viewport, so it is
+     more than a whole screen by itself.
+
+     What stays visible when collapsed: the eyebrow, the h2 stage title, the
+     stage question and the Details pill. What goes behind the toggle: the
+     lesson strip (moved into the <details> by the shell) and the "Before you
+     start" refresh (hidden by the :has() rule below rather than moved, so the
+     desktop grid keeps identical geometry). The stage question stays because
+     it is the one line that orients; the h2 stays because .stage-intro is
+     aria-labelledby it, so hiding it would strip the region's accessible name.
+     The same judgement the landscape-short block below already made. */
+  .intro-more > summary {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 44px; margin-top: 2px;
+    border-top: 1px dashed var(--cream-deep); padding: 9px 2px 0;
+    color: var(--navy); font-size: calc(var(--u) * .72); font-weight: 850;
+    letter-spacing: .07em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  /* The default triangle is replaced by a chevron that reads at 12px and
+     rotates, so there is an unambiguous "there is more here" affordance. */
+  .intro-more > summary { list-style: none; }
+  .intro-more > summary::-webkit-details-marker { display: none; }
+  .intro-more > summary::after {
+    content: "\25BE"; margin-left: auto;
+    font-size: calc(var(--u) * .95); line-height: 1;
+    transition: transform .15s ease;
+  }
+  .intro-more[open] > summary::after { transform: rotate(180deg); }
+  .intro-more[open] > summary { border-bottom: 0; }
+  /* The refresh is HIDDEN, not moved: moving it out of .intro-copy would
+     change the desktop grid. :has() is already a dependency of this file (see
+     the credit pill's body:has(dialog[open]) rule). */
+  .stage-intro:has(> .intro-more:not([open])) .refresh { display: none; }
+  /* A projector is not a phone: presentation mode keeps the whole intro, and
+     the shell forces the element open to match. */
+  body.presenter .intro-more > summary { display: none; }
+
   .brandline { grid-template-columns: 1fr; }
   .msu-brand { white-space: normal; }
   .topline { align-items: start; }
@@ -2162,7 +2258,7 @@ table.lb tr.you td { background: rgba(236, 172, 0, .1); }
 
 <script>
 
-/* lesson-shell v2 behaviour — dialogs, stage tablist, presentation
+/* lesson-shell v3 behaviour — dialogs, stage tablist, presentation
    mode, check cards. Injected by build.js; do not edit in the built file. */
 (() => {
   'use strict';
@@ -2312,16 +2408,121 @@ table.lb tr.you td { background: rgba(236, 172, 0, .1); }
   }));
   setPresentation(document.body.classList.contains('presenter'));
 
-  /* ---- A6 check cards: feedback for every option, nothing scored -------- */
+  /* ---- A6 check cards: feedback for every option, nothing scored --------
+     THE LEAD COMES FROM THE CARD, NOT FROM THE KIT. v2 hardcoded one demo's
+     wrong-answer sentence here, in the SHARED handler, and it rendered in
+     every built demo — so a learner reading a check card about PLC ladder
+     logic or about AI winters was told what a mass-spectrometer detector had
+     shown. The defaults below are demo-neutral; a demo that wants its own
+     framing sets data-correct-lead / data-wrong-lead on the .check card.
+     check-shell.js blocklists the leaked sentence so this cannot regress
+     quietly — and the sentence is deliberately NOT spelled anywhere in this
+     function, because everything here is injected into every built file and a
+     blocklist that matches its own explanation is worthless. The exact string
+     lives in LEAKED_A6 at module scope, which is not injected. The lead is set
+     as TEXT, not markup, because it now comes from an authored attribute. */
   $$('.check').forEach(card => {
     const out = $('.check-feedback', card);
+    const leadFor = btn => (btn.classList.contains('correct')
+      ? (card.dataset.correctLead || "Correct.")
+      : (card.dataset.wrongLead || "Not quite."));
     $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
       $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
       btn.setAttribute('aria-pressed', 'true');
-      if (out) out.innerHTML = (btn.classList.contains('correct') ? '<b>Supported.</b> ' : '<b>Not what the detector showed.</b> ')
-        + (btn.dataset.feedback || '');
+      if (!out) return;
+      out.textContent = '';
+      const strong = document.createElement('b');
+      strong.textContent = leadFor(btn);
+      out.appendChild(strong);
+      /* data-feedback keeps accepting inline markup, as it always has. */
+      out.insertAdjacentHTML('beforeend', ' ' + (btn.dataset.feedback || ''));
     }));
   });
+
+  /* ---- A2 intro disclosure: collapsible stage intro at phone width ------
+     Operator ruling, 2026-09-16: "collapsible intro at phone width."
+
+     THE MEASUREMENT IT ANSWERS. At 320px the full A2 intro (eyebrow, stage
+     title, stage question, "Before you start" refresh, then the three-card
+     Predict/Try/Takeaway strip) runs 726-775px against a 568-578px viewport —
+     the intro alone is more than one whole screen — and it put
+     zero-to-unbeatable's Train button 1979px down and ion-flight's Run button
+     2327px down, i.e. 4.1 screens. Measured on both demos before this change;
+     the cost is a property of the template, not of either demo.
+
+     WHAT COLLAPSES, AND WHAT NEVER DOES. Only the lesson strip is MOVED behind
+     the toggle (it is the expensive part: 232-359px, up to half the intro) and
+     the refresh is hidden by a CSS :has() rule rather than moved, so the
+     desktop grid keeps byte-identical geometry. The eyebrow, the h2 and the
+     stage question always stay visible: the stage question is the one line
+     that orients, and the h2 is the aria-labelledby target of .stage-intro, so
+     hiding it would strip that region's accessible name.
+
+     DEFAULT COLLAPSED ON PHONES. The Guide already opens on load and already
+     carries the orientation (the demo-level question, "where this sits", a
+     step per stage), so a second orientation block between the learner and the
+     activity is redundant rather than safer. Collapsed is not unoriented — the
+     question is still on screen.
+
+     NATIVE <details>, so Enter/Space, the disclosure role and the expanded
+     state all come from the user agent rather than from an aria-expanded
+     reimplementation.
+
+     DESKTOP AND THE PROJECTOR ARE UNTOUCHED: shell.css hides the summary above
+     480px and under body.presenter, and the element is forced open in both
+     cases, so there is no toggle chrome and no geometry change. */
+  const introDisclosures = [];
+  $$('.stage-intro').forEach(intro => {
+    const strip = $('.lesson-strip', intro);
+    if (!strip || $('details.intro-more', intro)) return;
+    const d = document.createElement('details');
+    d.className = "intro-more";
+    d.open = true;
+    const sum = document.createElement('summary');
+    sum.textContent = "Before you start · Predict · Try · Takeaway";
+    d.appendChild(sum);
+    intro.insertBefore(d, strip);
+    /* MOVED, never cloned: snapshot.echoes holds node references into the
+       strip, and a clone would silently orphan them from Reset. */
+    d.appendChild(strip);
+    introDisclosures.push(d);
+  });
+  const phoneMedia = window.matchMedia
+    ? window.matchMedia('(max-width: 480px)') : null;
+  function introShouldCollapse() {
+    if (!phoneMedia || !phoneMedia.matches) return false;
+    /* Presentation mode is a projector, where width is not the constraint. */
+    return !document.body.classList.contains('presenter');
+  }
+  /* The ONE place the default is decided, so load, a breakpoint change, a
+     presentation-mode toggle and Reset cannot disagree with each other. */
+  function applyIntroCollapse() {
+    const collapse = introShouldCollapse();
+    introDisclosures.forEach(d => { d.open = !collapse; });
+  }
+  if (phoneMedia && phoneMedia.addEventListener) {
+    phoneMedia.addEventListener('change', applyIntroCollapse);
+  }
+  /* A2's prediction echo is written INTO the strip, so feedback that appeared
+     while the strip was collapsed would be invisible — which would break the
+     predict-then-observe loop the strip exists for. Re-open on live content. */
+  if (window.MutationObserver) {
+    introDisclosures.forEach(d => {
+      new MutationObserver(() => {
+        if (d.open) return;
+        if ($$('.echo', d).some(e => !e.hidden && e.textContent.trim() !== '')) d.open = true;
+      }).observe(d, {
+        childList: true, subtree: true, characterData: true,
+        attributes: true, attributeFilter: ['hidden']
+      });
+    });
+  }
+  /* setPresentation() already dispatches presentationchange, so listening is
+     enough and the presentation code above needs no edit. The init call it
+     makes fires before this listener exists, which is what the direct call is
+     for. */
+  document.addEventListener('presentationchange', applyIntroCollapse);
+  applyIntroCollapse();
 
   /* ---- Reset: IN PLACE, no page reload -----------------------------------
      Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
@@ -2350,9 +2551,31 @@ table.lb tr.you td { background: rgba(236, 172, 0, .1); }
           there keeps it.
        6. The A5 Details drawer goes back to showing stage 1, with its
           subtitle restored.
+      6b. The A2 intro disclosure returns to its default for the CURRENT width
+          (v3) — recomputed, never restored from the load-time snapshot, so a
+          rotation between load and Reset cannot leave it half-open.
        7. selectStage(0) — stage 1, which also fires 'stagechange'.
        8. The page scrolls to the top.
        9. 'lessonreset' is dispatched on document.
+
+     THE ORDER OF 7 AND 9 IS DELIBERATE, AND v3 KEPT IT. The stagechange at
+     step 7 fires BEFORE lessonreset at step 9, so a stagechange handler that
+     renders activity state paints the PRE-reset state into freshly reset
+     chrome (missing-time hit exactly this). v3 fixes that with the
+     'resetting' flag rather than by reordering, for three reasons:
+       * this file and ADOPTING.md both GUARANTEE in writing that lessonreset
+         fires last, "so the demo has the final word over any node the two both
+         touch". Eight merged demos are written against that guarantee and five
+         more builder lanes are in flight; reordering invalidates all of them
+         silently.
+       * reordering swaps a known hazard for a new one — the demo's lessonreset
+         handler would then run before step 3 restored the tab chrome, so any
+         handler reading tab state would read the post-session gates.
+       * what-the-survey-missed established the hazard is inapplicable to
+         render-only-from-actions designs; it bites the move-the-instrument
+         pattern ion-flight and missing-time use. The flag fixes precisely that
+         pattern WITHOUT changing any event order, so those demos keep working
+         unmodified.
 
      WHAT THE SHELL DOES NOT TOUCH, deliberately:
        * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
@@ -2379,6 +2602,32 @@ table.lb tr.you td { background: rgba(236, 172, 0, .1); }
      check-shell.js fails a built file that carries no handler, with a negative
      control proving it is not merely matching the dispatch below. */
   function resetLesson() {
+    /* v3: the flag ADOPTING.md §4 has promised since v2. True from BEFORE the
+       onReset veto until AFTER 'lessonreset' has been dispatched, so a
+       stagechange handler that genuinely has to paint can skip the one
+       stagechange step 7 fires mid-reset:
+
+           document.addEventListener('stagechange', e => {
+             if (window.lessonShell.resetting) return;   // chrome only, mid-reset
+             render(e.detail.index);
+           });
+
+       DO NOT write that guard into your 'lessonreset' handler. The flag is
+       still true while 'lessonreset' runs, by design — your handler restores
+       state and re-renders by calling your own render directly, which the
+       guard above does not touch. Guarding lessonreset would suppress the very
+       render the reset exists to perform.
+
+       try/finally, so the veto path and any throw inside a listener both leave
+       the flag false rather than wedging every later stagechange. */
+    window.lessonShell.resetting = true;
+    try {
+      return runReset();
+    } finally {
+      window.lessonShell.resetting = false;
+    }
+  }
+  function runReset() {
     if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
     $$('dialog').forEach(d => {
       if (!d.open) return;
@@ -2403,6 +2652,12 @@ table.lb tr.you td { background: rgba(236, 172, 0, .1); }
     $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
     const sub = $('#details-subtitle');
     if (sub) sub.textContent = snapshot.detailsSubtitle;
+    /* 6b. The A2 intro disclosure goes back to ITS DEFAULT FOR THE CURRENT
+       WIDTH, recomputed rather than restored from the first-load snapshot.
+       Deliberate: if the phone was rotated since load, the snapshotted state is
+       the wrong answer, and restoring it is exactly how a reset leaves an
+       intro half-open. Recomputing cannot: applyIntroCollapse() is total. */
+    applyIntroCollapse();
     selectStage(0);
     try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
     document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
@@ -2419,7 +2674,12 @@ table.lb tr.you td { background: rgba(236, 172, 0, .1); }
     if (cta) cta.focus();
   }
 
-  window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
+  /* 'resetting' is a live flag, false except inside resetLesson(). See the
+     comment there for the guard pattern it exists for, and for the one place
+     you must NOT use it. */
+  window.lessonShell = {
+    selectStage, setPresentation, reset: resetLesson, flags, onReset: null, resetting: false
+  };
 })();
 
 </script>
