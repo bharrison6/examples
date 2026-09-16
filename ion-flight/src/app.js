@@ -151,7 +151,11 @@
     const completed = Boolean(lessonState.completed[lesson.id]);
     const finding = byId('finding');
     finding.hidden = !completed;
-    if (!completed) return;
+    /* Hide the Continue button on this path too. Before in-place reset an
+       incomplete stage could never have a visible one, so the early return
+       below was safe; a reset from a completed stage 1 now can (found by the
+       K2 reset control: the button sat un-hidden inside the hidden #finding). */
+    if (!completed) { byId('next-button').hidden = true; return; }
     const result = M.detectorFinding(lesson.id, lessonState.predictions[lesson.id]);
     finding.classList.toggle('contradicted', !result.supported);
     byId('finding-verdict').textContent = result.verdict;
