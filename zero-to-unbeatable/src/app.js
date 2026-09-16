@@ -2075,6 +2075,15 @@ $$('.lens-btn').forEach(b => b.addEventListener('click', () => window.lessonShel
      Form controls: #in-seed keeps its value on purpose; #era-select is
        rebuilt by renderEraSelect; the burst and depth segments are rebuilt
        by renderTrain / renderDepthSeg.
+     DELIBERATELY NOT RESTORED, because it is unobservable: the #btn-train
+       label and #train-sub still read whatever the neural stage left there.
+       resetAll's applyMode lands on 1a, where renderTrain sets
+       #train-panel[hidden] and returns before touching them, so the stale
+       text sits inside a hidden panel; renderTrain rewrites both
+       unconditionally when 1b or 1c is next visited, before the panel can be
+       seen. Measured in the browser: "Train network" immediately after Reset,
+       "Create learning examples" on arriving at 1c. Stated rather than
+       assumed, per ADOPTING.md's enumeration discipline.
      Not touched: presentation mode and the Guide (the shell's rule). */
 document.addEventListener('lessonreset', () => {
   S.resetting = false;
