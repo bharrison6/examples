@@ -1,0 +1,1587 @@
+{
+  "enumerated": "2026-09-16T11:53:56.717Z",
+  "source": "src/teacher-guide.html",
+  "words": 8294,
+  "unitCount": 277,
+  "tokenCount": 191,
+  "units": [
+    {
+      "id": "U001",
+      "tag": "div",
+      "text": "Instructor Guide Construction Scheduling Topping Out — a week-by-week scheduling game — Racer Commons , 3-story commercial, 38 activities"
+    },
+    {
+      "id": "U002",
+      "tag": "div",
+      "text": "Sheet IG-01"
+    },
+    {
+      "id": "U003",
+      "tag": "div",
+      "text": "Course level First-year CM"
+    },
+    {
+      "id": "U004",
+      "tag": "div",
+      "text": "Session 75 minutes"
+    },
+    {
+      "id": "U005",
+      "tag": "div",
+      "text": "Teams 3–4 students"
+    },
+    {
+      "id": "U006",
+      "tag": "div",
+      "text": "Prereq Network diagrams"
+    },
+    {
+      "id": "U007",
+      "tag": "div",
+      "text": "Issued for Class use"
+    },
+    {
+      "id": "U008",
+      "tag": "p",
+      "text": "Every team schedules the same building, week by week, from the same seed code. The seed fixes the project, the sequence of events and the roll behind every judgment call before anyone touches anything, so two teams that finish $200,000 apart did not get different weather and did not get different luck — they bought different exposure. That is the whole pedagogical trick, and Section 5 is how you prove it to a student who says otherwise."
+    },
+    {
+      "id": "U009",
+      "tag": "p",
+      "text": "The turn is a Monday morning meeting in four phases. THE NEWS reveals this week's events. DECISIONS lets you answer this week's calls, resequence, run overtime, order crews — they take two weeks to show up — expedite a delivery, work through the rain or stand down, move crews between zones, or absorb it. Expediting is worth saying out loud at the board, because students read it as an undo button: a fee always buys back some of a late delivery and never all of it. The engine caps recovery one day short of the delay at every difficulty, and if that leaves nothing to buy the offer is simply not made. A hot shot — a dedicated truck sent for one load rather than waiting for the scheduled run — recovers one of the two days on a short rebar shipment. It does not un-ship it. COMMIT is irreversible — no undo, ever. THE WEEK RUNS plays the five working days out in 4D."
+    },
+    {
+      "id": "U010",
+      "tag": "p",
+      "text": "What is on the screen. The right-hand panel is the meeting. Above the crew board sit this week's calls , headed \"decide now, find out later\", each one naming the activity where its consequence will show up. Below that, decisions live on a single crew board grouped by trade: each card carries the trade's headcount as pips (solid = working, hollow amber = idle and still billing, dashed = ordered and not here yet, reading +1 arrives wk 14 ), its overtime switch, and every work front open to that trade this week, tagged with its zone, its remaining duration and its float. Trades with nothing open collapse to one line. Cure times and inspection holds sit in their own hatched block headed \"running on their own — nothing you can do\", which is the point. On the left, the 4D view draws the finished building as a faint dashed ghost and fills it in as work completes; crews stand on the floor they are working, and a floor with work open and nobody on it gets an amber WORK OPEN — NO CREW box. Underneath, a real CPM engine re-solves the network every turn against what actually happened."
+    },
+    {
+      "id": "U011",
+      "tag": "h2",
+      "text": "1 Seventy-five minute running order"
+    },
+    {
+      "id": "U012",
+      "tag": "p",
+      "text": "The tutorial project, Shoe Tree Annex , is 10 activities, runs nine turns, and carries two calls of its own so nobody meets the mechanic for the first time when it is being scored. Do not skip it. Teams that meet the interface on the graded run spend six weeks clicking instead of thinking, and the debrief gets thin."
+    },
+    {
+      "id": "U013",
+      "tag": "caption",
+      "text": "Running order — 75 minutes"
+    },
+    {
+      "id": "U014",
+      "tag": "th",
+      "text": "Minutes"
+    },
+    {
+      "id": "U015",
+      "tag": "th",
+      "text": "Length"
+    },
+    {
+      "id": "U016",
+      "tag": "th",
+      "text": "Segment"
+    },
+    {
+      "id": "U017",
+      "tag": "td",
+      "text": "0–5"
+    },
+    {
+      "id": "U018",
+      "tag": "td",
+      "text": "5 min"
+    },
+    {
+      "id": "U019",
+      "tag": "td",
+      "text": "Setup. Seed code and difficulty on the board. Teams open the game, enter both, name themselves. Presentation mode up front. Confirm every team reads the same project start date, Mon 7 Sep 2026, before anyone commits a week."
+    },
+    {
+      "id": "U020",
+      "tag": "td",
+      "text": "5–11"
+    },
+    {
+      "id": "U021",
+      "tag": "td",
+      "text": "6 min"
+    },
+    {
+      "id": "U022",
+      "tag": "td",
+      "text": "CPM at the board. Forward pass, backward pass, total float, on the ten-activity tutorial network (Section 2). Land one sentence: float is not slack in your day, it is what a specific activity can slip before it moves the finish. Leave free float for the debrief."
+    },
+    {
+      "id": "U023",
+      "tag": "td",
+      "text": "11–22"
+    },
+    {
+      "id": "U024",
+      "tag": "td",
+      "text": "11 min"
+    },
+    {
+      "id": "U025",
+      "tag": "td",
+      "text": "Tutorial run — Shoe Tree Annex , nine turns. Walk the room. Push teams to read the float column before deciding anything, and make sure every team answers the subgrade call instead of clicking past it."
+    },
+    {
+      "id": "U026",
+      "tag": "td",
+      "text": "22–26"
+    },
+    {
+      "id": "U027",
+      "tag": "td",
+      "text": "4 min"
+    },
+    {
+      "id": "U028",
+      "tag": "td",
+      "text": "Brief the competition. Same seed, same difficulty, score is profit, no undo. Show where float and the critical path live, then say two things out loud: calls default to the free option, so not answering is answering; and crews take two weeks, so manpower is a forecast."
+    },
+    {
+      "id": "U029",
+      "tag": "td",
+      "text": "26–59"
+    },
+    {
+      "id": "U030",
+      "tag": "td",
+      "text": "33 min"
+    },
+    {
+      "id": "U031",
+      "tag": "td",
+      "text": "Competitive run. Twenty-four to thirty turns. Roughly half the weeks are one click; the rest carry a call, a weather decision or a crew order. Checkpoint at minute 44 — teams should be near week 12, and anyone behind should commit the quiet weeks fast."
+    },
+    {
+      "id": "U032",
+      "tag": "td",
+      "text": "59–63"
+    },
+    {
+      "id": "U033",
+      "tag": "td",
+      "text": "4 min"
+    },
+    {
+      "id": "U034",
+      "tag": "td",
+      "text": "Leaderboard and the do-nothing baseline. Show the spread, then what absorbing everything would have scored on this seed. Worst team against baseline is usually more interesting than first against second."
+    },
+    {
+      "id": "U035",
+      "tag": "td",
+      "text": "63–75"
+    },
+    {
+      "id": "U036",
+      "tag": "td",
+      "text": "12 min"
+    },
+    {
+      "id": "U037",
+      "tag": "td",
+      "text": "Debrief. Open on the calls table (Section 5); it is the fastest route into the room. Then five misconceptions (Section 6) and two or three questions from Section 7. Finish on the week the critical path moved and ask who noticed at the time."
+    },
+    {
+      "id": "U038",
+      "tag": "p",
+      "text": "The competitive run gained three minutes over the previous edition, because a rushed call is worse than no call. Two come off the board work — do both passes and total float there, and derive free float in the debrief off a schedule the room has just lived through. The third comes off the leaderboard, which lands faster now that the calls table is doing the explaining."
+    },
+    {
+      "id": "U039",
+      "tag": "h2",
+      "text": "2 The CPM you can teach from"
+    },
+    {
+      "id": "U040",
+      "tag": "p",
+      "text": "The engine runs a precedence-diagram CPM with finish-to-start, start-to-start and finish-to-finish relationships and lags in working days. Nothing is declared critical in the data file; criticality is computed, every single turn, from the live state of the job."
+    },
+    {
+      "id": "U041",
+      "tag": "h3",
+      "text": "Forward pass — earliest dates"
+    },
+    {
+      "id": "U042",
+      "tag": "p",
+      "text": "Walk the network in topological order. An activity's early start is the latest demand any predecessor places on it: FS requires predecessor EF + lag; SS requires predecessor ES + lag; FF requires predecessor EF + lag − duration. Early finish is ES + duration. The largest EF in the network is the project duration. In the tutorial that is 29 working days ."
+    },
+    {
+      "id": "U043",
+      "tag": "h3",
+      "text": "Backward pass — latest dates"
+    },
+    {
+      "id": "U044",
+      "tag": "p",
+      "text": "Start from the project end and walk back. Late finish is the earliest demand any successor places on you: FS gives successor LS − lag; SS gives successor LS − lag + your duration; FF gives successor LF − lag. Late start is LF − duration. Total float is LS − ES."
+    },
+    {
+      "id": "U045",
+      "tag": "h3",
+      "text": "Total float versus free float"
+    },
+    {
+      "id": "U046",
+      "tag": "p",
+      "text": "Total float is how long an activity can slip before the project slips. Free float is how long it can slip before it disturbs the early start of its own successor . Students collapse these two into \"spare time\" and it costs them. In Racer Commons at baseline, MEP rough-in on Level 1 ( MEP1 ) carries 9 days of total float and 1 day of free float. Spend three days on it and the finish date has not moved — but Level 2 rough-in cannot start when it wanted to, and the next card that lands on that branch has nowhere to go."
+    },
+    {
+      "id": "U047",
+      "tag": "h3",
+      "text": "Why lags matter"
+    },
+    {
+      "id": "U048",
+      "tag": "p",
+      "text": "Lags are how the schedule expresses trade overlap, and they are most of the compression already built into the plan. Steel walks up the building on SS+4 : Level 2 erection starts four days after Level 1 starts, not after it finishes. Drywall, finishes and MEP each ladder up on SS+2 — two days, which is tight enough that a trade normally has two or three fronts open at once and one crew to feed them. Curtain wall follows exterior framing on SS+5 . Commissioning finishes two days after Level 3 finishes ( FF+2 ) because it cannot close out ahead of the work it is testing. Remove those lags and the 126-day contract is not buildable. Add a day to an SS predecessor and the successor moves with it, which is not obvious to a student staring at a bar chart."
+    },
+    {
+      "id": "U049",
+      "tag": "caption",
+      "text": "Tutorial network — hand calculation the engine is tested against (working days, exclusive finish)"
+    },
+    {
+      "id": "U050",
+      "tag": "th",
+      "text": "Act"
+    },
+    {
+      "id": "U051",
+      "tag": "th",
+      "text": "Description"
+    },
+    {
+      "id": "U052",
+      "tag": "th",
+      "text": "Preds"
+    },
+    {
+      "id": "U053",
+      "tag": "th",
+      "text": "Dur"
+    },
+    {
+      "id": "U054",
+      "tag": "td",
+      "text": "Mobilize"
+    },
+    {
+      "id": "U055",
+      "tag": "td",
+      "text": "Excavate"
+    },
+    {
+      "id": "U056",
+      "tag": "td",
+      "text": "T1 FS0"
+    },
+    {
+      "id": "U057",
+      "tag": "td",
+      "text": "Footings"
+    },
+    {
+      "id": "U058",
+      "tag": "td",
+      "text": "T2 SS2"
+    },
+    {
+      "id": "U059",
+      "tag": "td",
+      "text": "Footing cure (fixed)"
+    },
+    {
+      "id": "U060",
+      "tag": "td",
+      "text": "T3 FS0"
+    },
+    {
+      "id": "U061",
+      "tag": "td",
+      "text": "Site utilities"
+    },
+    {
+      "id": "U062",
+      "tag": "td",
+      "text": "T2 FS0"
+    },
+    {
+      "id": "U063",
+      "tag": "td",
+      "text": "Slab on grade"
+    },
+    {
+      "id": "U064",
+      "tag": "td",
+      "text": "T4, T5 FS0"
+    },
+    {
+      "id": "U065",
+      "tag": "td",
+      "text": "Slab inspection (fixed)"
+    },
+    {
+      "id": "U066",
+      "tag": "td",
+      "text": "T6 FS0"
+    },
+    {
+      "id": "U067",
+      "tag": "td",
+      "text": "Steel frame"
+    },
+    {
+      "id": "U068",
+      "tag": "td",
+      "text": "T4 FS0"
+    },
+    {
+      "id": "U069",
+      "tag": "td",
+      "text": "Roof & dry-in"
+    },
+    {
+      "id": "U070",
+      "tag": "td",
+      "text": "T8, T7 FS0"
+    },
+    {
+      "id": "U071",
+      "tag": "td",
+      "text": "T10"
+    },
+    {
+      "id": "U072",
+      "tag": "td",
+      "text": "Closeout"
+    },
+    {
+      "id": "U073",
+      "tag": "td",
+      "text": "T9 FS0, T6 FF1"
+    },
+    {
+      "id": "U074",
+      "tag": "p",
+      "text": "Critical path T1–T2–T3–T4–T8–T9–T10 . T6 and T7 also carry zero total float — a parallel critical branch of identical length, which is worth naming out loud, because students expect exactly one path. T5 is the only activity in the job with float, and it has three days. The engine's self-tests check all sixty numbers in this table against the hand calculation, so if a student says the software is wrong, run the self-tests from the Settings menu in front of them."
+    },
+    {
+      "id": "U075",
+      "tag": "p",
+      "text": "One indexing note. The game numbers days from 0 and treats finish as exclusive, so EF = ES + duration. Textbook tables that number days 1 through n will read one higher on EF and LF. Say this once at the board and nobody argues about it later."
+    },
+    {
+      "id": "U076",
+      "tag": "h3",
+      "text": "Why the critical path moves"
+    },
+    {
+      "id": "U077",
+      "tag": "p",
+      "text": "Because it is recomputed every Monday against reality, not read off a baseline. Completed activities are pinned to the dates they actually happened; work in progress is anchored to its real start with its remaining duration recalculated from the crews now on it; work not yet started cannot begin before today. Consume float on a branch and the branch goes critical; accelerate the old critical chain and the path jumps somewhere else. The game announces the move and names the activity it moved to. Ask the class to predict it before the week runs."
+    },
+    {
+      "id": "U078",
+      "tag": "h2",
+      "text": "3 Overtime decay, and where the numbers come from"
+    },
+    {
+      "id": "U079",
+      "tag": "p",
+      "text": "Overtime is set per trade, per week, and it is the decision students get wrong most confidently. The model gives a grace period with no measurable loss, then compounds a weekly efficiency decay down to a documented floor. A 50-hour week gets two weeks of grace, then loses 10% per week to a floor of 0.75. A 60-hour week gets one week of grace, then loses 15% per week to a floor of 0.62. The cost premium, by contrast, applies in full from the very first week and never decays: 1.375× the daily rate at 50 hours, 1.75× at 60."
+    },
+    {
+      "id": "U080",
+      "tag": "caption",
+      "text": "Net progress multiplier against a straight-time crew-week, by consecutive week at that level"
+    },
+    {
+      "id": "U081",
+      "tag": "th",
+      "text": "Consecutive week"
+    },
+    {
+      "id": "U082",
+      "tag": "th",
+      "text": "50 hr — efficiency"
+    },
+    {
+      "id": "U083",
+      "tag": "th",
+      "text": "50 hr — net progress"
+    },
+    {
+      "id": "U084",
+      "tag": "th",
+      "text": "60 hr — efficiency"
+    },
+    {
+      "id": "U085",
+      "tag": "th",
+      "text": "60 hr — net progress"
+    },
+    {
+      "id": "U086",
+      "tag": "td",
+      "text": "Week 1"
+    },
+    {
+      "id": "U087",
+      "tag": "td",
+      "text": "1.00"
+    },
+    {
+      "id": "U088",
+      "tag": "td",
+      "text": "1.250"
+    },
+    {
+      "id": "U089",
+      "tag": "td",
+      "text": "1.00"
+    },
+    {
+      "id": "U090",
+      "tag": "td",
+      "text": "1.500"
+    },
+    {
+      "id": "U091",
+      "tag": "td",
+      "text": "Week 2"
+    },
+    {
+      "id": "U092",
+      "tag": "td",
+      "text": "1.00"
+    },
+    {
+      "id": "U093",
+      "tag": "td",
+      "text": "1.250"
+    },
+    {
+      "id": "U094",
+      "tag": "td",
+      "text": "0.85"
+    },
+    {
+      "id": "U095",
+      "tag": "td",
+      "text": "1.275"
+    },
+    {
+      "id": "U096",
+      "tag": "td",
+      "text": "Week 3"
+    },
+    {
+      "id": "U097",
+      "tag": "td",
+      "text": "0.90"
+    },
+    {
+      "id": "U098",
+      "tag": "td",
+      "text": "1.125"
+    },
+    {
+      "id": "U099",
+      "tag": "td",
+      "text": "0.72"
+    },
+    {
+      "id": "U100",
+      "tag": "td",
+      "text": "1.084"
+    },
+    {
+      "id": "U101",
+      "tag": "td",
+      "text": "Week 4"
+    },
+    {
+      "id": "U102",
+      "tag": "td",
+      "text": "0.81"
+    },
+    {
+      "id": "U103",
+      "tag": "td",
+      "text": "1.013"
+    },
+    {
+      "id": "U104",
+      "tag": "td",
+      "text": "0.62"
+    },
+    {
+      "id": "U105",
+      "tag": "td",
+      "text": "0.930"
+    },
+    {
+      "id": "U106",
+      "tag": "td",
+      "text": "Week 5 and after"
+    },
+    {
+      "id": "U107",
+      "tag": "td",
+      "text": "0.75"
+    },
+    {
+      "id": "U108",
+      "tag": "td",
+      "text": "0.938"
+    },
+    {
+      "id": "U109",
+      "tag": "td",
+      "text": "0.62"
+    },
+    {
+      "id": "U110",
+      "tag": "td",
+      "text": "0.930"
+    },
+    {
+      "id": "U111",
+      "tag": "td",
+      "text": "Labour cost, every week"
+    },
+    {
+      "id": "U112",
+      "tag": "td",
+      "text": "1.375×"
+    },
+    {
+      "id": "U113",
+      "tag": "td",
+      "text": "1.750×"
+    },
+    {
+      "id": "U114",
+      "tag": "p",
+      "text": "Point at week 4. A fourth consecutive 50-hour week delivers 1.3% more progress than straight time and costs 37.5% more labour on every crew-day. By week 5 the crew is producing less than it would have on forty hours, and still billing the premium. That single row is the most valuable thing on this sheet. Sixty-hour weeks cross the line a week earlier, in week 4, and settle at 0.930 — seven per cent below straight time, at 75% more cost, forever."
+    },
+    {
+      "id": "U115",
+      "tag": "p",
+      "text": "One note on that 0.62 floor, because a student who reads the sources will find it. Business Roundtable puts sustained 60-hour productivity near 66% of baseline. Taken literally that nets 1.50 × 0.66 = 0.99, which is fractionally better than the 50-hour floor of 1.25 × 0.75 = 0.94 — a non-monotonic pair that would teach the wrong lesson, that if you are going to burn the crew out you may as well do it at sixty. The same report concludes that sustained 60-hour weeks finish later than the same crew on forty, so the model uses a steeper floor of 0.62 to reproduce the report's own conclusion, well inside Thomas & Raynar's measured range of no loss to 25%. The claim all three sources agree on is the one the model makes: sustained overtime at any level settles below straight time while costing 37% to 75% more, so it is a burst tool for a defined push and nothing else."
+    },
+    {
+      "id": "U116",
+      "tag": "h3",
+      "text": "Sources, so a student can look them up"
+    },
+    {
+      "id": "U117",
+      "tag": "p",
+      "text": "Business Roundtable, Report C-2, Scheduled Overtime Effect on Construction Projects , Construction Industry Cost Effectiveness Project, 1980. The origin of the two floors in the table: sustained 50-hour weeks settle near 75% of baseline productivity, 60-hour weeks near 66% by weeks eight and nine, and crews held above sixty hours for more than about two months finish later than the same crew would have on forty. Still the most-cited document in this argument, and short enough to assign."
+    },
+    {
+      "id": "U118",
+      "tag": "p",
+      "text": "H. R. Thomas and K. A. Raynar, \"Scheduled Overtime and Labor Productivity: Quantitative Analysis,\" ASCE Journal of Construction Engineering and Management , vol. 123, no. 2, 1997; the same work also circulated through the Construction Industry Institute. This is where the grace period comes from: measured five- and six-day extended weeks lose roughly 10–15% efficiency, and crews commonly run three to four weeks before the loss is measurable at all. It also tempers the Roundtable's steeper claims with field data, which is a useful thing for students to see two sources do to each other."
+    },
+    {
+      "id": "U119",
+      "tag": "p",
+      "text": "The flat factors students will meet in practice — 50 hours = 92%, 60 hours = 82%, applied across an overtime period — trace to a Bureau of Labor Statistics study of repetitive manufacturing work, not to construction. MCAA’s own Bulletin OT1 (2011) is a week-by-week curve, reaching 72% and 61% by week 10. The game ramps toward the lower Roundtable floors, and a flat 92% against a curve that ends at 75% is a good five-minute argument."
+    },
+    {
+      "id": "U120",
+      "tag": "h2",
+      "text": "4 Crews, stacking and money"
+    },
+    {
+      "id": "U121",
+      "tag": "h3",
+      "text": "The crashing premium"
+    },
+    {
+      "id": "U122",
+      "tag": "p",
+      "text": "Crews are limited per trade and the second crew of a trade is the B team: it works around the first, shares the hoist, the laydown and the foreman's attention. Marginal output runs 1.00, 0.80, 0.65, so two crews deliver 1.80 crew-days a day, not 2.00 — doubling up buys about 44% off the duration for 100% more labour . That is the classic crash-cost curve: always available, never free, worth it only when the activity is driving the finish. No activity accepts more than two crews and no trade hires past two, so what students feel is the 1.00-to-0.80 step. Steel erection is capped at one crew throughout, so the front half of the job cannot be crashed with bodies at all."
+    },
+    {
+      "id": "U123",
+      "tag": "p",
+      "text": "A new crew costs 60% of a week's rate as a one-time mobilization (a second concrete crew: $11,400 against concrete's $19,000 weekly), charged only above the highest headcount you have ever carried, so cutting back and re-hiring later is free. A trade is on the roster only while it has a work front open — in a genuine gap it demobilises and stops billing — but while it is on site, any crew you are carrying and have not put on a front bills at half rate for doing nothing, shown as hollow amber pips with the daily cost beside them. That is the price of an unopened work front, and it is why sequencing to keep crews fed matters as much as sequencing to protect the critical path."
+    },
+    {
+      "id": "U124",
+      "tag": "h3",
+      "text": "Manpower is a forecast, and there is never enough of it"
+    },
+    {
+      "id": "U125",
+      "tag": "p",
+      "text": "Adding a crew takes two weeks' notice: decide on Monday of week 12 and they stand on the floor on Monday of week 14, because the sub has to find bodies and does not keep them in the yard. Releasing one is immediate and free. The board shows what is coming as dashed pips reading +1 arrives wk 14 , and the mobilization charge lands when you order, not when they arrive. That lag is the point — manpower is committed against a schedule nobody has seen yet, so a team that waits until a trade is visibly behind orders too late to help and then pays the crew to stand around after the crisis. And the fronts outnumber the crews: on any given week you should expect at least one trade, and often two, with more open work in front of it than one crew can feed — MEP, drywall and finishes each ladder up three floors on a two-day stagger. No allocation covers everything, deliberately. Float stops being decoration the moment the question turns from \"what do we work on\" into \"what do we starve this week\"."
+    },
+    {
+      "id": "U126",
+      "tag": "h3",
+      "text": "The vocabulary problem, and what the game does about it"
+    },
+    {
+      "id": "U127",
+      "tag": "p",
+      "text": "Every call is written the way it would be said on a jobsite, which means a first-year hits words they have never met: a proof roll that pumped , cylinder breaks, embeds, dry-in, fire-caulk at a penetration, shop drawings, a hot shot. Each call carries a What this actually means panel that unfolds under the text and explains the term and why it matters — a proof roll is a loaded truck driven slowly over the subgrade while the inspector watches the ground under the tyres, and if the surface flexes and rebounds in a visible wave behind the wheel it is pumping, which means the soil is too wet or soft to carry a slab and has to be undercut and replaced. The same terms are in the hover glossary. You do not need to pre-teach any of it; it is worth telling the room the panel is there, because students who do not know a word will guess rather than ask."
+    },
+    {
+      "id": "U128",
+      "tag": "h3",
+      "text": "Trade stacking"
+    },
+    {
+      "id": "U129",
+      "tag": "p",
+      "text": "A zone holds a limited number of crews comfortably: three on the site, two on each of Levels 1, 2 and 3, two on the roof, two on the exterior envelope. Past the cap, everyone in that zone loses 25% per crew over, floored at 35%. Four crews in a two-crew zone deliver 4 × 0.50 = 2.0 crew-days a day — what two crews deliver, for twice the money. Two and two across two zones gets you 4.0; five in that zone gets 1.75, less than two."
+    },
+    {
+      "id": "U130",
+      "tag": "p",
+      "text": "The best moment for this is Level 1 late in the job. ELEV is twelve days of work in zone L1 with a cap of two, and it sits there while insulation, drywall and finishes all want the same floor. A team that puts two drywall crews on DRY1 while the elevator crew is still in the zone takes 25% off everybody, including the elevator, which is on a different branch entirely."
+    },
+    {
+      "id": "U131",
+      "tag": "h3",
+      "text": "Money and the score"
+    },
+    {
+      "id": "U132",
+      "tag": "td",
+      "text": "Contract value"
+    },
+    {
+      "id": "U133",
+      "tag": "td",
+      "text": "$4,450,000"
+    },
+    {
+      "id": "U134",
+      "tag": "td",
+      "text": "Subcontract buyout and materials of $2,600,000 are committed at award and no decision moves them. Margin is thin on purpose."
+    },
+    {
+      "id": "U135",
+      "tag": "td",
+      "text": "General conditions"
+    },
+    {
+      "id": "U136",
+      "tag": "td",
+      "text": "$3,600 / calendar day"
+    },
+    {
+      "id": "U137",
+      "tag": "td",
+      "text": "Burns seven days a week, weekends included. Every week you save is $25,200."
+    },
+    {
+      "id": "U138",
+      "tag": "td",
+      "text": "Liquidated damages"
+    },
+    {
+      "id": "U139",
+      "tag": "td",
+      "text": "$14,000 / calendar day"
+    },
+    {
+      "id": "U140",
+      "tag": "td",
+      "text": "Past contract completion: 134 working days = 176 calendar days from Mon 7 Sep 2026, i.e. 12 Mar 2027."
+    },
+    {
+      "id": "U141",
+      "tag": "td",
+      "text": "Early completion bonus"
+    },
+    {
+      "id": "U142",
+      "tag": "td",
+      "text": "$1,600 / calendar day"
+    },
+    {
+      "id": "U143",
+      "tag": "td",
+      "text": "Capped at 20 days, so $32,000 maximum. Deliberately modest."
+    },
+    {
+      "id": "U144",
+      "tag": "td",
+      "text": "Overtime premium"
+    },
+    {
+      "id": "U145",
+      "tag": "td",
+      "text": "1.375× / 1.75×"
+    },
+    {
+      "id": "U146",
+      "tag": "td",
+      "text": "On worked crew-days, at 50 and 60 hours."
+    },
+    {
+      "id": "U147",
+      "tag": "td",
+      "text": "Expedite fees"
+    },
+    {
+      "id": "U148",
+      "tag": "td",
+      "text": "$7,500–$24,000"
+    },
+    {
+      "id": "U149",
+      "tag": "td",
+      "text": "Card by card; buys back a stated number of delay days."
+    },
+    {
+      "id": "U150",
+      "tag": "td",
+      "text": "Judgment calls"
+    },
+    {
+      "id": "U151",
+      "tag": "td",
+      "text": "$1,900–$22,000"
+    },
+    {
+      "id": "U152",
+      "tag": "td",
+      "text": "Priced per option, paid the week you decide. Section 5."
+    },
+    {
+      "id": "U153",
+      "tag": "p",
+      "text": "A week late costs $123,200 in general conditions and liquidated damages before you count labour; a week early returns $36,400 while the bonus cap holds. That 3.4:1 asymmetry should govern every expedite decision and every call, and almost no first-year student computes it unprompted. Score is profit: contract plus change orders, less buyout, labour, general conditions, event and call costs, expedite fees and hiring, less liquidated damages, plus bonus."
+    },
+    {
+      "id": "U154",
+      "tag": "p",
+      "text": "Name the liquidated damages figure as a modelling choice before a sharp student does. Fourteen thousand a day on a $4.45M job is steeper than most real contracts this size, where LDs sit nearer actual carrying cost; it is set there so schedule rather than cost-cutting dominates the score. Asking the class what behaviour a $2,000-a-day LD would produce instead is a better five minutes than defending the number."
+    },
+    {
+      "id": "U155",
+      "tag": "p",
+      "text": "Unimpeded, the network runs 89 working days against a 126-day contract — 53 calendar days of cushion, which sounds generous until the deck goes to work on it. On the seeds in Section 8, a team that absorbs everything and never intervenes finishes two to four and a half weeks late and averages about $185,000, going negative on two of the eight. A team that reads float, prices its calls, orders manpower ahead of need and only fights the weather when the exposed work has no float averages about $351,000. The whole game lives in that gap."
+    },
+    {
+      "id": "U156",
+      "tag": "h2",
+      "text": "4b Money in two sets of books: profit and cash"
+    },
+    {
+      "id": "U157",
+      "tag": "p",
+      "text": "Profit is still the score, but the game now keeps the second set of books every contractor lives by. Costs go out weekly — labour, general conditions, the subcontract buyout drawn as work goes in. Revenue comes back monthly: a pay application billed against the schedule of values, paid about thirty days later, with 5% retainage held until closeout and released two weeks after the ribbon. The gap between those curves is the classic cash valley, financed on a line of credit at real interest (~9.4% APR) that comes off the score. The HUD carries the cash position all game — a team can be projecting a healthy profit while sitting $1,000,000 into the bank's money, which is precisely the conversation worth having out loud."
+    },
+    {
+      "id": "U158",
+      "tag": "p",
+      "text": "Week one now opens with the schedule-of-values call: price it straight and finance the valley honestly, or front-load it so the job carries itself — against a 30% seeded chance the owner's reviewer audits a mid-job application and kicks it back three weeks. Both branches chart in the debrief's cash curve, valley marked in red with the interest bill printed under it. The misconception this section exists to kill: profitable and solvent are the same thing. They are not, and the S-curve chart is the proof."
+    },
+    {
+      "id": "U159",
+      "tag": "h3",
+      "text": "Sub standing"
+    },
+    {
+      "id": "U160",
+      "tag": "p",
+      "text": "Every trade carries a standing score you never see as a number — the crew card shows SOLID / WARY / BURNED . Sustained 60-hour weeks, a second week of 50s, joint-checking their supplier, or leaving mobilized crews idle all grind it down; steady work slowly rebuilds it. A wary sub takes an extra week to field a crew you order. A burned one drags five per cent on everything. So overtime now costs three times: premium pay, decayed productivity, and a subcontractor who has stopped answering first. It recovers — slowly — which makes \"rest the sub\" a real scheduling move."
+    },
+    {
+      "id": "U161",
+      "tag": "h2",
+      "text": "5 The calls — decide now, find out later"
+    },
+    {
+      "id": "U162",
+      "tag": "p",
+      "text": "A call is a judgment made before the work, whose consequence lands somewhere else. There are nine in Racer Commons and two in the tutorial. Each offers two or three options; each carries a price you pay this week — money, sometimes days — and an exposure : the probability the deferred consequence fires. Nothing is hidden. The card prints the exposure as a percentage and names the activity where it will show up, so it is a priced bet with the odds on it, which is what a real one is."
+    },
+    {
+      "id": "U163",
+      "tag": "caption",
+      "text": "Two of the nine — the option you buy is the bar the roll has to clear"
+    },
+    {
+      "id": "U164",
+      "tag": "th",
+      "text": "The call, and where it lands"
+    },
+    {
+      "id": "U165",
+      "tag": "th",
+      "text": "What you can buy"
+    },
+    {
+      "id": "U166",
+      "tag": "th",
+      "text": "Price today"
+    },
+    {
+      "id": "U167",
+      "tag": "th",
+      "text": "Exposure"
+    },
+    {
+      "id": "U168",
+      "tag": "td",
+      "text": "Bearing at column line 4 — offered wk 1 at FTG , lands at INSP1 : +3 days on the hold and $8,500"
+    },
+    {
+      "id": "U169",
+      "tag": "td",
+      "text": "Pour to plan"
+    },
+    {
+      "id": "U170",
+      "tag": "td",
+      "text": "45%"
+    },
+    {
+      "id": "U171",
+      "tag": "td",
+      "text": "Field determination by the EOR"
+    },
+    {
+      "id": "U172",
+      "tag": "td",
+      "text": "$3,200 + 2 d"
+    },
+    {
+      "id": "U173",
+      "tag": "td",
+      "text": "14%"
+    },
+    {
+      "id": "U174",
+      "tag": "td",
+      "text": "Over-excavate and add rebar"
+    },
+    {
+      "id": "U175",
+      "tag": "td",
+      "text": "$9,800 + 1 d"
+    },
+    {
+      "id": "U176",
+      "tag": "td",
+      "text": "Start rough-in before the building is dry — offered at MEP1 , lands at INSP3 : tear out three days of MEP1 and MEP2 , $7,400"
+    },
+    {
+      "id": "U177",
+      "tag": "td",
+      "text": "Start now, weather be damned"
+    },
+    {
+      "id": "U178",
+      "tag": "td",
+      "text": "40%"
+    },
+    {
+      "id": "U179",
+      "tag": "td",
+      "text": "Temporary enclosure on the open elevations"
+    },
+    {
+      "id": "U180",
+      "tag": "td",
+      "text": "$8,600"
+    },
+    {
+      "id": "U181",
+      "tag": "td",
+      "text": "Hold rough-in until the building is dry"
+    },
+    {
+      "id": "U182",
+      "tag": "td",
+      "text": "4 d"
+    },
+    {
+      "id": "U183",
+      "tag": "p",
+      "text": "Not answering is answering. Every call defaults to its first option, which is always the free one and always the most exposed, and the card says so in as many words. A team that clicks Commit through the job has taken the 45%, the 40%, the 44% and all the rest without ever deciding to. That is not a gotcha; on a real job the default happens while you are busy."
+    },
+    {
+      "id": "U184",
+      "tag": "h3",
+      "text": "Why it is not a dice game — the part to defend out loud"
+    },
+    {
+      "id": "U185",
+      "tag": "p",
+      "text": "The roll a call is judged against is a hash of the seed and the call's identifier, and nothing else: not the week you answered, not the order you played, not anything any team did. Every team on your seed faces the identical roll on every call. What differs is the bar that roll has to clear. Two teams both looking at 0.31: the one that bought the exposure down to 3% is covered, the one that left it at 45% is not, and what separates them is a decision made in week 1, not a die thrown in week 9. Two engine self-tests hold this — identical rolls across two games on a seed, rolls unchanged after a whole game played differently — but the stronger move is simpler: the same roll is printed in the debrief of the team that complained and in the debrief of the team that beat them."
+    },
+    {
+      "id": "U186",
+      "tag": "h3",
+      "text": "Grade the decision, not the outcome"
+    },
+    {
+      "id": "U187",
+      "tag": "p",
+      "text": "The debrief prints one row per call: Week / Call / You chose / Cost / Exposure / The roll / Outcome . The last column is a verdict, and the verdicts are a two-by-two."
+    },
+    {
+      "id": "U188",
+      "tag": "caption",
+      "text": "How the debrief grades a call"
+    },
+    {
+      "id": "U189",
+      "tag": "th",
+      "text": "The roll went your way"
+    },
+    {
+      "id": "U190",
+      "tag": "th",
+      "text": "The roll went against you"
+    },
+    {
+      "id": "U191",
+      "tag": "td",
+      "text": "You bought the exposure down"
+    },
+    {
+      "id": "U192",
+      "tag": "td",
+      "text": "Covered — never in doubt"
+    },
+    {
+      "id": "U193",
+      "tag": "td",
+      "text": "Unlucky: you covered it and it still bit"
+    },
+    {
+      "id": "U194",
+      "tag": "td",
+      "text": "You left yourself exposed"
+    },
+    {
+      "id": "U195",
+      "tag": "td",
+      "text": "Got away with it"
+    },
+    {
+      "id": "U196",
+      "tag": "td",
+      "text": "Went against you — and you were exposed"
+    },
+    {
+      "id": "U197",
+      "tag": "p",
+      "text": "The diagonal is the whole lesson. \"Got away with it\" is where the leaderboard's luckiest team lives, and it is the box that wins games and ends careers; \"unlucky: you covered it and it still bit\" is where a team that did everything right can be sitting. A good decision can have a bad outcome and a bad decision can have a good one. If you take one habit out of this guide, take the habit of making a team defend a call before you show them the roll."
+    },
+    {
+      "id": "U198",
+      "tag": "h3",
+      "text": "The weather call"
+    },
+    {
+      "id": "U199",
+      "tag": "p",
+      "text": "Weather-exposed work stands down on rain days by default and you lose them. You may instead work through: 70% production in the wet, $2,600 a rain day in pumping and protection, and a chance of placing something you take back out — min(0.62, 0.16 × rain days) , so a one-day blip is 16% and a three-day washout is 48%, which are properly different decisions. Damage costs two days of rework on an in-progress concrete activity and $5,200. Weather is now something you act on rather than read, and it asks one question: does the exposed work have float? Standing down on roofing with six days of it is free; standing down on foundation walls at zero is a week of liquidated damages."
+    },
+    {
+      "id": "U200",
+      "tag": "h3",
+      "text": "Why the deck never tells you the wrong thing is late"
+    },
+    {
+      "id": "U201",
+      "tag": "p",
+      "text": "Every card that names activities carries a week window derived from where those activities sit in this project's own schedule, so a late rebar delivery cannot land ten weeks after the last pour went in. The window is computed from the network alone — the critical-path dates stretched to the pace a real run takes — which means it is identical for every team on a seed and the fairness guarantee is untouched. It also means the ten-activity tutorial is never told its curtain wall is late, because it has not got one. If a team is running far enough ahead that a card still arrives after the work it names is finished, the news says so plainly: no impact, you are ahead of this one . That is a reward, and it is worth pointing out when it happens."
+    },
+    {
+      "id": "U202",
+      "tag": "h3",
+      "text": "The one call that is not a trade-off"
+    },
+    {
+      "id": "U203",
+      "tag": "p",
+      "text": "Almost every call in the deck is a legitimate judgment with defensible answers on both sides. One is not. In week six or thereabouts, with the foundation walls up and green and nothing bracing them, backfill is sitting on the schedule. Waiting for strength and backfilling both sides evenly costs three days and carries no exposure. Engineered kickers buy those three days back for $6,400. And then there is the third option: backfill high against one side now and keep the machine moving — free, saves the three days, and marked ⚠ UNSAFE on the button, with the reason printed underneath before anybody clicks it."
+    },
+    {
+      "id": "U204",
+      "tag": "p",
+      "text": "It is in the game deliberately, because schedule pressure producing an unsafe shortcut is not a hypothetical in this industry and naming it in a classroom is cheaper than meeting it on a jobsite. An unbraced, uncured foundation wall with fill on one side only is loaded in a direction nobody designed for; when one lets go it rotates in on whoever is standing in the excavation. It is an OSHA excavation and structural-stability violation before it is a schedule decision."
+    },
+    {
+      "id": "U205",
+      "tag": "p",
+      "text": "The important part is what happens afterwards. If a team takes it, the debrief opens — above the profit, before they can see their score — with a red block naming the call, quoting what they chose, and explaining why it is not available to them as professionals. It fires whether or not the wall stood. If the roll went their way the block says so in as many words: and it held. That is the most dangerous possible outcome, because it teaches you it was fine. If a team took it and topped the leaderboard, run the debrief in that order anyway: read the block, then read the number, then ask the room whether they would sign that decision with their own name on the citation. That is the whole lesson, and it lands better than any amount of safety lecturing because they chose it themselves under pressure you built."
+    },
+    {
+      "id": "U206",
+      "tag": "h3",
+      "text": "Procurement — three chances to make a card land harmlessly"
+    },
+    {
+      "id": "U207",
+      "tag": "p",
+      "text": "Three calls are buyouts: structural steel at footings, $15,500; switchgear and the elevator at slab on grade, $22,000; curtain wall at the structural inspection, $18,500. Pre-buying sets a flag, and when the matching late-delivery card comes up the news reads \"no impact — you bought that package out early\" . No delay, no expedite fee, nothing to recover from — a late delivery has become the consequence of a decision made twenty weeks earlier rather than pure bad luck. Say the other half too, or you are teaching insurance instead of judgment: covering all three costs $56,000 against a deck that may never deal you the card, and on a seed where the glazing card never comes up that $18,500 bought nothing and was still not a bad decision."
+    },
+    {
+      "id": "U208",
+      "tag": "h2",
+      "text": "6 Five misconceptions, and the moment that exposes each"
+    },
+    {
+      "id": "U209",
+      "tag": "h3",
+      "text": "(a) Float is free time you can spend casually"
+    },
+    {
+      "id": "U210",
+      "tag": "p",
+      "text": "Students treat any non-zero float column as permission. The exposure is the MEP branch. At baseline, MEP2 and MEP3 carry 8 and 4 days of total float and the rough-in inspection hold INSP3 carries 4. Then the switchgear card lands ( \"Gear that used to take 12 weeks now takes 30\" , from week 8) for two days, and the failed rough-in inspection lands ( fire-caulk missing at thirty-odd penetrations , from week 9) for three days on a hold nothing can compress. Two cards, five days on a branch that had four — and INSUL , which needs both the rough-in inspection and the curtain wall, is now on the critical path with drywall and finishes stacked behind it. Ask the team that spent that float in week 6 what they thought it was for. (Ask the team that pre-bought the switchgear how much of this they saw at all.)"
+    },
+    {
+      "id": "U211",
+      "tag": "p",
+      "text": "The free-float half of this is sharper still: MEP1 has 9 days of total float but only 1 day of free float . Slip it three days and the project has not moved, but Level 2 rough-in cannot start when it wanted to. Total float belongs to the path and gets consumed by whoever spends it first; free float is the only part that is genuinely yours."
+    },
+    {
+      "id": "U212",
+      "tag": "h3",
+      "text": "(b) Overtime always accelerates"
+    },
+    {
+      "id": "U213",
+      "tag": "p",
+      "text": "Two exposures, and you want both. The first is arithmetic: any team that puts drywall or finishes on 50-hour weeks and leaves them there is producing 0.938 of a straight-time week by week 5 while paying 1.375. Pull their week-by-week overtime log onto the projector next to the table in Section 3."
+    },
+    {
+      "id": "U214",
+      "tag": "p",
+      "text": "The second is structural and better. When the rough-in inspection fails and adds three days to INSP3 , teams reach for overtime and it does nothing, because holds and cures are non-compressible. Same with the four-day deck cure DKC between the Level 3 deck pour and the structural inspection: a team crashes DECK3 with a second concrete crew, buys 44% off a four-day activity, and hands most of it straight back to the cure. Ask what they bought for that money."
+    },
+    {
+      "id": "U215",
+      "tag": "h3",
+      "text": "(c) The critical path is fixed at baseline"
+    },
+    {
+      "id": "U216",
+      "tag": "p",
+      "text": "At baseline the path runs through foundations, steel, deck and cure, the structural inspection, envelope, drywall, finishes, commissioning, final inspection and punchlist — and ROOF , roofing membrane and flashing, sits off it with six days of float. Roofing is weather-flagged, and the curtain wall ( ENV2 ) cannot start until the roof is finished. Two rain days on roofing plus the membrane-backorder card and the roof is critical, at which point the glazing card that arrives later matters twice as much as it would have. The question for the debrief is not whether they saw the announcement — it is whether anyone changed their allocation the week before , when the float column was down to one day and still technically positive."
+    },
+    {
+      "id": "U217",
+      "tag": "h3",
+      "text": "(d) Weather delays everything equally"
+    },
+    {
+      "id": "U218",
+      "tag": "p",
+      "text": "Rain days only stop weather-flagged work: earthwork, concrete placement, roofing and envelope. Nothing else in the building is exposed. The clean demonstration is the same card in two places. \"Ground is soup\" costs earthwork and concrete up to three days; drawn in week 3 it takes three days off excavation, footings or foundation walls, all of which are critical, and the project moves. Drawn in week 18, with the building dried in and drywall and finishes running, it costs exactly nothing. Same card, same three days, same seed. And a cure keeps curing through a washout — a rained-out week still advances FTGC ."
+    },
+    {
+      "id": "U219",
+      "tag": "p",
+      "text": "Name the boundary out loud, because it is a modelling decision and not an accident. Steel erection carries no weather flag, so the wind-advisory card stops glazing and sheathing and leaves the crane alone, and real erectors do stand down in 40 mph gusts. Whether a boundary drawn for teachability is drawn in a defensible place is a good question for the room; an engine self-test enforces it in both directions, so no activity outside those four trades can be flagged and no weather card can claim a trade with no exposed work."
+    },
+    {
+      "id": "U220",
+      "tag": "h3",
+      "text": "(e) A good outcome means it was a good call"
+    },
+    {
+      "id": "U221",
+      "tag": "p",
+      "text": "The gambler's fallacy in a hard hat, and the most expensive habit on this list, because the job keeps rewarding it right up until it does not. A team pours to plan at column line 4, the seed's roll comes in at 0.61, the inspector takes the pads without comment, and they leave convinced they read the geotech. They read nothing: they took a 45% chance of a three-day hold and $8,500 on a foundation inspection and the roll — the roll every other team in the room was handed — landed above the line."
+    },
+    {
+      "id": "U222",
+      "tag": "p",
+      "text": "Put their calls table beside the row of a team that bought the same call down to 3%. Same seed, same roll, one verdict reading \"Got away with it\" and the other \"Covered — never in doubt\" . Then price it in front of them. If the branch that hold lands on still has float, pouring to plan cost an expected $3,800 and the $9,800 was wasted money. If the foundation branch has gone critical — two rain days on excavation will do it — three days at $17,600 a calendar day turns the free option into an expected $27,000 and makes $9,800 the cheapest thing on the card. The question is never \"did it work out\", it is \"what was it worth on the Monday you decided, given where the float was\". Then ask which team they would want running the next job."
+    },
+    {
+      "id": "U223",
+      "tag": "h2",
+      "text": "7 Debrief questions keyed to what actually happened"
+    },
+    {
+      "id": "U224",
+      "tag": "li",
+      "text": "Bearing at column line 4, week 1. Free at 45%, $3,200 and two days at 14%, $9,800 and one day at 3%. Price all three before anyone admits what they picked. What is a day worth in week 1 while the job still has cushion, and what is it worth if the ground-is-soup card has already taken three days out of excavation and the foundation branch is at zero float? Same call, two different right answers, and what changed was the float rather than the odds."
+    },
+    {
+      "id": "U225",
+      "tag": "li",
+      "text": "The roll everybody shared. Find a call where the room split. Ask each team what it thought it was buying, in dollars, before the roll goes on the screen. Then show it — every team on the seed had that same number. Whose decision was right, and does your answer change now that you know how it came out? If it does, say so out loud; that is the habit you are trying to break."
+    },
+    {
+      "id": "U226",
+      "tag": "li",
+      "text": "The weather call. One rain day forecast buys back one day for $2,600 at 16% exposure; three days buys three for $7,800 at 48%, and going wrong costs two days of rework and $5,200. Which is the better buy? (Neither, until you say what is exposed. Roofing with six days of float, never. Foundation walls at zero on a job already late, almost always. The forecast is not the decision — the float column is.)"
+    },
+    {
+      "id": "U227",
+      "tag": "li",
+      "text": "The elevator cab. The manufacturer pushes your slot three weeks and offers you someone else's production slot for $21,000 against a three-day delay. At baseline ELEV carries 21 days of total float . Who paid? Now work it the other way: three working days on a driving activity costs roughly $53,000 to $88,000 in general conditions and liquidated damages, so what would the float have to be for $21,000 to be right? And what did the team that pre-bought the elevator package pay for the same protection, twelve weeks earlier?"
+    },
+    {
+      "id": "U228",
+      "tag": "li",
+      "text": "The glazing card. \"The curtain wall units are sitting at the port. Customs hold, no release date.\" Three days on ENV2 , $24,000 to broker and air-freight the first two elevations. ENV2 is critical at baseline and it gates insulation, all three floors of drywall and everything after them. Now compare three groups on the final scoresheet: the teams that paid the $24,000, the teams that absorbed it, and the teams that spent $18,500 at the structural inspection and watched the card land with the words \"no impact\" under it."
+    },
+    {
+      "id": "U229",
+      "tag": "li",
+      "text": "Switchgear. Two days on MEP2 and MEP3 , $16,000 to source a substitute assembly and submit it. MEP2 carries eight days of total float and four of free float; MEP3 carries four and none. Which activity governs your answer, which float number governs it, and why do the two numbers disagree?"
+    },
+    {
+      "id": "U230",
+      "tag": "li",
+      "text": "The failed rough-in inspection. Three days added to INSP3 plus $4,200 in correction and re-inspection, and the card offers no expedite at all. No crew helps, no overtime helps. What is actually left to you? (Answer: sequence. INSUL needs the rough-in inspection and the curtain wall. If glazing was going to be the later of the two anyway, the hold costs nothing. Getting a work front finished early is the only defence against a card you cannot buy off.)"
+    },
+    {
+      "id": "U231",
+      "tag": "li",
+      "text": "Suspect welds. Two days on INSP2 and $8,000. The structural inspection releases exterior framing, Level 3 rough-in and the elevator at once. Which of the three actually cost you, and how would you have known that on the Monday?"
+    },
+    {
+      "id": "U232",
+      "tag": "li",
+      "text": "The lobby change order. $38,000 of revenue, $26,000 of cost, two days on FIN1 — net twelve thousand dollars on an activity that is critical at baseline. Do you sign it, and what do you need to know about the finishes ladder before you answer?"
+    },
+    {
+      "id": "U233",
+      "tag": "li",
+      "text": "Level 1 in the last month. Elevator, insulation, drywall, finishes, commissioning, final inspection and punchlist all live in a zone that holds two crews. Who stacked it, what did the 25% cost, and what would a two-and-two split across Level 1 and Level 2 have delivered instead?"
+    },
+    {
+      "id": "U234",
+      "tag": "li",
+      "text": "The week the path moved. Pull up the week the game announced it. Who was watching the float column, and who found out from the announcement? What would you have had to do the week before?"
+    },
+    {
+      "id": "U235",
+      "tag": "h2",
+      "text": "8 If it goes wrong"
+    },
+    {
+      "id": "U236",
+      "tag": "h3",
+      "text": "Picking a seed"
+    },
+    {
+      "id": "U237",
+      "tag": "p",
+      "text": "Any string works — it is hashed, and it is upper-cased first, so msu-1 and MSU-1 are the same run. Announce the difficulty with it: the deck is rolled from seed and difficulty together, so a team on the wrong setting is not playing your game and its score does not belong on your leaderboard. Check a seed before class by watching a do-nothing baseline run; you want one where absorbing everything finishes late enough to hurt but not so late that good play cannot recover it. Four measured starting points, all on Standard:"
+    },
+    {
+      "id": "U238",
+      "tag": "caption",
+      "text": "Two ways to play the same seed — defaults means absorb everything and take every free option"
+    },
+    {
+      "id": "U239",
+      "tag": "th",
+      "text": "Seed"
+    },
+    {
+      "id": "U240",
+      "tag": "th",
+      "text": "Wks"
+    },
+    {
+      "id": "U241",
+      "tag": "th",
+      "text": "Finish vs contract"
+    },
+    {
+      "id": "U242",
+      "tag": "th",
+      "text": "Defaults"
+    },
+    {
+      "id": "U243",
+      "tag": "th",
+      "text": "Judgment"
+    },
+    {
+      "id": "U244",
+      "tag": "th",
+      "text": "Character"
+    },
+    {
+      "id": "U245",
+      "tag": "td",
+      "text": "MSU-1"
+    },
+    {
+      "id": "U246",
+      "tag": "td",
+      "text": "27 days late"
+    },
+    {
+      "id": "U247",
+      "tag": "td",
+      "text": "$55,400"
+    },
+    {
+      "id": "U248",
+      "tag": "td",
+      "text": "$254,525"
+    },
+    {
+      "id": "U249",
+      "tag": "td",
+      "text": "Middle of the road. Good first run."
+    },
+    {
+      "id": "U250",
+      "tag": "td",
+      "text": "CMGT-201"
+    },
+    {
+      "id": "U251",
+      "tag": "td",
+      "text": "28 days late"
+    },
+    {
+      "id": "U252",
+      "tag": "td",
+      "text": "$26,700"
+    },
+    {
+      "id": "U253",
+      "tag": "td",
+      "text": "$525,200"
+    },
+    {
+      "id": "U254",
+      "tag": "td",
+      "text": "Judgment pays most here — half a million of spread."
+    },
+    {
+      "id": "U255",
+      "tag": "td",
+      "text": "TOPPING"
+    },
+    {
+      "id": "U256",
+      "tag": "td",
+      "text": "31 days late"
+    },
+    {
+      "id": "U257",
+      "tag": "td",
+      "text": "−$75,550"
+    },
+    {
+      "id": "U258",
+      "tag": "td",
+      "text": "$116,088"
+    },
+    {
+      "id": "U259",
+      "tag": "td",
+      "text": "Punishing. The defaults lose real money."
+    },
+    {
+      "id": "U260",
+      "tag": "td",
+      "text": "CALLOWAY"
+    },
+    {
+      "id": "U261",
+      "tag": "td",
+      "text": "14 days late"
+    },
+    {
+      "id": "U262",
+      "tag": "td",
+      "text": "$283,300"
+    },
+    {
+      "id": "U263",
+      "tag": "td",
+      "text": "$245,550"
+    },
+    {
+      "id": "U264",
+      "tag": "td",
+      "text": "Rewards nerve: the cheap calls come in. Best debrief seed on the sheet."
+    },
+    {
+      "id": "U265",
+      "tag": "p",
+      "text": "Across eight measured seeds the defaults average about $185,000 and go negative on two; judgment averages about $351,000 and wins on six of the eight. Well-played runs land between 24 and 28 weeks, and the best finish observed was 118 working days, eight working days inside the contract — so the early bonus is reachable, though nobody has come near the 20-day cap."
+    },
+    {
+      "id": "U266",
+      "tag": "p",
+      "text": "Some seeds reward caution and some punish it, and that is a feature. On CALLOWAY the free options happen to clear their thresholds, so the team that spent nothing on the calls beats the team that covered them, and you will hear about it. Do not apologise and do not reroll. When a team complains, put the two calls tables side by side and read the exposure column rather than the profit column: the careful team paid twenty thousand or so to be covered on decisions it could not see the end of, while the lucky team carried 40-odd per cent four or five times and was owed a bad week that never came. Then ask the room to replay the seed with the same calls and predict who wins. Nothing changes, because the rolls are fixed, and that is the moment a student hears the difference between a repeatable process and a result."
+    },
+    {
+      "id": "U267",
+      "tag": "h3",
+      "text": "Phones, projectors and the Racer paint job"
+    },
+    {
+      "id": "U268",
+      "tag": "p",
+      "text": "The game is fully playable on a phone: under tablet width the interface folds into two tabs, SITE and MEETING, with the commit button always in reach — useful when a team of three has one laptop and two phones. The identity is Murray State throughout: navy and gold, the horseshoe, the pennant on the field office, and gold hard hats on every crew. The critical path stays red. Some things are sacred."
+    },
+    {
+      "id": "U269",
+      "tag": "h3",
+      "text": "Setting difficulty"
+    },
+    {
+      "id": "U270",
+      "tag": "p",
+      "text": "Easy draws zero or one non-weather card a week, scales every delay, hold, cost and productivity loss to 60%, and takes a day off every rain forecast. Standard is the same card count at full severity. Hard draws one or two non-weather cards a week, scales severity to 130%, and adds a rain day. Severity scales delay days, hold days, event costs, expedite fees and the days an expedite fee buys back, so hard is harder because more goes wrong, not because the remedies quietly stop working. Use Standard for a first session, Easy if this is the class's first exposure to CPM at all, and Hard for a second run on a seed they have already seen."
+    },
+    {
+      "id": "U271",
+      "tag": "h3",
+      "text": "Presentation mode and the leaderboard"
+    },
+    {
+      "id": "U272",
+      "tag": "p",
+      "text": "The Settings menu (⚙ in the title bar, beside the ? that reopens the Guide) holds three things: Open Presenter Notes , which puts this guide on screen inside the game; Presentation mode ; and Reset , which returns the machine to the setup sheet as if it had just been opened. Turn Presentation mode on — projector mode, if you have called it that — on the instructor machine: larger type, the schedule and the computed critical path readable from the back row. Use it for THE NEWS each week so the whole room hears the same card at the same time, and for the leaderboard and the calls tables at minute 59. Clear the leaderboard from the same menu between sections — scores are held locally on that machine, so a second section starts clean and does not inherit the first section's spread."
+    },
+    {
+      "id": "U273",
+      "tag": "h3",
+      "text": "When a score is disputed, or a browser is lost"
+    },
+    {
+      "id": "U274",
+      "tag": "p",
+      "text": "The engine has no clock, no network call and no unseeded randomness. Same seed plus same decisions produces the same profit to the dollar, and this is one of the checks in the self-test suite. So a disputed score can be reproduced by replaying the seed with the team's decision log, and a team whose browser dies can rebuild from where they were. The same menu runs the whole self-test suite, including the tutorial CPM checked against the hand calculation in Section 2 and the two checks that hold the calls fair — twenty-eight checks, live, in front of the class. Running them is a surprisingly good two minutes of teaching if a student is convinced the software cheated."
+    },
+    {
+      "id": "U275",
+      "tag": "h3",
+      "text": "Pace problems"
+    },
+    {
+      "id": "U276",
+      "tag": "p",
+      "text": "The usual failure is a team that deliberates every week. Plenty of weeks carry a clear forecast, no open call and one card that misses their live work fronts entirely; those should commit in seconds. Tell the room at the checkpoint: read the news, ask whether it touches anything with zero or one day of float, and if it does not, commit. Save the deliberation for the nine calls, the weather weeks with critical work exposed, and the two or three weeks where manpower has to be ordered before the need is visible."
+    },
+    {
+      "id": "U277",
+      "tag": "div",
+      "text": "Construction Scheduling — Instructor Guide Sheet IG-01 Racer Commons — 38 activities — 134 working days"
+    }
+  ],
+  "tokens": {
+    "$1,000,000": 1,
+    "$1,600": 1,
+    "$1,900": 1,
+    "$11,400": 1,
+    "$116,088": 1,
+    "$123,200": 1,
+    "$14,000": 1,
+    "$15,500": 1,
+    "$16,000": 1,
+    "$17,600": 1,
+    "$18,500": 3,
+    "$185,000": 2,
+    "$19,000": 1,
+    "$2,000": 1,
+    "$2,600,000": 1,
+    "$2,600": 2,
+    "$200,000": 1,
+    "$21,000": 2,
+    "$22,000": 2,
+    "$24,000": 3,
+    "$245,550": 1,
+    "$25,200": 1,
+    "$254,525": 1,
+    "$26,000": 1,
+    "$26,700": 1,
+    "$27,000": 1,
+    "$283,300": 1,
+    "$3,200": 2,
+    "$3,600": 1,
+    "$3,800": 1,
+    "$32,000": 1,
+    "$351,000": 2,
+    "$36,400": 1,
+    "$38,000": 1,
+    "$4,200": 1,
+    "$4,450,000": 1,
+    "$4.45m": 1,
+    "$5,200": 2,
+    "$525,200": 1,
+    "$53,000": 1,
+    "$55,400": 1,
+    "$56,000": 1,
+    "$6,400": 1,
+    "$7,400": 1,
+    "$7,500": 1,
+    "$7,800": 1,
+    "$75,550": 1,
+    "$8,000": 1,
+    "$8,500": 2,
+    "$8,600": 1,
+    "$88,000": 1,
+    "$9,800": 4,
+    "0.16 ×": 1,
+    "0.16": 1,
+    "0.31": 1,
+    "0.50": 1,
+    "0.61": 1,
+    "0.62": 6,
+    "0.65": 1,
+    "0.66": 1,
+    "0.72": 1,
+    "0.75": 3,
+    "0.80": 2,
+    "0.81": 1,
+    "0.85": 1,
+    "0.90": 1,
+    "0.930": 3,
+    "0.938": 2,
+    "0.94": 1,
+    "0.99": 1,
+    "1 day": 2,
+    "1.25 ×": 1,
+    "1.3%": 1,
+    "1.375×": 3,
+    "1.50 ×": 1,
+    "1.750×": 1,
+    "1.75×": 2,
+    "1.80 crew-days": 1,
+    "10 activities": 1,
+    "10%": 1,
+    "100%": 1,
+    "11 min": 1,
+    "118 working days": 1,
+    "12 mar 2027": 1,
+    "12 min": 1,
+    "12 weeks": 1,
+    "130%": 1,
+    "134 working days": 2,
+    "14 days": 1,
+    "14%": 2,
+    "15%": 2,
+    "16%": 2,
+    "176 calendar days": 1,
+    "2.0 crew-days": 1,
+    "20 days": 1,
+    "21 days": 1,
+    "25%": 4,
+    "27 days": 1,
+    "28 days": 1,
+    "28 weeks": 1,
+    "29 working days": 1,
+    "3 days": 1,
+    "3%": 3,
+    "30%": 1,
+    "31 days": 1,
+    "33 min": 1,
+    "35%": 1,
+    "37%": 1,
+    "37.5%": 1,
+    "38 activities": 2,
+    "4 days": 1,
+    "4 min": 2,
+    "4 ×": 1,
+    "40 mph": 1,
+    "40%": 2,
+    "44%": 3,
+    "45%": 5,
+    "48%": 2,
+    "5 min": 1,
+    "5%": 1,
+    "50 hours": 2,
+    "50 hr": 2,
+    "53 calendar days": 1,
+    "6 min": 1,
+    "60 hours": 2,
+    "60 hr": 2,
+    "60%": 2,
+    "61%": 1,
+    "66%": 2,
+    "7 sep 2026": 2,
+    "70%": 1,
+    "72%": 1,
+    "75 minutes": 2,
+    "75%": 4,
+    "82%": 1,
+    "89 working days": 1,
+    "9 days": 2,
+    "9.4%": 1,
+    "92%": 2,
+    "asce": 1,
+    "bulletin ot1": 1,
+    "bureau of labor statistics": 1,
+    "business roundtable": 2,
+    "calloway": 2,
+    "cmgt-201": 1,
+    "deck3": 1,
+    "dkc": 1,
+    "dry1": 1,
+    "elev": 2,
+    "env2": 3,
+    "ff+2": 1,
+    "ff": 2,
+    "ff1": 1,
+    "fin1": 1,
+    "fs": 2,
+    "fs0": 8,
+    "ftg": 1,
+    "ftgc": 1,
+    "ig-01": 2,
+    "insp1": 1,
+    "insp2": 1,
+    "insp3": 4,
+    "insul": 2,
+    "mcaa": 1,
+    "mep1": 4,
+    "mep2": 4,
+    "mep3": 3,
+    "msu-1": 2,
+    "osha": 1,
+    "racer commons": 4,
+    "raynar": 2,
+    "report c-2": 1,
+    "roof": 1,
+    "shoe tree annex": 2,
+    "ss+2": 1,
+    "ss+4": 1,
+    "ss+5": 1,
+    "ss": 3,
+    "ss2": 1,
+    "t1": 2,
+    "t10": 2,
+    "t2": 3,
+    "t3": 2,
+    "t4": 3,
+    "t5": 2,
+    "t6": 3,
+    "t7": 2,
+    "t8": 2,
+    "t9": 2,
+    "thomas": 2,
+    "topping": 1
+  }
+}
