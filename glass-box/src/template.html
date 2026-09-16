@@ -75,14 +75,15 @@
     <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1 learning guide">
       <article><span>Predict</span><p>This model has 42,458 parameters and trains on one short story. After all
-        four eras, will it write <b>real English sentences</b>, or only <b>English-looking fragments</b>?</p>
+        four eras, <b>can it do simple math</b> &mdash; say, <b>2 + 2</b>?</p>
         <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="llm">
-          <button type="button" class="predict-btn" data-answer="sentences" aria-pressed="false">Real sentences</button>
-          <button type="button" class="predict-btn" data-answer="fragments" aria-pressed="false">English-looking fragments</button>
+          <button type="button" class="predict-btn" data-answer="yes" aria-pressed="false">Yes, it can add</button>
+          <button type="button" class="predict-btn" data-answer="no" aria-pressed="false">No, it cannot</button>
         </div>
         <span class="echo" hidden></span></article>
       <article><span>Try</span><p>Press <b>Train &middot; era 1</b> and watch the loss fall, then read the new
-        sample against Era 0. In <b>Try next-token prediction</b>, change the prompt and the temperature.</p></article>
+        sample against Era 0. In <b>Try next-token prediction</b>, change the prompt and the temperature &mdash;
+        then type <b>2+2=</b> as the prompt and read what comes back.</p></article>
       <article><span>Takeaway</span><p>Training changes the parameters; inference runs the frozen parameters
         forward to score every possible next token. A small model trained on a little text learns the shape of
         the language long before it learns to say anything true.</p></article>

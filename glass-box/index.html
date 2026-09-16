@@ -963,14 +963,15 @@ body.details-open { overflow:hidden; }
     <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1 learning guide">
       <article><span>Predict</span><p>This model has 42,458 parameters and trains on one short story. After all
-        four eras, will it write <b>real English sentences</b>, or only <b>English-looking fragments</b>?</p>
+        four eras, <b>can it do simple math</b> &mdash; say, <b>2 + 2</b>?</p>
         <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="llm">
-          <button type="button" class="predict-btn" data-answer="sentences" aria-pressed="false">Real sentences</button>
-          <button type="button" class="predict-btn" data-answer="fragments" aria-pressed="false">English-looking fragments</button>
+          <button type="button" class="predict-btn" data-answer="yes" aria-pressed="false">Yes, it can add</button>
+          <button type="button" class="predict-btn" data-answer="no" aria-pressed="false">No, it cannot</button>
         </div>
         <span class="echo" hidden></span></article>
       <article><span>Try</span><p>Press <b>Train &middot; era 1</b> and watch the loss fall, then read the new
-        sample against Era 0. In <b>Try next-token prediction</b>, change the prompt and the temperature.</p></article>
+        sample against Era 0. In <b>Try next-token prediction</b>, change the prompt and the temperature &mdash;
+        then type <b>2+2=</b> as the prompt and read what comes back.</p></article>
       <article><span>Takeaway</span><p>Training changes the parameters; inference runs the frozen parameters
         forward to score every possible next token. A small model trained on a little text learns the shape of
         the language long before it learns to say anything true.</p></article>
@@ -1504,7 +1505,7 @@ body.details-open { overflow:hidden; }
   <h3>Question</h3>
   <p>How can adjustable numbers turn recent text into a next-character prediction?</p>
   <h3>Predict prompt</h3>
-  <p>After all four eras, real English sentences or English-looking fragments? Most rooms split; the honest answer is fragments, and the reveal says so on the card once Era 4 finishes.</p>
+  <p>After all four eras, can it do simple math, like 2 + 2? The answer is no: its vocabulary has no digits, so 2+2= reaches it as blank spaces. Have someone type 2+2= into the prompt box to see it. The reveal says so on the card once Era 4 finishes, and Stage 2 trains the same kind of model on sums.</p>
   <h3>Activity</h3>
   <div class="beat"><div class="t">0:00</div><div><b>Open LLM.</b> Use Tokenize text and Inspect parameters on an untrained prompt. The numbers begin as random values.</div></div>
   <div class="beat"><div class="t">1:30</div><div><b>Choose Train the model.</b> Read one untrained sample, then narrate the loss and samples as the first era completes. Use Try next-token prediction to compare likely next characters; change Temperature only after the audience sees the ranked choices.</div></div>
@@ -3198,7 +3199,7 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
   // (Flagged for kit v3: the Predict control is required by template part A2 and
   // reinvented by every demo that obeys it.)
   const PREDICT_LABELS = {
-    llm: { sentences: 'real English sentences', fragments: 'English-looking fragments' },
+    llm: { yes: 'it can add', no: 'it cannot do math' },
     reason: { direct: 'the answers-only model', worked: 'the worked-steps model', same: 'about the same' },
     agent: { finish: 'it still finishes', stall: 'it loses the goal' }
   };
@@ -3623,10 +3624,14 @@ const WORKER_SRC = "// GlassBox tiny transformer engine — plain JS, no depende
     /* TEXT.ERAS is the full era list, so eras.length === TEXT.ERAS.length means
        every era has been trained and the prediction can be settled. */
     if (eras.length >= TEXT.ERAS.length) {
-      revealPrediction('llm', 'fragments',
-        'It writes English-looking fragments: the spacing, the letter runs and the short words are ' +
-        'the shape of the language, but it is not saying anything true. 42,458 parameters and one ' +
-        'short story buy the shape, not the content.');
+      /* The vocabulary is read from the model's own character set, never
+         typed, so this sentence cannot drift from what the model can see. */
+      const letters = TEXT.chars.filter(c => /[a-z]/.test(c)).length;
+      revealPrediction('llm', 'no',
+        'It cannot. It has never seen a digit: its whole vocabulary is ' + letters + ' letters, a space ' +
+        'and a full stop, so a prompt like 2+2= reaches it as blank spaces and it answers with story-like ' +
+        'letters. A model learns what is in its training text, and this one\u2019s text is a story. ' +
+        'Stage 2 trains the same kind of model on sums.');
     }
   });
 
