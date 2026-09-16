@@ -2312,8 +2312,15 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
   }
 
   function updateKicker(suffix, q) {
-    $('qual-' + suffix).hidden = !q.qualifier;
+    /* The qualifier names the KIND of value -- typical, specified minimum,
+       code-dependent. It is populated here but deliberately kept HIDDEN until
+       the reveal. 18 of the 23 qualifiers narrow the answer and 6 state it
+       outright ("13 A", "6%", "7 3/4 in"), so rendering it above the slider
+       hands the learner the very estimate the stage exists to elicit -- and the
+       Details drawer promises the opposite ("endpoints are chosen to be wide
+       enough not to give the answer away"). Unhidden in the reveal below. */
     if (q.qualifier) $('qual-' + suffix).textContent = q.qualifier;
+    $('qual-' + suffix).hidden = true;
     $('kicker-note-' + suffix).textContent = q.category + ' — ' + q.source.name;
   }
 
@@ -2368,6 +2375,12 @@ if (typeof module !== "undefined") module.exports = { QUESTIONS, LOG_IDS };
     $('guess-panel-' + suffix).style.display = 'none';
     const rp = $('reveal-panel-' + suffix);
     rp.classList.remove('hidden'); rp.style.display = 'flex';
+
+    /* The guess is locked, so the qualifier can now do the work it is for:
+       telling the learner whether the truth they just missed is a typical
+       value, a specified minimum, or code-dependent. Before this point it
+       would only have leaked the answer. */
+    $('qual-' + suffix).hidden = !q.qualifier;
 
     const guessPct = valueToPos(q, guess) / 10;
     const truthPct = valueToPos(q, q.value) / 10;
