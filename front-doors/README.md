@@ -34,8 +34,8 @@ Every verdict on the page traces to one of **4 axes**:
    apps, versus a whole project tree.
 2. **Can it do things?** Text back into the conversation, versus editing the open document in
    place, versus running commands on your machine.
-3. **Does it keep going when you are not watching?** One turn, versus scheduled and
-   unattended runs.
+3. **Does it keep going when you are not watching?** One reply per run (even on a timer),
+   versus unattended multi-step work on a schedule or a trigger.
 4. **How much must you check?** The cost nobody quotes.
 
 And **4 doors**, deliberately ordered as a ladder of reach:
@@ -44,7 +44,7 @@ And **4 doors**, deliberately ordered as a ladder of reach:
 |---|------|----------------------------|------------|
 | 1 | A chat window | ChatGPT (Chat), Claude, the Gemini app | Free tier on all three |
 | 2 | Inside the tools you already have | Docs, Sheets, Slides (Google); Word, Excel, PowerPoint (Microsoft) | Institutional licence |
-| 3 | A desktop coworker | Claude Cowork, ChatGPT Work | Paid plan |
+| 3 | A desktop coworker | Claude Cowork, ChatGPT Work, Gemini Spark | Paid plan |
 | 4 | A coding agent | Codex, Claude Code, Antigravity | Two paid, one free tier |
 
 4 doors against 4 axes is **16 cells**. Each one opens the reason, the vendor's own wording,
@@ -56,8 +56,9 @@ Rows 1 to 3 rise neatly left to right — and the page says out loud that this i
 of choosing the doors as a ladder, not a discovery. **Row 4 does not rise**, and that is the
 payload:
 
-- **Door 2 is among the cheapest to check.** The agent inside Docs or Word hands you a
-  *change to accept or reject*, inside a document that already has undo and version history.
+- **Door 2 is among the cheapest to check.** The agent inside Docs or Word makes its edit
+  inside a document that already has undo and version history — in Docs as a suggestion to
+  accept or reject; in Word, by Microsoft's own page, as a direct change you undo.
 - **Door 4 is easier to check than door 3.** Code comes with a diff, a history and tests, so
   the review has a shape — at the cost of needing to read code, and of the commands it ran
   never appearing in the diff at all.
@@ -128,7 +129,7 @@ Retrofitted onto the fleet's shared six-word provenance vocabulary (Live / Measu
 a real page; it is not invented, so it is not Illustrative). Both vocabularies show on screen;
 see `sixLabel()` in `src/app.js`.
 
-**16 sources**, every one first-party — a page belonging to the company whose product it
+**19 sources**, every one first-party — a page belonging to the company whose product it
 describes. The test suite enforces that: it checks the host of every source against a list of
 vendor hosts and fails on a news site or a blog. (One was added in the 2026-09-16 retrofit:
 `antigravity-remote`, backing the "remote-control mode" phrase in door 4's confusable note; the
@@ -142,12 +143,17 @@ Two things worth knowing if you re-verify:
   were read in an ordinary browser from `help.openai.com` and `learn.chatgpt.com`. They open
   normally for a human. Do not let a 403 talk you into downgrading a claim you can simply go
   and read.
-- **A non-existence claim cannot be sourced.** Door 3 has no Google product in it, and the
-  page reports only that we looked at Google's own pages and did not find one, labelled
-  **unconfirmed**. It does not claim no such product exists.
+- **A non-existence claim cannot be sourced — and this page shipped one that was wrong.**
+  The first build reported no consumer-plan Google product at door 3, labelled **unconfirmed**
+  and scoped to "we looked at Google's own pages". The 2026-09-16 review found **Gemini Spark**
+  (`support.google.com/gemini/answer/16596215`), a personal-account agent on a Google AI Pro or
+  Ultra plan, documented on a help centre this page already cited. The panel now records the
+  miss and states what was checked, where and when; door 3 lists Spark. The standing rule this
+  instantiates: a demo states what it checked, where and on what date — never that a
+  capability does not exist.
 
 **9 things cut.** Everything researched during the build and deliberately left off the page,
-with the reason, is listed in Act III. Two are worth repeating here because they correct the
+with the reason, is listed in Stage 3. Two are worth repeating here because they correct the
 brief this module was built from:
 
 - *"Microsoft 365 Copilot agent mode reached general availability in April 2026"* — dropped.
@@ -155,11 +161,11 @@ brief this module was built from:
   worldwide to general availability**. The brief was also using the retired name: the page is
   now titled **"Edit with Copilot in Word"** and disposes of the old one in a line —
   *"In earlier releases, this was referred to as Agent Mode."*
-- *"GPT Work"* — not a product, and never was. The correct name is **ChatGPT Work**, and
+- *"GPT Work"* — a name on none of the OpenAI pages this module opened. The correct name is **ChatGPT Work**, and
   OpenAI's help centre states that **ChatGPT agent is no longer available** and names
   ChatGPT Work as what to use instead.
 
-Both of those are **on** the page, in Act III, as the evidence that the names have a shelf
+Both of those are **on** the page, in Stage 3, as the evidence that the names have a shelf
 life and the doors do not.
 
 ---
@@ -293,7 +299,7 @@ output is not a declared source.
 Every count quoted in this README, in the presenter guide and in `demo.json` is cross-checked
 against the dataset by the test suite — **as a phrase**, not as a bare integer, because "4"
 matches almost any document and would be a test that passes by accident. It looks for
-`16 cells`, `28 judgements`, `16 sources`, `13 verified`, `3 reasoned`, `9 things cut`,
+`16 cells`, `28 judgements`, `19 sources`, `13 verified`, `3 reasoned`, `9 things cut`,
 `4 doors`, `4 axes`, `7 jobs`. A control asserts that a *wrong* count would not be found, so
 the check is known to be capable of failing.
 
@@ -303,18 +309,21 @@ the check is known to be capable of failing.
 
 This is the demo in the collection with a real shelf life. When something moves:
 
-1. **Re-open the sources.** All 16 are listed in Stage 3 and in `src/data.js` under `SOURCES`.
+1. **Re-open the sources.** All 19 are listed in Stage 3 and in `src/data.js` under `SOURCES`.
    Expect openai.com to 403 a script; use a browser.
 2. **Update the cell, not the prose.** `data.js` is the only place a claim lives. The screen,
    the self-test and the test suite all read from it.
-3. **Move the date.** `CHECKED_ON` and `CHECKED_ISO` at the top of `data.js`, plus `added` in
-   `demo.json`, which the test suite requires to agree.
+3. **Move the date by re-opening, never by editing a constant.** Each entry in `SOURCES` carries
+   `checked`, the ISO date that page was last opened in a real browser; set it only for a page you
+   actually re-opened. `CHECKED_ISO` / `CHECKED_ON` are derived as the **oldest** of those dates,
+   and `added` in `demo.json` must agree with it (the test suite checks). The 2026-09-16 review found
+   the previous single constant had re-dated eleven sources nobody had re-opened.
 4. **Add the change to `CHANGED`** rather than silently correcting it. The list of names that
    already moved is the module's best evidence for its own central claim, and it gets stronger
    every time this happens.
 5. **Rebuild, re-test, re-render the PDF**, in that order.
 
-If a name on screen has changed by the time you present, say so from the stage. Act III
+If a name on screen has changed by the time you present, say so from the stage. Stage 3
 predicted it, and a correction taken gratefully is a better moment than a correct page would
 have been.
 
