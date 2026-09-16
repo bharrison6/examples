@@ -41,9 +41,9 @@ Predict/Try/Takeaway strip, the board and the controls together.
   initialization, with layer sizes derived from the current model.
   Backpropagation supplies derivatives for normalized gradient updates; this is
   supervised fitting to frozen estimates, not evolutionary optimization.
-  Ultimate tic-tac-toe is an optional representation-limit extension reached from
-  this stage's Details: a network cannot recover facts absent from its inputs
-  merely by changing weights.
+  Ultimate tic-tac-toe is an optional representation-limit extension, one press
+  away on the board switch above this stage's board: a network cannot recover
+  facts absent from its inputs merely by changing weights.
 - **1d · Other architectures & training methods** holds both axes on one screen.
   Six pressable **training method** cards — supervised, unsupervised,
   self-supervised, reinforcement, semi-supervised, and no training at all — light
@@ -72,9 +72,11 @@ recorded; nothing is written from memory, and nothing is fetched at runtime — 
 links are ordinary hyperlinks the reader may choose to follow.
 
 The stage takeaway is the link back to the architecture lens: a type names the job,
-not the internals, and one neural-network family — the transformer — sits behind
-types on every branch of the catalogue, which Hugging Face's own framework page
-says in as many words.
+not the internals. One neural-network family — the transformer — serves text,
+vision, audio, video and multimodal jobs, which Hugging Face's own framework page
+says in as many words; generating images, audio and video also leans on diffusion
+models, a different family Hugging Face keeps in a separate library (Diffusers).
+Sources and fetch dates are in the stage's Details drawer.
 
 ## Presenter and contract surfaces
 
@@ -87,7 +89,7 @@ network inspector, the montage and the two map stages.
 Guide opens on load and reopens from the header's **Guide** button. Settings
 contains **Open Presenter Notes**, **Presentation mode** and **Reset**, then a
 playing preference, a rehearsal seed, the self-test and About. **Reset is in
-place — no page reload**: it restores stage 1a on the architecture lens, All 8
+place — no page reload**: it restores stage 1a on the architecture lens, First 2
 rules, hidden move scores, Era 0 with every later era and the network discarded,
 your records, every prediction echo and check answer, and closes every type card;
 Presentation mode and the playing preference stay as you set them.

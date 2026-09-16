@@ -1291,9 +1291,12 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink-on-navy); border-bottom:
   .network-layers > i { display: none; }
   .network-inspector-controls { grid-template-columns: 1fr; }
   .network-diagram { min-height: 150px; }
-  .method-grid, .family-grid, .type-grid { grid-template-columns: 1fr; }
+  /* Specificity, not order: the 3-column base rule sits later in this file
+     (the map-card block), so an equal-specificity override here lost and the
+     cards stayed three-across on a 320px phone (found 2026-09-16). */
+  .map-card .method-grid, .map-card .family-grid, .map-card .type-grid { grid-template-columns: 1fr; }
   .clarifiers { grid-template-columns: 1fr; }
-  .lens-btn small { display: none; }
+  .lens-btn small, .map-switch .map-btn small { display: none; }  /* .map-switch: outranks the base rule that sits later in this file */
   .predict-btns { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
@@ -1308,7 +1311,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 @media (orientation: landscape) and (max-height: 560px) {
   #lens-nav { padding: 0 14px 6px; }
   .lens-btn { min-height: 38px; }
-  .lens-btn small { display: none; }
+  .lens-btn small, .map-switch .map-btn small { display: none; }  /* .map-switch: outranks the base rule that sits later in this file */
   .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
   #board-wrap { margin-bottom: calc(.4 * var(--u)); }
   #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
@@ -1359,6 +1362,38 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 .method-card[aria-pressed="true"] .uses { color: var(--gold-deep); }
 .method-card .uses:empty::before { content: "press to see which playable model used it"; font-weight: 650; letter-spacing: 0; text-transform: none; }
 .method-card[aria-pressed="true"] .uses:empty::before { content: "none of 1a, 1b, 1c used this one"; }
+/* Stage 1d's two halves sit behind two buttons (operator ruling 2026-09-16).
+   Same shape as the lens row: a group of aria-pressed buttons, not a tablist. */
+.map-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--cream);
+}
+.map-switch.board-switch { margin-bottom: 10px; }
+.map-btn {
+  min-height: 46px; border: 0; border-radius: 9px; padding: 6px 12px; background: transparent;
+  color: var(--ink-2); font: inherit; font-weight: 800; font-size: calc(var(--u) * .92); text-align: center; line-height: 1.2; cursor: pointer;
+}
+.map-btn span, .map-btn small { display: block; }
+.map-btn small { margin-top: 2px; color: var(--ink-3); font-size: calc(var(--u) * .66); font-weight: 650; }
+.map-btn[aria-pressed="true"] { background: var(--navy); color: #fff; box-shadow: inset 0 -3px 0 var(--gold); }
+.map-btn[aria-pressed="true"] small { color: var(--ink-2-on-navy); }
+.map-btn:hover:not([aria-pressed="true"]) { background: var(--paper); }
+/* The architecture-family cards are pressable like the method cards, and
+   share their look; pressing one writes what it stores and computes. */
+.family-card {
+  display: block; width: 100%; min-width: 0; position: relative; font: inherit; line-height: 1.4; text-align: left;
+  border: 1px solid var(--cream-deep); border-radius: var(--radius-2); padding: 12px 13px 34px; background: var(--cream); color: var(--ink); cursor: pointer;
+}
+.family-card b { display: block; margin: 0 0 4px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); }
+.family-card span { display: block; margin: 0; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+.family-card:hover { border-color: var(--navy); background: var(--paper); }
+.family-card[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--paper); }
+.family-card .holds {
+  position: absolute; left: 13px; right: 13px; bottom: 9px; font-style: normal;
+  font-size: calc(var(--u) * .68); font-weight: 650; color: var(--ink-3);
+}
+.family-card[aria-pressed="true"] .holds { color: var(--gold-deep); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.family-card .holds:empty::before { content: "press to see what it stores and computes"; }
 .clarifiers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .clarifiers p, .search-note { margin: 0; padding: 10px 12px; border: 1px solid #BCD7E3; border-radius: var(--radius-2); background: var(--lite-soft); color: var(--ink-2); font-size: calc(var(--u) * .84); }
 .clarifiers b, .search-note b { color: var(--navy); }
@@ -1487,19 +1522,21 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
        row hides while that lens is selected (app.js toggles body[data-lens]). -->
   <nav class="stages" role="tablist" aria-label="Types of AI lesson stages">
     <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
-      <span class="stage-mark" aria-hidden="true">1a</span><span>Symbolic AI (GOFAI)</span><small>Can a program play well without learning?</small>
+      <span>Symbolic AI (GOFAI)</span><small>Can a program play well without learning?</small>
     </button>
     <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
-      <span class="stage-mark" aria-hidden="true">1b</span><span>Value table</span><small>Can experience alone teach a blank table?</small>
+      <span>Value table</span><small>Can experience alone teach a blank table?</small>
     </button>
     <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
-      <span class="stage-mark" aria-hidden="true">1c</span><span>Neural Network</span><small>Can shared weights score boards it never practised?</small>
+      <span>Neural Network</span><small>Can shared weights score boards it never practised?</small>
     </button>
     <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
-      <span class="stage-mark" aria-hidden="true">1d</span><span>Other architectures &amp; training methods</span><small>What else can a model be, and how else can it learn?</small>
+      <!-- &shy; = soft hyphen: invisible until the word must break, which it
+           must inside a quarter-width tab on a 320px phone (2026-09-16). -->
+      <span>Other architec&shy;tures &amp; training methods</span><small>What else can a model be, and how else can it learn?</small>
     </button>
     <button class="stage-tab lens-types-tab" type="button" role="tab" id="tab-5" aria-controls="stage-5" aria-selected="false" tabindex="-1">
-      <span class="stage-mark" aria-hidden="true">2</span><span>Model types</span><small>What goes in, and what comes out?</small>
+      <span>Model types</span><small>What goes in, and what comes out?</small>
     </button>
   </nav>
 </header>
@@ -1510,7 +1547,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
   <section class="stage-intro" aria-labelledby="stage-1-title">
     <div class="intro-copy">
-      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 1a</span>
+      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 1</span>
       <h2 id="stage-1-title">Symbolic AI (GOFAI)</h2>
       <p class="stage-question">Can a program play well without ever learning?</p>
       <p class="refresh"><b>Before you start.</b> A <b>model</b> is the thing that turns a board into a move.
@@ -1545,6 +1582,17 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <div id="score-row"></div>
           <div id="era-strip" hidden></div>
         </section>
+
+        <!-- 1c only: the optional Ultimate extension is one press away on the
+             stage itself, not a button inside a dialog (operator ruling
+             2026-09-16 — "what happened to our ultimate tictactoe?"). Same
+             shape as 1d's switch. app.js shows this only while the stage is
+             1c, and it is not gated on having trained: the ultimate learner
+             is a table seeded from 1b, and reads nothing from the network. -->
+        <div class="map-switch board-switch" role="group" aria-label="Which board to play" id="board-switch" hidden>
+          <button type="button" class="map-btn" data-board="net" aria-pressed="true"><span>Standard board</span><small>the network you train here</small></button>
+          <button type="button" class="map-btn" data-board="ult" aria-pressed="false"><span>Ultimate tic-tac-toe</span><small>optional extension: a learner that cannot see the whole game</small></button>
+        </div>
 
         <!-- ============================ BOARD ========================= -->
         <section id="board-wrap" aria-label="The game">
@@ -1656,7 +1704,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1">
   <section class="stage-intro" aria-labelledby="stage-2-title">
     <div class="intro-copy">
-      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 1b</span>
+      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 2</span>
       <h2 id="stage-2-title">Value table</h2>
       <p class="stage-question">Can experience alone teach a blank table to play?</p>
       <p class="refresh"><b>Before you start.</b> Stage 1a&rsquo;s model never changed. This model is a
@@ -1680,12 +1728,12 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 
   <section class="check" aria-labelledby="check-2-title" data-refutation="true">
     <span class="eyebrow">Check yourself</span>
-    <h3 id="check-2-title">You just beat Era 1 three games running. Did those games change its table?</h3>
+    <h3 id="check-2-title">Does playing the AI above train it?</h3>
     <div class="check-options">
       <button class="check-option correct" type="button" aria-pressed="false"
-        data-feedback="Your games are scored on the record strip, not learned from. Each era is a frozen snapshot; the only thing that writes to the live table is a press of Train the AI.">No &mdash; only the training burst updates the table; your games are scored, not learned from</button>
+        data-feedback="Each era is a frozen snapshot, and the live table changes only during a training burst. That is this demo's design choice, not a law of the method: the same table could have been wired to update after every game you play, and it simply is not. Real products often keep that door open &mdash; open Details for what two vendors say about using what you type to train later versions.">No &mdash; here your games are scored, not learned from; only Train the AI writes to the table</button>
       <button class="check-option wrong" type="button" aria-pressed="false"
-        data-feedback="That is the flawed picture this stage exists to correct. Play Era 1 ten times and then open the change report: its scores are byte-for-byte what they were when the era was frozen. Experience only enters through the training burst.">Yes &mdash; every game it plays is experience it learns from</button>
+        data-feedback="Not in this demo: play Era 1 ten times, open the change report, and its scores are what they were when the era was frozen. The instinct is not wrong in general, though. The table could have been built to learn from you, and some real systems do use what people type to train later versions, usually behind a setting. What is fixed here is a choice; Details names it and cites two vendors.">Yes &mdash; every game it plays is experience it learns from</button>
     </div>
     <p class="check-feedback" role="status" aria-live="polite"></p>
   </section>
@@ -1695,7 +1743,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1">
   <section class="stage-intro" aria-labelledby="stage-3-title">
     <div class="intro-copy">
-      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 1c</span>
+      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 3</span>
       <h2 id="stage-3-title">Neural Network</h2>
       <p class="stage-question">Can one set of shared weights score boards it never practised on?</p>
       <p class="refresh"><b>Before you start.</b> Stage 1b&rsquo;s table kept a separate number for every position.
@@ -1711,8 +1759,8 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <button type="button" class="predict-btn" data-answer="higher" aria-pressed="false">Clearly higher</button>
         </div>
         <span class="echo" hidden></span></article>
-      <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score.</p></article>
-      <article><span>Takeaway</span><p>A network&rsquo;s error measures fit to its training targets; held-out error shows how that fit carries to positions it never practised, and neither is a playing-strength guarantee.</p></article>
+      <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score. Optional: switch the board to <b>Ultimate tic-tac-toe</b> for a learner whose inputs leave out part of the game.</p></article>
+      <article><span>Takeaway</span><p>Shared weights give the network an answer for a board it never practised on &mdash; which a table simply cannot do &mdash; and training on other boards makes that answer better. The error readings say how close the answer is to the teacher&rsquo;s, not how well it plays.</p></article>
     </div>
   </section>
   <div class="activity-host" id="host-3"></div>
@@ -1745,7 +1793,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1">
   <section class="stage-intro" aria-labelledby="stage-4-title">
     <div class="intro-copy">
-      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 1d</span>
+      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 4</span>
       <h2 id="stage-4-title">Other architectures &amp; training methods</h2>
       <p class="stage-question">What else can a model be, and how else can it learn?</p>
       <p class="refresh"><b>Before you start.</b> Stages 1a&ndash;1c showed three <b>architectures</b>, meaning how a
@@ -1755,19 +1803,26 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     </div>
     <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1d learning guide">
-      <article><span>Predict</span><p>Which of the three playable models learned from inputs paired with target answers, that is, by <b>supervised learning</b>?</p>
-        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="other">
-          <button type="button" class="predict-btn" data-answer="1a" aria-pressed="false">1a</button>
-          <button type="button" class="predict-btn" data-answer="1b" aria-pressed="false">1b</button>
-          <button type="button" class="predict-btn" data-answer="1c" aria-pressed="false">1c</button>
-        </div>
-        <span class="echo" hidden></span></article>
-      <article><span>Try</span><p>Press a <b>training method</b> card: the three playable models that used it light up beneath it. Then read the <b>architecture</b> cards for what each one stores or computes.</p></article>
+      <!-- No Predict card here (operator ruling 2026-09-16): 1d is an
+           information stage, a map of two axes, and nothing on it runs a
+           result a prediction could be checked against. Try and Takeaway
+           stay: pressing a card is a real action with a visible outcome. -->
+      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes.</p></article>
       <article><span>Takeaway</span><p>Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</p></article>
     </div>
   </section>
 
-  <section class="card map-card" aria-labelledby="methods-title">
+  <!-- Operator ruling 2026-09-16: the two halves of this stage sit behind
+       two buttons instead of stacking. Not a tablist: the kit's stage
+       tablist is the only one on the page (A1), so this is the same shape
+       as the lens row above -- a role="group" of aria-pressed buttons, and
+       app.js toggles `hidden` on the two cards. -->
+  <div class="map-switch" role="group" aria-label="Two halves of this stage" id="map-switch">
+    <button type="button" class="map-btn" data-half="methods" aria-pressed="true" aria-controls="methods-card"><span>Training methods</span><small>how a model&rsquo;s adjustable parts change</small></button>
+    <button type="button" class="map-btn" data-half="families" aria-pressed="false" aria-controls="families-card"><span>Other architectures</span><small>more ways to hold a pattern or a strategy</small></button>
+  </div>
+
+  <section class="card map-card" id="methods-card" aria-labelledby="methods-title">
     <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping is read from this demo&rsquo;s code</span></span>
     <h3 id="methods-title">Training methods &mdash; how a model&rsquo;s adjustable parts change</h3>
     <p class="panel-lede">Press a card. The categories overlap, and one system can combine them.</p>
@@ -1798,18 +1853,19 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     </div>
   </section>
 
-  <section class="card map-card" aria-labelledby="families-title">
-    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">summaries in the authors&rsquo; words; not an exhaustive catalogue of AI</span></span>
+  <section class="card map-card" id="families-card" aria-labelledby="families-title" hidden>
+    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">summaries in the authors&rsquo; words, along the axis this stage defines (what is stored, what is computed); not an exhaustive catalogue of AI</span></span>
     <h3 id="families-title">Other architectures &mdash; more ways to hold a pattern or a strategy</h3>
-    <p class="panel-lede">Each of these can be fitted by more than one training method; the architecture and the method are separate facts about a model.</p>
-    <div class="family-grid">
-      <article><h4>Linear and logistic models</h4><p>Combine input features with learned coefficients to predict a number or a probability.</p></article>
-      <article><h4>Decision trees</h4><p>Route an example through learned questions. A tree can be learned from data even though 1a&rsquo;s rule chain was written by a person.</p></article>
-      <article><h4>Ensembles</h4><p>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</p></article>
-      <article><h4>Nearest neighbours</h4><p>Predict from stored examples that are most similar under a chosen distance.</p></article>
-      <article><h4>Support-vector machines</h4><p>Learn a boundary that balances a wide margin between classes against classification errors.</p></article>
-      <article><h4>Probabilistic and Bayesian models</h4><p>Represent uncertainty with probabilities and update beliefs when evidence arrives.</p></article>
+    <p class="panel-lede">Press a card. Each of these can be fitted by more than one training method; the architecture and the method are separate facts about a model.</p>
+    <div class="family-grid" role="group" aria-label="Other architectures">
+      <button type="button" class="family-card" data-family="linear" aria-pressed="false"><b>Linear and logistic models</b><span>Combine input features with learned coefficients to predict a number or a probability.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="tree" aria-pressed="false"><b>Decision trees</b><span>Route an example through learned questions. A tree can be learned from data even though 1a&rsquo;s rule chain was written by a person.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="ensemble" aria-pressed="false"><b>Ensembles</b><span>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="knn" aria-pressed="false"><b>Nearest neighbours</b><span>Predict from stored examples that are most similar under a chosen distance.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="svm" aria-pressed="false"><b>Support-vector machines</b><span>Learn a boundary that balances a wide margin between classes against classification errors.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="bayes" aria-pressed="false"><b>Probabilistic and Bayesian models</b><span>Represent uncertainty with probabilities and update beliefs when evidence arrives.</span><em class="holds" aria-hidden="true"></em></button>
     </div>
+    <p class="obs-cue" id="cue-4b" role="status" aria-live="polite"></p>
     <aside class="search-note"><b>Search and planning are AI problem-solving approaches, not architectures.</b> They explore possible actions or future states, and they can use any of these models to score what they find.</aside>
   </section>
 
@@ -1830,7 +1886,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <section class="stage" id="stage-5" role="tabpanel" aria-labelledby="tab-5" tabindex="-1">
   <section class="stage-intro" aria-labelledby="stage-5-title">
     <div class="intro-copy">
-      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 2</span>
+      <span class="eyebrow">Demo 1 of 16 &middot; Part one &middot; Stage 5</span>
       <h2 id="stage-5-title">Model types</h2>
       <p class="stage-question">If &ldquo;type&rdquo; means the job, what goes in and what comes out?</p>
       <p class="refresh"><b>Before you start.</b> Outside this demo, people mostly sort models by <b>type</b>, meaning the
@@ -1848,7 +1904,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
         </div>
         <span class="echo" hidden></span></article>
       <article><span>Try</span><p>Press any <b>type card</b> to read what goes in and what comes out in Hugging Face&rsquo;s own words, then follow <b>Browse models</b> to see real models of that type.</p></article>
-      <article><span>Takeaway</span><p>A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside; one neural-network family, the transformer, sits behind text, image, audio, video and multimodal types alike.</p></article>
+      <article><span>Takeaway</span><p>A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside. One neural-network family, the transformer, serves text, vision, audio, video and multimodal types; generating images, audio and video also leans on a different family, <b>diffusion models</b>, which Hugging Face keeps in a library of its own.</p></article>
     </div>
   </section>
 
@@ -1900,7 +1956,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   </div>
   <div class="lesson-dialog-body">
     <p class="lede"><b>Where does an AI&rsquo;s skill come from?</b> Three models play the same tic-tac-toe board, and each got its skill a different way.</p>
-    <p class="note">Demo 1 of 16, Part one. Nothing before it; it hands forward one idea: architecture, training method and model type are three separate questions.</p>
+    <p class="note">Demo 1 of 16 opens Part one. Nothing comes before it. It hands forward one idea to Demo 2 (How a Language Model Works): a model is a representation that can be trained, and <i>architecture</i>, <i>training method</i> and <i>model type</i> are three separate questions to ask of any AI.</p>
     <ol>
       <li><b>1a Symbolic AI (GOFAI).</b> Press <b>First 2 rules</b>, play, then <b>All 8 rules</b>. The board names the rule that answered you.</li>
       <li><b>1b Value table.</b> Press <b>Show move scores</b> in Era 0, then <b>Train the AI</b> and compare eras in the change report.</li>
@@ -1930,7 +1986,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     <p class="setnote">Scales the page up one notch for projecting to a room, and puts a <b>Notes</b> button in the header.</p>
     <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
     <h3>Reset</h3>
-    <p class="setnote">Back to the start: stage 1a on the Model architecture lens, All 8 rules, move scores hidden, every era and network discarded so the table is Era 0 again, your records cleared, every prediction and check cleared, every type card closed. Presentation mode and your playing preference stay as you set them.</p>
+    <p class="setnote">Back to the start: stage 1a on the Model architecture lens, First 2 rules, move scores hidden, every era and network discarded so the table is Era 0 again, your records cleared, every prediction and check cleared, every type card closed. Presentation mode and your playing preference stay as you set them.</p>
     <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
     <h3>Playing</h3>
     <label class="switch"><input type="checkbox" id="chk-first"><span>I always move first (otherwise it alternates)</span></label>
@@ -2004,6 +2060,10 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <span class="panel-kicker"><span class="k-measured">Measured</span> the change report and the era snapshots</span>
           <p>Each era is a frozen copy of the table taken when its burst finished, with the exhaustive check run once on that copy; selecting an older era shows that copy, not the live table.</p>
         </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">two vendors&rsquo; own help pages, fetched 2026-09-16</span> could a real system train on your play?</span>
+          <p>Some do, behind a setting. Claude&rsquo;s privacy centre says it will use your chats and coding sessions to improve its models if <q>you choose to allow us to use your chats and coding sessions to improve Claude</q>; Google&rsquo;s Gemini Apps help says that with its activity setting on, <q>Google uses your activity to provide, develop, and improve its services (including training generative AI models)</q>. Here, nothing you play leaves this page or outlives the record strip. That is the design choice named below, not a limit of reinforcement learning.</p>
+        </div>
         <div class="banner-host" id="banner-one"></div>
         <h3>How it works</h3>
         <p>1b&rsquo;s model is a <b>value table</b>: one stored estimate for each board position, learned by
@@ -2019,13 +2079,14 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           still drive its updates, so its method is reinforcement learning.</p>
         <h3>Assumptions and simplifications</h3>
         <ul>
-          <li>Human play never trains the table; only the app&rsquo;s training burst updates it. That is a design choice so the record strip measures the table rather than changing it.</li>
+          <li>Human play does not train this table; only the app&rsquo;s training burst updates it. That is a design choice so the record strip measures the table rather than changing it &mdash; the same learner could have been wired to update after every game you play.</li>
           <li>Tic-tac-toe is small enough that a table can hold every position (about five and a half thousand). Chess and language cannot be tabulated, which is why larger systems share parameters instead.</li>
           <li>The unbeatable verdict is a property of one frozen era on this game, established by exhaustive search, not by the sampled games the montage shows.</li>
         </ul>
         <h3>Sources</h3>
         <ul>
           <li>The learner and its hyper-parameters are <code>OG.HP</code> in <code>src/engine.js</code> (learning rate, discount, exploration schedule, self-play share); the values are printed under Settings &rarr; About.</li>
+          <li>Training on what users type: <a href="https://privacy.claude.com/en/articles/10023580-is-my-data-used-for-model-training" target="_blank" rel="noopener">Is my data used for model training? &mdash; Claude privacy centre</a> and <a href="https://support.google.com/gemini/answer/13594961" target="_blank" rel="noopener">Gemini Apps Privacy Hub &mdash; Google</a>, both fetched 2026-09-16. Quoted above only as far as each page says; policies change, so read the live page before repeating a specific.</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> a good record against you is not the proof. Only the exhaustive search over every reachable game line, both roles, earns the word unbeatable, and it applies to this one small game.</div>
       </section>
@@ -2084,11 +2145,11 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
         <span class="eyebrow">What is live</span>
         <h3>Nothing runs on this stage; it is a map</h3>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-live">Live</span> which playable model each method lights up</span>
-          <p>The 1a / 1b / 1c mapping under each method card is read from what this demo&rsquo;s code does: 1a has no training step, 1b learns from game rewards in <code>engine.js</code>, 1c fits frozen targets in <code>net.js</code>.</p>
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">the 1a&ndash;1c mapping is read from this demo&rsquo;s code by the authors, not computed at runtime</span> which playable model each method lights up</span>
+          <p>The 1a / 1b / 1c mapping under each method card is written into the page by the authors after reading what this demo&rsquo;s code does: 1a has no training step, 1b learns from game rewards in <code>engine.js</code>, 1c fits frozen targets in <code>net.js</code>.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">carried forward from the demo&rsquo;s earlier How they learn tab; not re-sourced this pass</span> the definitions on the cards</span>
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">the authors&rsquo; summaries, not re-sourced this pass</span> the definitions on the cards</span>
           <p>The one-line descriptions of each method and family are the authors&rsquo; summaries. No figure is claimed on this stage.</p>
         </div>
         <h3>How it works</h3>
@@ -2136,8 +2197,14 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
         <p>The link back to this demo: 1c is a neural network scoring boards. The same idea &mdash; adjustable weights
           shared across every input &mdash; is what most catalogue types run on, with an architecture family
           (the transformer) that Hugging Face&rsquo;s own framework page lists as serving text, vision, audio, video and
-          multimodal jobs. The tabular types are the visible exception: their page names sklearn and xgboost, the
-          tree and boosting families of stage 1d.</p>
+          multimodal jobs. It is not the only family. Generating images, audio and video leans on <b>diffusion
+          models</b>, which Hugging Face keeps in a separate library, Diffusers, described on its own page as
+          &ldquo;pretrained diffusion models for generating videos, images, and audio&rdquo;. Stable Diffusion XL&rsquo;s card
+          calls itself a &ldquo;Diffusion-based text-to-image generative model&rdquo; with a UNet inside; FLUX.1 [dev]&rsquo;s
+          card calls itself a &ldquo;rectified flow transformer&rdquo; &mdash; so the newest of them put a transformer under a
+          diffusion-style training objective, which is stage 1d&rsquo;s point again: architecture and method are
+          separate facts. The tabular types are the other visible exception: their page names sklearn and xgboost,
+          the tree and boosting families of stage 1d.</p>
         <h3>Assumptions and simplifications</h3>
         <ul>
           <li>Hugging Face&rsquo;s catalogue is one taxonomy, chosen because it is the largest public one and is dated; other catalogues cut the jobs differently.</li>
@@ -2151,6 +2218,9 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
           <li><a href="https://huggingface.co/models" target="_blank" rel="noopener">huggingface.co/models</a> &mdash; the task filter every Browse link uses, and the hub total (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/docs/transformers/index" target="_blank" rel="noopener">huggingface.co/docs/transformers</a> &mdash; the &ldquo;text, computer vision, audio, video, and multimodal&rdquo; sentence (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/tasks/tabular-classification" target="_blank" rel="noopener">huggingface.co/tasks/tabular-classification</a> &mdash; names sklearn and xgboost as libraries that train tabular models (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/diffusers/index" target="_blank" rel="noopener">huggingface.co/docs/diffusers</a> &mdash; &ldquo;a library of state-of-the-art pretrained diffusion models for generating videos, images, and audio&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank" rel="noopener">stabilityai/stable-diffusion-xl-base-1.0</a> &mdash; &ldquo;Model type: Diffusion-based text-to-image generative model&rdquo;; the usage snippet compiles <code>pipe.unet</code> (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/black-forest-labs/FLUX.1-dev" target="_blank" rel="noopener">black-forest-labs/FLUX.1-dev</a> &mdash; &ldquo;a 12 billion parameter rectified flow transformer&rdquo; (fetched 2026-09-16).</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> this stage shows what the world sorts models by and links to real ones. It does not run any of them, rank them, or claim that every model of a type shares one architecture.</div>
       </section>
@@ -2180,9 +2250,9 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <ol class="goals">
   <li><b>1a.</b> This opponent&rsquo;s skill came from a person: changing its rules changes its play, and playing more games changes nothing.</li>
   <li><b>1b.</b> Reinforcement learning stores experience as a separate score for each position; only an exhaustive search over every game line, not a good record, earns the word unbeatable.</li>
-  <li><b>1c.</b> A network&rsquo;s error measures fit to its training targets; held-out error shows how that fit carries to positions it never practised, and neither is a playing-strength guarantee.</li>
+  <li><b>1c.</b> Shared weights give the network an answer for a board it never practised on &mdash; which a table cannot do &mdash; and training on other boards makes that answer better. The error readings say how close the answer is to the teacher&rsquo;s, not how well it plays.</li>
   <li><b>1d.</b> Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</li>
-  <li><b>Model types.</b> A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside; one neural-network family, the transformer, sits behind text, image, audio, video and multimodal types alike.</li>
+  <li><b>Model types.</b> A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside. One neural-network family, the transformer, serves text, vision, audio, video and multimodal types; generating images, audio and video also leans on a different family, diffusion models, which Hugging Face keeps in a library of its own.</li>
 </ol>
 
 <h2>Where this sits on the path</h2>
@@ -2223,9 +2293,9 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 </ol>
 <h3>Expected observation</h3>
 <p>Era 1 is still beatable; the scores moved but a losing line remains. A later era has no losing line in either role. Human play never changes the table; only the burst does.</p>
-<div class="key"><b>Check answer:</b> no &mdash; only the training burst updates the table; your games are scored, not learned from. Each era is a frozen snapshot.</div>
+<div class="key"><b>Check answer</b> (&ldquo;Does playing the AI above train it?&rdquo;)<b>:</b> no &mdash; here only the training burst updates the table; your games are scored, not learned from. Say the caveat out loud: that is this demo&rsquo;s choice, not a law. The same table could have learned from every game you played, and real assistants can use what people type to train later versions, usually behind a setting. Details cites two vendors&rsquo; own pages (fetched 2026-09-16).</div>
 <h3>Teaching limit</h3>
-<p>The table has one separate score per position, so it carries nothing to a different situation. Tic-tac-toe is small enough to tabulate; chess and language are not, which is why the next stage shares parameters.</p>
+<p>A prediction of &ldquo;unbeatable&rdquo; is a claim about the table, settled by the exhaustive search, not by whether the room beat it: losing to a beatable era looks exactly like losing to an unbeatable one, and the reveal line says which one the search found. The table has one separate score per position, so it carries nothing to a different situation. Tic-tac-toe is small enough to tabulate; chess and language are not, which is why the next stage shares parameters.</p>
 
 <h2>1c · Neural Network &mdash; 6 minutes</h2>
 <h3>Question</h3>
@@ -2237,7 +2307,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   <li><span class="beat">0:00</span> Press <b>Create learning examples</b>. A fresh table learner plays 20,000 seeded games; its estimates freeze as targets. This is the one slow step.</li>
   <li><span class="beat">1:30</span> In the network view, pick a connection layer and a neuron; read one weight and its initialized value.</li>
   <li><span class="beat">2:30</span> Press <b>Train network</b>. Compare the weight with its initial value, then the practised and held-out errors, then the separate playing score. <b>Show move scores</b> shows predictions for legal moves.</li>
-  <li><span class="beat">5:00</span> Optional: from <b>Details</b>, open the Ultimate tic-tac-toe extension to show a representation that cannot see the whole game.</li>
+  <li><span class="beat">5:00</span> Optional: press <b>Ultimate tic-tac-toe</b> above the board to show a representation that cannot see the whole game; <b>Standard board</b> brings the network back.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>The network is a feedforward multilayer perceptron (29 inputs, 28 and 18 ReLU units, one output) fitted by supervised learning to targets another model produced. Backpropagation supplies gradients; updates are normalized gradient steps. Shared weights give an answer for a held-out position; the error readings say how close, and neither is playing strength.</p>
@@ -2249,11 +2319,11 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <h3>Question</h3>
 <p>What else can a model be, and how else can it learn?</p>
 <h3>Predict prompt</h3>
-<p>Which of 1a, 1b, 1c learned by supervised learning? Press a prediction, then press the <b>Supervised learning</b> card to check.</p>
+<p>None on this stage. 1d is a map of two axes, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
 <h3>Activity</h3>
 <ol>
-  <li><span class="beat">0:00</span> Press each <b>training method</b> card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
-  <li><span class="beat">1:30</span> Read the <b>architecture</b> cards: linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
+  <li><span class="beat">0:00</span> The stage has two halves behind two buttons. Under <b>Training methods</b>, press each card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
+  <li><span class="beat">1:30</span> Switch to <b>Other architectures</b> and press a card: the line beneath says what that model stores and what it computes &mdash; linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>Architecture and training method are separate columns. 1c is a network trained by supervised learning; a network could equally be trained by reinforcement, and a table could be fitted to supervised targets.</p>
@@ -2281,7 +2351,8 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <h2>Misconceptions</h2>
 <div class="mis"><b>&ldquo;A program that plays well must have learned.&rdquo;</b><span>1a plays unbeatable tic-tac-toe with no learning at all. Skill can be written down by a person; learning is one way to get it, not the definition of AI.</span></div>
 <div class="mis"><b>&ldquo;A long run of draws proves it is unbeatable.&rdquo;</b><span>Sampled games can miss a line. The app calls an era unbeatable only after searching every reachable game line in both roles. Open Details for the counts.</span></div>
-<div class="mis"><b>&ldquo;Playing against the table trains it.&rdquo;</b><span>Human play is scored, not learned from. Only Train the AI updates the live table, and every era is a frozen copy.</span></div>
+<div class="mis"><b>&ldquo;Playing against the table trains it.&rdquo;</b><span>Not here: human play is scored, not learned from, and every era is a frozen copy. But it is a design choice, not a rule &mdash; real systems can and sometimes do train on what users type.</span></div>
+<div class="mis"><b>&ldquo;I lost, so it must be unbeatable.&rdquo;</b><span>Beatable means a losing line exists, not that you found it. The search settles the verdict; your record only says how you played.</span></div>
 <div class="mis"><b>&ldquo;Low error means it plays well.&rdquo;</b><span>Error is agreement with a teacher whose estimates are imperfect. The playing score is a separate, fixed-seed measurement, and this tab never claims unbeatable.</span></div>
 <div class="mis"><b>&ldquo;Neural network is a kind of learning.&rdquo;</b><span>It is an architecture. 1c&rsquo;s network was fitted by supervised learning; the same weights could be trained by reinforcement. Press the method cards in 1d.</span></div>
 <div class="mis"><b>&ldquo;Same architecture, same type.&rdquo;</b><span>Type is the job. Hugging Face files transformers under text generation, image-to-text, speech recognition and more. Ask what goes in and what comes out.</span></div>
@@ -2297,7 +2368,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <h2>Presenter controls</h2>
 <ul>
   <li><b>Guide</b> (header) reopens the learner card. <b>Settings</b> has Open Presenter Notes, Presentation mode and Reset, then a playing preference, a rehearsal seed, the self-test and About.</li>
-  <li><b>Reset</b> is in place: stage 1a, All 8 rules, move scores hidden, Era 0, records and predictions cleared, type cards closed. Presentation mode and the playing preference stay.</li>
+  <li><b>Reset</b> is in place: stage 1a, First 2 rules, move scores hidden, Era 0, records and predictions cleared, type cards closed. Presentation mode and the playing preference stay.</li>
   <li><b>Rehearsal seed:</b> type a seed and press Reset; training then unfolds identically, so a rehearsal matches the lesson.</li>
   <li><b>Run the full self-test</b> re-runs the exhaustive search on the selected stage and prints it in Settings and the console.</li>
   <li>Deep links: <code>#stage-1</code> to <code>#stage-5</code>; the older <code>#rules</code>, <code>#learning</code>, <code>#neural</code> still work.</li>
@@ -3347,7 +3418,11 @@ const DEPTHS = [
   { n: 4, label: 'First 4', title: 'Win, block, fork, block the fork' },
   { n: 8, label: 'All 8',   title: 'The whole ladder' }
 ];
-const DEFAULT_DEPTH = 8;
+/* The app OPENS on two rules, not eight: stage 1a's Predict card asks
+   whether the learner can beat the First 2 rules, so the opponent they are
+   handed first has to be that one. Every engine caller passes its depth
+   explicitly; this default only decides the opening state of the UI. */
+const DEFAULT_DEPTH = 2;
 
 /* ------------------------------------------------------------------ *
  * Reading a board
@@ -5749,9 +5824,11 @@ const S = {
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
-  predictions: {},     // Predict-card answers by key: rules, one, net, other, types
+  predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
+  family: null,        // stage 1d: the architecture-family card that is pressed
+  half: 'methods',     // stage 1d: which of its two halves is showing
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -6009,9 +6086,16 @@ function applyMove(cell) {
     if (g.result === 'win') rec.w++; else if (g.result === 'loss') rec.l++; else rec.d++;
     renderScore();
     if (isRules() && S.depth === 2) {
-      revealPrediction('rules', 'yes', g.result === 'win'
-        ? 'You found one of the lines the exhaustive search finds: two rules can be beaten, and only a person adding rules would change that.'
-        : 'Not this game — but the exhaustive search finds losing lines for a two-rule ladder in both roles. Open Details for the game that shows it, then try the fork.');
+      /* The fact is the search's: a two-rule ladder HAS losing lines in
+         both roles. The learner's game either shows one or it does not;
+         a draw or a loss is not evidence that two rules are enough. */
+      revealPrediction('rules', 'yes', 'The exhaustive search finds losing lines for a two-rule ladder in both roles. ' +
+        (g.result === 'win'
+          ? 'You just played one of them: two rules can be beaten, and only a person adding rules would change that.'
+          : 'Not this game — that is your play, not proof the ladder is safe. Open Details for the game that shows it, then try the fork.'),
+        VERDICT_SEARCH);
+    } else if (S.mode === 'one' && S.era === 1) {
+      revealOne();
     }
   }
 }
@@ -6647,7 +6731,18 @@ function renderTrain() {
     $('#burst-seg').setAttribute('aria-label', 'Neural-network training updates');
     if (m && m.updates > 0) {
       const ratio = m.trainMse > 0 ? m.heldMse / m.trainMse : 1;
-      cue(`Held-out error ${m.heldMse.toFixed(3)} vs practised ${m.trainMse.toFixed(3)} after ${fmt(m.updates)} updates. Lower is closer to the frozen teacher; neither number is playing strength.`);
+      /* The generalisation evidence and the fit evidence arrive together.
+         Read alone, "held-out 0.5 vs practised 0.4" says the network is
+         WORSE on unseen boards — the lookup-table intuition in the demo's
+         own voice. What proves the shared weights carry is that held-out
+         error FELL from its untrained baseline, on positions no update
+         ever touched. Checkpoint 0 is recorded when the model is created
+         (recordNeuralCheckpoint in trainNeural), so it is present here. */
+      const b0 = S.neural.checkpoints.get(0);
+      const fell = b0 && b0.metrics.heldMse > m.heldMse;
+      cue(`On positions kept out of training, error went from ${b0 ? b0.metrics.heldMse.toFixed(3) : '?'} untrained to ${m.heldMse.toFixed(3)} after ${fmt(m.updates)} updates` +
+        (fell ? ' — it fell, and no update ever saw those boards. ' : ' — it did not fall this time. ') +
+        `Practised error is ${m.trainMse.toFixed(3)}. Lower is closer to the frozen teacher; neither number is playing strength.`);
       revealPrediction('net', ratio > 1.5 ? 'higher' : 'same',
         `Measured: held-out ${m.heldMse.toFixed(3)}, practised ${m.trainMse.toFixed(3)} (ratio ${ratio.toFixed(2)}; this demo calls it clearly higher above 1.5×). Train more and watch whether the gap moves.`);
     } else if (m) {
@@ -6776,16 +6871,7 @@ function renderBanner() {
       `<p><b>Prediction error:</b> MSE is the average squared difference between a predicted score and the frozen example’s score; zero means an exact match. On practiced examples it went from ${baseline.metrics.trainMse.toFixed(3)} before training to ${m.trainMse.toFixed(3)} now. On positions kept out of training it went from ${baseline.metrics.heldMse.toFixed(3)} to ${m.heldMse.toFixed(3)}. Related rotations and reflections stay together.</p>` +
       `<p><b>Reproducible sampled comparison:</b> each 100-game check uses the same random seed and scoring procedure; game paths can change as the network changes. Before training: ${baseline.play.wins} won, ${baseline.play.draws} drawn, ${baseline.play.losses} lost; now: ${point.play.wins} won, ${point.play.draws} drawn, ${point.play.losses} lost. The policy diagnostic ${point.policy.safe ? 'finds no losing line' : 'finds a losing line'}; this tab still makes no automatic unbeatable claim.</p>` +
       `<p class="proof">During play the network evaluates the board that each legal move would create. The frozen learning examples are absent from that decision.</p>` +
-      `<p><button class="btn ghost sm" id="btn-ultimate" type="button">Optional advanced extension: Ultimate tic-tac-toe</button></p>`;
-    setTimeout(() => {
-      const b = $('#btn-ultimate');
-      if (b) b.addEventListener('click', () => {
-        $('#details').close();
-        S.mode = 'ult';
-        applyMode();
-        cue('Ultimate tic-tac-toe: the learner scores each small board but cannot see where it sits or where a move sends you.', true);
-      });
-    }, 0);
+      `<p>The optional <b>Ultimate tic-tac-toe</b> extension is the second button above the board: a table learner inherited from 1b, playing a game its inputs cannot fully see.</p>`;
     return;
   }
 
@@ -6940,11 +7026,7 @@ async function train() {
   cue(`Era ${era.n} after ${fmt(era.games)} games: ` + (era.verified.safe
     ? 'the exhaustive search finds no losing line in either role — verified unbeatable.'
     : `still beatable — a losing line exists. ${era.changed === null ? '' : fmt(era.changed) + ' positions are now played differently from the last era.'}`), !era.verified.safe);
-  if (era.n === 1) {
-    revealPrediction('one', era.verified.safe ? 'unbeatable' : 'beatable', era.verified.safe
-      ? 'Era 1 is already verified: no losing line in either role after one burst.'
-      : 'Era 1 still has a losing line. The scores moved, but one burst is not enough — keep training and watch for the proof line.');
-  }
+  if (era.n === 1) revealOne();
 }
 
 /* The neural tab has two visible phases. Preparation is ordinary seeded
@@ -7537,6 +7619,10 @@ function applyMode() {
   document.body.classList.toggle('step-ult', ult);
   $('#board-wrap').hidden = ult;
   $('#ult-wrap').hidden = !ult;
+  /* The board switch belongs to stage 1c: it shows for the network and
+     for the ultimate extension it opens, and for nothing else. */
+  $('#board-switch').hidden = !(isNet() || ult);
+  $$('#board-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.board === S.mode)));
   $('#era-select').hidden = rules || isNet();
   $('#opp-row').hidden = rules || isNet();
   $('#depth-seg').hidden = !rules;
@@ -7569,6 +7655,17 @@ $('#btn-train').addEventListener('click', () => {
   if (isNet() && S.training) { S.cancelTraining = true; return; }
   train();
 });
+/* 1c's board switch. Not gated on having trained: the ultimate learner is
+   S.liveU, a table seeded from 1b's table by maybeSeed() inside applyMode,
+   and nothing in its path reads S.neural. Switching mid-training stops the
+   burst first, as a stage change does. */
+$$('#board-switch .map-btn').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.board === S.mode) return;
+  if (S.training) S.cancelTraining = true;
+  S.mode = b.dataset.board;
+  $('#selftest-out').textContent = '';
+  applyMode();
+}));
 $('#btn-stop-training').addEventListener('click', () => { S.cancelTraining = true; });
 $('#btn-newgame').addEventListener('click', newGame);
 function renderPlay() { if (isUlt()) renderUlt(); else renderBoard(); }
@@ -7621,7 +7718,6 @@ const PREDICT_LABELS = {
   rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
   one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
   net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
-  other: { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' },
   types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
 };
 function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
@@ -7634,13 +7730,62 @@ $$('.predict-btn').forEach(b => b.addEventListener('click', () => {
   echo(key, 'You predicted: <b>' + PREDICT_LABELS[key][b.dataset.answer] + '</b>. Now try it.');
 }));
 /* "You predicted X; the board says Y." Called at the moment the answer
-   exists; silent when no prediction was made. */
-function revealPrediction(key, answerKey, sentence) {
+   exists; silent when no prediction was made.
+
+   `words` names WHAT is agreeing or disagreeing. The default pair is right
+   when the learner watched the answer happen (a measured ratio, a card's
+   definition). It is wrong when the answer is a fact about the model that
+   the learner's own game can neither prove nor refute — "unbeatable" is a
+   verdict of the exhaustive search, and a learner who predicted it and then
+   lost has seen nothing that contradicts them. Those callers pass words
+   that say "the search", and a sentence that separates the two. */
+const VERDICT_DEFAULT = { ok: 'Confirmed.', no: 'Not what happened.' };
+const VERDICT_SEARCH = { ok: 'The search agrees.', no: 'The search says otherwise.' };
+function revealPrediction(key, answerKey, sentence, words) {
   const p = S.predictions[key];
   if (!p) return;
+  const w = words || VERDICT_DEFAULT;
   const ok = answerKey === null ? null : p === answerKey;
   echo(key, 'You predicted <b>' + PREDICT_LABELS[key][p] + '</b>. ' +
-    (ok === null ? '' : ok ? '<span class="ok">Confirmed.</span> ' : '<span class="bad">Not what happened.</span> ') + sentence);
+    (ok === null ? '' : ok ? '<span class="ok">' + w.ok + '</span> ' : '<span class="bad">' + w.no + '</span> ') + sentence);
+}
+
+/* Stage 1b's reveal. The prediction was about ERA 1 — "unbeatable" or
+   "still beatable" after one burst — and that is a property the exhaustive
+   search settles, not the learner's record. "Beatable" means a losing line
+   EXISTS; it does not mean a given player finds it, and losing to a
+   beatable table looks exactly like losing to an unbeatable one. So the
+   sentence always states the search's verdict first, and then, once the
+   learner has played Era 1, says how their own record relates to it — and
+   never lets the record overrule the verdict in either direction. Called
+   when Era 1 is frozen and again after every game against it. */
+function revealOne() {
+  const era = S.eras[1];
+  if (!era || !S.predictions.one) return;
+  const safe = era.verified.safe;
+  const r = era.rec, n = r.w + r.d + r.l;
+  const rec = `${r.w}–${r.d}–${r.l}`;
+  const verdict = safe
+    ? 'Era 1 has <b>no losing line</b> in either role after one burst — verified unbeatable.'
+    : 'Era 1 <b>still has a losing line</b> after one burst, so it is beatable in principle.';
+  let own;
+  if (n === 0) {
+    own = safe
+      ? 'Play it: you cannot win, and a draw is the best result on offer.'
+      : 'Whether you find that line is a separate question from whether it exists. Play it and look.';
+  } else if (safe) {
+    own = r.w > 0
+      ? `Your record against it is ${rec}. A win against a policy the search called safe should not be possible; ` +
+        'Settings → Run the full self-test is the tool for checking that.'
+      : `Your record against it is ${rec}: no wins, which is exactly what no losing line means. ` +
+        'Losing or drawing does not prove it, though — losing to a beatable table looks the same. The search is what settles it.';
+  } else {
+    own = r.w > 0
+      ? `Your record against it is ${rec}: you found a losing line yourself.`
+      : `Your record against it is ${rec}: you have not found the line yet. That says something about your play, ` +
+        'not about the table — a losing line exists whether or not this game found it.';
+  }
+  revealPrediction('one', safe ? 'unbeatable' : 'beatable', verdict + ' ' + own, VERDICT_SEARCH);
 }
 
 /* ------------------------------------------------------------------ *
@@ -7671,10 +7816,45 @@ function renderMethods() {
 $$('.method-card').forEach(c => c.addEventListener('click', () => {
   S.method = S.method === c.dataset.method ? null : c.dataset.method;
   renderMethods();
-  if (S.method === 'supervised') {
-    revealPrediction('other', '1c', 'Supervised learning lights up 1c: its targets were frozen table scores. 1b learned from rewards; 1a was never trained.');
-  }
 }));
+
+/* The other half of 1d: the architecture families, along the axis the
+   stage's own refresh line defines -- what a model STORES and how it
+   COMPUTES an answer. These restate the card text under the same Reasoned
+   kicker; no figure and no external claim is made. */
+const FAMILY_CUE = {
+  linear:   { stores: 'one learned coefficient per input feature, plus an offset', computes: 'a weighted sum of the features — squashed into a probability for the logistic kind' },
+  tree:     { stores: 'a tree of learned yes/no questions with an answer at each leaf', computes: 'the route one example takes down the tree, one question at a time' },
+  ensemble: { stores: 'many trees, or a sequence of them', computes: 'a combination of their answers — a vote or an average, or a running total of corrections' },
+  knn:      { stores: 'the training examples themselves', computes: 'a distance from the new example to each stored one, then an answer from the closest few' },
+  svm:      { stores: 'a boundary, pinned by the examples nearest to it and their weights', computes: 'which side of the boundary a new example falls, and how far from it' },
+  bayes:    { stores: 'probabilities — what was believed before, and how each kind of evidence shifts it', computes: 'an updated probability once the evidence arrives' }
+};
+function renderFamilies() {
+  $$('.family-card').forEach(c => {
+    const on = c.dataset.family === S.family;
+    c.setAttribute('aria-pressed', String(on));
+    $('.holds', c).textContent = on ? 'stores · computes — below' : '';
+  });
+  const out = $('#cue-4b');
+  if (!S.family) { out.textContent = ''; return; }
+  const card = $('.family-card[data-family="' + S.family + '"]'), f = FAMILY_CUE[S.family];
+  out.textContent = $('b', card).textContent + ' → stores ' + f.stores + '; computes ' + f.computes + '.';
+}
+$$('.family-card').forEach(c => c.addEventListener('click', () => {
+  S.family = S.family === c.dataset.family ? null : c.dataset.family;
+  renderFamilies();
+}));
+/* Which half of 1d is showing. Two buttons, one card visible at a time;
+   the stage's check card and the Details drawer are outside both halves. */
+function renderHalf() {
+  /* Scoped to #map-switch: the 1c board switch reuses the .map-btn look
+     and must not be driven by 1d's state (found in the browser pass). */
+  $$('#map-switch .map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
+  $('#methods-card').hidden = S.half !== 'methods';
+  $('#families-card').hidden = S.half !== 'families';
+}
+$$('#map-switch .map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
 
 /* ------------------------------------------------------------------ *
  * Model types — built from src/model-types.js, the dated Hugging Face
@@ -7811,14 +7991,14 @@ document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};
-  S.method = null;
+  S.method = null; S.family = null; S.half = 'methods';
   $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
   $$('.type-card').forEach(d => { d.open = false; });
   $('#learned-body').innerHTML = '';
   $('#learned-sub').textContent = '';
   const nv = $('#network-view');
   delete nv.dataset.layer; delete nv.dataset.neuron;
-  renderMethods();
+  renderMethods(); renderFamilies(); renderHalf();
   resetAll(true);
 });
 
@@ -7826,7 +8006,7 @@ document.addEventListener('lessonreset', () => {
 
 resetAll();
 renderScore();
-renderMethods();
+renderMethods(); renderFamilies(); renderHalf();
 /* The shell may already have selected a stage from a #stage-N hash before
    this script ran, and the old public deep links (#rules, #learning,
    #neural) are honoured through the flags the shell parsed. */

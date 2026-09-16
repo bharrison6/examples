@@ -967,6 +967,14 @@ head('7. Step 1 — the hand-written rules');
     RULES.LADDER.length === 8 && RULES.LADDER.every((r, i) => r.id === i + 1));
   check('every depth preset offered in the app is one the search has an answer for',
     RULES.DEPTHS.every(d => typeof RULES.report(d.n).safe === 'boolean'));
+  /* Operator item 1 (2026-09-16): the app opens on the First 2 rules, because
+     that is the opponent the 1a Predict card asks about. Pinned deliberately
+     -- with eight as the default, the prediction was unanswerable as set. The
+     default must also be a beatable ladder, or the prediction has no live
+     answer, and it must be one of the presets the segmented control offers. */
+  check('the app opens on the two-rule ladder the 1a prediction is about',
+    RULES.DEFAULT_DEPTH === 2 && RULES.report(RULES.DEFAULT_DEPTH).safe === false &&
+    RULES.DEPTHS.some(d => d.n === RULES.DEFAULT_DEPTH));
 
   /* The README says rule 8 is the list being tidy: by the time "empty
      side" could fire, a side is the only thing left to play, so seven
@@ -1041,14 +1049,28 @@ head('7. Step 1 — the hand-written rules');
   check('every stage has at least one check item',
     perStage.length === 5 && perStage.every(n => n >= 1),
     'per stage: ' + perStage.join(', '));
-  check('every stage carries a question, a refresh line and the three strip labels',
+  /* Four Predict cards, not five: 1d is a map stage with no result to check
+     a prediction against, so its Predict card was removed on operator ruling
+     (2026-09-16). Try and Takeaway remain on every stage. */
+  check('every stage carries a question, a refresh line and the strip labels (1d has no Predict)',
     (tpl.match(/class="stage-question"/g) || []).length === 5 &&
     (tpl.match(/class="refresh"/g) || []).length === 5 &&
-    (tpl.match(/<span>Predict<\/span>/g) || []).length === 5 &&
+    (tpl.match(/<span>Predict<\/span>/g) || []).length === 4 &&
+    !/data-predict="other"/.test(tpl) && !/revealPrediction\('other'/.test(app) &&
     (tpl.match(/<span>Try<\/span>/g) || []).length === 5 &&
     (tpl.match(/<span>Takeaway<\/span>/g) || []).length === 5);
   check('exactly one tablist: the lens row is not a second one (A1)',
     (tpl.match(/role="tablist"/g) || []).length === 1);
+  /* 2026-09-16: 1d's half-switch and 1c's board switch share the .map-btn
+     look. Their handlers and renderers must be scoped by container, or one
+     drives the other (found in the browser pass: pressing Ultimate ran
+     renderHalf with S.half undefined and lit both board buttons). */
+  check('the two .map-btn switches are wired by container, never by bare class',
+    !/\$\$\('\.map-btn'\)/.test(app) &&
+    /\$\$\('#map-switch \.map-btn'\)/.test(app) && /\$\$\('#board-switch \.map-btn'\)/.test(app) &&
+    (tpl.match(/id="map-switch"/g) || []).length === 1 && (tpl.match(/id="board-switch"/g) || []).length === 1);
+  check('the 1d Predict card is gone and ultimate is reachable from a visible control, not a Details button',
+    !/id="btn-ultimate"/.test(app) && /data-board="ult"/.test(tpl));
   check('the demo implements the kit reset contract (A8)',
     /addEventListener\('lessonreset'/.test(app));
   /* ADOPTING.md section 4 step 7: the shell fires stagechange BEFORE

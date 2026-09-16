@@ -92,7 +92,11 @@ const DEPTHS = [
   { n: 4, label: 'First 4', title: 'Win, block, fork, block the fork' },
   { n: 8, label: 'All 8',   title: 'The whole ladder' }
 ];
-const DEFAULT_DEPTH = 8;
+/* The app OPENS on two rules, not eight: stage 1a's Predict card asks
+   whether the learner can beat the First 2 rules, so the opponent they are
+   handed first has to be that one. Every engine caller passes its depth
+   explicitly; this default only decides the opening state of the UI. */
+const DEFAULT_DEPTH = 2;
 
 /* ------------------------------------------------------------------ *
  * Reading a board
