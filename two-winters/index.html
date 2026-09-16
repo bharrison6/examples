@@ -26,7 +26,7 @@
   only — see build.js). Companion: demo-guide.html, shipped as
   presenter-guide.html. Sources live in src/ and are concatenated by build.js.
 -->
-<!-- lesson-shell v1 css:d13e2bec1db3 -->
+<!-- lesson-shell v2 css:d13e2bec1db3 -->
 <style>
 
 /* ---- lesson-shell/tokens.css ---- */
@@ -1151,8 +1151,9 @@ body.presenter #tl { height: 460px; }
       <b>Notes</b> button in the header.</p>
     <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
     <h3>Reset</h3>
-    <p class="setnote">Back to a fresh load: every answer cleared, stage 1, the timeline rewound to the
-      full span, the self-test output cleared. Presentation mode stays as you set it.</p>
+    <p class="setnote">Back to the start: every answer cleared, stage 1, the timeline rewound to the
+      full span, every opened card closed, the self-test output cleared. The page does not reload.
+      Presentation mode stays as you set it.</p>
     <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
     <h3>Proof</h3>
     <p class="setnote">
@@ -1600,9 +1601,9 @@ body.presenter #tl { height: 460px; }
   <ul>
     <li>Turn on <b>Settings &rarr; Presentation mode</b> for projector-sized type.</li>
     <li>Run the self-test once so you know it is green before anyone asks.</li>
-    <li>Between rooms, <b>Settings &rarr; Reset</b> reloads the page to a fresh load &mdash;
-      answers cleared, Stage 1, timeline rewound &mdash; and keeps Presentation mode on so the
-      projector does not change under you.</li>
+    <li>Between rooms, <b>Settings &rarr; Reset</b> puts the demo back to its start without
+      reloading the page &mdash; answers cleared, Stage 1, timeline rewound, opened cards closed
+      &mdash; and keeps Presentation mode on so the projector does not change under you.</li>
     <li>The app saves nothing anywhere, so an ordinary reload resets it too.</li>
     <li>No network is needed at any point. If the room&rsquo;s wifi is down, nothing changes.</li>
   </ul>
@@ -1633,7 +1634,7 @@ body.presenter #tl { height: 460px; }
      window.lessonShell.selectStage() to drive the tabs itself. -->
 <script>
 
-/* lesson-shell v1 behaviour — dialogs, stage tablist, presentation
+/* lesson-shell v2 behaviour — dialogs, stage tablist, presentation
    mode, check cards. Injected by build.js; do not edit in the built file. */
 (() => {
   'use strict';
@@ -1700,6 +1701,27 @@ body.presenter #tl { height: 460px; }
   /* ---- A1 stage tablist ------------------------------------------------- */
   const tabs = $$('.stage-tab');
   const panels = $$('section.stage');
+
+  /* ---- the first-load snapshot ------------------------------------------
+     Taken here, before the hash can select a stage and before the demo's own
+     app.js has run at all (the shell's script tag precedes it). Reset RESTORES
+     FROM THIS rather than recomputing, which is what makes an in-place reset
+     honest for a gated demo: the gate comes back exactly as the template
+     authored it, whether or not the demo has a sync function of its own. */
+  const snapshot = {
+    tabs: tabs.map(t => {
+      const mark = $('.stage-mark', t);
+      return {
+        disabled: t.disabled,
+        className: t.className,
+        title: t.getAttribute('title'),
+        mark: mark ? mark.textContent : null
+      };
+    }),
+    echoes: $$('.lesson-strip .echo').map(e => ({ node: e, html: e.innerHTML, hidden: e.hidden })),
+    cues: $$('.obs-cue').map(c => ({ node: c, text: c.textContent, className: c.className })),
+    detailsSubtitle: (($('#details-subtitle') || {}).textContent) || ''
+  };
   function selectStage(index, opts) {
     if (!tabs.length) return;
     /* A gated demo (one that unlocks stage k+1 only after stage k's evidence)
@@ -1773,26 +1795,103 @@ body.presenter #tl { height: 460px; }
     }));
   });
 
-  /* ---- Reset: a fresh load, with presentation mode preserved ------------ */
-  const resetBtn = $('#reset-btn');
-  if (resetBtn) resetBtn.addEventListener('click', () => {
-    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return;
-    const f = ['reset'];
-    if (document.body.classList.contains('presenter')) f.push('presenting');
-    const base = location.href.split('#')[0];
-    try { location.replace(base + '#' + f.join(',')); } catch (e) { location.hash = f.join(','); }
-    location.reload();
-  });
+  /* ---- Reset: IN PLACE, no page reload -----------------------------------
+     Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
+     location.reload(), which was trivially correct and threw the page away to
+     get there: a reload discards a canvas mid-animation, re-runs every boot
+     path, and on a slow projector laptop is a visible blank flash in front of
+     a room. In-place costs a real contract instead, and this is it.
 
-  /* ---- A7: the Guide greets every load; a Reset arrives explained ------- */
-  if (guide && !guide.open && !flags.has('reset')) {
+     THE DIVISION OF LABOUR — the whole contract in one sentence: if the kit
+     named the class, the shell restores it; everything else is the demo's.
+
+     WHAT THE SHELL GUARANTEES, in this order:
+       1. 'onReset()' is consulted first and a 'false' return CANCELS the whole
+          reset — nothing below runs. That is the veto path, unchanged from v1.
+       2. Every open <dialog> closes — not only the shell's four. A demo may
+          own one (two-winters' #item-details), and a dialog still open after a
+          Reset is un-restored state the learner is looking straight at.
+       3. Every stage tab goes back to its first-load chrome from the snapshot:
+          'disabled' (so a gate re-locks), class (so 'complete' marks clear),
+          title, and the .stage-mark glyph.
+       4. Every A6 check card drops its aria-pressed answer and clears its
+          feedback line.
+       5. Every A2 .echo and A4 .obs-cue returns to its snapshotted first-load
+          content. partials.html specifies both as empty on load; the snapshot
+          is used rather than a blanket clear so a demo that authored something
+          there keeps it.
+       6. The A5 Details drawer goes back to showing stage 1, with its
+          subtitle restored.
+       7. selectStage(0) — stage 1, which also fires 'stagechange'.
+       8. The page scrolls to the top.
+       9. 'lessonreset' is dispatched on document.
+
+     WHAT THE SHELL DOES NOT TOUCH, deliberately:
+       * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
+         projector every time would be hostile. CONTRACT.md's wording too.
+       * THE GUIDE. It does not reopen. A reset is not a fresh arrival, and the
+         learner who pressed it has already read it.
+       * THE ACTIVITY. The shell cannot know what a demo holds. That is what
+         step 9 is for.
+
+     WHAT THE DEMO MUST IMPLEMENT — required, not optional:
+
+         document.addEventListener('lessonreset', () => {
+           // every variable your module closes over, back to its initial value
+           // every node your app.js generated, back to its first-load content
+           // then re-render stage 1
+         });
+
+     'lessonreset' fires LAST, after the shell has finished, so the demo has
+     the final word over any node the two both touch. It is not cancelable: the
+     veto lives in onReset(), so there is exactly one place to refuse a reset.
+
+     A demo that ships no handler silently keeps its answers, its generated
+     DOM and its progress through a Reset that visibly moved everything else.
+     check-shell.js fails a built file that carries no handler, with a negative
+     control proving it is not merely matching the dispatch below. */
+  function resetLesson() {
+    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
+    $$('dialog').forEach(d => {
+      if (!d.open) return;
+      try { d.close(); } catch (e) { /* a dialog mid-close; it is already going */ }
+    });
+    tabs.forEach((t, i) => {
+      const s = snapshot.tabs[i];
+      if (!s) return;
+      t.disabled = s.disabled;
+      t.className = s.className;
+      if (s.title === null) t.removeAttribute('title'); else t.setAttribute('title', s.title);
+      const mark = $('.stage-mark', t);
+      if (mark && s.mark !== null) mark.textContent = s.mark;
+    });
+    $$('.check').forEach(card => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      const out = $('.check-feedback', card);
+      if (out) out.innerHTML = '';
+    });
+    snapshot.echoes.forEach(e => { e.node.innerHTML = e.html; e.node.hidden = e.hidden; });
+    snapshot.cues.forEach(c => { c.node.textContent = c.text; c.node.className = c.className; });
+    $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
+    const sub = $('#details-subtitle');
+    if (sub) sub.textContent = snapshot.detailsSubtitle;
+    selectStage(0);
+    try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+    document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
+    return true;
+  }
+  const resetBtn = $('#reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', () => resetLesson());
+
+  /* ---- A7: the Guide greets every load ---------------------------------- */
+  if (guide && !guide.open) {
     opener = $('#guide-open');
     guide.showModal();
     const cta = $('.lesson-dialog-actions button', guide);
     if (cta) cta.focus();
   }
 
-  window.lessonShell = { selectStage, setPresentation, flags, onReset: null };
+  window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
 })();
 
 </script>
@@ -2873,9 +2972,10 @@ const D = DATA, E = ENGINE;
 const $  = s => document.querySelector(s);
 const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 
-/* Session state. Nothing is persisted anywhere — Settings -> Reset triggers a
-   full reload (the shell's own behaviour), which is what actually returns
-   every one of these to its fresh-load value. */
+/* Session state. Nothing is persisted anywhere. Settings -> Reset is IN PLACE
+   (kit v2): the shell restores its own chrome and dispatches `lessonreset`,
+   and resetActivity() below returns every one of these to its fresh-load
+   value by hand. The enumeration lives on that function. */
 const S = {
   i: 0,                       /* index into D.CARDS */
   answers: {},                /* id -> { year, verdict } */
@@ -3379,6 +3479,91 @@ function scrollActTop() {
 document.addEventListener('presentationchange', e => {
   if (S.tl) S.tl.setBig(e.detail.on);
 });
+
+/* ============================ reset, in place ============================
+   Kit v2. The shell has already put back everything the kit named — stage 1
+   selected, every dialog closed (including #item-details), the four .obs-cue
+   lines, the check cards, the Details drawer, the scroll — and then dispatched
+   `lessonreset`. This is the half only this file can know about. This demo's
+   SPEC.md always said "Reset restores the first lens and closes disclosures";
+   the reload that came with kit v1 met that by accident, and this meets it on
+   purpose.
+
+   THE ENUMERATION, written out because in place is only correct if the list
+   is complete:
+
+     S.i, S.answers, S.pending, S.revealed, S.lens — the plain values.
+     S.tl — KEPT and REWOUND, not dropped. buildTimeline() binds the slider,
+            the ‹ › buttons and a window resize listener exactly once; nulling
+            S.tl and letting the next stagechange rebuild it would bind them
+            all a second time. So: cursor to the full span (1), selection
+            cleared, and the slider input put back to its template value.
+
+     Stage 1 DOM: #intro visible; #card-body hidden; #scorecard hidden and
+            emptied; #guess-wrap visible; #reveal-wrap hidden and emptied;
+            #btn-lock visible; #btn-next-card hidden; #year-slider and
+            #year-read back to 1985; #card-progress width back to none.
+            #card-count / #card-quote / #card-note / #verdict-prompt /
+            #verdict-btns are NOT touched here: they sit inside the hidden
+            #card-body and renderCard() rewrites all five unconditionally
+            before it can be shown, so their content is unobservable until it
+            is overwritten. Stated, not assumed.
+     Stage 2 DOM: #tl-detail back to the empty-state hint (showEvent(null) —
+            called directly, because select(null) on an already-null selection
+            returns before its callback); #tl-winter hidden; the three stat
+            readouts back to their template values ("2026", "0", "0"). Their
+            live values return on the next visit, when the stagechange handler
+            re-syncs, exactly as on first load.
+     Stage 3 DOM: #lens-nav and #anatomy emptied; renderAnatomy() rebuilds
+            them from S.lens = 0 on the next visit.
+     Stage 4 DOM: #close emptied and its build-once guard removed, so every
+            <details> a learner opened is gone rather than left open.
+     Settings: #selftest-out emptied.
+     #item-details: closed by the shell; its title and body cleared here so
+            nothing stale is one showModal() away.
+   ======================================================================== */
+function resetActivity() {
+  S.i = 0;
+  S.answers = {};
+  S.pending = { year: 1985, verdict: null };
+  S.revealed = false;
+  S.lens = 0;
+
+  if (S.tl) {
+    S.tl.setCursor(1);
+    S.tl.select(null);
+    $('#tl-slider').value = '1000';
+  }
+  showEvent(null);
+  $('#tl-winter').hidden = true;
+  $('#tl-year').textContent = '2026';
+  $('#tl-total').textContent = '0';
+  $('#tl-with').textContent = '0';
+
+  $('#intro').hidden = false;
+  $('#card-body').hidden = true;
+  const sc = $('#scorecard'); sc.hidden = true; sc.innerHTML = '';
+  $('#guess-wrap').hidden = false;
+  const rv = $('#reveal-wrap'); rv.hidden = true; rv.innerHTML = '';
+  $('#btn-lock').hidden = false;
+  $('#btn-lock').disabled = false;   /* the template's value; renderCard() re-derives it on Begin */
+  $('#btn-next-card').hidden = true;
+  $('#year-slider').value = '1985';
+  $('#year-read').textContent = '1985';
+  $('#card-progress').style.width = '';
+
+  $('#lens-nav').innerHTML = '';
+  $('#anatomy').innerHTML = '';
+
+  const close = $('#close');
+  close.innerHTML = '';
+  delete close.dataset.built;
+
+  $('#selftest-out').innerHTML = '';
+  $('#item-details-title').textContent = 'Details';
+  $('#item-details-body').innerHTML = '';
+}
+document.addEventListener('lessonreset', resetActivity);
 
 /* ========================= item-level detail popover =====================
    A SEPARATE mechanism from the shell's #details drawer (which is fixed,

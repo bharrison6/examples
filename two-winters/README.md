@@ -54,9 +54,9 @@ readable on screen at **Settings → Open Presenter Notes** so you never need a 
 window. It is the same file, injected at build time, not a summary of it. Short version:
 
 - **Presentation mode** (Settings) enlarges everything for a projector.
-- **Settings → Reset** returns the whole demo to a fresh load between rooms — a real
-  reload, so answers, Stage 1, and the timeline all return to their fresh-load state —
-  and leaves Presentation mode on (the shell carries it across the reload).
+- **Settings → Reset** returns the whole demo to its start between rooms, in place —
+  no reload, so nothing flashes on a projector; answers, Stage 1, the timeline and every
+  opened card return to their fresh-load state — and leaves Presentation mode on.
 - **The `?` button is Guide** — the short how-to panel, which opens on first load.
 - **Do the first two cards yourself, out loud.** Then hand it over. Ask for a show of
   hands on the year *before* dragging the slider. The room being wrong together is the
@@ -137,7 +137,7 @@ resource-loading tag, so a stray CDN reference fails the build rather than shipp
 | `src/template.html` | The app shell markup, built against `../tools/lesson-shell/partials.html`'s vocabulary. `build.js` fills the shell's placeholders plus this demo's own JS bundle marker. |
 | `src/demo-guide.html` | **Canonical** presenter guide (renamed from `presenter-guide.html`, kept as the shipped output filename in `demo.json`). Its `<style id="guide-css">` block and its `.guide-scope` div are lifted into the app so the on-screen notes and the printable guide cannot drift. Both markers must start a line and occur exactly once outside a comment, or `build.js` refuses to run. |
 | `src/playtest.test.js` | 81 checks on the data and the engine. Run before committing. |
-| `src/contract.test.js` | Checks the built `index.html` against CONTRACT.md's Required UX against the shared shell's markup: the Guide button and dialog, the four Settings labels (asserted inside the Settings dialog only, never against the injected guide text), the Reset handler, and a clean guide injection (re-using `../tools/lesson-shell/guide-contract.js`'s own extraction). |
+| `src/contract.test.js` | Checks the built `index.html` against CONTRACT.md's Required UX against the shared shell's markup: the Guide button and dialog, the four Settings labels (asserted inside the Settings dialog only, never against the injected guide text), the in-place Reset contract (no navigation primitive in the shell, the `lessonreset` dispatch, this demo's listener), and a clean guide injection (re-using `../tools/lesson-shell/guide-contract.js`'s own extraction). |
 | `tools/pdf.mjs` | Guide → PDF. Prefers Playwright, falls back to a system Chrome or Edge. |
 
 ### The PDF tool differs from its neighbours
@@ -184,7 +184,7 @@ see `plan-demo-fleet-format-alignment` in the memory store for the full template
 |------|-------|
 | Guide dialog on load, dismissible, reopenable from the `?` button (named **Guide**) | yes — shell-owned |
 | Settings menu offering **Open Presenter Notes**, **Presentation mode**, **Reset** | yes, shell-owned — plus this demo's own **Run the self-test** |
-| **Reset** returns the whole demo to fresh-load state | yes — a full reload (shell-owned); Presentation mode is carried across it by design |
+| **Reset** returns the whole demo to fresh-load state | yes — in place, no reload: the shell restores its chrome and dispatches `lessonreset`; `src/app.js`'s `resetActivity()` restores the activity. Presentation mode is left alone by design |
 | Presenter notes openable in-app, and identical to the printable guide | yes — injected from `src/demo-guide.html` at build time; `node build.js --check` fails on drift |
 | Murray State theme | yes — kit tokens: navy `#002144`, gold `#ECAC00`, lite blue `#00A4E3` |
 | Red-orange `#FF4500` reserved for genuine failure states | yes — a wrong verdict, the "money leaves" stage, a failed self-test check, an unresolved source. Nothing else. |

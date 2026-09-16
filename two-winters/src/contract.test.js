@@ -101,8 +101,10 @@ const decode = s => s.replace(/&[a-z#0-9]+;/gi, e => ENT[e] != null ? ENT[e] : e
   ok('The Guide dialog exists', !!g);
   const h2 = g && (g.match(/<h2 id="guide-title">([\s\S]*?)<span/i) || [])[1];
   ok('The Guide dialog heading reads exactly "Guide"', (h2 || '').trim() === 'Guide', String(h2));
-  ok('The Guide dialog opens on load unless the page arrived from a Reset',
-     /if \(guide && !guide\.open && !flags\.has\('reset'\)\) \{/.test(html) && /guide\.showModal\(\);/.test(html));
+  ok('The Guide dialog opens on load (kit v2: Reset no longer reloads, so there is no '
+     + '"arrived from a Reset" case and the old hash-flag guard must be gone)',
+     /if \(guide && !guide\.open\) \{/.test(html) && /guide\.showModal\(\);/.test(html)
+     && !/flags\.has\('reset'\)/.test(html));
   ok('The Guide dialog is dismissible (native <dialog> Escape/backdrop/close button) and reopenable '
      + 'from at least two places (header + footer)',
      !!g && /<form method="dialog"><button type="submit" aria-label="Close">/.test(g)
@@ -143,26 +145,43 @@ if (settings) {
      + '  (a document-wide assertion would match these instead of the menu)');
 }
 
-/* ================= 4. Reset means whole-demo fresh load =================
-   The shell's Reset is a full page reload (with a #reset[,presenting] hash
-   flag), not an in-place state rewind — a deliberate simplification the kit
-   enables (recorded in P2-progress.md): a reload trivially returns every
-   piece of session state to its fresh-load value, so there is no per-field
-   JS state left to assert against. What IS checkable statically: the button
-   exists and is labelled, the shell's handler reaches location.reload(),
-   and the reload preserves Presentation mode via the hash flag while NOT
-   preserving the 'reset' page-just-loaded flag as "show the Guide again". */
+/* ==================== 4. Reset is in place, no reload ====================
+   Kit v2 (operator ruling 2026-09-16). The shell restores what the kit owns
+   and dispatches `lessonreset`; this demo's resetActivity() restores the
+   activity. The old section here asserted that the shell reached
+   location.reload() — that assertion is now inverted.
+
+   What is checkable statically: the button; NO navigation primitive anywhere
+   in the shell's script (the load-bearing negative, because the way in-place
+   regresses is a reload creeping back in); the dispatch; the veto consulted
+   first; and this demo's listener. What is NOT checkable here — that the
+   answers, timeline, lenses and opened cards actually come back — is why the
+   browser pass is non-waivable, and P2-progress/K2-progress carry that
+   evidence with its sentinel control.
+
+   Prose is not code: the shell's Reset comment explains that v1 called
+   location.reload(), so block comments are stripped before the negative
+   scan, and the scan is proved on bait first (guide-contract.js's rule). */
 {
+  const scripts = html.split('<script>').slice(1).map(c => c.split('</script>')[0]);
+  const shellJs = scripts.find(s => s.includes('window.lessonShell = {')) || '';
+  const appJs = scripts.find(s => s.includes('AI Winters: Boom and Bust self-test')) || '';
+  const decomment = s => s.replace(/\/\*[\s\S]*?\*\//g, ' ');
+  ok('The shell script and the app script were both found in the built file',
+     shellJs.length > 0 && appJs.length > 0);
   ok('A #reset-btn control exists', /id="reset-btn"/.test(html));
-  ok("The shell's Reset handler calls onReset() first, then always reloads",
-     /if \(window\.lessonShell\.onReset && window\.lessonShell\.onReset\(\) === false\) return;/.test(html)
-     && /location\.reload\(\);/.test(html));
-  ok('Reset preserves Presentation mode across the reload (pushes a "presenting" hash flag '
-     + 'when the page is currently in presenter mode)',
-     /if \(document\.body\.classList\.contains\('presenter'\)\) f\.push\('presenting'\);/.test(html));
-  ok('A page that just reloaded from Reset does not reopen the Guide '
-     + '(the shell checks flags.has(\'reset\') before auto-opening it)',
-     /!flags\.has\('reset'\)/.test(html));
+  ok('POSITIVE CONTROL — the navigation scan sees a reload when one is present',
+     /location\.reload\(\)/.test(decomment(shellJs + '\nlocation.reload();')));
+  ok("The shell's script contains no navigation primitive: Reset is in place",
+     !/location\.reload\(\)|location\.replace\(|location\.assign\(|location\.href\s*=/.test(decomment(shellJs)));
+  ok("The shell's Reset consults onReset() first and a false return cancels it",
+     /if \(window\.lessonShell\.onReset && window\.lessonShell\.onReset\(\) === false\) return false;/.test(shellJs));
+  ok("The shell dispatches 'lessonreset' after restoring its own chrome",
+     /document\.dispatchEvent\(new CustomEvent\('lessonreset'/.test(shellJs));
+  ok("This demo listens for 'lessonreset' (the required half of the contract)",
+     /addEventListener\('lessonreset'/.test(appJs));
+  ok('The dead #reset hash flag from the reload era is gone',
+     !/flags\.has\('reset'\)/.test(shellJs) && !/f\.push\('presenting'\)/.test(shellJs));
 }
 
 /* ============= 5. the notes are the guide, injected cleanly ==============
