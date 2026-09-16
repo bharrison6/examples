@@ -1,76 +1,361 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The Pace of AI Progress — presenter guide</title>
-<style>
-.guide-scope { color:#14273a; font:400 1rem/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; }
-.guide-scope h1 { color:#002144; font:700 2rem/1.12 Georgia,serif; margin:0 0 10px; }
-.guide-scope h2 { color:#002144; font:700 1.5rem/1.15 Georgia,serif; margin:24px 0 10px; }
-.guide-scope h3 { color:#002144; font-size:1.05rem; margin:18px 0 7px; }
-.guide-scope p { margin:0 0 12px; }
-.guide-scope .kicker { color:#805800; font-size:.78rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; margin-bottom:10px; }
-.guide-scope .lead { font-size:1.12rem; color:#40556a; }
-.guide-scope .beat { border-left:3px solid #ecac00; background:#f7f0e3; padding:12px 16px; margin:16px 0; }
-.guide-scope .beat p { margin:5px 0 0; }
-.guide-scope ul, .guide-scope ol { padding-left:22px; margin:8px 0 16px; }
-.guide-scope li { margin:8px 0; }
-.guide-scope .source { font-size:.84rem; color:#40556a; }
-.guide-scope a { color:#00608b; text-underline-offset:3px; overflow-wrap:anywhere; }
-.guide-scope .g-foot { border-top:1px solid #d6cbb6; margin-top:22px; padding-top:10px; color:#52667b; font-size:.8rem; }
-.guide-scope .page-no { float:right; color:#805800; }
-.guide-scope .formula { background:#eee7d8; border-radius:5px; padding:10px 14px; font-family:ui-monospace,Consolas,monospace; font-size:.9rem; }
-.guide-scope .guide-page { margin-bottom:30px; }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Pace of AI Progress — presenter guide</title>
+<!--
+  Canonical, printable presenter guide for The Pace of AI Progress.
+  Demo 3 of 16, Part two ("Where it is going") of AI: From Zero to Takeoff.
+
+  This file is the single source of truth for the presenter notes. build.js
+  lifts the stylesheet marked with the id guide-css, and the guide-scope div,
+  out of here verbatim and injects them into index.html, so Settings ->
+  Open Presenter Notes shows exactly this text with no sibling file to go
+  looking for. Edit here; never edit the copy inside index.html.
+
+  Three markers are contractual, and build.js refuses to run unless each one
+  starts a line and occurs exactly once outside a comment: the opening tag of
+  the scoped stylesheet, the opening tag of the guide-scope div, and the
+  closing tag of that div with its trailing marker comment.
+
+  Everything in the scoped stylesheet MUST be scoped to .guide-scope, because
+  it is injected into an app with its own stylesheet. Page-level styles for the
+  standalone printable version live in the unnamed block after it, which is not
+  extracted.
+
+  Structure follows template part A9: header; Learning goals (the stage
+  Takeaways verbatim — never "you will be able to", per the operator
+  amendment); Where this sits on the path; one question for the session; per
+  stage Question / Predict prompt / Activity / Expected observation /
+  Check-yourself answer key / Teaching limit; Misconceptions as .mis cards;
+  Discussion questions; Presenter controls; footer.
+-->
+<style id="guide-css">
+.guide-scope { color: inherit; }
+.guide-scope .g-head { margin-bottom: 18px; }
+.guide-scope .g-kicker { font: 800 .7rem/1 system-ui, sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #805800; }
+.guide-scope h1 { font-size: 1.5rem; margin: 6px 0 4px; }
+.guide-scope .g-sub { opacity: .72; font-size: .92rem; }
+.guide-scope h2 { font-size: 1.1rem; margin: 22px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(143,163,192,0.25); }
+.guide-scope h3 { font-size: .98rem; margin: 15px 0 5px; }
+.guide-scope p { margin: 0 0 .8em; }
+.guide-scope ul, .guide-scope ol { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope li { margin-bottom: 5px; }
+.guide-scope .say {
+  border-left: 3px solid #ECAC00; padding: 2px 0 2px 12px;
+  margin: 0 0 .9em; font-style: italic; opacity: .95;
+}
+.guide-scope .warn { border-left-color: #FF4500; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; border-collapse: collapse; font-size: .86rem; min-width: 420px; }
+.guide-scope th, .guide-scope td { text-align: left; padding: 6px 8px; border-bottom: 1px solid rgba(143,163,192,0.22); vertical-align: top; }
+.guide-scope th { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; opacity: .7; }
+.guide-scope .big { font-weight: 800; white-space: nowrap; }
+.guide-scope .goals { padding-left: 20px; margin: 0 0 .9em; }
+.guide-scope .goals li { margin-bottom: 8px; }
+.guide-scope .mis {
+  border-left: 3px solid #b98cff; border-radius: 0 6px 6px 0;
+  padding: 8px 12px; margin: 0 0 10px; background: rgba(185, 140, 255, .08);
+}
+.guide-scope .mis b { display: block; color: #5a3e8c; }
+.guide-scope .mis span { display: block; margin-top: 4px; }
+.guide-scope .g-foot { margin-top: 24px; padding-top: 10px; border-top: 1px solid rgba(143,163,192,0.25); font-size: .82rem; opacity: .72; }
 </style>
 <style>
-@page { size:letter; margin:.58in .65in; }
-* { box-sizing:border-box; }
-body { margin:0; background:#fffdf8; }
-.page { max-width:8.5in; margin:auto; padding:35px; }
-@media print {
-body { background:white; }
-.page { padding:0; max-width:none; }
-.guide-scope { font-size:10pt; line-height:1.38; }
-.guide-scope h1 { font-size:24pt; }
-.guide-scope h2 { font-size:17pt; margin:18px 0 8px; }
-.guide-scope h3 { font-size:11pt; margin:14px 0 6px; }
-.guide-scope p { margin-bottom:9px; }
-.guide-scope .lead { font-size:12pt; }
-.guide-scope .kicker,.guide-scope .g-foot { font-size:8pt; }
-.guide-scope .source { font-size:8.8pt; }
-.guide-scope .beat { padding:9px 12px; margin:12px 0; }
-.guide-scope .guide-page { break-after:page; margin:0; }
-.guide-scope .guide-page:last-child { break-after:auto; }
-.guide-scope h2,.guide-scope h3 { break-after:avoid; }
-.guide-scope .beat,.guide-scope li { break-inside:avoid; }
+/* Standalone printable page only — not extracted into the app. */
+body {
+  margin: 0; background: #fff; color: #14181f;
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
-@media(max-width:600px) { .page { padding:20px 16px; } }
-</style></head><body><div class="page"><div class="guide-scope">
-<section class="guide-page">
-<div class="kicker">Presenter guide · AI literacy · 1 of 4</div><h1>The Pace of AI Progress</h1><p class="lead">What has changed, what the measurements mean, and what can reasonably follow from them.</p>
-<p>Bryant Harrison · Murray State University<br>Evidence snapshot checked September 9, 2026. This is a selected historical collection, not a live leaderboard or complete account of AI research.</p>
-<div class="beat"><b>Learning goal</b><p>Participants should be able to describe a result with its task, metric, date, and conditions; separate a benchmark gain from a workplace outcome; and identify assumptions in a forecast.</p></div>
-<h2>Run a 20–25 minute session</h2>
-<ol><li><b>Measure · 10 minutes.</b> Start with “What has changed?” Explain that a benchmark is a defined test and scoring rule. Ask people to estimate a missing piece of history, then reveal it. Spend more time on the conditions than on whether an estimate was high or low.</li><li><b>Context · 4 minutes.</b> Scrub the selected release timeline. Ask what the chart does and does not measure. Company lanes separate dots; height does not rank capability. Open the source-backed release list.</li><li><b>Transfer · 5 minutes.</b> Compare the two workplace studies. Ask why an average gain for customer-support agents can coexist with slower completion in a specific developer study. Then inspect a scientific system.</li><li><b>Forecast · 4 minutes.</b> Move the illustrative years slider. All three rules fit the same two invented points. Ask which additional evidence would help choose between them.</li><li><b>Debrief · 2 minutes.</b> Have each participant name one task from their own work, one quality measure, and one failure they would watch for.</li></ol>
-<h2>Controls and accessible participation</h2>
-<p>The Guide opens on each load; reopen it with <b>?</b>. Settings contains <b>Open Presenter Notes</b>, <b>Presentation mode</b>, and <b>Reset</b>. These notes are the same document as the printable guide. Reset clears the activity while preserving Presentation mode.</p>
-<p>Draw with a finger or mouse. For a straight-line estimate, focus the chart and press Up or Down; Home and End set its endpoints. Choose any measurement from the selector. <b>Details</b> opens a side panel with an example, comparison limits, and a table. Hidden values appear in that table after Reveal. Escape closes a panel and returns focus.</p>
-<p class="source"><b>Short route:</b> use the coding, METR, and price measurements; compare the two work studies; end with the forecast slider. The other measurements remain available for discussion. No runtime network, AI inference, or storage is required.</p>
-<div class="g-foot">The activity is not a test of who can predict the largest gain. <span class="page-no">1 / 4</span></div>
-</section>
-<section class="guide-page">
-<div class="kicker">Measurement reference · 2 of 4</div><h1>Read each chart on its own terms.</h1>
-<h3>1. Coding · SWE-bench Verified</h3><p>The selected 2025 reports are Claude 3.7 Sonnet <b>63.7%</b>, Claude Opus 4 <b>72.5%</b>, GPT-5 <b>74.9%</b>, and Claude Sonnet 4.5 <b>77.2%</b>. The score is the share of selected repository issues resolved according to automated tests.</p><p>These are vendor-reported systems with different conditions. Claude 3.7 used 489 tasks; GPT-5 used a fixed 477-task subset; Sonnet 4.5 reports the full 500, averaged across ten trials with 200K thinking budget. Single-attempt wording does not establish like-for-like evaluation. Ask: “Which parts of the system changed besides the model?”</p>
-<h3>2. Scientific questions · GPQA Diamond</h3><p>This is a <b>198-question</b> multiple-choice set. OpenAI reports GPT-4o <b>50.6%</b> and an o1 research model <b>77.3%</b> in its September 2024 comparison. Google's later table reports Gemini 3 Pro <b>91.9%</b> and Gemini 3.1 Pro <b>94.3%</b>, Thinking HIGH, no tools.</p><p>GPT-4o is located by its release date, with the later reporting date stated in Details. The o1 research point is an evaluation date, not the o1-preview product release. Vendors and compute protocols differ. Human markers from mismatched question sets are omitted. Ask: “Which parts of scientific work are not multiple-choice questions?”</p>
-<h3>3. Task duration · METR Time Horizon 1.1</h3><p>The January 2026 report estimates <b>3.5, 60, 121, 101, 214, and 320 minutes</b> for the six selected models. These are human-expert task durations at predicted <b>50% AI success</b>, not AI runtime. The plot retains the reported 95% confidence intervals and the decline between o3 and Opus 4.</p><p>The tasks mostly concern software and research engineering. A later Sol estimate of 11.3 hours [5–40] is excluded from the curve: METR explicitly described the June 2026 estimates as non-robust. Details preserves that result and warning. A doubling-time fit depends on sample and date range; it does not prove acceleration or reliable autonomy.</p>
-<h3>4. Cost · A fixed MMLU threshold</h3><p>Epoch's snapshot follows the cheapest listed API price meeting <b>MMLU ≥86%</b>. The rounded endpoints are <b>$37.50</b> and <b>$0.18</b>, about 200 times cheaper. Units are dollars per million tokens, with input and output prices blended <b>3:1</b>. The snapshot ends in February 2025.</p><p>This is not a price per million words or the full cost of a job. The threshold is one benchmark criterion, not “everything GPT-4 can do.” Ask what integration, review, retries, and token consumption would add.</p>
-<div class="g-foot">Logarithmic axes use equal distances for equal ratios. Lines connect selected reports; they are not continuous measurements. <span class="page-no">2 / 4</span></div>
-</section>
-<section class="guide-page">
-<div class="kicker">Task and system boundaries · 3 of 4</div><h1>A score belongs to a setup.</h1>
-<h3>5. Puzzles · ARC-AGI-1 and a separate ARC-AGI-3 comparison</h3><p>ARC Prize's December 2024 o3 preview evaluation reported <b>75.7%</b> at lower compute and <b>87.5%</b> at higher compute. The tuned preview was distinct from the later released o3. The points share a date because they are configurations, not sequential releases. Training on public practice examples and compute costs matter. The small gravity puzzle in Details is illustrative, not a representative test sample.</p><p>The next panel is deliberately separate. ARC-AGI-3 uses interactive games and <b>Relative Human Action Efficiency (RHAE)</b>. ARC Prize reported Astra at high reasoning effort with <b>54.8%</b> in a standard harness and <b>99.9%</b> in a provider harness, on the same semi-private set. Total reported costs were $40,705 and $18,817. This is not the percentage of ARC-AGI-1 puzzles solved, and it is not a continuation of that curve.</p><div class="beat"><b>Prompt the room</b><p>“What would be missing if someone quoted only the model name and the larger score?” Look for the test version, metric, effort, harness, task set, and evaluation date.</p></div>
-<h2>Transfer: two work settings</h2><p><b>Customer support.</b> The revised Generative AI at Work study reports 5,172 agents and an average <b>15%</b> increase in issues resolved per hour. It used staggered deployment in a specific work setting. Benefits varied by worker; it is not a randomized estimate for all jobs.</p><p><b>Experienced developers.</b> METR randomized AI access across <b>246 tasks</b> performed by <b>16 developers</b> on familiar open-source repositories. With early-2025 tools, AI-allowed tasks took <b>19% longer</b> (95% interval: 2–39% longer). Its February 2026 update suggests later improvement but says selection and timing limitations prevent a reliable magnitude estimate. Do not present the older number as today's effect.</p><h2>Transfer: specialized scientific systems</h2><p><b>GenCast.</b> The 2019 evaluation beat ENS on CRPS in <b>97.2% of 1,320 comparisons</b> of variable, lead time, and level. That is not 97.2% weather forecast accuracy. Precipitation was excluded from the main results. Name the baseline and probabilistic scoring rule.</p><p><b>AlphaFold 3.</b> Its structure-prediction results concern biomolecular complexes. Static structures do not simulate molecular dynamics or establish biological function. The paper describes limitations including stereochemistry and hallucinated structures. There is no single universal accuracy number in this activity.</p>
-<div class="g-foot">A narrow success and a narrow failure can both be true. Transfer requires testing the setting that matters to you. <span class="page-no">3 / 4</span></div>
-</section>
-<section class="guide-page">
-<div class="kicker">Forecast and debrief · 4 of 4</div><h1>Two points leave several futures open.</h1><p>The scenario is invented. Its score rises from 20 to 30 in one year. Let <b>t</b> be years after the second observation. Three rules fit both anchors exactly:</p><div class="formula">Fixed gain: 30 + 10t<br>Proportional gain: 30 × 1.5<sup>t</sup><br>Slowing toward a limit: 75 − 45 × (9/11)<sup>t</sup></div><p>At t = −1, all three give 20. At t = 0, all give 30. Farther out, their assumptions dominate. The slowing rule assumes a ceiling of 75; the score itself has a maximum of 100. Outputs above 100 are displayed as violations of the score's bounds, not silently clipped into plausible predictions.</p><div class="beat"><b>Debrief questions</b><p>Which observation would help distinguish these rules? What might change the trend? What is the ceiling imposed by the test? What happens when the test becomes too easy? Which real task could you evaluate without assuming any of these futures?</p></div>
-<h2>Primary reading and verification boundaries</h2><p class="source">The in-app source list and data table carry full links. These starting points support the activity's measurement and transfer discussions; original authors and evaluators can still make errors.</p><ul class="source"><li><a href="https://www.anthropic.com/news/claude-3-7-sonnet">Anthropic: Claude 3.7 Sonnet</a>; <a href="https://www.anthropic.com/news/claude-4">Claude 4</a>; <a href="https://www.anthropic.com/news/claude-sonnet-4-5">Sonnet 4.5</a>; <a href="https://openai.com/index/introducing-gpt-5/">OpenAI: GPT-5</a>. Read evaluation footnotes.</li><li><a href="https://openai.com/index/learning-to-reason-with-llms/">OpenAI: Learning to reason with LLMs, Appendix A</a>; <a href="https://deepmind.google/models/gemini/pro/">Google: Gemini comparison table</a>. Same benchmark name does not guarantee the same protocol.</li><li><a href="https://metr.org/blog/2026-1-29-time-horizon-1-1/">METR: Time Horizon 1.1</a>; <a href="https://metr.org/blog/2026-06-26-gpt-5-6-sol/">METR: Sol evaluation</a>. Keep uncertainty and robustness warnings attached.</li><li><a href="https://epoch.ai/data-insights/llm-inference-price-trends">Epoch AI: Inference price trends</a>. MMLU threshold and blended token pricing.</li><li><a href="https://arcprize.org/blog/oai-o3-pub-breakthrough">ARC Prize: o3 evaluation</a>; <a href="https://arcprize.org/blog/astra">ARC Prize: Astra evaluation</a>. Different benchmarks use different metrics.</li><li><a href="https://digitaleconomy.stanford.edu/publication/generative-ai-at-work/">Stanford: Generative AI at Work</a>; <a href="https://metr.org/blog/2025-07-10-early-2025-ai-experienced-os-dev-study/">METR: Developer study</a>; <a href="https://metr.org/blog/2026-02-24-uplift-update/">2026 update</a>. Populations and workflows matter.</li><li><a href="https://www.nature.com/articles/s41586-024-08252-9">Nature: GenCast</a>; <a href="https://www.nature.com/articles/s41586-024-07487-w">Nature: AlphaFold 3</a>. Specialized system results are not generic chatbot capabilities.</li></ul><p class="source"><b>Checking the demo:</b> Settings → Run data integrity checks tests source references, dates, bounds, and numerical behavior. It cannot validate a paper, prove causation, or establish that a selected catalog represents the field.</p>
-<div class="g-foot">Canonical guide: src/presenter-guide.html. The app, printable HTML, and PDF derive from this document. <span class="page-no">4 / 4</span></div>
-</section>
-</div><!-- /guide --></div></body></html>
+.page { max-width: 46rem; margin: 0 auto; padding: 32px 22px 56px; }
+@media print {
+  body { font-size: 10.5pt; }
+  .page { max-width: none; padding: 0; }
+  .guide-scope h2 { break-after: avoid; }
+  .guide-scope h3 { break-after: avoid; }
+  .guide-scope h3 + p { break-inside: avoid; }
+  .guide-scope table { break-inside: auto; }
+  .guide-scope tr { break-inside: avoid; }
+  .guide-scope .g-foot { margin-top: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="guide-scope">
+
+  <div class="g-head">
+    <div class="g-kicker">Demo 3 of 16 &middot; Part two &middot; 22&ndash;28 min full, 10 min cut</div>
+    <h1>The Pace of AI Progress &mdash; presenter guide</h1>
+    <div class="g-sub">
+      One HTML file, offline, no AI at runtime. You need a screen to project or share and a mouse or
+      touchscreen for the drawing in stage 1. Nothing else.
+    </div>
+  </div>
+
+  <h2>Learning goals</h2>
+  <p>What the activity itself demonstrably shows, one per stage:</p>
+  <ol class="goals">
+    <li>On the tests the field cites most, the change since 2023 is measured in multiples, not
+      points &mdash; and every series stops where its published record stops, conditions
+      attached.</li>
+    <li>A benchmark is retired when it stops measuring what it was meant to; being beaten is one of
+      four routes, and the replacement often counts something new &mdash; so a rising line across
+      generations is not one trend.</li>
+    <li>An achievement is an event with an acceptance status and a stated AI role; read the rung
+      before the headline &mdash; every rung from Nobel Prize to retracted has a real
+      2023&ndash;2026 occupant.</li>
+    <li>A gap in published history can be estimated; a future cannot &mdash; three rules fit the same
+      two points, and only the next measurement chooses between them.</li>
+  </ol>
+
+  <h2>Where this sits on the path</h2>
+  <p>
+    Demo 2 showed a language model being measured &mdash; a score is a measurement, not a property of
+    a mind. This demo hands that forward to <i>published</i> measurements: read one with its
+    conditions, and do not extend it past where it stops. Demo 4 takes the question this one raises
+    &mdash; progress this fast invites &ldquo;is it a bubble?&rdquo; &mdash; and answers it with
+    history rather than a script.
+  </p>
+
+  <h2>One question for the session</h2>
+  <p><b>How far has AI actually come, and how would you know?</b> The honest answer is large and
+    specific: multiples, on named tests, under stated conditions, with the boundary on the same
+    slide.</p>
+  <p class="say">
+    The one sentence to land: <b>the change is bigger than most rooms guess, and a number is only
+    a result when it comes with its conditions.</b> Both halves, in that order.
+  </p>
+
+  <h2>The three facts worth a projector</h2>
+  <p>Ninety seconds each, no benchmark literacy needed.</p>
+  <div class="scroll">
+  <table>
+    <tr><th>Fact</th><th>The move</th><th>Why this one</th></tr>
+    <tr>
+      <td><b>GDPval</b> &mdash; 1,320 real work deliverables, 44 occupations, graded blind by
+        professionals from those occupations</td>
+      <td class="big">12.3% &rarr; 70.9%<br>in ~13 months</td>
+      <td>Nurses, lawyers, accountants, engineers, journalists rated the machine's deliverable as
+        good as or better than their own about seven times in ten. Vendor-built &mdash; say so
+        &mdash; with the scores republished by Epoch AI.</td>
+    </tr>
+    <tr>
+      <td><b>METR time horizon</b> &mdash; the length of task, in human working time, a model
+        finishes half the time</td>
+      <td class="big">3.5 min &rarr; 320 min<br>in 32 months</td>
+      <td>The unit needs no explaining. An independent non-profit, same methodology both ends, and
+        intervals nowhere near overlapping: 6.9 min upper bound then, 170 min lower bound now. Pair
+        it with the doubling time &mdash; ~7 months over the whole history, <b>88.6 days since
+        2024</b>.</td>
+    </tr>
+    <tr>
+      <td><b>FrontierMath Tier 4</b> &mdash; 43 problems Epoch says take a researcher days</td>
+      <td class="big">0% &rarr; 97.6%<br>in 20 months</td>
+      <td>And on <b>FrontierMath-Erdős</b> &mdash; 68 genuinely unsolved problems, released the same
+        month &mdash; the same model gets <b>2 of 68</b>. Pace and boundary in one image, and it
+        pre-empts &ldquo;the tests just got easier&rdquo;: the administrator built a harder one and
+        the model fell off it.</td>
+    </tr>
+  </table>
+  </div>
+  <p class="say">
+    Fourth, if a room wants money: ARC-AGI-1 at 87.5% cost about <b>$4,560 per task</b> in December
+    2024; today 98.5% costs <b>28 cents</b>, and ARC-AGI-2 &mdash; the harder successor &mdash;
+    reaches 95% at $1.12. A harder test, a higher score, roughly four thousand times less money.
+  </p>
+
+  <h2>The shape of the session</h2>
+  <p>Measure 10 min (two series drawn with the room, three offered) &middot; Retire 6 (one family
+    opened properly) &middot; Achieve 6 (top rung, then bottom) &middot; Forecast 4 (drag to year 8,
+    then the boundary card).</p>
+  <p><b>The ten-minute cut:</b> stage 1 with the METR series only, stage 3 filtered to Nobel Prize
+    and to contested, then the last paragraph of stage 4 &mdash; magnitude, acceptance and the
+    anti-extrapolation point, without the benchmark-family detail.</p>
+
+  <h2>Stage 1 &mdash; Measure</h2>
+  <p><b>Question.</b> How much did the most-cited AI measurements move, and could you have guessed
+    the size of it?</p>
+  <p><b>Predict prompt.</b> &ldquo;GPT-4 managed tasks that take a person three and a half minutes.
+    Where is that by late 2025 &mdash; ten minutes? An hour?&rdquo; Take numbers out loud, then draw
+    the room's median, not your own.</p>
+  <p><b>Activity.</b> Do the GDPval series yourself so the room sees the mechanic, then hand over the
+    METR series and take a show of hands before <b>Reveal</b>. Drag across the shaded region, or
+    focus the chart and use Up/Down. <b>Choose a series</b> jumps between the five.</p>
+  <p><b>Expected observation.</b> Almost every room draws below the published line, on every series.
+    Name that as a fact about the measurements, not a failing of the room &mdash; and do not let it
+    become &ldquo;draw higher next time&rdquo;, the error stage 4 exists to kill. The reveal's
+    <b>what would have broken this line</b> list is the payload: a successor released inside the
+    gap, a harness change, a problem set corrected in 42% of its items.</p>
+  <p><b>Second half.</b> Ask what the hatched gap between the last dot and the snapshot date means:
+    nothing was measured there, by this page.</p>
+  <p><b>Check-yourself answer key.</b> &ldquo;Your line was below the published result. What does
+    that show?&rdquo; &mdash; That the results moved faster than the room guessed, on these tests
+    under these conditions. <b>Not</b> that the room can forecast by drawing further.</p>
+  <p><b>Teaching limit.</b> Five series are a teaching selection, not a survey. The ratio at reveal
+    compares an endpoint with one selected report; it does not grade anyone's reasoning.</p>
+
+  <h2>Stage 2 &mdash; Retire</h2>
+  <p><b>Question.</b> Every widely cited test gets replaced. Were they all simply beaten?</p>
+  <p><b>Predict prompt.</b> &ldquo;SWE-bench Verified was the standard AI coding benchmark, and it
+    has been retired. What was the top score when its own co-author stopped reporting it?&rdquo; Let
+    the room guess high: 76.80%, and the reason is not the score.</p>
+  <p><b>Activity.</b> Open <b>Software engineering</b> first; it breaks the tidy story. Read
+    OpenAI's own words off the card: 59.4% of the audited failing problems had flawed tests, and
+    every frontier model could reproduce the human bug fix from memory. Then <b>ARC-AGI</b>, for the
+    generation that changed the unit.</p>
+  <p><b>Expected observation.</b> Four routes, and only one is &ldquo;beaten&rdquo;. Rooms assume
+    contamination is rare; the Terminal-Bench leaderboard carries a canary string begging not to be
+    trained on, which lands it better than any argument.</p>
+  <p><b>Check-yourself answer key.</b> &ldquo;Terminal-Bench went 2.0 &rarr; 3.0 &rarr; 4.0. What
+    does the higher number tell you?&rdquo; &mdash; Only that the old version stopped measuring what
+    it was meant to: 4.0 has 66 tasks to 2.1's 89, and one model scores <i>higher</i> on 4.0.</p>
+  <p><b>Teaching limit.</b> Four families, not the field. The status and route chips are labelled
+    <b>Reasoned</b> because they are this page's reading of the quotation beside them &mdash; a
+    reader is invited to disagree, which is why the quotation is shown.</p>
+
+  <h2>Stage 3 &mdash; Achieve</h2>
+  <p><b>Question.</b> Which of these happened the way the headline says, and how would you tell?</p>
+  <p><b>Predict prompt.</b> &ldquo;The news said AI solved a Millennium Prize Problem. On a ladder
+    from Nobel Prize down to retracted, where does that sit?&rdquo; Take answers before filtering.</p>
+  <p><b>Activity.</b> Filter to <b>Nobel Prize</b> &mdash; one card, and it took years. Then
+    <b>Announced, contested</b> &mdash; one card, the biggest headline on the page; read its
+    <b>Who checked it</b> line aloud, in full. Then <b>Retracted</b>: the same organisation nine
+    months earlier.</p>
+  <p><b>Expected observation.</b> The rung ordering inverts the news ordering: the loudest claims
+    sit at the bottom, and the one with a prize is two years old and not a language model.</p>
+  <p><b>Say this about Navier&ndash;Stokes, precisely.</b> An AI system produced a proof, checked in
+    Lean, that closed the last gap in a strategy two human mathematicians had built &mdash; for one
+    of the four statements Clay accepts as resolving the problem. Clay's page still reads
+    &ldquo;Active&rdquo;; it is not peer-reviewed; Clay's rules need publication plus two years plus
+    general acceptance, so no prize was possible before 2028 whatever anyone thinks of the proof;
+    OpenAI states it does not intend to claim it; the priority dispute is unresolved; and statement
+    (C) leaves (A), the unforced case everyone means, open.</p>
+  <p class="say warn">
+    That long version is not hedging &mdash; it is a better story than the headline, and it survives
+    the one person in the room who knows the field. If you shorten it, shorten it to: <i>a real,
+    checkable advance on one of the four statements Clay accepts, with AI closing a specific gap
+    inside a human proof strategy.</i> Never to &ldquo;AI solved a Millennium Prize Problem&rdquo;.
+  </p>
+  <p><b>Check-yourself answer key.</b> &ldquo;Which rung does the September 2026
+    Navier&ndash;Stokes result sit on?&rdquo; &mdash; Announced, contested.</p>
+  <p><b>Teaching limit.</b> Fourteen cases, weighted toward mathematics because that is where the
+    strongest and the most contested recent claims are. The ladder ranks how thoroughly a claim has
+    been checked, not how important it is.</p>
+
+  <h2>Stage 4 &mdash; Forecast</h2>
+  <p><b>Question.</b> What can two measurements tell you about next year?</p>
+  <p><b>Predict prompt.</b> &ldquo;A score went 20 to 30 in a year. Eight years on, how far apart can
+    three rules that fit those points be &mdash; a few points, or a factor of ten?&rdquo;</p>
+  <p><b>Activity.</b> Drag to year 8: the compound rule leaves the scale entirely, the saturation
+    rule is still under 75. Then read the boundary card &mdash; five sentences, deliberately
+    short.</p>
+  <p><b>Expected observation.</b> A room that has just watched five series move by multiples wants to
+    extrapolate; this is the stage that refuses. Say the reconciliation out loud: stage 1 filled a
+    gap in published history, where an answer existed. A forecast has no answer yet, and two points
+    do not choose the shape.</p>
+  <p><b>Check-yourself answer key.</b> &ldquo;Which rule fits the two points?&rdquo; &mdash; All
+    three, and by year 8 they disagree by a factor of ten.</p>
+  <p><b>Teaching limit.</b> The scenario is invented, ceiling included. It shows that two points
+    underdetermine a curve; it says nothing about which curve AI is on.</p>
+
+  <h2>Misconceptions</h2>
+  <div class="mis"><b>&ldquo;The benchmarks just got easier, so the numbers are meaningless.&rdquo;</b>
+    <span>The opposite, mostly: ARC-AGI-2 was built to resist scale and went 6.5% to 95% in
+    seventeen months, and on a harder mathematics set released this month the same model gets 2 of
+    68. Read the task count, not the version number (stages 1&ndash;2).</span></div>
+  <div class="mis"><b>&ldquo;A benchmark gets replaced because it was beaten.&rdquo;</b>
+    <span>One of four. SWE-bench Verified was retired at 76.80% for flawed tests and contamination;
+    Terminal-Bench 2.1 was an environment fix; multilingual variants exist for coverage
+    (stage 2).</span></div>
+  <div class="mis"><b>&ldquo;A score is a property of the model.&rdquo;</b>
+    <span>One model on one benchmark spans 18 points across harnesses, and 45 on ARC-AGI-3 at a
+    fixed effort setting. Effort is not even monotone: 35.2% at &ldquo;none&rdquo; beats 17.5% at
+    &ldquo;low&rdquo; (stages 1&ndash;2).</span></div>
+  <div class="mis"><b>&ldquo;If AI won a Nobel and solved a Millennium problem, it can do the
+    work.&rdquo;</b>
+    <span>The Nobel was for AlphaFold, not a chatbot, after years of checking; the
+    Navier&ndash;Stokes result is unrecognised and contested. Meanwhile the one randomised trial of
+    experienced developers measured them <b>19% slower</b>, and the best score on real paid
+    freelance projects is 16.1% (stages 3&ndash;4).</span></div>
+  <div class="mis"><b>&ldquo;Saturation means progress is slowing.&rdquo;</b>
+    <span>Saturation is a property of bounded scores. METR's horizon has no ceiling, has forced no
+    successor, and its doubling time is shortening (stages 1&ndash;2).</span></div>
+
+  <h2>Discussion questions</h2>
+  <ul>
+    <li>Pick one series. What would you need to know to say whether it is still rising in two years
+      &mdash; and could you have known it in February 2025?</li>
+    <li>A vendor shows one number for its model on a benchmark. What five things do you now ask for
+      before believing it?</li>
+    <li>GDPval says professionals rate the machine's work as good as or better seven times in ten;
+      the developer trial says experienced developers were 19% slower. Both careful. What question
+      would distinguish them for your own work?</li>
+  </ul>
+
+  <h2>Questions you will get</h2>
+  <h3>&ldquo;So did AI solve a Millennium Prize Problem or not?&rdquo;</h3>
+  <p>
+    Give the precise version in stage 3 and do not flinch from its length. Short form: a real,
+    checkable advance on one of Clay's four statements, with AI closing a gap inside a human
+    strategy; not peer-reviewed; not recognised; no prize; disputed on priority. Pushed for yes or
+    no: &ldquo;not as the news said it, and more than a sceptic would expect.&rdquo;
+  </p>
+  <h3>&ldquo;Aren&rsquo;t these numbers from the companies selling it?&rdquo;</h3>
+  <p>
+    Some are, and the page labels them. GDPval is OpenAI's &mdash; but the graders are independent
+    professionals judging blind, and Epoch AI republished the scores. METR is a non-profit with no
+    product; the ARC Prize and Terminal-Bench boards are third-party and publish cost beside score.
+    FrontierMath is the sharpest case: OpenAI funded it and holds exclusive access to part of it,
+    <i>and Epoch says so on its own page</i>, and Epoch's own run reproduces OpenAI's 97.6% exactly.
+  </p>
+  <h3>&ldquo;Why does that one card have two different numbers for GPQA?&rdquo;</h3>
+  <p>
+    Because OpenAI published two. GPT-4o's GPQA Diamond pass@1 is 50.6% in the o1 post's table; the
+    May 2024 launch chart, labelled plain &ldquo;GPQA&rdquo;, shows 53.6% for the same model. Two
+    runs, two pages, one vendor. Showing both rather than picking one is the whole lesson in a
+    row.
+  </p>
+  <h3>&ldquo;Where did you get this?&rdquo;</h3>
+  <p>
+    Open <b>Settings &rarr; Run data integrity checks</b> in front of them. It re-derives live that
+    every reference resolves to a source dated to the snapshot, that every point carries its
+    conditions, that every series says where it stops, and that every label word is from its closed
+    vocabulary. Then open <b>Details</b> on any stage: each lists its sources with the fetch date and
+    how the page was read &mdash; fetched, rendered in a browser, or downloaded as a dataset.
+  </p>
+  <h3>&ldquo;Is this current?&rdquo;</h3>
+  <p>
+    Every source was opened on the snapshot date printed on the chart, and each series is drawn only
+    as far as its published record goes &mdash; that is what the hatched stretch means. Re-check the
+    sources each semester: a stale page here would teach the opposite of its own lesson.
+  </p>
+
+  <h2>Presenter controls</h2>
+  <ul>
+    <li><b>Settings &rarr; Presentation mode</b> for projector-sized type; it also enlarges the
+      chart and puts a <b>Notes</b> button in the header.</li>
+    <li>Run the data integrity checks before the room arrives, so you know they are green.</li>
+    <li>Between rooms, <b>Settings &rarr; Reset</b> restarts the demo without reloading &mdash; drawn
+      lines cleared, first series, stage 1, filters and scenario back to their first state &mdash;
+      and keeps Presentation mode as set.</li>
+    <li>Nothing is stored, so an ordinary reload resets it too. No network is needed at any
+      point.</li>
+    <li>Top right: <b>?</b> is the <b>Guide</b> (the on-load how-to, not this document);
+      <b>&#9881;</b> is <b>Settings</b>, holding this document, Presentation mode, Reset and the
+      checks.</li>
+  </ul>
+
+
+  <div class="g-foot">
+    The Pace of AI Progress &mdash; Bryant Harrison, Murray State University.
+    Every source opened on the snapshot date shown on the chart; every figure on screen links to its
+    origin, and the Details drawer says how each page was read. Claims this page deliberately does
+    not make are listed in stage 4.
+  </div>
+
+</div><!-- /guide -->
+</div>
+</body>
+</html>
