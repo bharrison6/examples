@@ -23,9 +23,10 @@ const D = DATA, E = ENGINE;
 const $  = s => document.querySelector(s);
 const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 
-/* Session state. Nothing is persisted anywhere — Settings -> Reset triggers a
-   full reload (the shell's own behaviour), which is what actually returns
-   every one of these to its fresh-load value. */
+/* Session state. Nothing is persisted anywhere. Settings -> Reset is IN PLACE
+   (kit v2): the shell restores its own chrome and dispatches `lessonreset`,
+   and resetActivity() below returns every one of these to its fresh-load
+   value by hand. The enumeration lives on that function. */
 const S = {
   i: 0,                       /* index into D.CARDS */
   answers: {},                /* id -> { year, verdict } */
@@ -529,6 +530,91 @@ function scrollActTop() {
 document.addEventListener('presentationchange', e => {
   if (S.tl) S.tl.setBig(e.detail.on);
 });
+
+/* ============================ reset, in place ============================
+   Kit v2. The shell has already put back everything the kit named — stage 1
+   selected, every dialog closed (including #item-details), the four .obs-cue
+   lines, the check cards, the Details drawer, the scroll — and then dispatched
+   `lessonreset`. This is the half only this file can know about. This demo's
+   SPEC.md always said "Reset restores the first lens and closes disclosures";
+   the reload that came with kit v1 met that by accident, and this meets it on
+   purpose.
+
+   THE ENUMERATION, written out because in place is only correct if the list
+   is complete:
+
+     S.i, S.answers, S.pending, S.revealed, S.lens — the plain values.
+     S.tl — KEPT and REWOUND, not dropped. buildTimeline() binds the slider,
+            the ‹ › buttons and a window resize listener exactly once; nulling
+            S.tl and letting the next stagechange rebuild it would bind them
+            all a second time. So: cursor to the full span (1), selection
+            cleared, and the slider input put back to its template value.
+
+     Stage 1 DOM: #intro visible; #card-body hidden; #scorecard hidden and
+            emptied; #guess-wrap visible; #reveal-wrap hidden and emptied;
+            #btn-lock visible; #btn-next-card hidden; #year-slider and
+            #year-read back to 1985; #card-progress width back to none.
+            #card-count / #card-quote / #card-note / #verdict-prompt /
+            #verdict-btns are NOT touched here: they sit inside the hidden
+            #card-body and renderCard() rewrites all five unconditionally
+            before it can be shown, so their content is unobservable until it
+            is overwritten. Stated, not assumed.
+     Stage 2 DOM: #tl-detail back to the empty-state hint (showEvent(null) —
+            called directly, because select(null) on an already-null selection
+            returns before its callback); #tl-winter hidden; the three stat
+            readouts back to their template values ("2026", "0", "0"). Their
+            live values return on the next visit, when the stagechange handler
+            re-syncs, exactly as on first load.
+     Stage 3 DOM: #lens-nav and #anatomy emptied; renderAnatomy() rebuilds
+            them from S.lens = 0 on the next visit.
+     Stage 4 DOM: #close emptied and its build-once guard removed, so every
+            <details> a learner opened is gone rather than left open.
+     Settings: #selftest-out emptied.
+     #item-details: closed by the shell; its title and body cleared here so
+            nothing stale is one showModal() away.
+   ======================================================================== */
+function resetActivity() {
+  S.i = 0;
+  S.answers = {};
+  S.pending = { year: 1985, verdict: null };
+  S.revealed = false;
+  S.lens = 0;
+
+  if (S.tl) {
+    S.tl.setCursor(1);
+    S.tl.select(null);
+    $('#tl-slider').value = '1000';
+  }
+  showEvent(null);
+  $('#tl-winter').hidden = true;
+  $('#tl-year').textContent = '2026';
+  $('#tl-total').textContent = '0';
+  $('#tl-with').textContent = '0';
+
+  $('#intro').hidden = false;
+  $('#card-body').hidden = true;
+  const sc = $('#scorecard'); sc.hidden = true; sc.innerHTML = '';
+  $('#guess-wrap').hidden = false;
+  const rv = $('#reveal-wrap'); rv.hidden = true; rv.innerHTML = '';
+  $('#btn-lock').hidden = false;
+  $('#btn-lock').disabled = false;   /* the template's value; renderCard() re-derives it on Begin */
+  $('#btn-next-card').hidden = true;
+  $('#year-slider').value = '1985';
+  $('#year-read').textContent = '1985';
+  $('#card-progress').style.width = '';
+
+  $('#lens-nav').innerHTML = '';
+  $('#anatomy').innerHTML = '';
+
+  const close = $('#close');
+  close.innerHTML = '';
+  delete close.dataset.built;
+
+  $('#selftest-out').innerHTML = '';
+  $('#item-details-title').textContent = 'Details';
+  $('#item-details-body').innerHTML = '';
+}
+document.addEventListener('lessonreset', resetActivity);
 
 /* ========================= item-level detail popover =====================
    A SEPARATE mechanism from the shell's #details drawer (which is fixed,
