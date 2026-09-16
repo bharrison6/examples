@@ -87,7 +87,7 @@ network inspector, the montage and the two map stages.
 Guide opens on load and reopens from the header's **Guide** button. Settings
 contains **Open Presenter Notes**, **Presentation mode** and **Reset**, then a
 playing preference, a rehearsal seed, the self-test and About. **Reset is in
-place — no page reload**: it restores stage 1a on the architecture lens, All 8
+place — no page reload**: it restores stage 1a on the architecture lens, First 2
 rules, hidden move scores, Era 0 with every later era and the network discarded,
 your records, every prediction echo and check answer, and closes every type card;
 Presentation mode and the playing preference stay as you set them.
