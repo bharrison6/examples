@@ -640,9 +640,9 @@ const QUESTIONS = [
     factoid: "3×10⁸ m/s — about one foot per nanosecond, the number that sets the speed limit for every circuit." },
 
   { id: 23, category: "Electrical",
-    prompt: "Electric current across the chest that can trigger cardiac arrest",
+    prompt: "Rule-of-thumb AC current across the chest for cardiac fibrillation risk",
     units: "mA", value: 100, min: 0.01, max: 10000, scale: "log",
-    factoid: "About 100 mA — a tenth of an amp — can cause fibrillation. It's the current, not the voltage, that kills." },
+    factoid: "Not a threshold but one point on a curve: IEC 60479-1 sets fibrillation risk by current, duration and path — 80 mA for 10 s is already ~50% risk. Lower is not safe." },
 
   { id: 24, category: "Electrical",
     prompt: "Minimum voltage you can feel as a static shock",
@@ -996,7 +996,7 @@ const QUESTIONS = [
   <h2>Discussion prompts</h2>
   <ol>
     <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Both are in the bank. Ask the room to derive one from the other (62.4 &divide; 144 in&sup2;/ft&sup2;). One number they already had was two numbers they thought they didn't.</li>
-    <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it takes to feel a static shock? A doorknob zap is 5&ndash;25 kV and harmless. It is the current, not the voltage, that kills.</li>
+    <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it takes to feel a static shock? A doorknob zap is 5&ndash;25 kV and harmless. It is the current, not the voltage, that kills. Say plainly that 100 mA is a rule of thumb and not a safe/unsafe line: IEC 60479-1 puts fibrillation risk on a curve over current, duration and path, and well under 100 mA is already dangerous.</li>
     <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs 70 GPa; density 7,850 vs 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical &mdash; the real choice is cost, buckling and joining.</li>
     <li><b>What if steel and concrete expanded at different rates?</b> They both run near 12 &micro;m/m&middot;&deg;C. Every summer would crack the building. Reinforced concrete works on a coincidence.</li>
     <li><b>Did the steel melt?</b> Carbon steel melts near 1,500 &deg;C, but it softens enough to fail far below that. Good for separating "melted" from "failed" in students' vocabulary.</li>
