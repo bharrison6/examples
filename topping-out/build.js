@@ -91,9 +91,28 @@ function buildHtml() {
      validates is a document that rots. */
   gc.extractGuide(appendixSrc);
 
-  const engine = ENGINE_FILES
+  /* The engine and data files carry a CommonJS tail so node can require them
+     for the test suites. Nothing is stripped — `typeof module` is undefined
+     in the browser and the guards handle it — but a literal </script> inside
+     any string would close the inline script tag early.
+
+     THE ESCAPING IS APPLIED TO THE JS PAYLOADS ONLY, never to the assembled
+     document. Doing it document-wide escapes the TEMPLATE's own closing
+     </script> tags as well, and the result is a page where the browser never
+     sees a script close, treats the rest of the document as script text, and
+     runs NOTHING — silently, with an empty console, because the document
+     simply ends inside a script rather than hitting a parse error.
+     That shipped for one build here and every static check stayed green:
+     build.js --check, the 36 engine assertions, the 83 playtest assertions,
+     check-shell and build-hub --check all passed over a page that executed
+     no JavaScript at all. It was caught by asserting a stage panel actually
+     rendered in a real browser, which is precisely why that step is not
+     waivable. */
+  const escapeScriptClose = s => s.replace(/<\/script(?=[\s>])/gi, '<\\/script');
+
+  const engine = escapeScriptClose(ENGINE_FILES
     .map(f => '/* ==== ' + f + ' ==== */\n' + S(f))
-    .join('\n\n');
+    .join('\n\n'));
 
   let html = S('template.html');
   const markers = [
@@ -114,16 +133,20 @@ function buildHtml() {
   html = gc.injectOnce(html, shell.MARKERS.guideCss, guide.css);
   html = gc.injectOnce(html, shell.MARKERS.shellJs, shell.behaviourScript());
   html = gc.injectOnce(html, ENGINE_MARKER, engine);
-  html = gc.injectOnce(html, shell.MARKERS.app, S('app.js'));
+  html = gc.injectOnce(html, shell.MARKERS.app, escapeScriptClose(S('app.js')));
   html = gc.injectOnce(html, shell.MARKERS.guide, guide.html);
 
-  /* The engine and data files carry a CommonJS tail so node can require them
-     for the test suites. Nothing is stripped — `typeof module` is undefined
-     in the browser and the guards handle it — but a literal </script> inside
-     any string would close the inline script tag early. This has to run after
-     injection and before the reference scan, or the scan sees the escaped
-     form and the browser sees the unescaped one. */
-  html = html.replace(/<\/script(?=[\s>])/gi, '<\\/script');
+  /* A last, cheap assertion that the escaping above did not eat the
+     template's own script closers. Three <script> blocks go in, so three
+     real </script> tags must come out. Without this the failure is invisible
+     to every other check in this build and to every node suite. */
+  const closers = (html.match(/<\/script>/g) || []).length;
+  if (closers !== 3) {
+    die('build refuses to ship a document with ' + closers + ' real </script> closers (expected 3).\n' +
+        '  Escaping </script> across the whole assembled document, instead of inside the JS\n' +
+        '  payloads, produces exactly this — and the page then executes no JavaScript at all,\n' +
+        '  with an empty console, because the document ends inside an unterminated script.');
+  }
 
   /* THE ALLOW LIST IS EMPTY, AND THAT IS THE CORRECT ANSWER HERE.
      assertNoExternalRefs scans script/link/img/iframe/source/video/audio/

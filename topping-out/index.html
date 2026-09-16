@@ -738,7 +738,16 @@ h1, h2, h3, h4 { margin: 0; font-weight: 700; }
 .btn[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
 
 /* ---------- main panes ---------- */
-#panes { display: flex; flex: 1 1 auto; min-height: 0; }
+/* `min-width: 0` matters as much as min-height here, and it did not before
+   the retrofit: #panes is itself a flex item now, and a flex item defaults to
+   `min-width: auto`, which refuses to shrink below its content's min-content
+   width. Measured at a 320px viewport: #panes insisted on 348px inside a
+   292px #app, so the right-hand ~28px of the board was clipped and
+   unreachable. The demo used to hide this behind `body { overflow: hidden }`,
+   which the retrofit correctly removed. #left already carries min-width: 0;
+   #right is flex: 0 0 400px and is display:none under 820px, so the mobile
+   fold keeps it out of the calculation rather than min-width doing it. */
+#panes { display: flex; flex: 1 1 auto; min-height: 0; min-width: 0; }
 #left { flex: 1 1 auto; display: flex; flex-direction: column; min-width: 0; }
 #right {
   flex: 0 0 400px; border-left: 2px solid var(--ink); background: var(--paper-2);
@@ -1352,8 +1361,12 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   /* overflow-x on body alone does not stop the viewport panning —
      the html element owns that scroll, so clip it there too */
   html, body { overflow-y: auto; overflow-x: hidden; }
-  #app { max-width: 100vw; }
-  #app { height: 100dvh; }
+  /* The board is a block inside a stage panel now, not the viewport, so both
+     of these are measured against the CONTAINER. `100vw` and `100dvh` were
+     right when the demo WAS the page and are wrong here: at a 320px viewport
+     the stage's content box is 292px, and a 100vw board overhangs it. */
+  #app { max-width: 100%; }
+  #panes { max-width: 100%; }
   #topbar { flex-wrap: wrap; }
   #brand { min-width: 0; padding: 6px 10px; }
   #brand .t2 { display: none; }
@@ -1367,9 +1380,22 @@ table.lb td.rank { font-weight: 700; width: 30px; }
   #topbar-actions { padding: 0 8px; }
   #panes { position: relative; }
   #left, #right {
-    flex: 1 1 100%; border-left: 0;
-    min-width: 0; max-width: 100vw;      /* a flex item will not shrink past
+    /* basis 0, not 100%/400px: #panes sizes to its content, so a non-zero
+       basis is what the pane ends up at and nothing forces the shrink. */
+    flex: 1 1 0; border-left: 0;
+    min-width: 0;                        /* a flex item will not shrink past
                                             its content without this */
+    /* `max-width: 100%` of the CONTAINER, not `100vw` of the viewport. Before
+       the retrofit the board WAS the viewport, so the two were the same
+       number. Now the board sits inside a stage panel with the shell's own
+       gutters, so at a 320px viewport the container is 292px while 100vw is
+       still 320 — and #right rendered 320px wide starting 28px in, putting
+       the right edge at 348. Measured consequence: the right edge of
+       "COMMIT WEEK 1 — NO UNDO" landed at x=334 in a 320px viewport, i.e. the
+       demo's single most important control was clipped off-screen on a phone.
+       Found by measuring getBoundingClientRect() against innerWidth; no
+       static check and no screenshot at a wider width could see it. */
+    max-width: 100%;
   }
   #meeting-body, .news .eff { overflow-wrap: break-word; }
   body.m-site #right { display: none; }
@@ -1414,7 +1440,7 @@ table.lb td.rank { font-weight: 700; width: 30px; }
 @media (max-width: 1560px) { .hud-cell.opt { display: none; } }
 @media (max-width: 1340px) { .hud-cell.opt2 { display: none; } }
 @media (max-width: 1100px) {
-  #right { flex-basis: 340px; }
+  #right { flex-basis: 0; }
   #brand { min-width: 110px; }
 }
 body.big .hud-cell.opt, body.big .hud-cell.opt2 { display: none; }
@@ -2779,7 +2805,7 @@ to the dollar, and that is one of the 36. Replay the seed with the team's decisi
   window.lessonShell = { selectStage, setPresentation, reset: resetLesson, flags, onReset: null };
 })();
 
-<\/script>
+</script>
 <script>
 /* ==== data.js ==== */
 /* =====================================================================
@@ -6654,7 +6680,7 @@ TO.Views = (function () {
 
 if (typeof module !== 'undefined' && module.exports) module.exports = TO.Views;
 
-<\/script>
+</script>
 <script>
 /* =====================================================================
    TOPPING OUT — APP
@@ -8439,6 +8465,31 @@ TO.App = (function () {
     };
     document.getElementById('btn-lb-clear').onclick = clearLeaderboard;
 
+    /* ---- A6: repair the kit's leaked domain wording -------------------
+       lesson-shell v2's check-card handler hardcodes the wrong-answer prefix
+       as "Not what the detector showed." — ion-flight's noun, in every demo
+       that adopts the kit. There is no detector in a construction schedule,
+       and a learner reading it in this demo is being told about a machine
+       that does not exist.
+
+       THE KIT IS FROZEN, so this is repaired demo-side rather than upstream,
+       and it is reported in the lane's friction list for kit v3. The kit
+       registers its own click listener while its script runs, which is
+       before this file executes, so this listener fires AFTER it and gets the
+       last word on the same node. Only the prefix is rewritten; the
+       per-option feedback text is the demo's own and is left alone. */
+    document.addEventListener('click', function (e) {
+      var opt = e.target.closest && e.target.closest('.check-option');
+      if (!opt) return;
+      var card = opt.closest('.check');
+      var out = card && card.querySelector('.check-feedback');
+      if (!out) return;
+      out.innerHTML = out.innerHTML.replace(
+        '<b>Not what the detector showed.</b>',
+        '<b>Not what the schedule showed.</b>'
+      );
+    });
+
     /* Stage 4's own control. Mid-run it shows the calls table so far, which
        is what the session guide tells a presenter to open the debrief on;
        the full scoresheet appears once the job finishes. */
@@ -8478,6 +8529,6 @@ if (typeof document !== 'undefined') {
   else TO.App.init();
 }
 
-<\/script>
+</script>
 </body>
 </html>
