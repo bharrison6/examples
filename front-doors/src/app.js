@@ -1,12 +1,23 @@
 /* ==========================================================================
    AI Tool Guide (folder: front-doors) — the application.
 
-   Three acts:
-     I   The four doors — four surfaces against four axes, sixteen cells.
-     II  Pick a job — seven realistic faculty tasks against the same four
-         doors, with the smallest sufficient door computed rather than typed.
-     III The receipts — what already changed, what will rot, the uneven row,
-         the cut list and every source.
+   Retrofitted onto lesson-shell v2. Three stages, mapped from the original
+   three acts:
+     1  The four doors — four surfaces against four axes, sixteen cells.
+     2  Pick a job — seven realistic faculty tasks against the same four
+        doors, with the smallest sufficient door computed rather than typed,
+        and a captured before-the-reveal prediction.
+     3  The receipts — what already changed, what was rechecked and held,
+        what will rot, the uneven row, the cut list and every source.
+
+   The shell owns the header, stage tablist, dialogs (Guide/Settings/Details/
+   Presenter Notes), presentation mode, the A6 check cards and Reset's chrome
+   restoration. This file owns the activity: it listens for `stagechange`
+   (chrome only — never render activity state from it, see ADOPTING.md §4
+   step 7) and `lessonreset` (required; restores every piece of this demo's
+   own state) and drives its own per-cell/per-door drill-down dialog,
+   `#item-details`, which is distinct from the shell's per-stage `#details`
+   drawer (ADOPTING.md §5).
 
    No framework and no network. Every derived number comes from engine.js, so
    the screen, the shipped test suite and the self-test button cannot disagree
@@ -19,7 +30,12 @@ const D = DATA, E = ENGINE;
 const $  = s => document.querySelector(s);
 const $$ = s => Array.prototype.slice.call(document.querySelectorAll(s));
 
-const S = { act: 1, job: null, presenter: false };
+const S = {
+  job: null,           /* Act II: which job is selected */
+  predictAxis: null,   /* stage 1 predicted "not a staircase" axis */
+  predictDoor: null,   /* stage 2 predicted door for the CURRENT job; reset per job */
+  predictChanged: null /* stage 3 predicted change count */
+};
 
 /* ---------------------------------------------------------------- helpers */
 
@@ -42,10 +58,44 @@ function srcChip(id, label) {
   return a;
 }
 
-function confChip(conf) {
-  const b = el('span', 'conf ' + conf, conf);
-  b.title = D.CONF_LABEL[conf] || conf;
-  return b;
+/* --------------------------------------------------------------------------
+   The honesty machinery. This demo's own three words — verified / reasoned /
+   unconfirmed — predate the fleet's six-word provenance vocabulary and map
+   onto it directly (orchestrator ruling, 2026-09-15: Reasoned was added to
+   the six specifically because of this demo's own-judgement verdicts):
+
+     verified    -> Sourced, qualified "verified <check date>"
+     reasoned    -> Reasoned (the words already coincide)
+     unconfirmed -> Sourced, qualified "unconfirmed" — an unconfirmed cell
+                    still rests on a real page (Google's own admin docs, for
+                    the uneven row); it is not invented, so it is not
+                    Illustrative, and "unconfirmed" is a qualifier riding on
+                    Sourced, never a label of its own.
+
+   Both words are kept on screen: sixLabel() names the kicker, confWord()
+   names the demo's own original word as the qualifier, so nothing already
+   written is lost and every claim also carries the fleet's vocabulary. */
+function sixLabel(conf) {
+  if (conf === 'reasoned') return { cls: 'k-reasoned', text: 'Reasoned', qual: null };
+  if (conf === 'unconfirmed') return { cls: 'k-sourced', text: 'Sourced', qual: 'unconfirmed' };
+  return { cls: 'k-sourced', text: 'Sourced', qual: 'verified ' + D.CHECKED_ON };
+}
+
+/** A fleet-vocabulary kicker: <span class="panel-kicker"><span class="k-...">
+ *  Word</span><span class="k-qual">...</span></span>. Use wherever a claim
+ *  needs its provenance on the face of the page (A3). */
+function kicker(conf) {
+  const s = sixLabel(conf);
+  const wrap = el('span', 'panel-kicker');
+  wrap.appendChild(el('span', s.cls, s.text));
+  if (s.qual) wrap.appendChild(el('span', 'k-qual', s.qual));
+  return wrap;
+}
+
+/** The demo's own word, standalone — used where a compact badge (a grid
+ *  cell footer) needs the original vocabulary without the full kicker. */
+function confWord(conf) {
+  return el('span', 'conf-word', conf);
 }
 
 /** A four-segment meter. Decorative — the words are in the cell and in the
@@ -77,12 +127,12 @@ function paras(parent, list) {
   (list || []).forEach(p => parent.appendChild(el('p', null, p)));
 }
 
-/* ================================ ACT I =================================
-   One piece of markup, two layouts. app.js stamps --col and --row on every
-   grid child; the stylesheet uses them only above 940px, where the two
-   wrapper divs collapse with `display: contents` and the children become
-   items of a real five-column grid. Below that the wrappers are cards and
-   the custom properties are simply ignored.
+/* ============================= STAGE 1 ===================================
+   The four doors. One piece of markup, two layouts. app.js stamps --col and
+   --row on every grid child; the stylesheet uses them only above 940px,
+   where the two wrapper divs collapse with `display: contents` and the
+   children become items of a real five-column grid. Below that the wrappers
+   are cards and the custom properties are simply ignored.
    ---------------------------------------------------------------------- */
 
 function place(node, col, row) {
@@ -95,7 +145,6 @@ function renderGrid() {
   const g = $('#grid');
   g.innerHTML = '';
 
-  /* the axis rail: a corner plus one label per axis */
   const rail = el('div', 'g-rail');
   rail.appendChild(place(el('div', 'g-corner', 'The four doors'), 1, 1));
   D.AXES.forEach((axis, i) => {
@@ -108,7 +157,6 @@ function renderGrid() {
   });
   g.appendChild(rail);
 
-  /* one group per door: its header, then its four cells */
   D.DOORS.forEach((door, j) => {
     const group = el('div', 'g-group');
     group.dataset.door = door.id;
@@ -135,18 +183,28 @@ function renderGrid() {
       b.appendChild(el('span', 'c-head', c ? c.head : 'no cell'));
       const foot = el('div', 'c-foot');
       foot.appendChild(meter(c ? c.bar : 0));
-      if (c && c.conf !== 'verified') foot.appendChild(confChip(c.conf));
-      else foot.appendChild(el('span', 'c-tap', 'why'));
+      if (c) { foot.appendChild(kicker(c.conf)); }
       b.appendChild(foot);
       b.setAttribute('aria-label',
         axis.q + ' Door ' + door.n + ', ' + door.name + ': ' + (c ? c.head : '') +
         '. Level ' + (c ? c.bar : 0) + ' of 4. Open the explanation.');
-      b.addEventListener('click', () => openCell(door, axis));
+      b.addEventListener('click', () => { openCell(door, axis); noteCheckObserved(door, axis, c); });
       group.appendChild(b);
     });
 
     g.appendChild(group);
   });
+}
+
+/** A4 observation cue for stage 1: fires when the learner opens a "you
+ *  check" (row 4) cell — the moment the non-staircase row is actually in
+ *  front of them. */
+function noteCheckObserved(door, axis, c) {
+  if (axis.id !== 'check' || !c) return;
+  const cue = $('#cue-1');
+  if (!cue) return;
+  cue.textContent = 'Row 4 for door ' + door.n + ' (' + door.name.toLowerCase() + '): ' + c.head +
+    '. Compare that to how far this door reaches on rows 1–3.';
 }
 
 /** The exception panel. Its content is COMPUTED from the bars, so it cannot
@@ -170,6 +228,9 @@ function renderCheckNote() {
       }).join('; ') + '.';
   }
   box.appendChild(line);
+  const kr = el('div', 'src-row');
+  kr.appendChild(kicker('reasoned'));
+  box.appendChild(kr);
   box.appendChild(sourceRow(D.CHECK_NOTE.src, 'The verified facts this ordering rests on:'));
 }
 
@@ -188,20 +249,45 @@ function renderAxisNote() {
   box.appendChild(ul);
 }
 
+/* ------------------------------------------------- stage 1 predict card */
+
+function wirePredictAxis() {
+  const group = $('#predict-axis');
+  if (!group) return;
+  $$('.predict-opt', group).forEach(btn => btn.addEventListener('click', () => {
+    S.predictAxis = btn.dataset.axis;
+    $$('.predict-opt', group).forEach(b => { b.classList.toggle('chosen', b === btn); b.disabled = true; });
+    const echo = $('#echo-1');
+    const correct = 'check';
+    const axisName = { see: 'Sees', do: 'Does', keep: 'Keeps going', check: 'You check' }[btn.dataset.axis];
+    echo.hidden = false;
+    if (btn.dataset.axis === correct) {
+      echo.classList.add('match'); echo.classList.remove('miss');
+      echo.textContent = 'You guessed ' + axisName + ' — right. Rows 1–3 were chosen to rise; row 4 was not, and it does not.';
+    } else {
+      echo.classList.add('miss'); echo.classList.remove('match');
+      echo.textContent = 'You guessed ' + axisName + '. It is actually “You check” (row 4) that breaks the staircase — open the row-4 note below to see why.';
+    }
+  }));
+}
+
 /* ---------------------------------------------------- the detail sheets */
 
-function openSheetWith(title, sub, build) {
-  $('#detail-title').textContent = title;
-  $('#detail-sub').textContent = sub;
-  const body = $('#detail-body');
+function openItemDetails(title, sub, build) {
+  $('#item-details-title-text').textContent = title;
+  $('#item-details-sub').textContent = sub;
+  const body = $('#item-details-body');
   body.innerHTML = '';
   build(body);
-  open('detail');
+  const dlg = $('#item-details');
+  dlg.showModal();
+  const head = $('.lesson-dialog-head button', dlg);
+  if (head) head.focus();
 }
 
 function openCell(door, axis) {
   const c = E.cell(D, door.id, axis.id);
-  openSheetWith(door.name, 'Door ' + door.n + ' · ' + axis.q, body => {
+  openItemDetails(door.name, 'Door ' + door.n + ' · ' + axis.q, body => {
     body.appendChild(el('div', 'd-axis', 'Axis ' + axis.n + ' — ' + axis.short));
     const h = el('h3', null, c ? c.head : 'No cell');
     body.appendChild(h);
@@ -223,7 +309,8 @@ function openCell(door, axis) {
       }
 
       const cr = el('div', 'src-row');
-      cr.appendChild(confChip(c.conf));
+      cr.appendChild(kicker(c.conf));
+      cr.appendChild(confWord(c.conf));
       cr.appendChild(el('span', 'src-title', D.CONF_LABEL[c.conf] || ''));
       body.appendChild(cr);
       body.appendChild(sourceRow(c.src, 'Checked against:'));
@@ -231,26 +318,43 @@ function openCell(door, axis) {
   });
 }
 
+/** Door-level prose (blurb/where/costText/confusable). The pre-build audit's
+ *  structural finding: the sixteen grid cells each carry a kicker but this
+ *  sheet, where the uncertain Codex claim actually lives, carried none at
+ *  all. Every claim-bearing block below now opens with one. */
 function openDoor(door) {
-  openSheetWith(door.name, 'Door ' + door.n + ' · ' + door.tag, body => {
+  openItemDetails(door.name, 'Door ' + door.n + ' · ' + door.tag, body => {
     body.appendChild(el('p', 'lead', door.blurb));
 
     body.appendChild(el('div', 'd-axis', 'Where it lives'));
-    body.appendChild(el('p', null, door.where));
+    const whereClaim = el('div', 'claim');
+    whereClaim.appendChild(kicker('verified'));
+    whereClaim.appendChild(el('p', null, door.where));
+    body.appendChild(whereClaim);
     if (door.whereSrc) body.appendChild(sourceRow(door.whereSrc));
 
     body.appendChild(el('div', 'd-axis', 'Products, on the check date'));
     body.appendChild(el('p', null, door.products));
 
     body.appendChild(el('div', 'd-axis', 'What it costs you to get in'));
-    body.appendChild(el('p', null, door.costText));
+    const costClaim = el('div', 'claim');
+    costClaim.appendChild(kicker('verified'));
+    costClaim.appendChild(el('p', null, door.costText));
+    body.appendChild(costClaim);
     body.appendChild(el('p', 'help', 'No figures on this page on purpose — prices on all four doors moved more than once in the last year. Ask your own IT department what your institution already has; that answer beats any vendor page.'));
     if (door.costSrc) body.appendChild(sourceRow(door.costSrc));
 
     if (door.confusable) {
       body.appendChild(el('hr', 'hr'));
       body.appendChild(el('div', 'd-axis', 'Easy to mix up'));
-      body.appendChild(el('p', null, door.confusable));
+      const confusableClaim = el('div', 'claim');
+      /* Door 4's confusable text is where the demo's top misleading risk
+         lives (the Codex web/mobile claim, re-verified in a real browser on
+         RECHECKED_ON) — a Reasoned kicker would understate it as inference;
+         it is a verified vendor statement, checked twice now. */
+      confusableClaim.appendChild(kicker('verified'));
+      confusableClaim.appendChild(el('p', null, door.confusable));
+      body.appendChild(confusableClaim);
       if (door.confusableSrc) body.appendChild(sourceRow(door.confusableSrc));
     }
 
@@ -269,7 +373,9 @@ function openDoor(door) {
   });
 }
 
-/* ================================ ACT II ================================ */
+/* ============================= STAGE 2 ===================================
+   Pick a job.
+   ---------------------------------------------------------------------- */
 
 function renderJobPicker() {
   const box = $('#job-picker');
@@ -287,8 +393,32 @@ function renderJobPicker() {
 
 function pickJob(id) {
   S.job = id;
+  S.predictDoor = null; /* a fresh job is a fresh prediction, made before the reveal */
   $$('#job-picker .job-btn').forEach(b => b.classList.toggle('on', b.dataset.job === id));
+  renderPredictDoor();
   renderJob();
+}
+
+/** The Predict card for stage 2: a door guess captured BEFORE the computed
+ *  reveal (A2 — "which door finishes this job?" before the computed answer,
+ *  Act II's natural predict-observe-explain). Rendered fresh per job so a
+ *  previous job's guess never leaks into a new one; a guess already made for
+ *  THIS job (after Reset put it back, or on revisiting) is not restored —
+ *  every job selection is a fresh prediction opportunity. */
+function renderPredictDoor() {
+  const group = $('#predict-door');
+  if (!group || !S.job) { if (group) group.hidden = true; return; }
+  group.hidden = false;
+  $$('.predict-opt', group).forEach(b => { b.classList.remove('chosen'); b.disabled = false; });
+  const echo = $('#echo-2');
+  echo.hidden = true; echo.textContent = '';
+  $$('.predict-opt', group).forEach(btn => {
+    btn.onclick = () => {
+      S.predictDoor = btn.dataset.door;
+      $$('.predict-opt', group).forEach(b => { b.classList.toggle('chosen', b === btn); b.disabled = true; });
+      renderJob(); /* reveal, now that a guess is locked in */
+    };
+  });
 }
 
 function renderJob() {
@@ -296,6 +426,10 @@ function renderJob() {
   out.innerHTML = '';
   const job = E.jobById(D, S.job);
   if (!job) { out.classList.add('empty'); return; }
+
+  /* Hold the reveal until a prediction is captured, unless one already was
+     for this job this session (e.g. after opening a different job and back). */
+  if (!S.predictDoor) { out.classList.add('empty'); return; }
   out.classList.remove('empty');
 
   const head = el('div', 'j-head');
@@ -312,6 +446,24 @@ function renderJob() {
 
   const best = E.bestDoor(D, job);
   const t = E.tally(D, job);
+
+  /* The predict echo: your guess vs the computed answer, side by side. */
+  const guessedDoor = D.DOORS.find(d => d.id === S.predictDoor);
+  const echo = $('#echo-2');
+  if (echo && guessedDoor) {
+    echo.hidden = false;
+    const matched = best && best.id === guessedDoor.id;
+    echo.classList.toggle('match', !!matched);
+    echo.classList.toggle('miss', !matched);
+    echo.textContent = 'You guessed Door ' + guessedDoor.n + '. ' +
+      (best
+        ? 'The smallest door that does the whole job is Door ' + best.n + ' — ' + best.name + '.' +
+          (matched ? ' Matched your guess.' : ' Different from your guess — read why below.')
+        : 'No door on this page does the whole job on its own.');
+    const cue = $('#cue-2');
+    if (cue) cue.textContent = echo.textContent;
+  }
+
   const bb = el('div', 'j-best');
   bb.appendChild(el('span', 'b-lbl', 'Smallest door that does the whole job'));
   if (best) {
@@ -341,9 +493,6 @@ function renderJob() {
     card.appendChild(el('p', 'jd-why', v.why));
     const axis = D.AXES.find(a => a.id === v.axis);
     card.appendChild(el('span', 'jd-axis', 'Decided by axis ' + (axis ? axis.n + ' — ' + axis.short : v.axis)));
-    /* "You hand over: nothing" is true of a door that does the job for free and
-       also, misleadingly, of one that cannot do it at all. Only the first is
-       worth saying, so a "wrong door" card states the cost differently. */
     const hand = el('p', 'jd-hand');
     if (v.v === 'no') {
       hand.appendChild(el('b', null, 'Nothing to hand over — '));
@@ -357,14 +506,17 @@ function renderJob() {
   });
   out.appendChild(doors);
 
+  /* The "reasoned, not quoted" disclosure sits BESIDE the verdicts it
+     describes, not below the whole card stack — the pre-build audit's
+     finding that Act II's cards visually resemble Act I's sourced grid
+     while the disclosure sat well below them (split-attention risk). */
   const note = el('div', 'panel warn');
   note.appendChild(el('h3', null, 'These verdicts are reasoned, not quoted'));
-  note.appendChild(el('p', null, 'No vendor page says anything about eighty student reflections. Every verdict above is an inference from the sourced capabilities in Act I — which is why each one names the axis that decided it, so you can check the reasoning rather than trust the answer.'));
-  const cr = el('div', 'src-row');
-  cr.appendChild(confChip('reasoned'));
-  cr.appendChild(el('span', 'src-title', D.CONF_LABEL.reasoned));
-  note.appendChild(cr);
-  out.appendChild(note);
+  const kr = el('div', 'src-row');
+  kr.appendChild(kicker('reasoned'));
+  note.appendChild(kr);
+  note.appendChild(el('p', null, 'No vendor page says anything about eighty student reflections. Every verdict above is an inference from the sourced capabilities in Stage 1 — which is why each one names the axis that decided it, so you can check the reasoning rather than trust the answer.'));
+  out.insertBefore(note, doors);
 }
 
 function renderJobsNote() {
@@ -380,29 +532,88 @@ function renderJobsNote() {
     low.length + ' of the ' + D.JOBS.length + ' are done completely by a chat window or by the agent already inside your word processor.'));
 }
 
-/* =============================== ACT III =============================== */
+/* ============================= STAGE 3 ===================================
+   The receipts.
+   ---------------------------------------------------------------------- */
+
+/** Both "What already changed" and "What was rechecked and held" render as
+ *  an accordion of buttons: pressing one opens its quote+source and fires
+ *  the A4 observation cue (Try = "press any entry"). */
+function renderChangeCard(entry, kind) {
+  const c = el('div', 'chg');
+  const toggle = el('button', 'chg-toggle');
+  toggle.type = 'button';
+  toggle.setAttribute('aria-expanded', 'false');
+
+  if (kind === 'changed') {
+    const move = el('div', 'c-move');
+    move.appendChild(el('span', 'c-was', entry.was));
+    move.appendChild(el('span', 'c-arrow', '→'));
+    move.appendChild(el('span', 'c-now', entry.now));
+    toggle.appendChild(move);
+    toggle.appendChild(el('div', 'c-what', entry.what));
+  } else {
+    toggle.appendChild(el('p', 'c-claim', entry.claim));
+  }
+  toggle.appendChild(kicker(entry.conf));
+
+  const body = el('div', 'chg-body');
+  body.hidden = true;
+  body.appendChild(el('p', 'c-body', entry.body));
+  if (entry.quote) body.appendChild(el('blockquote', 'quote', '“' + entry.quote + '”'));
+  const row = sourceRow(entry.src);
+  body.appendChild(row);
+
+  toggle.addEventListener('click', () => {
+    const open = body.hidden;
+    body.hidden = !open;
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) {
+      const cue = $('#cue-3');
+      const label = kind === 'changed' ? (entry.was + ' → ' + entry.now) : entry.claim;
+      if (cue) cue.textContent = (kind === 'changed' ? 'Changed: ' : 'Rechecked and held: ') + label +
+        ' — checked ' + (kind === 'changed' ? D.CHECKED_ON : D.RECHECKED_ON) + '.';
+    }
+  });
+
+  c.appendChild(toggle);
+  c.appendChild(body);
+  return c;
+}
 
 function renderChanged() {
   const box = $('#changed');
   box.innerHTML = '';
-  D.CHANGED.forEach(ch => {
-    const c = el('div', 'chg');
-    const move = el('div', 'c-move');
-    move.appendChild(el('span', 'c-was', ch.was));
-    move.appendChild(el('span', 'c-arrow', '→'));
-    move.appendChild(el('span', 'c-now', ch.now));
-    c.appendChild(move);
-    c.appendChild(el('div', 'c-what', ch.what));
-    c.appendChild(el('p', 'c-body', ch.body));
-    if (ch.quote) {
-      c.appendChild(el('blockquote', 'quote', '“' + ch.quote + '”'));
-    }
-    const row = sourceRow(ch.src);
-    row.insertBefore(confChip(ch.conf), row.firstChild);
-    c.appendChild(row);
-    box.appendChild(c);
-  });
+  box.appendChild(el('h3', null, 'What already changed'));
+  D.CHANGED.forEach(ch => box.appendChild(renderChangeCard(ch, 'changed')));
   box.appendChild(el('p', 'help', D.CHANGED_NOTE));
+}
+
+/** Symmetric evidence's other half: a claim that could have gone stale and
+ *  did not, given the same visible treatment as a claim that did. */
+function renderRechecked() {
+  const box = $('#rechecked');
+  if (!box) return;
+  box.innerHTML = '';
+  box.appendChild(el('h3', null, 'What was rechecked and held'));
+  (D.RECHECKED || []).forEach(r => box.appendChild(renderChangeCard(r, 'rechecked')));
+  box.appendChild(el('p', 'help', D.RECHECKED_NOTE));
+}
+
+function wirePredictChanged() {
+  const group = $('#predict-changed');
+  if (!group) return;
+  $$('.predict-opt', group).forEach(btn => btn.addEventListener('click', () => {
+    S.predictChanged = Number(btn.dataset.n);
+    $$('.predict-opt', group).forEach(b => { b.classList.toggle('chosen', b === btn); b.disabled = true; });
+    const actual = D.CHANGED.filter(c => /Agent Mode|ChatGPT agent/i.test(c.was)).length;
+    const echo = $('#echo-3');
+    echo.hidden = false;
+    const matched = S.predictChanged === actual;
+    echo.classList.toggle('match', matched);
+    echo.classList.toggle('miss', !matched);
+    echo.textContent = 'You guessed ' + S.predictChanged + '. ' + actual + ' of the four doors had a product renamed or retired by a vendor in that window (Word’s “Agent Mode” and OpenAI’s “ChatGPT agent”) — the third entry below is this module’s own drafting mistake about itself, not a vendor change.';
+  }));
 }
 
 function renderStale() {
@@ -436,7 +647,7 @@ function renderUneven() {
   if (D.UNEVEN.quote) box.appendChild(el('blockquote', 'quote', '“' + D.UNEVEN.quote + '”'));
   box.appendChild(el('p', 'help', D.UNEVEN.note));
   const row = sourceRow(D.UNEVEN.src);
-  row.insertBefore(confChip(D.UNEVEN.conf), row.firstChild);
+  row.insertBefore(kicker(D.UNEVEN.conf), row.firstChild);
   box.appendChild(row);
 }
 
@@ -483,80 +694,52 @@ function renderCounts() {
   box.appendChild(el('p', 'help', 'Every number in that paragraph is read out of the dataset at page load, and the shipped test suite fails the build if any of them disagrees with README.md, the presenter guide or the manifest.'));
 }
 
-/* =============================== acts ================================== */
-
-function setAct(n) {
-  S.act = n;
-  $$('.act').forEach(a => { a.hidden = +a.dataset.act !== n; });
-  $$('#actnav button').forEach(b => {
-    const on = +b.dataset.act === n;
-    b.classList.toggle('on', on);
-    b.setAttribute('aria-selected', String(on));
-  });
-  window.scrollTo({ top: 0, behavior: 'auto' });
-}
-
-/* ============================== overlays =============================== */
-
-function lockScroll() {
-  document.body.style.overflowY = $$('.overlay').some(o => !o.hidden) ? 'hidden' : '';
-}
-function open(id) {
-  const o = document.getElementById(id);
-  o.hidden = false;
-  lockScroll();
-  const inner = o.querySelector('.sheet-inner');
-  if (inner) inner.focus();
-}
-function close(id) { document.getElementById(id).hidden = true; lockScroll(); }
-
-function wireOverlays() {
-  $$('[data-close]').forEach(b => b.addEventListener('click', () => close(b.dataset.close)));
-  $$('.overlay').forEach(o => o.addEventListener('click', ev => {
-    if (ev.target === o) { o.hidden = true; lockScroll(); }
-  }));
-  document.addEventListener('keydown', ev => {
-    if (ev.key === 'Escape') { $$('.overlay').forEach(o => { o.hidden = true; }); lockScroll(); }
-  });
-  $('#btn-howto').addEventListener('click', () => open('howto'));
-  $('#btn-settings').addEventListener('click', () => open('settings'));
-  $('#btn-notes').addEventListener('click', () => { close('settings'); open('notes'); });
-  $('#chk-presenter').addEventListener('change', ev => {
-    S.presenter = ev.target.checked;
-    document.body.classList.toggle('presenting', S.presenter);
-  });
-  $('#btn-reset').addEventListener('click', resetDemo);
-  $('#btn-selftest').addEventListener('click', runSelfTest);
-}
-
-/* ================================ reset =================================
-   Whole-demo, fresh-load semantics: everything boot() leaves behind except
-   the two things that are not demo state.
-
-   Presentation mode survives on purpose. It is a property of the room — the
-   projector is still a projector — and a presenter who reset between sessions
-   and had to re-enable it every time would stop using the button. The Guide
-   overlay stays CLOSED, because reset is not a reload: the presenter pressing
-   it is mid-session and does not need the how-to panel in the way.
-
-   Everything else here is genuinely all of this demo's mutable state. S holds
-   three fields, one of which is `presenter`; the rest of what a session
-   accumulates lives in the DOM, in the job output and the self-test results.
+/* ============================ stagechange ================================
+   Chrome only, per ADOPTING.md §4 step 7: the shell fires `stagechange`
+   during Reset BEFORE `lessonreset`, so a handler that renders activity
+   state here would resurrect the pre-reset state into freshly reset chrome.
+   This demo needs no per-stage build step — every stage's content is
+   already rendered once at boot — so the handler does nothing but exists to
+   document that fact rather than leave the question open.
    ---------------------------------------------------------------------- */
+document.addEventListener('stagechange', () => { /* chrome-only; nothing to (re)build per stage */ });
 
-function resetDemo() {
+/* ================================ reset ==================================
+   Required (ADOPTING.md §4). Enumerated rather than asserted:
+     - S.job, S.predictAxis, S.predictDoor, S.predictChanged -> initial values
+     - the job picker's .on class, the predict button groups' .chosen/disabled
+     - the three .echo spans -> hidden, cleared
+     - #job-out -> empty (re-render with no job)
+     - #cue-1 / #cue-2 / #cue-3 -> cleared
+     - every .chg-body accordion -> closed
+     - the self-test output -> the shell clears #selftest-out only if we
+       clear it; it is ours, so we do
+   The shell has already, by the time this fires: closed every dialog
+   (including #item-details), returned the stage tabs and A6 check cards to
+   first load, and moved to stage 1. Presentation mode is untouched, as
+   contracted.
+   ---------------------------------------------------------------------- */
+function resetActivity() {
   S.job = null;
+  S.predictAxis = null;
+  S.predictDoor = null;
+  S.predictChanged = null;
+
   $$('#job-picker .job-btn').forEach(b => b.classList.remove('on'));
-  renderJob();                       /* clears #job-out and restores .empty */
+  const pd = $('#predict-door');
+  if (pd) pd.hidden = true;
+  renderJob();
+
+  $$('.predict-opt').forEach(b => { b.classList.remove('chosen'); b.disabled = false; });
+  $$('.lesson-strip .echo').forEach(e => { e.hidden = true; e.textContent = ''; e.classList.remove('match', 'miss'); });
+  $$('.obs-cue').forEach(c => { c.textContent = ''; });
+  $$('.chg-body').forEach(b => { b.hidden = true; });
+  $$('.chg-toggle').forEach(t => t.setAttribute('aria-expanded', 'false'));
 
   const st = $('#selftest-out');
   if (st) st.innerHTML = '';
-
-  $$('.overlay').forEach(o => { o.hidden = true; });
-  lockScroll();
-
-  setAct(1);                         /* also scrolls to the top */
 }
+document.addEventListener('lessonreset', resetActivity);
 
 /* ============================== self-test ===============================
    The proof button. It re-derives, in front of whoever is asking, the
@@ -568,7 +751,6 @@ function runSelfTest() {
   const out = [];
   const ok = (name, cond, detail) => out.push([!!cond, name, detail || '']);
 
-  /* ---- sources resolve, in both directions ---- */
   const dangling = E.danglingSources(D);
   ok('Every claim resolves to a declared source', dangling.length === 0, dangling.join(', '));
   const unused = E.unusedSources(D);
@@ -578,7 +760,6 @@ function runSelfTest() {
   ok('Every source is first-party',
      Object.keys(D.SOURCES).every(id => D.SOURCES[id].kind === 'primary'));
 
-  /* ---- the grid is complete and honestly labelled ---- */
   ok('All sixteen cells exist', E.cells(D).every(x => !!x.c),
      E.cells(D).filter(x => !x.c).map(x => x.key).join(', '));
   const noSrc = E.verifiedWithoutSource(D);
@@ -588,13 +769,11 @@ function runSelfTest() {
   ok('Every bar is a level the axis actually defines',
      E.cells(D).every(({ c, axis }) => c && E.barText(D, axis.id, c.bar) !== null));
 
-  /* ---- the module's two self-imposed rules ---- */
   const money = E.priceLeaks(D);
   ok('No price reaches the screen', money.length === 0, money.join(' | '));
   const rank = E.rankingLeaks(D);
   ok('No vendor is recommended or ranked', rank.length === 0, rank.join(', '));
 
-  /* ---- the thesis, as a property of the data ---- */
   ok('The three reach rows rise across the four doors', E.reachRowsAreStaircases(D));
   ok('The review row does NOT simply rise — that is the point',
      !E.checkIsStaircase(D),
@@ -603,7 +782,6 @@ function runSelfTest() {
   ok('The page names every door whose review burden departs from its reach',
      ex.length > 0, ex.map(r => 'door ' + r.n + ' reach ' + r.reach + ' check ' + r.check).join('; '));
 
-  /* ---- act II ---- */
   ok('Every job has a verdict for every door',
      D.JOBS.every(j => D.DOORS.every(d => !!E.verdict(D, j, d.id))));
   ok('Every verdict names one of the four axes',
@@ -621,7 +799,6 @@ function runSelfTest() {
      D.JOBS.every(j => !!E.bestDoor(D, j)),
      D.JOBS.filter(j => !E.bestDoor(D, j)).map(j => j.id).join(', '));
 
-  /* ---- receipts ---- */
   ok('The cut list is not empty and every entry says why',
      D.CUT.length > 0 && D.CUT.every(c => c.claim && c.why && c.why.length > 40));
   ok('At least two product names are shown as already changed',
@@ -630,6 +807,9 @@ function runSelfTest() {
      D.UNEVEN.conf === 'unconfirmed', D.UNEVEN.conf);
   ok('The page carries the date it was checked',
      /\d{4}/.test(D.CHECKED_ON) && D.CHECKED_ISO.length === 10, D.CHECKED_ON);
+  ok('At least one claim was rechecked and confirmed held, with its own date',
+     Array.isArray(D.RECHECKED) && D.RECHECKED.length > 0 && /\d{4}/.test(D.RECHECKED_ON || ''),
+     String((D.RECHECKED || []).length));
 
   const box = $('#selftest-out');
   box.innerHTML = '';
@@ -654,31 +834,38 @@ function runSelfTest() {
 /* ================================ boot ================================== */
 
 function boot() {
-  /* the date, in the three places that state it */
   $$('.js-date').forEach(n => { n.textContent = D.CHECKED_ON; });
-  $('#intro-title').textContent = D.INTRO.title;
-  paras($('#intro-body'), D.INTRO.body);
-  $('#intro-note').textContent = D.INTRO.note;
+  $$('.js-recheck-date').forEach(n => { n.textContent = D.RECHECKED_ON; });
 
   renderGrid();
   renderAxisNote();
   renderCheckNote();
+  wirePredictAxis();
+
   renderJobPicker();
   renderJobsNote();
   renderJob();
+
   renderChanged();
+  renderRechecked();
+  wirePredictChanged();
   renderStale();
   renderUneven();
   renderCounts();
   renderCut();
   renderSources();
-  wireOverlays();
 
-  $$('#actnav button').forEach(b => b.addEventListener('click', () => setAct(+b.dataset.act)));
-  $('#btn-to-jobs').addEventListener('click', () => setAct(2));
-  $('#btn-to-receipts').addEventListener('click', () => setAct(3));
+  /* #item-details is the demo's own dialog, not one of the shell's four, so
+     it needs its own backdrop-click-to-close; Escape already works, being a
+     native <dialog>, and the shell's Reset already closes every open
+     <dialog> including this one. */
+  const itemDetails = $('#item-details');
+  if (itemDetails) {
+    itemDetails.addEventListener('click', e => { if (e.target === itemDetails) itemDetails.close(); });
+  }
 
-  open('howto');
+  const selftestBtn = $('#btn-selftest');
+  if (selftestBtn) selftestBtn.addEventListener('click', runSelfTest);
 }
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
