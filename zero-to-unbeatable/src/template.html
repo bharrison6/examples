@@ -302,7 +302,7 @@
         </div>
         <span class="echo" hidden></span></article>
       <article><span>Try</span><p>Press <b>Create learning examples</b>, read one weight in the network view, then press <b>Train network</b>. Compare the two error readings, then the separate playing score.</p></article>
-      <article><span>Takeaway</span><p>A network&rsquo;s error measures fit to its training targets; held-out error shows how that fit carries to positions it never practised, and neither is a playing-strength guarantee.</p></article>
+      <article><span>Takeaway</span><p>Shared weights give the network an answer for a board it never practised on &mdash; which a table simply cannot do &mdash; and training on other boards makes that answer better. The error readings say how close the answer is to the teacher&rsquo;s, not how well it plays.</p></article>
     </div>
   </section>
   <div class="activity-host" id="host-3"></div>
@@ -435,7 +435,7 @@
         </div>
         <span class="echo" hidden></span></article>
       <article><span>Try</span><p>Press any <b>type card</b> to read what goes in and what comes out in Hugging Face&rsquo;s own words, then follow <b>Browse models</b> to see real models of that type.</p></article>
-      <article><span>Takeaway</span><p>A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside; one neural-network family, the transformer, sits behind text, image, audio, video and multimodal types alike.</p></article>
+      <article><span>Takeaway</span><p>A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside. One neural-network family, the transformer, serves text, vision, audio, video and multimodal types; generating images, audio and video also leans on a different family, <b>diffusion models</b>, which Hugging Face keeps in a library of its own.</p></article>
     </div>
   </section>
 
@@ -676,11 +676,11 @@
         <span class="eyebrow">What is live</span>
         <h3>Nothing runs on this stage; it is a map</h3>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-live">Live</span> which playable model each method lights up</span>
-          <p>The 1a / 1b / 1c mapping under each method card is read from what this demo&rsquo;s code does: 1a has no training step, 1b learns from game rewards in <code>engine.js</code>, 1c fits frozen targets in <code>net.js</code>.</p>
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">the 1a&ndash;1c mapping is read from this demo&rsquo;s code by the authors, not computed at runtime</span> which playable model each method lights up</span>
+          <p>The 1a / 1b / 1c mapping under each method card is written into the page by the authors after reading what this demo&rsquo;s code does: 1a has no training step, 1b learns from game rewards in <code>engine.js</code>, 1c fits frozen targets in <code>net.js</code>.</p>
         </div>
         <div class="claim">
-          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">carried forward from the demo&rsquo;s earlier How they learn tab; not re-sourced this pass</span> the definitions on the cards</span>
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">the authors&rsquo; summaries, not re-sourced this pass</span> the definitions on the cards</span>
           <p>The one-line descriptions of each method and family are the authors&rsquo; summaries. No figure is claimed on this stage.</p>
         </div>
         <h3>How it works</h3>
@@ -728,8 +728,14 @@
         <p>The link back to this demo: 1c is a neural network scoring boards. The same idea &mdash; adjustable weights
           shared across every input &mdash; is what most catalogue types run on, with an architecture family
           (the transformer) that Hugging Face&rsquo;s own framework page lists as serving text, vision, audio, video and
-          multimodal jobs. The tabular types are the visible exception: their page names sklearn and xgboost, the
-          tree and boosting families of stage 1d.</p>
+          multimodal jobs. It is not the only family. Generating images, audio and video leans on <b>diffusion
+          models</b>, which Hugging Face keeps in a separate library, Diffusers, described on its own page as
+          &ldquo;pretrained diffusion models for generating videos, images, and audio&rdquo;. Stable Diffusion XL&rsquo;s card
+          calls itself a &ldquo;Diffusion-based text-to-image generative model&rdquo; with a UNet inside; FLUX.1 [dev]&rsquo;s
+          card calls itself a &ldquo;rectified flow transformer&rdquo; &mdash; so the newest of them put a transformer under a
+          diffusion-style training objective, which is stage 1d&rsquo;s point again: architecture and method are
+          separate facts. The tabular types are the other visible exception: their page names sklearn and xgboost,
+          the tree and boosting families of stage 1d.</p>
         <h3>Assumptions and simplifications</h3>
         <ul>
           <li>Hugging Face&rsquo;s catalogue is one taxonomy, chosen because it is the largest public one and is dated; other catalogues cut the jobs differently.</li>
@@ -743,6 +749,9 @@
           <li><a href="https://huggingface.co/models" target="_blank" rel="noopener">huggingface.co/models</a> &mdash; the task filter every Browse link uses, and the hub total (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/docs/transformers/index" target="_blank" rel="noopener">huggingface.co/docs/transformers</a> &mdash; the &ldquo;text, computer vision, audio, video, and multimodal&rdquo; sentence (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/tasks/tabular-classification" target="_blank" rel="noopener">huggingface.co/tasks/tabular-classification</a> &mdash; names sklearn and xgboost as libraries that train tabular models (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/diffusers/index" target="_blank" rel="noopener">huggingface.co/docs/diffusers</a> &mdash; &ldquo;a library of state-of-the-art pretrained diffusion models for generating videos, images, and audio&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank" rel="noopener">stabilityai/stable-diffusion-xl-base-1.0</a> &mdash; &ldquo;Model type: Diffusion-based text-to-image generative model&rdquo;; the usage snippet compiles <code>pipe.unet</code> (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/black-forest-labs/FLUX.1-dev" target="_blank" rel="noopener">black-forest-labs/FLUX.1-dev</a> &mdash; &ldquo;a 12 billion parameter rectified flow transformer&rdquo; (fetched 2026-09-16).</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> this stage shows what the world sorts models by and links to real ones. It does not run any of them, rank them, or claim that every model of a type shares one architecture.</div>
       </section>

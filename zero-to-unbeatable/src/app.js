@@ -933,7 +933,18 @@ function renderTrain() {
     $('#burst-seg').setAttribute('aria-label', 'Neural-network training updates');
     if (m && m.updates > 0) {
       const ratio = m.trainMse > 0 ? m.heldMse / m.trainMse : 1;
-      cue(`Held-out error ${m.heldMse.toFixed(3)} vs practised ${m.trainMse.toFixed(3)} after ${fmt(m.updates)} updates. Lower is closer to the frozen teacher; neither number is playing strength.`);
+      /* The generalisation evidence and the fit evidence arrive together.
+         Read alone, "held-out 0.5 vs practised 0.4" says the network is
+         WORSE on unseen boards — the lookup-table intuition in the demo's
+         own voice. What proves the shared weights carry is that held-out
+         error FELL from its untrained baseline, on positions no update
+         ever touched. Checkpoint 0 is recorded when the model is created
+         (recordNeuralCheckpoint in trainNeural), so it is present here. */
+      const b0 = S.neural.checkpoints.get(0);
+      const fell = b0 && b0.metrics.heldMse > m.heldMse;
+      cue(`On positions kept out of training, error went from ${b0 ? b0.metrics.heldMse.toFixed(3) : '?'} untrained to ${m.heldMse.toFixed(3)} after ${fmt(m.updates)} updates` +
+        (fell ? ' — it fell, and no update ever saw those boards. ' : ' — it did not fall this time. ') +
+        `Practised error is ${m.trainMse.toFixed(3)}. Lower is closer to the frozen teacher; neither number is playing strength.`);
       revealPrediction('net', ratio > 1.5 ? 'higher' : 'same',
         `Measured: held-out ${m.heldMse.toFixed(3)}, practised ${m.trainMse.toFixed(3)} (ratio ${ratio.toFixed(2)}; this demo calls it clearly higher above 1.5×). Train more and watch whether the gap moves.`);
     } else if (m) {
