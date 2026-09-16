@@ -28,7 +28,7 @@ const S = {
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
-  predictions: {},     // Predict-card answers by key: rules, one, net, other, types
+  predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
@@ -1900,7 +1900,6 @@ const PREDICT_LABELS = {
   rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
   one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
   net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
-  other: { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' },
   types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
 };
 function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
@@ -1950,9 +1949,6 @@ function renderMethods() {
 $$('.method-card').forEach(c => c.addEventListener('click', () => {
   S.method = S.method === c.dataset.method ? null : c.dataset.method;
   renderMethods();
-  if (S.method === 'supervised') {
-    revealPrediction('other', '1c', 'Supervised learning lights up 1c: its targets were frozen table scores. 1b learned from rewards; 1a was never trained.');
-  }
 }));
 
 /* ------------------------------------------------------------------ *

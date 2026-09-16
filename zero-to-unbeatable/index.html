@@ -1755,13 +1755,10 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     </div>
     <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1d learning guide">
-      <article><span>Predict</span><p>Which of the three playable models learned from inputs paired with target answers, that is, by <b>supervised learning</b>?</p>
-        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="other">
-          <button type="button" class="predict-btn" data-answer="1a" aria-pressed="false">1a</button>
-          <button type="button" class="predict-btn" data-answer="1b" aria-pressed="false">1b</button>
-          <button type="button" class="predict-btn" data-answer="1c" aria-pressed="false">1c</button>
-        </div>
-        <span class="echo" hidden></span></article>
+      <!-- No Predict card here (operator ruling 2026-09-16): 1d is an
+           information stage, a map of two axes, and nothing on it runs a
+           result a prediction could be checked against. Try and Takeaway
+           stay: pressing a card is a real action with a visible outcome. -->
       <article><span>Try</span><p>Press a <b>training method</b> card: the three playable models that used it light up beneath it. Then read the <b>architecture</b> cards for what each one stores or computes.</p></article>
       <article><span>Takeaway</span><p>Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</p></article>
     </div>
@@ -2249,7 +2246,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <h3>Question</h3>
 <p>What else can a model be, and how else can it learn?</p>
 <h3>Predict prompt</h3>
-<p>Which of 1a, 1b, 1c learned by supervised learning? Press a prediction, then press the <b>Supervised learning</b> card to check.</p>
+<p>None on this stage. 1d is a map of two axes, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
 <h3>Activity</h3>
 <ol>
   <li><span class="beat">0:00</span> Press each <b>training method</b> card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
@@ -5753,7 +5750,7 @@ const S = {
      a world where neither writing it nor checking it is on offer. */
   mode: 'rules',
   stage: 0,            // the shell's stage index; 0-2 host the board, 3 and 4 are maps
-  predictions: {},     // Predict-card answers by key: rules, one, net, other, types
+  predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
@@ -7625,7 +7622,6 @@ const PREDICT_LABELS = {
   rules: { yes: 'yes, you can beat two rules', no: 'no, two rules are enough' },
   one: { unbeatable: 'unbeatable after one burst', beatable: 'still beatable after one burst' },
   net: { same: 'held-out error about the same as practised', higher: 'held-out error clearly higher' },
-  other: { '1a': '1a Symbolic AI', '1b': '1b Value table', '1c': '1c Neural Network' },
   types: { words: 'words come out', image: 'another image comes out', mesh: 'a 3-D mesh comes out' }
 };
 function echoEl(key) { return $('.predict-btns[data-predict="' + key + '"]').parentElement.querySelector('.echo'); }
@@ -7675,9 +7671,6 @@ function renderMethods() {
 $$('.method-card').forEach(c => c.addEventListener('click', () => {
   S.method = S.method === c.dataset.method ? null : c.dataset.method;
   renderMethods();
-  if (S.method === 'supervised') {
-    revealPrediction('other', '1c', 'Supervised learning lights up 1c: its targets were frozen table scores. 1b learned from rewards; 1a was never trained.');
-  }
 }));
 
 /* ------------------------------------------------------------------ *

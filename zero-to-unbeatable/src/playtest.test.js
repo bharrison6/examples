@@ -1049,10 +1049,14 @@ head('7. Step 1 — the hand-written rules');
   check('every stage has at least one check item',
     perStage.length === 5 && perStage.every(n => n >= 1),
     'per stage: ' + perStage.join(', '));
-  check('every stage carries a question, a refresh line and the three strip labels',
+  /* Four Predict cards, not five: 1d is a map stage with no result to check
+     a prediction against, so its Predict card was removed on operator ruling
+     (2026-09-16). Try and Takeaway remain on every stage. */
+  check('every stage carries a question, a refresh line and the strip labels (1d has no Predict)',
     (tpl.match(/class="stage-question"/g) || []).length === 5 &&
     (tpl.match(/class="refresh"/g) || []).length === 5 &&
-    (tpl.match(/<span>Predict<\/span>/g) || []).length === 5 &&
+    (tpl.match(/<span>Predict<\/span>/g) || []).length === 4 &&
+    !/data-predict="other"/.test(tpl) && !/revealPrediction\('other'/.test(app) &&
     (tpl.match(/<span>Try<\/span>/g) || []).length === 5 &&
     (tpl.match(/<span>Takeaway<\/span>/g) || []).length === 5);
   check('exactly one tablist: the lens row is not a second one (A1)',
