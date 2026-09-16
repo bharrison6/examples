@@ -1,13 +1,31 @@
 # Types of AI — current implementation specification
 
-The model row exposes 1a Symbolic AI (GOFAI), 1b Value table, 1c Neural Network,
-and 1d Other model types. A-C compare strategy representations on one game;
-D is a model-family overview. The top-level Model types / How they learn row
-distinguishes representations from cross-cutting learning methods. The model row
-appears below it only while Model types is selected. Switching these reading views
-preserves the selected model and its state.
-The tabs are not an exhaustive AI taxonomy or a progression of difficulty.
-`#rules`, `#learning`, and `#neural` select them directly.
+The demo is built on the shared lesson shell (`../tools/lesson-shell`), a
+build-time dependency whose CSS and behaviour are inlined so the shipped
+`index.html` remains one self-contained file. The shell owns the header, the
+single stage tablist, the four dialogs (Guide, Settings, Details, Presenter
+Notes), the A6 check cards and the in-place Reset; the demo owns the lens row,
+the activity and the two map stages, and implements the required `lessonreset`
+handler.
+
+Two lenses sort models on two axes. **Model architecture** exposes stages 1a
+Symbolic AI (GOFAI), 1b Value table, 1c Neural Network and 1d Other
+architectures & training methods; 1a-1c compare architectures on one game and 1d
+is a map of the remaining architectures and of the training methods that fit
+them. **Model types** is a separate axis, by task: what goes in and what comes
+out. The stage tablist hides while the Model types lens is selected. The lens row
+is not a second tablist: `selectStage` remains the only thing that moves a stage,
+and the lens buttons call it.
+
+The tabs are not an exhaustive AI taxonomy or a progression of difficulty. No
+stage is gated. `#stage-1` through `#stage-5` select stages; the older `#rules`,
+`#learning` and `#neural` links are honoured for the three playable stages, and
+`#presenting` opens in presentation mode.
+
+The activity is ONE element (`#activity`) moved, never cloned, between the three
+playable stages' hosts by the `stagechange` handler, so its listeners and the
+game in progress survive a stage change. Stages 1d and Model types host no
+activity.
 
 1a is a readable hand-written eight-rule ladder. It receives no experience and
 is verified by `OG.verifyPolicy`. Its ordered tests can be expressed as a decision
@@ -48,16 +66,42 @@ error and the fixed-seed playing score remain separate measurements. No neural-
 network unbeatable claim appears unless that exact policy is separately verified
 and the wording is deliberately revised.
 
-How they learn distinguishes supervised, unsupervised, self-supervised,
-reinforcement and semi-supervised feedback using examples, without treating them
-as mutually exclusive model families. Self-play does not imply self-supervision;
-supervised targets need not come from humans. Gradient and evolutionary methods
-are optimization approaches. D lists linear/logistic models, learned trees,
-ensembles, nearest neighbors, support-vector machines and probabilistic/Bayesian
-models; search/planning is identified separately as a problem-solving approach.
+Stage 1d holds both axes. Six pressable training-method cards distinguish
+supervised, unsupervised, self-supervised, reinforcement and semi-supervised
+learning, plus no training at all, without treating them as mutually exclusive
+model families; pressing one names which of 1a-1c used it, read from this demo's
+own code (supervised -> 1c, reinforcement -> 1b, none -> 1a, the other three
+nothing). Self-play does not imply self-supervision; supervised targets need not
+come from humans. Gradient and evolutionary methods are optimization approaches.
+Six architecture cards list linear/logistic models, learned trees, ensembles,
+nearest neighbours, support-vector machines and probabilistic/Bayesian models;
+search/planning is identified separately as a problem-solving approach.
+
+The Model types stage is generated from `src/model-types.js`, which carries
+Hugging Face's task taxonomy as fetched on 2026-09-16: the six group headings,
+47 task names and their model counts from `huggingface.co/tasks`, the
+`pipeline_tag` slug behind every outbound link from the task filter on
+`huggingface.co/models`, and a verbatim opening definition from each featured
+task's own page. The file records its probe controls (three unusual slugs
+confirmed against the model hub, and `image-to-mesh` returning zero results,
+which is why that job is presented under the catalogue's own name Image-to-3D).
+No taxonomy claim is written from memory, every count carries its fetch date on
+the page face under a `Sourced` kicker, and nothing is fetched at runtime: the
+per-type links are ordinary `<a href>` navigations the reader may choose to
+follow. `src/model-types.test.js` enforces the file's shape and that every link
+is built from a catalogue slug.
 
 The required Guide opens on entry and from the header’s Guide button. Settings,
-beside Guide, contains Open Presenter Notes, Presentation mode, and Reset. The
+beside Guide, contains Open Presenter Notes, Presentation mode, and Reset, then
+the playing preference, the rehearsal seed, the self-test and About. Reset is IN
+PLACE with no page reload: the shell restores the chrome it owns and dispatches
+`lessonreset`, and the demo's handler restores stage 1a on the architecture lens,
+All 8 rules, hidden move scores, Era 0 with every later era and the network
+discarded, the records, the rule tallies, the burst sizes, every prediction and
+method selection, and closes every type card. Presentation mode and the playing
+preference are deliberately left alone. Because the shell fires `stagechange`
+before `lessonreset`, the demo raises a flag in `onReset` so the reset path
+paints exactly once, from `lessonreset` (ADOPTING.md section 4 step 7). The
 canonical `src/demo-guide.html` supplies both embedded Presenter Notes and the
 printable guide; the build check detects drift. Its visible controls use the
 current contract names: New game, Show/Hide move scores, Create learning
