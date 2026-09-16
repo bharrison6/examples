@@ -40,7 +40,10 @@ const S = {
   family: D.FAMILIES[0].id,
   rung: 'all',
   role: 'all',
-  big: false
+  big: false,
+  /* True only between the shell consulting onReset() and this file finishing
+     resetActivity(). See the stagechange handler for why it exists. */
+  resetting: false
 };
 
 /* ---- boot ------------------------------------------------------------------- */
@@ -523,7 +526,23 @@ function runSelfTest() {
 
 /* ---- the shell's two events ------------------------------------------------ */
 
+/* `stagechange` is treated as a CHROME event only, per ADOPTING.md section 4
+   step 7. The shell's reset calls selectStage(0) — firing stagechange — BEFORE
+   it dispatches `lessonreset`, so anything here that renders activity state
+   would paint the PRE-reset state into freshly reset chrome. This demo renders
+   a canvas on stage 1, and Chart.resize() repaints from the chart's own state,
+   which at that instant still holds the previous round, the drawn line and the
+   revealed series. So the handler bails out while a reset is in flight; the
+   render it would have done is done by resetActivity() a moment later, from
+   state that has actually been reset.
+
+   The flag is set from `onReset`, which the shell consults as step 1 of its
+   reset — the only hook a demo gets before the ordering hazard fires.
+   Returning anything but false lets the reset proceed. */
+window.lessonShell.onReset = () => { S.resetting = true; return true; };
+
 document.addEventListener('stagechange', e => {
+  if (S.resetting) return;
   if (e.detail.index === 0) setTimeout(() => { fitChart(); S.chart.resize(); }, 20);
 });
 
@@ -544,7 +563,11 @@ document.addEventListener('presentationchange', e => {
             NOT touched: presentation mode is the shell's and stays as set.
      S.chart — KEPT and rewound, not dropped: Chart.create binds pointer and
             keyboard listeners once; recreating it would bind them twice.
-            loadRound(0) calls setRound + reset on the existing instance.
+            loadRound(0) calls setRound + reset on the existing instance, which
+            clears the drawn line, the reveal sweep and the axis extension.
+     S.resetting — set by onReset() before the shell's own steps run, cleared
+            at the END of this function, so the stagechange the shell fires at
+            step 7 cannot repaint the pre-reset chart.
      Stage 1 DOM: everything loadRound(0) rewrites — #round-select, the
             round copy, #verdict (hidden, emptied), #twist-wrap / #twist-body
             / #btn-twist, #scorecard (hidden, emptied), #round-body shown,
@@ -579,6 +602,11 @@ function resetActivity() {
   renderScenario(false);
   $('#cut').open = false;
   $('#selftest-out').innerHTML = '';
+  /* Last: the stage-1 chart is now rebuilt from reset state, so stagechange
+     may render again. */
+  S.resetting = false;
+  fitChart();
+  S.chart.resize();
 }
 document.addEventListener('lessonreset', resetActivity);
 
