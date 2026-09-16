@@ -103,18 +103,48 @@
     const tight = (units === '°' || units === '%');
     return fmt(v) + (tight ? '' : ' ') + units;
   }
+  /* Band-aware since the 2026-09-16 correction pass. Where an item carries
+     `band: [lo, hi]` — a sourced range its own qualifier or factoid already
+     names — a guess inside the band is exactly right (err 0), and a guess
+     outside it is measured from the NEAREST EDGE rather than from `value`.
+     Before this, item 23's qualifier taught "~30 mA sustained" and the game
+     scored 30 mA WARM and the let-go figure 16 mA COLD; items 12/20/28
+     printed a range in their reveal text and scored both of its ends WARM.
+     The 29 single-valued items are scored exactly as before. The reveal
+     still displays `value`, the single anchor; only the score changes. */
   function scoreGuess(q, guess) {
+    const b = Array.isArray(q.band) && q.band.length === 2 ? q.band : null;
+    const inBand = !!b && guess >= b[0] && guess <= b[1];
+    const ref = !b ? q.value : (inBand ? guess : (guess < b[0] ? b[0] : b[1]));
     let err;
-    if (q.scale === 'log') err = Math.abs(Math.log10(guess / q.value));
-    else err = Math.abs(guess - q.value) / Math.abs(q.value);
+    if (q.scale === 'log') err = Math.abs(Math.log10(guess / ref));
+    else err = Math.abs(guess - ref) / Math.abs(ref);
     const th = SCORING[q.scale === 'log' ? 'log' : 'linear'];
     let band = th.length;
     for (let i = 0; i < th.length; i++) { if (err <= th[i]) { band = i; break; } }
     const normErr = (q.scale === 'log') ? Math.pow(10, err) - 1 : err;
-    const offBy = (q.scale === 'log')
-      ? (Math.round(Math.pow(10, err) * 10) / 10) + '× off'
-      : Math.round(err * 100) + '% off';
-    return { band, err, normErr, offBy, pts: BANDS[band].pts };
+    const tail = b ? ' past the range' : ' off';
+    const offBy = inBand ? 'in range' : ((q.scale === 'log')
+      ? (Math.round(Math.pow(10, err) * 10) / 10) + '×' + tail
+      : Math.round(err * 100) + '%' + tail);
+    return { band, err, normErr, offBy, inBand, pts: BANDS[band].pts };
+  }
+  function bandText(q) {
+    return q.band ? fmt(q.band[0]) + '–' + withUnits(q.band[1], q.units) : '';
+  }
+  /* Expected points of a uniformly random slider position on these
+     questions — the exact mean over all STEPS+1 positions, scored through
+     the same scoreGuess (and the same 3-significant-figure snap) the game
+     applies to a real guess. Used by the debrief as its control. */
+  function randomGuessAvg(qs) {
+    if (!qs.length) return 0;
+    let total = 0;
+    qs.forEach(q => {
+      let s = 0;
+      for (let pos = 0; pos <= STEPS; pos++) s += scoreGuess(q, roundSig(posToValue(q, pos), 3)).pts;
+      total += s / (STEPS + 1);
+    });
+    return total / qs.length;
   }
 
   /* ---------- category colours, assigned automatically ---------- */
@@ -128,14 +158,17 @@
      from the SAME data.js table the game itself plays from — one canonical
      source of truth for both surfaces, per the back-propagate rule. -------- */
   function renderSources() {
+    const esc = t => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    const anchor = s => s.url
+      ? `<a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}</a>`
+      : esc(s.name);
     const list = (host, qs) => {
       host.innerHTML = qs.map(q => {
         const s = q.source;
-        const link = s.url
-          ? `<a href="${s.url}" target="_blank" rel="noopener">${s.name}</a>`
-          : s.name;
-        const qual = q.qualifier ? ` <i>(${q.qualifier})</i>` : '';
-        return `<li>${link} — item ${q.id}, "${q.prompt}"${qual}${s.fetched ? ` — checked ${s.fetched}` : ''}</li>`;
+        const also = (s.also || []).map(a => '; ' + anchor(a)).join('');
+        const qual = q.qualifier ? ` <i>(${esc(q.qualifier)})</i>` : '';
+        const band = q.band ? ` — scored as correct anywhere in ${esc(bandText(q))}` : '';
+        return `<li>${anchor(s)}${also} — item ${q.id}, "${esc(q.prompt)}"${qual}${band}${s.fetched ? ` — checked ${s.fetched}` : ''}</li>`;
       }).join('');
     };
     if ($('sources-0')) list($('sources-0'), LINEAR_QUESTIONS);
@@ -353,10 +386,20 @@
     const isLast = (round.i + 1 >= round.deck.length);
     nextBtn.textContent = isLast ? 'See results' : 'Next';
 
-    /* A4 observation cue — the one-line "what just happened", within one
-       screen of the LOCK IT IN control that caused it. */
-    $('cue-' + suffix).textContent = BANDS[result.band].label + ' — ' + result.offBy +
-      (q.qualifier ? ' (qualifier: ' + (q.qualifier.split(';')[0]) + ')' : '');
+    /* A4 observation cue — the "what just happened", within one screen of the
+       LOCK IT IN control that caused it. The qualifier rides along INTACT:
+       an earlier build cut it at the first semicolon, which on item 23 kept
+       "a rule-of-thumb anchor on a current-duration-path curve" and dropped
+       the 16 / 20 / 30 mA figures that were the point. Where the item is
+       scored against a band, the cue says so and names the band, so the
+       learner can see why an answer that is not the anchor still scored. */
+    const bandNote = q.band
+      ? (result.inBand
+        ? ' Any answer from ' + bandText(q) + ' scores as correct; ' + withUnits(q.value, q.units) + ' is the anchor shown.'
+        : ' Scored from the nearer edge of the accepted ' + bandText(q) + ' range.')
+      : '';
+    $('cue-' + suffix).textContent = BANDS[result.band].label + ' — ' + result.offBy + '.' + bandNote +
+      (q.qualifier ? ' Qualifier: ' + q.qualifier + '.' : '');
 
     /* A2 echo — the captured prediction shown beside the observed result. */
     const echo = $('echo-' + suffix);
@@ -545,14 +588,35 @@
     if (linAvg === null || logAvg === null) {
       calText.textContent = 'Play both stages first — this fills in once you have answers on both decks.';
     } else {
+      /* The control the verdict needs: what a knowledge-free guess earns on
+         each deck YOU played, computed here by scoring every one of the
+         1,001 slider positions on every question (exact for a uniform
+         random slider, no sampling noise). An earlier build asserted that a
+         higher log average meant "the log slider was more forgiving"; the
+         measured control says the two decks are within a point or two of
+         each other for a random guesser, so the gap is what you knew, not
+         how the deck is scored. */
+      const linRand = randomGuessAvg(G.linear.answers.map(a => a.q));
+      const logRand = randomGuessAvg(G.log.answers.map(a => a.q));
       const linRound = Math.round(linAvg), logRound = Math.round(logAvg);
+      const gap = Math.round(logRand) - Math.round(linRand);
+      const reading = Math.abs(gap) <= 5
+        ? 'the two decks are about equally forgiving to a random guess, so a gap between your averages is knowledge, not the scoring. '
+        : 'on these particular questions the ' + (gap > 0 ? 'log' : 'linear') + ' deck is ' + Math.abs(gap) +
+          ' points more forgiving to a random guess, so discount a gap of that size before reading the rest as knowledge. ';
+      const control = 'A guess made by dragging the slider to a random position would average about <b>' +
+        Math.round(linRand) + '</b> on your linear questions and <b>' + Math.round(logRand) +
+        '</b> on your log ones — ' + reading;
       const verdict = logRound > linRound
-        ? 'The log guesses scored HIGHER on average — getting the order of magnitude right earned more forgiveness than the linear slider gave for an exact percent.'
+        ? 'Your log guesses scored HIGHER on average: you placed the SIZE of those five numbers better than you placed the exact figures on the linear deck.'
         : (logRound < linRound
-          ? 'The linear guesses scored HIGHER on average — the exact-percent scoring rewarded familiar, everyday-scale numbers more than the five order-of-magnitude questions did.'
-          : 'The two decks scored about the same on average — a genuine tie, for whatever that is worth over five log questions.');
+          ? 'Your linear guesses scored HIGHER on average: the everyday-scale numbers were more familiar to you than the sizes of the five order-of-magnitude ones.'
+          : 'The two decks scored about the same on average — a genuine tie.');
+      const sample = G.log.answers.length < 5
+        ? ' With only ' + G.log.answers.length + ' log answer' + (G.log.answers.length === 1 ? '' : 's') + ', one band step moves that average by 5–60 points, so read the direction loosely.'
+        : ' Five log questions is still a small sample — one band step moves that average by up to 20 points.';
       calText.innerHTML = 'Linear average: <b>' + linRound + ' pts/question</b> (' + G.linear.answers.length + ' questions). ' +
-        'Log average: <b>' + logRound + ' pts/question</b> (' + G.log.answers.length + ' questions). ' + verdict;
+        'Log average: <b>' + logRound + ' pts/question</b> (' + G.log.answers.length + ' questions). ' + control + verdict + sample;
     }
     $('cue-3').textContent = 'Debrief computed from ' + allAnswers.length + ' answers this session.';
   }

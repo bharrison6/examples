@@ -111,8 +111,11 @@
       "you vs. truth" markers on the track; the observation cue names the band and the miss size.</p>
     <p><b>Check-yourself answer key.</b> "It's a specified minimum &mdash; real steel usually tests
       higher" is correct; "it's the average strength" is the flawed model item 10 exists to break.</p>
-    <p><b>Teaching limit.</b> Percent-error scoring only makes sense while the true value and the guess
-      are on the same, roughly-linear scale &mdash; which is exactly what breaks in stage 2.</p>
+    <p><b>Teaching limit.</b> A linear slider only works while the plausible answers fit on one linear
+      track &mdash; which is exactly what breaks in stage 2, where the right answer to the resistivity
+      item would sit at step 0 of 1,000. Note also that eleven items are scored against a stated range
+      (the reveal names it): a guess inside the range is Bullseye, and the reveal's single "truth" is the
+      anchor, not the only acceptable answer.</p>
   </section>
 
   <section aria-labelledby="g-s2">
@@ -173,9 +176,9 @@
     <ol>
       <li><b>62.4 lb/ft&sup3; and 0.433 psi/ft are the same fact.</b> Ask the room to derive one from the
         other (62.4 &divide; 144 in&sup2;/ft&sup2;).</li>
-      <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the 3,000 V it
-        takes to feel a static shock? It is the current, not the voltage, that kills; say plainly that
-        100 mA is a rule of thumb, not a safe/unsafe line.</li>
+      <li><b>Which number is the dangerous one</b> &mdash; 100 mA across the chest, or the few thousand
+        volts (2,000&ndash;4,000 V for most people) it takes to feel a static shock? It is the current, not
+        the voltage, that kills; say plainly that 100 mA is a rule of thumb, not a safe/unsafe line.</li>
       <li><b>Why not build everything out of aluminum?</b> Young's modulus 200 vs. 70 GPa; density
         7,850 vs. 2,700 kg/m&sup3;. Both ratios are about 2.9, so stiffness-to-weight is nearly identical
         &mdash; the real choice is cost, buckling, and joining.</li>
@@ -185,9 +188,10 @@
         in ksi. How many other "memorized" numbers are printed on the spec sheet's name, and how many of
         those are minimums rather than typicals?</li>
       <li><b>A single number can be right AND still teach the wrong lesson.</b> Every one of the 40
-        values in this bank checks out against a real source &mdash; but 17 of them ship with a qualifier
-        because a bare number would have implied more precision than the world actually has. Ask the room
-        to name one more everyday "fact" that is really a range, a floor, or a design convention.</li>
+        values in this bank checks out against a real source &mdash; but 23 of them ship with a qualifier
+        because a bare number would have implied more precision than the world actually has, and 11 of
+        the 40 are scored against a range rather than a point for the same reason. Ask the room to name
+        one more everyday "fact" that is really a range, a floor, or a design convention.</li>
       <li><b>One gallon of gasoline is 33.7 kWh</b> &mdash; roughly a full day of an average US home's
         electricity, and (per this build's re-sourcing) a genuinely accurate figure for real gasoline, not
         a lowball regulatory number.</li>
@@ -213,7 +217,14 @@
     </table>
     <p class="small">Because both scales share this one point table, stage 3's linear-vs-log comparison
       uses average points per question rather than the raw percent/decades numbers, which are not
-      directly comparable.</p>
+      directly comparable. The debrief also prints the control &mdash; what a randomly placed slider
+      would average on the questions actually played, scored over all 1,001 positions &mdash; and across
+      the whole bank that control is within a few points of equal on the two decks, so a gap between a
+      student's two averages is knowledge, not a gentler deck.</p>
+    <p class="small">Where an item carries an accepted range (its qualifier or reveal text names it, and
+      the Details drawer lists it with its source), a guess inside the range scores Bullseye and a guess
+      outside it is measured from the nearer edge. Eleven items are scored this way; the other 29 score
+      against their single value exactly as the table above describes.</p>
   </section>
 
   <section aria-labelledby="g-edit">
@@ -221,12 +232,16 @@
     <p>The bank now lives in <code>src/data.js</code> (moved out of <code>index.html</code> for this
       retrofit) &mdash; each entry carries <code>id</code>, <code>category</code>, <code>prompt</code>,
       <code>units</code>, <code>value</code>, <code>min</code>/<code>max</code>, <code>scale</code>
-      (<code>"linear"</code>/<code>"log"</code>), <code>factoid</code>, and now an optional
-      <code>qualifier</code> plus a <code>source</code> object (<code>name</code>, <code>url</code>,
-      <code>fetched</code>). Edit <code>src/data.js</code>, then run <code>node build.js</code>. A value
-      with no qualifier is presented as a single, unhedged fact &mdash; add one whenever a new question is
-      really a range, a specified minimum, or a code/edition-dependent figure, per the standing "research,
-      not memory" rule: back it with an actual source before shipping it, or mark it unverified.</p>
+      (<code>"linear"</code>/<code>"log"</code>), <code>factoid</code>, an optional
+      <code>qualifier</code>, an optional <code>band: [lo, hi]</code>, and a <code>source</code> object
+      (<code>name</code>, <code>url</code>, <code>fetched</code>, optional <code>also</code> list for a
+      second citation). Edit <code>src/data.js</code>, then run <code>node build.js</code> &mdash; the
+      build derives the qualifier and band counts from the bank and refuses to run until this guide, the
+      README and <code>demo.json</code> state the same numbers. A value with no qualifier is presented as
+      a single, unhedged fact &mdash; add one whenever a new question is really a range, a specified
+      minimum, or a code/edition-dependent figure, and add a <code>band</code> only where a sourced range
+      for the same quantity already appears in the item's own text, per the standing "research, not
+      memory" rule: back it with an actual source before shipping it, or mark it unverified.</p>
   </section>
 
   <section aria-labelledby="g-controls">
@@ -255,18 +270,27 @@
         Resolution 2</a> &mdash; the defined value of standard gravity.</li>
       <li>NIH/NCBI StatPearls, <a href="https://www.ncbi.nlm.nih.gov/books/NBK580528/">Electrical
         Injuries</a> &mdash; the current thresholds behind item 23's qualifier.</li>
-      <li>up.codes, <a href="https://up.codes/s/ampacities-for-flexible-cords-and-flexible-cables">NEC
-        Table 400.5(A)(1)</a> and <a href="https://up.codes/s/stair-treads-and-risers">IRC/IBC stair
-        tread and riser requirements</a>.</li>
-      <li>OSHA, <a href="https://www.osha.gov/laws-regs/regulations/standardnumber/1926/1926.1053">1926.1053,
-        Ladders</a>.</li>
+      <li>NEC Table 400.5(A)(1) as rendered by <a href="https://www.distributorwire.com/blogs/soow-so-cord-ampacity-chart-nec-400-5">Distributor
+        Wire &amp; Cable</a> (16 AWG: 13 A with two current-carrying conductors, 10 A with three), and
+        up.codes, <a href="https://up.codes/s/stair-treads-and-risers">IRC/IBC stair tread and riser
+        requirements</a> (jurisdiction-routed; the page served may be a state adoption).</li>
+      <li>29 CFR 1926.1053(b)(5)(i), Ladders, via <a href="https://www.law.cornell.edu/cfr/text/29/1926.1053">Cornell
+        LII</a> &mdash; base offset one-quarter of the ladder's <i>working length</i>, i.e. arccos&nbsp;&frac14;
+        = 75.5&deg; (osha.gov's own copy refuses automated readers).</li>
+      <li>IEC 60479-1:2018 &sect;3.3.2 Note 1, <a href="https://cdn.standards.iteh.ai/samples/102053/a6ad398bc8e94fc29370ca887ba3cb16/IEC-60479-1-2018.pdf">sample
+        pages</a> &mdash; the 80 mA at 10 s, 50 % fibrillation figure in item 23's reveal.</li>
       <li>TxDOT Roadway Design Manual, <a href="https://www.txdot.gov/manuals/des/rdw/chapter-4--basic-design-criteria/4-8-vertical-alignment/4-8-1-grades.html">Ch.
         4.8.1 Grades</a> &mdash; the terrain&times;design-speed structure behind item 36's qualifier.</li>
       <li>CPSC Publication 5098, <a href="https://www.cpsc.gov/s3fs-public/5098.pdf">Tap Water Scalds</a>.</li>
-      <li>NIST Chemistry WebBook, <a href="https://webbook.nist.gov/cgi/cbook.cgi?ID=C7732185&amp;Mask=4">Water</a>
-        &mdash; thermophysical properties behind items 25, 29, 30 and 33.</li>
-      <li>ICAO Doc 7488, <a href="https://news.ncac.mn/uploads/bookSubject/2022-11/6369ec174ab34.pdf">Manual
-        of the ICAO Standard Atmosphere</a> &mdash; items 27 and 40.</li>
+      <li>Engineering ToolBox water tables &mdash; <a href="https://www.engineeringtoolbox.com/water-properties-d_1573.html">heat
+        of vaporization</a> (item 29), <a href="https://www.engineeringtoolbox.com/specific-heat-capacity-water-d_660.html">specific
+        heat</a> (item 30), <a href="https://www.engineeringtoolbox.com/boiling-points-water-altitude-d_1344.html">boiling
+        point vs. altitude</a> (item 25); item 33 is derived from item 5 and NIST's
+        <a href="https://www.nist.gov/how-do-you-measure-it/how-do-you-measure-fuel-gas-pump">231 in&sup3;
+        gallon</a>. (The NIST WebBook page cited earlier carries none of these four numbers.)</li>
+      <li>Engineering ToolBox, <a href="https://www.engineeringtoolbox.com/standard-atmosphere-d_604.html">U.S.
+        Standard Atmosphere</a> &mdash; items 27 and 40 (replacing an ICAO Doc 7488 mirror whose TLS
+        certificate does not validate).</li>
     </ul>
     <p class="small">The full 40-row table (value, qualifier, source, date checked) is in
       <code>src/data.js</code> and in this retrofit's return report; some lower-stakes items (exact unit
