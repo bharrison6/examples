@@ -353,8 +353,9 @@
       <p class="stage-question">What else can a model be, and how else can it learn?</p>
       <p class="refresh"><b>Before you start.</b> Stages 1a&ndash;1c showed three <b>architectures</b>, meaning how a
         model is built: a rule list, a table, a network. A <b>training method</b> is a separate choice: how the
-        model&rsquo;s adjustable parts change. 1a had none, 1b used reinforcement learning, 1c used supervised
-        learning. Both axes have more members than one board can run.</p>
+        model&rsquo;s adjustable parts change, and each of 1a&ndash;1c used one or none: press a card below to see
+        which. Both axes have more members than one board can run, and some systems change what they do without
+        changing their parameters at all.</p>
     </div>
     <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Stage 1d learning guide">
@@ -362,46 +363,55 @@
            information stage, a map of two axes, and nothing on it runs a
            result a prediction could be checked against. Try and Takeaway
            stay: pressing a card is a real action with a visible outcome. -->
-      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes.</p></article>
+      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes. Switch to <b>Learning with no weight change</b> and press a card: it says whether anything in this demo does it.</p></article>
       <article><span>Takeaway</span><p>Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</p></article>
     </div>
   </section>
 
-  <!-- Operator ruling 2026-09-16: the two halves of this stage sit behind
-       two buttons instead of stacking. Not a tablist: the kit's stage
-       tablist is the only one on the page (A1), so this is the same shape
-       as the lens row above -- a role="group" of aria-pressed buttons, and
-       app.js toggles `hidden` on the two cards. -->
-  <div class="map-switch" role="group" aria-label="Two halves of this stage" id="map-switch">
+  <!-- Operator ruling 2026-09-16: the parts of this stage sit behind
+       buttons instead of stacking (two at first; the third, learning with no
+       weight change, added on operator direction the same day). Not a
+       tablist: the kit's stage tablist is the only one on the page (A1), so
+       this is the same shape as the lens row above -- a role="group" of
+       aria-pressed buttons, and app.js toggles `hidden` on the cards. -->
+  <div class="map-switch three" role="group" aria-label="Three parts of this stage" id="map-switch">
     <button type="button" class="map-btn" data-half="methods" aria-pressed="true" aria-controls="methods-card"><span>Training methods</span><small>how a model&rsquo;s adjustable parts change</small></button>
     <button type="button" class="map-btn" data-half="families" aria-pressed="false" aria-controls="families-card"><span>Other architectures</span><small>more ways to hold a pattern or a strategy</small></button>
+    <button type="button" class="map-btn" data-half="nochange" aria-pressed="false" aria-controls="nochange-card"><span>Learning with no weight change</span><small>behaviour changes; parameters do not</small></button>
   </div>
 
   <section class="card map-card" id="methods-card" aria-labelledby="methods-title">
-    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping is read from this demo&rsquo;s code</span></span>
+    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping a press reveals is read from this demo&rsquo;s code; each &ldquo;used for&rdquo; line is Sourced (Details)</span></span>
     <h3 id="methods-title">Training methods &mdash; how a model&rsquo;s adjustable parts change</h3>
     <p class="panel-lede">Press a card. The categories overlap, and one system can combine them.</p>
     <div class="method-grid" role="group" aria-label="Training methods">
       <button type="button" class="method-card" data-method="supervised" data-uses="1c" aria-pressed="false">
-        <b>Supervised learning</b><span>Learns from inputs paired with target answers. In this demo, 1c fits frozen scores produced by another model &mdash; targets need not be written by a person.</span>
+        <b>Supervised learning</b><span>Learns from inputs paired with target answers. Example: photos, each labelled with what is in it.</span>
+        <small class="stage-note"><span class="k-sourced">Sourced</span> Used for <b>supervised fine-tuning</b> (prompts paired with good responses) and <b>distillation</b> (a student model fits a teacher&rsquo;s outputs).</small>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="unsupervised" data-uses="" aria-pressed="false">
         <b>Unsupervised learning</b><span>Looks for structure without target labels. Example: grouping similar documents into clusters without predefined topics.</span>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="self-supervised" data-uses="" aria-pressed="false">
         <b>Self-supervised learning</b><span>Generates targets from the data itself. Example: hide a word in a sentence and train a model to predict it.</span>
+        <small class="stage-note"><span class="k-sourced">Sourced</span> Used for <b>pretraining</b> large language models: predict the next token of unlabelled text, the text itself supplying the answer.</small>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card featured" data-method="reinforcement" data-uses="1b" aria-pressed="false">
-        <b>Reinforcement learning</b><span>Learns from rewards that follow actions. In this demo, 1b updates position values after wins, losses and draws &mdash; even during self-play.</span>
+        <b>Reinforcement learning</b><span>Learns from rewards that follow actions. Example: a game-playing program scored only on whether it wins.</span>
+        <small class="stage-note"><span class="k-sourced">Sourced</span> Used to <b>post-train</b> chat and reasoning models: from human preference rankings (RLHF), and newer online methods such as GRPO.</small>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="semi-supervised" data-uses="" aria-pressed="false">
         <b>Semi-supervised learning</b><span>Combines a smaller labelled set with a larger unlabelled set. Example: an image classifier trained on a few labelled images and many unlabelled ones.</span>
         <em class="uses" aria-hidden="true"></em></button>
       <button type="button" class="method-card" data-method="none" data-uses="1a" aria-pressed="false">
-        <b>No training at all</b><span>A person writes the policy directly. In this demo, 1a&rsquo;s eight rules are fixed text; the only way its play changes is switching rules on or off.</span>
+        <b>No training at all</b><span>A person writes the policy directly. Example: a filter that is a hand-written list of banned phrases.</span>
         <em class="uses" aria-hidden="true"></em></button>
     </div>
     <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+    <aside class="search-note stages-note"><span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">fetched 2026-09-16; sources in Details</span></span>
+      <b>Pretraining and fine-tuning are stages, not methods.</b> Each stage of building a model uses one of the methods above.
+      Neither is only a generative-AI idea: a vision model can be pretrained on a large image set, then fine-tuned for a narrower
+      image task. Learning from human preferences is the exception here: every source this stage cites for it is language-model work.</aside>
     <div class="clarifiers">
       <p><b>Self-play is not self-supervised learning.</b> The value table can play against itself, but it still learns from game rewards, so its method is reinforcement learning.</p>
       <p><b>Gradient training is not evolution.</b> Backpropagation computes how prediction error changes with each weight; the update rule uses those derivatives to adjust the current network. Evolutionary optimization instead evaluates variations across a population of candidates.</p>
@@ -422,6 +432,18 @@
     </div>
     <p class="obs-cue" id="cue-4b" role="status" aria-live="polite"></p>
     <aside class="search-note"><b>Search and planning are AI problem-solving approaches, not architectures.</b> They explore possible actions or future states, and they can use any of these models to score what they find.</aside>
+  </section>
+
+  <section class="card map-card" id="nochange-card" aria-labelledby="nochange-title" hidden>
+    <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">the cards, fetched 2026-09-16, sources in Details; the line a press writes about this demo is Reasoned, read from its code</span></span>
+    <h3 id="nochange-title">Learning with no weight change &mdash; behaviour changes, parameters do not</h3>
+    <p class="panel-lede">1b asked <b>&ldquo;Does playing the AI above train it?&rdquo;</b> Here is the other side of that question: a model can appear to learn within a session without changing at all. Press a card.</p>
+    <div class="family-grid nochange-grid" role="group" aria-label="Learning with no weight change">
+      <button type="button" class="family-card nochange-card" data-nochange="context" aria-pressed="false"><b>In-context (few-shot) learning</b><span>Examples or instructions placed in the prompt change what a language model does. The GPT-3 paper ran its tasks with no gradient updates: the demonstrations were written into the text.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card nochange-card" data-nochange="retrieval" aria-pressed="false"><b>Retrieval and external memory</b><span>At answer time the model is handed information looked up in a store outside its weights. In the retrieval-augmented generation (RAG) paper, that store is a searchable index of Wikipedia.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card nochange-card" data-nochange="search" aria-pressed="false"><b>Search at decision time</b><span>Spend computation looking ahead before committing, instead of changing weights. Language-model research calls this using more test-time computation.</span><em class="holds" aria-hidden="true"></em></button>
+    </div>
+    <p class="obs-cue" id="cue-4c" role="status" aria-live="polite"></p>
   </section>
 
   <section class="check" aria-labelledby="check-4-title" data-refutation="true">
@@ -451,14 +473,10 @@
     </div>
     <button class="details-trigger" type="button" data-details="4" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
     <div class="lesson-strip" aria-label="Model types learning guide">
-      <article><span>Predict</span><p>An <b>image-to-text</b> model: what comes out?</p>
-        <div class="predict-btns" role="group" aria-label="Your prediction" data-predict="types">
-          <button type="button" class="predict-btn" data-answer="words" aria-pressed="false">Words</button>
-          <button type="button" class="predict-btn" data-answer="image" aria-pressed="false">Another image</button>
-          <button type="button" class="predict-btn" data-answer="mesh" aria-pressed="false">A 3-D mesh</button>
-        </div>
-        <span class="echo" hidden></span></article>
-      <article><span>Try</span><p>Press any <b>type card</b> to read what goes in and what comes out in Hugging Face&rsquo;s own words, then follow <b>Browse models</b> to see real models of that type.</p></article>
+      <!-- No Predict card here (operator ruling 2026-09-16, as for 1d): this
+           stage is informational; nothing on it runs a result a prediction
+           could be checked against. -->
+      <article><span>Try</span><p>Press any <b>type card</b> to read what goes in and what comes out in Hugging Face&rsquo;s own words, then follow <b>Browse models</b> to see real models of that type. Then read <b>Beyond one catalogue</b> for major types that list does not show.</p></article>
       <article><span>Takeaway</span><p>A model type names the job &mdash; what goes in and what comes out &mdash; not the architecture inside. One neural-network family, the transformer, serves text, vision, audio, video and multimodal types; generating images, audio and video also leans on a different family, <b>diffusion models</b>, which Hugging Face keeps in a library of its own.</p></article>
     </div>
   </section>
@@ -469,6 +487,13 @@
     <p class="panel-lede">Each card names the job, then what goes in and what comes out. Press one for the catalogue&rsquo;s own definition and a link to real models of that type. Model counts are the catalogue&rsquo;s on the fetch date and will have moved.</p>
     <div class="type-grid" id="type-grid"></div>
     <p class="obs-cue" id="cue-5" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="card map-card" aria-labelledby="beyond-title">
+    <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual" id="beyond-qual">each model&rsquo;s own page, fetched 2026-09-16</span></span>
+    <h3 id="beyond-title">Beyond one catalogue</h3>
+    <p class="panel-lede">The list above is one platform&rsquo;s catalogue of what people upload to it. Several of the most talked-about models are not on it, or are not filed under one of its tasks. Each card below names the job, then one real example, linked to that model&rsquo;s own page.</p>
+    <div class="type-grid" id="beyond-grid"></div>
   </section>
 
   <section class="card map-card" aria-labelledby="all-types-title">
@@ -707,6 +732,18 @@
           <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">the authors&rsquo; summaries, not re-sourced this pass</span> the definitions on the cards</span>
           <p>The one-line descriptions of each method and family are the authors&rsquo; summaries. No figure is claimed on this stage.</p>
         </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">fetched 2026-09-16</span> the &ldquo;used for&rdquo; lines: pretraining, fine-tuning, distillation, preference learning</span>
+          <p>A language-model survey states that during pre-training an LLM is trained on &ldquo;(usually) unlabeled texts, usually in a self-supervised manner&rdquo;. The InstructGPT paper fine-tunes GPT-3 &ldquo;using supervised learning&rdquo; on labeller demonstrations, then further &ldquo;using reinforcement learning from human feedback&rdquo;. Hugging Face&rsquo;s TRL library lists Supervised Fine-Tuning, Reward Modeling, GRPO (&ldquo;an online learning algorithm&rdquo;) and knowledge distillation, whose trainer &ldquo;trains a smaller student model to match a teacher&rsquo;s next-token distribution&rdquo;. Pretraining is not only a language idea: the Vision Transformer paper reports results &ldquo;when pre-trained on large amounts of data and transferred&rdquo; to smaller image-recognition benchmarks.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">fetched 2026-09-16</span> learning with no weight change</span>
+          <p>GPT-3 was &ldquo;applied without any gradient updates or fine-tuning, with tasks and few-shot demonstrations specified purely via text interaction with the model.&rdquo; Retrieval-augmented generation pairs a trained model with &ldquo;a dense vector index of Wikipedia&rdquo; as non-parametric memory. A study of test-time compute frames &ldquo;using more test-time computation&rdquo; as a way for language models to improve their outputs.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">read from this demo&rsquo;s code by the authors, not computed at runtime</span> what a no-weight-change card says about this demo</span>
+          <p>1a&rsquo;s rules 3 and 4 (<code>forkCells</code> and the forcing loop in <code>src/rules.js</code>) try each empty square on a copy of the board and count the threats it would make: a look-ahead redone every turn, with nothing fitted. The exhaustive search in <code>OG.verifyPolicyRole</code> (<code>src/engine.js</code>) takes a player and checks it for losing lines; it never chooses a move in play.</p>
+        </div>
         <h3>How it works</h3>
         <p>An <b>architecture</b> is how a model is built: what it stores and how it computes an answer. A
           <b>training method</b> is how its adjustable parts change. The two are separate choices, and the model types
@@ -718,12 +755,22 @@
         <h3>Assumptions and simplifications</h3>
         <ul>
           <li>The cards are a wider map, not a complete catalogue of AI; families overlap and one system can combine several.</li>
-          <li>The five methods are common textbook categories; real systems mix them (a self-supervised pre-training step followed by supervised fine-tuning is one ordinary combination).</li>
+          <li>The five methods are common textbook categories; real systems mix them (a self-supervised pre-training step followed by supervised fine-tuning is one ordinary combination). Pretraining and fine-tuning are stages that use these methods, not further methods.</li>
           <li>&ldquo;No training at all&rdquo; is listed as a method so 1a has an honest place on the map; it is the absence of one.</li>
         </ul>
         <h3>Sources</h3>
         <ul>
           <li>The 1a&ndash;1c mapping: <code>src/rules.js</code> (no update step), <code>OG.trainGames</code> in <code>src/engine.js</code> (rewards), <code>NET.trainBatch</code> in <code>src/net.js</code> (frozen targets).</li>
+          <li><a href="https://arxiv.org/pdf/2402.06196" target="_blank" rel="noopener">Large Language Models: A Survey</a> &mdash; pre-training &ldquo;usually in a self-supervised manner&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2203.02155" target="_blank" rel="noopener">Training language models to follow instructions with human feedback</a> &mdash; supervised fine-tuning, then RLHF (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/index" target="_blank" rel="noopener">Hugging Face TRL</a> &mdash; SFT, reward modeling, GRPO, knowledge distillation (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/sft_trainer" target="_blank" rel="noopener">TRL SFT Trainer</a> &mdash; &ldquo;pairs of input and output sequences&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/distillation_trainer" target="_blank" rel="noopener">TRL Distillation Trainer</a> &mdash; a student matches a teacher (fetched 2026-09-16).</li>
+          <li><a href="https://huggingface.co/docs/trl/grpo_trainer" target="_blank" rel="noopener">TRL GRPO Trainer</a> &mdash; &ldquo;an online learning algorithm&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2010.11929" target="_blank" rel="noopener">An Image is Worth 16x16 Words (ViT)</a> &mdash; pre-trained, then transferred to smaller image benchmarks (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2005.14165" target="_blank" rel="noopener">Language Models are Few-Shot Learners (GPT-3)</a> &mdash; no gradient updates; demonstrations in the text (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2005.11401" target="_blank" rel="noopener">Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks</a> &mdash; a dense vector index of Wikipedia as memory (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2408.03314" target="_blank" rel="noopener">Scaling LLM Test-Time Compute Optimally</a> &mdash; improving outputs with more test-time computation (fetched 2026-09-16).</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> this stage names categories; it does not rank them, and it does not claim that any family is obsolete or that any method is always best.</div>
       </section>
@@ -744,6 +791,10 @@
           <span class="panel-kicker"><span class="k-sourced">Sourced</span> one architecture family across many types</span>
           <p>Hugging Face describes its Transformers library as &ldquo;the model-definition framework for state-of-the-art machine learning models in text, computer vision, audio, video, and multimodal models&rdquo; &mdash; one family of neural-network definitions behind types on every branch of the catalogue.</p>
         </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-sourced">Sourced</span><span class="k-qual">each model&rsquo;s own page, fetched 2026-09-16</span> Beyond one catalogue</span>
+          <p>Each card quotes the named model&rsquo;s own page (lab, vendor or paper), not Hugging Face. Two examples &mdash; Wan-Animate for character animation and 4C4D for free-viewpoint video &mdash; are current, verifiable examples of their type, chosen by the authors; they are not claims about any particular release a viewer may have seen.</p>
+        </div>
         <h3>How it works</h3>
         <p>A <b>type</b> is named by its job: what goes in and what comes out. The catalogue&rsquo;s task names are
           mostly built that way (text-to-image, image-to-text, text-to-speech) or name the output (classification,
@@ -762,7 +813,7 @@
           the tree and boosting families of stage 1d.</p>
         <h3>Assumptions and simplifications</h3>
         <ul>
-          <li>Hugging Face&rsquo;s catalogue is one taxonomy, chosen because it is the largest public one and is dated; other catalogues cut the jobs differently.</li>
+          <li>Hugging Face&rsquo;s catalogue is one taxonomy, chosen because it is the largest public one and is dated; other catalogues cut the jobs differently, and several widely discussed models are not on it &mdash; hence the second group.</li>
           <li>Model counts are a snapshot: the catalogue showed 3,069,798 models in total on the fetch date and grows daily.</li>
           <li>&ldquo;Image-to-mesh&rdquo; is not a catalogue name; the job lives under Image-to-3D, whose outputs include meshes.</li>
           <li>Following a Browse link leaves this page for huggingface.co; the demo itself fetches nothing.</li>
@@ -776,6 +827,14 @@
           <li><a href="https://huggingface.co/docs/diffusers/index" target="_blank" rel="noopener">huggingface.co/docs/diffusers</a> &mdash; &ldquo;a library of state-of-the-art pretrained diffusion models for generating videos, images, and audio&rdquo; (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0" target="_blank" rel="noopener">stabilityai/stable-diffusion-xl-base-1.0</a> &mdash; &ldquo;Model type: Diffusion-based text-to-image generative model&rdquo;; the usage snippet compiles <code>pipe.unet</code> (fetched 2026-09-16).</li>
           <li><a href="https://huggingface.co/black-forest-labs/FLUX.1-dev" target="_blank" rel="noopener">black-forest-labs/FLUX.1-dev</a> &mdash; &ldquo;a 12 billion parameter rectified flow transformer&rdquo; (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/models/genie/" target="_blank" rel="noopener">Genie 3 (Google DeepMind)</a> &mdash; world model; text to explorable environments (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/models/veo/" target="_blank" rel="noopener">Veo 3.1 (Google DeepMind)</a> &mdash; video generation with native audio (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/models/gemini-robotics/" target="_blank" rel="noopener">Gemini Robotics (Google DeepMind)</a> &mdash; vision-language-action model (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/science/alphafold/" target="_blank" rel="noopener">AlphaFold (Google DeepMind, Isomorphic Labs)</a> &mdash; protein structure and interactions (fetched 2026-09-16).</li>
+          <li><a href="https://deepmind.google/blog/gencast-predicts-weather-and-the-risks-of-extreme-conditions-with-sota-accuracy/" target="_blank" rel="noopener">GenCast (Google DeepMind)</a> &mdash; ensemble weather forecasts (fetched 2026-09-16).</li>
+          <li><a href="https://www.nvidia.com/en-us/geforce/broadcasting/broadcast-app/" target="_blank" rel="noopener">NVIDIA Broadcast</a> &mdash; background removal, replacement and blur (fetched 2026-09-16).</li>
+          <li><a href="https://humanaigc.github.io/wan-animate/" target="_blank" rel="noopener">Wan-Animate (Tongyi Lab, Alibaba)</a> &mdash; character animation from a performer&rsquo;s video (fetched 2026-09-16).</li>
+          <li><a href="https://arxiv.org/abs/2604.04063" target="_blank" rel="noopener">4C4D: 4 Camera 4D Gaussian Splatting</a> &mdash; 4D scenes from as few as four portable cameras (fetched 2026-09-16).</li>
         </ul>
         <div class="evidence-card"><b>Boundary:</b> this stage shows what the world sorts models by and links to real ones. It does not run any of them, rank them, or claim that every model of a type shares one architecture.</div>
       </section>

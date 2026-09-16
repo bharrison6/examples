@@ -1049,14 +1049,17 @@ head('7. Step 1 — the hand-written rules');
   check('every stage has at least one check item',
     perStage.length === 5 && perStage.every(n => n >= 1),
     'per stage: ' + perStage.join(', '));
-  /* Four Predict cards, not five: 1d is a map stage with no result to check
-     a prediction against, so its Predict card was removed on operator ruling
-     (2026-09-16). Try and Takeaway remain on every stage. */
-  check('every stage carries a question, a refresh line and the strip labels (1d has no Predict)',
+  /* Three Predict cards, not five: 1d and Model types are informational map
+     stages with no result to check a prediction against, so both Predict
+     cards were removed on operator ruling (2026-09-16; Model types second,
+     the same day). Try and Takeaway remain on every stage. */
+  check('every stage carries a question, a refresh line and the strip labels (1d and Model types have no Predict)',
     (tpl.match(/class="stage-question"/g) || []).length === 5 &&
     (tpl.match(/class="refresh"/g) || []).length === 5 &&
-    (tpl.match(/<span>Predict<\/span>/g) || []).length === 4 &&
+    (tpl.match(/<span>Predict<\/span>/g) || []).length === 3 &&
     !/data-predict="other"/.test(tpl) && !/revealPrediction\('other'/.test(app) &&
+    !/data-predict="types"/.test(tpl) && !/revealPrediction\('types'/.test(app) &&
+    !/\btypes: \{ words:/.test(app) &&
     (tpl.match(/<span>Try<\/span>/g) || []).length === 5 &&
     (tpl.match(/<span>Takeaway<\/span>/g) || []).length === 5);
   check('exactly one tablist: the lens row is not a second one (A1)',
@@ -1071,6 +1074,29 @@ head('7. Step 1 — the hand-written rules');
     (tpl.match(/id="map-switch"/g) || []).length === 1 && (tpl.match(/id="board-switch"/g) || []).length === 1);
   check('the 1d Predict card is gone and ultimate is reachable from a visible control, not a Details button',
     !/id="btn-ultimate"/.test(app) && /data-board="ult"/.test(tpl));
+  /* 2026-09-16 operator directions for 1d. (1) A third part, learning with
+     no weight change, behind the same switch. (3) The method cards' visible
+     text must not state which playable model used them: that is what the
+     press reveals. The negative probe is proven potent on a planted copy of
+     the old supervised sentence, so its silence on the real template counts. */
+  const halves = (tpl.match(/<button[^>]*class="map-btn"[^>]*data-half="(\w+)"/g) || []).length;
+  check('1d has three parts behind one switch, each with its card, wired and reset',
+    halves === 3 && /id="nochange-card"/.test(tpl) && /data-half="nochange"/.test(tpl) &&
+    (tpl.match(/data-nochange="/g) || []).length >= 3 && (tpl.match(/data-nochange="/g) || []).length <= 4 &&
+    /nochange: '#nochange-card'/.test(app) && /S\.nochange = null/.test(app) &&
+    /Does playing the AI above train it\?/.test(tpl.split('id="nochange-card"')[1].split('</section>')[0]));
+  const methodFaces = (tpl.split('class="method-grid"')[1] || '').split('</div>')[0];
+  /* Visible text only: the data-uses ATTRIBUTE names the model by design
+     (it is what the press reads), and a probe over raw markup matched it. */
+  const faceText = h => h.replace(/<[^>]*>/g, ' ');
+  const giveaway = /In this demo|\b1[abc]\b/;
+  const planted = methodFaces.replace('<span>Learns from inputs', '<span>In this demo, 1c fits frozen scores. Learns from inputs');
+  check('no training-method card face states which playable model used it (the press reveals that)',
+    methodFaces.length > 500 && !giveaway.test(faceText(methodFaces)) && giveaway.test(faceText(planted)));
+  check('the supervised, self-supervised and reinforcement cards each carry a Sourced "used for" stage note',
+    (methodFaces.match(/class="stage-note"><span class="k-sourced">Sourced<\/span>/g) || []).length === 3 &&
+    /pretraining/.test(methodFaces) && /supervised fine-tuning/.test(methodFaces) && /distillation/.test(methodFaces) &&
+    /RLHF/.test(methodFaces));
   check('the demo implements the kit reset contract (A8)',
     /addEventListener\('lessonreset'/.test(app));
   /* ADOPTING.md section 4 step 7: the shell fires stagechange BEFORE

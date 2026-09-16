@@ -782,6 +782,13 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
   border: 1px solid var(--line); border-radius: 12px; background: var(--cream);
 }
 .map-switch.board-switch { margin-bottom: 10px; }
+.map-switch.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* 1d training-method cards: the one-line "used for" stage note (Sourced).
+   `.method-card span` makes every span a block; the kicker must stay inline. */
+.method-card .stage-note { display: block; margin-top: 6px; color: var(--ink-3); font-size: calc(var(--u) * .74); line-height: 1.35; }
+.method-card .stage-note b { display: inline; margin: 0; font-family: inherit; font-size: inherit; color: var(--ink-2); }
+.method-card .stage-note .k-sourced { display: inline-block; margin-right: 4px; font-size: calc(var(--u) * .6); color: var(--gold-deep); }
+.stages-note .panel-kicker { display: block; margin-bottom: 4px; }
 .map-btn {
   min-height: 46px; border: 0; border-radius: 9px; padding: 6px 12px; background: transparent;
   color: var(--ink-2); font: inherit; font-weight: 800; font-size: calc(var(--u) * .92); text-align: center; line-height: 1.2; cursor: pointer;
@@ -831,6 +838,12 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 .type-card .body q::after { content: "\201D"; }
 .type-card .body .n { display: block; color: var(--ink-3); font-size: calc(var(--u) * .74); margin-bottom: 8px; }
 .type-card .body a { display: inline-block; color: var(--lite-deep); font-weight: 800; font-size: calc(var(--u) * .84); }
+
+/* Model types: "Beyond one catalogue" cards are always open (no press):
+   the named example and its own-page link are the content. */
+.beyond-card { padding: 12px 13px; }
+.beyond-card .body { padding: 0; margin-top: 8px; }
+.type-card .body .n .k-sourced { margin-right: 6px; }
 
 /* the whole catalogue, in its own groups */
 #type-groups h4 { margin: 14px 0 6px; color: var(--navy); font-size: calc(var(--u) * .78); font-weight: 850; letter-spacing: .1em; text-transform: uppercase; }
