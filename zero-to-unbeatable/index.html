@@ -1293,7 +1293,7 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink-on-navy); border-bottom:
   .network-diagram { min-height: 150px; }
   .method-grid, .family-grid, .type-grid { grid-template-columns: 1fr; }
   .clarifiers { grid-template-columns: 1fr; }
-  .lens-btn small { display: none; }
+  .lens-btn small, .map-btn small { display: none; }
   .predict-btns { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
@@ -1308,7 +1308,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 @media (orientation: landscape) and (max-height: 560px) {
   #lens-nav { padding: 0 14px 6px; }
   .lens-btn { min-height: 38px; }
-  .lens-btn small { display: none; }
+  .lens-btn small, .map-btn small { display: none; }
   .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
   #board-wrap { margin-bottom: calc(.4 * var(--u)); }
   #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
@@ -1359,6 +1359,37 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 .method-card[aria-pressed="true"] .uses { color: var(--gold-deep); }
 .method-card .uses:empty::before { content: "press to see which playable model used it"; font-weight: 650; letter-spacing: 0; text-transform: none; }
 .method-card[aria-pressed="true"] .uses:empty::before { content: "none of 1a, 1b, 1c used this one"; }
+/* Stage 1d's two halves sit behind two buttons (operator ruling 2026-09-16).
+   Same shape as the lens row: a group of aria-pressed buttons, not a tablist. */
+.map-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--cream);
+}
+.map-btn {
+  min-height: 46px; border: 0; border-radius: 9px; padding: 6px 12px; background: transparent;
+  color: var(--ink-2); font: inherit; font-weight: 800; font-size: calc(var(--u) * .92); text-align: center; line-height: 1.2; cursor: pointer;
+}
+.map-btn span, .map-btn small { display: block; }
+.map-btn small { margin-top: 2px; color: var(--ink-3); font-size: calc(var(--u) * .66); font-weight: 650; }
+.map-btn[aria-pressed="true"] { background: var(--navy); color: #fff; box-shadow: inset 0 -3px 0 var(--gold); }
+.map-btn[aria-pressed="true"] small { color: var(--ink-2-on-navy); }
+.map-btn:hover:not([aria-pressed="true"]) { background: var(--paper); }
+/* The architecture-family cards are pressable like the method cards, and
+   share their look; pressing one writes what it stores and computes. */
+.family-card {
+  display: block; width: 100%; min-width: 0; position: relative; font: inherit; line-height: 1.4; text-align: left;
+  border: 1px solid var(--cream-deep); border-radius: var(--radius-2); padding: 12px 13px 34px; background: var(--cream); color: var(--ink); cursor: pointer;
+}
+.family-card b { display: block; margin: 0 0 4px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); }
+.family-card span { display: block; margin: 0; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+.family-card:hover { border-color: var(--navy); background: var(--paper); }
+.family-card[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--paper); }
+.family-card .holds {
+  position: absolute; left: 13px; right: 13px; bottom: 9px; font-style: normal;
+  font-size: calc(var(--u) * .68); font-weight: 650; color: var(--ink-3);
+}
+.family-card[aria-pressed="true"] .holds { color: var(--gold-deep); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.family-card .holds:empty::before { content: "press to see what it stores and computes"; }
 .clarifiers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .clarifiers p, .search-note { margin: 0; padding: 10px 12px; border: 1px solid #BCD7E3; border-radius: var(--radius-2); background: var(--lite-soft); color: var(--ink-2); font-size: calc(var(--u) * .84); }
 .clarifiers b, .search-note b { color: var(--navy); }
@@ -1759,12 +1790,22 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
            information stage, a map of two axes, and nothing on it runs a
            result a prediction could be checked against. Try and Takeaway
            stay: pressing a card is a real action with a visible outcome. -->
-      <article><span>Try</span><p>Press a <b>training method</b> card: the three playable models that used it light up beneath it. Then read the <b>architecture</b> cards for what each one stores or computes.</p></article>
+      <article><span>Try</span><p>Under <b>Training methods</b>, press a card: the playable models that used it light up beneath it. Switch to <b>Other architectures</b> and press a card: it says what that model stores and what it computes.</p></article>
       <article><span>Takeaway</span><p>Architecture (how a model is built) and training method (how it learns) are separate choices: the same architecture can be trained more than one way, and the same method can train more than one architecture.</p></article>
     </div>
   </section>
 
-  <section class="card map-card" aria-labelledby="methods-title">
+  <!-- Operator ruling 2026-09-16: the two halves of this stage sit behind
+       two buttons instead of stacking. Not a tablist: the kit's stage
+       tablist is the only one on the page (A1), so this is the same shape
+       as the lens row above -- a role="group" of aria-pressed buttons, and
+       app.js toggles `hidden` on the two cards. -->
+  <div class="map-switch" role="group" aria-label="Two halves of this stage" id="map-switch">
+    <button type="button" class="map-btn" data-half="methods" aria-pressed="true" aria-controls="methods-card"><span>Training methods</span><small>how a model&rsquo;s adjustable parts change</small></button>
+    <button type="button" class="map-btn" data-half="families" aria-pressed="false" aria-controls="families-card"><span>Other architectures</span><small>more ways to hold a pattern or a strategy</small></button>
+  </div>
+
+  <section class="card map-card" id="methods-card" aria-labelledby="methods-title">
     <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">definitions in the authors&rsquo; words; the 1a&ndash;1c mapping is read from this demo&rsquo;s code</span></span>
     <h3 id="methods-title">Training methods &mdash; how a model&rsquo;s adjustable parts change</h3>
     <p class="panel-lede">Press a card. The categories overlap, and one system can combine them.</p>
@@ -1795,18 +1836,19 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
     </div>
   </section>
 
-  <section class="card map-card" aria-labelledby="families-title">
-    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">summaries in the authors&rsquo; words; not an exhaustive catalogue of AI</span></span>
+  <section class="card map-card" id="families-card" aria-labelledby="families-title" hidden>
+    <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">summaries in the authors&rsquo; words, along the axis this stage defines (what is stored, what is computed); not an exhaustive catalogue of AI</span></span>
     <h3 id="families-title">Other architectures &mdash; more ways to hold a pattern or a strategy</h3>
-    <p class="panel-lede">Each of these can be fitted by more than one training method; the architecture and the method are separate facts about a model.</p>
-    <div class="family-grid">
-      <article><h4>Linear and logistic models</h4><p>Combine input features with learned coefficients to predict a number or a probability.</p></article>
-      <article><h4>Decision trees</h4><p>Route an example through learned questions. A tree can be learned from data even though 1a&rsquo;s rule chain was written by a person.</p></article>
-      <article><h4>Ensembles</h4><p>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</p></article>
-      <article><h4>Nearest neighbours</h4><p>Predict from stored examples that are most similar under a chosen distance.</p></article>
-      <article><h4>Support-vector machines</h4><p>Learn a boundary that balances a wide margin between classes against classification errors.</p></article>
-      <article><h4>Probabilistic and Bayesian models</h4><p>Represent uncertainty with probabilities and update beliefs when evidence arrives.</p></article>
+    <p class="panel-lede">Press a card. Each of these can be fitted by more than one training method; the architecture and the method are separate facts about a model.</p>
+    <div class="family-grid" role="group" aria-label="Other architectures">
+      <button type="button" class="family-card" data-family="linear" aria-pressed="false"><b>Linear and logistic models</b><span>Combine input features with learned coefficients to predict a number or a probability.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="tree" aria-pressed="false"><b>Decision trees</b><span>Route an example through learned questions. A tree can be learned from data even though 1a&rsquo;s rule chain was written by a person.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="ensemble" aria-pressed="false"><b>Ensembles</b><span>Forests combine many trees; boosting builds a sequence whose later models correct earlier errors.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="knn" aria-pressed="false"><b>Nearest neighbours</b><span>Predict from stored examples that are most similar under a chosen distance.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="svm" aria-pressed="false"><b>Support-vector machines</b><span>Learn a boundary that balances a wide margin between classes against classification errors.</span><em class="holds" aria-hidden="true"></em></button>
+      <button type="button" class="family-card" data-family="bayes" aria-pressed="false"><b>Probabilistic and Bayesian models</b><span>Represent uncertainty with probabilities and update beliefs when evidence arrives.</span><em class="holds" aria-hidden="true"></em></button>
     </div>
+    <p class="obs-cue" id="cue-4b" role="status" aria-live="polite"></p>
     <aside class="search-note"><b>Search and planning are AI problem-solving approaches, not architectures.</b> They explore possible actions or future states, and they can use any of these models to score what they find.</aside>
   </section>
 
@@ -2263,8 +2305,8 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 <p>None on this stage. 1d is a map of two axes, not an experiment; nothing on it runs a result a prediction could be checked against. If you want a show of hands anyway, ask which of 1a, 1b, 1c learned from inputs paired with target answers, then press the <b>Supervised learning</b> card.</p>
 <h3>Activity</h3>
 <ol>
-  <li><span class="beat">0:00</span> Press each <b>training method</b> card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
-  <li><span class="beat">1:30</span> Read the <b>architecture</b> cards: linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
+  <li><span class="beat">0:00</span> The stage has two halves behind two buttons. Under <b>Training methods</b>, press each card. The playable models that used it light up beneath: supervised &rarr; 1c, reinforcement &rarr; 1b, no training &rarr; 1a; the other three light nothing.</li>
+  <li><span class="beat">1:30</span> Switch to <b>Other architectures</b> and press a card: the line beneath says what that model stores and what it computes &mdash; linear models, decision trees, ensembles, nearest neighbours, support-vector machines, probabilistic models. Search and planning are named separately as problem-solving approaches.</li>
 </ol>
 <h3>Expected observation</h3>
 <p>Architecture and training method are separate columns. 1c is a network trained by supervised learning; a network could equally be trained by reinforcement, and a table could be fitted to supervised targets.</p>
@@ -5768,6 +5810,8 @@ const S = {
   predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
+  family: null,        // stage 1d: the architecture-family card that is pressed
+  half: 'methods',     // stage 1d: which of its two halves is showing
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -7751,6 +7795,42 @@ $$('.method-card').forEach(c => c.addEventListener('click', () => {
   renderMethods();
 }));
 
+/* The other half of 1d: the architecture families, along the axis the
+   stage's own refresh line defines -- what a model STORES and how it
+   COMPUTES an answer. These restate the card text under the same Reasoned
+   kicker; no figure and no external claim is made. */
+const FAMILY_CUE = {
+  linear:   { stores: 'one learned coefficient per input feature, plus an offset', computes: 'a weighted sum of the features — squashed into a probability for the logistic kind' },
+  tree:     { stores: 'a tree of learned yes/no questions with an answer at each leaf', computes: 'the route one example takes down the tree, one question at a time' },
+  ensemble: { stores: 'many trees, or a sequence of them', computes: 'a combination of their answers — a vote or an average, or a running total of corrections' },
+  knn:      { stores: 'the training examples themselves', computes: 'a distance from the new example to each stored one, then an answer from the closest few' },
+  svm:      { stores: 'a boundary, pinned by the examples nearest to it and their weights', computes: 'which side of the boundary a new example falls, and how far from it' },
+  bayes:    { stores: 'probabilities — what was believed before, and how each kind of evidence shifts it', computes: 'an updated probability once the evidence arrives' }
+};
+function renderFamilies() {
+  $$('.family-card').forEach(c => {
+    const on = c.dataset.family === S.family;
+    c.setAttribute('aria-pressed', String(on));
+    $('.holds', c).textContent = on ? 'stores · computes — below' : '';
+  });
+  const out = $('#cue-4b');
+  if (!S.family) { out.textContent = ''; return; }
+  const card = $('.family-card[data-family="' + S.family + '"]'), f = FAMILY_CUE[S.family];
+  out.textContent = $('b', card).textContent + ' → stores ' + f.stores + '; computes ' + f.computes + '.';
+}
+$$('.family-card').forEach(c => c.addEventListener('click', () => {
+  S.family = S.family === c.dataset.family ? null : c.dataset.family;
+  renderFamilies();
+}));
+/* Which half of 1d is showing. Two buttons, one card visible at a time;
+   the stage's check card and the Details drawer are outside both halves. */
+function renderHalf() {
+  $$('.map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
+  $('#methods-card').hidden = S.half !== 'methods';
+  $('#families-card').hidden = S.half !== 'families';
+}
+$$('.map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
+
 /* ------------------------------------------------------------------ *
  * Model types — built from src/model-types.js, the dated Hugging Face
  * catalogue. Nothing here fetches; the links are the learner's to follow.
@@ -7886,14 +7966,14 @@ document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};
-  S.method = null;
+  S.method = null; S.family = null; S.half = 'methods';
   $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
   $$('.type-card').forEach(d => { d.open = false; });
   $('#learned-body').innerHTML = '';
   $('#learned-sub').textContent = '';
   const nv = $('#network-view');
   delete nv.dataset.layer; delete nv.dataset.neuron;
-  renderMethods();
+  renderMethods(); renderFamilies(); renderHalf();
   resetAll(true);
 });
 
@@ -7901,7 +7981,7 @@ document.addEventListener('lessonreset', () => {
 
 resetAll();
 renderScore();
-renderMethods();
+renderMethods(); renderFamilies(); renderHalf();
 /* The shell may already have selected a stage from a #stage-N hash before
    this script ran, and the old public deep links (#rules, #learning,
    #neural) are honoured through the flags the shell parsed. */

@@ -31,6 +31,8 @@ const S = {
   predictions: {},     // Predict-card answers by key: rules, one, net, types (1d has no Predict: it is a map)
   resetting: false,    // true only between onReset() and the lessonreset handler
   method: null,        // stage 1d: the training-method card that is pressed
+  family: null,        // stage 1d: the architecture-family card that is pressed
+  half: 'methods',     // stage 1d: which of its two halves is showing
   depth: RULES.DEFAULT_DEPTH,   // how many of the eight rules are switched on
   ruleRec: {},         // depth -> your record against that ladder
   ruleCounts: {},      // depth -> how many moves each rule decided
@@ -2014,6 +2016,42 @@ $$('.method-card').forEach(c => c.addEventListener('click', () => {
   renderMethods();
 }));
 
+/* The other half of 1d: the architecture families, along the axis the
+   stage's own refresh line defines -- what a model STORES and how it
+   COMPUTES an answer. These restate the card text under the same Reasoned
+   kicker; no figure and no external claim is made. */
+const FAMILY_CUE = {
+  linear:   { stores: 'one learned coefficient per input feature, plus an offset', computes: 'a weighted sum of the features — squashed into a probability for the logistic kind' },
+  tree:     { stores: 'a tree of learned yes/no questions with an answer at each leaf', computes: 'the route one example takes down the tree, one question at a time' },
+  ensemble: { stores: 'many trees, or a sequence of them', computes: 'a combination of their answers — a vote or an average, or a running total of corrections' },
+  knn:      { stores: 'the training examples themselves', computes: 'a distance from the new example to each stored one, then an answer from the closest few' },
+  svm:      { stores: 'a boundary, pinned by the examples nearest to it and their weights', computes: 'which side of the boundary a new example falls, and how far from it' },
+  bayes:    { stores: 'probabilities — what was believed before, and how each kind of evidence shifts it', computes: 'an updated probability once the evidence arrives' }
+};
+function renderFamilies() {
+  $$('.family-card').forEach(c => {
+    const on = c.dataset.family === S.family;
+    c.setAttribute('aria-pressed', String(on));
+    $('.holds', c).textContent = on ? 'stores · computes — below' : '';
+  });
+  const out = $('#cue-4b');
+  if (!S.family) { out.textContent = ''; return; }
+  const card = $('.family-card[data-family="' + S.family + '"]'), f = FAMILY_CUE[S.family];
+  out.textContent = $('b', card).textContent + ' → stores ' + f.stores + '; computes ' + f.computes + '.';
+}
+$$('.family-card').forEach(c => c.addEventListener('click', () => {
+  S.family = S.family === c.dataset.family ? null : c.dataset.family;
+  renderFamilies();
+}));
+/* Which half of 1d is showing. Two buttons, one card visible at a time;
+   the stage's check card and the Details drawer are outside both halves. */
+function renderHalf() {
+  $$('.map-btn').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.half === S.half)));
+  $('#methods-card').hidden = S.half !== 'methods';
+  $('#families-card').hidden = S.half !== 'families';
+}
+$$('.map-btn').forEach(b => b.addEventListener('click', () => { S.half = b.dataset.half; renderHalf(); }));
+
 /* ------------------------------------------------------------------ *
  * Model types — built from src/model-types.js, the dated Hugging Face
  * catalogue. Nothing here fetches; the links are the learner's to follow.
@@ -2149,14 +2187,14 @@ document.addEventListener('lessonreset', () => {
   S.cancelTraining = true;
   S.seed = $('#in-seed').value.trim();
   S.predictions = {};
-  S.method = null;
+  S.method = null; S.family = null; S.half = 'methods';
   $$('.predict-btn').forEach(b => b.setAttribute('aria-pressed', 'false'));
   $$('.type-card').forEach(d => { d.open = false; });
   $('#learned-body').innerHTML = '';
   $('#learned-sub').textContent = '';
   const nv = $('#network-view');
   delete nv.dataset.layer; delete nv.dataset.neuron;
-  renderMethods();
+  renderMethods(); renderFamilies(); renderHalf();
   resetAll(true);
 });
 
@@ -2164,7 +2202,7 @@ document.addEventListener('lessonreset', () => {
 
 resetAll();
 renderScore();
-renderMethods();
+renderMethods(); renderFamilies(); renderHalf();
 /* The shell may already have selected a stage from a #stage-N hash before
    this script ran, and the old public deep links (#rules, #learning,
    #neural) are honoured through the flags the shell parsed. */

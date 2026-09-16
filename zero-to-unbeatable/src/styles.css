@@ -706,7 +706,7 @@ table.cmp tr.hi td { font-weight: 800; color: var(--ink-on-navy); border-bottom:
   .network-diagram { min-height: 150px; }
   .method-grid, .family-grid, .type-grid { grid-template-columns: 1fr; }
   .clarifiers { grid-template-columns: 1fr; }
-  .lens-btn small { display: none; }
+  .lens-btn small, .map-btn small { display: none; }
   .predict-btns { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
@@ -721,7 +721,7 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 @media (orientation: landscape) and (max-height: 560px) {
   #lens-nav { padding: 0 14px 6px; }
   .lens-btn { min-height: 38px; }
-  .lens-btn small { display: none; }
+  .lens-btn small, .map-btn small { display: none; }
   .panel { padding: calc(.45 * var(--u)); margin-bottom: calc(.4 * var(--u)); }
   #board-wrap { margin-bottom: calc(.4 * var(--u)); }
   #opp-row { flex-direction: row; align-items: center; gap: calc(.4 * var(--u)); margin-top: 0; }
@@ -772,6 +772,37 @@ body.presenter #board, body.presenter.step-rules #board { max-width: min(100%, 4
 .method-card[aria-pressed="true"] .uses { color: var(--gold-deep); }
 .method-card .uses:empty::before { content: "press to see which playable model used it"; font-weight: 650; letter-spacing: 0; text-transform: none; }
 .method-card[aria-pressed="true"] .uses:empty::before { content: "none of 1a, 1b, 1c used this one"; }
+/* Stage 1d's two halves sit behind two buttons (operator ruling 2026-09-16).
+   Same shape as the lens row: a group of aria-pressed buttons, not a tablist. */
+.map-switch {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3px; padding: 3px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--cream);
+}
+.map-btn {
+  min-height: 46px; border: 0; border-radius: 9px; padding: 6px 12px; background: transparent;
+  color: var(--ink-2); font: inherit; font-weight: 800; font-size: calc(var(--u) * .92); text-align: center; line-height: 1.2; cursor: pointer;
+}
+.map-btn span, .map-btn small { display: block; }
+.map-btn small { margin-top: 2px; color: var(--ink-3); font-size: calc(var(--u) * .66); font-weight: 650; }
+.map-btn[aria-pressed="true"] { background: var(--navy); color: #fff; box-shadow: inset 0 -3px 0 var(--gold); }
+.map-btn[aria-pressed="true"] small { color: var(--ink-2-on-navy); }
+.map-btn:hover:not([aria-pressed="true"]) { background: var(--paper); }
+/* The architecture-family cards are pressable like the method cards, and
+   share their look; pressing one writes what it stores and computes. */
+.family-card {
+  display: block; width: 100%; min-width: 0; position: relative; font: inherit; line-height: 1.4; text-align: left;
+  border: 1px solid var(--cream-deep); border-radius: var(--radius-2); padding: 12px 13px 34px; background: var(--cream); color: var(--ink); cursor: pointer;
+}
+.family-card b { display: block; margin: 0 0 4px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); }
+.family-card span { display: block; margin: 0; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+.family-card:hover { border-color: var(--navy); background: var(--paper); }
+.family-card[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--paper); }
+.family-card .holds {
+  position: absolute; left: 13px; right: 13px; bottom: 9px; font-style: normal;
+  font-size: calc(var(--u) * .68); font-weight: 650; color: var(--ink-3);
+}
+.family-card[aria-pressed="true"] .holds { color: var(--gold-deep); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.family-card .holds:empty::before { content: "press to see what it stores and computes"; }
 .clarifiers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .clarifiers p, .search-note { margin: 0; padding: 10px 12px; border: 1px solid #BCD7E3; border-radius: var(--radius-2); background: var(--lite-soft); color: var(--ink-2); font-size: calc(var(--u) * .84); }
 .clarifiers b, .search-note b { color: var(--navy); }
