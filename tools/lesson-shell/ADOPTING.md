@@ -101,6 +101,50 @@ both had before the retrofit and neither has now.
 - [ ] **Your own `#details` id**, if you had one, and any other id the kit
       reserves — the list is at the top of `partials.html`. A duplicate id does
       not throw; it silently gives one of the two elements to the other. See §5.
+- [ ] **Your claim on the viewport.** `body { overflow: hidden }`, `height:
+      100vh` on a root element, `position: fixed` on the game container —
+      anything that made the demo *be* the screen. A kit page is a document
+      that scrolls: header, stage intro, activity, check card, footer. Leave
+      the viewport lock in and the stage intro, the check card and the footer
+      all exist and **cannot be scrolled to**; the lesson is on the page and
+      unreachable, and no static check sees it (`topping-out` shipped exactly
+      this before its browser pass). Every game-shaped demo has one of these.
+      Delete it and let the activity size to its box — see the canvas notes
+      below.
+
+### If your activity is a canvas: it stops being fullscreen and becomes a box
+
+A pre-kit game usually treated the window as its stage. Under the kit the
+canvas lives inside a stage panel, sized by the page, and three things follow.
+`fuel-golf`, `ladder-lab` and `topping-out` all converged on the same shape
+independently, so treat it as the shape rather than one lane's taste:
+
+- **Read the canvas's box, not the window.** `grep` your source for
+  `window.innerWidth`, `window.innerHeight` and raw `e.clientX` / `e.clientY`;
+  every hit is a fullscreen assumption. Size from `canvas.getBoundingClientRect()`
+  (or the host's), and turn pointer coordinates into canvas space by
+  subtracting that rect and scaling by `canvas.width / rect.width`. A window
+  `resize` listener is not enough, because **the box changes when the window
+  does not**: a stage switch, presentation mode, a breakpoint crossing, the
+  intro disclosure opening. Use **one `ResizeObserver`** on the host and let it
+  be the only thing that resizes the canvas.
+- **One activity, relocated between stage hosts — never one canvas per
+  stage.** If stages 1–3 all show the same device, keep a single canvas and
+  move it (`host.append(canvas)`) in your `stagechange` handler. Three canvases
+  mean three contexts, three sets of listeners and three copies of the state to
+  keep in step, and Reset has to rewind all of them (§4 enumeration item 6
+  exists because of this).
+- **Guard `draw()` on a zero-size box.** A canvas inside a hidden stage panel,
+  or inside a closed disclosure, measures `0×0`. Drawing into it throws in some
+  paths and silently paints nothing in others; either way a frame loop that
+  runs while the stage is hidden burns work for a box nobody sees. Return early
+  when `rect.width === 0`.
+- **`min-height` plus `aspect-ratio` drives the *used width*, and it will
+  overflow a narrow breakpoint.** A box with `aspect-ratio: 16 / 9; min-height:
+  360px` is 640px wide before any `width` rule is consulted, so at 390px it
+  runs off the right edge of the page — and every static check passes, because
+  nothing in the markup is wrong. Clamp with `max-width: 100%` (and let
+  `min-height` go if it fights). How to *measure* it is in §6.
 
 > ### ⚠ The `.hidden` trap — read this before you delete a stylesheet
 >
@@ -110,7 +154,7 @@ both had before the retrofit and neither has now.
 > controls silently renders **stacked** — and `build.js --check`, `check-shell`
 > and `build-hub --check` all stay green, because your markup and your contract
 > are both still correct. It shows up only in a browser, under a per-panel
-> `display` / `offsetParent` assertion. `should-have-known-that` shipped
+> render assertion (`checkVisibility()`, §6). `should-have-known-that` shipped
 > straight into it mid-build (setup / turn / play panels stacked).
 >
 > **Since v3 the kit ships `.hidden { display: none !important }` itself**, so a
@@ -127,6 +171,17 @@ both had before the retrofit and neither has now.
 >
 > Retrofitting onto a kit **older than v3**? Either keep the one rule when you
 > delete the stylesheet, or convert the JS to the attribute.
+>
+> **When you audit for it, tell the class apart from the property.** A grep
+> for `\.hidden\b` matches `node.hidden`, `if (row.hidden)` and
+> `rows.hidden.at(-1)` — JavaScript property access, which was always fine —
+> as readily as `classList.add('hidden')` or a `.hidden {` CSS rule. Counted
+> that way, one demo reported 56 "sites" and had **zero** class-form uses;
+> another was told it had 6 and had none. Count the class form
+> (`classList.*('hidden')`, `class="… hidden …"`, `.hidden {` in a stylesheet)
+> and the attribute form separately, and only the first is exposed to this
+> trap. Three lanes were sent chasing a problem they did not have on a count
+> that conflated the two.
 
 ### What to KEEP, and not get talked out of
 
@@ -161,6 +216,27 @@ when the index did not change, so handle the no-op case.
 Your `app.js` does **not** show or hide the panel — the shell already did. Your
 handler exists to do the work the shell cannot: lazily build a canvas, re-run a
 layout measurement, cancel an animation that belongs to the stage being left.
+
+### Gating a stage: two mechanisms, for two different reasons
+
+A demo sometimes needs the learner to have done something before the next
+stage is useful. There are two ways to say so, and they are not
+interchangeable — pick by *why* the gate exists (`fuel-golf` worked both out
+and used both):
+
+| | **Tab gate** | **Evidence gate** |
+|---|---|---|
+| Use when | the next stage **makes no sense** without the previous result — there is no week to run without a schedule, no orbit to compare without a first burn | the **prediction is the point**: the stage exists so the learner commits before seeing the evidence |
+| Mechanism | `disabled` on the stage tab **in the template markup**; your `app.js` removes it when the prerequisite lands | the tab stays live; the stage renders its intro and prediction capture, and **withholds the activity** (the plot, the reveal, the Run button) until a prediction is recorded |
+| What Reset does | the shell's pre-`app.js` snapshot re-locks it (§4 step 3) — for free, *because* it was authored in markup | your `lessonreset` handler hides the activity again and clears the captured prediction |
+| What the learner sees | a tab they cannot select yet, with a `title` saying why | a stage they can visit, read and predict on, that has not shown its hand |
+
+A tab gate applied only at runtime (`tab.disabled = true` in `app.js`, nothing
+in the markup) comes back **unlocked** after Reset, because the snapshot was
+taken before your script ran. An evidence gate implemented as a tab gate makes
+the learner unable to *reach* the question they are meant to predict on, which
+defeats the predict-then-observe method the template is built around. Neither
+mistake is visible to a static check.
 
 ### `lessonreset` — put your activity back
 
@@ -241,6 +317,36 @@ In this order, when `#reset-btn` is pressed:
 - **The Guide.** It does not reopen. A reset is not a fresh arrival — the person
   who pressed it has already read the Guide.
 - **Your activity.** The shell cannot know what it holds. Step 9 is for that.
+
+### What Reset is not for: data that outlives the session
+
+**Reset restores the lesson's own state.** Data that outlives the session and
+was not created by it — saved records, a class leaderboard, other people's
+results — is **out of scope**, and stays where it is. (Operator ruling,
+2026-09-16, on `fuel-golf`, whose pre-kit `resetDemo()` wiped the leaderboards
+behind a two-step confirm.)
+
+The reason is the shape of the control. A8's "fresh-load demo state" was
+written about answers, echoes and a canvas — things one learner made in the
+last ten minutes and can make again. The kit's Reset is **one unconfirmed
+click**. Pointing it at a store that holds another class period's scores turns
+a "start this exercise over" affordance into an unrecoverable delete, and a
+learner who pressed it to clear their own answers gets no warning. Persisted
+third-party data is not "demo state" in A8's sense.
+
+Two conditions, so the divergence is visible rather than silent:
+
+- **Say so where the learner meets the control.** The Reset affordance, or the
+  Settings menu it lives in, or the Guide, states that Reset does not clear
+  the leaderboard (or whatever the store is). A learner should not have to
+  press it to find out.
+- **Keep your own confirmed clear.** If the demo had a two-step "clear all
+  scores", it keeps it — as its own control, with its own confirmation, not
+  folded into Reset and not removed because Reset exists.
+
+A demo that has no such store has nothing to do here. A demo that does and is
+unsure which side of the line a given value falls on: ask, in the progress file,
+rather than deciding by default in either direction.
 
 ### What you must implement
 
@@ -437,6 +543,18 @@ node ../tools/lesson-shell/check-shell.js --self-test
 node ../tools/build-hub.js --check
 ```
 
+**Then count your `</script>` closers**, before you trust any of the green
+above. A build step that escapes `</script>` document-wide — to embed the guide,
+or a JSON blob, or anything with a closing tag in it — can eat the template's
+*own* closers and ship a page that runs **no JavaScript at all**, with an
+**empty console**, because nothing ever executed to complain. `build --check`,
+the engine suites, `check-shell` and `build-hub --check` all stay green: the
+markup is well-formed, the strings are all present, the stamp matches.
+`topping-out` shipped this. Assert the count you expect
+(`grep -o '</script>' index.html | wc -l`), write the expected number down, and
+re-assert it after every rebuild — a rebuild against a new kit version must not
+change it.
+
 And the browser pass, which is **not waivable** and is the only thing here that
 can see a runtime DOM failure. Both defects the kit has shipped so far — a
 `HierarchyRequestError` that killed every render, and stage panels pinned shut
@@ -448,13 +566,40 @@ The browser pass must, at minimum:
 - serve over a **local static server**. `file://` does not permit interaction in
   this environment;
 - prove the console reader is live on a bait page **first**, then show the demo's
-  console clean on a fresh tab;
-- **visit every stage and assert each panel actually renders** —
-  `getComputedStyle(panel).display !== 'none'` **and** a live `offsetParent`.
-  Tab state is not panel state: a tab can report `aria-selected="true"` over a
-  panel that is not on the screen, which is exactly how the `hidden` defect
-  shipped. If a stage is gated, drive the real interaction to open the gate;
-- exercise **Reset with its control**, per §4.
+  console clean on a **fresh tab — not a reload**. The reader's buffer is
+  per-tab and **survives navigation**, so a reload after a bait page, or after
+  an earlier broken build, reports the old entries as if they were this load's.
+  Open a new tab for the clean capture. Then emit a positive control (a
+  `console.error` of your own) **after** the clean capture, in the same tab, and
+  show it arrives — proving the reader was live *for that tab* rather than
+  quietly detached. A control fired before the capture proves nothing about the
+  capture;
+- **visit every stage and assert each panel actually renders**, with
+  **`element.checkVisibility()`** as the primary probe. Tab state is not panel
+  state: a tab can report `aria-selected="true"` over a panel that is not on
+  the screen, which is exactly how the `hidden` defect shipped. If a stage is
+  gated, drive the real interaction to open the gate.
+
+  `checkVisibility()` and not `display` / `offsetParent`, because **since v3
+  every demo has a `<details>` in every stage** (§4b), and inside a closed
+  `<details>` an element reports `display: grid`, a live `offsetParent` and a
+  non-zero bounding rect while being genuinely unrendered. K3 measured it on
+  the lesson strip: 377px wide, `offsetParent` = `BODY`, not on screen. Only
+  `checkVisibility()` returns `false` there. `display !== 'none'` plus a live
+  `offsetParent` is still a fine *secondary* signal for stage panels, which are
+  not inside a disclosure — but the primary assertion is `checkVisibility()`,
+  and for anything inside the intro (the strip, the echo, the refresh line) it
+  is the only one that is not a false positive;
+- **measure overflow at exact widths through a same-origin `<iframe>`**, not by
+  resizing the pane. The browser pane emulates a viewport by *scaling* its own
+  frame, so a "390px" pane may be rendering at 400 and rounding — a layout that
+  overflows by six pixels passes. Load the built page in an iframe sized to
+  exactly `390×844` (and `320×568`, `1024×768`, `1440×900`) on a scratch page
+  served from the same origin, and read `scrollWidth > clientWidth` and each
+  suspect box's `getBoundingClientRect().right` inside it. That is how the
+  `aspect-ratio` overflow in §2 is caught; it is invisible any other way;
+- exercise **Reset with its control**, per §4 — sentinel on `window`, navigation
+  entries `1 → 1`, and at phone width the intro disclosure back to collapsed.
 
 ## 7. Rebuilding after a kit change
 
