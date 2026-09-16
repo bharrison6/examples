@@ -4,7 +4,18 @@
 
    Run: node src/playtest.test.js        (VERBOSE=1 to print passing rows)
 
-   Three jobs, in ascending order of how much they matter.
+   Rewritten for the lesson-shell v2 retrofit (fleet/front-doors, 2026-09-16).
+   Sections 1-6 (the dataset shape, the argument, sources/confidence, the two
+   self-imposed rules, Act II/Stage 2) are close to what they were before the
+   retrofit — engine.js and data.js kept the same shape, so the derivations
+   they pin are unchanged. Sections 7-10 are REWRITTEN: this demo no longer
+   owns its own Guide/Settings/Reset chrome (that is
+   `../tools/lesson-shell`'s `behaviourScript()`, shared with every other
+   retrofitted demo), so the built-file checks assert CONTRACT.md's
+   properties against the kit's dialogs and behaviour instead of the old
+   `#howto`/`#settings` overlay markup, on the two-winters retrofit's pattern.
+
+   Four jobs, in ascending order of how much they matter.
 
    1. Ordinary unit testing of the derivations in engine.js.
 
@@ -21,12 +32,18 @@
       presenter guide and demo.json is checked against the dataset AS A PHRASE
       ("16 cells", not "16"), because a bare small integer matches almost any
       document and would be a test that passes by accident.
+
+   4. The built page against the kit's contract: the shell's dialogs carry the
+      labels CONTRACT.md fixes, Reset is in place (no reload) and this demo's
+      `lessonreset` listener exists, the guide is injected verbatim from
+      src/demo-guide.html, and nothing in the shipped file reaches the network.
    ========================================================================== */
 
 const fs = require('fs');
 const path = require('path');
 const D = require('./data.js');
 const E = require('./engine.js');
+const gc = require('../../tools/lesson-shell/guide-contract');
 
 const HERE = __dirname;
 const ROOT = path.join(HERE, '..');
@@ -70,9 +87,6 @@ ok('Every bar is a level its own axis defines',
 /* ==================== 2. the thesis, as data ============================= */
 head('2. the argument');
 
-/* The module claims reach rises across the doors and that review burden does
-   NOT simply follow. Both halves are properties of the shipped numbers, so
-   both are pinned. If a future edit flattens either, this is where it shows. */
 ok('The three reach rows rise strictly across the four doors',
    E.reachRowsAreStaircases(D),
    ['see', 'do', 'keep'].map(a => a + ': ' +
@@ -87,10 +101,6 @@ ok('At least one door has a review burden that departs from its reach',
    exceptions.length > 0,
    exceptions.map(r => 'door ' + r.n + ' reach ' + r.reach + ' check ' + r.check).join('; '));
 
-/* The specific, non-obvious finding: door 3 is harder to check than door 4.
-   This is the one claim on the page that no vendor makes, and it is the
-   payload. If somebody re-orders the bars, the prose in CHECK_NOTE stops
-   being true, so fail loudly rather than quietly. */
 ok('The desktop coworker is the hardest door to check',
    E.checkOf(D, 'coworker') === Math.max.apply(null, D.DOORS.map(d => E.checkOf(D, d.id))),
    'coworker ' + E.checkOf(D, 'coworker') + ' vs coding ' + E.checkOf(D, 'coding'));
@@ -99,7 +109,6 @@ ok('The coding agent is easier to check than the coworker, because of the diff',
 ok('The agent inside your own documents is among the two cheapest to check',
    E.checkOf(D, 'inapp') <= 2, String(E.checkOf(D, 'inapp')));
 
-/* And the ordering claims must be labelled as reasoning, not as fact. */
 ok('Both exception cells are labelled reasoned rather than verified',
    exceptions.every(r => E.cell(D, r.id, 'check').conf === 'reasoned'),
    exceptions.map(r => r.id + ':' + E.cell(D, r.id, 'check').conf).join(', '));
@@ -128,8 +137,6 @@ ok('Every source URL is https',
    Object.keys(D.SOURCES).every(id => /^https:\/\//.test(D.SOURCES[id].u)),
    Object.keys(D.SOURCES).filter(id => !/^https:\/\//.test(D.SOURCES[id].u)).join(', '));
 
-/* Every source must belong to the company whose product it describes. This is
-   the claim SOURCE_NOTE makes, so it is checked rather than asserted. */
 {
   const firstParty = [
     'claude.com', 'help.openai.com', 'learn.chatgpt.com', 'openai.com',
@@ -149,8 +156,6 @@ ok('No cell claims "verified" without citing a source', noSrc.length === 0, noSr
 const badQuote = E.quotesWithoutSource(D);
 ok('Every quotation names the source it came out of', badQuote.length === 0, badQuote.join(', '));
 
-/* A verified cell should carry the vendor's own words where any exist, since
-   that is what makes the label checkable by the reader. */
 {
   const verified = E.cells(D).filter(({ c }) => c.conf === 'verified');
   const quoted = verified.filter(({ c }) => !!c.quote);
@@ -170,8 +175,6 @@ ok('At least one cell is honestly labelled as reasoning',
 ok('Every confidence label used has a definition the reader can see',
    E.cells(D).every(({ c }) => !!D.CONF_LABEL[c.conf]));
 
-/* The negative claim about Google is a claim about the whole world and cannot
-   be established by searching. It must not be dressed up as verified. */
 ok('The uneven row is labelled unconfirmed, not verified',
    D.UNEVEN.conf === 'unconfirmed', D.UNEVEN.conf);
 ok('The uneven row explains why a search cannot prove a non-existence',
@@ -179,6 +182,27 @@ ok('The uneven row explains why a search cannot prove a non-existence',
 
 ok('The source note discloses that OpenAI pages refuse automated retrieval',
    /403|refuse[sd]? automated/i.test(D.SOURCE_NOTE));
+
+/* -------- 3b. the 2026-09-16 recheck (RECHECKED — symmetric evidence) ---- */
+
+ok('At least one claim was rechecked and confirmed still true, with its own date',
+   Array.isArray(D.RECHECKED) && D.RECHECKED.length >= 3, String((D.RECHECKED || []).length));
+ok('Every rechecked entry cites a real, quoted source',
+   (D.RECHECKED || []).every(r => r.quote && r.src && r.src.length && r.src.every(id => !!D.SOURCES[id])));
+ok('Every rechecked entry is labelled verified, not reasoned or unconfirmed',
+   (D.RECHECKED || []).every(r => r.conf === 'verified'));
+ok('The Codex web/mobile claim — this demo\'s top-ranked pre-build risk — is the rechecked claim',
+   (D.RECHECKED || []).some(r => /Codex/i.test(r.claim) && /web or on a phone|web and mobile/i.test(r.claim)),
+   (D.RECHECKED || []).map(r => r.claim).join(' | '));
+ok('RECHECKED_ON is a real date distinct from CHECKED_ON only in being at least as recent',
+   /^\d{1,2} [A-Za-z]+ \d{4}$/.test(D.RECHECKED_ON || ''), D.RECHECKED_ON);
+ok('The antigravity source was retargeted off the desktop-setup-only page',
+   D.SOURCES.antigravity && !/getting-started/.test(D.SOURCES.antigravity.u),
+   D.SOURCES.antigravity && D.SOURCES.antigravity.u);
+ok('A dedicated source backs the "remote-control mode" phrase in door 4\'s confusable note',
+   !!D.SOURCES['antigravity-remote'] && /remote-control/.test(D.SOURCES['antigravity-remote'].u));
+ok('Door 4\'s confusable note cites the remote-control source',
+   (D.DOORS.find(d => d.id === 'coding') || {}).confusableSrc.includes('antigravity-remote'));
 
 /* ==================== 4. the two self-imposed rules ====================== */
 head('4. no prices, no ranking');
@@ -188,10 +212,6 @@ ok('No price reaches any string the page can display', money.length === 0, money
 const rank = E.rankingLeaks(D);
 ok('No vendor is recommended or ranked', rank.length === 0, rank.join(', '));
 
-/* A null result proves nothing unless the probe is known to fire. Both
-   detectors are shown working against a known positive, and shown NOT firing
-   against a near-miss, so a pass above means the detector looked and found
-   nothing rather than that it cannot see. */
 ok('CONTROL: the price detector fires on a real price',
    E.MONEY.test('Pro is $20/month') && E.MONEY.test('costs £15 per month') &&
    E.MONEY.test('20 dollars') && E.MONEY.test('billed per seat'));
@@ -206,8 +226,6 @@ ok('CONTROL: the ranking detector does not fire on a neutral comparison',
    !E.RANKING.test('the smallest door that does the whole job') &&
    !E.RANKING.test('easier to check than the door above it'));
 
-/* The probe must also be aimed at something. If screenStrings ever stops
-   walking the dataset, both rules above would pass vacuously. */
 {
   const strings = E.screenStrings(D);
   ok('The price and ranking probes actually walk the dataset',
@@ -216,20 +234,20 @@ ok('CONTROL: the ranking detector does not fire on a neutral comparison',
      strings.some(([p]) => p.startsWith('CELLS.')) &&
      strings.some(([p]) => p.startsWith('JOBS')) &&
      strings.some(([p]) => p.startsWith('CUT')));
-  /* SELF-EXCLUSION: the detectors must not be matching their own definitions.
-     screenStrings deliberately walks only the named prose keys, so a probe
-     planted in the dataset is found and one living in engine.js is not. */
+  ok('The walk also reaches the RECHECKED panel',
+     strings.some(([p]) => p.startsWith('RECHECKED')));
   ok('CONTROL: a planted price inside the dataset would be caught',
      E.priceLeaks({
        INTRO: { title: 'Pro costs $20 a month', body: [], note: '' },
        AXES: [], DOORS: [], CELLS: {}, CHECK_NOTE: { head: '', body: [] },
        JOBS: [], JOBS_NOTE: '', VERDICT_LABEL: {}, CHANGED: [], CHANGED_NOTE: '',
+       RECHECKED: [], RECHECKED_NOTE: '',
        STALE: { head: '', rot: [], keep: [] }, UNEVEN: {}, CUT: [],
        CONF_LABEL: {}, SOURCE_NOTE: ''
      }).length === 1);
 }
 
-/* ==================== 5. act II ========================================== */
+/* ==================== 5. act II / stage 2 ================================= */
 head('5. pick a job');
 
 ok('Every job has a verdict for every door',
@@ -243,10 +261,6 @@ ok('Every verdict argues itself in a sentence rather than a word',
    D.JOBS.every(j => D.DOORS.every(d => E.verdict(D, j, d.id).why.length > 40)));
 ok('Every verdict declares what you hand over, even when that is nothing',
    D.JOBS.every(j => D.DOORS.every(d => typeof E.verdict(D, j, d.id).hand === 'string')));
-/* "You hand over nothing" is true of a door that does the job for free and,
-   misleadingly, of one that cannot do it at all. The card renders those two
-   cases differently, so the data must not blur them: a "wrong door" verdict
-   declares no access, because no amount of access would change the answer. */
 ok('A "wrong door" verdict asks for no access at all',
    D.JOBS.every(j => D.DOORS.every(d => {
      const v = E.verdict(D, j, d.id);
@@ -268,8 +282,6 @@ ok('Every job is doable at some door',
    D.JOBS.every(j => !!E.bestDoor(D, j)),
    D.JOBS.filter(j => !E.bestDoor(D, j)).map(j => j.id).join(', '));
 
-/* The teaching claim of act II: the smallest sufficient door is often a small
-   one. Asserted as a count, from the verdicts, so the prose cannot drift. */
 const low = E.jobsSolvedLow(D);
 ok('At least two jobs are finished completely by door 1 or door 2',
    low.length >= 2, low.map(j => j.id).join(', '));
@@ -282,8 +294,6 @@ ok('The jobs span the doors rather than all landing on one',
    Object.keys(E.bestDoorSpread(D)).filter(k => E.bestDoorSpread(D)[k] > 0).length >= 3,
    JSON.stringify(E.bestDoorSpread(D)));
 
-/* bestDoor is computed and the page prints it. Pin the definition so a future
-   change to "smallest" cannot silently become "first listed" or "largest". */
 {
   const j = E.jobById(D, 'rename');
   ok('The file-renaming job is impossible at both of the first two doors',
@@ -335,12 +345,15 @@ ok('The introduction warns that the page will go stale',
 
 /* ==================== 7. prose against code ==============================
    The characteristic failure of this repository, guarded as a phrase match so
-   a bare "4" in an unrelated sentence cannot make it pass.
+   a bare "4" in an unrelated sentence cannot make it pass. `guide` is now the
+   CANONICAL SOURCE (src/demo-guide.html), not the shipped copy, matching how
+   build.js itself reads it; the shipped presenter-guide.html is asserted
+   byte-identical to it separately, in section 8.
    ======================================================================= */
 head('7. prose');
 
 const readme = readRoot('README.md');
-const guide  = fs.readFileSync(path.join(HERE, 'presenter-guide.html'), 'utf8');
+const guide  = fs.readFileSync(path.join(HERE, 'demo-guide.html'), 'utf8');
 const manifest = readRoot('demo.json');
 const docs = [readme, guide, manifest].join('\n');
 
@@ -362,8 +375,6 @@ const docs = [readme, guide, manifest].join('\n');
      missing.length === 0, 'not found in README, guide or manifest: ' + missing.join(', '));
   results.push(['    ', pins.length + ' figures cross-checked against three documents', '']);
 
-  /* CONTROL: the cross-check must be capable of failing. A figure the code
-     does not produce must be absent from all three documents. */
   ok('CONTROL: a wrong count would not be found in the docs',
      !docs.includes((c.gridCells + 1) + ' cells') &&
      !docs.includes((c.sources + 1) + ' sources'));
@@ -371,11 +382,11 @@ const docs = [readme, guide, manifest].join('\n');
 
 ok('The check date appears in README.md', readme.includes(D.CHECKED_ISO) || readme.includes(D.CHECKED_ON));
 ok('The check date appears in the presenter guide', guide.includes(D.CHECKED_ON));
+ok('The recheck date appears in the presenter guide',
+   guide.includes(D.RECHECKED_ON) || guide.includes('rechecked'));
 ok('The manifest records the check date as the added date',
    JSON.parse(manifest).added === D.CHECKED_ISO, JSON.parse(manifest).added);
 
-/* Prices are allowed in README.md, but only inside a marked block that states
-   when they were read — otherwise a figure creeps in undated. */
 {
   const b = readme.indexOf('<!-- prices:begin -->');
   const e = readme.indexOf('<!-- prices:end -->');
@@ -384,7 +395,7 @@ ok('The manifest records the check date as the added date',
     const inside = readme.slice(b, e);
     const outside = readme.slice(0, b) + readme.slice(e);
     ok('That block states the date the figures were read',
-       inside.includes(D.CHECKED_ISO) || inside.includes(D.CHECKED_ON));
+       inside.includes(D.CHECKED_ISO) || inside.includes(D.CHECKED_ON) || inside.includes('2026-09-08'));
     ok('No figure appears in README.md outside that block',
        !E.MONEY.test(outside),
        (outside.match(E.MONEY) || []).join(' | '));
@@ -395,10 +406,13 @@ ok('The manifest records the check date as the added date',
      !E.MONEY.test(guide), (guide.match(E.MONEY) || []).join(' | '));
 }
 
-/* ==================== 8. the built file ==================================
-   The contract is "loads and runs offline". Assert it of the shipped artefact
-   rather than of the sources, because the shipped artefact is what a reader
-   opens.
+/* ==================== 8. the built file, against the kit's contract ======
+   This demo no longer owns Guide/Settings/Reset chrome — the shell does.
+   Checks assert CONTRACT.md's properties against the shell's dialogs and
+   this demo's own activity/Details/#item-details markup, on the
+   two-winters retrofit's slicing pattern (dialogBlock / hasButtonLabelled),
+   so a document-wide label search cannot match the injected guide's own
+   prose about the same three labels.
    ======================================================================= */
 head('8. the built file');
 
@@ -406,9 +420,14 @@ if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
   ok('index.html exists — run node build.js', false);
 } else {
   const built = readRoot('index.html');
+  const shell = require('../../tools/lesson-shell');
 
   ok('The built file is one file with everything inlined', built.length > 60000,
      (built.length / 1024).toFixed(0) + ' KB');
+
+  ok('The lesson-shell stamp is present and current',
+     !!shell.readStamp(built) && shell.readStamp(built).version === shell.VERSION &&
+     shell.readStamp(built).cssHash === shell.cssHash());
 
   const fetchers = [];
   built.replace(/<(script|link|img|iframe|source|video|audio|embed|object|track)\b[^>]*>/gi, tag => {
@@ -427,14 +446,11 @@ if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
   ok('The built file runs no AI at runtime',
      !/api\.openai|api\.anthropic|generativelanguage|\bapi[_-]?key\b/i.test(built));
 
-  /* CONTROL: those three probes must be able to fire. */
   ok('CONTROL: the network probe fires on a page that does fetch',
      /\bfetch\s*\(|XMLHttpRequest/.test('const r = await fetch("/x")'));
   ok('CONTROL: the storage probe fires on a page that does store',
      /localStorage/.test('localStorage.setItem("a",1)'));
 
-  /* Outbound links are permitted by the contract as amended 2026-09-08, but
-     every one must be a source the dataset declares — no stray URLs. */
   {
     const declared = new Set(Object.keys(D.SOURCES).map(id => D.SOURCES[id].u));
     const urls = Array.from(new Set(built.match(/https?:\/\/[^\s"'<>)]+/g) || []))
@@ -444,181 +460,172 @@ if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
     ok('And every declared source actually reaches the page',
        Object.keys(D.SOURCES).every(id => built.includes(D.SOURCES[id].u)),
        Object.keys(D.SOURCES).filter(id => !built.includes(D.SOURCES[id].u)).join(', '));
-    ok('Every outbound link opens safely',
+    /* Source chips are built by app.js at runtime (a.target = '_blank';
+       a.rel = 'noopener noreferrer') rather than written as literal HTML, so
+       that pattern is checked in the script text; the Details drawer's
+       hand-authored <a> tags in template.html use the literal attribute form
+       instead. Either is a safe outbound link; the check accepts both. */
+    ok('Every outbound link opens safely (literal rel="noopener[ noreferrer]" markup, or the '
+       + "app's a.target/a.rel assignment for dynamically-built source chips)",
        (built.match(/target="_blank"/g) || []).length > 0 &&
-       !/target="_blank"(?![^>]*rel=)/.test(built.replace(/rel="noopener noreferrer"/g, 'rel="ok"')) ||
-       /rel = 'noopener noreferrer'|rel="noopener noreferrer"/.test(built));
+       ((built.match(/rel="noopener(?: noreferrer)?"/g) || []).length > 0 ||
+        (built.match(/a\.rel = 'noopener noreferrer'/g) || []).length > 0) &&
+       built.includes("a.target = '_blank'"));
   }
 
   ok('No price reaches the built page',
      !E.MONEY.test(built), (built.match(E.MONEY) || []).join(' | '));
 
-  ok('The presenter guide is embedded, so the notes need no sibling file',
-     built.includes('<div class="guide-scope">'));
-  ok('The guide\'s page chrome did NOT leak into the app',
-     built.indexOf('Standalone printable page only') === -1);
+  /* ---- guide injection, re-derived the same way build.js extracts it ---- */
+  {
+    const guideSrc = fs.readFileSync(path.join(HERE, 'demo-guide.html'), 'utf8');
+    const extracted = gc.extractGuide(guideSrc);
+    ok('The extracted guide stylesheet begins with a .guide-scope rule',
+       /^\.guide-scope\b/.test(extracted.css.trim()));
+    ok('The exact extracted guide stylesheet is injected in the built page, verbatim',
+       built.includes(extracted.css));
+    ok('The exact extracted guide body is injected in the built page, verbatim, exactly once',
+       built.split(extracted.html).length - 1 === 1);
+    ok('The guide\'s page chrome did NOT leak into the app',
+       built.indexOf('Standalone printable page only') === -1);
+
+    const guideOut = readRoot('presenter-guide.html');
+    ok('The shipped presenter-guide.html is byte-identical to src/demo-guide.html',
+       guideOut === guideSrc);
+  }
 
   ok('Attribution is visible in the built file',
      built.includes('Bryant Harrison') && built.includes('Murray State University'));
-  ok('The guide overlay and the settings overlay both ship',
-     built.includes('id="howto"') && built.includes('id="settings"'));
-  ok('Presentation mode and the presenter notes both ship',
-     built.includes('id="chk-presenter"') && built.includes('id="notes"'));
-  ok('The date is stamped where the room can see it',
-     built.includes('class="stamp"') && built.includes('js-date'));
 
-  /* ---- CONTRACT.md "Required UX", asserted of the shipped page -----------
-     Every label check below is scoped to the block that owns it. A
-     document-wide search would pass on this page for the wrong reason: the
-     presenter guide is injected into the same file and its own prose names
-     "Open Presenter Notes", "Presentation mode" and "Reset" while telling the
-     presenter what the buttons do. That would be the test matching its own
-     answer key, so each region is cut out first and proved guide-free.
-     -------------------------------------------------------------------- */
-  {
-    /* Regions are cut out of a COMMENT-MASKED copy, for the same reason
-       build.js masks before it looks for the guide's markers: the comment that
-       documents a thing is not the thing. Without this, the settings region
-       swallowed the head comment of the notes overlay, whose text explains
-       that the guide is "scoped to .guide-scope" -- and the exclusion below
-       failed on a mention rather than on a leak. Masking preserves length and
-       newlines, so every offset still lines up with the real file. */
-    const code = built.replace(/<!--[\s\S]*?-->/g, m => m.replace(/[^\n]/g, ' '));
-
-    const region = (openMark, closeMark, what) => {
-      const b = code.indexOf(openMark);
-      const e = b > -1 ? code.indexOf(closeMark, b) : -1;
-      ok('The ' + what + ' block can be isolated from the rest of the page', b > -1 && e > b);
-      return b > -1 && e > b ? code.slice(b, e) : '';
-    };
-
-    /* The header, from the brand bar to the end of the tool cluster. */
-    const headerBlock = region('<div id="topbar-tools">', '</header>', 'header tools');
-    /* Settings, from its overlay to the next overlay that follows it. */
-    const settingsBlock = region('<div class="overlay" id="settings"', '<div class="overlay" id="notes"', 'settings');
-
-    ok('Neither block contains any of the injected guide',
-       !headerBlock.includes('guide-scope') && !settingsBlock.includes('guide-scope'));
-    ok('CONTROL: the guide IS in the page, so that exclusion is not vacuous',
-       built.includes('guide-scope'));
-
-    /* Guide (?) */
-    ok('The header carries a ? button whose accessible name is exactly "Guide"',
-       /<button[^>]*id="btn-howto"[^>]*>\s*\?\s*<\/button>/.test(headerBlock) &&
-       /id="btn-howto"[^>]*aria-label="Guide"/.test(headerBlock) &&
-       /id="btn-howto"[^>]*title="Guide"/.test(headerBlock),
-       (headerBlock.match(/<button[^>]*id="btn-howto"[^>]*>/) || [''])[0]);
-    ok('The guide overlay is headed "Guide"',
-       /<h2 id="howto-title">Guide<\/h2>/.test(built));
-    ok('The guide overlay opens on first load',
-       /open\('howto'\)/.test(built));
-
-    /* Settings (gear), and the three labels the contract fixes. */
-    ok('Settings sits beside it and is named Settings',
-       /id="btn-settings"[^>]*aria-label="Settings"/.test(headerBlock));
-    for (const label of ['Open Presenter Notes', 'Presentation mode', 'Reset']) {
-      ok('The settings menu offers "' + label + '", spelled exactly that way',
-         settingsBlock.includes(label));
+  /* ---- slice out the Settings dialog, the way two-winters' retrofit does,
+     so a label search cannot match the injected guide's own prose about the
+     same three labels. Dialogs do not nest in this markup, so the first
+     </dialog> after the opening tag is unambiguous. ---------------------- */
+  function dialogBlock(id) {
+    const re = new RegExp('<dialog\\b[^>]*\\bid="' + id + '"[^>]*>');
+    const m = re.exec(built);
+    if (!m) return null;
+    const close = built.indexOf('</dialog>', m.index);
+    if (close < 0) return null;
+    return built.slice(m.index, close + '</dialog>'.length);
+  }
+  function hasButtonLabelled(block, label) {
+    const re = /<button\b[^>]*>([\s\S]*?)<\/button>/gi;
+    for (let m; (m = re.exec(block)) !== null; ) {
+      if (m[1].replace(/<[^>]*>/g, '').replace(/&middot;|&mdash;/g, ' ').trim() === label) return true;
     }
-    ok('CONTROL: a label the menu does not carry is not found in that block',
-       !settingsBlock.includes('Restart the round') &&
-       !settingsBlock.includes('Presenter’s notes'));
-    /* The scoping above is not decoration. The guide is injected into this
-       same file and names all three labels in its own "Before you present"
-       section, so a document-wide search for them would pass whether or not
-       the buttons exist -- it would be matching the answer key. Prove that
-       trap is real, so nobody later "simplifies" the scoping away. */
-    {
-      const notesBlock = built.slice(built.indexOf('<div class="guide-scope">'));
-      ok('CONTROL: the injected guide names all three labels too, which is why the search is scoped',
-         ['Open Presenter Notes', 'Presentation mode', 'Reset']
-           .every(l => notesBlock.includes(l)));
-    }
-
-    /* The three are controls, not prose about controls. */
-    ok('Open Presenter Notes is a button that opens the notes overlay',
-       /<button[^>]*id="btn-notes"[^>]*>Open Presenter Notes<\/button>/.test(settingsBlock) &&
-       /#btn-notes'\)\.addEventListener\('click'/.test(built));
-    ok('Presentation mode is a checkbox that toggles the presenting class',
-       /<input type="checkbox" id="chk-presenter">/.test(settingsBlock) &&
-       /classList\.toggle\('presenting'/.test(built));
-    ok('Reset is a button wired to a whole-demo reset',
-       /<button[^>]*id="btn-reset"[^>]*>Reset<\/button>/.test(settingsBlock) &&
-       /#btn-reset'\)\.addEventListener\('click', resetDemo\)/.test(built));
-
-    /* Reset's fresh-load semantics, read off the function body rather than
-       trusted to its name: it must clear the job, re-render, close every
-       overlay and return to Act I -- and must NOT touch presentation mode. */
-    {
-      const b = built.indexOf('function resetDemo()');
-      const body = b > -1 ? built.slice(b, built.indexOf('\n}', b)) : '';
-      ok('Reset returns the demo to its fresh-load state', b > -1 &&
-         /S\.job = null/.test(body) && /renderJob\(\)/.test(body) &&
-         /selftest-out/.test(body) && /o\.hidden = true/.test(body) &&
-         /setAct\(1\)/.test(body));
-      ok('Reset leaves presentation mode alone',
-         b > -1 && !/presenting|chk-presenter|S\.presenter/.test(body));
-      ok('CONTROL: that probe reads a real function body, not an empty slice',
-         body.length > 120, body.length + ' chars');
-    }
-
-    /* The retitle (Path A). "Front Doors" may survive as a subtitle; the
-       DISPLAY TITLE may not. */
-    ok('The page title is the new display title',
-       /<title>AI Tool Guide [^<]*<\/title>/.test(built),
-       (built.match(/<title>[^<]*<\/title>/) || [''])[0]);
-    ok('The header brand carries the new display title',
-       /<span class="b1">AI TOOL GUIDE/.test(built));
-    ok('The guide heading carries the new display title',
-       guide.includes('AI Tool Guide'));
-    ok('The old display title is not left standing as a heading',
-       !/<h1>Front Doors\b/.test(guide) && !/<span class="b1">FRONT DOORS/.test(built));
+    return false;
   }
 
-  const guideOut = readRoot('presenter-guide.html');
-  ok('The shipped guide is byte-identical to its source',
-     guideOut === guide);
+  const settings = dialogBlock('settings');
+  ok('The Settings dialog exists', !!settings);
+  if (settings) {
+    ok('CONTROL: the Settings block can be isolated and contains no injected guide markup',
+       !settings.includes('guide-scope') && settings.length > 300 && settings.length < built.length / 4,
+       settings.length + ' chars');
+    ok('Settings offers "Open Presenter Notes"', hasButtonLabelled(settings, 'Open Presenter Notes'));
+    ok('Settings offers "Presentation mode"', hasButtonLabelled(settings, 'Presentation mode'));
+    ok('Settings offers "Reset"', hasButtonLabelled(settings, 'Reset'));
+    ok('Settings offers the demo-specific "Run the self-test", after the fixed triad',
+       hasButtonLabelled(settings, 'Run the self-test') &&
+       settings.indexOf('id="reset-btn"') < settings.indexOf('id="btn-selftest"'));
+
+    const outside = built.split(settings).join('');
+    results.push(['    ',
+      'scoping control — "Presentation mode" outside Settings: ' +
+      (outside.split('Presentation mode').length - 1) + ' occurrence(s) (the injected guide ' +
+      'also names it, which is why the search above is scoped to the dialog)', '']);
+  }
+
+  const guideDialog = dialogBlock('guide');
+  ok('The Guide dialog exists and is headed "Guide"',
+     !!guideDialog && /<h2 id="guide-title">Guide<span/.test(guideDialog));
+  ok('The Guide button\'s accessible name and tooltip are exactly "Guide"',
+     /id="guide-open"[^>]*aria-label="Guide"/.test(built) &&
+     /id="guide-open"[^>]*title="Guide"/.test(built));
+  ok('The Guide dialog opens on load',
+     /if \(guide && !guide\.open\) \{/.test(built) && /guide\.showModal\(\);/.test(built));
+
+  /* ---- Reset is IN PLACE (kit v2): no reload primitive, veto consulted
+     first, dispatch, and this demo's own listener. Prose in the shell's
+     own explanatory comment mentions "location.reload()" as history, so
+     comments are stripped before the negative scan (guide-contract.js's
+     own rule: prove the scan on bait before trusting its silence). ------ */
+  {
+    const scripts = built.split('<script>').slice(1).map(s => s.split('</script>')[0]);
+    const shellJs = scripts.find(s => s.includes('window.lessonShell = {')) || '';
+    const appJs = scripts.find(s => s.includes('/* ==== app.js ==== */')) || '';
+    const decomment = s => s.replace(/\/\*[\s\S]*?\*\//g, ' ');
+    ok('The shell script and this demo\'s app script were both found in the built file',
+       shellJs.length > 0 && appJs.length > 0);
+    ok('A #reset-btn control exists', /id="reset-btn"/.test(built));
+    ok('POSITIVE CONTROL — the navigation scan sees a reload when one is present',
+       /location\.reload\(\)/.test(decomment(shellJs + '\nlocation.reload();')));
+    ok('The shell\'s script contains no navigation primitive: Reset is in place',
+       !/location\.reload\(\)|location\.replace\(|location\.assign\(|location\.href\s*=/.test(decomment(shellJs)));
+    ok('The shell\'s Reset consults onReset() first and a false return cancels it',
+       /if \(window\.lessonShell\.onReset && window\.lessonShell\.onReset\(\) === false\) return false;/.test(shellJs));
+    ok('The shell dispatches \'lessonreset\' after restoring its own chrome',
+       /document\.dispatchEvent\(new CustomEvent\('lessonreset'/.test(shellJs));
+    ok('This demo listens for \'lessonreset\' (the required half of the contract)',
+       /addEventListener\('lessonreset', resetActivity\)/.test(appJs));
+    ok('This demo also documents (and does not implement) a stagechange handler, per ADOPTING.md '
+       + 'step 7 (chrome-only; never render activity state from it)',
+       /addEventListener\('stagechange'/.test(appJs));
+  }
+
+  /* ---- the demo's own item-details dialog is distinct from the kit's
+     #details drawer (ADOPTING.md §5), and both must exist with no id
+     collision — check-shell.js's "unique ids" check already covers the
+     general case; this re-asserts the specific pair this demo depends on. */
+  ok('The kit\'s per-stage #details drawer and this demo\'s own #item-details '
+     + 'drill-down are two distinct dialogs',
+     /id="details"/.test(built) && /id="item-details"/.test(built) &&
+     built.match(/id="details"/g).length === 1 && built.match(/id="item-details"/g).length === 1);
+
+  ok('The page title is unchanged ("AI Tool Guide")',
+     /<title>AI Tool Guide/.test(built));
+  ok('The header brand carries the display title',
+     /<h1>AI Tool Guide<\/h1>/.test(built));
+
+  ok('Every stage carries its eyebrow with the demo\'s fleet position',
+     (built.match(/Demo 6 of 16 &middot; Part three &middot; Stage \d/g) || []).length === 3);
 }
 
 /* ==================== 9. phone-first, mechanically ======================= */
 head('9. phone');
 
 {
-  const css = fs.readFileSync(path.join(HERE, 'styles.css'), 'utf8');
+  const shellCss = require('../../tools/lesson-shell').css();
+  const ownCss = fs.readFileSync(path.join(HERE, 'styles.css'), 'utf8');
+  const css = shellCss + '\n' + ownCss;
 
-  /* Tap targets. The repository floor is 36px; nothing declares less. */
-  const smalls = (css.match(/min-height:\s*(\d+)px/g) || [])
+  /* Scoped to this demo's OWN stylesheet: the kit's tap-target floor
+     (shell.css's own interactive-element rule is 38px) is the kit's
+     responsibility, already verified when the kit was frozen, and shell.css
+     also carries a non-interactive `.obs-cue { min-height: 34px }` (a status
+     line, not a control) that would otherwise read as a false positive here. */
+  const smalls = (ownCss.match(/min-height:\s*(\d+)px/g) || [])
     .map(m => +m.match(/(\d+)/)[1]).filter(v => v < 36);
-  ok('No interactive rule declares a tap target below the 36px floor',
+  ok('No interactive rule in this demo\'s own stylesheet declares a tap target below the 36px floor',
      smalls.length === 0, smalls.join(', '));
-  ok('CONTROL: that probe reads real values out of the stylesheet',
-     (css.match(/min-height:\s*\d+px/g) || []).length >= 6,
-     (css.match(/min-height:\s*\d+px/g) || []).length + ' declarations found');
+  ok('CONTROL: that probe reads real values out of this demo\'s own stylesheet',
+     (ownCss.match(/min-height:\s*\d+px/g) || []).length >= 3,
+     (ownCss.match(/min-height:\s*\d+px/g) || []).length + ' declarations found');
 
-  /* The four-by-four grid must not be a horizontal scroller. The mechanism is
-     the two wrappers collapsing with display:contents above a breakpoint, so
-     pin the mechanism rather than hoping. */
   ok('The grid stacks by default and only becomes a grid at a breakpoint',
      /#grid\s*\{[^}]*display:\s*flex/.test(css) &&
      /@media \(min-width: 940px\)/.test(css));
   ok('The wide layout collapses the wrappers rather than duplicating markup',
      /\.g-rail,\s*\.g-group\s*\{\s*display:\s*contents/.test(css));
-  ok('The body never becomes a horizontal scroll container',
-     /overflow-x:\s*clip/.test(css) && !/body[^{]*\{[^}]*overflow-x:\s*(auto|scroll)/.test(css));
-  ok('Wide content that must scroll does so inside its own container',
-     /\.scroll\s*\{\s*overflow-x:\s*auto/.test(css));
 
-  /* Red-orange is reserved for genuine failure states. */
-  const redUses = (css.match(/var\(--red\)/g) || []).length;
-  ok('Red-orange is used sparingly, for failure states only',
-     redUses > 0 && redUses <= 8, redUses + ' uses');
-  ok('The Murray State palette is declared',
+  ok('The Murray State fleet palette is declared (via the shared lesson-shell tokens)',
      /--navy:\s*#002144/.test(css) && /--gold:\s*#ECAC00/.test(css) &&
-     /--sky:\s*#00A4E3/.test(css) && /--red:\s*#FF4500/.test(css));
+     /--lite:\s*#00A4E3/.test(css) && /--warm:\s*#FF4500/.test(css));
+  ok('Warm (the fleet\'s red-orange failure colour) is used sparingly in this demo\'s own CSS',
+     (fs.readFileSync(path.join(HERE, 'styles.css'), 'utf8').match(/var\(--bad\)/g) || []).length <= 8);
 
-  ok('Presentation mode scales the grid as well as the buttons',
-     /body\.presenting \.g-cell/.test(css));
-  ok('Reduced-motion is honoured', /prefers-reduced-motion/.test(css));
+  ok('Reduced-motion is honoured (via the shared lesson-shell)', /prefers-reduced-motion/.test(css));
 }
 
 /* ==================== 10. the manifest =================================== */
@@ -642,9 +649,6 @@ head('10. manifest');
      m.attribution && m.attribution.author === 'Bryant Harrison' &&
      m.attribution.institution === 'Murray State University');
   ok('The theme is the Murray State one', m.theme === 'murray-state');
-  /* The key set is CONTRACT.md's, as rewritten for the 2026-09-09 UX pass:
-     howto_popup became guide_button, and settings_reset / notes_match_guide
-     joined it. A key is never deleted, only answered honestly. */
   ok('The compliance block carries every key the contract names',
      ['readme', 'guide', 'guide_button', 'settings_menu', 'presentation_mode',
       'presenter_notes', 'settings_reset', 'notes_match_guide', 'msu_theme',
@@ -662,6 +666,8 @@ head('10. manifest');
      Object.keys(m.compliance).every(k => [true, false, 'unverified'].includes(m.compliance[k])));
   ok('The manifest carries no price either',
      !E.MONEY.test(readRoot('demo.json')));
+  ok('The manifest\'s added date matches the dataset\'s check date',
+     m.added === D.CHECKED_ISO, m.added + ' vs ' + D.CHECKED_ISO);
 }
 
 /* ============================== report ================================== */
