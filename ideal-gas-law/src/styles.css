@@ -1,0 +1,157 @@
+/* ===========================================================================
+   Ideal Gas Law Simulator — ACTIVITY styles only.
+
+   The lesson shell (header, stage tablist, stage intro, lesson strip,
+   provenance kickers, observation cue, Details drawer, check cards, dialogs,
+   credit pill, breakpoints, presentation scaling, .workbench and .card) lives
+   in tools/lesson-shell/ and is injected before this file. Everything here is
+   the instrument itself: the two-column workspace, the prediction list and
+   finding, the box canvas, the gauges, the pressure bar, the sliders and
+   switches, the speed histogram, and stage 4's sweep card.
+
+   Sizes are in calc(var(--u) * n) rather than rem so that Presentation mode —
+   which changes --u and nothing else — scales the instrument with the lesson.
+   Canvas heights are set from JS against the measured box width (the box
+   keeps its 100:60 aspect), so they are not in this file.
+
+   Navy is the live device; light is decisions and evidence (ADOPTING.md §1).
+   The instrument is the kit's .workbench; the task panel and the sweep card
+   are light.
+   =========================================================================== */
+
+/* ---- the two-column workspace: decisions on the left, the machine right --- */
+.workspace {
+  display: grid; grid-template-columns: minmax(280px, .7fr) minmax(0, 1.5fr);
+  gap: 18px; margin-bottom: 18px; align-items: start;
+}
+.workspace > .workbench, .workspace > .task-panel { margin-bottom: 0; }
+
+.task-panel {
+  min-width: 0; padding: clamp(16px, 2.2vw, 24px);
+  background: linear-gradient(180deg, var(--paper), #F6FAFC);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 9px 24px rgba(0, 33, 68, .08);
+}
+.task-panel > h3 { margin: 4px 0 0; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.3); line-height: 1.15; }
+.task-purpose { margin: 8px 0 15px; color: var(--ink-2); font-size: calc(var(--u) * .94); }
+
+/* The locked prediction. Run stays disabled until one is chosen, and the list
+   locks while the experiment runs: committing before observing is the point. */
+fieldset { padding: 0; margin: 0; border: 0; }
+legend { width: 100%; margin-bottom: 9px; color: var(--navy); font-weight: 830; font-size: calc(var(--u) * .96); }
+.prediction-list { display: grid; gap: 7px; }
+.prediction {
+  width: 100%; min-height: 44px; padding: 10px 12px; text-align: left;
+  color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 9px; font: inherit; font-weight: 680; cursor: pointer;
+}
+.prediction:hover:not(:disabled) { border-color: var(--lite); background: #F0FAFF; }
+.prediction:disabled { cursor: default; opacity: .8; }
+.prediction.selected { border: 2px solid var(--lite); padding: 9px 11px; background: var(--lite-soft); color: var(--navy); font-weight: 800; opacity: 1; }
+.action-row { display: grid; grid-template-columns: 1fr auto; gap: 9px; margin-top: 14px; }
+.action-row .btn { width: 100%; }
+.run-hint { min-height: 1.4em; margin: 7px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .82); }
+
+/* The experiment's progress: a bar that fills, and a label naming the phase. */
+.progress { margin-top: 10px; }
+.progress-bar { height: 8px; overflow: hidden; background: var(--cream-deep); border-radius: 999px; }
+.progress-bar span { display: block; height: 100%; width: 0; background: var(--gold); border-radius: 999px; transition: width .2s linear; }
+.progress > span { display: block; margin-top: 5px; color: var(--ink-2); font-size: calc(var(--u) * .8); font-weight: 700; }
+
+/* The finding: what the gauge recorded, against what you predicted. Green
+   when supported, warm when contradicted. */
+.finding { margin-top: 17px; padding: 14px; border-radius: 12px; border-left: 5px solid var(--ok); background: var(--ok-soft); }
+.finding.contradicted { border-left-color: var(--warm); background: #FFF0E2; }
+.finding h3 { margin: 0 0 5px; color: var(--navy); font-size: calc(var(--u) * 1); }
+.finding p { margin: 5px 0; font-size: calc(var(--u) * .9); color: var(--ink); }
+.measure-list { display: grid; gap: 5px; margin: 9px 0; }
+.measure-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-top: 5px; border-top: 1px solid rgba(0, 33, 68, .15); font-size: calc(var(--u) * .9); }
+.measure-row b:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.measure-row .ratio { color: var(--navy); font-size: calc(var(--u) * 1.05); }
+
+/* ---- the instrument -------------------------------------------------------- */
+.instrument { padding: 16px; }
+.instrument .panel-head h3 { color: #fff; }
+.scale-badge { flex: 0 0 auto; padding: 5px 9px; color: var(--navy); background: var(--gold); border-radius: 999px; font-size: calc(var(--u) * .74); font-weight: 900; }
+
+.box-wrap { position: relative; width: 100%; max-width: 100%; background: var(--navy-deep); border-radius: 12px; overflow: hidden; }
+.box-wrap canvas { display: block; width: 100%; max-width: 100%; }
+
+/* The gauges. Every value Live; tabular numerals so a changing reading does
+   not jitter the layout. */
+.gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 8px; }
+.gauges div { min-width: 0; padding: 8px 10px; background: var(--navy-2); border-radius: 9px; }
+.gauges span { display: block; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .66); font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+.gauges b { display: block; color: #fff; font-size: calc(var(--u) * 1.1); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.gauges small { display: block; color: var(--ink-2-on-navy); font-size: calc(var(--u) * .72); font-variant-numeric: tabular-nums; }
+.gauges .g-wide b { color: var(--gold-lite); }
+
+/* The pressure bar: measured over predicted, one glance. */
+.pbar { margin: 0 0 6px; }
+.pbar-track { position: relative; height: 12px; background: rgba(255,255,255,.12); border-radius: 999px; overflow: hidden; }
+.pbar-track span { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; transition: width .15s linear; }
+.pbar-ideal { background: rgba(255,255,255,.35); }
+.pbar-meas { background: var(--gold); height: 60%; top: 20%; }
+.pbar-key { display: flex; gap: 14px; margin-top: 4px; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .7); }
+.pbar-key i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
+.pbar-key .swatch-meas { background: var(--gold); }
+.pbar-key .swatch-ideal { background: rgba(255,255,255,.35); }
+
+/* The cue sits on navy here; the shell styles it for a light surface, and its
+   own background keeps the text readable, so nothing to override. */
+
+/* Controls: four sliders and a switch row. Range inputs get the palette so
+   the gold thumb reads as "the thing you move". */
+.controls { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.ctl { min-width: 0; }
+.ctl .control-label { margin-bottom: 2px; }
+.ctl output { margin-left: 6px; padding: 1px 7px; color: var(--navy); background: var(--gold-lite); border-radius: 999px; font-variant-numeric: tabular-nums; font-size: calc(var(--u) * .78); }
+.ctl input[type=range] { width: 100%; margin: 4px 0 2px; accent-color: var(--gold); }
+.ctl input[type=range]:disabled { opacity: .45; }
+.ctl-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.switch {
+  min-height: 40px; padding: 7px 11px; color: #fff; background: transparent;
+  border: 1px solid var(--line-on-navy); border-radius: 999px; font: inherit; font-size: calc(var(--u) * .82); font-weight: 700; cursor: pointer;
+}
+.switch b { color: var(--gold-lite); }
+.switch[aria-pressed="true"] { background: rgba(255,255,255,.14); border-color: #fff; }
+.switch:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+.switch:disabled { opacity: .45; cursor: default; }
+#ctl-pause[aria-pressed="true"] { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+.ctl-note { grid-column: 1 / -1; margin: 4px 0 0; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .8); line-height: 1.45; }
+.ctl-note b { color: var(--ink-2-on-navy); }
+
+/* The speed histogram. */
+.hist-block { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-on-navy); }
+.hist-head h4 { margin: 2px 0 8px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); font-weight: 700; }
+#hist-canvas { display: block; width: 100%; max-width: 100%; background: var(--navy-deep); border-radius: 10px; }
+.hist-note { margin: 8px 0 0; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .8); line-height: 1.45; }
+.hist-note b { color: var(--ink-2-on-navy); }
+
+/* ---- stage 4: the sweep card ----------------------------------------------- */
+.sweep-controls { margin: 4px 0 8px; }
+.sweep-progress { margin: 6px 0; color: var(--ink-2); font-size: calc(var(--u) * .84); font-weight: 700; }
+#sweep-canvas { display: block; width: 100%; max-width: 100%; margin-top: 8px; background: #F6FAFC; border: 1px solid var(--line); border-radius: 10px; }
+.sweep-scroll { overflow-x: auto; margin-top: 10px; }
+.sweep-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: calc(var(--u) * .82); }
+.sweep-table th, .sweep-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.sweep-table th:first-child, .sweep-table td:first-child { text-align: left; }
+.sweep-table th { color: var(--ink-2); font-size: calc(var(--u) * .72); text-transform: uppercase; letter-spacing: .05em; }
+.sweep-table td.z { color: var(--navy); font-weight: 800; }
+.sweep-summary { margin: 10px 0 0; color: var(--ink); font-size: calc(var(--u) * .9); }
+.sweep-summary b { color: var(--navy); }
+
+/* ---- breakpoints ----------------------------------------------------------- */
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: 1fr; }
+  /* On one column the machine goes first: the learner sees the box, then
+     decides. The DOM order stays task-first so the prediction question is
+     read first by assistive technology; this is a visual reorder only. */
+  .workspace > .workbench { order: -1; }
+}
+@media (max-width: 560px) {
+  .gauges { grid-template-columns: 1fr 1fr; }
+  .controls { grid-template-columns: 1fr; }
+  .instrument { padding: 12px; }
+  .action-row { grid-template-columns: 1fr; }
+}

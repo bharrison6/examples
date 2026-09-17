@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ideal Gas Law Simulator — Presenter Guide</title>
+  <!--
+    Canonical, printable presenter guide for this demo. This file is the single
+    source of truth for the presenter notes: build.js lifts the tagged style block
+    and the .guide-scope div out of here verbatim and injects them into index.html,
+    so Settings -> Open Presenter Notes shows exactly this document with no sibling
+    file to fetch. Edit here; never edit the copy inside index.html.
+    node build.js --check fails if the two have drifted.
+
+    THE MARKERS MUST START THEIR LINES AT COLUMN ZERO: the tagged style open, its
+    closing tag, the .guide-scope div, and the end marker at the foot of the file.
+    Every rule in the tagged block MUST be scoped to .guide-scope.
+  -->
+<style id="guide-css">
+.guide-scope { color: #172b42; }
+.guide-scope .g-head { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
+.guide-scope h1 { margin: 0; color: #002144; font-size: 2.3em; line-height: 1.05; }
+.guide-scope .g-sub { margin: 5px 0 0; color: #526a7e; }
+.guide-scope .g-meta { margin: 6px 0 0; color: #002144; font-weight: 700; font-size: .95em; }
+.guide-scope h2 { margin: 15px 0 6px; color: #002144; font-size: 1.4em; break-after: avoid; }
+.guide-scope h3 { margin: 11px 0 4px; color: #006a98; font-size: 1.1em; break-after: avoid; }
+.guide-scope p { margin: 5px 0; }
+.guide-scope ul, .guide-scope ol { margin: 5px 0 8px 20px; padding: 0; }
+.guide-scope li { margin: 4px 0; }
+.guide-scope .lead { font-size: 1.1em; }
+.guide-scope .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
+.guide-scope .warning { background: #fff6d9; border-left-color: #ecac00; }
+.guide-scope .say { margin: 8px 0; padding: 8px 11px; background: #f7f0e3; border-left: 5px solid #002144; font-style: italic; break-inside: avoid; }
+.guide-scope .mis { margin: 8px 0; padding: 9px 11px; background: #fdf1ec; border-left: 5px solid #c63f1d; break-inside: avoid; }
+.guide-scope .mis b { color: #9a2f13; }
+.guide-scope .goal { margin: 5px 0 5px 20px; padding: 0; }
+.guide-scope .formula { margin: 9px 0; padding: 10px; color: white; background: #002144; border-radius: 4px; text-align: center; font: bold 1.3em Georgia, serif; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
+.guide-scope .scroll table { min-width: 380px; }
+.guide-scope th, .guide-scope td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
+.guide-scope th { color: white; background: #002144; font-size: .9em; }
+.guide-scope .small { font-size: .9em; color: #526a7e; }
+.guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+.guide-scope a { color: #006a98; }
+.guide-scope .page-break { break-before: page; page-break-before: always; }
+.guide-scope .g-foot { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: .85em; }
+</style>
+  <style>
+    /* Standalone printable page only — not extracted into the app. */
+    @page { size: letter; margin: .55in; }
+    * { box-sizing: border-box; }
+    body { max-width: 7.4in; margin: 0 auto; color: #172b42; font: 10pt/1.38 Arial, sans-serif; }
+    @media screen {
+      body { margin: 24px auto; padding: .55in; background: white; box-shadow: 0 0 24px #0003; }
+    }
+    @media (max-width: 680px) {
+      body { margin: 0; padding: 18px; box-shadow: none; font-size: 11pt; }
+      .guide-scope .page-break { break-before: auto; page-break-before: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="guide-scope">
+  <div class="g-head">
+    <p class="g-sub">Presenter guide · Kinetic-theory simulator: particles in a box</p>
+    <h1>Ideal Gas Law Simulator</h1>
+    <p class="g-meta">Demo 17 of 17 · Part four, Example projects · About 15 minutes for the four guided experiments, plus 5 for the sweeps</p>
+    <p class="small"><strong>You need:</strong> <code>index.html</code> open in any modern browser, on a projector or on
+      each student's phone. No network, no install, no accounts. Nothing is fetched at runtime, so it works with
+      the wi-fi off.</p>
+  </div>
+
+  <section aria-labelledby="g-goals">
+    <h2 id="g-goals">Learning goals</h2>
+    <p class="small">One per stage, in the learner's own words — these are the four Takeaway cards on screen,
+      verbatim. If a student can say these four things and point at the gauge reading that shows each, the demo has
+      done its job.</p>
+    <ol class="goal">
+      <li>Pressure is the running tally of wall hits: twice the particles means twice the hits per second, and twice the pressure.</li>
+      <li>Temperature is the particles' average kinetic energy, and pressure rises in step with it: hotter particles hit harder <em>and</em> more often.</li>
+      <li>At fixed temperature, pressure × area stays constant: half the room means every wall is hit twice as often.</li>
+      <li>The ideal gas law is what tiny, non-interacting particles do on average. It holds here to within the noise, and drifts as soon as the particles take up real room.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="g-path">
+    <h2 id="g-path">Where this sits on the path</h2>
+    <p>An AI-built classroom tool from Part four. Its distinctive move is that <b>the gas law is never typed into the
+      simulation</b>: pressure is measured by adding up the momentum the walls receive, temperature is computed from the
+      particles' kinetic energy, and P·A = N·T is a prediction the gauges test. It does not depend on any earlier demo;
+      the habit it shares with the rest of Part four is naming the boundary between what is measured and what is claimed.</p>
+  </section>
+
+  <section aria-labelledby="g-question">
+    <h2 id="g-question">One question for the session</h2>
+    <p class="lead">Where does gas pressure come from, and how far does P·A = N·T get you?</p>
+    <div class="say">"Every number on this screen is measured from those dots. Nobody told the box the gas law. We are
+      going to change one thing at a time and see whether the gauge does what the law says it should — and then we are
+      going to break the law on purpose."</div>
+  </section>
+
+  <section aria-labelledby="g-units">
+    <h2 id="g-units">Units students see</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Label</th><th>Meaning in this activity</th></tr></thead>
+        <tbody>
+          <tr><td>N</td><td>Number of particles in the box (10 to 600; 240 by default).</td></tr>
+          <tr><td>T</td><td>Temperature: half the mean squared speed, in the model's units. 300 by default because it reads like room temperature in kelvin. <b>It is not kelvin.</b></td></tr>
+          <tr><td>A</td><td>Box area, width × 60. The box is two-dimensional, so "volume" is area.</td></tr>
+          <tr><td>P</td><td>Pressure: momentum handed to the walls, per second, per unit of wall length. Two-dimensional pressure is force per length.</td></tr>
+          <tr><td>Z</td><td>The ratio P·A / (N·T). Exactly 1 when the ideal gas law holds.</td></tr>
+          <tr><td>r</td><td>Particle radius, 0.35 to 1.0. At 0.35 the particles cover about 1.5% of the box; at 1.0, about 13%.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula">P · A = N · T &nbsp;&nbsp;(mass = 1, k<sub>B</sub> = 1, two dimensions)</div>
+  </section>
+
+  <section aria-labelledby="g-run" class="page-break">
+    <h2 id="g-run">Run of show</h2>
+    <p class="small">Every stage follows the same routine: read the question, commit to a prediction (the Run button
+      stays locked until one is chosen), press Run, read the finding. The guided experiment measures for four seconds of
+      simulated time, makes one change, settles, and measures again. At the default 2× speed that is about six real
+      seconds. The numbers below are what the model produces at the defaults; a gauge on a few hundred particles wanders
+      by a few percent run to run, and that is worth saying out loud.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Stage</th><th>Beat</th><th>What the gauge shows</th><th>Say</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>1 · Add particles</b><br><span class="small">~4 min</span></td>
+            <td>Point at the walls flashing gold where they are hit. Ask for the prediction. Press <b>Run: double the particles</b>.</td>
+            <td>P ≈ 12.4 → ≈ 24.8 (2.0×). T stays at 300. Wall hits/s roughly doubles, about 90 → 180.</td>
+            <td>"Same speeds, same walls, twice the bodies. The walls are hit twice as often. That is all pressure is."</td>
+          </tr>
+          <tr>
+            <td><b>2 · Heat it</b><br><span class="small">~4 min</span></td>
+            <td>Ask for the prediction; most rooms split between 2× and 4×. Press <b>Run: double the temperature</b>. Point at the histogram widening.</td>
+            <td>P ≈ 12.4 → ≈ 24.8 (2.0×). Hits/s rise by about 1.4×, not 2×. T reads 600.</td>
+            <td>"Doubling the temperature only made them √2 faster. √2 harder, √2 more often. √2 × √2 is 2."</td>
+          </tr>
+          <tr>
+            <td><b>3 · Squeeze it</b><br><span class="small">~4 min</span></td>
+            <td>Press <b>Run: halve the box</b> with the thermostat on; watch the piston slide. Then switch the <b>Thermostat</b> off and drag the <b>Piston</b> in by hand.</td>
+            <td>P ≈ 12.4 → ≈ 25 (2.0×) with T held at 300; P × A ≈ 74,000 both times. Thermostat off: T climbs past 500 as the piston moves.</td>
+            <td>"Half the distance between walls, twice the hits. Now turn off the water bath and push: the moving wall kicks every particle it meets. That is why a bicycle pump gets warm."</td>
+          </tr>
+          <tr>
+            <td><b>4 · Test the law</b><br><span class="small">~5 min + sweeps</span></td>
+            <td>Press <b>Run: grow the particles</b>. Then run <b>Sweep the box</b> small, grow the particles with the size slider, and run it again.</td>
+            <td>Z ≈ 1.03 at r = 0.35 → Z ≈ 1.3 at r = 1.0. Sweep points sit on the diagonal when small, above it when big.</td>
+            <td>"The law assumed the particles took up no room. Give them room and the space they fly through shrinks. This is the 'b' in van der Waals."</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box warning"><b>If a run comes out 1.9× or 2.1×:</b> that is the finding, not a bug. Point at the ± band under
+      the pressure reading and the hit count in the finding. Ask what would steady it (more particles, more time, a
+      smaller box) and try one. A gauge on 240 particles is exactly as noisy as it looks.</div>
+  </section>
+
+  <section aria-labelledby="g-mis">
+    <h2 id="g-mis">Misconceptions to name</h2>
+    <div class="mis"><b>"Crowded particles push harder."</b> Stage 1 and stage 3 both show T unchanged while P doubles. Each
+      hit carries the same momentum; only the count changed. The temperature gauge is the evidence.</div>
+    <div class="mis"><b>"Double the temperature, four times the pressure."</b> Temperature is speed <em>squared</em>, so speeds
+      rise by √2. The hits/s readout rising by about 1.4× while P rises by 2× separates the two factors on screen.</div>
+    <div class="mis"><b>"Collisions between particles make pressure."</b> Switch Collisions off in stage 1: the reading does
+      not change. Particle–particle collisions swap momentum between particles and never touch a wall. (In stage 4 they
+      matter for a different reason: they are what keeps big particles out of each other's space.)</div>
+    <div class="mis"><b>"The law fails, so the simulation is wrong."</b> Stage 4's drift is the point. The ideal gas law is an
+      approximation with a stated assumption, and the gauge shows where the assumption stops holding.</div>
+  </section>
+
+  <section aria-labelledby="g-bound">
+    <h2 id="g-bound">What this model is, and is not</h2>
+    <ul>
+      <li><b>Two-dimensional, reduced units.</b> Mass 1, k<sub>B</sub> = 1, temperature = half the mean squared speed.
+        Every relationship the stages find holds in three dimensions too; only the constants change. The temperature and
+        pressure scales are the model's own.</li>
+      <li><b>Hard discs with no attraction.</b> The model shows one of the two real-gas corrections (excluded volume,
+        the van der Waals <i>b</i>). The other, attraction pulling Z below 1 at low temperature, is not in it.</li>
+      <li><b>An idealized thermostat</b> that rescales every speed toward the target, like a water bath with no lag.</li>
+      <li><b>A piston at one fixed speed</b>, a sizeable fraction of the particles' speeds, so compression with the thermostat
+        off heats more than a slow one would. The direction is right; the size depends on the piston speed.</li>
+      <li><b>The ± band</b> under the pressure reading is a rule of thumb (reading ÷ √hits), not a confidence interval.</li>
+      <li><b>The excluded-area estimate</b> in stage 4's Details is the authors' first-order derivation from the disc
+        geometry, labelled as such. It gives direction and rough size, not a fitted equation of state.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="g-sources">
+    <h2 id="g-sources">Sources and attribution</h2>
+    <ul>
+      <li>OpenStax <i>Chemistry 2e</i>, <a href="https://openstax.org/books/chemistry-2e/pages/9-5-the-kinetic-molecular-theory">§9.5 The Kinetic-Molecular Theory</a>
+        — the postulates the box implements, and the Maxwell–Boltzmann distribution.</li>
+      <li>OpenStax <i>Chemistry 2e</i>, <a href="https://openstax.org/books/chemistry-2e/pages/9-6-non-ideal-gas-behavior">§9.6 Non-Ideal Gas Behavior</a>
+        — the compressibility factor Z and the van der Waals <i>b</i> term.</li>
+      <li>OpenStax <i>University Physics Volume 2</i>, <a href="https://openstax.org/books/university-physics-volume-2/pages/2-2-pressure-temperature-and-rms-speed">§2.2 Pressure, Temperature, and RMS Speed</a>
+        — pressure derived from wall collisions, which the gauge performs numerically.</li>
+    </ul>
+    <p class="small">These sources support the underlying physics; they do not endorse this activity. The 2D speed
+      distribution, the moving-wall reflection rule and the excluded-area estimate are computed in the page's own model
+      and checked by its node test suite, not quoted.</p>
+  </section>
+
+  <div class="g-foot"><strong>Ideal Gas Law Simulator</strong> · Bryant Harrison · Murray State University · Offline teaching model. Open <code>index.html</code> to run it. <code>src/demo-guide.html</code> is the canonical source of this document; the shipped <code>presenter-guide.html</code>, the PDF beside it, and the in-app presenter notes are all generated from it at build time.</div>
+
+</div><!-- /guide -->
+</body>
+</html>

@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An offline kinetic-theory simulator: particles in a box, pressure measured from wall hits, and the ideal gas law tested against that measurement.">
+<title>Ideal Gas Law Simulator · Particles in a Box</title>
+<!--__SHELL_STAMP__-->
+<style>
+/*__SHELL_CSS__*/
+</style>
+<style>
+/*__CSS__*/
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+/*__GUIDE_CSS__*/
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University · Part four · Example projects</span>
+      <h1>Ideal Gas Law Simulator</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Four stages, none gated: each is an independent experiment on the
+       same box, and a presenter may open on any of them. The evidence gate is
+       inside each stage — the guided experiment stays locked until a
+       prediction is chosen — so the commitment is still real. -->
+  <nav class="stages" role="tablist" aria-label="Ideal gas law lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Add particles</span><small>Where does pressure come from?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Heat it</span><small>What does temperature do to the walls?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Squeeze it</span><small>Does half the room mean twice the pressure?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Test the law</span><small>Does P·A = N·T survive, and when does it fail?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ══════════════════════ STAGE 1 · add particles ══════════════════════════
+     ONE BOX, FOUR EXPERIMENTS. The instrument — the canvas, the gauges, the
+     controls, the speed histogram — appears exactly once, inside stage 1's
+     .activity-host, and app.js relocates #activity into the active stage's
+     host on every stage change (the ion-flight pattern). Four copies would
+     mean four canvases, four contexts and four states to keep in step, and
+     Reset would have to rewind all of them. -->
+
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 1</span>
+      <h2 id="stage-1-title">Pressure is a tally of wall hits</h2>
+      <p class="stage-question">Double the number of particles in the same box at the same temperature. What does the pressure do?</p>
+      <p class="refresh"><b>Before you start.</b> The box holds tiny <b>particles</b> that fly in straight lines and
+        bounce off the walls. <b>Pressure</b> is the push the walls feel: this page measures it by adding up the
+        momentum every bounce hands to a wall, per second, per unit of wall. Nothing about the gas law is
+        typed into the simulation &mdash; the gauge reads what the particles actually do.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Twice the particles, same box, same temperature: does the pressure double, stay put, or rise by less?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit to a prediction, then press <b>Run: double the particles</b> and watch the pressure gauge before and after.</p></article>
+      <article><span>Takeaway</span><p>Pressure is the running tally of wall hits: twice the particles means twice the hits per second, and twice the pressure.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="0">
+   <div class="activity" id="activity">
+    <!-- #activity is a wrapper INSIDE host 0, never the host itself:
+         appending a node into itself throws HierarchyRequestError. -->
+    <div class="workspace">
+
+      <!-- The task panel is LIGHT: it is where the learner decides and reads
+           evidence. The instrument beside it is NAVY: the machine. -->
+      <section class="task-panel" aria-labelledby="task-title">
+        <span class="panel-kicker"><span class="k-scripted">Scripted</span> the guided experiment for this stage</span>
+        <h3 id="task-title"></h3>
+        <p class="task-purpose" id="task-purpose"></p>
+
+        <fieldset>
+          <legend id="prediction-question"></legend>
+          <span class="control-label" id="prediction-label">Your prediction
+            <span class="why">Commit before you run. The experiment stays locked until you do, and the list locks while it runs &mdash; the commitment is the point.</span></span>
+          <div class="prediction-list" id="prediction-list" aria-describedby="prediction-label"></div>
+        </fieldset>
+        <div class="action-row">
+          <button class="btn" type="button" id="run-button" disabled>Choose a prediction first</button>
+          <button class="btn ghost" type="button" id="again-button" hidden>Run again</button>
+        </div>
+        <p class="run-hint" id="run-hint">The experiment measures for a few seconds, makes one change, and measures again.</p>
+        <div class="progress" id="run-progress" hidden aria-live="polite">
+          <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+          <span id="progress-label"></span>
+        </div>
+
+        <section class="finding" id="finding" aria-live="polite" hidden>
+          <h3 id="finding-verdict"></h3>
+          <div class="measure-list" id="measure-list"></div>
+          <p id="finding-explanation"></p>
+          <p id="finding-conclusion"></p>
+        </section>
+      </section>
+
+      <section class="workbench instrument" id="instrument-panel" aria-label="The gas box, its gauges and its controls">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker"><span class="k-live">Live</span> every number here is measured from the particles on this device</span>
+            <h3>Gas in a box</h3>
+          </div>
+          <span class="scale-badge" id="speed-badge">2&times; time</span>
+        </div>
+        <div class="box-wrap">
+          <canvas id="box-canvas" aria-label="Particles moving in a rectangular box whose right wall is a piston; walls flash where they are hit"></canvas>
+        </div>
+
+        <!-- A3: the gauges. Every one is Live; the ± band under pressure is
+             Reasoned and says so in Details. -->
+        <div class="gauges" aria-label="Gauges">
+          <div><span>Particles N</span><b id="g-n">&ndash;</b></div>
+          <div><span>Temperature T</span><b id="g-t">&ndash;</b></div>
+          <div><span>Area A</span><b id="g-a">&ndash;</b></div>
+          <div class="g-wide"><span>Pressure, measured</span><b id="g-p">&ndash;</b><small id="g-p-note">from wall hits</small></div>
+          <div class="g-wide"><span>Pressure, predicted N&middot;T&nbsp;/&nbsp;A</span><b id="g-pi">&ndash;</b><small id="g-z">ratio &ndash;</small></div>
+          <div><span>Wall hits / s</span><b id="g-hits">&ndash;</b></div>
+        </div>
+        <div class="pbar" aria-hidden="true">
+          <div class="pbar-track"><span class="pbar-ideal" id="pbar-ideal"></span><span class="pbar-meas" id="pbar-meas"></span></div>
+          <div class="pbar-key"><span><i class="swatch-meas"></i>measured</span><span><i class="swatch-ideal"></i>predicted</span></div>
+        </div>
+
+        <!-- A4. The observation cue, one screen from the controls. -->
+        <p class="obs-cue" id="cue-core" role="status" aria-live="polite"></p>
+
+        <div class="controls" id="controls">
+          <div class="ctl">
+            <label class="control-label" for="ctl-n">Particles N <output id="out-n" for="ctl-n">240</output>
+              <span class="why">How many particles are in the box. Stage 1's variable: more particles means more wall hits per second.</span></label>
+            <input type="range" id="ctl-n" min="10" max="600" step="10" value="240">
+          </div>
+          <div class="ctl">
+            <label class="control-label" for="ctl-t">Temperature T <output id="out-t" for="ctl-t">300</output>
+              <span class="why">The thermostat's target. Temperature here is the particles' average kinetic energy, on a scale chosen to read like kelvin.</span></label>
+            <input type="range" id="ctl-t" min="50" max="1200" step="10" value="300">
+          </div>
+          <div class="ctl">
+            <label class="control-label" for="ctl-w">Piston &mdash; box width <output id="out-w" for="ctl-w">100</output>
+              <span class="why">Slides the right wall in or out. Stage 3's variable: less room means each wall is hit more often.</span></label>
+            <input type="range" id="ctl-w" min="40" max="100" step="1" value="100">
+          </div>
+          <div class="ctl">
+            <label class="control-label" for="ctl-r">Particle size <output id="out-r" for="ctl-r">0.35</output>
+              <span class="why">The radius of every particle. Stage 4's variable: the ideal law assumes particles take up no room at all.</span></label>
+            <input type="range" id="ctl-r" min="0.35" max="1" step="0.05" value="0.35">
+          </div>
+          <div class="ctl-row" role="group" aria-label="Simulation switches">
+            <button class="switch" type="button" id="ctl-thermo" aria-pressed="true">Thermostat <b>on</b></button>
+            <button class="switch" type="button" id="ctl-coll" aria-pressed="true">Collisions <b>on</b></button>
+            <button class="switch" type="button" id="ctl-pause" aria-pressed="false">Running</button>
+            <button class="switch" type="button" id="ctl-speed" aria-pressed="false">Speed <b>2&times;</b></button>
+            <button class="switch" type="button" id="ctl-samespeed">Start all at one speed</button>
+          </div>
+          <p class="ctl-note">The <b>thermostat</b> nudges every speed toward the target temperature, like a water bath. Switch it off and the gas keeps whatever energy it has &mdash; then push the piston in and watch <b>T</b>.</p>
+        </div>
+
+        <div class="hist-block">
+          <div class="hist-head">
+            <span class="panel-kicker"><span class="k-live">Live</span> the bars are the particles now; the curve is the 2D Maxwell distribution at the measured T</span>
+            <h4>How fast are they going?</h4>
+          </div>
+          <canvas id="hist-canvas" aria-label="Histogram of particle speeds with the theoretical Maxwell distribution drawn over it"></canvas>
+          <p class="hist-note">Bars: how many particles are at each speed right now. Line: the shape a gas at this temperature settles into once the particles have collided enough. Press <b>Start all at one speed</b> to watch it get there.</p>
+        </div>
+      </section>
+    </div>
+   </div>
+  </div>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">You doubled the particles and the measured pressure roughly doubled. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="The wall-hits readout doubled too. Each hit hands the wall the same momentum on average, because the temperature did not change; there were simply twice as many of them per second.">Twice as many particles means twice as many wall hits per second</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The temperature gauge stayed at its target, and temperature is the average kinetic energy — so the average hit was exactly as hard as before. What changed was the count of hits, not their strength.">Each particle hits harder when the box is crowded</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Try it with Collisions switched off: the pressure reading is the same. A collision between two particles swaps momentum between them and never touches a wall. Only wall hits register on the gauge.">The particles bounce off each other more, and that pushes on the walls</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 2 · heat it ═══════════════════════════════ -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 2</span>
+      <h2 id="stage-2-title">Hotter particles hit harder and more often</h2>
+      <p class="stage-question">Double the temperature with the same particles in the same box. Does the pressure double, quadruple, or rise by about 1.4&times;?</p>
+      <p class="refresh"><b>Before you start.</b> In this model <b>temperature</b> is nothing more than the particles' average
+        kinetic energy: hotter means faster. Kinetic energy goes as speed <em>squared</em>, so doubling the
+        temperature raises speeds by only <b>&radic;2 &asymp; 1.41</b>. Stage 1 found that pressure counts wall hits;
+        now ask what a faster particle does to each hit, and to how often it hits.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Temperature 300 to 600, same N, same box. Does pressure go 2&times;, 4&times;, or 1.4&times;?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run: double the temperature</b>. Watch the speed histogram widen and the wall-hits readout climb.</p></article>
+      <article><span>Takeaway</span><p>Temperature is the particles' average kinetic energy, and pressure rises in step with it: hotter particles hit harder <em>and</em> more often.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="1"></div>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Doubling the temperature doubled the pressure. Faster particles hit harder &mdash; so why not quadruple?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Doubling T raises the typical speed by √2, not 2. Each hit hands over √2 times the momentum, and hits come √2 times as often — and √2 × √2 = 2. Pressure tracks speed squared, which is exactly what temperature is.">Speeds rose by only &radic;2; hits got &radic;2 harder <em>and</em> &radic;2 more frequent, and &radic;2 &times; &radic;2 = 2</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The thermostat sets the temperature and nothing else; it never touches the walls. The pressure gauge counts momentum arriving at the walls, and that count doubled because the particles did.">The thermostat capped the pressure at double</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Pressure is momentum delivered per second. A faster particle delivers more per second, not less: it returns to the wall sooner and arrives with more momentum each time. Both factors push the same way.">Faster particles spend less time pressing on each wall, which cancels part of the gain</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 3 · squeeze it ═════════════════════════════ -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 3</span>
+      <h2 id="stage-3-title">Half the room, twice the hits</h2>
+      <p class="stage-question">Slide the piston in until the box is half as wide, with the thermostat holding the temperature. Does the pressure double?</p>
+      <p class="refresh"><b>Before you start.</b> The right wall of the box is a <b>piston</b> that slides in and out. The
+        <b>thermostat</b> is switched on, so the particles keep the same average speed no matter what the piston
+        does. Stages 1 and 2 changed how many particles there are and how fast they go; this stage changes only
+        how far they travel between one wall and the next.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Box width 100 to 50, same N, thermostat on. Does pressure double, stay the same, or rise by 1.4&times;?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run: halve the box</b>. Afterwards, switch the <b>Thermostat</b> off, drag the <b>Piston</b> in yourself, and watch <b>T</b>.</p></article>
+      <article><span>Takeaway</span><p>At fixed temperature, pressure &times; area stays constant: half the room means every wall is hit twice as often.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="2"></div>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">The box is half as wide, the thermostat held T at 300, and the pressure doubled. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Same speeds, half the distance to cross: each particle reaches a wall twice as often, so the wall-hits readout doubled while each hit stayed the same size. Pressure × area held steady.">Same speeds, half the distance between walls, so every wall is hit twice as often</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The temperature gauge read 300 throughout, and temperature is the average kinetic energy, so each hit handed over the same momentum as before. Being close together does not make a particle push harder; it makes it reach a wall sooner.">The particles are squeezed together, so each one pushes harder</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The moving piston does hand energy to every particle that bounces off it — but with the thermostat on, that energy was removed as fast as it arrived, and T stayed at 300. Switch the thermostat off and push the piston in: now the temperature climbs, and that is a different experiment.">The piston added energy to the gas, and that is what raised the pressure</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 4 · test the law ═══════════════════════════ -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 4</span>
+      <h2 id="stage-4-title">A law is a prediction, so test it</h2>
+      <p class="stage-question">P&middot;A = N&middot;T predicts every pressure this box should show. Does the measurement agree &mdash; and what happens when the particles take up real room?</p>
+      <p class="refresh"><b>Before you start.</b> The three stages so far each doubled one thing. The <b>ideal gas law</b>
+        puts them together: pressure &times; area equals particle count &times; temperature, <b>P&middot;A = N&middot;T</b>
+        in this model's units. The gauges have shown a <b>ratio</b> all along &mdash; measured pressure divided by
+        that prediction. Near 1, the law holds. The law's quiet assumption is that particles take up no room at
+        all; this stage grows them until that stops being true.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Grow the particles to about three times their radius. Will the measured pressure sit above the law's prediction, on it, or below?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run: grow the particles</b>. Then use <b>Sweep the box</b>, <b>Sweep temperature</b> and <b>Sweep particle count</b> below to plot the law against the measurements.</p></article>
+      <article><span>Takeaway</span><p>The ideal gas law is what tiny, non-interacting particles do on average. It holds here to within the noise, and drifts as soon as the particles take up real room.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="3"></div>
+
+  <!-- The sweep tool: a LIGHT panel because it is evidence to read, not a
+       machine to drive. Each point is a fresh measurement on the box above. -->
+  <section class="card sweep-card" aria-labelledby="sweep-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-live">Live</span> each point is a fresh measurement on the box above; the diagonal is the prediction</span>
+        <h3 id="sweep-heading">Sweep the law</h3>
+      </div>
+    </div>
+    <p class="panel-lede">Hold two of <b>N</b>, <b>T</b> and <b>A</b> and step the third through five values. Each step
+      settles, then measures for a few seconds. Points on the diagonal mean the measurement matched
+      N&middot;T&nbsp;/&nbsp;A. Run a sweep with the particles small, then grow them and run it again.</p>
+    <span class="control-label">Which variable to sweep
+      <span class="why">Each button holds the other two fixed at their current settings and steps one variable through five values, at whatever particle size is set above.</span></span>
+    <div class="row sweep-controls" role="group" aria-label="Sweeps">
+      <button class="btn" type="button" id="sweep-area">Sweep the box (P vs A)</button>
+      <button class="btn" type="button" id="sweep-temp">Sweep temperature (P vs T)</button>
+      <button class="btn" type="button" id="sweep-count">Sweep particle count (P vs N)</button>
+      <button class="btn ghost" type="button" id="sweep-clear">Clear points</button>
+    </div>
+    <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+    <div class="sweep-progress" id="sweep-progress" hidden aria-live="polite"><span id="sweep-progress-label"></span></div>
+    <canvas id="sweep-canvas" aria-label="Measured pressure plotted against predicted pressure; the diagonal is where the ideal gas law holds exactly"></canvas>
+    <div class="sweep-scroll">
+      <table class="sweep-table">
+        <thead><tr><th>Sweep</th><th>N</th><th>T</th><th>A</th><th>Size r</th><th>Predicted P</th><th>Measured P</th><th>Ratio Z</th></tr></thead>
+        <tbody id="sweep-body"></tbody>
+      </table>
+    </div>
+    <p class="sweep-summary" id="sweep-summary">No sweeps yet.</p>
+  </section>
+
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">With big particles the walls felt more pressure than N&middot;T&nbsp;/&nbsp;A predicts. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="The particles' own bodies take up part of the box, so the space they actually fly through is smaller than A. Smaller effective area at the same N and T means more pressure — the same lesson as stage 3, arriving by a different route. This is the correction a real-gas equation makes with its 'b' term.">The particles' own bodies take up room, so the space they actually move in is smaller than the box</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Every particle in this model has mass 1 at every size, and the temperature gauge read the same 300 before and after — so each hit carried the same momentum on average. Size changed how much room was left, not how hard anything hit.">Bigger particles are heavier, so each hit is harder</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The shift was tens of percent, many times the ± band the gauge shows, and it comes back in the same direction every run. Noise scatters both ways and averages out; this does not.">Nothing real changed &mdash; the reading is just noise</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span><b>Ideal Gas Law Simulator</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; idealized teaching model</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="presenter-guide.html" target="_blank" rel="noopener">Printable presenter guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE · opens on load ════════════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">One question across four stages: <b>where does gas pressure come from, and how far does P&middot;A = N&middot;T get you?</b></p>
+    <p class="note">Where this sits: an AI-built classroom tool from Part four. The gas law is never typed into the
+      simulation &mdash; pressure is measured from the particles, and the law is a prediction the gauges test.</p>
+    <ol>
+      <li><b>Add particles.</b> Commit to a prediction, press <b>Run: double the particles</b>, and read the pressure gauge before and after.</li>
+      <li><b>Heat it.</b> Same routine with <b>Run: double the temperature</b>; watch the speed histogram widen.</li>
+      <li><b>Squeeze it.</b> <b>Run: halve the box</b> with the thermostat on; then switch the <b>Thermostat</b> off and drag the <b>Piston</b> yourself.</li>
+      <li><b>Test the law.</b> <b>Run: grow the particles</b>, then plot the law with <b>Sweep the box</b>, <b>Sweep temperature</b> and <b>Sweep particle count</b>.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The four tabs switch stages; the box and its controls come with you. <b>Details</b> opens the formula, assumptions and
+      sources for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> holds <b>Open Presenter Notes</b>,
+      <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Time</h3>
+    <p>About fifteen minutes for the four guided experiments: each one measures for a few seconds, changes one thing, and
+      measures again. A sweep in stage 4 takes ten to fifteen seconds.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Add particles</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS · the contract triad ════════════════ -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable presenter guide, on screen: timings, the beats to hit, the numbers this model
+      produces, and the misconceptions to name.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the whole page up one notch for projecting to a room and puts a <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to the start: stage 1, a fresh gas of 240 small particles at 300 in a full-width box with the
+      thermostat on, no predictions, no findings, the sweep chart cleared, and every disclosure closed. The page does not
+      reload, so nothing flashes on a projector. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS · one section per stage ══════════════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Add particles</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>The pressure gauge reads the walls, not a formula</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> particle motion, wall hits, pressure, temperature, the histogram</span>
+          <p>Every particle's position and velocity is advanced on this device many times per frame. When one reaches a
+            wall it bounces, and the momentum it hands over is added to that wall's tally. The pressure gauge is that
+            tally, per second, per unit of wall length. Temperature is computed from the particles' kinetic energy.
+            Nothing is looked up and nothing about the gas law is built in.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the box, the starting gas and the guided experiment</span>
+          <p>A 100 &times; 60 box, 240 particles at a temperature of 300 and a particle radius of 0.35 are chosen teaching
+            values. The guided experiment is a fixed routine: measure for four seconds of simulated time, double N,
+            wait a moment, measure again.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span> the &plusmn; band under the pressure reading</span>
+          <p>A gauge on a few hundred particles is noisy: the band is the reading divided by the square root of the
+            number of wall hits counted, a rough rule of thumb for a random count, not a confidence interval. More
+            particles, more time, or a smaller box all steady it.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">P = (momentum handed to the walls) &divide; (time &times; total wall length)</div>
+        <p>A particle of mass 1 moving at speed <i>v</i><sub>&perp;</sub> toward a wall leaves with the same speed the other
+          way, so the wall receives momentum 2<i>v</i><sub>&perp;</sub>. Add every such hit over a stretch of time,
+          divide by that time and by the length of wall, and you have a pressure. Doubling the number of particles
+          doubles the number of hits per second while leaving each hit the same, so the pressure doubles.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Two dimensions.</b> The box is flat, so "pressure" is force per unit <em>length</em> of wall and "volume"
+            is <em>area</em>. Every relationship the stages find holds in 3D too; only the constants change.</li>
+          <li><b>Reduced units.</b> Every particle has mass 1 and Boltzmann's constant is 1, so temperature is half the
+            mean squared speed and the gas law reads <b>P&middot;A = N&middot;T</b> with no constant in it. The default
+            temperature of 300 is chosen to look like room temperature in kelvin; it is not kelvin.</li>
+          <li><b>Perfectly elastic walls</b> at rest (the piston aside), which hand back exactly the speed they receive.</li>
+          <li><b>A finite, noisy gauge.</b> Real gases have ~10<sup>23</sup> particles and a gauge that averages over
+            all of them; this box has a few hundred, so the reading wanders. The running average smooths about one
+            second of simulated time.</li>
+          <li><b>The animation runs at 2&times; simulated time by default</b>, adjustable from the Speed switch, so that
+            an experiment finishes in a few seconds.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/chemistry-2e/pages/9-5-the-kinetic-molecular-theory" target="_blank" rel="noopener">OpenStax
+            <i>Chemistry 2e</i>, &sect;9.5 The Kinetic-Molecular Theory</a> &mdash; the postulates this box implements: particles in
+            constant random motion, elastic collisions, pressure arising from collisions with the container walls, and
+            kinetic energy proportional to temperature.</li>
+          <li><a href="https://openstax.org/books/university-physics-volume-2/pages/2-2-pressure-temperature-and-rms-speed" target="_blank" rel="noopener">OpenStax
+            <i>University Physics Volume 2</i>, &sect;2.2 Pressure, Temperature, and RMS Speed</a> &mdash; the derivation of
+            pressure from wall collisions that the gauge here performs numerically.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is an idealized two-dimensional teaching model built to make one
+          mechanism visible. It does not reproduce any real gas's numbers, and its temperature and pressure scales are
+          the model's own.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>The same gauge, with temperature as the variable</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the temperature readout, the histogram and the pressure</span>
+          <p>The temperature shown is computed every frame from the particles' actual kinetic energy. The guided
+            experiment rescales every velocity by &radic;2 in one step so the gas is at 600 at once, then measures the
+            walls. The histogram's bars are the particles now; its curve is the 2D Maxwell distribution for the
+            measured temperature, drawn for comparison.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the thermostat</span>
+          <p>The thermostat nudges every speed a little toward the target each step, like a water bath the box is
+            sitting in. It changes only the width of the speed distribution. It is a modelling device, not a claim
+            about any particular apparatus.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">T = &frac12;&langle;v&sup2;&rangle; &nbsp;&nbsp;so&nbsp;&nbsp; v<sub>rms</sub> = &radic;(2T)</div>
+        <p>Doubling T multiplies typical speeds by &radic;2. A particle moving &radic;2 times faster hands the wall
+          &radic;2 times the momentum per hit, and comes back to hit it &radic;2 times as often. The product is 2:
+          pressure is proportional to temperature at fixed N and A.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Temperature is defined by kinetic energy alone.</b> These particles have no rotation, no vibration, no
+            internal structure &mdash; two degrees of freedom each and nothing else.</li>
+          <li><b>The velocity distribution is Maxwellian</b> at the start and stays so, because the thermostat rescales
+            uniformly and disc collisions keep it thermalized. Switch collisions off and start all particles at one
+            speed to see a distribution that is <em>not</em> Maxwellian.</li>
+          <li><b>Every simplification from stage 1 still applies</b> &mdash; two dimensions, reduced units, elastic walls,
+            a noisy finite gauge.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/chemistry-2e/pages/9-5-the-kinetic-molecular-theory" target="_blank" rel="noopener">OpenStax
+            <i>Chemistry 2e</i>, &sect;9.5</a> &mdash; average kinetic energy proportional to temperature; the
+            Maxwell&ndash;Boltzmann distribution and how it widens with temperature.</li>
+          <li>The 2D speed density drawn on the histogram, <i>f</i>(<i>v</i>) = (<i>v</i>/<i>T</i>)&middot;e<sup>&minus;<i>v</i>&sup2;/2<i>T</i></sup>,
+            is the two-dimensional case of that distribution with <i>m</i> = <i>k</i><sub>B</sub> = 1; it is computed
+            in this page's model and checked there to integrate to 1, not quoted from a table.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the claim is that pressure tracks temperature for a gas of
+          structureless particles. Real molecules store energy in rotation and vibration too, which changes heat
+          capacities but not this proportionality.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>A moving wall, and what it does with the thermostat off</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the piston, the pressure and the temperature</span>
+          <p>The piston slides at a fixed 12 units per second toward wherever the slider is set. A particle that bounces
+            off a wall moving at speed <i>u</i> leaves with its normal speed changed by 2<i>u</i>: a wall moving inward
+            speeds it up. That is the entire mechanism by which compressing a gas heats it, and this page computes it
+            for every bounce rather than assuming it.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the guided experiment holds the thermostat on</span>
+          <p>The routine measures, slides the piston from width 100 to 50, waits for it to arrive and for the gas to
+            settle, and measures again &mdash; with the thermostat holding T at 300 throughout, so that the only thing that
+            changed is the room. Switching the thermostat off is left to you, on purpose.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">P&middot;A = constant &nbsp;(fixed N and T)</div>
+        <p>With the same speeds and half the width, a particle crossing the box reaches the piston and the left wall
+          twice as often. The top and bottom walls are shorter, so they are hit as often per unit length as before but
+          there is less of them. Add it up and the total momentum per second per unit of wall doubles. This is
+          Boyle's law, arrived at by counting.</p>
+        <p>With the thermostat off, the inward-moving piston hands energy to every particle it meets, so T rises and the
+          pressure rises by more than the room alone would give. That is adiabatic compression &mdash; the reason a bicycle
+          pump gets warm.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The piston moves at one fixed speed</b>, which is a sizeable fraction of the particles' own speeds.
+            The compression is therefore not slow and gentle, and with the thermostat off it heats the gas more than
+            a slow one would. The direction of the effect is right; its size depends on the piston speed.</li>
+          <li><b>The thermostat is idealized</b> &mdash; it removes energy at a fixed rate everywhere at once. A real
+            water bath conducts heat through the walls with a lag.</li>
+          <li><b>Every simplification from stages 1 and 2 still applies.</b></li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/university-physics-volume-2/pages/2-2-pressure-temperature-and-rms-speed" target="_blank" rel="noopener">OpenStax
+            <i>University Physics Volume 2</i>, &sect;2.2</a> &mdash; pressure from wall collisions, from which Boyle's law
+            follows at fixed temperature.</li>
+          <li>The moving-wall reflection rule, <i>v</i>&prime; = &minus;<i>v</i> + 2<i>u</i>, is an exact consequence of
+            an elastic bounce seen from the wall's own frame; it is coded in this page's model, not quoted.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage shows why pressure and area trade off at fixed
+          temperature, and why compression heats a gas that is not held cold. It reports no real gas's compressibility
+          and no real pump's temperature rise.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live, and what is estimated</span>
+        <h3>The sweeps are measured; the size correction is a first-order estimate</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> every sweep point and every ratio</span>
+          <p>Each sweep steps one of N, T or A through five values. At every step the gas settles for a moment and the
+            walls are measured for three seconds of simulated time; the point plotted is that measurement against
+            N&middot;T&nbsp;/&nbsp;A for the same step. The ratio Z = P&middot;A&nbsp;/&nbsp;(N&middot;T) is measured, not
+            fitted.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">first-order estimate, overstates the effect at higher packing</span> the "expected drift" for big particles</span>
+          <p>Two particles of radius <i>r</i> cannot bring their centres closer than 2<i>r</i>, so each pair excludes a
+            disc of area 4&pi;<i>r</i>&sup2;; sharing that between the two gives about 2&pi;<i>r</i>&sup2; of lost room
+            per particle. With N&middot;2&pi;<i>r</i>&sup2; of the box unavailable, P &asymp; N&middot;T&nbsp;/&nbsp;(A &minus;
+            N&middot;2&pi;<i>r</i>&sup2;), so Z &asymp; 1&nbsp;/&nbsp;(1 &minus; 2&eta;) where &eta; is the fraction of the
+            box the particles cover. That is the authors' leading-order estimate from the geometry, offered for
+            direction and rough size. It is not a fitted equation of state.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Z = P&middot;A &divide; (N&middot;T) &nbsp;&nbsp;&mdash;&nbsp;&nbsp; 1 when the law holds</div>
+        <p>The ideal gas law assumes particles occupy no space and never interact except at the walls. Small particles
+          with collisions on come close to that: Z sits within a few percent of 1. Grow them and the room they leave
+          each other shrinks, so the walls are hit more often than the law expects and Z climbs. This is the
+          correction a real-gas equation such as van der Waals makes with its <i>b</i> term. There is no attraction
+          between these particles, so the other van der Waals correction, which lowers pressure, does not appear here.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Hard discs, no attraction.</b> Real molecules attract each other weakly at a distance, which pulls Z
+            below 1 at low temperature. This model has only the repulsive core, so it shows one of the two real-gas
+            corrections.</li>
+          <li><b>Even the "small" default is not zero.</b> At radius 0.35 the particles cover about 1.5% of the box,
+            and Z runs a few percent above 1 for that reason. The demo's "the law holds" is "to within a few percent
+            plus noise", and the gauge shows the number.</li>
+          <li><b>Sweeps are short.</b> Three simulated seconds per point keeps a sweep to about fifteen real seconds,
+            at the cost of a few percent of scatter on each point.</li>
+          <li><b>Every simplification from stages 1 to 3 still applies.</b></li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/chemistry-2e/pages/9-6-non-ideal-gas-behavior" target="_blank" rel="noopener">OpenStax
+            <i>Chemistry 2e</i>, &sect;9.6 Non-Ideal Gas Behavior</a> &mdash; the compressibility factor Z, why molecular
+            volume raises it above 1, and the van der Waals <i>b</i> term this stage's drift corresponds to.</li>
+          <li>The excluded-area estimate above is the authors' own derivation from the disc geometry, as labelled; it is
+            not taken from a source.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the claim is that the ideal gas law holds for tiny non-interacting
+          particles and drifts, in a predictable direction, when they take up room. This page does not measure any
+          real gas's compressibility, and its size correction is an estimate of direction and magnitude, not a fitted
+          law.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Presenter notes ARE the printable presenter guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<!--__GUIDE__-->
+    <p class="guide-print"><a href="presenter-guide.html" target="_blank" rel="noopener">Open the printable copy (presenter-guide.html)</a> &mdash; the same document, laid out for Letter; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing, in this order and no other:
+     1. the model, which defines IdealGasModel;
+     2. the lesson shell, which defines window.lessonShell and wires the
+        dialogs, the tablist keyboard and presentation mode;
+     3. app.js, which uses both — it reads the shell's selected tab at start-up
+        rather than assuming stage 1, so a #stage-4 deep link lands correctly. -->
+<script>
+/*__IDEAL_GAS_MODEL__*/
+</script>
+<script>
+/*__SHELL_JS__*/
+</script>
+<script>
+/*__APP__*/
+</script>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>
