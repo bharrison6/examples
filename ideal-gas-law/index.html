@@ -1,0 +1,3477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="An offline kinetic-theory simulator: particles in a box, pressure measured from wall hits, and the ideal gas law tested against that measurement.">
+<title>Ideal Gas Law Simulator · Particles in a Box</title>
+<!-- lesson-shell v3 css:5f6336bcbaf8 -->
+<style>
+
+/* ---- lesson-shell/tokens.css ---- */
+/* ===========================================================================
+   lesson-shell / tokens.css — the palette and type contract, part A0.
+
+   ONE :root block, named identically in every demo. A reviewer greps the built
+   index.html for these names and must find every one of them, so a demo that
+   needs a colour the kit does not have adds a NEW token in its own stylesheet;
+   it never renames or drops one of these.
+
+   Arrangement (plan A0, chosen over Demo 1's navy-panels-on-cream because the
+   launcher and every post-2026-09-09 demo already use it, and dark panels wash
+   out at the edges of a projector):
+
+     cream / paper   the page
+     navy            "live machine" surfaces — a workbench, a sim canvas frame,
+                     a live readout
+     gold            the primary action, and the lesson-strip rule
+     lite            the second data series and focus rings
+     warm            genuine failure states ONLY (Murray State brand guide says
+                     use Red Orange sparingly; CONTRACT.md repeats it)
+
+   Palette source: the Murray State brand guide — Blue #002144 (PMS 289),
+   Gold #ECAC00 (PMS 123), Lite Blue #00A4E3 (PMS 2995), Red Orange #FF4500.
+   =========================================================================== */
+
+:root {
+  /* --- the A0 required set. Every name below appears in every demo. ------- */
+  --u: 1rem;              /* type unit; everything scales off it */
+  --navy: #002144;        /* brand */
+  --gold: #ECAC00;        /* brand */
+  --lite: #00A4E3;        /* brand accent — second series, focus rings */
+  --warm: #FF4500;        /* brand accent — genuine failure states only */
+  --paper: #FFFDF8;       /* page */
+  --cream: #F7F0E3;       /* secondary surface */
+  --ink: #14273A;         /* body text on paper/cream */
+  --ink-2: #40556A;       /* secondary text */
+  --ink-3: #65788A;       /* tertiary text, notes */
+  --line: #C6D1D8;        /* hairlines on light surfaces */
+
+  /* --- derived shades the shell CSS needs. Also fleet-wide, also stable. -- */
+  --navy-2: #07345D;      /* raised navy surface inside a workbench */
+  --navy-deep: #01182C;   /* code/readout wells inside a workbench */
+  --cream-deep: #EBE0CA;  /* card borders on cream */
+  --gold-deep: #9F6700;   /* gold as TEXT on paper — 4.6:1, passes AA */
+  --gold-lite: #FFD76A;   /* gold as text on navy */
+  --lite-soft: #D9EFF8;   /* lite blue wash */
+  --lite-deep: #007EB5;   /* lite blue as text on paper — 4.6:1 */
+  --bad: #C63F1D;         /* a wrong answer, a contradicted prediction */
+  --bad-soft: #FDE8E1;
+  --ok: #1C704D;          /* a supported prediction */
+  --ok-soft: #E0F5EE;
+  --ink-on-navy: #F6FBFF; /* body text on a navy surface */
+  --ink-2-on-navy: #D7E5EF;
+  --ink-3-on-navy: #B8CBD8;
+  --line-on-navy: rgba(255, 255, 255, .30);
+  --radius: 16px;
+  --radius-2: 10px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-t: env(safe-area-inset-top, 0px);
+
+  color-scheme: light;
+}
+
+/* Presentation mode changes --u and nothing else. One value fleet-wide:
+   Demo 1 shipped 1.25rem and Demo 2 shipped 1.18rem; the plan picks 1.2. */
+body.presenter { --u: 1.2rem; }
+
+/* Very short portrait screens — an iPhone SE 1st gen is 320x568 — get the whole
+   layout down a notch rather than letting the activity push the primary action
+   off the bottom. .94rem keeps every tap target over 40px. body.presenter
+   out-specifies this, so presentation mode still wins. */
+@media (orientation: portrait) and (max-height: 660px) {
+  :root { --u: .94rem; }
+}
+
+/* ---- lesson-shell/shell.css ---- */
+/* ===========================================================================
+   lesson-shell / shell.css — the lesson parts that WRAP any activity.
+
+   Loaded after tokens.css and BEFORE the demo's own stylesheet, so a demo can
+   override any rule here without !important. Nothing in this file styles an
+   activity: no canvas, no game board, no workbench internals. It styles the
+   parts the template names — A0 header and footer, A1 stage tablist, A2 stage
+   intro and lesson strip, A3's kicker vocabulary, A4's observation cue, A5's
+   Details drawer, A6's check card, A7/A8's dialogs, and the credit pill.
+
+   CLASS VOCABULARY — a demo uses these names or the reviewer's grep fails:
+
+     .top .topline .brandline .brand-kicker .msu-brand .top-tools .icon-btn
+     .stages .stage-tab                        (A1, role=tablist)
+     section.stage .stage.on                   (A1, role=tabpanel)
+     .stage-intro .intro-copy .eyebrow .stage-question .refresh
+     .lesson-strip                             (A2, exactly 3 articles)
+     .details-trigger
+     .panel-kicker + .k-live .k-measured .k-sourced .k-scripted .k-illustrative
+     .control-label                            (A3)
+     .obs-cue                                  (A4)
+     .details-sheet .details-drawer .details-body .details-stage .evidence-card
+     .check .check-options .check-option .check-feedback   (A6)
+     .lesson-dialog .lesson-dialog-head .lesson-dialog-body .lesson-dialog-actions
+     .btn .btn.ghost .btn.small
+     .footer .footer-tools .footer-link
+     .bh-credit
+     .intro-more                               (A2 phone disclosure, v3;
+                                                built by behaviourScript())
+
+   RESERVED, NOT VOCABULARY: `.hidden`. The kit backs it with
+   `display: none !important` (see the rule beside `[hidden]` below) so that a
+   retrofit which deletes the demo's own chrome stylesheet cannot take the rule
+   with it. A demo must not redefine it; check-shell.js fails one that does.
+   =========================================================================== */
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; background: var(--cream); }
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font: 400 var(--u)/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+[hidden] { display: none !important; }
+/* A RESERVED KIT CLASS (v3), and the kit's one deliberate claim on a generic
+   author-space name. Added because five demos had independently written this
+   exact rule — bridge-works, should-have-known-that and the-stranger, all
+   spelling it `display: none !important` — and a retrofit that correctly
+   deletes the demo's own chrome stylesheet (ADOPTING.md §2) takes the rule with
+   it while the demo's JS keeps toggling the class. should-have-known-that
+   shipped straight into that: setup / turn / play panels rendered stacked, with
+   `build.js --check`, `check-shell` and `build-hub --check` all green, because
+   the markup and the contract were both correct. Five identical independent
+   copies of one rule is a missing kit primitive, not a coincidence.
+
+   `!important` is load-bearing, not defensive: without it a panel carrying its
+   own later `display: grid` wins on equal specificity and the class does
+   nothing — which is the exact case that fails.
+
+   THE PRICE, STATED: this is the one place the kit overrides a demo without
+   the demo being able to take it back unprefixed, so it is declared reserved
+   in ADOPTING.md rather than claimed quietly, and check-shell.js fails any
+   demo that defines `.hidden` as anything other than display:none. Prefer the
+   `hidden` ATTRIBUTE in new code — it is the platform's, it carries the right
+   semantics to assistive tech, and the rule above already covers it. */
+.hidden { display: none !important; }
+button, input, select, summary, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { opacity: .48; cursor: not-allowed; }
+/* Every interactive thing clears the 38px touch floor CONTRACT.md's "touch
+   works" is checked against. */
+button, input, select, summary, a[href], [role="button"], [tabindex]:not([tabindex="-1"]) { min-height: 38px; }
+button:focus-visible, input:focus-visible, select:focus-visible,
+summary:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--lite);
+  outline-offset: 2px;
+}
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- A0 header + A1 stage navigation -------------------------------
+   The header is sticky so a presenter can always reach Guide, Settings and the
+   stage tabs. One measure (1180px) for the header, the tablist and main, so the
+   kicker, the tabs and the stage question all share a left edge. */
+.top {
+  position: sticky; top: 0; z-index: 40;
+  background: color-mix(in srgb, var(--cream) 94%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--navy) 16%, transparent);
+  backdrop-filter: blur(12px);
+}
+.topline, .stages, main { max-width: 1180px; margin: 0 auto; }
+.topline { display: flex; justify-content: space-between; align-items: center; gap: 18px; padding: calc(14px + var(--safe-t)) 22px 10px; }
+.brandline { display: grid; grid-template-columns: auto 1fr; column-gap: 12px; align-items: baseline; min-width: 0; }
+/* The kicker is `Murray State University · <tour part label>` — one spelling
+   fleet-wide, taken from tours/*.json, never an invented collection name. */
+.brand-kicker {
+  grid-column: 1 / -1;
+  color: var(--gold-deep); font-size: calc(var(--u) * .68); font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.brandline h1 {
+  margin: 2px 0 0; color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.45rem, 2.6vw, 2.25rem); line-height: 1.03;
+}
+.msu-brand { color: var(--ink-2); font-size: calc(var(--u) * .72); font-weight: 750; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.top-tools { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+/* Icon buttons carry a VISIBLE text label at >=480px; the icon alone is the
+   phone affordance. The accessible name stays on the button either way. */
+.icon-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 40px; border: 1px solid var(--navy); border-radius: 999px;
+  padding: 5px 11px; color: var(--navy); background: var(--paper);
+  font-size: calc(var(--u) * .78); font-weight: 800;
+}
+.icon-btn:hover { background: var(--navy); color: #fff; }
+/* The header Notes button exists only in presentation mode (A8). */
+.top-tools .notes-open { display: none; }
+body.presenter .top-tools .notes-open { display: inline-flex; }
+
+/* A1: one tab per stage, short name + a question subtitle that ends in "?".
+   auto-fit means 2, 3 or 4 stages all work with no per-demo override. */
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; padding: 0 22px 12px; }
+.stage-tab {
+  min-height: 52px; border: 1px solid var(--line); border-radius: 12px;
+  padding: 6px 9px; background: var(--paper); color: var(--ink-2);
+  font-weight: 800; line-height: 1.1; text-align: center;
+}
+.stage-tab span, .stage-tab small { display: block; }
+.stage-tab small { margin-top: 4px; color: var(--ink-3); font-size: calc(var(--u) * .68); font-weight: 650; }
+.stage-tab[aria-selected="true"] { border-color: var(--navy); background: var(--navy); color: #fff; box-shadow: inset 0 -4px 0 var(--gold); }
+.stage-tab[aria-selected="true"] small { color: var(--ink-2-on-navy); }
+/* A locked stage is dimmed but still announces why (title/aria-description on
+   the button); it is not removed, so the learner sees the whole route. */
+.stage-tab:disabled { opacity: .55; }
+.stage-tab .stage-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 1.45em; height: 1.45em; margin: 0 auto 2px; border-radius: 999px;
+  background: var(--cream-deep); color: var(--navy); font-size: calc(var(--u) * .72);
+}
+.stage-tab[aria-selected="true"] .stage-mark { background: var(--gold); color: var(--navy); }
+.stage-tab.complete .stage-mark { background: var(--ok); color: #fff; }
+
+/* ---------- A2 stage intro and lesson strip ------------------------------- */
+main { padding: 20px 22px 74px; }
+section.stage { display: none; }
+section.stage.on { display: block; }
+.stage-intro {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px 22px;
+  padding: 22px; margin-bottom: 18px;
+  border: 1px solid var(--cream-deep); border-radius: var(--radius); background: var(--paper);
+}
+.intro-copy { max-width: 720px; }
+.eyebrow, .panel-kicker {
+  color: var(--gold-deep); font-size: calc(var(--u) * .72); font-weight: 850;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.stage-intro h2 {
+  margin: 5px 0 7px; color: var(--navy);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.5rem, 3vw, 2.35rem); line-height: 1.08;
+}
+/* The stage question is the first readable line after the nav (L3 pass
+   criterion). Exactly one question per stage — two is split attention. */
+.stage-question { margin: 0; color: var(--ink-2); font-size: calc(var(--u) * 1.02); }
+/* "Before you start": two or three sentences of prerequisite refresh, no more.
+   Bold every key term on first use and define it in place. */
+.refresh { margin: 11px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .92); }
+.refresh b, .refresh strong { color: var(--navy); }
+.details-trigger {
+  align-self: start; min-height: 42px; border: 1px solid var(--navy);
+  border-radius: 999px; padding: 7px 13px; color: var(--navy);
+  background: transparent; font-weight: 800;
+}
+.details-trigger:hover { background: var(--navy); color: #fff; }
+/* Three cards, fixed labels: Predict · Try · Takeaway. */
+.lesson-strip { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.lesson-strip article { min-width: 0; border-left: 3px solid var(--gold); padding: 7px 10px; background: var(--cream); }
+.lesson-strip article span {
+  display: block; color: var(--navy); font-size: calc(var(--u) * .72);
+  font-weight: 850; letter-spacing: .08em; text-transform: uppercase;
+}
+.lesson-strip p { margin: 3px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .8); }
+/* Where the activity captured the prediction, the observed result is echoed
+   beside it inside the Predict card. */
+/* text-transform is EXPLICITLY reset here, not merely omitted. `.echo` is a
+   span inside .lesson-strip article, and the card-label rule above styles
+   `.lesson-strip article span` — so without this the echo INHERITS the label's
+   uppercase and a captured prediction renders SHOUTING. Found by the
+   zero-to-unbeatable lane, which had to patch it demo-side; it belongs here.
+   letter-spacing is reset for the same reason. */
+.lesson-strip .echo {
+  display: block; margin-top: 5px; padding-top: 5px;
+  border-top: 1px dashed var(--cream-deep); color: var(--ink);
+  font-size: calc(var(--u) * .78);
+  font-weight: 400; text-transform: none; letter-spacing: normal;
+}
+.lesson-strip .echo b { color: var(--navy); }
+
+/* ---------- A2 phone intro disclosure (v3) --------------------------------
+   Operator ruling 2026-09-16, "collapsible intro at phone width". The
+   <details class="intro-more"> is BUILT BY behaviourScript() at runtime around
+   the lesson strip — partials.html is a reference sheet, not an injected file,
+   so markup there would reach only demos adopted after this change. See the
+   intro-disclosure section of index.js for why, and for what never collapses.
+
+   ABOVE 480px THIS IS INERT. The summary is display:none and the element is
+   held open, so the <details> is a transparent wrapper sitting in exactly the
+   grid cell .lesson-strip used to occupy: same geometry, no toggle chrome, and
+   nothing added to the accessibility tree. Desktop is unchanged by
+   construction rather than by inspection. */
+.stage-intro > .intro-more { grid-column: 1 / -1; margin: 0; }
+.intro-more > summary { display: none; }
+
+/* ---------- A3 provenance kickers and control labels ----------------------
+   SIX WORDS, and they are the only vocabulary. A claim on screen without one
+   of them is a defect (plan A3 / lens L1).
+
+     Live         computed here, now
+     Measured     computed here earlier and stored — say when, say the seed
+     Sourced      a published number — cite it in Details
+     Reasoned     the authors' own judgement, from the criteria the page shows
+     Scripted     a teaching fixture standing in for what a live system would
+                  have produced — say what is fixed
+     Illustrative invented numbers — say so
+
+   Reasoned was added on orchestrator ruling 2026-09-15, on evidence from the
+   front-doors accuracy audit. It is NOT a fold of Scripted: Scripted stands in
+   for a live system's output (the-stranger's 64 hand-written answers are the
+   type case), while Reasoned is judgement the authors own, derived from stated
+   criteria (front-doors' 28 job verdicts). Different mechanisms, so they
+   split. Without it, an honest "we could not confirm this" had to be rendered
+   as Illustrative — i.e. as INVENTED, which is a worse claim than the truth.
+
+   Reasoned reads neutral slate deliberately: a learner must not mistake a
+   judgement for a citation, so it shares nothing with Sourced's gold. */
+.k-live, .k-measured, .k-sourced, .k-reasoned, .k-scripted, .k-illustrative {
+  display: inline-block; border-radius: 999px; padding: 2px 8px;
+  font-size: calc(var(--u) * .64); font-weight: 850;
+  letter-spacing: .09em; text-transform: uppercase; white-space: nowrap;
+}
+.k-live { background: var(--ok-soft); color: var(--ok); }
+.k-measured { background: var(--lite-soft); color: var(--lite-deep); }
+.k-sourced { background: var(--cream-deep); color: var(--gold-deep); }
+.k-reasoned { background: #E3EAF0; color: #38546B; box-shadow: inset 0 0 0 1px #B9C8D4; }
+.k-scripted { background: #EEE6F5; color: #5A3E8C; }
+.k-illustrative { background: var(--bad-soft); color: var(--bad); }
+/* On a navy surface the same six read light. */
+.workbench .k-live, .navy-surface .k-live { background: rgba(255,255,255,.16); color: #9EE7C8; }
+.workbench .k-measured, .navy-surface .k-measured { background: rgba(255,255,255,.16); color: #8FD8F5; }
+.workbench .k-sourced, .navy-surface .k-sourced { background: rgba(255,255,255,.16); color: var(--gold-lite); }
+.workbench .k-reasoned, .navy-surface .k-reasoned { background: rgba(255,255,255,.16); color: #C6D6E3; box-shadow: inset 0 0 0 1px rgba(255,255,255,.34); }
+.workbench .k-scripted, .navy-surface .k-scripted { background: rgba(255,255,255,.16); color: #D3BCF2; }
+.workbench .k-illustrative, .navy-surface .k-illustrative { background: rgba(255,255,255,.16); color: #FFB49B; }
+
+/* AN HONESTY QUALIFIER, not a label. One optional free-text rider appended to
+   a provenance label, subordinate to it, never replacing it. The demo supplies
+   its own string; the kit deliberately does not enumerate the kinds, because
+   two audits produced four different kinds in two days:
+
+     Sourced · unconfirmed since 2026-09-08        staleness
+     Sourced · typical, range 250–400 MPa          one point in a real spread
+     Sourced · specified minimum, not typical      the value is a floor
+     Sourced · IRC 2021 — differs under IBC        code- and edition-dependent
+     Measured · seed 41                            which run produced it
+
+   Why a rider and not a second label: an unconfirmed published figure is still
+   Sourced. Demoting it to Illustrative would say it was invented, which is a
+   worse claim than the truth. Same for a range — a real spread reported at one
+   point is still a sourced measurement, honestly narrowed.
+
+   It wraps rather than pushing the panel wide: some riders are a clause, not a
+   word, and a phone at 320px must not scroll sideways. The LABEL stays nowrap. */
+.k-qual {
+  display: inline; margin-left: 5px;
+  color: var(--ink-3); font-size: calc(var(--u) * .66); font-weight: 650;
+  font-style: italic; letter-spacing: .02em;
+  white-space: normal; text-transform: none;
+}
+.k-qual::before { content: "· "; font-style: normal; }
+.workbench .k-qual, .navy-surface .k-qual { color: var(--ink-3-on-navy); }
+
+/* A claim-bearing prose block inside the Details drawer. The audit's second
+   structural finding was that a demo can label its grid cells and leave its
+   detail prose unlabeled — and that unlabeled surface is exactly where the one
+   uncertain claim lives. So detail prose that carries a claim is wrapped in
+   .claim and MUST open with a kicker; check-shell.js enforces that on any
+   block marked .claim. It cannot enforce it on prose nobody marked — see the
+   note at the head of check-shell.js. */
+.claim { margin: 0 0 12px; padding: 9px 11px 10px; border-left: 3px solid var(--line); border-radius: 0 var(--radius-2) var(--radius-2) 0; background: var(--cream); }
+.claim > .panel-kicker { display: block; margin-bottom: 4px; }
+.claim > p:last-child { margin-bottom: 0; }
+
+/* A3: every control says what changes and WHY you would change it. The label
+   sits at the control, never in a legend elsewhere (spatial contiguity). */
+.control-label { display: block; margin: 2px 0 5px; color: var(--ink-2); font-size: calc(var(--u) * .78); font-weight: 800; }
+.control-label .why { display: block; color: var(--ink-3); font-size: calc(var(--u) * .88); font-weight: 500; }
+.workbench .control-label, .navy-surface .control-label { color: var(--ink-2-on-navy); }
+.workbench .control-label .why, .navy-surface .control-label .why { color: var(--ink-3-on-navy); }
+
+/* ---------- A4 observation cue -------------------------------------------
+   One aria-live line that names the thing to notice at the moment it becomes
+   true. Must appear within one screen of the control that caused it. */
+.obs-cue {
+  display: flex; align-items: center; gap: 9px; min-height: 40px;
+  margin: 12px 0; padding: 8px 12px;
+  border-left: 4px solid var(--lite); border-radius: var(--radius-2);
+  background: var(--lite-soft); color: var(--ink);
+  font-size: calc(var(--u) * .88);
+}
+.obs-cue::before { content: "Notice"; color: var(--lite-deep); font-size: calc(var(--u) * .66); font-weight: 850; letter-spacing: .09em; text-transform: uppercase; flex: 0 0 auto; }
+.obs-cue:empty { display: none; }
+.obs-cue.cue-warm { border-left-color: var(--gold); background: #FFF6DC; }
+.obs-cue.cue-warm::before { color: var(--gold-deep); }
+
+/* ---------- generic surfaces a wrapped activity can reuse ----------------- */
+.card { min-width: 0; margin-bottom: 18px; border: 1px solid var(--cream-deep); border-radius: var(--radius); padding: 20px; background: var(--paper); color: var(--ink); }
+.workbench { min-width: 0; margin-bottom: 18px; border: 1px solid var(--navy); border-radius: var(--radius); padding: 20px; background: var(--navy); color: var(--ink-on-navy); box-shadow: 0 9px 24px rgba(0, 33, 68, .12); }
+.panel-head { display: flex; justify-content: space-between; gap: 12px; align-items: start; margin-bottom: 9px; flex-wrap: wrap; }
+.panel-head h3 { margin: 3px 0 0; color: inherit; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.25); line-height: 1.12; }
+.workbench .panel-kicker { color: var(--gold-lite); }
+.panel-lede { margin: 0 0 14px; color: var(--ink-2); font-size: calc(var(--u) * .88); }
+.workbench .panel-lede { color: var(--ink-2-on-navy); }
+.note { color: var(--ink-3); font-size: calc(var(--u) * .78); }
+.workbench .note { color: var(--ink-3-on-navy); }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; border: 1px solid var(--gold); border-radius: var(--radius-2);
+  padding: 9px 14px; background: var(--gold); color: var(--navy); font-weight: 850;
+}
+.btn:hover:not(:disabled) { background: #FFD05A; border-color: #FFD05A; }
+.btn.ghost { border-color: var(--navy); background: transparent; color: var(--navy); }
+.btn.ghost:hover:not(:disabled) { background: var(--navy); color: #fff; }
+.workbench .btn.ghost { border-color: var(--line-on-navy); color: #fff; }
+.workbench .btn.ghost:hover:not(:disabled) { background: #fff; border-color: #fff; color: var(--navy); }
+.btn.small { min-height: 40px; padding: 7px 11px; font-size: calc(var(--u) * .82); }
+.row { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+
+/* ---------- A6 check yourself --------------------------------------------
+   One or two items per stage, answerable from what was just observed, with
+   written feedback for EVERY option. At least one refutation item per demo:
+   it states the flawed model and the feedback names why it is wrong. */
+.check { margin: 18px 0 0; border: 1px solid var(--cream-deep); border-left: 4px solid var(--navy); border-radius: var(--radius); padding: 18px 20px; background: var(--paper); }
+.check h3 { margin: 4px 0 4px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.18); }
+.check .check-prompt { margin: 0 0 11px; color: var(--ink); }
+.check-options { display: grid; gap: 8px; }
+.check-option {
+  min-height: 46px; border: 1px solid var(--line); border-radius: var(--radius-2);
+  padding: 9px 13px; background: var(--paper); color: var(--ink);
+  font-weight: 650; text-align: left;
+}
+.check-option:hover:not(:disabled) { border-color: var(--navy); background: var(--cream); }
+.check-option[aria-pressed="true"] { border-color: var(--navy); border-width: 2px; background: var(--cream); font-weight: 800; }
+.check-option.correct[aria-pressed="true"] { border-color: var(--ok); background: var(--ok-soft); }
+.check-option.wrong[aria-pressed="true"] { border-color: var(--bad); background: var(--bad-soft); }
+.check-feedback { margin: 11px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .9); }
+.check-feedback:empty { display: none; }
+.check-feedback b { color: var(--navy); }
+/* Peer Instruction: in presentation mode the item goes large and the feedback
+   stays hidden until the room has voted and someone taps. */
+body.presenter .check .check-prompt { font-size: calc(var(--u) * 1.12); }
+body.presenter .check-option { font-size: calc(var(--u) * 1.02); }
+
+/* ---------- A5 Details drawer, and A7/A8 dialogs --------------------------
+   A5 is a right-side drawer; A7 (Guide), A8 (Settings) and the presenter notes
+   are centred cards. `margin: auto` is what centres a <dialog> whose width is
+   constrained — without it the card sits against the left edge at >=1024px
+   (this is task-glass-box-dialog-centering, fixed here once for the fleet). */
+body.details-open { overflow: hidden; }
+.details-sheet { inset: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; padding: 0; border: 0; background: transparent; }
+.details-sheet::backdrop, .lesson-dialog::backdrop { background: rgba(0, 33, 68, .36); backdrop-filter: blur(2px); }
+.details-sheet[open] { display: flex; justify-content: flex-end; }
+.details-drawer { display: flex; flex-direction: column; width: min(510px, 46vw); height: 100%; background: var(--paper); color: var(--ink); box-shadow: -18px 0 48px rgba(0, 33, 68, .24); }
+.details-body { flex: 1; overflow: auto; padding: 22px; }
+.details-body h3 { margin: 16px 0 6px; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.2); }
+.details-body h3:first-of-type { margin-top: 4px; }
+.details-body p { margin: 0 0 11px; color: var(--ink-2); }
+.details-body ul, .details-body ol { margin: 0 0 11px; padding-left: 21px; color: var(--ink-2); }
+.details-body li { margin: 4px 0; }
+.details-note { color: var(--ink-3) !important; font-size: calc(var(--u) * .8); }
+.details-stage { display: none; }
+.details-stage.on { display: block; }
+.details-formula { margin: 10px 0; padding: 11px; border-radius: var(--radius-2); background: var(--navy); color: #fff; font: 800 calc(var(--u) * 1.1) Georgia, "Times New Roman", serif; text-align: center; }
+/* The closing Boundary card: what this demo does NOT claim. */
+.evidence-card { margin-top: 14px; border: 1px solid var(--cream-deep); border-left: 4px solid var(--gold); border-radius: 9px; padding: 11px; background: var(--cream); color: var(--ink-2); font-size: calc(var(--u) * .86); }
+.evidence-card b { color: var(--navy); }
+
+.lesson-dialog {
+  width: min(680px, calc(100% - 32px)); max-height: min(88dvh, 800px);
+  margin: auto; padding: 0;
+  border: 1px solid var(--navy); border-top: 5px solid var(--gold); border-radius: 14px;
+  background: var(--paper); color: var(--ink); box-shadow: 0 24px 70px rgba(0, 33, 68, .3);
+}
+.lesson-dialog[open] { display: flex; flex-direction: column; }
+.lesson-dialog-head, .details-drawer .lesson-dialog-head { display: flex; align-items: center; gap: 10px; padding: 13px 16px; background: var(--navy); color: #fff; }
+.lesson-dialog-head h2 { flex: 1; margin: 0; color: #fff; font-size: calc(var(--u) * 1.18); }
+.lesson-dialog-head .head-sub { display: block; margin-top: 2px; color: var(--gold-lite); font-size: calc(var(--u) * .7); letter-spacing: .08em; text-transform: uppercase; }
+.lesson-dialog-head button { min-width: 40px; min-height: 40px; border: 1px solid var(--gold); border-radius: 8px; background: var(--gold); color: var(--navy); font-weight: 900; }
+.lesson-dialog-body { flex: 1; min-height: 0; overflow: auto; padding: 17px 19px 10px; }
+.lesson-dialog-body h3 { margin: 15px 0 5px; color: var(--navy); }
+.lesson-dialog-body p { margin: 0 0 10px; }
+.lesson-dialog-body ol, .lesson-dialog-body ul { padding-left: 22px; }
+.lesson-dialog-body li { margin: 5px 0; }
+.lesson-dialog-body .lede, .lesson-dialog-body .setnote { color: var(--ink-2); }
+.lesson-dialog-body .btn { width: 100%; }
+.lesson-dialog-actions { display: flex; justify-content: flex-end; padding: 10px 18px 16px; }
+.lesson-dialog-actions button { min-height: 44px; border: 1px solid var(--navy); border-radius: 8px; padding: 8px 16px; background: var(--navy); color: #fff; font-weight: 800; }
+/* The presenter notes are the printable guide, injected at build time. The
+   guide's own scoped stylesheet lands after this file, so it wins inside here. */
+.guide-host { padding-top: 14px; }
+.guide-host .guide-scope { zoom: 1; }
+.guide-host .guide-scope .page-break { break-before: auto; page-break-before: auto; padding-top: 0; }
+.guide-host .guide-scope header, .guide-host .guide-scope .g-head { display: block; }
+.guide-print { margin: 14px 0 4px; border-top: 1px solid var(--line); padding-top: 10px; color: var(--ink-2); font-size: calc(var(--u) * .84); }
+.guide-print a, .footer-link { color: var(--lite-deep); }
+
+/* ---------- A0 footer and the credit pill --------------------------------- */
+.footer { padding: 24px 22px 78px; color: var(--ink-3); font-size: calc(var(--u) * .78); text-align: center; }
+.footer-tools { display: flex; justify-content: center; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+.footer-link { min-height: 36px; border: 0; background: transparent; font-weight: 750; text-decoration: underline; }
+
+/* ONE spec fleet-wide (plan A0, closing task-shared-credit-pill-design).
+   Text is exactly "Bryant Harrison · Murray State University" — provenance
+   belongs in demo.json built_with, not on the glass. Fixed in px, not --u, so
+   presentation mode does not blow it up on a projector. It never takes a
+   pointer event, and it hides whenever a modal or a bottom control bar is
+   open, so it cannot sit over a control. */
+.bh-credit {
+  position: fixed; left: 8px; bottom: calc(6px + var(--safe-b)); z-index: 30;
+  max-width: calc(100vw - 16px);
+  pointer-events: none;
+  font: 600 10px/1.3 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: var(--gold); background: rgba(0, 33, 68, .85);
+  border: 1px solid rgba(236, 172, 0, .4);
+  padding: 3px 10px; border-radius: 999px; letter-spacing: .03em;
+  animation: bh-settle 9s ease forwards;
+}
+@keyframes bh-settle { 0%, 65% { opacity: .93 } 100% { opacity: .5 } }
+body:has(dialog[open]) .bh-credit,
+body.has-bottom-bar .bh-credit { display: none; }
+@media print { .bh-credit { display: none !important; } }
+
+/* ---------- breakpoints ---------------------------------------------------
+   phone <= 480, narrow <= 760, wide > 760, plus the landscape-short case: a
+   phone held sideways on a projector table. Demo 1 has it, Demo 2 does not;
+   the plan keeps it. */
+/* The pill is position:fixed, so the page scrolls UNDER it and no amount of
+   padding can stop it passing over mid-page content — that is inherent to a
+   standing byline, and is why it takes no pointer event and fades to .5 (Demo
+   1 and Demo 2 both ship it that way). What padding CAN fix is the end of the
+   scroll, where the footer would otherwise sit permanently underneath it. So:
+   reserve that space at phone widths, and keep the pill as LOW as possible.
+
+   An earlier version of this file raised the pill 62px at <= 820px to clear a
+   bottom control bar. That was wrong twice over — it made mid-page overlap
+   worse rather than better (measured at 390px, sitting across the Predict
+   card), and a demo that actually has a bottom bar sets body.has-bottom-bar,
+   which HIDES the pill outright, so nothing needed raising. */
+@media (max-width: 480px) {
+  body { padding-bottom: calc(28px + var(--safe-b)); }
+}
+@media (max-width: 760px) {
+  .topline { padding: calc(12px + var(--safe-t)) 14px 9px; }
+  .stages { padding: 0 14px 10px; }
+  main { padding: 15px 14px 68px; }
+  .stage-intro { grid-template-columns: 1fr; padding: 17px; }
+  .details-trigger { justify-self: start; }
+  .lesson-strip { grid-template-columns: 1fr; }
+  .details-drawer { width: min(620px, 100vw); }
+  .check { padding: 15px 16px; }
+}
+@media (max-width: 480px) {
+  /* ---- A2 intro disclosure: the phone affordance ------------------------
+     The ONLY width at which the toggle exists. `phone` on the kit's own scale,
+     and the width at which the measurement says the intro stops fitting: at
+     320 the full intro is 726-775px against a 568-578px viewport, so it is
+     more than a whole screen by itself.
+
+     What stays visible when collapsed: the eyebrow, the h2 stage title, the
+     stage question and the Details pill. What goes behind the toggle: the
+     lesson strip (moved into the <details> by the shell) and the "Before you
+     start" refresh (hidden by the :has() rule below rather than moved, so the
+     desktop grid keeps identical geometry). The stage question stays because
+     it is the one line that orients; the h2 stays because .stage-intro is
+     aria-labelledby it, so hiding it would strip the region's accessible name.
+     The same judgement the landscape-short block below already made. */
+  .intro-more > summary {
+    display: flex; align-items: center; gap: 8px;
+    min-height: 44px; margin-top: 2px;
+    border-top: 1px dashed var(--cream-deep); padding: 9px 2px 0;
+    color: var(--navy); font-size: calc(var(--u) * .72); font-weight: 850;
+    letter-spacing: .07em; text-transform: uppercase;
+    cursor: pointer;
+  }
+  /* The default triangle is replaced by a chevron that reads at 12px and
+     rotates, so there is an unambiguous "there is more here" affordance. */
+  .intro-more > summary { list-style: none; }
+  .intro-more > summary::-webkit-details-marker { display: none; }
+  .intro-more > summary::after {
+    content: "\25BE"; margin-left: auto;
+    font-size: calc(var(--u) * .95); line-height: 1;
+    transition: transform .15s ease;
+  }
+  .intro-more[open] > summary::after { transform: rotate(180deg); }
+  .intro-more[open] > summary { border-bottom: 0; }
+  /* The refresh is HIDDEN, not moved: moving it out of .intro-copy would
+     change the desktop grid. :has() is already a dependency of this file (see
+     the credit pill's body:has(dialog[open]) rule). */
+  .stage-intro:has(> .intro-more:not([open])) .refresh { display: none; }
+  /* A projector is not a phone: presentation mode keeps the whole intro, and
+     the shell forces the element open to match. */
+  body.presenter .intro-more > summary { display: none; }
+
+  .brandline { grid-template-columns: 1fr; }
+  .msu-brand { white-space: normal; }
+  .topline { align-items: start; }
+  .top-tools { gap: 4px; }
+  .icon-btn { min-width: 40px; padding: 5px 8px; }
+  .icon-label { display: none; }
+  .stages { gap: 5px; }
+  .stage-tab { min-height: 50px; font-size: calc(var(--u) * .82); }
+  .stage-tab small { font-size: calc(var(--u) * .6); }
+  .lesson-strip { gap: 7px; }
+  .stage-intro h2 { font-size: 1.65rem; }
+  .card, .workbench { padding: 15px; }
+  .lesson-dialog { width: 100%; max-width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-left: 0; border-right: 0; }
+  .lesson-dialog-body { padding: 14px 14px 44px; }
+  .details-drawer { width: 100vw; }
+  /* The page must not scroll sideways at 320px. Anything wider than the
+     viewport inside a stage is the demo's job to make scrollable itself. */
+  .footer { padding: 20px 14px 72px; }
+}
+@media (orientation: landscape) and (max-height: 560px) {
+  .top { position: static; }
+  .topline { padding: 8px 14px 6px; }
+  .brandline h1 { font-size: 1.25rem; }
+  .stages { padding: 0 14px 7px; }
+  .stage-tab { min-height: 42px; }
+  .stage-tab small { display: none; }
+  main { padding: 10px 14px 44px; }
+  /* Keep the question and the Predict card; the title, the refresh line and
+     the other two cards cost more height than they earn here. */
+  .stage-intro { padding: 11px 13px; margin-bottom: 10px; gap: 8px 14px; }
+  .stage-intro h2, .stage-intro .eyebrow, .stage-intro .refresh { display: none; }
+  .stage-question { font-size: calc(var(--u) * .94); }
+  .lesson-strip { grid-template-columns: 1fr; gap: 4px; }
+  .lesson-strip article:not(:first-child) { display: none; }
+  .lesson-strip article:first-child { display: grid; grid-template-columns: 4.5rem 1fr; gap: .5rem; align-items: baseline; }
+  .obs-cue { margin: 7px 0; min-height: 34px; }
+  .check { margin-top: 10px; padding: 11px 13px; }
+  .footer { padding: 12px 14px 40px; }
+}
+
+/* ---------- required accessibility blocks (A0) ---------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  html { scroll-behavior: auto; }
+}
+@media (prefers-contrast: more) {
+  :root { --ink-2: #26394D; --ink-3: #33475C; --line: #6D8496; --cream-deep: #C9BC9F; --ink-2-on-navy: #EDF5FB; --ink-3-on-navy: #DCE9F3; }
+  .stage-tab, .check-option, .icon-btn { border-width: 2px; }
+  .lesson-strip article { border-left-width: 5px; }
+}
+
+
+</style>
+<style>
+/* ===========================================================================
+   Ideal Gas Law Simulator — ACTIVITY styles only.
+
+   The lesson shell (header, stage tablist, stage intro, lesson strip,
+   provenance kickers, observation cue, Details drawer, check cards, dialogs,
+   credit pill, breakpoints, presentation scaling, .workbench and .card) lives
+   in tools/lesson-shell/ and is injected before this file. Everything here is
+   the instrument itself: the two-column workspace, the prediction list and
+   finding, the box canvas, the gauges, the pressure bar, the sliders and
+   switches, the speed histogram, and stage 4's sweep card.
+
+   Sizes are in calc(var(--u) * n) rather than rem so that Presentation mode —
+   which changes --u and nothing else — scales the instrument with the lesson.
+   Canvas heights are set from JS against the measured box width (the box
+   keeps its 100:60 aspect), so they are not in this file.
+
+   Navy is the live device; light is decisions and evidence (ADOPTING.md §1).
+   The instrument is the kit's .workbench; the task panel and the sweep card
+   are light.
+   =========================================================================== */
+
+/* ---- the two-column workspace: decisions on the left, the machine right --- */
+.workspace {
+  display: grid; grid-template-columns: minmax(280px, .7fr) minmax(0, 1.5fr);
+  gap: 18px; margin-bottom: 18px; align-items: start;
+}
+.workspace > .workbench, .workspace > .task-panel { margin-bottom: 0; }
+
+.task-panel {
+  min-width: 0; padding: clamp(16px, 2.2vw, 24px);
+  background: linear-gradient(180deg, var(--paper), #F6FAFC);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: 0 9px 24px rgba(0, 33, 68, .08);
+}
+.task-panel > h3 { margin: 4px 0 0; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.3); line-height: 1.15; }
+.task-purpose { margin: 8px 0 15px; color: var(--ink-2); font-size: calc(var(--u) * .94); }
+
+/* The locked prediction. Run stays disabled until one is chosen, and the list
+   locks while the experiment runs: committing before observing is the point. */
+fieldset { padding: 0; margin: 0; border: 0; }
+legend { width: 100%; margin-bottom: 9px; color: var(--navy); font-weight: 830; font-size: calc(var(--u) * .96); }
+.prediction-list { display: grid; gap: 7px; }
+.prediction {
+  width: 100%; min-height: 44px; padding: 10px 12px; text-align: left;
+  color: var(--ink); background: var(--paper);
+  border: 1px solid var(--line); border-radius: 9px; font: inherit; font-weight: 680; cursor: pointer;
+}
+.prediction:hover:not(:disabled) { border-color: var(--lite); background: #F0FAFF; }
+.prediction:disabled { cursor: default; opacity: .8; }
+.prediction.selected { border: 2px solid var(--lite); padding: 9px 11px; background: var(--lite-soft); color: var(--navy); font-weight: 800; opacity: 1; }
+.action-row { display: grid; grid-template-columns: 1fr auto; gap: 9px; margin-top: 14px; }
+.action-row .btn { width: 100%; }
+.run-hint { min-height: 1.4em; margin: 7px 0 0; color: var(--ink-2); font-size: calc(var(--u) * .82); }
+
+/* The experiment's progress: a bar that fills, and a label naming the phase. */
+.progress { margin-top: 10px; }
+.progress-bar { height: 8px; overflow: hidden; background: var(--cream-deep); border-radius: 999px; }
+.progress-bar span { display: block; height: 100%; width: 0; background: var(--gold); border-radius: 999px; transition: width .2s linear; }
+.progress > span { display: block; margin-top: 5px; color: var(--ink-2); font-size: calc(var(--u) * .8); font-weight: 700; }
+
+/* The finding: what the gauge recorded, against what you predicted. Green
+   when supported, warm when contradicted. */
+.finding { margin-top: 17px; padding: 14px; border-radius: 12px; border-left: 5px solid var(--ok); background: var(--ok-soft); }
+.finding.contradicted { border-left-color: var(--warm); background: #FFF0E2; }
+.finding h3 { margin: 0 0 5px; color: var(--navy); font-size: calc(var(--u) * 1); }
+.finding p { margin: 5px 0; font-size: calc(var(--u) * .9); color: var(--ink); }
+.measure-list { display: grid; gap: 5px; margin: 9px 0; }
+.measure-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding-top: 5px; border-top: 1px solid rgba(0, 33, 68, .15); font-size: calc(var(--u) * .9); }
+.measure-row b:last-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.measure-row .ratio { color: var(--navy); font-size: calc(var(--u) * 1.05); }
+
+/* ---- the instrument -------------------------------------------------------- */
+.instrument { padding: 16px; }
+.instrument .panel-head h3 { color: #fff; }
+.scale-badge { flex: 0 0 auto; padding: 5px 9px; color: var(--navy); background: var(--gold); border-radius: 999px; font-size: calc(var(--u) * .74); font-weight: 900; }
+
+.box-wrap { position: relative; width: 100%; max-width: 100%; background: var(--navy-deep); border-radius: 12px; overflow: hidden; }
+.box-wrap canvas { display: block; width: 100%; max-width: 100%; }
+
+/* The gauges. Every value Live; tabular numerals so a changing reading does
+   not jitter the layout. */
+.gauges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 8px; }
+.gauges div { min-width: 0; padding: 8px 10px; background: var(--navy-2); border-radius: 9px; }
+.gauges span { display: block; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .66); font-weight: 800; text-transform: uppercase; letter-spacing: .07em; }
+.gauges b { display: block; color: #fff; font-size: calc(var(--u) * 1.1); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.gauges small { display: block; color: var(--ink-2-on-navy); font-size: calc(var(--u) * .72); font-variant-numeric: tabular-nums; }
+.gauges .g-wide b { color: var(--gold-lite); }
+
+/* The pressure bar: measured over predicted, one glance. */
+.pbar { margin: 0 0 6px; }
+.pbar-track { position: relative; height: 12px; background: rgba(255,255,255,.12); border-radius: 999px; overflow: hidden; }
+.pbar-track span { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; transition: width .15s linear; }
+.pbar-ideal { background: rgba(255,255,255,.35); }
+.pbar-meas { background: var(--gold); height: 60%; top: 20%; }
+.pbar-key { display: flex; gap: 14px; margin-top: 4px; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .7); }
+.pbar-key i { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 2px; vertical-align: -1px; }
+.pbar-key .swatch-meas { background: var(--gold); }
+.pbar-key .swatch-ideal { background: rgba(255,255,255,.35); }
+
+/* The cue sits on navy here; the shell styles it for a light surface, and its
+   own background keeps the text readable, so nothing to override. */
+
+/* Controls: four sliders and a switch row. Range inputs get the palette so
+   the gold thumb reads as "the thing you move". */
+.controls { margin-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.ctl { min-width: 0; }
+.ctl .control-label { margin-bottom: 2px; }
+.ctl output { margin-left: 6px; padding: 1px 7px; color: var(--navy); background: var(--gold-lite); border-radius: 999px; font-variant-numeric: tabular-nums; font-size: calc(var(--u) * .78); }
+.ctl input[type=range] { width: 100%; margin: 4px 0 2px; accent-color: var(--gold); }
+.ctl input[type=range]:disabled { opacity: .45; }
+.ctl-row { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
+.switch {
+  min-height: 40px; padding: 7px 11px; color: #fff; background: transparent;
+  border: 1px solid var(--line-on-navy); border-radius: 999px; font: inherit; font-size: calc(var(--u) * .82); font-weight: 700; cursor: pointer;
+}
+.switch b { color: var(--gold-lite); }
+.switch[aria-pressed="true"] { background: rgba(255,255,255,.14); border-color: #fff; }
+.switch:hover:not(:disabled) { background: rgba(255,255,255,.2); }
+.switch:disabled { opacity: .45; cursor: default; }
+#ctl-pause[aria-pressed="true"] { background: var(--gold); color: var(--navy); border-color: var(--gold); }
+.ctl-note { grid-column: 1 / -1; margin: 4px 0 0; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .8); line-height: 1.45; }
+.ctl-note b { color: var(--ink-2-on-navy); }
+
+/* The speed histogram. */
+.hist-block { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-on-navy); }
+.hist-head h4 { margin: 2px 0 8px; color: #fff; font-family: Georgia, "Times New Roman", serif; font-size: calc(var(--u) * 1.02); font-weight: 700; }
+#hist-canvas { display: block; width: 100%; max-width: 100%; background: var(--navy-deep); border-radius: 10px; }
+.hist-note { margin: 8px 0 0; color: var(--ink-3-on-navy); font-size: calc(var(--u) * .8); line-height: 1.45; }
+.hist-note b { color: var(--ink-2-on-navy); }
+
+/* ---- stage 4: the sweep card ----------------------------------------------- */
+.sweep-controls { margin: 4px 0 8px; }
+.sweep-progress { margin: 6px 0; color: var(--ink-2); font-size: calc(var(--u) * .84); font-weight: 700; }
+#sweep-canvas { display: block; width: 100%; max-width: 100%; margin-top: 8px; background: #F6FAFC; border: 1px solid var(--line); border-radius: 10px; }
+.sweep-scroll { overflow-x: auto; margin-top: 10px; }
+.sweep-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: calc(var(--u) * .82); }
+.sweep-table th, .sweep-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--line); font-variant-numeric: tabular-nums; }
+.sweep-table th:first-child, .sweep-table td:first-child { text-align: left; }
+.sweep-table th { color: var(--ink-2); font-size: calc(var(--u) * .72); text-transform: uppercase; letter-spacing: .05em; }
+.sweep-table td.z { color: var(--navy); font-weight: 800; }
+.sweep-summary { margin: 10px 0 0; color: var(--ink); font-size: calc(var(--u) * .9); }
+.sweep-summary b { color: var(--navy); }
+
+/* ---- breakpoints ----------------------------------------------------------- */
+@media (max-width: 900px) {
+  .workspace { grid-template-columns: 1fr; }
+  /* On one column the machine goes first: the learner sees the box, then
+     decides. The DOM order stays task-first so the prediction question is
+     read first by assistive technology; this is a visual reorder only. */
+  .workspace > .workbench { order: -1; }
+}
+@media (max-width: 560px) {
+  .gauges { grid-template-columns: 1fr 1fr; }
+  .controls { grid-template-columns: 1fr; }
+  .instrument { padding: 12px; }
+  .action-row { grid-template-columns: 1fr; }
+}
+
+</style>
+<!-- Injected by build.js from the guide's <style id="guide-css"> block. Last
+     in the head so .guide-scope rules win ties inside the notes overlay. -->
+<style>
+.guide-scope { color: #172b42; }
+.guide-scope .g-head { padding-bottom: 9px; margin-bottom: 13px; border-bottom: 5px solid #ecac00; }
+.guide-scope h1 { margin: 0; color: #002144; font-size: 2.3em; line-height: 1.05; }
+.guide-scope .g-sub { margin: 5px 0 0; color: #526a7e; }
+.guide-scope .g-meta { margin: 6px 0 0; color: #002144; font-weight: 700; font-size: .95em; }
+.guide-scope h2 { margin: 15px 0 6px; color: #002144; font-size: 1.4em; break-after: avoid; }
+.guide-scope h3 { margin: 11px 0 4px; color: #006a98; font-size: 1.1em; break-after: avoid; }
+.guide-scope p { margin: 5px 0; }
+.guide-scope ul, .guide-scope ol { margin: 5px 0 8px 20px; padding: 0; }
+.guide-scope li { margin: 4px 0; }
+.guide-scope .lead { font-size: 1.1em; }
+.guide-scope .box { margin: 10px 0; padding: 9px 11px; background: #eef8fc; border-left: 5px solid #00a4e3; break-inside: avoid; }
+.guide-scope .warning { background: #fff6d9; border-left-color: #ecac00; }
+.guide-scope .say { margin: 8px 0; padding: 8px 11px; background: #f7f0e3; border-left: 5px solid #002144; font-style: italic; break-inside: avoid; }
+.guide-scope .mis { margin: 8px 0; padding: 9px 11px; background: #fdf1ec; border-left: 5px solid #c63f1d; break-inside: avoid; }
+.guide-scope .mis b { color: #9a2f13; }
+.guide-scope .goal { margin: 5px 0 5px 20px; padding: 0; }
+.guide-scope .formula { margin: 9px 0; padding: 10px; color: white; background: #002144; border-radius: 4px; text-align: center; font: bold 1.3em Georgia, serif; }
+.guide-scope .scroll { overflow-x: auto; }
+.guide-scope table { width: 100%; margin: 7px 0 11px; border-collapse: collapse; break-inside: avoid; }
+.guide-scope .scroll table { min-width: 380px; }
+.guide-scope th, .guide-scope td { padding: 6px 7px; text-align: left; vertical-align: top; border: 1px solid #b8cad8; }
+.guide-scope th { color: white; background: #002144; font-size: .9em; }
+.guide-scope .small { font-size: .9em; color: #526a7e; }
+.guide-scope code { font-family: ui-monospace, Consolas, monospace; font-size: .95em; }
+.guide-scope a { color: #006a98; }
+.guide-scope .page-break { break-before: page; page-break-before: always; }
+.guide-scope .g-foot { margin-top: 16px; padding-top: 7px; color: #526a7e; border-top: 1px solid #b8cad8; font-size: .85em; }
+</style>
+</head>
+<body>
+
+<header class="top" id="brandbar">
+  <div class="topline">
+    <div class="brandline">
+      <span class="brand-kicker">Murray State University · Part four · Example projects</span>
+      <h1>Ideal Gas Law Simulator</h1>
+      <div class="msu-brand">Murray State University</div>
+    </div>
+    <div class="top-tools">
+      <button class="icon-btn notes-open" type="button" title="Open Presenter Notes" aria-label="Open Presenter Notes">Notes</button>
+      <button class="icon-btn guide-open" type="button" id="guide-open" title="Guide" aria-label="Guide"><span aria-hidden="true">?</span><span class="icon-label">Guide</span></button>
+      <button class="icon-btn" type="button" id="settings-open" title="Settings" aria-label="Settings"><span aria-hidden="true">&#9881;</span><span class="icon-label">Settings</span></button>
+    </div>
+  </div>
+  <!-- A1. Four stages, none gated: each is an independent experiment on the
+       same box, and a presenter may open on any of them. The evidence gate is
+       inside each stage — the guided experiment stays locked until a
+       prediction is chosen — so the commitment is still real. -->
+  <nav class="stages" role="tablist" aria-label="Ideal gas law lesson stages">
+    <button class="stage-tab" type="button" role="tab" id="tab-1" aria-controls="stage-1" aria-selected="true" tabindex="0">
+      <span class="stage-mark" aria-hidden="true">1</span><span>Add particles</span><small>Where does pressure come from?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-2" aria-controls="stage-2" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">2</span><span>Heat it</span><small>What does temperature do to the walls?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-3" aria-controls="stage-3" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">3</span><span>Squeeze it</span><small>Does half the room mean twice the pressure?</small>
+    </button>
+    <button class="stage-tab" type="button" role="tab" id="tab-4" aria-controls="stage-4" aria-selected="false" tabindex="-1">
+      <span class="stage-mark" aria-hidden="true">4</span><span>Test the law</span><small>Does P·A = N·T survive, and when does it fail?</small>
+    </button>
+  </nav>
+</header>
+
+<main>
+
+<!-- ══════════════════════ STAGE 1 · add particles ══════════════════════════
+     ONE BOX, FOUR EXPERIMENTS. The instrument — the canvas, the gauges, the
+     controls, the speed histogram — appears exactly once, inside stage 1's
+     .activity-host, and app.js relocates #activity into the active stage's
+     host on every stage change (the ion-flight pattern). Four copies would
+     mean four canvases, four contexts and four states to keep in step, and
+     Reset would have to rewind all of them. -->
+
+<section class="stage on" id="stage-1" role="tabpanel" aria-labelledby="tab-1" tabindex="-1">
+  <section class="stage-intro" aria-labelledby="stage-1-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 1</span>
+      <h2 id="stage-1-title">Pressure is a tally of wall hits</h2>
+      <p class="stage-question">Double the number of particles in the same box at the same temperature. What does the pressure do?</p>
+      <p class="refresh"><b>Before you start.</b> The box holds tiny <b>particles</b> that fly in straight lines and
+        bounce off the walls. <b>Pressure</b> is the push the walls feel: this page measures it by adding up the
+        momentum every bounce hands to a wall, per second, per unit of wall. Nothing about the gas law is
+        typed into the simulation &mdash; the gauge reads what the particles actually do.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="0" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 1 learning guide">
+      <article><span>Predict</span><p>Twice the particles, same box, same temperature: does the pressure double, stay put, or rise by less?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit to a prediction, then press <b>Run: double the particles</b> and watch the pressure gauge before and after.</p></article>
+      <article><span>Takeaway</span><p>Pressure is the running tally of wall hits: twice the particles means twice the hits per second, and twice the pressure.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="0">
+   <div class="activity" id="activity">
+    <!-- #activity is a wrapper INSIDE host 0, never the host itself:
+         appending a node into itself throws HierarchyRequestError. -->
+    <div class="workspace">
+
+      <!-- The task panel is LIGHT: it is where the learner decides and reads
+           evidence. The instrument beside it is NAVY: the machine. -->
+      <section class="task-panel" aria-labelledby="task-title">
+        <span class="panel-kicker"><span class="k-scripted">Scripted</span> the guided experiment for this stage</span>
+        <h3 id="task-title"></h3>
+        <p class="task-purpose" id="task-purpose"></p>
+
+        <fieldset>
+          <legend id="prediction-question"></legend>
+          <span class="control-label" id="prediction-label">Your prediction
+            <span class="why">Commit before you run. The experiment stays locked until you do, and the list locks while it runs &mdash; the commitment is the point.</span></span>
+          <div class="prediction-list" id="prediction-list" aria-describedby="prediction-label"></div>
+        </fieldset>
+        <div class="action-row">
+          <button class="btn" type="button" id="run-button" disabled>Choose a prediction first</button>
+          <button class="btn ghost" type="button" id="again-button" hidden>Run again</button>
+        </div>
+        <p class="run-hint" id="run-hint">The experiment measures for a few seconds, makes one change, and measures again.</p>
+        <div class="progress" id="run-progress" hidden aria-live="polite">
+          <div class="progress-bar" aria-hidden="true"><span id="progress-fill"></span></div>
+          <span id="progress-label"></span>
+        </div>
+
+        <section class="finding" id="finding" aria-live="polite" hidden>
+          <h3 id="finding-verdict"></h3>
+          <div class="measure-list" id="measure-list"></div>
+          <p id="finding-explanation"></p>
+          <p id="finding-conclusion"></p>
+        </section>
+      </section>
+
+      <section class="workbench instrument" id="instrument-panel" aria-label="The gas box, its gauges and its controls">
+        <div class="panel-head">
+          <div>
+            <span class="panel-kicker"><span class="k-live">Live</span> every number here is measured from the particles on this device</span>
+            <h3>Gas in a box</h3>
+          </div>
+          <span class="scale-badge" id="speed-badge">2&times; time</span>
+        </div>
+        <div class="box-wrap">
+          <canvas id="box-canvas" aria-label="Particles moving in a rectangular box whose right wall is a piston; walls flash where they are hit"></canvas>
+        </div>
+
+        <!-- A3: the gauges. Every one is Live; the ± band under pressure is
+             Reasoned and says so in Details. -->
+        <div class="gauges" aria-label="Gauges">
+          <div><span>Particles N</span><b id="g-n">&ndash;</b></div>
+          <div><span>Temperature T</span><b id="g-t">&ndash;</b></div>
+          <div><span>Area A</span><b id="g-a">&ndash;</b></div>
+          <div class="g-wide"><span>Pressure, measured</span><b id="g-p">&ndash;</b><small id="g-p-note">from wall hits</small></div>
+          <div class="g-wide"><span>Pressure, predicted N&middot;T&nbsp;/&nbsp;A</span><b id="g-pi">&ndash;</b><small id="g-z">ratio &ndash;</small></div>
+          <div><span>Wall hits / s</span><b id="g-hits">&ndash;</b></div>
+        </div>
+        <div class="pbar" aria-hidden="true">
+          <div class="pbar-track"><span class="pbar-ideal" id="pbar-ideal"></span><span class="pbar-meas" id="pbar-meas"></span></div>
+          <div class="pbar-key"><span><i class="swatch-meas"></i>measured</span><span><i class="swatch-ideal"></i>predicted</span></div>
+        </div>
+
+        <!-- A4. The observation cue, one screen from the controls. -->
+        <p class="obs-cue" id="cue-core" role="status" aria-live="polite"></p>
+
+        <div class="controls" id="controls">
+          <div class="ctl">
+            <label class="control-label" for="ctl-n">Particles N <output id="out-n" for="ctl-n">240</output>
+              <span class="why">How many particles are in the box. Stage 1's variable: more particles means more wall hits per second.</span></label>
+            <input type="range" id="ctl-n" min="10" max="600" step="10" value="240">
+          </div>
+          <div class="ctl">
+            <label class="control-label" for="ctl-t">Temperature T <output id="out-t" for="ctl-t">300</output>
+              <span class="why">The thermostat's target. Temperature here is the particles' average kinetic energy, on a scale chosen to read like kelvin.</span></label>
+            <input type="range" id="ctl-t" min="50" max="1200" step="10" value="300">
+          </div>
+          <div class="ctl">
+            <label class="control-label" for="ctl-w">Piston &mdash; box width <output id="out-w" for="ctl-w">100</output>
+              <span class="why">Slides the right wall in or out. Stage 3's variable: less room means each wall is hit more often.</span></label>
+            <input type="range" id="ctl-w" min="40" max="100" step="1" value="100">
+          </div>
+          <div class="ctl">
+            <label class="control-label" for="ctl-r">Particle size <output id="out-r" for="ctl-r">0.35</output>
+              <span class="why">The radius of every particle. Stage 4's variable: the ideal law assumes particles take up no room at all.</span></label>
+            <input type="range" id="ctl-r" min="0.35" max="1" step="0.05" value="0.35">
+          </div>
+          <div class="ctl-row" role="group" aria-label="Simulation switches">
+            <button class="switch" type="button" id="ctl-thermo" aria-pressed="true">Thermostat <b>on</b></button>
+            <button class="switch" type="button" id="ctl-coll" aria-pressed="true">Collisions <b>on</b></button>
+            <button class="switch" type="button" id="ctl-pause" aria-pressed="false">Running</button>
+            <button class="switch" type="button" id="ctl-speed" aria-pressed="false">Speed <b>2&times;</b></button>
+            <button class="switch" type="button" id="ctl-samespeed">Start all at one speed</button>
+          </div>
+          <p class="ctl-note">The <b>thermostat</b> nudges every speed toward the target temperature, like a water bath. Switch it off and the gas keeps whatever energy it has &mdash; then push the piston in and watch <b>T</b>.</p>
+        </div>
+
+        <div class="hist-block">
+          <div class="hist-head">
+            <span class="panel-kicker"><span class="k-live">Live</span> the bars are the particles now; the curve is the 2D Maxwell distribution at the measured T</span>
+            <h4>How fast are they going?</h4>
+          </div>
+          <canvas id="hist-canvas" aria-label="Histogram of particle speeds with the theoretical Maxwell distribution drawn over it"></canvas>
+          <p class="hist-note">Bars: how many particles are at each speed right now. Line: the shape a gas at this temperature settles into once the particles have collided enough. Press <b>Start all at one speed</b> to watch it get there.</p>
+        </div>
+      </section>
+    </div>
+   </div>
+  </div>
+
+  <section class="check" aria-labelledby="check-1-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-1-title">You doubled the particles and the measured pressure roughly doubled. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="The wall-hits readout doubled too. Each hit hands the wall the same momentum on average, because the temperature did not change; there were simply twice as many of them per second.">Twice as many particles means twice as many wall hits per second</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The temperature gauge stayed at its target, and temperature is the average kinetic energy — so the average hit was exactly as hard as before. What changed was the count of hits, not their strength.">Each particle hits harder when the box is crowded</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Try it with Collisions switched off: the pressure reading is the same. A collision between two particles swaps momentum between them and never touches a wall. Only wall hits register on the gauge.">The particles bounce off each other more, and that pushes on the walls</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 2 · heat it ═══════════════════════════════ -->
+<section class="stage" id="stage-2" role="tabpanel" aria-labelledby="tab-2" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-2-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 2</span>
+      <h2 id="stage-2-title">Hotter particles hit harder and more often</h2>
+      <p class="stage-question">Double the temperature with the same particles in the same box. Does the pressure double, quadruple, or rise by about 1.4&times;?</p>
+      <p class="refresh"><b>Before you start.</b> In this model <b>temperature</b> is nothing more than the particles' average
+        kinetic energy: hotter means faster. Kinetic energy goes as speed <em>squared</em>, so doubling the
+        temperature raises speeds by only <b>&radic;2 &asymp; 1.41</b>. Stage 1 found that pressure counts wall hits;
+        now ask what a faster particle does to each hit, and to how often it hits.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="1" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 2 learning guide">
+      <article><span>Predict</span><p>Temperature 300 to 600, same N, same box. Does pressure go 2&times;, 4&times;, or 1.4&times;?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run: double the temperature</b>. Watch the speed histogram widen and the wall-hits readout climb.</p></article>
+      <article><span>Takeaway</span><p>Temperature is the particles' average kinetic energy, and pressure rises in step with it: hotter particles hit harder <em>and</em> more often.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="1"></div>
+
+  <section class="check" aria-labelledby="check-2-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-2-title">Doubling the temperature doubled the pressure. Faster particles hit harder &mdash; so why not quadruple?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Doubling T raises the typical speed by √2, not 2. Each hit hands over √2 times the momentum, and hits come √2 times as often — and √2 × √2 = 2. Pressure tracks speed squared, which is exactly what temperature is.">Speeds rose by only &radic;2; hits got &radic;2 harder <em>and</em> &radic;2 more frequent, and &radic;2 &times; &radic;2 = 2</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The thermostat sets the temperature and nothing else; it never touches the walls. The pressure gauge counts momentum arriving at the walls, and that count doubled because the particles did.">The thermostat capped the pressure at double</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Pressure is momentum delivered per second. A faster particle delivers more per second, not less: it returns to the wall sooner and arrives with more momentum each time. Both factors push the same way.">Faster particles spend less time pressing on each wall, which cancels part of the gain</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 3 · squeeze it ═════════════════════════════ -->
+<section class="stage" id="stage-3" role="tabpanel" aria-labelledby="tab-3" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-3-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 3</span>
+      <h2 id="stage-3-title">Half the room, twice the hits</h2>
+      <p class="stage-question">Slide the piston in until the box is half as wide, with the thermostat holding the temperature. Does the pressure double?</p>
+      <p class="refresh"><b>Before you start.</b> The right wall of the box is a <b>piston</b> that slides in and out. The
+        <b>thermostat</b> is switched on, so the particles keep the same average speed no matter what the piston
+        does. Stages 1 and 2 changed how many particles there are and how fast they go; this stage changes only
+        how far they travel between one wall and the next.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="2" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 3 learning guide">
+      <article><span>Predict</span><p>Box width 100 to 50, same N, thermostat on. Does pressure double, stay the same, or rise by 1.4&times;?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run: halve the box</b>. Afterwards, switch the <b>Thermostat</b> off, drag the <b>Piston</b> in yourself, and watch <b>T</b>.</p></article>
+      <article><span>Takeaway</span><p>At fixed temperature, pressure &times; area stays constant: half the room means every wall is hit twice as often.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="2"></div>
+
+  <section class="check" aria-labelledby="check-3-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-3-title">The box is half as wide, the thermostat held T at 300, and the pressure doubled. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="Same speeds, half the distance to cross: each particle reaches a wall twice as often, so the wall-hits readout doubled while each hit stayed the same size. Pressure × area held steady.">Same speeds, half the distance between walls, so every wall is hit twice as often</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The temperature gauge read 300 throughout, and temperature is the average kinetic energy, so each hit handed over the same momentum as before. Being close together does not make a particle push harder; it makes it reach a wall sooner.">The particles are squeezed together, so each one pushes harder</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The moving piston does hand energy to every particle that bounces off it — but with the thermostat on, that energy was removed as fast as it arrived, and T stayed at 300. Switch the thermostat off and push the piston in: now the temperature climbs, and that is a different experiment.">The piston added energy to the gas, and that is what raised the pressure</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+<!-- ══════════════════════ STAGE 4 · test the law ═══════════════════════════ -->
+<section class="stage" id="stage-4" role="tabpanel" aria-labelledby="tab-4" tabindex="-1" hidden>
+  <section class="stage-intro" aria-labelledby="stage-4-title">
+    <div class="intro-copy">
+      <span class="eyebrow">Demo 17 of 17 &middot; Part four &middot; Physics &middot; Stage 4</span>
+      <h2 id="stage-4-title">A law is a prediction, so test it</h2>
+      <p class="stage-question">P&middot;A = N&middot;T predicts every pressure this box should show. Does the measurement agree &mdash; and what happens when the particles take up real room?</p>
+      <p class="refresh"><b>Before you start.</b> The three stages so far each doubled one thing. The <b>ideal gas law</b>
+        puts them together: pressure &times; area equals particle count &times; temperature, <b>P&middot;A = N&middot;T</b>
+        in this model's units. The gauges have shown a <b>ratio</b> all along &mdash; measured pressure divided by
+        that prediction. Near 1, the law holds. The law's quiet assumption is that particles take up no room at
+        all; this stage grows them until that stops being true.</p>
+    </div>
+    <button class="details-trigger" type="button" data-details="3" aria-label="Details">Details <span aria-hidden="true">&rarr;</span></button>
+    <div class="lesson-strip" aria-label="Stage 4 learning guide">
+      <article><span>Predict</span><p>Grow the particles to about three times their radius. Will the measured pressure sit above the law's prediction, on it, or below?</p><span class="echo" hidden></span></article>
+      <article><span>Try</span><p>Commit, then press <b>Run: grow the particles</b>. Then use <b>Sweep the box</b>, <b>Sweep temperature</b> and <b>Sweep particle count</b> below to plot the law against the measurements.</p></article>
+      <article><span>Takeaway</span><p>The ideal gas law is what tiny, non-interacting particles do on average. It holds here to within the noise, and drifts as soon as the particles take up real room.</p></article>
+    </div>
+  </section>
+
+  <div class="activity-host" data-activity-host="3"></div>
+
+  <!-- The sweep tool: a LIGHT panel because it is evidence to read, not a
+       machine to drive. Each point is a fresh measurement on the box above. -->
+  <section class="card sweep-card" aria-labelledby="sweep-heading">
+    <div class="panel-head">
+      <div>
+        <span class="panel-kicker"><span class="k-live">Live</span> each point is a fresh measurement on the box above; the diagonal is the prediction</span>
+        <h3 id="sweep-heading">Sweep the law</h3>
+      </div>
+    </div>
+    <p class="panel-lede">Hold two of <b>N</b>, <b>T</b> and <b>A</b> and step the third through five values. Each step
+      settles, then measures for a few seconds. Points on the diagonal mean the measurement matched
+      N&middot;T&nbsp;/&nbsp;A. Run a sweep with the particles small, then grow them and run it again.</p>
+    <span class="control-label">Which variable to sweep
+      <span class="why">Each button holds the other two fixed at their current settings and steps one variable through five values, at whatever particle size is set above.</span></span>
+    <div class="row sweep-controls" role="group" aria-label="Sweeps">
+      <button class="btn" type="button" id="sweep-area">Sweep the box (P vs A)</button>
+      <button class="btn" type="button" id="sweep-temp">Sweep temperature (P vs T)</button>
+      <button class="btn" type="button" id="sweep-count">Sweep particle count (P vs N)</button>
+      <button class="btn ghost" type="button" id="sweep-clear">Clear points</button>
+    </div>
+    <p class="obs-cue" id="cue-4" role="status" aria-live="polite"></p>
+    <div class="sweep-progress" id="sweep-progress" hidden aria-live="polite"><span id="sweep-progress-label"></span></div>
+    <canvas id="sweep-canvas" aria-label="Measured pressure plotted against predicted pressure; the diagonal is where the ideal gas law holds exactly"></canvas>
+    <div class="sweep-scroll">
+      <table class="sweep-table">
+        <thead><tr><th>Sweep</th><th>N</th><th>T</th><th>A</th><th>Size r</th><th>Predicted P</th><th>Measured P</th><th>Ratio Z</th></tr></thead>
+        <tbody id="sweep-body"></tbody>
+      </table>
+    </div>
+    <p class="sweep-summary" id="sweep-summary">No sweeps yet.</p>
+  </section>
+
+  <section class="check" aria-labelledby="check-4-title" data-refutation="true" data-correct-lead="Supported." data-wrong-lead="Not what the gauge showed.">
+    <span class="eyebrow">Check yourself</span>
+    <h3 id="check-4-title">With big particles the walls felt more pressure than N&middot;T&nbsp;/&nbsp;A predicts. Why?</h3>
+    <div class="check-options">
+      <button class="check-option correct" type="button" aria-pressed="false"
+        data-feedback="The particles' own bodies take up part of the box, so the space they actually fly through is smaller than A. Smaller effective area at the same N and T means more pressure — the same lesson as stage 3, arriving by a different route. This is the correction a real-gas equation makes with its 'b' term.">The particles' own bodies take up room, so the space they actually move in is smaller than the box</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="Every particle in this model has mass 1 at every size, and the temperature gauge read the same 300 before and after — so each hit carried the same momentum on average. Size changed how much room was left, not how hard anything hit.">Bigger particles are heavier, so each hit is harder</button>
+      <button class="check-option wrong" type="button" aria-pressed="false"
+        data-feedback="The shift was tens of percent, many times the ± band the gauge shows, and it comes back in the same direction every run. Noise scatters both ways and averages out; this does not.">Nothing real changed &mdash; the reading is just noise</button>
+    </div>
+    <p class="check-feedback" role="status" aria-live="polite"></p>
+  </section>
+</section>
+
+</main>
+
+<div class="footer">
+  <span><b>Ideal Gas Law Simulator</b> &middot; Bryant Harrison &middot; Murray State University</span><br>
+  <span>One HTML file &middot; runs offline &middot; idealized teaching model</span>
+  <div class="footer-tools">
+    <button type="button" class="footer-link guide-open">Guide</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link" id="presentation-foot">Presentation mode</button><span aria-hidden="true">&middot;</span>
+    <button type="button" class="footer-link notes-open">Presenter Notes</button><span aria-hidden="true">&middot;</span>
+    <a class="footer-link" href="presenter-guide.html" target="_blank" rel="noopener">Printable presenter guide</a>
+  </div>
+</div>
+
+<!-- ══════════════════════ A7 GUIDE · opens on load ════════════════════════ -->
+<dialog class="lesson-dialog" id="guide" aria-labelledby="guide-title">
+  <div class="lesson-dialog-head">
+    <h2 id="guide-title">Guide<span class="head-sub">how to use this demo</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body">
+    <p class="lede">One question across four stages: <b>where does gas pressure come from, and how far does P&middot;A = N&middot;T get you?</b></p>
+    <p class="note">Where this sits: an AI-built classroom tool from Part four. The gas law is never typed into the
+      simulation &mdash; pressure is measured from the particles, and the law is a prediction the gauges test.</p>
+    <ol>
+      <li><b>Add particles.</b> Commit to a prediction, press <b>Run: double the particles</b>, and read the pressure gauge before and after.</li>
+      <li><b>Heat it.</b> Same routine with <b>Run: double the temperature</b>; watch the speed histogram widen.</li>
+      <li><b>Squeeze it.</b> <b>Run: halve the box</b> with the thermostat on; then switch the <b>Thermostat</b> off and drag the <b>Piston</b> yourself.</li>
+      <li><b>Test the law.</b> <b>Run: grow the particles</b>, then plot the law with <b>Sweep the box</b>, <b>Sweep temperature</b> and <b>Sweep particle count</b>.</li>
+    </ol>
+    <h3>Getting around</h3>
+    <p>The four tabs switch stages; the box and its controls come with you. <b>Details</b> opens the formula, assumptions and
+      sources for the current stage. <b>Guide</b> reopens this card; <b>Settings</b> holds <b>Open Presenter Notes</b>,
+      <b>Presentation mode</b> and <b>Reset</b>.</p>
+    <h3>Time</h3>
+    <p>About fifteen minutes for the four guided experiments: each one measures for a few seconds, changes one thing, and
+      measures again. A sweep in stage 4 takes ten to fifteen seconds.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Start with Add particles</button></form>
+</dialog>
+
+<!-- ══════════════════════ A8 SETTINGS · the contract triad ════════════════ -->
+<dialog class="lesson-dialog" id="settings" aria-labelledby="settings-title">
+  <div class="lesson-dialog-head">
+    <h2 id="settings-title">Settings</h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body" id="settings-menu">
+    <h3>Presenter notes</h3>
+    <p class="setnote">The printable presenter guide, on screen: timings, the beats to hit, the numbers this model
+      produces, and the misconceptions to name.</p>
+    <p><button class="btn notes-open" type="button">Open Presenter Notes</button></p>
+    <h3>Presentation mode</h3>
+    <p class="setnote">Scales the whole page up one notch for projecting to a room and puts a <b>Notes</b> button in the header.</p>
+    <p><button class="btn ghost" type="button" id="presentation-btn" aria-pressed="false">Presentation mode</button></p>
+    <h3>Reset</h3>
+    <p class="setnote">Back to the start: stage 1, a fresh gas of 240 small particles at 300 in a full-width box with the
+      thermostat on, no predictions, no findings, the sweep chart cleared, and every disclosure closed. The page does not
+      reload, so nothing flashes on a projector. Presentation mode stays as you set it.</p>
+    <p><button class="btn ghost" type="button" id="reset-btn">Reset</button></p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Done</button></form>
+</dialog>
+
+<!-- ══════════════════════ A5 DETAILS · one section per stage ══════════════ -->
+<dialog class="details-sheet" id="details" aria-labelledby="details-title">
+  <div class="details-drawer">
+    <div class="lesson-dialog-head">
+      <h2 id="details-title">Details<span class="head-sub" id="details-subtitle">Add particles</span></h2>
+      <form method="dialog"><button type="submit" aria-label="Close Details">&times;</button></form>
+    </div>
+    <div class="details-body" tabindex="0" role="region" aria-label="Stage details">
+
+      <section class="details-stage on" data-details-stage="0">
+        <span class="eyebrow">What is live</span>
+        <h3>The pressure gauge reads the walls, not a formula</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> particle motion, wall hits, pressure, temperature, the histogram</span>
+          <p>Every particle's position and velocity is advanced on this device many times per frame. When one reaches a
+            wall it bounces, and the momentum it hands over is added to that wall's tally. The pressure gauge is that
+            tally, per second, per unit of wall length. Temperature is computed from the particles' kinetic energy.
+            Nothing is looked up and nothing about the gas law is built in.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the box, the starting gas and the guided experiment</span>
+          <p>A 100 &times; 60 box, 240 particles at a temperature of 300 and a particle radius of 0.35 are chosen teaching
+            values. The guided experiment is a fixed routine: measure for four seconds of simulated time, double N,
+            wait a moment, measure again.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span> the &plusmn; band under the pressure reading</span>
+          <p>A gauge on a few hundred particles is noisy: the band is the reading divided by the square root of the
+            number of wall hits counted, a rough rule of thumb for a random count, not a confidence interval. More
+            particles, more time, or a smaller box all steady it.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">P = (momentum handed to the walls) &divide; (time &times; total wall length)</div>
+        <p>A particle of mass 1 moving at speed <i>v</i><sub>&perp;</sub> toward a wall leaves with the same speed the other
+          way, so the wall receives momentum 2<i>v</i><sub>&perp;</sub>. Add every such hit over a stretch of time,
+          divide by that time and by the length of wall, and you have a pressure. Doubling the number of particles
+          doubles the number of hits per second while leaving each hit the same, so the pressure doubles.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Two dimensions.</b> The box is flat, so "pressure" is force per unit <em>length</em> of wall and "volume"
+            is <em>area</em>. Every relationship the stages find holds in 3D too; only the constants change.</li>
+          <li><b>Reduced units.</b> Every particle has mass 1 and Boltzmann's constant is 1, so temperature is half the
+            mean squared speed and the gas law reads <b>P&middot;A = N&middot;T</b> with no constant in it. The default
+            temperature of 300 is chosen to look like room temperature in kelvin; it is not kelvin.</li>
+          <li><b>Perfectly elastic walls</b> at rest (the piston aside), which hand back exactly the speed they receive.</li>
+          <li><b>A finite, noisy gauge.</b> Real gases have ~10<sup>23</sup> particles and a gauge that averages over
+            all of them; this box has a few hundred, so the reading wanders. The running average smooths about one
+            second of simulated time.</li>
+          <li><b>The animation runs at 2&times; simulated time by default</b>, adjustable from the Speed switch, so that
+            an experiment finishes in a few seconds.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/chemistry-2e/pages/9-5-the-kinetic-molecular-theory" target="_blank" rel="noopener">OpenStax
+            <i>Chemistry 2e</i>, &sect;9.5 The Kinetic-Molecular Theory</a> &mdash; the postulates this box implements: particles in
+            constant random motion, elastic collisions, pressure arising from collisions with the container walls, and
+            kinetic energy proportional to temperature.</li>
+          <li><a href="https://openstax.org/books/university-physics-volume-2/pages/2-2-pressure-temperature-and-rms-speed" target="_blank" rel="noopener">OpenStax
+            <i>University Physics Volume 2</i>, &sect;2.2 Pressure, Temperature, and RMS Speed</a> &mdash; the derivation of
+            pressure from wall collisions that the gauge here performs numerically.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this is an idealized two-dimensional teaching model built to make one
+          mechanism visible. It does not reproduce any real gas's numbers, and its temperature and pressure scales are
+          the model's own.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="1" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>The same gauge, with temperature as the variable</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the temperature readout, the histogram and the pressure</span>
+          <p>The temperature shown is computed every frame from the particles' actual kinetic energy. The guided
+            experiment rescales every velocity by &radic;2 in one step so the gas is at 600 at once, then measures the
+            walls. The histogram's bars are the particles now; its curve is the 2D Maxwell distribution for the
+            measured temperature, drawn for comparison.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the thermostat</span>
+          <p>The thermostat nudges every speed a little toward the target each step, like a water bath the box is
+            sitting in. It changes only the width of the speed distribution. It is a modelling device, not a claim
+            about any particular apparatus.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">T = &frac12;&langle;v&sup2;&rangle; &nbsp;&nbsp;so&nbsp;&nbsp; v<sub>rms</sub> = &radic;(2T)</div>
+        <p>Doubling T multiplies typical speeds by &radic;2. A particle moving &radic;2 times faster hands the wall
+          &radic;2 times the momentum per hit, and comes back to hit it &radic;2 times as often. The product is 2:
+          pressure is proportional to temperature at fixed N and A.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Temperature is defined by kinetic energy alone.</b> These particles have no rotation, no vibration, no
+            internal structure &mdash; two degrees of freedom each and nothing else.</li>
+          <li><b>The velocity distribution is Maxwellian</b> at the start and stays so, because the thermostat rescales
+            uniformly and disc collisions keep it thermalized. Switch collisions off and start all particles at one
+            speed to see a distribution that is <em>not</em> Maxwellian.</li>
+          <li><b>Every simplification from stage 1 still applies</b> &mdash; two dimensions, reduced units, elastic walls,
+            a noisy finite gauge.</li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/chemistry-2e/pages/9-5-the-kinetic-molecular-theory" target="_blank" rel="noopener">OpenStax
+            <i>Chemistry 2e</i>, &sect;9.5</a> &mdash; average kinetic energy proportional to temperature; the
+            Maxwell&ndash;Boltzmann distribution and how it widens with temperature.</li>
+          <li>The 2D speed density drawn on the histogram, <i>f</i>(<i>v</i>) = (<i>v</i>/<i>T</i>)&middot;e<sup>&minus;<i>v</i>&sup2;/2<i>T</i></sup>,
+            is the two-dimensional case of that distribution with <i>m</i> = <i>k</i><sub>B</sub> = 1; it is computed
+            in this page's model and checked there to integrate to 1, not quoted from a table.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the claim is that pressure tracks temperature for a gas of
+          structureless particles. Real molecules store energy in rotation and vibration too, which changes heat
+          capacities but not this proportionality.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="2" hidden>
+        <span class="eyebrow">What is live</span>
+        <h3>A moving wall, and what it does with the thermostat off</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> the piston, the pressure and the temperature</span>
+          <p>The piston slides at a fixed 12 units per second toward wherever the slider is set. A particle that bounces
+            off a wall moving at speed <i>u</i> leaves with its normal speed changed by 2<i>u</i>: a wall moving inward
+            speeds it up. That is the entire mechanism by which compressing a gas heats it, and this page computes it
+            for every bounce rather than assuming it.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-scripted">Scripted</span> the guided experiment holds the thermostat on</span>
+          <p>The routine measures, slides the piston from width 100 to 50, waits for it to arrive and for the gas to
+            settle, and measures again &mdash; with the thermostat holding T at 300 throughout, so that the only thing that
+            changed is the room. Switching the thermostat off is left to you, on purpose.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">P&middot;A = constant &nbsp;(fixed N and T)</div>
+        <p>With the same speeds and half the width, a particle crossing the box reaches the piston and the left wall
+          twice as often. The top and bottom walls are shorter, so they are hit as often per unit length as before but
+          there is less of them. Add it up and the total momentum per second per unit of wall doubles. This is
+          Boyle's law, arrived at by counting.</p>
+        <p>With the thermostat off, the inward-moving piston hands energy to every particle it meets, so T rises and the
+          pressure rises by more than the room alone would give. That is adiabatic compression &mdash; the reason a bicycle
+          pump gets warm.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>The piston moves at one fixed speed</b>, which is a sizeable fraction of the particles' own speeds.
+            The compression is therefore not slow and gentle, and with the thermostat off it heats the gas more than
+            a slow one would. The direction of the effect is right; its size depends on the piston speed.</li>
+          <li><b>The thermostat is idealized</b> &mdash; it removes energy at a fixed rate everywhere at once. A real
+            water bath conducts heat through the walls with a lag.</li>
+          <li><b>Every simplification from stages 1 and 2 still applies.</b></li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/university-physics-volume-2/pages/2-2-pressure-temperature-and-rms-speed" target="_blank" rel="noopener">OpenStax
+            <i>University Physics Volume 2</i>, &sect;2.2</a> &mdash; pressure from wall collisions, from which Boyle's law
+            follows at fixed temperature.</li>
+          <li>The moving-wall reflection rule, <i>v</i>&prime; = &minus;<i>v</i> + 2<i>u</i>, is an exact consequence of
+            an elastic bounce seen from the wall's own frame; it is coded in this page's model, not quoted.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> this stage shows why pressure and area trade off at fixed
+          temperature, and why compression heats a gas that is not held cold. It reports no real gas's compressibility
+          and no real pump's temperature rise.</div>
+      </section>
+
+      <section class="details-stage" data-details-stage="3" hidden>
+        <span class="eyebrow">What is live, and what is estimated</span>
+        <h3>The sweeps are measured; the size correction is a first-order estimate</h3>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-live">Live</span> every sweep point and every ratio</span>
+          <p>Each sweep steps one of N, T or A through five values. At every step the gas settles for a moment and the
+            walls are measured for three seconds of simulated time; the point plotted is that measurement against
+            N&middot;T&nbsp;/&nbsp;A for the same step. The ratio Z = P&middot;A&nbsp;/&nbsp;(N&middot;T) is measured, not
+            fitted.</p>
+        </div>
+        <div class="claim">
+          <span class="panel-kicker"><span class="k-reasoned">Reasoned</span><span class="k-qual">first-order estimate, overstates the effect at higher packing</span> the "expected drift" for big particles</span>
+          <p>Two particles of radius <i>r</i> cannot bring their centres closer than 2<i>r</i>, so each pair excludes a
+            disc of area 4&pi;<i>r</i>&sup2;; sharing that between the two gives about 2&pi;<i>r</i>&sup2; of lost room
+            per particle. With N&middot;2&pi;<i>r</i>&sup2; of the box unavailable, P &asymp; N&middot;T&nbsp;/&nbsp;(A &minus;
+            N&middot;2&pi;<i>r</i>&sup2;), so Z &asymp; 1&nbsp;/&nbsp;(1 &minus; 2&eta;) where &eta; is the fraction of the
+            box the particles cover. That is the authors' leading-order estimate from the geometry, offered for
+            direction and rough size. It is not a fitted equation of state.</p>
+        </div>
+        <h3>How it works</h3>
+        <div class="details-formula">Z = P&middot;A &divide; (N&middot;T) &nbsp;&nbsp;&mdash;&nbsp;&nbsp; 1 when the law holds</div>
+        <p>The ideal gas law assumes particles occupy no space and never interact except at the walls. Small particles
+          with collisions on come close to that: Z sits within a few percent of 1. Grow them and the room they leave
+          each other shrinks, so the walls are hit more often than the law expects and Z climbs. This is the
+          correction a real-gas equation such as van der Waals makes with its <i>b</i> term. There is no attraction
+          between these particles, so the other van der Waals correction, which lowers pressure, does not appear here.</p>
+        <h3>Assumptions and simplifications</h3>
+        <ul>
+          <li><b>Hard discs, no attraction.</b> Real molecules attract each other weakly at a distance, which pulls Z
+            below 1 at low temperature. This model has only the repulsive core, so it shows one of the two real-gas
+            corrections.</li>
+          <li><b>Even the "small" default is not zero.</b> At radius 0.35 the particles cover about 1.5% of the box,
+            and Z runs a few percent above 1 for that reason. The demo's "the law holds" is "to within a few percent
+            plus noise", and the gauge shows the number.</li>
+          <li><b>Sweeps are short.</b> Three simulated seconds per point keeps a sweep to about fifteen real seconds,
+            at the cost of a few percent of scatter on each point.</li>
+          <li><b>Every simplification from stages 1 to 3 still applies.</b></li>
+        </ul>
+        <h3>Sources</h3>
+        <ul>
+          <li><a href="https://openstax.org/books/chemistry-2e/pages/9-6-non-ideal-gas-behavior" target="_blank" rel="noopener">OpenStax
+            <i>Chemistry 2e</i>, &sect;9.6 Non-Ideal Gas Behavior</a> &mdash; the compressibility factor Z, why molecular
+            volume raises it above 1, and the van der Waals <i>b</i> term this stage's drift corresponds to.</li>
+          <li>The excluded-area estimate above is the authors' own derivation from the disc geometry, as labelled; it is
+            not taken from a source.</li>
+        </ul>
+        <div class="evidence-card"><b>Boundary:</b> the claim is that the ideal gas law holds for tiny non-interacting
+          particles and drifts, in a predictable direction, when they take up room. This page does not measure any
+          real gas's compressibility, and its size correction is an estimate of direction and magnitude, not a fitted
+          law.</div>
+      </section>
+
+    </div>
+    <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to activity</button></form>
+  </div>
+</dialog>
+
+<!-- Presenter notes ARE the printable presenter guide. build.js injects the
+     .guide-scope body of src/demo-guide.html at the marker below, so there is
+     one source and nothing to fetch at runtime. Edit src/demo-guide.html. -->
+<dialog class="lesson-dialog" id="presenter-notes" aria-labelledby="presenter-notes-title">
+  <div class="lesson-dialog-head">
+    <h2 id="presenter-notes-title">Presenter Notes<span class="head-sub">the printable guide, on screen</span></h2>
+    <form method="dialog"><button type="submit" aria-label="Close">&times;</button></form>
+  </div>
+  <div class="lesson-dialog-body guide-host">
+<div class="guide-scope">
+  <div class="g-head">
+    <p class="g-sub">Presenter guide · Kinetic-theory simulator: particles in a box</p>
+    <h1>Ideal Gas Law Simulator</h1>
+    <p class="g-meta">Demo 17 of 17 · Part four, Example projects · About 15 minutes for the four guided experiments, plus 5 for the sweeps</p>
+    <p class="small"><strong>You need:</strong> <code>index.html</code> open in any modern browser, on a projector or on
+      each student's phone. No network, no install, no accounts. Nothing is fetched at runtime, so it works with
+      the wi-fi off.</p>
+  </div>
+
+  <section aria-labelledby="g-goals">
+    <h2 id="g-goals">Learning goals</h2>
+    <p class="small">One per stage, in the learner's own words — these are the four Takeaway cards on screen,
+      verbatim. If a student can say these four things and point at the gauge reading that shows each, the demo has
+      done its job.</p>
+    <ol class="goal">
+      <li>Pressure is the running tally of wall hits: twice the particles means twice the hits per second, and twice the pressure.</li>
+      <li>Temperature is the particles' average kinetic energy, and pressure rises in step with it: hotter particles hit harder <em>and</em> more often.</li>
+      <li>At fixed temperature, pressure × area stays constant: half the room means every wall is hit twice as often.</li>
+      <li>The ideal gas law is what tiny, non-interacting particles do on average. It holds here to within the noise, and drifts as soon as the particles take up real room.</li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="g-path">
+    <h2 id="g-path">Where this sits on the path</h2>
+    <p>An AI-built classroom tool from Part four. Its distinctive move is that <b>the gas law is never typed into the
+      simulation</b>: pressure is measured by adding up the momentum the walls receive, temperature is computed from the
+      particles' kinetic energy, and P·A = N·T is a prediction the gauges test. It does not depend on any earlier demo;
+      the habit it shares with the rest of Part four is naming the boundary between what is measured and what is claimed.</p>
+  </section>
+
+  <section aria-labelledby="g-question">
+    <h2 id="g-question">One question for the session</h2>
+    <p class="lead">Where does gas pressure come from, and how far does P·A = N·T get you?</p>
+    <div class="say">"Every number on this screen is measured from those dots. Nobody told the box the gas law. We are
+      going to change one thing at a time and see whether the gauge does what the law says it should — and then we are
+      going to break the law on purpose."</div>
+  </section>
+
+  <section aria-labelledby="g-units">
+    <h2 id="g-units">Units students see</h2>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Label</th><th>Meaning in this activity</th></tr></thead>
+        <tbody>
+          <tr><td>N</td><td>Number of particles in the box (10 to 600; 240 by default).</td></tr>
+          <tr><td>T</td><td>Temperature: half the mean squared speed, in the model's units. 300 by default because it reads like room temperature in kelvin. <b>It is not kelvin.</b></td></tr>
+          <tr><td>A</td><td>Box area, width × 60. The box is two-dimensional, so "volume" is area.</td></tr>
+          <tr><td>P</td><td>Pressure: momentum handed to the walls, per second, per unit of wall length. Two-dimensional pressure is force per length.</td></tr>
+          <tr><td>Z</td><td>The ratio P·A / (N·T). Exactly 1 when the ideal gas law holds.</td></tr>
+          <tr><td>r</td><td>Particle radius, 0.35 to 1.0. At 0.35 the particles cover about 1.5% of the box; at 1.0, about 13%.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="formula">P · A = N · T &nbsp;&nbsp;(mass = 1, k<sub>B</sub> = 1, two dimensions)</div>
+  </section>
+
+  <section aria-labelledby="g-run" class="page-break">
+    <h2 id="g-run">Run of show</h2>
+    <p class="small">Every stage follows the same routine: read the question, commit to a prediction (the Run button
+      stays locked until one is chosen), press Run, read the finding. The guided experiment measures for four seconds of
+      simulated time, makes one change, settles, and measures again. At the default 2× speed that is about six real
+      seconds. The numbers below are what the model produces at the defaults; a gauge on a few hundred particles wanders
+      by a few percent run to run, and that is worth saying out loud.</p>
+    <div class="scroll">
+      <table>
+        <thead><tr><th>Stage</th><th>Beat</th><th>What the gauge shows</th><th>Say</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>1 · Add particles</b><br><span class="small">~4 min</span></td>
+            <td>Point at the walls flashing gold where they are hit. Ask for the prediction. Press <b>Run: double the particles</b>.</td>
+            <td>P ≈ 12.4 → ≈ 24.8 (2.0×). T stays at 300. Wall hits/s roughly doubles, about 90 → 180.</td>
+            <td>"Same speeds, same walls, twice the bodies. The walls are hit twice as often. That is all pressure is."</td>
+          </tr>
+          <tr>
+            <td><b>2 · Heat it</b><br><span class="small">~4 min</span></td>
+            <td>Ask for the prediction; most rooms split between 2× and 4×. Press <b>Run: double the temperature</b>. Point at the histogram widening.</td>
+            <td>P ≈ 12.4 → ≈ 24.8 (2.0×). Hits/s rise by about 1.4×, not 2×. T reads 600.</td>
+            <td>"Doubling the temperature only made them √2 faster. √2 harder, √2 more often. √2 × √2 is 2."</td>
+          </tr>
+          <tr>
+            <td><b>3 · Squeeze it</b><br><span class="small">~4 min</span></td>
+            <td>Press <b>Run: halve the box</b> with the thermostat on; watch the piston slide. Then switch the <b>Thermostat</b> off and drag the <b>Piston</b> in by hand.</td>
+            <td>P ≈ 12.4 → ≈ 25 (2.0×) with T held at 300; P × A ≈ 74,000 both times. Thermostat off: T climbs past 500 as the piston moves.</td>
+            <td>"Half the distance between walls, twice the hits. Now turn off the water bath and push: the moving wall kicks every particle it meets. That is why a bicycle pump gets warm."</td>
+          </tr>
+          <tr>
+            <td><b>4 · Test the law</b><br><span class="small">~5 min + sweeps</span></td>
+            <td>Press <b>Run: grow the particles</b>. Then run <b>Sweep the box</b> small, grow the particles with the size slider, and run it again.</td>
+            <td>Z ≈ 1.03 at r = 0.35 → Z ≈ 1.3 at r = 1.0. Sweep points sit on the diagonal when small, above it when big.</td>
+            <td>"The law assumed the particles took up no room. Give them room and the space they fly through shrinks. This is the 'b' in van der Waals."</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box warning"><b>If a run comes out 1.9× or 2.1×:</b> that is the finding, not a bug. Point at the ± band under
+      the pressure reading and the hit count in the finding. Ask what would steady it (more particles, more time, a
+      smaller box) and try one. A gauge on 240 particles is exactly as noisy as it looks.</div>
+  </section>
+
+  <section aria-labelledby="g-mis">
+    <h2 id="g-mis">Misconceptions to name</h2>
+    <div class="mis"><b>"Crowded particles push harder."</b> Stage 1 and stage 3 both show T unchanged while P doubles. Each
+      hit carries the same momentum; only the count changed. The temperature gauge is the evidence.</div>
+    <div class="mis"><b>"Double the temperature, four times the pressure."</b> Temperature is speed <em>squared</em>, so speeds
+      rise by √2. The hits/s readout rising by about 1.4× while P rises by 2× separates the two factors on screen.</div>
+    <div class="mis"><b>"Collisions between particles make pressure."</b> Switch Collisions off in stage 1: the reading does
+      not change. Particle–particle collisions swap momentum between particles and never touch a wall. (In stage 4 they
+      matter for a different reason: they are what keeps big particles out of each other's space.)</div>
+    <div class="mis"><b>"The law fails, so the simulation is wrong."</b> Stage 4's drift is the point. The ideal gas law is an
+      approximation with a stated assumption, and the gauge shows where the assumption stops holding.</div>
+  </section>
+
+  <section aria-labelledby="g-bound">
+    <h2 id="g-bound">What this model is, and is not</h2>
+    <ul>
+      <li><b>Two-dimensional, reduced units.</b> Mass 1, k<sub>B</sub> = 1, temperature = half the mean squared speed.
+        Every relationship the stages find holds in three dimensions too; only the constants change. The temperature and
+        pressure scales are the model's own.</li>
+      <li><b>Hard discs with no attraction.</b> The model shows one of the two real-gas corrections (excluded volume,
+        the van der Waals <i>b</i>). The other, attraction pulling Z below 1 at low temperature, is not in it.</li>
+      <li><b>An idealized thermostat</b> that rescales every speed toward the target, like a water bath with no lag.</li>
+      <li><b>A piston at one fixed speed</b>, a sizeable fraction of the particles' speeds, so compression with the thermostat
+        off heats more than a slow one would. The direction is right; the size depends on the piston speed.</li>
+      <li><b>The ± band</b> under the pressure reading is a rule of thumb (reading ÷ √hits), not a confidence interval.</li>
+      <li><b>The excluded-area estimate</b> in stage 4's Details is the authors' first-order derivation from the disc
+        geometry, labelled as such. It gives direction and rough size, not a fitted equation of state.</li>
+    </ul>
+  </section>
+
+  <section aria-labelledby="g-sources">
+    <h2 id="g-sources">Sources and attribution</h2>
+    <ul>
+      <li>OpenStax <i>Chemistry 2e</i>, <a href="https://openstax.org/books/chemistry-2e/pages/9-5-the-kinetic-molecular-theory">§9.5 The Kinetic-Molecular Theory</a>
+        — the postulates the box implements, and the Maxwell–Boltzmann distribution.</li>
+      <li>OpenStax <i>Chemistry 2e</i>, <a href="https://openstax.org/books/chemistry-2e/pages/9-6-non-ideal-gas-behavior">§9.6 Non-Ideal Gas Behavior</a>
+        — the compressibility factor Z and the van der Waals <i>b</i> term.</li>
+      <li>OpenStax <i>University Physics Volume 2</i>, <a href="https://openstax.org/books/university-physics-volume-2/pages/2-2-pressure-temperature-and-rms-speed">§2.2 Pressure, Temperature, and RMS Speed</a>
+        — pressure derived from wall collisions, which the gauge performs numerically.</li>
+    </ul>
+    <p class="small">These sources support the underlying physics; they do not endorse this activity. The 2D speed
+      distribution, the moving-wall reflection rule and the excluded-area estimate are computed in the page's own model
+      and checked by its node test suite, not quoted.</p>
+  </section>
+
+  <div class="g-foot"><strong>Ideal Gas Law Simulator</strong> · Bryant Harrison · Murray State University · Offline teaching model. Open <code>index.html</code> to run it. <code>src/demo-guide.html</code> is the canonical source of this document; the shipped <code>presenter-guide.html</code>, the PDF beside it, and the in-app presenter notes are all generated from it at build time.</div>
+
+</div>
+    <p class="guide-print"><a href="presenter-guide.html" target="_blank" rel="noopener">Open the printable copy (presenter-guide.html)</a> &mdash; the same document, laid out for Letter; the PDF beside it is a render of that file.</p>
+  </div>
+  <form method="dialog" class="lesson-dialog-actions"><button type="submit">Back to the demo</button></form>
+</dialog>
+
+<!-- Load order is load-bearing, in this order and no other:
+     1. the model, which defines IdealGasModel;
+     2. the lesson shell, which defines window.lessonShell and wires the
+        dialogs, the tablist keyboard and presentation mode;
+     3. app.js, which uses both — it reads the shell's selected tab at start-up
+        rather than assuming stage 1, so a #stage-4 deep link lands correctly. -->
+<script>
+/* Ideal Gas Law — the physics and measurement model. No DOM in this file.
+
+   WHAT THIS IS. N hard discs in a rectangular box with one movable wall (the
+   piston). Particles fly freely, reflect off the walls, and (optionally)
+   collide elastically with each other. Nothing about the ideal gas law is
+   written into the simulation: PRESSURE is measured by adding up the momentum
+   the walls receive, TEMPERATURE is computed from the particles' kinetic
+   energy, and P·A = N·T is a PREDICTION the rest of the demo tests against
+   those measurements.
+
+   UNITS, and the one constant that must not drift. This is a 2D box, in
+   reduced units: every particle has mass 1 and Boltzmann's constant is 1.
+   Equipartition then says each degree of freedom carries T/2 of kinetic
+   energy, so with DOF = 2
+
+       T = <v^2> / DOF         (= half the mean squared speed)
+
+   "Pressure" in 2D is force per unit LENGTH of wall, and "volume" is the box
+   AREA, so the ideal gas law reads P·A = N·T. Every formula below derives
+   from DOF; never write a 3D constant (3/2, 4πv²) anywhere in this demo.
+
+   The default temperature is 300 because it reads like room temperature in
+   kelvin. It is not kelvin. The scale is a teaching choice, and the page says
+   so wherever the number appears.
+
+   Bundled into index.html by build.js; the CommonJS tail lets test-model.js
+   require it under node, where `module` exists and in the browser does not. */
+const IdealGasModel = (() => {
+  'use strict';
+
+  const DOF = 2;
+
+  const DEFAULTS = Object.freeze({
+    boxWidth: 100,
+    boxHeight: 60,
+    count: 240,
+    temperature: 300,
+    radius: 0.35,
+    thermostat: true,
+    collisions: true,
+    timeScale: 2,        /* simulated seconds per real second */
+    emaTau: 1.0,         /* smoothing time for the pressure readout, sim-s */
+    thermostatTau: 0.15, /* how fast the thermostat pulls T to its target, sim-s */
+    pistonSpeed: 12,     /* how fast the piston slides toward its target, units/s */
+    capacity: 600
+  });
+
+  const LIMITS = Object.freeze({
+    count: [10, 600],
+    temperature: [50, 1200],
+    boxWidth: [40, 100],
+    radius: [0.35, 1.0],
+    timeScale: [0.5, 4]
+  });
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+  /* Box–Muller, one standard normal per call (the second is discarded for
+     simplicity; this runs a few hundred times per reset, not per frame). */
+  function gaussian(rng) {
+    let u = 0;
+    while (u === 0) u = rng();
+    const v = rng();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+
+  /* A small seedable generator (mulberry32) so the node tests are
+     repeatable. The browser passes Math.random. */
+  function seeded(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  /* ---- the gas ------------------------------------------------------------ */
+
+  function createGas(options) {
+    const o = Object.assign({}, DEFAULTS, options || {});
+    const cap = o.capacity;
+    const gas = {
+      rng: o.rng || Math.random,
+      W: o.boxWidth,
+      H: o.boxHeight,
+      pistonTarget: o.boxWidth,
+      pistonU: 0,             /* the wall's velocity this step, units/s */
+      N: 0,
+      cap,
+      r: o.radius,
+      x: new Float64Array(cap),
+      y: new Float64Array(cap),
+      vx: new Float64Array(cap),
+      vy: new Float64Array(cap),
+      targetT: o.temperature,
+      thermostat: o.thermostat,
+      collisions: o.collisions,
+      thermostatTau: o.thermostatTau,
+      pistonSpeed: o.pistonSpeed,
+      time: 0,
+      /* momentum handed to each wall since the last flush, and the hit count */
+      impulse: { left: 0, right: 0, top: 0, bottom: 0 },
+      hits: 0,
+      /* per-wall "glow" for the renderer: momentum in the last frame */
+      wallFlash: { left: 0, right: 0, top: 0, bottom: 0 },
+      pEma: 0,
+      hitsEma: 0,
+      emaTau: o.emaTau,
+      emaPrimed: false,
+      /* a measurement window for the guided experiments */
+      window: null,
+      /* collision grid, rebuilt each substep */
+      grid: { cell: 1, nx: 1, ny: 1, head: new Int32Array(1), next: new Int32Array(cap) }
+    };
+    addParticles(gas, o.count, o.temperature);
+    return gas;
+  }
+
+  function area(gas) { return gas.W * gas.H; }
+  function perimeter(gas) { return 2 * (gas.W + gas.H); }
+
+  /* Temperature from the kinetic energy actually present. */
+  function temperature(gas) {
+    if (gas.N === 0) return 0;
+    let s = 0;
+    for (let i = 0; i < gas.N; i++) s += gas.vx[i] * gas.vx[i] + gas.vy[i] * gas.vy[i];
+    return s / (gas.N * DOF);
+  }
+
+  function kineticEnergy(gas) {
+    let s = 0;
+    for (let i = 0; i < gas.N; i++) s += gas.vx[i] * gas.vx[i] + gas.vy[i] * gas.vy[i];
+    return 0.5 * s;
+  }
+
+  function maxSpeed(gas) {
+    let m = 0;
+    for (let i = 0; i < gas.N; i++) {
+      const s = gas.vx[i] * gas.vx[i] + gas.vy[i] * gas.vy[i];
+      if (s > m) m = s;
+    }
+    return Math.sqrt(m);
+  }
+
+  /* The prediction under test. */
+  function idealPressure(N, T, A) { return A > 0 ? (N * T) / A : 0; }
+
+  /* Place n new particles at random non-overlapping positions, with speeds
+     drawn from the 2D Maxwell distribution at temperature T (each velocity
+     component is Gaussian with variance T when m = k_B = 1). */
+  function addParticles(gas, n, T) {
+    const want = Math.min(gas.cap, gas.N + n);
+    const r = gas.r;
+    const twoR2 = (2 * r) * (2 * r);
+    const temp = T === undefined ? gas.targetT : T;
+    let attempts = 0;
+    while (gas.N < want && attempts < 20000) {
+      attempts++;
+      const px = r + gas.rng() * (gas.W - 2 * r);
+      const py = r + gas.rng() * (gas.H - 2 * r);
+      let ok = true;
+      if (gas.collisions) {
+        for (let j = 0; j < gas.N; j++) {
+          const dx = gas.x[j] - px, dy = gas.y[j] - py;
+          if (dx * dx + dy * dy < twoR2) { ok = false; break; }
+        }
+      }
+      if (!ok) continue;
+      const i = gas.N++;
+      gas.x[i] = px; gas.y[i] = py;
+      const s = Math.sqrt(temp);
+      gas.vx[i] = gaussian(gas.rng) * s;
+      gas.vy[i] = gaussian(gas.rng) * s;
+    }
+    return gas.N;
+  }
+
+  function removeParticles(gas, n) {
+    gas.N = Math.max(0, gas.N - n);
+    return gas.N;
+  }
+
+  function setCount(gas, n) {
+    n = Math.round(clamp(n, LIMITS.count[0], Math.min(LIMITS.count[1], gas.cap)));
+    if (n > gas.N) addParticles(gas, n - gas.N, gas.thermostat ? gas.targetT : temperature(gas));
+    else if (n < gas.N) removeParticles(gas, gas.N - n);
+    return gas.N;
+  }
+
+  /* Scale every velocity so the measured temperature equals T exactly. This
+     keeps the SHAPE of the speed distribution and changes only its width. */
+  function rescaleTo(gas, T) {
+    const now = temperature(gas);
+    if (now <= 0 || gas.N === 0) return;
+    const k = Math.sqrt(T / now);
+    for (let i = 0; i < gas.N; i++) { gas.vx[i] *= k; gas.vy[i] *= k; }
+  }
+
+  function setTemperature(gas, T, immediate) {
+    gas.targetT = clamp(T, LIMITS.temperature[0], LIMITS.temperature[1]);
+    if (immediate) rescaleTo(gas, gas.targetT);
+  }
+
+  function setRadius(gas, r) {
+    gas.r = clamp(r, LIMITS.radius[0], LIMITS.radius[1]);
+    /* Growing the discs can leave some overlapping; a few silent relaxation
+       passes push them apart before the next visible step. */
+    if (gas.collisions) for (let k = 0; k < 6; k++) resolvePairs(gas, true);
+    keepInside(gas);
+  }
+
+  function setBoxWidth(gas, W) {
+    gas.pistonTarget = clamp(W, LIMITS.boxWidth[0], LIMITS.boxWidth[1]);
+  }
+
+  /* Any particle left outside the box (a fast piston move, a radius change)
+     is put back just inside; velocity untouched. */
+  function keepInside(gas) {
+    const r = gas.r;
+    for (let i = 0; i < gas.N; i++) {
+      if (gas.x[i] < r) gas.x[i] = r;
+      if (gas.x[i] > gas.W - r) gas.x[i] = gas.W - r;
+      if (gas.y[i] < r) gas.y[i] = r;
+      if (gas.y[i] > gas.H - r) gas.y[i] = gas.H - r;
+    }
+  }
+
+  /* ---- one substep ---------------------------------------------------------- */
+
+  function movePiston(gas, dt) {
+    const gap = gas.pistonTarget - gas.W;
+    if (Math.abs(gap) < 1e-9) { gas.pistonU = 0; return; }
+    const step = Math.sign(gap) * Math.min(Math.abs(gap), gas.pistonSpeed * dt);
+    gas.W += step;
+    gas.pistonU = step / dt;
+    if (Math.abs(gas.pistonTarget - gas.W) < 1e-9) gas.W = gas.pistonTarget;
+  }
+
+  /* Walls. Each reflection REFLECTS the position about the wall rather than
+     clamping it — a clamp would shorten the path and inject energy. The
+     right wall may be moving at pistonU: in the wall's frame the particle
+     reflects normally, which in the lab frame is vx' = -vx + 2u. That is the
+     whole mechanism of adiabatic heating: a wall moving inward hands energy
+     to every particle that bounces off it. The momentum the wall receives is
+     |vx' - vx|, which is 2|vx| for a wall at rest. */
+  function reflectWalls(gas) {
+    const r = gas.r, W = gas.W, H = gas.H, u = gas.pistonU;
+    const x = gas.x, y = gas.y, vx = gas.vx, vy = gas.vy;
+    const imp = gas.impulse;
+    for (let i = 0; i < gas.N; i++) {
+      if (x[i] < r) {
+        x[i] = 2 * r - x[i];
+        if (vx[i] < 0) { imp.left += 2 * -vx[i]; vx[i] = -vx[i]; gas.hits++; }
+      } else if (x[i] > W - r) {
+        x[i] = 2 * (W - r) - x[i];
+        if (vx[i] > u) {
+          const after = -vx[i] + 2 * u;
+          imp.right += Math.abs(after - vx[i]);
+          vx[i] = after;
+          gas.hits++;
+        }
+        if (x[i] > W - r) x[i] = W - r;
+        if (x[i] < r) x[i] = r;
+      }
+      if (y[i] < r) {
+        y[i] = 2 * r - y[i];
+        if (vy[i] < 0) { imp.bottom += 2 * -vy[i]; vy[i] = -vy[i]; gas.hits++; }
+      } else if (y[i] > H - r) {
+        y[i] = 2 * (H - r) - y[i];
+        if (vy[i] > 0) { imp.top += 2 * vy[i]; vy[i] = -vy[i]; gas.hits++; }
+      }
+    }
+  }
+
+  /* Elastic disc–disc collisions through a uniform grid. Equal masses, so
+     the two particles simply exchange the components of velocity along the
+     line of centres; that conserves momentum and kinetic energy exactly.
+     Overlap is removed by moving positions apart, which touches no velocity.
+     With positionsOnly set, the velocity exchange is skipped (used to relax
+     overlaps after a radius change without a spurious kick). */
+  function resolvePairs(gas, positionsOnly) {
+    const r = gas.r, N = gas.N;
+    if (N < 2) return;
+    const g = gas.grid;
+    const cell = Math.max(2 * r * 1.05, 1e-6);
+    const nx = Math.max(1, Math.ceil(gas.W / cell));
+    const ny = Math.max(1, Math.ceil(gas.H / cell));
+    if (g.head.length < nx * ny) g.head = new Int32Array(nx * ny);
+    g.head.fill(-1, 0, nx * ny);
+    const head = g.head, next = g.next;
+    const x = gas.x, y = gas.y, vx = gas.vx, vy = gas.vy;
+    for (let i = 0; i < N; i++) {
+      const cx = clamp(Math.floor(x[i] / cell), 0, nx - 1);
+      const cy = clamp(Math.floor(y[i] / cell), 0, ny - 1);
+      const c = cy * nx + cx;
+      next[i] = head[c];
+      head[c] = i;
+    }
+    const twoR = 2 * r, twoR2 = twoR * twoR;
+    for (let cy = 0; cy < ny; cy++) {
+      for (let cx = 0; cx < nx; cx++) {
+        for (let i = head[cy * nx + cx]; i !== -1; i = next[i]) {
+          for (let oy = -1; oy <= 1; oy++) {
+            const yy = cy + oy;
+            if (yy < 0 || yy >= ny) continue;
+            for (let ox = -1; ox <= 1; ox++) {
+              const xx = cx + ox;
+              if (xx < 0 || xx >= nx) continue;
+              for (let j = head[yy * nx + xx]; j !== -1; j = next[j]) {
+                if (j <= i) continue;
+                const dx = x[j] - x[i], dy = y[j] - y[i];
+                const d2 = dx * dx + dy * dy;
+                if (d2 >= twoR2 || d2 === 0) continue;
+                const d = Math.sqrt(d2);
+                const nxu = dx / d, nyu = dy / d;
+                if (!positionsOnly) {
+                  const vn = (vx[i] - vx[j]) * nxu + (vy[i] - vy[j]) * nyu;
+                  if (vn > 0) {
+                    vx[i] -= vn * nxu; vy[i] -= vn * nyu;
+                    vx[j] += vn * nxu; vy[j] += vn * nyu;
+                  }
+                }
+                const push = (twoR - d) / 2 + 1e-6;
+                x[i] -= push * nxu; y[i] -= push * nyu;
+                x[j] += push * nxu; y[j] += push * nyu;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* The thermostat: pull the measured temperature toward the target by
+     rescaling every velocity a little each step. It changes the width of the
+     speed distribution and nothing else. */
+  function thermostatStep(gas, dt) {
+    const now = temperature(gas);
+    if (now <= 0) return;
+    const lambda = 1 - Math.exp(-dt / gas.thermostatTau);
+    const k = Math.sqrt(1 + lambda * (gas.targetT / now - 1));
+    for (let i = 0; i < gas.N; i++) { gas.vx[i] *= k; gas.vy[i] *= k; }
+  }
+
+  function substep(gas, dt) {
+    movePiston(gas, dt);
+    const x = gas.x, y = gas.y, vx = gas.vx, vy = gas.vy;
+    for (let i = 0; i < gas.N; i++) { x[i] += vx[i] * dt; y[i] += vy[i] * dt; }
+    reflectWalls(gas);
+    if (gas.collisions) resolvePairs(gas, false);
+    if (gas.thermostat) thermostatStep(gas, dt);
+    gas.time += dt;
+  }
+
+  /* Advance by one frame of simulated time, in enough substeps that no
+     particle moves more than about one radius per substep (so disc–disc
+     collisions are not tunnelled through). Wall reflections are exact for
+     any overshoot, so the substep count is about pair collisions only.
+     Returns the frame's measurements and flushes the wall accumulators. */
+  function advance(gas, simDt) {
+    simDt = clamp(simDt, 0, 0.25);
+    const vmax = Math.max(maxSpeed(gas), Math.abs(gas.pistonU), 1e-6);
+    const n = clamp(Math.ceil((vmax * simDt) / gas.r), 1, 40);
+    const dt = simDt / n;
+    for (let k = 0; k < n; k++) substep(gas, dt);
+    return flushFrame(gas, simDt);
+  }
+
+  /* Pressure this frame = momentum delivered to all four walls, divided by
+     the frame's duration and by the total wall length. The exponential moving
+     average is what the readout shows; the raw number is kept too because the
+     noise is honest evidence of how a gauge on a finite gas behaves. */
+  function flushFrame(gas, simDt) {
+    const imp = gas.impulse;
+    const total = imp.left + imp.right + imp.top + imp.bottom;
+    const per = perimeter(gas);
+    const pInst = simDt > 0 ? total / (simDt * per) : 0;
+    const hitRate = simDt > 0 ? gas.hits / simDt : 0;
+    if (!gas.emaPrimed) { gas.pEma = pInst; gas.hitsEma = hitRate; gas.emaPrimed = true; }
+    else {
+      const a = 1 - Math.exp(-simDt / gas.emaTau);
+      gas.pEma += a * (pInst - gas.pEma);
+      gas.hitsEma += a * (hitRate - gas.hitsEma);
+    }
+    if (gas.window) {
+      const w = gas.window;
+      w.impulse += total;
+      w.hits += gas.hits;
+      w.seconds += simDt;
+      w.tSum += temperature(gas) * simDt;
+      w.aSum += area(gas) * simDt;
+      w.perSum += per * simDt;
+      w.nSum += gas.N * simDt;
+    }
+    gas.wallFlash = { left: imp.left, right: imp.right, top: imp.top, bottom: imp.bottom };
+    const hits = gas.hits;
+    imp.left = imp.right = imp.top = imp.bottom = 0;
+    gas.hits = 0;
+    const T = temperature(gas);
+    const A = area(gas);
+    return {
+      time: gas.time,
+      N: gas.N,
+      T,
+      A,
+      pInst,
+      pEma: gas.pEma,
+      pIdeal: idealPressure(gas.N, T, A),
+      hitsPerSecond: gas.hitsEma,
+      hitsThisFrame: hits,
+      kineticEnergy: kineticEnergy(gas),
+      pistonMoving: gas.pistonU !== 0
+    };
+  }
+
+  /* ---- measurement windows (the guided experiments) ------------------------- */
+
+  function beginWindow(gas) {
+    gas.window = { impulse: 0, hits: 0, seconds: 0, tSum: 0, aSum: 0, perSum: 0, nSum: 0 };
+  }
+
+  /* Close the window and report the time-averaged pressure over it, with a
+     rough uncertainty. The uncertainty is REASONED, not measured: with H wall
+     hits counted, the relative scatter of the total is about 1/sqrt(H) (a
+     Poisson count with some extra spread from the hit-to-hit momentum
+     variation), so the band shown is P/sqrt(H). It is a guide to how far to
+     trust the last digit, not a confidence interval. */
+  function endWindow(gas) {
+    const w = gas.window;
+    gas.window = null;
+    if (!w || w.seconds <= 0) return null;
+    const per = w.perSum / w.seconds;
+    const P = w.impulse / (w.seconds * per);
+    const T = w.tSum / w.seconds;
+    const A = w.aSum / w.seconds;
+    const N = w.nSum / w.seconds;
+    const pIdeal = idealPressure(N, T, A);
+    return {
+      P, T, A, N, pIdeal,
+      hits: w.hits,
+      seconds: w.seconds,
+      uncertainty: w.hits > 0 ? P / Math.sqrt(w.hits) : Infinity,
+      ratio: pIdeal > 0 ? P / pIdeal : NaN
+    };
+  }
+
+  /* ---- theory the page draws alongside the measurements -------------------- */
+
+  /* 2D Maxwell (Rayleigh) speed distribution at temperature T, m = k_B = 1:
+     f(v) = (v / T) · exp(-v² / 2T). Integrates to 1 over v ≥ 0. */
+  function maxwellSpeedPdf(v, T) {
+    if (T <= 0 || v < 0) return 0;
+    return (v / T) * Math.exp(-(v * v) / (2 * T));
+  }
+
+  function meanSpeed(T) { return Math.sqrt((Math.PI * T) / 2); }
+  function rmsSpeed(T) { return Math.sqrt(DOF * T); }
+
+  function speedHistogram(gas, bins, vMax) {
+    const counts = new Array(bins).fill(0);
+    const w = vMax / bins;
+    for (let i = 0; i < gas.N; i++) {
+      const v = Math.hypot(gas.vx[i], gas.vy[i]);
+      const b = Math.min(bins - 1, Math.floor(v / w));
+      counts[b]++;
+    }
+    return { counts, binWidth: w };
+  }
+
+  /* Packing fraction: how much of the box the discs themselves cover. */
+  function packingFraction(N, r, A) { return A > 0 ? (N * Math.PI * r * r) / A : 0; }
+
+  /* A first-order excluded-area estimate of how far above the ideal law the
+     measured pressure should sit. Two discs of radius r cannot bring their
+     centres closer than 2r, so each pair excludes a disc of area π(2r)² =
+     4πr²; sharing that between the two gives b = 2πr² of "room lost" per
+     particle. The free area is then about A − N·b, and P ≈ N·T / (A − N·b),
+     so Z = P·A/(N·T) ≈ 1 / (1 − 2η) with η the packing fraction. This is the
+     leading term only and overstates Z at higher packing; it is offered as a
+     REASONED estimate of direction and rough size, not a fitted law. */
+  function excludedAreaZ(N, r, A) {
+    const eta = packingFraction(N, r, A);
+    const denom = 1 - 2 * eta;
+    return denom > 0.05 ? 1 / denom : Infinity;
+  }
+
+  /* Expected wall-hit rate for an ideal gas at (N, T, A), used by the guide
+     to say how steady a reading to expect: hits per second per unit wall =
+     (N/A) · <|v_perp|> / 2, and <|v_perp|> = sqrt(2T/π) for a Gaussian
+     component of variance T. Multiply by the perimeter for the total. */
+  function expectedHitRate(N, T, W, H) {
+    return 2 * (W + H) * (N / (W * H)) * Math.sqrt((2 * T) / Math.PI) / 2;
+  }
+
+  return Object.freeze({
+    DOF, DEFAULTS, LIMITS, clamp, seeded,
+    createGas, area, perimeter, temperature, kineticEnergy, maxSpeed,
+    idealPressure, addParticles, removeParticles, setCount, rescaleTo,
+    setTemperature, setRadius, setBoxWidth, keepInside, advance,
+    beginWindow, endWindow,
+    maxwellSpeedPdf, meanSpeed, rmsSpeed, speedHistogram,
+    packingFraction, excludedAreaZ, expectedHitRate
+  });
+})();
+
+if (typeof module !== 'undefined' && module.exports) module.exports = IdealGasModel;
+
+</script>
+<script>
+
+/* lesson-shell v3 behaviour — dialogs, stage tablist, presentation
+   mode, check cards. Injected by build.js; do not edit in the built file. */
+(() => {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const flags = new Set(location.hash.replace(/^#/, '').split(',').filter(Boolean));
+  const hashStage = (() => {
+    for (const f of flags) { const m = /^stage-(\d+)$/.exec(f); if (m) return Number(m[1]) - 1; }
+    return null;
+  })();
+  /* Presentation mode has to be on the body before the activity initialises,
+     so it is read here and not after. The fragment is stripped on arrival so a
+     later manual refresh is an ordinary fresh load. */
+  if (flags.has('presenting')) document.body.classList.add('presenter');
+  if (flags.size) { try { history.replaceState(null, '', location.href.split('#')[0]); } catch (e) { /* some hosts refuse replaceState on file://; a visible fragment is cosmetic */ } }
+
+  /* ---- dialogs ---------------------------------------------------------- */
+  const guide = $('#guide'), settings = $('#settings'), notes = $('#presenter-notes'), details = $('#details');
+  let opener = null;
+  /* Opening a card from inside another one SWAPS them: nesting two modal
+     dialogs stacks backdrops and makes Escape ambiguous. */
+  const open = (dialog, from) => {
+    if (!dialog) return;
+    const host = from && from.closest && from.closest('dialog[open]');
+    opener = host ? $('#settings-open') : from;
+    if (host) host.close();
+    dialog.showModal();
+    const head = $('.lesson-dialog-head button', dialog);
+    if (head) head.focus();
+  };
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.guide-open');
+    if (!b) return; e.preventDefault(); open(guide, b);
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.notes-open');
+    if (!b) return; e.preventDefault(); open(notes, b);
+  });
+  const settingsOpen = $('#settings-open');
+  if (settingsOpen) settingsOpen.addEventListener('click', e => open(settings, e.currentTarget));
+  [guide, settings, notes, details].filter(Boolean).forEach(d => {
+    d.addEventListener('click', e => { if (e.target === d) d.close(); });
+    d.addEventListener('close', () => { if (opener && opener.isConnected) opener.focus(); });
+  });
+  /* A5: the Details trigger in the stage intro, and reopenable from anywhere. */
+  document.addEventListener('click', e => {
+    const b = e.target.closest && e.target.closest('.details-trigger');
+    if (!b || !details) return;
+    e.preventDefault();
+    const k = b.dataset.details || '0';
+    $$('.details-stage', details).forEach(s => {
+      const on = s.dataset.detailsStage === k;
+      s.classList.toggle('on', on); s.hidden = !on;
+    });
+    const sub = $('#details-subtitle');
+    const tab = $$('.stage-tab')[Number(k)];
+    if (sub && tab) sub.textContent = ($('span:not(.stage-mark)', tab) || {}).textContent || '';
+    opener = b;
+    details.showModal();
+    const head = $('.lesson-dialog-head button', details);
+    if (head) head.focus();
+  });
+
+  /* ---- A1 stage tablist ------------------------------------------------- */
+  const tabs = $$('.stage-tab');
+  const panels = $$('section.stage');
+
+  /* ---- the first-load snapshot ------------------------------------------
+     Taken here, before the hash can select a stage and before the demo's own
+     app.js has run at all (the shell's script tag precedes it). Reset RESTORES
+     FROM THIS rather than recomputing, which is what makes an in-place reset
+     honest for a gated demo: the gate comes back exactly as the template
+     authored it, whether or not the demo has a sync function of its own. */
+  const snapshot = {
+    tabs: tabs.map(t => {
+      const mark = $('.stage-mark', t);
+      return {
+        disabled: t.disabled,
+        className: t.className,
+        title: t.getAttribute('title'),
+        mark: mark ? mark.textContent : null
+      };
+    }),
+    echoes: $$('.lesson-strip .echo').map(e => ({ node: e, html: e.innerHTML, hidden: e.hidden })),
+    cues: $$('.obs-cue').map(c => ({ node: c, text: c.textContent, className: c.className })),
+    detailsSubtitle: (($('#details-subtitle') || {}).textContent) || ''
+  };
+  function selectStage(index, opts) {
+    if (!tabs.length) return;
+    /* A gated demo (one that unlocks stage k+1 only after stage k's evidence)
+       clamps here rather than unlocking: the prediction-before-evidence gate
+       IS the pedagogy, and a hash must not route around it. The clamp is
+       silent by design; the tab stays visible and disabled so the learner
+       still sees the whole route. */
+    let i = Math.max(0, Math.min(tabs.length - 1, index));
+    while (i > 0 && tabs[i].disabled) i -= 1;
+    tabs.forEach((t, k) => {
+      const on = k === i;
+      t.setAttribute('aria-selected', String(on));
+      t.tabIndex = on ? 0 : -1;
+    });
+    /* Clear the hidden attribute as well as toggling the class. shell.css
+       carries [hidden] { display: none !important } and NO .stage or .stage.on
+       display rule, so panel visibility rests entirely on the attribute: a
+       class-only toggle leaves every non-first stage pinned shut by the
+       !important, whatever the class says. ion-flight shipped exactly that way
+       - stages 2-4 unreachable - and no node suite, build --check, check-shell
+       or build-hub --check could see it. Found by the two-winters lane (P2),
+       2026-09-16. */
+    panels.forEach((p, k) => {
+      const on = k === i;
+      p.classList.toggle('on', on);
+      p.hidden = !on;
+    });
+    if (opts && opts.focus) tabs[i].focus();
+    document.dispatchEvent(new CustomEvent('stagechange', { detail: { index: i } }));
+    return i;
+  }
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectStage(i));
+    tab.addEventListener('keydown', e => {
+      const step = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1
+        : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+      if (step) {
+        e.preventDefault();
+        let j = i;
+        do { j = (j + step + tabs.length) % tabs.length; } while (tabs[j].disabled && j !== i);
+        selectStage(j, { focus: true });
+      } else if (e.key === 'Home') { e.preventDefault(); selectStage(0, { focus: true }); }
+      else if (e.key === 'End') { e.preventDefault(); selectStage(tabs.length - 1, { focus: true }); }
+    });
+  });
+  if (hashStage !== null) selectStage(hashStage);
+
+  /* ---- A8 presentation mode --------------------------------------------- */
+  function setPresentation(on) {
+    document.body.classList.toggle('presenter', on);
+    $$('#presentation-btn, #presentation-foot').forEach(b => {
+      b.setAttribute('aria-pressed', String(on));
+      b.classList.toggle('active', on);
+    });
+    document.dispatchEvent(new CustomEvent('presentationchange', { detail: { on } }));
+  }
+  $$('#presentation-btn, #presentation-foot').forEach(b => b.addEventListener('click', () => {
+    setPresentation(!document.body.classList.contains('presenter'));
+    if (settings && settings.open) settings.close();
+  }));
+  setPresentation(document.body.classList.contains('presenter'));
+
+  /* ---- A6 check cards: feedback for every option, nothing scored --------
+     THE LEAD COMES FROM THE CARD, NOT FROM THE KIT. v2 hardcoded one demo's
+     wrong-answer sentence here, in the SHARED handler, and it rendered in
+     every built demo — so a learner reading a check card about PLC ladder
+     logic or about AI winters was told what a mass-spectrometer detector had
+     shown. The defaults below are demo-neutral; a demo that wants its own
+     framing sets data-correct-lead / data-wrong-lead on the .check card.
+     check-shell.js blocklists the leaked sentence so this cannot regress
+     quietly — and the sentence is deliberately NOT spelled anywhere in this
+     function, because everything here is injected into every built file and a
+     blocklist that matches its own explanation is worthless. The exact string
+     lives in LEAKED_A6 at module scope, which is not injected. The lead is set
+     as TEXT, not markup, because it now comes from an authored attribute. */
+  $$('.check').forEach(card => {
+    const out = $('.check-feedback', card);
+    const leadFor = btn => (btn.classList.contains('correct')
+      ? (card.dataset.correctLead || "Correct.")
+      : (card.dataset.wrongLead || "Not quite."));
+    $$('.check-option', card).forEach(btn => btn.addEventListener('click', () => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      btn.setAttribute('aria-pressed', 'true');
+      if (!out) return;
+      out.textContent = '';
+      const strong = document.createElement('b');
+      strong.textContent = leadFor(btn);
+      out.appendChild(strong);
+      /* data-feedback keeps accepting inline markup, as it always has. */
+      out.insertAdjacentHTML('beforeend', ' ' + (btn.dataset.feedback || ''));
+    }));
+  });
+
+  /* ---- A2 intro disclosure: collapsible stage intro at phone width ------
+     Operator ruling, 2026-09-16: "collapsible intro at phone width."
+
+     THE MEASUREMENT IT ANSWERS. At 320px the full A2 intro (eyebrow, stage
+     title, stage question, "Before you start" refresh, then the three-card
+     Predict/Try/Takeaway strip) runs 726-775px against a 568-578px viewport —
+     the intro alone is more than one whole screen — and it put
+     zero-to-unbeatable's Train button 1979px down and ion-flight's Run button
+     2327px down, i.e. 4.1 screens. Measured on both demos before this change;
+     the cost is a property of the template, not of either demo.
+
+     WHAT COLLAPSES, AND WHAT NEVER DOES. Only the lesson strip is MOVED behind
+     the toggle (it is the expensive part: 232-359px, up to half the intro) and
+     the refresh is hidden by a CSS :has() rule rather than moved, so the
+     desktop grid keeps byte-identical geometry. The eyebrow, the h2 and the
+     stage question always stay visible: the stage question is the one line
+     that orients, and the h2 is the aria-labelledby target of .stage-intro, so
+     hiding it would strip that region's accessible name.
+
+     DEFAULT COLLAPSED ON PHONES. The Guide already opens on load and already
+     carries the orientation (the demo-level question, "where this sits", a
+     step per stage), so a second orientation block between the learner and the
+     activity is redundant rather than safer. Collapsed is not unoriented — the
+     question is still on screen.
+
+     NATIVE <details>, so Enter/Space, the disclosure role and the expanded
+     state all come from the user agent rather than from an aria-expanded
+     reimplementation.
+
+     DESKTOP AND THE PROJECTOR ARE UNTOUCHED: shell.css hides the summary above
+     480px and under body.presenter, and the element is forced open in both
+     cases, so there is no toggle chrome and no geometry change. */
+  const introDisclosures = [];
+  $$('.stage-intro').forEach(intro => {
+    const strip = $('.lesson-strip', intro);
+    if (!strip || $('details.intro-more', intro)) return;
+    const d = document.createElement('details');
+    d.className = "intro-more";
+    d.open = true;
+    const sum = document.createElement('summary');
+    sum.textContent = "Before you start · Predict · Try · Takeaway";
+    d.appendChild(sum);
+    intro.insertBefore(d, strip);
+    /* MOVED, never cloned: snapshot.echoes holds node references into the
+       strip, and a clone would silently orphan them from Reset. */
+    d.appendChild(strip);
+    introDisclosures.push(d);
+  });
+  const phoneMedia = window.matchMedia
+    ? window.matchMedia('(max-width: 480px)') : null;
+  function introShouldCollapse() {
+    if (!phoneMedia || !phoneMedia.matches) return false;
+    /* Presentation mode is a projector, where width is not the constraint. */
+    return !document.body.classList.contains('presenter');
+  }
+  /* The ONE place the default is decided, so load, a breakpoint change, a
+     presentation-mode toggle and Reset cannot disagree with each other. */
+  function applyIntroCollapse() {
+    const collapse = introShouldCollapse();
+    introDisclosures.forEach(d => { d.open = !collapse; });
+  }
+  if (phoneMedia && phoneMedia.addEventListener) {
+    phoneMedia.addEventListener('change', applyIntroCollapse);
+  }
+  /* A2's prediction echo is written INTO the strip, so feedback that appeared
+     while the strip was collapsed would be invisible — which would break the
+     predict-then-observe loop the strip exists for. Re-open on live content. */
+  if (window.MutationObserver) {
+    introDisclosures.forEach(d => {
+      new MutationObserver(() => {
+        if (d.open) return;
+        if ($$('.echo', d).some(e => !e.hidden && e.textContent.trim() !== '')) d.open = true;
+      }).observe(d, {
+        childList: true, subtree: true, characterData: true,
+        attributes: true, attributeFilter: ['hidden']
+      });
+    });
+  }
+  /* setPresentation() already dispatches presentationchange, so listening is
+     enough and the presentation code above needs no edit. The init call it
+     makes fires before this listener exists, which is what the direct call is
+     for. */
+  document.addEventListener('presentationchange', applyIntroCollapse);
+  applyIntroCollapse();
+
+  /* ---- Reset: IN PLACE, no page reload -----------------------------------
+     Operator ruling 2026-09-16. Until then Reset set a #reset hash and called
+     location.reload(), which was trivially correct and threw the page away to
+     get there: a reload discards a canvas mid-animation, re-runs every boot
+     path, and on a slow projector laptop is a visible blank flash in front of
+     a room. In-place costs a real contract instead, and this is it.
+
+     THE DIVISION OF LABOUR — the whole contract in one sentence: if the kit
+     named the class, the shell restores it; everything else is the demo's.
+
+     WHAT THE SHELL GUARANTEES, in this order:
+       1. 'onReset()' is consulted first and a 'false' return CANCELS the whole
+          reset — nothing below runs. That is the veto path, unchanged from v1.
+       2. Every open <dialog> closes — not only the shell's four. A demo may
+          own one (two-winters' #item-details), and a dialog still open after a
+          Reset is un-restored state the learner is looking straight at.
+       3. Every stage tab goes back to its first-load chrome from the snapshot:
+          'disabled' (so a gate re-locks), class (so 'complete' marks clear),
+          title, and the .stage-mark glyph.
+       4. Every A6 check card drops its aria-pressed answer and clears its
+          feedback line.
+       5. Every A2 .echo and A4 .obs-cue returns to its snapshotted first-load
+          content. partials.html specifies both as empty on load; the snapshot
+          is used rather than a blanket clear so a demo that authored something
+          there keeps it.
+       6. The A5 Details drawer goes back to showing stage 1, with its
+          subtitle restored.
+      6b. The A2 intro disclosure returns to its default for the CURRENT width
+          (v3) — recomputed, never restored from the load-time snapshot, so a
+          rotation between load and Reset cannot leave it half-open.
+       7. selectStage(0) — stage 1, which also fires 'stagechange'.
+       8. The page scrolls to the top.
+       9. 'lessonreset' is dispatched on document.
+
+     THE ORDER OF 7 AND 9 IS DELIBERATE, AND v3 KEPT IT. The stagechange at
+     step 7 fires BEFORE lessonreset at step 9, so a stagechange handler that
+     renders activity state paints the PRE-reset state into freshly reset
+     chrome (missing-time hit exactly this). v3 fixes that with the
+     'resetting' flag rather than by reordering, for three reasons:
+       * this file and ADOPTING.md both GUARANTEE in writing that lessonreset
+         fires last, "so the demo has the final word over any node the two both
+         touch". Eight merged demos are written against that guarantee and five
+         more builder lanes are in flight; reordering invalidates all of them
+         silently.
+       * reordering swaps a known hazard for a new one — the demo's lessonreset
+         handler would then run before step 3 restored the tab chrome, so any
+         handler reading tab state would read the post-session gates.
+       * what-the-survey-missed established the hazard is inapplicable to
+         render-only-from-actions designs; it bites the move-the-instrument
+         pattern ion-flight and missing-time use. The flag fixes precisely that
+         pattern WITHOUT changing any event order, so those demos keep working
+         unmodified.
+
+     WHAT THE SHELL DOES NOT TOUCH, deliberately:
+       * PRESENTATION MODE. A presenter resets between rooms; re-shrinking the
+         projector every time would be hostile. CONTRACT.md's wording too.
+       * THE GUIDE. It does not reopen. A reset is not a fresh arrival, and the
+         learner who pressed it has already read it.
+       * THE ACTIVITY. The shell cannot know what a demo holds. That is what
+         step 9 is for.
+
+     WHAT THE DEMO MUST IMPLEMENT — required, not optional:
+
+         document.addEventListener('lessonreset', () => {
+           // every variable your module closes over, back to its initial value
+           // every node your app.js generated, back to its first-load content
+           // then re-render stage 1
+         });
+
+     'lessonreset' fires LAST, after the shell has finished, so the demo has
+     the final word over any node the two both touch. It is not cancelable: the
+     veto lives in onReset(), so there is exactly one place to refuse a reset.
+
+     A demo that ships no handler silently keeps its answers, its generated
+     DOM and its progress through a Reset that visibly moved everything else.
+     check-shell.js fails a built file that carries no handler, with a negative
+     control proving it is not merely matching the dispatch below. */
+  function resetLesson() {
+    /* v3: the flag ADOPTING.md §4 has promised since v2. True from BEFORE the
+       onReset veto until AFTER 'lessonreset' has been dispatched, so a
+       stagechange handler that genuinely has to paint can skip the one
+       stagechange step 7 fires mid-reset:
+
+           document.addEventListener('stagechange', e => {
+             if (window.lessonShell.resetting) return;   // chrome only, mid-reset
+             render(e.detail.index);
+           });
+
+       DO NOT write that guard into your 'lessonreset' handler. The flag is
+       still true while 'lessonreset' runs, by design — your handler restores
+       state and re-renders by calling your own render directly, which the
+       guard above does not touch. Guarding lessonreset would suppress the very
+       render the reset exists to perform.
+
+       try/finally, so the veto path and any throw inside a listener both leave
+       the flag false rather than wedging every later stagechange. */
+    window.lessonShell.resetting = true;
+    try {
+      return runReset();
+    } finally {
+      window.lessonShell.resetting = false;
+    }
+  }
+  function runReset() {
+    if (window.lessonShell.onReset && window.lessonShell.onReset() === false) return false;
+    $$('dialog').forEach(d => {
+      if (!d.open) return;
+      try { d.close(); } catch (e) { /* a dialog mid-close; it is already going */ }
+    });
+    tabs.forEach((t, i) => {
+      const s = snapshot.tabs[i];
+      if (!s) return;
+      t.disabled = s.disabled;
+      t.className = s.className;
+      if (s.title === null) t.removeAttribute('title'); else t.setAttribute('title', s.title);
+      const mark = $('.stage-mark', t);
+      if (mark && s.mark !== null) mark.textContent = s.mark;
+    });
+    $$('.check').forEach(card => {
+      $$('.check-option', card).forEach(b => b.setAttribute('aria-pressed', 'false'));
+      const out = $('.check-feedback', card);
+      if (out) out.innerHTML = '';
+    });
+    snapshot.echoes.forEach(e => { e.node.innerHTML = e.html; e.node.hidden = e.hidden; });
+    snapshot.cues.forEach(c => { c.node.textContent = c.text; c.node.className = c.className; });
+    $$('.details-stage').forEach((s, i) => { s.classList.toggle('on', i === 0); s.hidden = i !== 0; });
+    const sub = $('#details-subtitle');
+    if (sub) sub.textContent = snapshot.detailsSubtitle;
+    /* 6b. The A2 intro disclosure goes back to ITS DEFAULT FOR THE CURRENT
+       WIDTH, recomputed rather than restored from the first-load snapshot.
+       Deliberate: if the phone was rotated since load, the snapshotted state is
+       the wrong answer, and restoring it is exactly how a reset leaves an
+       intro half-open. Recomputing cannot: applyIntroCollapse() is total. */
+    applyIntroCollapse();
+    selectStage(0);
+    try { window.scrollTo({ top: 0, behavior: 'auto' }); } catch (e) { window.scrollTo(0, 0); }
+    document.dispatchEvent(new CustomEvent('lessonreset', { detail: { index: 0 } }));
+    return true;
+  }
+  const resetBtn = $('#reset-btn');
+  if (resetBtn) resetBtn.addEventListener('click', () => resetLesson());
+
+  /* ---- A7: the Guide greets every load ---------------------------------- */
+  if (guide && !guide.open) {
+    opener = $('#guide-open');
+    guide.showModal();
+    const cta = $('.lesson-dialog-actions button', guide);
+    if (cta) cta.focus();
+  }
+
+  /* 'resetting' is a live flag, false except inside resetLesson(). See the
+     comment there for the guard pattern it exists for, and for the one place
+     you must NOT use it. */
+  window.lessonShell = {
+    selectStage, setPresentation, reset: resetLesson, flags, onReset: null, resetting: false
+  };
+})();
+
+</script>
+<script>
+/* Ideal Gas Law Simulator — the view layer. All physics and measurement live
+   in model.js; this file owns the frame loop, the canvases, the gauges, the
+   four guided experiments, stage 4's sweeps, and the lesson shell's three
+   events. Bundled into index.html by build.js; the shell's own behaviour
+   (dialogs, stage tablist keyboard, presentation mode, check cards, Reset) is
+   injected separately from tools/lesson-shell.
+
+   ONE INSTRUMENT. #activity is a single element moved between the four
+   stages' .activity-host slots on every stage change. The gas keeps running
+   through a stage change; what changes is which guided experiment the task
+   panel offers.
+
+   THE GUIDED EXPERIMENT is a fixed routine driven from the frame loop:
+   prepare (put this stage's own variable back at its baseline), measure
+   BEFORE for a window, apply the one change, settle, measure AFTER for a
+   window, report. The learner's prediction is echoed beside what the gauge
+   showed. Free play with the sliders is always available outside a run. */
+(() => {
+  'use strict';
+
+  const M = IdealGasModel;
+  const byId = id => document.getElementById(id);
+
+  /* ---- the four stages -------------------------------------------------- */
+
+  const WINDOW_S = 4;      /* sim-seconds measured before and after */
+  const SETTLE_S = 1.5;    /* sim-seconds between the change and the AFTER window */
+  const SWEEP_SETTLE_S = 1.2;
+  const SWEEP_WINDOW_S = 3;
+
+  const STAGES = [
+    {
+      id: 'count',
+      title: 'Double the particles',
+      purpose: 'Measure the pressure, double N with everything else held, and measure again. The thermostat is on, so the temperature cannot drift.',
+      question: 'Twice the particles, same box, same temperature. What does the pressure do?',
+      choices: [
+        { label: 'It doubles', value: 2 },
+        { label: 'It stays the same — the walls are the same size', value: 1 },
+        { label: 'It rises, but by less than double — the particles get in each other’s way', value: 1.5 }
+      ],
+      runLabel: 'Run: double the particles',
+      baseline: gas => M.setCount(gas, M.DEFAULTS.count),
+      apply: gas => M.setCount(gas, gas.N * 2),
+      describe: (a, b) => 'N ' + Math.round(a.N) + ' → ' + Math.round(b.N) + ', T held at ' + Math.round(a.T) + ', box ' + Math.round(a.A),
+      metric: 'pressure',
+      explain: (a, b, ratio) => 'The wall-hit rate went from about ' + Math.round(a.hits / a.seconds) + ' to ' + Math.round(b.hits / b.seconds) +
+        ' hits per second while the temperature gauge stayed at ' + Math.round(b.T) + '. Each hit handed over the same momentum on average; there were ' +
+        ratio.toFixed(2) + '× as many of them.',
+      conclusion: 'Pressure counts wall hits. Twice the particles, twice the hits per second, twice the pressure — to within the gauge’s noise.'
+    },
+    {
+      id: 'temp',
+      title: 'Double the temperature',
+      purpose: 'Measure the pressure, rescale every speed so the temperature jumps from 300 to 600 at once, and measure again with the same particles in the same box.',
+      question: 'Temperature 300 to 600, same N, same box. Does the pressure go 2×, 4×, or 1.4×?',
+      choices: [
+        { label: 'It doubles (2×)', value: 2 },
+        { label: 'It quadruples (4×) — faster particles hit harder and more often', value: 4 },
+        { label: 'It rises by about 1.4× — speed only grows as the square root', value: 1.414 }
+      ],
+      runLabel: 'Run: double the temperature',
+      baseline: gas => M.setTemperature(gas, M.DEFAULTS.temperature, true),
+      apply: gas => M.setTemperature(gas, gas.targetT * 2, true),
+      describe: (a, b) => 'T ' + Math.round(a.T) + ' → ' + Math.round(b.T) + ', N held at ' + Math.round(a.N) + ', box ' + Math.round(a.A),
+      metric: 'pressure',
+      explain: (a, b, ratio) => 'Typical speeds rose by √2 ≈ 1.41, not 2. Wall hits went from about ' + Math.round(a.hits / a.seconds) + ' to ' +
+        Math.round(b.hits / b.seconds) + ' per second (×' + ((b.hits / b.seconds) / (a.hits / a.seconds)).toFixed(2) +
+        '), and each hit carried about √2 times the momentum. The two factors multiply to ' + ratio.toFixed(2) + '.',
+      conclusion: 'Pressure tracks temperature, because temperature is speed squared: hotter particles hit √2 harder and √2 more often.'
+    },
+    {
+      id: 'area',
+      title: 'Halve the box',
+      purpose: 'Measure the pressure, slide the piston from width 100 to 50 with the thermostat holding T, wait for it to arrive, and measure again.',
+      question: 'Box width 100 to 50, same N, thermostat on. Does the pressure double, stay the same, or rise by 1.4×?',
+      choices: [
+        { label: 'It doubles', value: 2 },
+        { label: 'It stays the same — same particles, same speeds', value: 1 },
+        { label: 'It rises by about 1.4×', value: 1.414 }
+      ],
+      runLabel: 'Run: halve the box',
+      baseline: gas => M.setBoxWidth(gas, M.DEFAULTS.boxWidth),
+      apply: gas => M.setBoxWidth(gas, Math.max(M.LIMITS.boxWidth[0], gas.pistonTarget / 2)),
+      describe: (a, b) => 'A ' + Math.round(a.A) + ' → ' + Math.round(b.A) + ', N held at ' + Math.round(a.N) + ', T held at ' + Math.round(a.T),
+      metric: 'pressure',
+      explain: (a, b, ratio) => 'The temperature gauge read ' + Math.round(b.T) + ' throughout, so each hit was as hard as before. Wall hits went from about ' +
+        Math.round(a.hits / a.seconds) + ' to ' + Math.round(b.hits / b.seconds) + ' per second on ' + Math.round(a.A / b.A * 100) / 100 +
+        '× less wall: every wall was hit more often, and pressure × area went ' + (a.P * a.A).toFixed(0) + ' → ' + (b.P * b.A).toFixed(0) + '.',
+      conclusion: 'At fixed temperature, pressure × area holds steady. Now switch the Thermostat off, drag the Piston in yourself, and watch T.'
+    },
+    {
+      id: 'size',
+      title: 'Grow the particles',
+      purpose: 'Measure the ratio Z = P·A / (N·T) with small particles, grow every particle from radius 0.35 to 1.0 at the same N, T and box, and measure Z again.',
+      question: 'Same N, T and box, but the particles are about three times their radius. Where does the measured pressure sit against the law’s prediction?',
+      choices: [
+        { label: 'Above it — the walls feel more pressure than N·T / A', value: 0.3 },
+        { label: 'On it — size does not enter the law', value: 0 },
+        { label: 'Below it — bigger particles are slower', value: -0.3 }
+      ],
+      runLabel: 'Run: grow the particles',
+      baseline: gas => M.setRadius(gas, M.DEFAULTS.radius),
+      apply: gas => M.setRadius(gas, M.LIMITS.radius[1]),
+      describe: (a, b, gas) => 'r 0.35 → ' + gas.r.toFixed(2) + ' (particles cover ' + Math.round(M.packingFraction(gas.N, gas.r, gas.A || M.area(gas)) * 100) +
+        '% of the box), N ' + Math.round(a.N) + ', T ' + Math.round(a.T) + ', A ' + Math.round(a.A),
+      metric: 'ratio',
+      explain: (a, b, delta, gas) => 'With small particles the ratio was ' + a.ratio.toFixed(2) + '; with big ones it is ' + b.ratio.toFixed(2) +
+        '. The temperature gauge read ' + Math.round(b.T) + ' both times, so nothing hit harder. The first-order excluded-area estimate for this packing is Z ≈ ' +
+        M.excludedAreaZ(gas.N, gas.r, M.area(gas)).toFixed(2) + ' (Details explains it).',
+      conclusion: 'The law assumes particles take up no room. Give them room and the space they actually fly through shrinks, so the walls are hit more often than N·T / A expects.'
+    }
+  ];
+
+  /* ---- state ----------------------------------------------------------- */
+
+  let gas = M.createGas();
+  let timeScale = M.DEFAULTS.timeScale;
+  let paused = false;
+  let stageIndex = 0;
+  const predictions = [null, null, null, null];
+  const findings = [null, null, null, null];
+  let experiment = null;   /* the guided routine in flight, or null */
+  let sweep = null;        /* a stage-4 sweep in flight, or null */
+  let sweepPoints = [];
+  let sweepRuns = 0;
+  let lastStats = null;
+  let lastFrameMs = 0;
+  let lastGaugeMs = 0;
+  let lastHistMs = 0;
+  let pbarScale = 20;
+  const flash = { left: 0, right: 0, top: 0, bottom: 0 };
+  const freeCue = { compressStartT: null, compressing: false };
+
+  const activity = byId('activity');
+  const hosts = Array.from(document.querySelectorAll('.activity-host'));
+
+  const boxCanvas = byId('box-canvas');
+  const histCanvas = byId('hist-canvas');
+  const sweepCanvas = byId('sweep-canvas');
+  const boxCtx = boxCanvas.getContext('2d');
+  const histCtx = histCanvas.getContext('2d');
+  const sweepCtx = sweepCanvas.getContext('2d');
+
+  const controls = {
+    n: byId('ctl-n'), t: byId('ctl-t'), w: byId('ctl-w'), r: byId('ctl-r'),
+    thermo: byId('ctl-thermo'), coll: byId('ctl-coll'), pause: byId('ctl-pause'),
+    speed: byId('ctl-speed'), same: byId('ctl-samespeed')
+  };
+  const outs = { n: byId('out-n'), t: byId('out-t'), w: byId('out-w'), r: byId('out-r') };
+  const SPEEDS = [0.5, 1, 2, 4];
+
+  /* ---- helpers ----------------------------------------------------------- */
+
+  const fmtP = p => (Math.round(p * 10) / 10).toFixed(1);
+  const fmtZ = z => Number.isFinite(z) ? z.toFixed(2) : '–';
+
+  function setCue(text, warm) {
+    const cue = byId('cue-core');
+    cue.textContent = text || '';
+    cue.classList.toggle('cue-warm', Boolean(warm));
+  }
+
+  function setCue4(text, warm) {
+    const cue = byId('cue-4');
+    cue.textContent = text || '';
+    cue.classList.toggle('cue-warm', Boolean(warm));
+  }
+
+  function busy() { return experiment !== null || sweep !== null; }
+
+  function lockControls(locked) {
+    ['n', 't', 'w', 'r'].forEach(k => { controls[k].disabled = locked; });
+    ['thermo', 'coll', 'same'].forEach(k => { controls[k].disabled = locked; });
+    ['sweep-area', 'sweep-temp', 'sweep-count'].forEach(id => { byId(id).disabled = locked; });
+  }
+
+  /* Mirror the gas into the sliders (after an experiment or a reset moved
+     something the learner did not). */
+  function syncControls() {
+    controls.n.value = String(gas.N); outs.n.value = String(gas.N);
+    controls.t.value = String(Math.round(gas.targetT)); outs.t.value = String(Math.round(gas.targetT));
+    controls.w.value = String(Math.round(gas.pistonTarget)); outs.w.value = String(Math.round(gas.pistonTarget));
+    controls.r.value = gas.r.toFixed(2); outs.r.value = gas.r.toFixed(2);
+    controls.thermo.setAttribute('aria-pressed', String(gas.thermostat));
+    controls.thermo.innerHTML = 'Thermostat <b>' + (gas.thermostat ? 'on' : 'off') + '</b>';
+    controls.coll.setAttribute('aria-pressed', String(gas.collisions));
+    controls.coll.innerHTML = 'Collisions <b>' + (gas.collisions ? 'on' : 'off') + '</b>';
+    controls.pause.setAttribute('aria-pressed', String(paused));
+    controls.pause.textContent = paused ? 'Paused' : 'Running';
+    controls.speed.innerHTML = 'Speed <b>' + timeScale + '×</b>';
+    byId('speed-badge').innerHTML = timeScale + '× time';
+  }
+
+  /* ---- canvases --------------------------------------------------------- */
+
+  function sizeCanvas(canvas, aspect, maxHeight) {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    if (rect.width === 0) return false;
+    const ratio = window.devicePixelRatio || 1;
+    let h = rect.width * aspect;
+    if (maxHeight && h > maxHeight) h = maxHeight;
+    canvas.style.height = h + 'px';
+    const w = Math.round(rect.width * ratio), hh = Math.round(h * ratio);
+    if (canvas.width !== w || canvas.height !== hh) { canvas.width = w; canvas.height = hh; }
+    return true;
+  }
+
+  /* Speed → colour: cool blue for slow, white in the middle, gold for fast,
+     relative to the target temperature's rms speed. Sixteen buckets so the
+     particles draw in sixteen fills rather than six hundred. */
+  const PALETTE = (() => {
+    const stops = [[0, 164, 227], [255, 255, 255], [255, 215, 106]];
+    const out = [];
+    for (let i = 0; i < 16; i++) {
+      const t = i / 15;
+      const seg = t < 0.5 ? 0 : 1, u = (t - seg * 0.5) * 2;
+      const a = stops[seg], b = stops[seg + 1];
+      const c = a.map((v, k) => Math.round(v + (b[k] - v) * u));
+      out.push('rgb(' + c.join(',') + ')');
+    }
+    return out;
+  })();
+
+  function drawBox() {
+    if (!sizeCanvas(boxCanvas, M.DEFAULTS.boxHeight / M.DEFAULTS.boxWidth, 420)) return;
+    const W = boxCanvas.width, H = boxCanvas.height;
+    const s = W / M.DEFAULTS.boxWidth;
+    const ctx = boxCtx;
+    ctx.clearRect(0, 0, W, H);
+    /* the region behind the piston */
+    ctx.fillStyle = 'rgba(0,0,0,.35)';
+    ctx.fillRect(gas.W * s, 0, W - gas.W * s, H);
+    /* the gas region */
+    ctx.fillStyle = '#04213C';
+    ctx.fillRect(0, 0, gas.W * s, H);
+
+    /* particles, bucketed by speed */
+    const vref = Math.max(M.rmsSpeed(gas.targetT), 1e-6);
+    const buckets = PALETTE.map(() => []);
+    for (let i = 0; i < gas.N; i++) {
+      const v = Math.hypot(gas.vx[i], gas.vy[i]);
+      const b = M.clamp(Math.floor((v / (2.2 * vref)) * 15), 0, 15);
+      buckets[b].push(i);
+    }
+    const rp = Math.max(gas.r * s, 2.2 * (window.devicePixelRatio || 1));
+    for (let b = 0; b < 16; b++) {
+      const list = buckets[b];
+      if (!list.length) continue;
+      ctx.fillStyle = PALETTE[b];
+      ctx.beginPath();
+      for (const i of list) {
+        const px = gas.x[i] * s, py = H - gas.y[i] * s;
+        ctx.moveTo(px + rp, py);
+        ctx.arc(px, py, rp, 0, Math.PI * 2);
+      }
+      ctx.fill();
+    }
+
+    /* wall flashes: momentum delivered in the last frame, decayed so a hit
+       lingers for a few frames. Normalised to the ideal per-wall rate so the
+       glow means "more than usual". */
+    const wf = gas.wallFlash;
+    const decay = 0.82;
+    flash.left = Math.max(flash.left * decay, wf.left);
+    flash.right = Math.max(flash.right * decay, wf.right);
+    flash.top = Math.max(flash.top * decay, wf.top);
+    flash.bottom = Math.max(flash.bottom * decay, wf.bottom);
+    const pIdeal = lastStats ? lastStats.pIdeal : M.idealPressure(gas.N, gas.targetT, M.area(gas));
+    const frameS = (1 / 60) * timeScale;
+    const norm = side => {
+      const len = (side === 'left' || side === 'right') ? gas.H : gas.W;
+      const expected = Math.max(pIdeal * len * frameS, 1e-6);
+      return M.clamp(flash[side] / expected * 0.35, 0, 1);
+    };
+    const lw = Math.max(3, 0.02 * W);
+    ctx.lineCap = 'butt';
+    const wall = (x1, y1, x2, y2, a, colour) => {
+      ctx.strokeStyle = colour || ('rgba(255,215,106,' + (0.15 + 0.85 * a).toFixed(3) + ')');
+      ctx.lineWidth = lw;
+      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    };
+    wall(lw / 2, 0, lw / 2, H, norm('left'));
+    wall(0, lw / 2, gas.W * s, lw / 2, norm('top'));
+    wall(0, H - lw / 2, gas.W * s, H - lw / 2, norm('bottom'));
+    /* the piston: a thick gold bar that glows with its own hits */
+    const px = gas.W * s;
+    ctx.fillStyle = 'rgba(236,172,0,' + (0.75 + 0.25 * norm('right')).toFixed(3) + ')';
+    ctx.fillRect(px - lw * 1.6, 0, lw * 3.2, H);
+    ctx.fillStyle = 'rgba(0,33,68,.55)';
+    for (let k = 1; k <= 3; k++) ctx.fillRect(px - lw * 0.25, (H * k) / 4 - lw * 1.2, lw * 0.5, lw * 2.4);
+  }
+
+  function drawHistogram() {
+    if (!sizeCanvas(histCanvas, 0.42, 220)) return;
+    const W = histCanvas.width, H = histCanvas.height;
+    const ctx = histCtx;
+    const ratio = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, W, H);
+    const T = lastStats ? lastStats.T : gas.targetT;
+    if (!(T > 0) || gas.N === 0) return;
+    const bins = 28;
+    const vMax = 4 * Math.sqrt(Math.max(T, gas.targetT * 0.5));
+    const { counts, binWidth } = M.speedHistogram(gas, bins, vMax);
+    const padL = 8 * ratio, padB = 22 * ratio, padT = 8 * ratio, padR = 8 * ratio;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    /* expected count per bin from the 2D Maxwell density at the measured T */
+    const expected = [];
+    let peak = 1;
+    for (let b = 0; b < bins; b++) {
+      const v = (b + 0.5) * binWidth;
+      const e = gas.N * M.maxwellSpeedPdf(v, T) * binWidth;
+      expected.push(e);
+      peak = Math.max(peak, e, counts[b]);
+    }
+    peak *= 1.08;
+    const bw = plotW / bins;
+    ctx.fillStyle = 'rgba(0,164,227,.55)';
+    for (let b = 0; b < bins; b++) {
+      const h = (counts[b] / peak) * plotH;
+      ctx.fillRect(padL + b * bw + 1, padT + plotH - h, Math.max(1, bw - 2), h);
+    }
+    ctx.strokeStyle = '#FFD76A';
+    ctx.lineWidth = 2 * ratio;
+    ctx.beginPath();
+    for (let b = 0; b < bins; b++) {
+      const x = padL + (b + 0.5) * bw, y = padT + plotH - (expected[b] / peak) * plotH;
+      if (b === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    /* axis: speed, with the rms speed marked */
+    ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.font = (11 * ratio) + 'px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('speed →', padL, H - 6 * ratio);
+    const vrms = M.rmsSpeed(T);
+    const xr = padL + (vrms / vMax) * plotW;
+    ctx.strokeStyle = 'rgba(255,255,255,.35)';
+    ctx.lineWidth = 1 * ratio;
+    ctx.setLineDash([4 * ratio, 4 * ratio]);
+    ctx.beginPath(); ctx.moveTo(xr, padT); ctx.lineTo(xr, padT + plotH); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.textAlign = 'center';
+    ctx.fillText('rms ' + vrms.toFixed(1), xr, H - 6 * ratio);
+    ctx.textAlign = 'right';
+    ctx.fillText('T = ' + Math.round(T), W - padR, padT + 12 * ratio);
+  }
+
+  const SWEEP_COLOURS = { area: '#00A4E3', temp: '#C63F1D', count: '#1C704D' };
+  const SWEEP_NAMES = { area: 'box (A)', temp: 'temperature (T)', count: 'particle count (N)' };
+
+  function drawSweep() {
+    if (!sizeCanvas(sweepCanvas, 0.62, 360)) return;
+    const W = sweepCanvas.width, H = sweepCanvas.height;
+    const ctx = sweepCtx;
+    const ratio = window.devicePixelRatio || 1;
+    ctx.clearRect(0, 0, W, H);
+    const padL = 46 * ratio, padB = 34 * ratio, padT = 12 * ratio, padR = 14 * ratio;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+    let max = 1;
+    for (const p of sweepPoints) max = Math.max(max, p.pIdeal, p.P);
+    max *= 1.12;
+    const X = v => padL + (v / max) * plotW;
+    const Y = v => padT + plotH - (v / max) * plotH;
+    /* axes */
+    ctx.strokeStyle = '#C6D1D8'; ctx.lineWidth = 1 * ratio;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+    /* the diagonal: the prediction */
+    ctx.strokeStyle = '#002144'; ctx.lineWidth = 1.5 * ratio; ctx.setLineDash([6 * ratio, 5 * ratio]);
+    ctx.beginPath(); ctx.moveTo(X(0), Y(0)); ctx.lineTo(X(max), Y(max)); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#40556A';
+    ctx.font = (11 * ratio) + 'px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('predicted pressure  N·T / A', padL + plotW / 2, H - 8 * ratio);
+    ctx.save();
+    ctx.translate(12 * ratio, padT + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('measured pressure', 0, 0);
+    ctx.restore();
+    ctx.textAlign = 'right';
+    ctx.fillText(max.toFixed(0), padL - 4 * ratio, padT + 10 * ratio);
+    ctx.fillText('0', padL - 4 * ratio, padT + plotH);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#002144';
+    ctx.fillText('diagonal = the law holds', X(max * 0.55) + 6 * ratio, Y(max * 0.55) - 8 * ratio);
+    /* points */
+    for (const p of sweepPoints) {
+      ctx.fillStyle = SWEEP_COLOURS[p.kind];
+      ctx.beginPath();
+      ctx.arc(X(p.pIdeal), Y(p.P), (p.big ? 6 : 4.5) * ratio, 0, Math.PI * 2);
+      ctx.fill();
+      if (p.big) { ctx.strokeStyle = '#ECAC00'; ctx.lineWidth = 2 * ratio; ctx.stroke(); }
+    }
+    /* legend */
+    let lx = padL + 8 * ratio, ly = padT + 14 * ratio;
+    for (const k of Object.keys(SWEEP_NAMES)) {
+      ctx.fillStyle = SWEEP_COLOURS[k];
+      ctx.beginPath(); ctx.arc(lx, ly - 4 * ratio, 4 * ratio, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#40556A';
+      ctx.fillText(SWEEP_NAMES[k], lx + 8 * ratio, ly);
+      ly += 15 * ratio;
+    }
+    ctx.fillStyle = '#9F6700';
+    ctx.fillText('gold ring = big particles (r ≥ 0.7)', lx, ly);
+  }
+
+  /* ---- gauges ----------------------------------------------------------- */
+
+  function renderGauges(st) {
+    byId('g-n').textContent = String(st.N);
+    byId('g-t').textContent = String(Math.round(st.T));
+    byId('g-a').textContent = String(Math.round(st.A));
+    byId('g-p').textContent = fmtP(st.pEma);
+    const hitsS = Math.max(st.hitsPerSecond, 1);
+    const band = st.pEma / Math.sqrt(hitsS * gas.emaTau);
+    byId('g-p-note').textContent = '±' + fmtP(band) + ' · from wall hits';
+    byId('g-pi').textContent = fmtP(st.pIdeal);
+    const z = st.pIdeal > 0 ? st.pEma / st.pIdeal : NaN;
+    byId('g-z').textContent = 'ratio Z = ' + fmtZ(z);
+    byId('g-hits').textContent = String(Math.round(st.hitsPerSecond));
+    const want = Math.max(st.pIdeal, st.pEma, 1) * 1.3;
+    pbarScale += (want - pbarScale) * 0.1;
+    byId('pbar-ideal').style.width = M.clamp(st.pIdeal / pbarScale * 100, 0, 100) + '%';
+    byId('pbar-meas').style.width = M.clamp(st.pEma / pbarScale * 100, 0, 100) + '%';
+  }
+
+  /* ---- the guided experiment -------------------------------------------- */
+
+  function startExperiment(i) {
+    if (busy()) return;
+    const stage = STAGES[i];
+    experiment = { stage: i, phase: 'prepare', elapsed: 0, before: null, after: null, startT: null };
+    gas.thermostat = true;
+    gas.collisions = true;
+    paused = false;
+    stage.baseline(gas);
+    lockControls(true);
+    syncControls();
+    renderPredictions(i);
+    byId('run-button').disabled = true;
+    byId('run-button').textContent = 'Running…';
+    byId('again-button').hidden = true;
+    byId('finding').hidden = true;
+    byId('run-progress').hidden = false;
+    setProgress(0, 'Preparing: putting this stage’s variable at its baseline');
+    setCue('');
+  }
+
+  function setProgress(fraction, label) {
+    byId('progress-fill').style.width = Math.round(M.clamp(fraction, 0, 1) * 100) + '%';
+    byId('progress-label').textContent = label;
+  }
+
+  function pistonSettled() { return gas.pistonU === 0 && Math.abs(gas.W - gas.pistonTarget) < 1e-9; }
+
+  function tickExperiment(simDt) {
+    const e = experiment;
+    const stage = STAGES[e.stage];
+    e.elapsed += simDt;
+    const total = SETTLE_S + WINDOW_S + SETTLE_S + WINDOW_S;
+    switch (e.phase) {
+      case 'prepare':
+        if (e.elapsed >= SETTLE_S && pistonSettled()) {
+          e.phase = 'before'; e.elapsed = 0; M.beginWindow(gas);
+        }
+        setProgress(0.02, 'Preparing: putting this stage’s variable at its baseline');
+        break;
+      case 'before':
+        setProgress((SETTLE_S + e.elapsed) / total, 'Measuring BEFORE — ' + e.elapsed.toFixed(1) + ' of ' + WINDOW_S + ' s');
+        if (e.elapsed >= WINDOW_S) {
+          e.before = M.endWindow(gas);
+          stage.apply(gas);
+          syncControls();
+          e.phase = 'settle'; e.elapsed = 0;
+        }
+        break;
+      case 'settle':
+        setProgress((SETTLE_S + WINDOW_S + Math.min(e.elapsed, SETTLE_S)) / total,
+          stage.id === 'area' && !pistonSettled() ? 'The piston is sliding in…' : 'Settling after the change…');
+        if (e.elapsed >= SETTLE_S && pistonSettled()) {
+          e.phase = 'after'; e.elapsed = 0; M.beginWindow(gas);
+        }
+        break;
+      case 'after':
+        setProgress((SETTLE_S + WINDOW_S + SETTLE_S + e.elapsed) / total, 'Measuring AFTER — ' + e.elapsed.toFixed(1) + ' of ' + WINDOW_S + ' s');
+        if (e.elapsed >= WINDOW_S) {
+          e.after = M.endWindow(gas);
+          finishExperiment();
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  function finishExperiment() {
+    const e = experiment;
+    const stage = STAGES[e.stage];
+    const a = e.before, b = e.after;
+    const observed = stage.metric === 'ratio' ? (b.ratio - a.ratio) : (b.P / a.P);
+    /* which choice the gauge supported: the one whose value is nearest */
+    let nearest = 0, best = Infinity;
+    stage.choices.forEach((c, k) => {
+      const d = Math.abs(c.value - observed);
+      if (d < best) { best = d; nearest = k; }
+    });
+    const chosen = predictions[e.stage];
+    findings[e.stage] = { before: a, after: b, observed, nearest, chosen, supported: chosen === nearest };
+    experiment = null;
+    lockControls(false);
+    byId('run-progress').hidden = true;
+    renderStage(e.stage);
+    /* A4: the observation cue, at the moment it becomes true */
+    if (stage.metric === 'ratio') {
+      setCue('Ratio Z went ' + fmtZ(a.ratio) + ' → ' + fmtZ(b.ratio) + ' with T at ' + Math.round(b.T) +
+        ' both times: the walls are being hit more often than N·T / A expects.', false);
+    } else {
+      setCue('Pressure went ' + fmtP(a.P) + ' → ' + fmtP(b.P) + ' (' + observed.toFixed(2) + '×) — ' + stage.describe(a, b, gas) + '.', false);
+    }
+  }
+
+  function cancelExperiment() {
+    if (!experiment) return;
+    experiment = null;
+    if (gas.window) M.endWindow(gas);
+    lockControls(false);
+    byId('run-progress').hidden = true;
+  }
+
+  /* ---- stage 4 sweeps ------------------------------------------------------ */
+
+  const SWEEPS = {
+    area: { values: [100, 85, 70, 55, 40], set: v => M.setBoxWidth(gas, v), save: () => gas.pistonTarget },
+    temp: { values: [150, 300, 450, 600, 900], set: v => M.setTemperature(gas, v, true), save: () => gas.targetT },
+    count: { values: [60, 120, 240, 360, 480], set: v => M.setCount(gas, v), save: () => gas.N }
+  };
+
+  function startSweep(kind) {
+    if (busy()) return;
+    const def = SWEEPS[kind];
+    sweep = { kind, step: 0, phase: 'set', elapsed: 0, restore: def.save(), points: [] };
+    gas.thermostat = true;
+    gas.collisions = true;
+    paused = false;
+    lockControls(true);
+    byId('run-button').disabled = true;
+    byId('sweep-progress').hidden = false;
+    byId('sweep-clear').disabled = true;
+    setCue4('');
+  }
+
+  function tickSweep(simDt) {
+    const s = sweep;
+    const def = SWEEPS[s.kind];
+    s.elapsed += simDt;
+    if (s.phase === 'set') {
+      if (s.step >= def.values.length) {
+        def.set(s.restore);
+        s.phase = 'restore'; s.elapsed = 0;
+        return;
+      }
+      def.set(def.values[s.step]);
+      syncControls();
+      s.phase = 'settle'; s.elapsed = 0;
+      byId('sweep-progress-label').textContent = 'Step ' + (s.step + 1) + ' of ' + def.values.length + ': setting ' + SWEEP_NAMES[s.kind] + ' to ' + def.values[s.step] + '…';
+    } else if (s.phase === 'settle') {
+      if (s.elapsed >= SWEEP_SETTLE_S && pistonSettled()) { s.phase = 'measure'; s.elapsed = 0; M.beginWindow(gas); }
+    } else if (s.phase === 'measure') {
+      byId('sweep-progress-label').textContent = 'Step ' + (s.step + 1) + ' of ' + def.values.length + ': measuring — ' + s.elapsed.toFixed(1) + ' of ' + SWEEP_WINDOW_S + ' s';
+      if (s.elapsed >= SWEEP_WINDOW_S) {
+        const m = M.endWindow(gas);
+        const point = { kind: s.kind, run: sweepRuns + 1, N: m.N, T: m.T, A: m.A, r: gas.r, P: m.P, pIdeal: m.pIdeal, ratio: m.ratio, big: gas.r >= 0.7 };
+        s.points.push(point);
+        sweepPoints.push(point);
+        appendSweepRow(point);
+        drawSweep();
+        s.step++;
+        s.phase = 'set'; s.elapsed = 0;
+      }
+    } else if (s.phase === 'restore') {
+      if (s.elapsed >= 0.5 && pistonSettled()) finishSweep();
+    }
+  }
+
+  function finishSweep() {
+    const s = sweep;
+    sweep = null;
+    sweepRuns++;
+    lockControls(false);
+    syncControls();
+    byId('sweep-progress').hidden = true;
+    byId('sweep-clear').disabled = false;
+    renderRunButton(stageIndex);
+    const zs = s.points.map(p => p.ratio);
+    const mean = zs.reduce((a, b) => a + b, 0) / zs.length;
+    const spread = Math.sqrt(zs.reduce((a, z) => a + (z - mean) * (z - mean), 0) / zs.length);
+    const r = s.points[0].r;
+    const est = M.excludedAreaZ(Math.round(s.points[0].N), r, s.points[0].A);
+    byId('sweep-summary').innerHTML = 'Sweep of ' + SWEEP_NAMES[s.kind] + ' at particle size ' + r.toFixed(2) + ': mean ratio <b>Z = ' + mean.toFixed(2) +
+      '</b>, point-to-point spread ±' + spread.toFixed(2) + '. ' +
+      (r >= 0.7
+        ? 'The points sit above the diagonal by a consistent margin; the first-order excluded-area estimate for the first point’s packing is Z ≈ ' + est.toFixed(2) + '.'
+        : 'Points within a few percent of the diagonal: the law held across the sweep, to within the noise of a few hundred particles.');
+    setCue4(r >= 0.7
+      ? 'Every point landed above the diagonal: at this particle size the walls are hit more often than the law predicts, in the same direction every time.'
+      : 'The points track the diagonal: the measured pressure followed N·T / A across five values of ' + SWEEP_NAMES[s.kind] + '.', false);
+  }
+
+  function cancelSweep() {
+    if (!sweep) return;
+    const s = sweep;
+    sweep = null;
+    if (gas.window) M.endWindow(gas);
+    SWEEPS[s.kind].set(s.restore);
+    lockControls(false);
+    syncControls();
+    byId('sweep-progress').hidden = true;
+    byId('sweep-clear').disabled = false;
+  }
+
+  function appendSweepRow(p) {
+    const tr = document.createElement('tr');
+    const cells = [
+      SWEEP_NAMES[p.kind] + ' #' + p.run, Math.round(p.N), Math.round(p.T), Math.round(p.A), p.r.toFixed(2), fmtP(p.pIdeal), fmtP(p.P), fmtZ(p.ratio)
+    ];
+    cells.forEach((c, k) => {
+      const td = document.createElement('td');
+      td.textContent = String(c);
+      if (k === 7) td.className = 'z';
+      tr.appendChild(td);
+    });
+    byId('sweep-body').appendChild(tr);
+  }
+
+  function clearSweeps() {
+    sweepPoints = [];
+    sweepRuns = 0;
+    byId('sweep-body').innerHTML = '';
+    byId('sweep-summary').textContent = 'No sweeps yet.';
+    setCue4('');
+    drawSweep();
+  }
+
+  /* ---- the task panel per stage --------------------------------------------- */
+
+  function renderPredictions(i) {
+    const stage = STAGES[i];
+    const list = byId('prediction-list');
+    list.innerHTML = '';
+    const locked = busy() || findings[i] !== null;
+    stage.choices.forEach((c, k) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'prediction' + (predictions[i] === k ? ' selected' : '');
+      b.textContent = c.label;
+      b.setAttribute('aria-pressed', String(predictions[i] === k));
+      b.disabled = locked;
+      b.addEventListener('click', () => {
+        if (busy()) return;
+        predictions[i] = k;
+        findings[i] = null;
+        renderStage(i);
+      });
+      list.appendChild(b);
+    });
+  }
+
+  function renderRunButton(i) {
+    const stage = STAGES[i];
+    const run = byId('run-button');
+    const again = byId('again-button');
+    if (busy()) { run.disabled = true; run.textContent = sweep ? 'A sweep is running…' : 'Running…'; again.hidden = true; return; }
+    if (findings[i]) { run.disabled = true; run.textContent = 'Done — read the finding'; again.hidden = false; return; }
+    if (predictions[i] === null) { run.disabled = true; run.textContent = 'Choose a prediction first'; again.hidden = true; return; }
+    run.disabled = false; run.textContent = stage.runLabel; again.hidden = true;
+  }
+
+  function renderEcho(i) {
+    const stageEl = byId('stage-' + (i + 1));
+    const echo = stageEl && stageEl.querySelector('.lesson-strip .echo');
+    if (!echo) return;
+    const choice = predictions[i];
+    if (choice === null) { echo.hidden = true; echo.textContent = ''; return; }
+    echo.hidden = false;
+    const f = findings[i];
+    echo.innerHTML = 'You predicted: <b>' + STAGES[i].choices[choice].label + '</b>' +
+      (f ? '<br>The gauge: <b>' + (f.supported ? 'agreed' : 'disagreed') + '</b>' : '');
+  }
+
+  function renderFinding(i) {
+    const f = findings[i];
+    const el = byId('finding');
+    if (!f) { el.hidden = true; return; }
+    const stage = STAGES[i];
+    const a = f.before, b = f.after;
+    el.hidden = false;
+    el.classList.toggle('contradicted', !f.supported);
+    byId('finding-verdict').textContent = (f.supported ? 'Supported: ' : 'Not what the gauge showed: ') + stage.choices[f.nearest].label;
+    const rows = [];
+    const row = (label, value) => rows.push('<div class="measure-row"><span>' + label + '</span><b>' + value + '</b></div>');
+    row('Before', 'P = ' + fmtP(a.P) + ' ± ' + fmtP(a.uncertainty) + ' · Z = ' + fmtZ(a.ratio) + ' · ' + a.hits + ' hits');
+    row('After', 'P = ' + fmtP(b.P) + ' ± ' + fmtP(b.uncertainty) + ' · Z = ' + fmtZ(b.ratio) + ' · ' + b.hits + ' hits');
+    row('Change', stage.describe(a, b, gas));
+    if (stage.metric === 'ratio') row('Ratio Z, before → after', '<span class="ratio">' + fmtZ(a.ratio) + ' → ' + fmtZ(b.ratio) + '</span>');
+    else row('Pressure after ÷ before', '<span class="ratio">' + f.observed.toFixed(2) + '×</span>');
+    byId('measure-list').innerHTML = rows.join('');
+    byId('finding-explanation').textContent = stage.explain(a, b, f.observed, gas);
+    byId('finding-conclusion').textContent = stage.conclusion;
+  }
+
+  function renderStage(i) {
+    const stage = STAGES[i];
+    byId('task-title').textContent = stage.title;
+    byId('task-purpose').textContent = stage.purpose;
+    byId('prediction-question').textContent = stage.question;
+    renderPredictions(i);
+    renderRunButton(i);
+    renderEcho(i);
+    renderFinding(i);
+  }
+
+  function moveActivityTo(i) {
+    const host = hosts[i] || hosts[0];
+    if (activity.parentElement !== host) host.appendChild(activity);
+  }
+
+  /* ---- the frame loop ------------------------------------------------------- */
+
+  function frame(nowMs) {
+    const realDt = lastFrameMs ? Math.min(0.05, (nowMs - lastFrameMs) / 1000) : 1 / 60;
+    lastFrameMs = nowMs;
+    const simDt = paused ? 0 : realDt * timeScale;
+    if (simDt > 0) {
+      lastStats = M.advance(gas, simDt);
+      if (experiment) tickExperiment(simDt);
+      else if (sweep) tickSweep(simDt);
+      else freePlayCues(simDt);
+    }
+    drawBox();
+    if (nowMs - lastGaugeMs > 120 && lastStats) { renderGauges(lastStats); lastGaugeMs = nowMs; }
+    if (nowMs - lastHistMs > 70) { drawHistogram(); lastHistMs = nowMs; }
+    requestAnimationFrame(frame);
+  }
+
+  /* A4 cues during free play: the one worth naming is the piston heating the
+     gas when nothing is holding the temperature. */
+  function freePlayCues() {
+    const moving = gas.pistonU < 0;
+    if (!gas.thermostat && moving && !freeCue.compressing) {
+      freeCue.compressing = true;
+      freeCue.compressStartT = lastStats.T;
+    }
+    if (freeCue.compressing) {
+      if (!moving) {
+        freeCue.compressing = false;
+        const t0 = freeCue.compressStartT, t1 = lastStats.T;
+        if (!gas.thermostat && t1 > t0 * 1.08) {
+          setCue('T rose ' + Math.round(t0) + ' → ' + Math.round(t1) + ' while the piston moved in with the thermostat off: the moving wall did work on every particle that bounced off it.', true);
+        }
+      }
+    }
+  }
+
+  /* ---- controls ----------------------------------------------------------------- */
+
+  controls.n.addEventListener('input', () => {
+    if (busy()) return;
+    M.setCount(gas, Number(controls.n.value));
+    outs.n.value = String(gas.N);
+  });
+  controls.t.addEventListener('input', () => {
+    if (busy()) return;
+    M.setTemperature(gas, Number(controls.t.value), !gas.thermostat);
+    outs.t.value = String(Math.round(gas.targetT));
+  });
+  controls.w.addEventListener('input', () => {
+    if (busy()) return;
+    M.setBoxWidth(gas, Number(controls.w.value));
+    outs.w.value = String(Math.round(gas.pistonTarget));
+  });
+  controls.r.addEventListener('input', () => {
+    if (busy()) return;
+    M.setRadius(gas, Number(controls.r.value));
+    outs.r.value = gas.r.toFixed(2);
+    if (gas.r >= 0.7) setCue('Watch the ratio: at this size the particles cover ' + Math.round(M.packingFraction(gas.N, gas.r, M.area(gas)) * 100) + '% of the box, and the walls are hit more often than N·T / A expects.', false);
+  });
+  controls.thermo.addEventListener('click', () => {
+    if (busy()) return;
+    gas.thermostat = !gas.thermostat;
+    syncControls();
+    if (!gas.thermostat) setCue('Thermostat off: the gas keeps whatever energy it has. Slide the piston in and watch T.', false);
+  });
+  controls.coll.addEventListener('click', () => {
+    if (busy()) return;
+    gas.collisions = !gas.collisions;
+    syncControls();
+    if (!gas.collisions) setCue('Collisions off: particles pass through each other. The pressure reading does not change — a collision between two particles never touches a wall.', false);
+    else M.setRadius(gas, gas.r);
+  });
+  controls.pause.addEventListener('click', () => {
+    paused = !paused;
+    syncControls();
+  });
+  controls.speed.addEventListener('click', () => {
+    const k = (SPEEDS.indexOf(timeScale) + 1) % SPEEDS.length;
+    timeScale = SPEEDS[k];
+    syncControls();
+  });
+  controls.same.addEventListener('click', () => {
+    if (busy()) return;
+    const v = M.rmsSpeed(gas.targetT);
+    for (let i = 0; i < gas.N; i++) {
+      const th = gas.rng() * Math.PI * 2;
+      gas.vx[i] = v * Math.cos(th); gas.vy[i] = v * Math.sin(th);
+    }
+    setCue('Every particle now has the same speed. ' + (gas.collisions
+      ? 'Watch the histogram relax into the curve as they collide.'
+      : 'With collisions off it will stay that way: nothing exchanges energy between particles.'), false);
+  });
+
+  byId('run-button').addEventListener('click', () => startExperiment(stageIndex));
+  byId('again-button').addEventListener('click', () => { findings[stageIndex] = null; renderStage(stageIndex); startExperiment(stageIndex); });
+  byId('sweep-area').addEventListener('click', () => startSweep('area'));
+  byId('sweep-temp').addEventListener('click', () => startSweep('temp'));
+  byId('sweep-count').addEventListener('click', () => startSweep('count'));
+  byId('sweep-clear').addEventListener('click', clearSweeps);
+
+  /* ---- the shell's three events ------------------------------------------------- */
+
+  document.addEventListener('stagechange', event => {
+    const index = event.detail.index;
+    if (window.lessonShell && window.lessonShell.resetting) { moveActivityTo(index); return; }
+    if (index !== stageIndex) { cancelExperiment(); cancelSweep(); }
+    stageIndex = index;
+    moveActivityTo(index);
+    renderStage(index);
+    drawSweep();
+  });
+
+  /* Reset, in place. The enumeration, written out:
+       1. gas — a fresh createGas() at the defaults (N, T, W, r, thermostat,
+          collisions, the EMA, the wall accumulators, the window);
+       2. timeScale, paused;
+       3. experiment, sweep — cancelled, their windows closed, controls
+          unlocked, progress hidden;
+       4. predictions[], findings[] — cleared, so every echo hides and the
+          finding panel hides;
+       5. sweepPoints, sweepRuns, the sweep table, the sweep chart, the
+          sweep summary;
+       6. the slider values and outputs, the four switches, the speed badge;
+       7. #activity back in host 0; stageIndex 0;
+       8. pbarScale and the wall flash state; the free-play cue tracker.
+     #cue-core and #cue-4 are .obs-cue, so the shell restores them; listed
+     here so the next reader does not go looking. */
+  document.addEventListener('lessonreset', () => {
+    cancelExperiment();
+    cancelSweep();
+    gas = M.createGas();
+    timeScale = M.DEFAULTS.timeScale;
+    paused = false;
+    for (let i = 0; i < 4; i++) { predictions[i] = null; findings[i] = null; }
+    clearSweeps();
+    lastStats = null;
+    pbarScale = 20;
+    flash.left = flash.right = flash.top = flash.bottom = 0;
+    freeCue.compressing = false; freeCue.compressStartT = null;
+    syncControls();
+    lockControls(false);
+    stageIndex = 0;
+    moveActivityTo(0);
+    renderStage(0);
+    for (let i = 0; i < 4; i++) renderEchoFor(i);
+  });
+
+  function renderEchoFor(i) {
+    const stageEl = byId('stage-' + (i + 1));
+    const echo = stageEl && stageEl.querySelector('.lesson-strip .echo');
+    if (echo) { echo.hidden = true; echo.textContent = ''; }
+  }
+
+  /* Nothing here refuses a reset. Left as null on purpose, not by omission. */
+  if (window.lessonShell) window.lessonShell.onReset = null;
+
+  document.addEventListener('presentationchange', () => { drawBox(); drawHistogram(); drawSweep(); });
+
+  /* The canvases size themselves from their boxes, and the box changes when
+     the window does not (a stage switch, presentation mode, the intro
+     disclosure), so one ResizeObserver per canvas host is the only resizer. */
+  const ro = new ResizeObserver(() => { drawBox(); drawHistogram(); drawSweep(); });
+  ro.observe(boxCanvas.parentElement);
+  ro.observe(histCanvas.parentElement);
+  ro.observe(sweepCanvas.parentElement);
+
+  /* ---- start-up ---------------------------------------------------------------- */
+
+  const tabs = Array.from(document.querySelectorAll('.stage-tab'));
+  const selected = Math.max(0, tabs.findIndex(t => t.getAttribute('aria-selected') === 'true'));
+  stageIndex = selected;
+  moveActivityTo(selected);
+  syncControls();
+  renderStage(selected);
+  drawSweep();
+  requestAnimationFrame(frame);
+})();
+
+</script>
+<div class="bh-credit">Bryant Harrison &middot; Murray State University</div>
+</body>
+</html>

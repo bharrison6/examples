@@ -1,0 +1,33 @@
+{
+  "slug": "ideal-gas-law",
+  "title": "Ideal Gas Law Simulator",
+  "emoji": "🎈",
+  "topic": "Physics · Kinetic Theory of Gases",
+  "discipline": "Physics",
+  "tagline": "Measure pressure from wall hits, then test P·A = N·T until it breaks",
+  "hub_blurb": "Watch particles bounce in a box, measure pressure from the walls they hit, and test the ideal gas law against that measurement — then grow the particles and watch it drift.",
+  "card_blurb": "A live kinetic-theory box: pressure is measured from the momentum the walls receive, temperature from the particles' energy, and the ideal gas law is a prediction the gauges test. Four guided experiments double N, double T, halve the box, and grow the particles until the law stops holding.",
+  "description": "**Ideal Gas Law Simulator** — an offline two-dimensional kinetic-theory box. Hard discs fly, bounce off the walls and collide with each other; the pressure gauge adds up the momentum the walls receive and the temperature readout computes the particles' kinetic energy, so P·A = N·T is never typed in — it is a prediction the measurements test. Four guided predict-then-observe experiments (double N, double T, halve the box with a thermostat, grow the particles), a live speed histogram against the 2D Maxwell curve, a piston that heats the gas adiabatically when the thermostat is off, and automated sweeps that plot measured against predicted pressure.",
+  "entry": "index.html",
+  "guide": { "html": "presenter-guide.html", "pdf": "Ideal-Gas-Law-Presenter-Guide.pdf" },
+  "theme": "murray-state",
+  "built_for": "murray-state",
+  "attribution": { "author": "Bryant Harrison", "institution": "Murray State University" },
+  "built_with": ["claude-code"],
+  "status": "active",
+  "added": "2026-09-17",
+  "compliance": {
+    "readme": true,
+    "guide": true,
+    "guide_button": true,
+    "settings_menu": true,
+    "presentation_mode": true,
+    "presenter_notes": true,
+    "settings_reset": true,
+    "notes_match_guide": true,
+    "msu_theme": true,
+    "attribution_visible": true,
+    "mobile": true,
+    "offline_no_inference": true
+  }
+}
