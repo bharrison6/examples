@@ -186,7 +186,7 @@ assert.equal(stages.length, 4, 'A2: four stage panels');
 const TAKEAWAYS = [];
 stages.forEach((stage, i) => {
   const n = i + 1;
-  assert.match(stage, /<span class="eyebrow">Demo 13 of 16 &middot; Part four/, `A2: stage ${n} eyebrow places the demo on the path`);
+  assert.match(stage, /<span class="eyebrow">Demo 13 of 17 &middot; Part four/, `A2: stage ${n} eyebrow places the demo on the path`);
   const q = stage.match(/<p class="stage-question">([\s\S]*?)<\/p>/);
   assert.ok(q, `A2: stage ${n} needs a stage question`);
   assert.equal((stage.match(/class="stage-question"/g) || []).length, 1,

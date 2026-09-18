@@ -140,7 +140,7 @@ assert.equal(stages.length, 3, 'A2: three stage panels, one per case');
 const TAKEAWAYS = [];
 stages.forEach((stageHtml, i) => {
   const n = i + 1;
-  assert.match(stageHtml, /<span class="eyebrow">Demo 15 of 16 &middot; Part four &middot; Geology &middot; Stage \d<\/span>/,
+  assert.match(stageHtml, /<span class="eyebrow">Demo 15 of 17 &middot; Part four &middot; Geology &middot; Stage \d<\/span>/,
     `A2: stage ${n} eyebrow places the demo on the path`);
   const q = stageHtml.match(/<p class="stage-question">([\s\S]*?)<\/p>/);
   assert.ok(q, `A2: stage ${n} needs a stage question`);

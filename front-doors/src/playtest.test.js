@@ -606,7 +606,7 @@ if (!fs.existsSync(path.join(ROOT, 'index.html'))) {
      /<h1>AI Tool Guide<\/h1>/.test(built));
 
   ok('Every stage carries its eyebrow with the demo\'s fleet position',
-     (built.match(/Demo 6 of 16 &middot; Part three &middot; Stage \d/g) || []).length === 3);
+     (built.match(/Demo 6 of 17 &middot; Part three &middot; Stage \d/g) || []).length === 3);
 }
 
 /* ==================== 9. phone-first, mechanically ======================= */

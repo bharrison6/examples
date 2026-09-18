@@ -9,7 +9,7 @@ Themed in Murray State University colors: MSU Blue `#002144`, MSU Gold `#ECAC00`
 Lite Blue `#00A4E3`, with the university's alert Red Orange `#FF4500` reserved — as the
 brand guidelines specify — for genuine failure states (crashes, fall-back trajectories).
 
-Demo 7 of 16 in the *Zero to Takeoff* tour, and the first of Part four. It is built on
+Demo 7 of 17 in the *Zero to Takeoff* tour, and the first of Part four. It is built on
 the shared **lesson shell** (`../tools/lesson-shell/`), so it carries the same eleven
 template parts as every other demo in the tour — see `ADOPTING.md` beside the kit.
 

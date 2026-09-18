@@ -1,6 +1,6 @@
 # AI Winters: Boom and Bust
 
-**Has this happened before?** — Demo 4 of 16, Part two ("Where it is going"), in
+**Has this happened before?** — Demo 4 of 17, Part two ("Where it is going"), in
 *AI: From Zero to Takeoff* (`tours/zero-to-takeoff.json`).
 (Folder and URL stay `two-winters`; the two winters are still what it is about.)
 

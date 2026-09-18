@@ -4,7 +4,7 @@ Murray State University · Instrumental Analysis
 
 **Time-of-Flight Mass Spectrometer** (folder `ion-flight/`) is a self-contained,
 guided linear time-of-flight (TOF) mass-spectrometry investigation. It is **Demo 13 of
-16** in the *AI: From Zero to Takeoff* tour (Part four, Example projects). Students
+17** in the *AI: From Zero to Takeoff* tour (Part four, Example projects). Students
 predict and run three linked two-ion experiments — change mass, change positive charge,
 then match mass-to-charge ratio — and a fourth stage compares peak widths. The
 instrument animation, detector arrival cues, and trace produce the evidence used to

@@ -1,6 +1,6 @@
 # Inhibitor Investigation
 
-An offline, self-contained initial-rate enzyme-inhibition investigation. Demo 14 of 16, Part four (Example projects) of *AI: From Zero to Takeoff*. Students run a limited number of exact synthetic assays, compare observed rates to three declared candidate curves, explain what the evidence shows before a reveal, and practice the scientifically valid conclusion that evidence can be insufficient.
+An offline, self-contained initial-rate enzyme-inhibition investigation. Demo 14 of 17, Part four (Example projects) of *AI: From Zero to Takeoff*. Students run a limited number of exact synthetic assays, compare observed rates to three declared candidate curves, explain what the evidence shows before a reveal, and practice the scientifically valid conclusion that evidence can be insufficient.
 
 Built against the shared [lesson-shell](../tools/lesson-shell) kit (v2). Three stages: **Bench** (choose an assay and read the rate evidence), **Explain** (explain before reveal), and **Transfer** (pick the next measurement that would actually separate two tied candidates) — all reachable at any time; "explain before reveal" is a within-stage content gate (the mystery pattern's name stays out of the feedback until a choice is made), not a locked tab.
 

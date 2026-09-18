@@ -1,6 +1,6 @@
 # What the Survey Missed
 
-**Can fewer sightings mean fewer occupied sites?** — Demo 16 of 16, Part four ("Example
+**Can fewer sightings mean fewer occupied sites?** — Demo 16 of 17, Part four ("Example
 projects"), in *AI: From Zero to Takeoff* (`tours/zero-to-takeoff.json`). The last of the
 five "investigation" demos (predict, run, explain before reveal): wavelet-lab, ion-flight,
 inhibitor-investigation, missing-time, and this one.
