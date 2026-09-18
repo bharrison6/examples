@@ -1,6 +1,6 @@
 # Types of AI
 
-Demo 1 of 16, Part one of *AI: From Zero to Takeoff*. It sorts models two ways and
+Demo 1 of 17, Part one of *AI: From Zero to Takeoff*. It sorts models two ways and
 keeps three questions apart that people routinely mix up: **how a model is built**
 (architecture), **how it learned** (training method), and **what job it does**
 (model type). Open `index.html` in a modern browser. It is a single offline file:

@@ -3,7 +3,7 @@
 Murray State University · Example projects
 
 **Engineering Trivia** (folder `should-have-known-that/`) is a self-contained,
-slider-based estimation game. It is **Demo 11 of 16** in the *AI: From Zero to Takeoff*
+slider-based estimation game. It is **Demo 11 of 17** in the *AI: From Zero to Takeoff*
 tour (Part four, Example projects). Forty numbers an engineer is expected to carry
 without looking up — yield strengths, ampacities, psi per foot of water — and no typed
 answers: you drag a slider, commit to a guess, and see how it scores.

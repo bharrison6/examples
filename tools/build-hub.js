@@ -141,4 +141,25 @@ for (const slug of ordered) {
 const missingProv = ordered.filter(s => !(demos[s].built_with || []).length);
 if (missingProv.length) console.log('\nnote: built_with provenance unrecorded for: ' + missingProv.join(', '));
 
+/* The "Demo N of T" eyebrow is authored by hand in every demo's template, so
+   adding a demo leaves all the others claiming the old total. That is not
+   hypothetical: ideal-gas-law made sixteen demos seventeen and the sixteen
+   shipped pages went on saying "of 16" until this check was written. The tours
+   are the authority on how many demos there are and in what order, so any
+   built page that disagrees with them is drift, whichever side is wrong. */
+for (const slug of order) {
+  const built = path.join(ROOT, slug, 'index.html');
+  if (!fs.existsSync(built)) continue;
+  const want = `${order.indexOf(slug) + 1} of ${order.length}`;
+  const claims = new Set();
+  for (const m of fs.readFileSync(built, 'utf8').matchAll(/Demo\s+(\d+\s+of\s+\d+)/g)) {
+    claims.add(m[1].replace(/\s+/g, ' '));
+  }
+  const wrong = [...claims].filter(c => c !== want);
+  if (wrong.length) {
+    fail(`${slug}: built page says "Demo ${wrong.join('", "Demo ')}" but the tours place it at `
+      + `"Demo ${want}" -- update the demo's template (and its guide) or the tour`);
+  }
+}
+
 process.exit(failed ? 1 : 0);

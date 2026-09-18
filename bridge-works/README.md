@@ -1,6 +1,6 @@
 # Truss Bridge Builder
 
-Murray State University · Part four, Example projects · Demo 8 of 16 · folder `bridge-works`
+Murray State University · Part four, Example projects · Demo 8 of 17 · folder `bridge-works`
 
 A browser-based truss bridge builder for physics and engineering class, on the tour's shared
 lesson shell. Students design a bridge, **call which member goes first**, drive a vehicle across,

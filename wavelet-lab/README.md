@@ -1,6 +1,6 @@
 # Wavelet Lab
 
-An offline, self-contained Haar-wavelet reconstruction workspace for the AI Fellows demo collection — Demo 12 of 16, Part four ("Example projects") of *AI: From Zero to Takeoff*. It pairs an editable eight-value signal with a 64 × 64 procedural grayscale image, so students can connect a visible coefficient decision to numerical reconstruction error.
+An offline, self-contained Haar-wavelet reconstruction workspace for the AI Fellows demo collection — Demo 12 of 17, Part four ("Example projects") of *AI: From Zero to Takeoff*. It pairs an editable eight-value signal with a 64 × 64 procedural grayscale image, so students can connect a visible coefficient decision to numerical reconstruction error.
 
 Built on the shared lesson shell at [`../tools/lesson-shell`](../tools/lesson-shell) (a build-time-only dependency; the shipped `index.html` stays one self-contained file). Three stages, none locked: **Signal** (predict, then drop a coefficient), **Image** (retain a coefficient budget), **New case** (carry the rule to a portrait at a hard budget). Each stage opens with a stage question, a "Before you start" refresh, and a Predict/Try/Takeaway strip, and closes with a Check yourself card.
 

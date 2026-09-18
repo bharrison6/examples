@@ -1,6 +1,6 @@
 # The Pace of AI Progress
 
-An offline classroom activity for reading AI evidence: estimate where five widely cited benchmark series went, see why the tests keep being replaced, read real achievements by who checked them, and test what two points can tell you about next year. Demo 3 of 16, Part two of *AI: From Zero to Takeoff*. The public folder remains `takeoff/`.
+An offline classroom activity for reading AI evidence: estimate where five widely cited benchmark series went, see why the tests keep being replaced, read real achievements by who checked them, and test what two points can tell you about next year. Demo 3 of 17, Part two of *AI: From Zero to Takeoff*. The public folder remains `takeoff/`.
 
 Built on the shared lesson shell at `../tools/lesson-shell` (build-time only — the shipped `index.html` is still one self-contained file). Bryant Harrison · Murray State University.
 
