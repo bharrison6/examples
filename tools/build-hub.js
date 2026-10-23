@@ -77,7 +77,14 @@ for (const [slug, missing] of incomplete) {
 const untoured = Object.keys(demos)
   .filter(s => !order.includes(s) && !incomplete.has(s)).sort();
 if (untoured.length) console.log('note: demos in no tour (appended alphabetically): ' + untoured.join(', '));
-const ordered = order.concat(untoured);
+// Relocated manifests keep the original tour numbering, while the gallery
+// advertises only the classroom examples that still run in this repository.
+const ordered = order.concat(untoured).filter(slug => demos[slug].status !== 'moved');
+for (const [slug, manifest] of Object.entries(demos)) {
+  if (manifest.status === 'moved' && !/^https:\/\/bharrison6\.github\.io\/coursewiki\//.test(manifest.moved_to || '')) {
+    fail(`${slug}: moved activity needs its canonical CourseWiki destination`);
+  }
+}
 
 // ---- README table ----------------------------------------------------------
 const mdEscape = s => String(s).replace(/\|/g, '\\|');

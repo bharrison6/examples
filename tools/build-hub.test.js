@@ -20,7 +20,8 @@ test('generated launcher cards match the tour and concise manifest copy', () => 
   assert.equal(check.status, 0, `${check.stdout}\n${check.stderr}`);
 
   const tour = JSON.parse(read('tours/zero-to-takeoff.json'));
-  const expected = tour.sections.flatMap(section => section.demos);
+  const expected = tour.sections.flatMap(section => section.demos)
+    .filter(slug => JSON.parse(read(`${slug}/demo.json`)).status !== 'moved');
   const index = read('index.html');
   const cards = [...index.matchAll(/<a class="card" href="([a-z0-9-]+)\/index\.html">([\s\S]*?)<\/a>/g)];
 
@@ -32,14 +33,19 @@ test('generated launcher cards match the tour and concise manifest copy', () => 
   }
 });
 
-test('README keeps detailed descriptions and the tour closes with both Fellow demos', () => {
+test('README keeps classroom descriptions and relocated AI routes retain destinations', () => {
   const tour = JSON.parse(read('tours/zero-to-takeoff.json'));
   const order = tour.sections.flatMap(section => section.demos);
-  assert.deepEqual(order.slice(-2), ['missing-time', 'what-the-survey-missed']);
+  assert.deepEqual(order.slice(-3), ['missing-time', 'what-the-survey-missed', 'ideal-gas-law']);
 
   const readme = read('README.md');
   for (const slug of order) {
     const manifest = JSON.parse(read(`${slug}/demo.json`));
+    if (manifest.status === 'moved') {
+      assert.ok(read(`${slug}/index.html`).includes(manifest.moved_to), `${slug} retains its moved destination`);
+      assert.ok(!fs.existsSync(path.join(ROOT, slug, 'src')), `${slug} has one canonical editable source`);
+      continue;
+    }
     assert.ok(readme.includes(manifest.description), `${slug} keeps its detailed README description`);
   }
 });

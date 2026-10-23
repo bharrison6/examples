@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#002144">
-<title>AI: From Zero to Takeoff — live demos · Bryant Harrison · Murray State University</title>
+<title>Classroom Example Projects · Bryant Harrison · Murray State University</title>
 <style>
   :root {
     --navy: #002144;
@@ -330,17 +330,15 @@
       <div class="topline">
         <a class="brand" href="#top"><span class="brand-mark" aria-hidden="true">AI</span> Murray State University</a>
         <nav aria-label="Launcher sections">
-          <a href="#part-one">What AI is</a>
-          <a href="#part-two">Where it is going</a>
-          <a href="#part-three">How to use AI</a>
+          <a href="https://bharrison6.github.io/coursewiki/artificial-intelligence/index.html">AI lessons in CourseWiki</a>
           <a href="#part-four">Example projects</a>
         </nav>
       </div>
       <div class="hero" id="top">
         <div>
           <p class="eyebrow">A live, hands-on collection</p>
-          <h1>AI: From Zero to <span>Takeoff</span></h1>
-          <p class="hero-copy">Start with a game small enough to inspect completely. Then train a language model, test forecasts against evidence, and open classroom activities built for specific disciplines.</p>
+          <h1>Classroom <span>Example Projects</span></h1>
+          <p class="hero-copy">Explore classroom projects built with AI. Each activity includes its model, assumptions and teaching guide. The AI lessons and their interactive demos now live in CourseWiki.</p>
         </div>
         <aside class="hero-note" aria-label="About the demos">
           <strong>Open any demo on this device.</strong>
@@ -351,116 +349,15 @@
   </header>
 
   <main class="shell">
-    <section class="part" id="part-one">
-      <div class="part-head">
-        <div>
-          <p class="part-num">Part one</p>
-          <h2>What AI is</h2>
-        </div>
-        <p class="part-intro">Two demonstrations make the machinery visible. The first compares three ways to choose a move on the same tic-tac-toe board. The second builds from a small language model to reasoning and tool use.</p>
-      </div>
-
-      <div class="start-grid">
-        <article class="start-card">
-          <p class="feature-number">Demo 1 · one board, three stages</p>
-          <a class="card" href="zero-to-unbeatable/index.html">
-            <div class="topic">AI model architecture, training methods and model types</div>
-            <h2><span class="emoji">🧠</span>Types of AI</h2>
-            <p>Compare written rules, a learned value table and a neural network on one tic-tac-toe board, then inspect the network's actual weights. Separate three questions people mix up: how a model is built, how it was trained, and what job it does — the last one linked to Hugging Face's own catalogue of model types.</p>
-            <div class="go">Open demo →</div>
-          </a>
-          <ol class="stage-list" aria-label="Types of AI stages">
-            <li><b>1a</b><span><strong>Symbolic AI (GOFAI)</strong>Eight rules a person wrote. It never learns, and an exhaustive search still finds no losing line.</span></li>
-            <li><b>1b</b><span><strong>Value table</strong>One score per position, learned from game outcomes, until the search can call it unbeatable.</span></li>
-            <li><b>1c</b><span><strong>Neural Network</strong>Shared weights fitted to the table&rsquo;s frozen scores, with error measured on positions kept out of training.</span></li>
-            <li><b>1d</b><span><strong>Other architectures &amp; training methods</strong>Trees, ensembles, SVMs and the rest &mdash; and which of 1a&ndash;1c used which training method.</span></li>
-            <li><b>2</b><span><strong>Model types</strong>What a model does rather than how it is built: Hugging Face&rsquo;s own by-task catalogue, with a link to real models of each type.</span></li>
-          </ol>
-        </article>
-
-        <article class="start-card">
-          <p class="feature-number">Demo 2 · from prediction to action</p>
-          <a class="card" href="glass-box/index.html">
-            <div class="topic">Language models, reasoning and tool use</div>
-            <h2><span class="emoji">🔍</span>How a Language Model Works</h2>
-            <p>Train a tiny transformer, compare arithmetic strategies, and explore a scripted agent loop with real local tools.</p>
-            <div class="go">Open demo →</div>
-          </a>
-          <ol class="stage-list" aria-label="Glass Box stages">
-            <li><b>2a</b><span><strong>Language model</strong>Train a small transformer and inspect what its attention tracks.</span></li>
-            <li><b>2b</b><span><strong>Reasoning model</strong>Compare direct answers with extra computation on the same problems.</span></li>
-            <li><b>2c</b><span><strong>Agent</strong>Give a model tools, a loop, and limited memory; then test where it breaks.</span></li>
-          </ol>
-        </article>
-      </div>
-
-      <details class="concept-note">
-        <summary>How the terms relate</summary>
-        <div class="concept-grid">
-          <div><b>Artificial intelligence</b><p>A broad label for machines performing tasks that call for judgment, prediction, planning, perception, or language.</p></div>
-          <div><b>Machine learning</b><p>A part of AI in which behavior improves from data or experience. Neural networks are one family of machine-learning models.</p></div>
-          <div><b>Generative AI</b><p>Systems that produce new text, images, audio, or other content. Modern examples often use neural networks, but “generative” describes what a system does.</p></div>
-          <div><b>Models and agents</b><p>A language model predicts sequences. Reasoning training can improve multi-step work; an agent adds tools, memory, and a loop around a model.</p></div>
-          <div class="concept-caveat"><b>These labels overlap; they are not one universal ladder.</b><p>Rules-based systems, learned tables, neural networks, generative systems, reasoning methods, and agents describe different mechanisms or behaviors. Ask what was learned, what was written by people, and what the system can actually do.</p></div>
-        </div>
-      </details>
-    </section>
-
-    <section class="part" id="part-two">
-      <div class="part-head">
-        <div>
-          <p class="part-num">Part two</p>
-          <h2>Where it is going</h2>
-        </div>
-        <p class="part-intro">One demo tests your intuition against measured progress. The other tests confident predictions against seventy years of history. Read together, they support urgency with skepticism.</p>
-      </div>
-      <div class="paired-grid">
-        <a class="card" href="takeoff/index.html">
-          <div class="topic">The pace of AI progress</div>
-          <h2><span class="emoji">📈</span>The Pace of AI Progress</h2>
-          <p>Draw where five widely cited AI benchmarks went, see why the tests keep being replaced, and read real achievements by who checked them.</p>
-          <div class="go">Open demo →</div>
-        </a>
-        <a class="card" href="two-winters/index.html">
-          <div class="topic">Has this happened before?</div>
-          <h2><span class="emoji">❄️</span>AI Winters: Boom and Bust</h2>
-          <p>Classify and date ten sourced claims, then compare two AI winters through evidence rather than a prediction script.</p>
-          <div class="go">Open demo →</div>
-        </a>
-      </div>
-      <p class="pair-note"><strong>Hold both findings at once:</strong> capability can move faster than intuition, while forecasts about timing and impact still fail in both optimistic and dismissive directions.</p>
-    </section>
-
-    <section class="part" id="part-three">
-      <div class="part-head">
-        <div>
-          <p class="part-num">Part three</p>
-          <h2>How to use AI</h2>
-        </div>
-        <p class="part-intro">Practice writing a clear request, then choose the right tool for the job. These two activities show how your instructions and your choice of tools shape what AI can help you do.</p>
-      </div>
-
-      <div class="practical-grid" aria-label="Practical starting points">
-        <a class="card" href="the-stranger/index.html">
-          <div class="topic">Prompting techniques</div>
-          <h2><span class="emoji">💬</span>Prompting Strategies</h2>
-          <p>Change one prompt lever at a time—context, a success specification, or expert vocabulary—and see exactly what each contributes.</p>
-          <div class="go">Open demo →</div>
-        </a>
-        <a class="card" href="front-doors/index.html">
-          <div class="topic">What to ask it with</div>
-          <h2><span class="emoji">🚪</span>AI Tool Guide</h2>
-          <p>Compare four ways to use AI across seven faculty tasks, then choose the smallest tool that can finish each job.</p>
-          <div class="go">Open demo →</div>
-        </a>
-      </div>
-
+    <section class="part" id="ai-lessons">
+      <h2>AI lessons are now in CourseWiki</h2>
+      <p><a href="https://bharrison6.github.io/coursewiki/artificial-intelligence/understanding-artificial-intelligence.html?p=ai-from-zero-to-takeoff">Open AI: From Zero to Takeoff</a> for all six AI lessons, interactive activities and presenter guides.</p>
     </section>
 
     <section class="part" id="part-four">
       <div class="part-head">
         <div>
-          <p class="part-num">Part four</p>
+          <p class="part-num">The example gallery</p>
           <h2>Example projects</h2>
         </div>
         <p class="part-intro">Explore classroom projects built with AI. Each activity includes a guide to its model, assumptions, and teaching use. Start with a learning goal and inspect the evidence before adapting a project for your class.</p>
@@ -536,14 +433,6 @@
       </div>
     </section>
 
-    <section class="part closing" aria-labelledby="carry-heading">
-      <h2 id="carry-heading">Three ideas to carry forward</h2>
-      <ol>
-        <li><strong>Ask what kind of system you are looking at.</strong> Human-written rules, learned values, neural networks, language models, and agents behave differently.</li>
-        <li><strong>Match the tool to the job and the review you can provide.</strong> Choose a workflow whose results you can inspect.</li>
-        <li><strong>Bring your discipline’s standards.</strong> A useful classroom tool starts from the learning goal, exposes its assumptions, and makes evidence available for challenge.</li>
-      </ol>
-    </section>
   </main>
 
   <footer>

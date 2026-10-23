@@ -1,7 +1,9 @@
 # examples — agent instructions
 
-Public demo collection for showing off AI-built classroom software, curated as the live
-tour for **"AI: From Zero to Takeoff"** (Bryant Harrison, Murray State University).
+Public demo collection for showing off AI-built classroom software
+(Bryant Harrison, Murray State University). The six AI subject lessons and their
+editable sources now live in CourseWiki's `activities/` tree. Their folders here
+are compatibility redirects; edit those lessons in CourseWiki, not here.
 Hosted at `bharrison6.github.io/examples`; remote `github.com/bharrison6/examples`.
 
 This file is the canonical agent instruction file for this repo — Cowork, Claude Code,
@@ -45,8 +47,8 @@ below `<!-- acc-changelog-entry-point -->`, entry format per the file's preamble
 
 ## Git
 
-`.git` here is a pointer file (`gitdir: ../../../.acc-gitdb/examples`); the real git
-database lives outside OneDrive at `C:\Users\Champion\.acc-gitdb\examples`. Moving or
+`.git` here is a pointer file; locate the machine's real database outside OneDrive
+with `git rev-parse --absolute-git-dir`. Moving or
 renaming the repo folder breaks the pointer. Cloud/remote sessions may need explicit
 `GIT_DIR`/`GIT_WORK_TREE`. Commit locally at logical units; **pushing requires explicit
 user confirmation** — a push deploys the public hosted copy.
